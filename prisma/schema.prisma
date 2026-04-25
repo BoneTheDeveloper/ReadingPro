@@ -1,0 +1,236 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+//[better-auth-model]
+
+model Account {
+  id                     String    @id
+  accountId              String
+  providerId             String
+  userId                 String
+  accessToken            String?
+  refreshToken           String?
+  idToken                String?
+  accessTokenExpiresAt   DateTime?
+  refreshTokenExpiresAt   DateTime?
+  scope                  String?
+  password               String?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Session {
+  id         String   @id
+  expiresAt  DateTime
+  token      String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  ipAddress  String?
+  userAgent  String?
+  userId     String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
+}
+
+model User {
+  id               String         @id
+  name             String
+  email            String         @unique
+  emailVerified    Boolean        @default(false)
+  image            String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime
+  tier             String?        @default("FREE")
+  accounts         Account[]
+  userProfile      UserProfile?
+  sessions         Session[]
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+
+//[app-model]
+
+model UserProfile {
+  id                   String                  @id
+  bio                  String?
+  createdAt            DateTime                @default(now())
+  updatedAt            DateTime
+  passages             Passage[]
+  user                 User                    @relation(fields: [id], references: [id], onDelete: Cascade)
+  vocabularyItems      VocabularyItem[]
+  vocabularySets       VocabularySet[]
+}
+
+model Passage {
+  id                    String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId                String
+  title                 String
+  content               String
+  cefrLevel             CEFRLevel?
+  wordCount             Int
+  sourceType            SourceType
+  filePath              String?                 @unique
+  createdAt             DateTime                @default(now())
+  youtubeUrl            String?
+  userProfile           UserProfile             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  studioArtifacts       StudioArtifact[]
+  studyChatMessages     StudyChatMessage[]
+
+  @@index([createdAt])
+  @@index([userId])
+}
+//studio-model
+model StudioArtifact {
+  id        String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  passageId String             @db.Uuid
+  userId    String
+  type      StudioArtifactType
+  createdAt DateTime          @default(now())
+  content   Json
+  progress  Json?
+
+  passage   Passage           @relation(fields: [passageId], references: [id], onDelete: Cascade)
+
+  @@index([passageId, createdAt(sort: Desc)])
+  @@index([userId, createdAt(sort: Desc)])
+}
+
+model StudyChatMessage {
+  id          String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String
+  passageId   String      @db.Uuid
+  role        String
+  content     String
+  createdAt   DateTime    @default(now())
+  passage     Passage      @relation(fields: [passageId], references: [id], onDelete: Cascade)
+
+  @@index([userId, passageId, createdAt])
+}
+
+//vocabulary
+model VocabularyItem {
+  id                     String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId                 String
+  translation            String
+  sourceLanguage         String
+  targetLanguage         String
+  type                   String                   @default("WORD")
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime
+  normalizedText         String                   @default("")
+  displayText            String                   @default("")
+  normalizedTranslation  String                   @default("")
+  savedCount             Int                      @default(1)
+  nextReviewAt           DateTime?
+  lastReviewedAt         DateTime?
+  dictionaryEntryId      String?                  @db.Uuid
+  dictionarySenseId      String?                  @db.Uuid
+  status                 VocabularyStatus         @default(NEW)
+  userProfile            UserProfile              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vocabularyOccurrences  VocabularyOccurrence[]
+  vocabularySetItems     VocabularySetItem[]
+
+  @@unique([userId, normalizedText, targetLanguage, normalizedTranslation])
+  @@index([userId, nextReviewAt])
+  @@index([userId, status])
+}
+
+model VocabularyOccurrence {
+  id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  vocabularyItemId String           @db.Uuid
+  sourceId         String?          @db.Uuid
+  selectedText     String
+  contextSentence  String?
+  createdAt        DateTime         @default(now())
+  vocabularyItem   VocabularyItem   @relation(fields: [vocabularyItemId], references: [id], onDelete: Cascade)
+
+  @@unique([vocabularyItemId, sourceId, contextSentence])
+  @@index([sourceId])
+}
+
+model VocabularySetItem {
+  id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  vocabularySetId  String           @db.Uuid
+  vocabularyItemId String           @db.Uuid
+  addedAt          DateTime         @default(now())
+  vocabularyItem   VocabularyItem   @relation(fields: [vocabularyItemId], references: [id], onDelete: Cascade)
+  vocabularySet    VocabularySet    @relation(fields: [vocabularySetId], references: [id], onDelete: Cascade)
+
+  @@unique([vocabularySetId, vocabularyItemId])
+}
+
+model VocabularySet {
+  id                   String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId               String
+  name                 String
+  type                 VocabularySetType
+  periodStart          DateTime?
+  periodEnd            DateTime?
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime
+  vocabularySetItems   VocabularySetItem[]
+  userProfile          UserProfile            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, type, periodStart, periodEnd])
+  @@index([userId, type])
+}
+
+//[enum]
+enum CEFRLevel {
+  A1
+  A2
+  B1
+  B2
+  C1
+  C2
+}
+
+enum SourceType {
+  TEXT
+  PDF
+  YOUTUBE
+}
+
+enum VocabularySetType {
+  MANUAL
+  DAILY
+  WEEKLY
+}
+
+
+enum VocabularyStatus {
+  NEW
+  LEARNING
+  MASTERED
+}
+
+enum StudioArtifactType {
+  QUESTION
+  FLASHCARD
+}

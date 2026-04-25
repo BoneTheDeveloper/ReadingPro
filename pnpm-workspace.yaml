@@ -1,0 +1,17 @@
+packages: []
+
+allowBuilds:
+  "@prisma/client": true
+  "@prisma/engines": true
+  "@sentry/cli": true
+  prisma: true
+  sharp: true
+  msw: false
+  unrs-resolver: false
+  "@parcel/watcher": true
+  "@swc/core": true
+  esbuild: true
+  protobufjs: true
+minimumReleaseAgeExclude:
+  - '@ai-sdk/react@4.0.17'
+  - ai@7.0.16
