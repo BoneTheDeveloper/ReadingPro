@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(node scripts/detect-topic.js \"PyMuPDF pdfplumber Python PDF text extraction layout preservation\")",
+      "Bash(node scripts/fetch-docs.js \"PyMuPDF pdfplumber Python PDF text extraction layout preservation\")",
+      "Bash(git init *)",
+      "Bash(git branch *)",
+      "Bash(\\\\.claude\\\\skills\\\\.venv\\\\Scripts\\\\python.exe scripts/search.py \"language learning reading app\" --domain product)",
+      "Bash(node *)",
+      "Bash(npx shadcn@latest init -d)",
+      "Bash(npx prisma *)"
+    ]
+  }
+}
