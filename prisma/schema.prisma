@@ -1,0 +1,142 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ============================================
+// USER MODEL
+// ============================================
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String?
+  targetLevel  CEFRLevel @default(B2)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  passages      Passage[]
+  studySessions StudySession[]
+  cardReviews   CardReview[]
+
+  @@map("users")
+}
+
+// ============================================
+// PASSAGE MODEL
+// ============================================
+model Passage {
+  id               String   @id @default(cuid())
+  userId           String
+  title            String
+  content          String
+  simplifiedContent String?
+  originalLevel    CEFRLevel?
+  simplifiedLevel  CEFRLevel?
+  wordCount        Int
+  sourceType       SourceType
+  fileUrl          String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questions Question[]
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("passages")
+}
+
+// ============================================
+// QUESTION MODEL (Flashcards)
+// ============================================
+model Question {
+  id             String   @id @default(cuid())
+  passageId      String
+  questionText   String
+  options        Json
+  correctOption  String
+  sourceText     String
+  sourceLine     Int
+  explanation    String
+  questionType   QuestionType @default(MULTIPLE_CHOICE)
+  difficulty     Int      @default(3)
+  createdAt      DateTime @default(now())
+
+  passage  Passage      @relation(fields: [passageId], references: [id], onDelete: Cascade)
+  reviews  CardReview[]
+
+  @@index([passageId])
+  @@map("questions")
+}
+
+// ============================================
+// CARD REVIEW MODEL (SM-2 Tracking)
+// ============================================
+model CardReview {
+  id             String    @id @default(cuid())
+  questionId     String
+  userId         String
+
+  qualityRating  Int
+  easeFactor     Float     @default(2.5)
+  intervalDays   Int       @default(1)
+  repetitions    Int       @default(0)
+
+  nextReviewDate DateTime  @default(now())
+  reviewedAt     DateTime  @default(now())
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([questionId, userId])
+  @@index([userId, nextReviewDate])
+  @@map("card_reviews")
+}
+
+// ============================================
+// STUDY SESSION MODEL
+// ============================================
+model StudySession {
+  id            String   @id @default(cuid())
+  userId        String
+  passageId     String?
+
+  startedAt     DateTime @default(now())
+  completedAt   DateTime?
+
+  cardsReviewed Int      @default(0)
+  newCards      Int      @default(0)
+  correctCount  Int      @default(0)
+  incorrectCount Int     @default(0)
+  accuracyRate  Float?
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, startedAt])
+  @@map("study_sessions")
+}
+
+// ============================================
+// ENUMS
+// ============================================
+enum CEFRLevel {
+  A1
+  A2
+  B1
+  B2
+  C1
+  C2
+}
+
+enum SourceType {
+  TEXT
+  PDF
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+}
