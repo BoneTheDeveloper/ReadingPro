@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useCallback, useState } from 'react';
-import { useDropzone, type FileRejection } from 'react-dropzone';
-import { Upload, FileText, AlertCircle, Loader2 } from 'lucide-react';
-import { validateFile, formatFileSize } from '@/lib/upload-validator';
-import { cn } from '@/lib/utils';
+import { useCallback, useState } from "react";
+import { useDropzone, type FileRejection } from "react-dropzone";
+import { Upload, FileText, AlertCircle, Loader2 } from "lucide-react";
+import { validateFile, formatFileSize } from "@/lib/validation/upload";
+import { cn } from "@/lib/shared/classname";
 
 interface UploadZoneProps {
   onFileSelect: (file: File) => void;
@@ -12,7 +12,11 @@ interface UploadZoneProps {
   disabled?: boolean;
 }
 
-export function UploadZone({ onFileSelect, isProcessing, disabled }: UploadZoneProps) {
+export function UploadZone({
+  onFileSelect,
+  isProcessing,
+  disabled,
+}: UploadZoneProps) {
   const [error, setError] = useState<string>();
 
   const onDrop = useCallback(
@@ -21,12 +25,12 @@ export function UploadZone({ onFileSelect, isProcessing, disabled }: UploadZoneP
 
       if (rejectedFiles.length > 0) {
         const rejection = rejectedFiles[0];
-        if (rejection.errors[0]?.code === 'file-too-large') {
-          setError('File size exceeds 10MB limit');
-        } else if (rejection.errors[0]?.code === 'file-invalid-type') {
-          setError('Only .txt and .pdf files are supported');
+        if (rejection.errors[0]?.code === "file-too-large") {
+          setError("File size exceeds 10MB limit");
+        } else if (rejection.errors[0]?.code === "file-invalid-type") {
+          setError("Only .txt and .pdf files are supported");
         } else {
-          setError('Invalid file. Please try again.');
+          setError("Invalid file. Please try again.");
         }
         return;
       }
@@ -40,14 +44,14 @@ export function UploadZone({ onFileSelect, isProcessing, disabled }: UploadZoneP
         onFileSelect(acceptedFiles[0]);
       }
     },
-    [onFileSelect]
+    [onFileSelect],
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
-      'text/plain': ['.txt'],
-      'application/pdf': ['.pdf'],
+      "text/plain": [".txt"],
+      "application/pdf": [".pdf"],
     },
     maxSize: 10 * 1024 * 1024,
     multiple: false,
@@ -59,13 +63,14 @@ export function UploadZone({ onFileSelect, isProcessing, disabled }: UploadZoneP
       <div
         {...getRootProps()}
         className={cn(
-          'relative flex flex-col items-center justify-center',
-          'border-2 border-dashed rounded-2xl p-12 text-center',
-          'transition-all duration-200 cursor-pointer',
-          'min-h-[300px]',
-          isDragActive && 'border-primary-500 bg-primary-50 scale-[1.02]',
-          !isDragActive && 'border-neutral-300 hover:border-primary-400 hover:bg-neutral-50',
-          (disabled || isProcessing) && 'opacity-50 cursor-not-allowed'
+          "relative flex flex-col items-center justify-center",
+          "border-2 border-dashed rounded-2xl p-12 text-center",
+          "transition-all duration-200 cursor-pointer",
+          "min-h-[300px]",
+          isDragActive && "border-primary-500 bg-primary-50 scale-[1.02]",
+          !isDragActive &&
+            "border-neutral-300 hover:border-primary-400 hover:bg-neutral-50",
+          (disabled || isProcessing) && "opacity-50 cursor-not-allowed",
         )}
       >
         <input {...getInputProps()} />
@@ -73,8 +78,8 @@ export function UploadZone({ onFileSelect, isProcessing, disabled }: UploadZoneP
         <div className="flex flex-col items-center gap-6">
           <div
             className={cn(
-              'w-16 h-16 rounded-xl flex items-center justify-center transition-transform',
-              isDragActive ? 'bg-primary-200 scale-110' : 'bg-primary-100'
+              "w-16 h-16 rounded-xl flex items-center justify-center transition-transform",
+              isDragActive ? "bg-primary-200 scale-110" : "bg-primary-100",
             )}
           >
             {isProcessing ? (
@@ -86,12 +91,16 @@ export function UploadZone({ onFileSelect, isProcessing, disabled }: UploadZoneP
 
           <div>
             <h3 className="text-xl font-semibold text-neutral-900 mb-2">
-              {isDragActive ? 'Drop your file here' : isProcessing ? 'Processing...' : 'Upload your content'}
+              {isDragActive
+                ? "Drop your file here"
+                : isProcessing
+                  ? "Processing..."
+                  : "Upload your content"}
             </h3>
             <p className="text-neutral-500 text-sm">
               {isProcessing
-                ? 'Please wait while we process your file'
-                : 'Drag and drop, or click to browse'}
+                ? "Please wait while we process your file"
+                : "Drag and drop, or click to browse"}
             </p>
           </div>
 

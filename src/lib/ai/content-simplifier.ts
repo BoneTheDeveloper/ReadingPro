@@ -1,6 +1,9 @@
 import { generateObject } from 'ai';
 import { google } from '@ai-sdk/google';
 import { z } from 'zod';
+import { createModuleLogger } from '@/lib/core/logger';
+
+const log = createModuleLogger('ai:content-simplifier');
 
 export const simplifiedContentSchema = z.object({
   simplifiedText: z.string(),
@@ -34,7 +37,7 @@ Original: ${text}`,
     });
     return object;
   } catch (error) {
-    console.error('Simplification error:', error);
+    log.error({ err: error }, 'Simplification failed');
     return null;
   }
 }
