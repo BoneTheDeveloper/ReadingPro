@@ -1,6 +1,9 @@
 import { generateObject } from 'ai';
 import { google } from '@ai-sdk/google';
 import { z } from 'zod';
+import { createModuleLogger } from '@/lib/core/logger';
+
+const log = createModuleLogger('ai:question-generator');
 
 export const questionOptionSchema = z.object({
   id: z.string(),
@@ -48,7 +51,7 @@ ${numberedPassage}`,
 
     return object;
   } catch (error) {
-    console.error('Question generation error:', error);
+    log.error({ err: error }, 'Question generation failed');
     return null;
   }
 }

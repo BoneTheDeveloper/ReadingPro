@@ -1,6 +1,9 @@
 import { generateObject } from 'ai';
 import { google } from '@ai-sdk/google';
 import { z } from 'zod';
+import { createModuleLogger } from '@/lib/core/logger';
+
+const log = createModuleLogger('ai:cefr-detector');
 
 export const cefrAnalysisSchema = z.object({
   level: z.enum(['A1', 'A2', 'B1', 'B2', 'C1', 'C2']),
@@ -25,7 +28,7 @@ Text: ${text.slice(0, 2000)}`,
     });
     return object;
   } catch (error) {
-    console.error('CEFR detection error:', error);
+    log.error({ err: error }, 'CEFR detection failed');
     return null;
   }
 }

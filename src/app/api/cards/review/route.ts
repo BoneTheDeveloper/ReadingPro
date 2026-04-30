@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { updateCardReview } from '@/lib/db-utils';
+import { updateCardReview } from '@/lib/db/utils';
+import { createModuleLogger } from '@/lib/core/logger';
+
+const log = createModuleLogger('api:cards:review');
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,7 +26,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, data: updatedReview });
   } catch (error) {
-    console.error('Error submitting review:', error);
+    log.error({ err: error }, 'Failed to submit review');
     return NextResponse.json(
       { error: 'Failed to submit review' },
       { status: 500 }

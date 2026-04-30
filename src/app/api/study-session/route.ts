@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { db } from '@/lib/db/client';
+import { createModuleLogger } from '@/lib/core/logger';
+
+const log = createModuleLogger('api:study-session');
 
 const DEMO_USER_EMAIL = 'demo@example.com';
 
@@ -24,7 +27,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, data: session });
   } catch (error) {
-    console.error('Error creating session:', error);
+    log.error({ err: error }, 'Failed to create session');
     return NextResponse.json(
       { error: 'Failed to create session' },
       { status: 500 }
@@ -52,7 +55,7 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({ success: true, data: session });
   } catch (error) {
-    console.error('Error updating session:', error);
+    log.error({ err: error }, 'Failed to update session');
     return NextResponse.json(
       { error: 'Failed to update session' },
       { status: 500 }
