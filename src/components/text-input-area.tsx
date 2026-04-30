@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { FileText, AlertCircle, Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { validateTextContent } from "@/lib/upload-validator";
+import { cn } from "@/lib/shared/classname";
+import { validateTextContent } from "@/lib/validation/upload";
 
 interface TextInputAreaProps {
   onSubmit: (text: string) => void;

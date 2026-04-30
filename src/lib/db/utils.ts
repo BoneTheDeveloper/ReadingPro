@@ -1,6 +1,6 @@
-import { db } from './db';
-import type { CEFRLevel } from './cefr-utils';
-export { getCEFRColor, getCEFRLabel } from './cefr-utils';
+import { db } from './client';
+import type { CEFRLevel } from '../shared/cefr-utils';
+export { getCEFRColor, getCEFRLabel } from '../shared/cefr-utils';
 
 export async function getDueCards(userId: string) {
   return db.cardReview.findMany({

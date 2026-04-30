@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Clock, FileText, ChevronLeft, Play } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { calculateReadingTime } from '@/lib/reading-utils';
-import { getCEFRColor, getCEFRLabel } from '@/lib/cefr-utils';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Clock, FileText, ChevronLeft, Play } from "lucide-react";
+import { cn } from "@/lib/shared/classname";
+import { calculateReadingTime } from "@/lib/shared/reading-utils";
+import { getCEFRColor, getCEFRLabel } from "@/lib/shared/cefr-utils";
 
 interface PassageData {
   id: string;
@@ -24,24 +24,29 @@ interface ReadingViewClientProps {
   passage: PassageData;
 }
 
-type ViewMode = 'original' | 'simplified';
+type ViewMode = "original" | "simplified";
 
 export function ReadingViewClient({ passage }: ReadingViewClientProps) {
   const router = useRouter();
   const [viewMode, setViewMode] = useState<ViewMode>(
-    passage.simplifiedContent ? 'simplified' : 'original'
+    passage.simplifiedContent ? "simplified" : "original",
   );
 
   const currentContent =
-    viewMode === 'simplified' && passage.simplifiedContent
+    viewMode === "simplified" && passage.simplifiedContent
       ? passage.simplifiedContent
       : passage.content;
 
   const currentLevel =
-    viewMode === 'simplified' ? passage.simplifiedLevel : passage.originalLevel;
+    viewMode === "simplified" ? passage.simplifiedLevel : passage.originalLevel;
 
-  const level = (currentLevel || passage.displayLevel) as Parameters<typeof getCEFRColor>[0];
-  const readingTime = calculateReadingTime(passage.wordCount, passage.displayLevel);
+  const level = (currentLevel || passage.displayLevel) as Parameters<
+    typeof getCEFRColor
+  >[0];
+  const readingTime = calculateReadingTime(
+    passage.wordCount,
+    passage.displayLevel,
+  );
 
   return (
     <div className="min-h-screen bg-neutral-50">
@@ -49,7 +54,7 @@ export function ReadingViewClient({ passage }: ReadingViewClientProps) {
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
             <button
-              onClick={() => router.push('/')}
+              onClick={() => router.push("/")}
               className="p-2 hover:bg-neutral-100 rounded-lg"
             >
               <ChevronLeft className="w-5 h-5" />
@@ -62,8 +67,8 @@ export function ReadingViewClient({ passage }: ReadingViewClientProps) {
           <div className="flex items-center gap-3">
             <span
               className={cn(
-                'px-3 py-1 rounded-full text-sm font-semibold',
-                getCEFRColor(level)
+                "px-3 py-1 rounded-full text-sm font-semibold",
+                getCEFRColor(level),
               )}
             >
               {getCEFRLabel(level)}
@@ -100,8 +105,8 @@ export function ReadingViewClient({ passage }: ReadingViewClientProps) {
             <div className="flex items-center gap-1.5">
               <span
                 className={cn(
-                  'px-2 py-0.5 rounded-full text-xs font-semibold',
-                  getCEFRColor(level)
+                  "px-2 py-0.5 rounded-full text-xs font-semibold",
+                  getCEFRColor(level),
                 )}
               >
                 Level {level}
@@ -112,23 +117,23 @@ export function ReadingViewClient({ passage }: ReadingViewClientProps) {
           {passage.simplifiedContent && (
             <div className="flex items-center gap-2 mb-6 p-1 bg-neutral-100 rounded-lg">
               <button
-                onClick={() => setViewMode('original')}
+                onClick={() => setViewMode("original")}
                 className={cn(
-                  'px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
-                  viewMode === 'original'
-                    ? 'bg-white text-neutral-900 shadow-sm'
-                    : 'text-neutral-600 hover:text-neutral-900'
+                  "px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
+                  viewMode === "original"
+                    ? "bg-white text-neutral-900 shadow-sm"
+                    : "text-neutral-600 hover:text-neutral-900",
                 )}
               >
                 Original ({passage.originalLevel})
               </button>
               <button
-                onClick={() => setViewMode('simplified')}
+                onClick={() => setViewMode("simplified")}
                 className={cn(
-                  'px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
-                  viewMode === 'simplified'
-                    ? 'bg-white text-neutral-900 shadow-sm'
-                    : 'text-neutral-600 hover:text-neutral-900'
+                  "px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
+                  viewMode === "simplified"
+                    ? "bg-white text-neutral-900 shadow-sm"
+                    : "text-neutral-600 hover:text-neutral-900",
                 )}
               >
                 Simplified ({passage.simplifiedLevel})
@@ -137,7 +142,7 @@ export function ReadingViewClient({ passage }: ReadingViewClientProps) {
           )}
 
           <div className="font-serif text-lg leading-loose text-neutral-800">
-            {currentContent.split('\n\n').map((paragraph, i) => (
+            {currentContent.split("\n\n").map((paragraph, i) => (
               <p key={i} className="mb-5 last:mb-0">
                 {paragraph}
               </p>
@@ -146,7 +151,8 @@ export function ReadingViewClient({ passage }: ReadingViewClientProps) {
 
           <div className="mt-8 pt-6 border-t border-neutral-200 flex items-center justify-between">
             <div className="text-sm text-neutral-500">
-              {passage.questionCount} comprehension question{passage.questionCount !== 1 ? 's' : ''} available
+              {passage.questionCount} comprehension question
+              {passage.questionCount !== 1 ? "s" : ""} available
             </div>
             {passage.questionCount > 0 && (
               <button

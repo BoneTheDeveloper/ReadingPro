@@ -2,9 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { writeFile, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
 import path from 'path';
-import { parsePDF } from '@/lib/pdf-parser';
-import { validateFile } from '@/lib/upload-validator';
+import { parsePDF } from '@/lib/parsers/pdf';
+import { validateFile } from '@/lib/validation/upload';
 import { analyzeContentAction } from '@/app/actions/analyze';
+import { createModuleLogger } from '@/lib/core/logger';
+
+const log = createModuleLogger('api:upload');
 
 const UPLOAD_DIR = path.join(process.cwd(), 'uploads', 'content');
 
@@ -82,7 +85,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Upload error:', error);
+    log.error({ err: error }, 'Upload failed');
     return NextResponse.json(
       { error: 'Failed to process file' },
       { status: 500 }

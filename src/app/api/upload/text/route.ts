@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { validateTextContent } from '@/lib/upload-validator';
+import { validateTextContent } from '@/lib/validation/upload';
 import { analyzeContentAction } from '@/app/actions/analyze';
+import { createModuleLogger } from '@/lib/core/logger';
+
+const log = createModuleLogger('api:upload:text');
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,7 +33,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, data: result });
   } catch (error) {
-    console.error('Text processing error:', error);
+    log.error({ err: error }, 'Text processing failed');
     return NextResponse.json(
       { error: 'Failed to process text' },
       { status: 500 }
