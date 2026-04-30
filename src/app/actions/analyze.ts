@@ -2,7 +2,10 @@
 
 import { generateObject } from 'ai';
 import { google } from '@ai-sdk/google';
-import { db } from '@/lib/db';
+import { db } from '@/lib/db/client';
+import { createModuleLogger } from '@/lib/core/logger';
+
+const log = createModuleLogger('actions:analyze');
 import { cefrAnalysisSchema } from '@/lib/ai/cefr-detector';
 import { simplifiedContentSchema } from '@/lib/ai/content-simplifier';
 import { questionGenerationSchema, type QuestionGenerationResult } from '@/lib/ai/question-generator';
@@ -30,7 +33,7 @@ export async function analyzeContentAction(formData: FormData) {
     });
     originalLevel = cefrResult.level;
   } catch {
-    console.warn('CEFR detection failed, using heuristic');
+    log.warn('CEFR detection failed, using heuristic');
     originalLevel = getHeuristicCEFR(text);
   }
 
@@ -49,7 +52,7 @@ export async function analyzeContentAction(formData: FormData) {
       simplifiedContent = simplified.simplifiedText;
       simplifiedLevel = targetLevel;
     } catch {
-      console.warn('Simplification failed, using original');
+      log.warn('Simplification failed, using original');
     }
   }
 
@@ -65,7 +68,7 @@ export async function analyzeContentAction(formData: FormData) {
     });
     questions = questionResult.questions;
   } catch {
-    console.warn('Question generation failed');
+    log.warn('Question generation failed');
   }
 
   const userEmail = 'demo@example.com';
@@ -142,7 +145,7 @@ export async function studyAnalyzeAction({ text, title }: { text: string; title:
       simplifiedContent = simplified.simplifiedText;
       simplifiedLevel = targetLevel;
     } catch {
-      console.warn('Simplification failed');
+      log.warn('Simplification failed');
     }
   }
 
@@ -157,7 +160,7 @@ export async function studyAnalyzeAction({ text, title }: { text: string; title:
     });
     questions = questionResult.questions;
   } catch {
-    console.warn('Question generation failed');
+    log.warn('Question generation failed');
   }
 
   const userEmail = 'demo@example.com';
