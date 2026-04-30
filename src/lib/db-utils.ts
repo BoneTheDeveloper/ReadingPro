@@ -1,5 +1,6 @@
 import { db } from './db';
-import { Prisma, CEFRLevel } from '@prisma/client';
+import type { CEFRLevel } from './cefr-utils';
+export { getCEFRColor, getCEFRLabel } from './cefr-utils';
 
 export async function getDueCards(userId: string) {
   return db.cardReview.findMany({
@@ -132,36 +133,9 @@ export async function getUserProgress(userId: string) {
   };
 }
 
-export function getCEFRColor(level: CEFRLevel): string {
-  const colors: Record<CEFRLevel, string> = {
-    A1: 'bg-green-100 text-green-700',
-    A2: 'bg-lime-100 text-lime-700',
-    B1: 'bg-yellow-100 text-yellow-700',
-    B2: 'bg-orange-100 text-orange-700',
-    C1: 'bg-pink-100 text-pink-700',
-    C2: 'bg-purple-100 text-purple-700',
-  };
-  return colors[level];
-}
-
-export function getCEFRLabel(level: CEFRLevel): string {
-  const labels: Record<CEFRLevel, string> = {
-    A1: 'Beginner',
-    A2: 'Elementary',
-    B1: 'Intermediate',
-    B2: 'Upper Intermediate',
-    C1: 'Advanced',
-    C2: 'Mastery',
-  };
-  return labels[level];
-}
-
 export async function createUser(email: string, name?: string) {
   return db.user.create({
-    data: {
-      email,
-      name,
-    },
+    data: { email, name },
   });
 }
 
@@ -213,9 +187,7 @@ export async function createCardReview(questionId: string, userId: string) {
 export async function getPassageWithQuestions(passageId: string) {
   return db.passage.findUnique({
     where: { id: passageId },
-    include: {
-      questions: true,
-    },
+    include: { questions: true },
   });
 }
 
@@ -228,10 +200,7 @@ export async function getUserPassages(userId: string) {
 
 export async function createStudySession(userId: string, passageId?: string) {
   return db.studySession.create({
-    data: {
-      userId,
-      passageId,
-    },
+    data: { userId, passageId },
   });
 }
 

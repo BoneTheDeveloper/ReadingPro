@@ -16,6 +16,8 @@ export async function analyzeContentAction(formData: FormData) {
     return { error: 'Text too short' };
   }
 
+  const truncatedText = text.slice(0, 10000);
+
   let originalLevel: string | null = null;
   let simplifiedContent: string | null = null;
   let simplifiedLevel: string | null = null;
@@ -24,7 +26,7 @@ export async function analyzeContentAction(formData: FormData) {
     const { object: cefrResult } = await generateObject({
       model: google('gemini-1.5-flash'),
       schema: cefrAnalysisSchema,
-      prompt: `Analyze text and return CEFR level: ${text.slice(0, 2000)}`,
+      prompt: `Analyze text and return CEFR level: ${truncatedText.slice(0, 2000)}`,
     });
     originalLevel = cefrResult.level;
   } catch {
@@ -42,7 +44,7 @@ export async function analyzeContentAction(formData: FormData) {
       const { object: simplified } = await generateObject({
         model: google('gemini-1.5-flash'),
         schema: simplifiedContentSchema,
-        prompt: `Simplify to ${targetLevel}: ${text}`,
+        prompt: `Simplify to ${targetLevel}: ${truncatedText}`,
       });
       simplifiedContent = simplified.simplifiedText;
       simplifiedLevel = targetLevel;
@@ -59,7 +61,7 @@ export async function analyzeContentAction(formData: FormData) {
     const { object: questionResult } = await generateObject({
       model: google('gemini-1.5-flash'),
       schema: questionGenerationSchema,
-      prompt: `Generate 5 comprehension questions for: ${contentToAnalyze}`,
+      prompt: `Generate 5 comprehension questions for: ${contentToAnalyze.slice(0, 10000)}`,
     });
     questions = questionResult.questions;
   } catch {
@@ -105,4 +107,117 @@ export async function analyzeContentAction(formData: FormData) {
     simplifiedLevel,
     questionCount: questions.length,
   };
+}
+
+export async function studyAnalyzeAction({ text, title }: { text: string; title: string }) {
+  if (!text || text.length < 50) {
+    return { error: 'Text too short (minimum 50 characters)' };
+  }
+
+  const truncatedText = text.slice(0, 10000);
+  let originalLevel: string | null = null;
+  let simplifiedContent: string | null = null;
+  let simplifiedLevel: string | null = null;
+
+  try {
+    const { object: cefrResult } = await generateObject({
+      model: google('gemini-1.5-flash'),
+      schema: cefrAnalysisSchema,
+      prompt: `Analyze text and return CEFR level: ${truncatedText.slice(0, 2000)}`,
+    });
+    originalLevel = cefrResult.level;
+  } catch {
+    originalLevel = getHeuristicCEFR(text);
+  }
+
+  if (originalLevel && originalLevel !== 'A1' && originalLevel !== 'A2') {
+    const targetMap: Record<string, string> = { C2: 'C1', C1: 'B2', B2: 'B1', B1: 'A2' };
+    const targetLevel = targetMap[originalLevel] || 'B1';
+    try {
+      const { object: simplified } = await generateObject({
+        model: google('gemini-1.5-flash'),
+        schema: simplifiedContentSchema,
+        prompt: `Simplify to ${targetLevel}: ${truncatedText}`,
+      });
+      simplifiedContent = simplified.simplifiedText;
+      simplifiedLevel = targetLevel;
+    } catch {
+      console.warn('Simplification failed');
+    }
+  }
+
+  const contentToAnalyze = simplifiedContent || text;
+  let questions: QuestionGenerationResult['questions'] = [];
+
+  try {
+    const { object: questionResult } = await generateObject({
+      model: google('gemini-1.5-flash'),
+      schema: questionGenerationSchema,
+      prompt: `Generate 5 comprehension questions for: ${contentToAnalyze.slice(0, 10000)}`,
+    });
+    questions = questionResult.questions;
+  } catch {
+    console.warn('Question generation failed');
+  }
+
+  const userEmail = 'demo@example.com';
+  let user = await db.user.findUnique({ where: { email: userEmail } });
+  if (!user) {
+    user = await db.user.create({ data: { email: userEmail, name: 'Demo User' } });
+  }
+
+  const passage = await db.passage.create({
+    data: {
+      userId: user.id,
+      title,
+      content: text,
+      simplifiedContent,
+      originalLevel: originalLevel as 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2' | null,
+      simplifiedLevel: simplifiedLevel as 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2' | null,
+      wordCount: text.split(/\s+/).length,
+      sourceType: 'TEXT',
+      questions: {
+        create: questions.map(q => ({
+          questionText: q.questionText,
+          options: JSON.stringify(q.options),
+          correctOption: q.correctAnswer,
+          sourceText: q.sourceText,
+          sourceLine: q.sourceLine,
+          explanation: q.explanation,
+          questionType: q.questionType,
+          difficulty: q.difficulty,
+        })),
+      },
+    },
+    include: { questions: true },
+  });
+
+  const passageData = {
+    id: passage.id,
+    title: passage.title,
+    content: passage.content,
+    simplifiedContent: passage.simplifiedContent,
+    originalLevel: passage.originalLevel,
+    simplifiedLevel: passage.simplifiedLevel,
+    wordCount: passage.wordCount,
+  };
+
+  const questionsData = passage.questions.map((q, i) => {
+    let parsedOptions: Array<{ id: string; text: string }> = [];
+    try { parsedOptions = JSON.parse(q.options as string); } catch { parsedOptions = []; }
+    return {
+      id: q.id,
+      number: i + 1,
+      questionText: q.questionText,
+      options: parsedOptions,
+      correctAnswer: q.correctOption,
+      explanation: q.explanation,
+      sourceText: q.sourceText,
+      sourceLine: q.sourceLine,
+      questionType: q.questionType,
+      difficulty: q.difficulty,
+    };
+  }).filter(q => q.options.length > 0);
+
+  return { passage: passageData, questions: questionsData };
 }

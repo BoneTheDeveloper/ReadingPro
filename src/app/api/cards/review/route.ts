@@ -1,0 +1,32 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { updateCardReview } from '@/lib/db-utils';
+
+export async function POST(request: NextRequest) {
+  try {
+    const { cardReviewId, qualityRating } = await request.json();
+
+    if (!cardReviewId || typeof qualityRating !== 'number') {
+      return NextResponse.json(
+        { error: 'Invalid request' },
+        { status: 400 }
+      );
+    }
+
+    if (qualityRating < 0 || qualityRating > 5) {
+      return NextResponse.json(
+        { error: 'Quality rating must be between 0 and 5' },
+        { status: 400 }
+      );
+    }
+
+    const updatedReview = await updateCardReview(cardReviewId, qualityRating);
+
+    return NextResponse.json({ success: true, data: updatedReview });
+  } catch (error) {
+    console.error('Error submitting review:', error);
+    return NextResponse.json(
+      { error: 'Failed to submit review' },
+      { status: 500 }
+    );
+  }
+}

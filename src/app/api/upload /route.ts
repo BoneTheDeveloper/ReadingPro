@@ -3,6 +3,8 @@ import { writeFile, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
 import path from 'path';
 import { parsePDF } from '@/lib/pdf-parser';
+import { validateFile } from '@/lib/upload-validator';
+import { analyzeContentAction } from '@/app/actions/analyze';
 
 const UPLOAD_DIR = path.join(process.cwd(), 'uploads', 'content');
 
@@ -26,8 +28,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const validation = validateFile(file);
+    if (!validation.valid) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
+    }
+
     const timestamp = Date.now();
-    const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const safeName = file.name.replace(/[^a-zA-Z0-9]/g, '_');
     const filename = `${timestamp}-${safeName}`;
     const filepath = path.join(UPLOAD_DIR, filename);
 
@@ -36,15 +43,10 @@ export async function POST(request: NextRequest) {
     await writeFile(filepath, buffer);
 
     let text: string;
-    let metadata: Record<string, unknown> = {};
 
     if (file.type === 'application/pdf') {
       const pdf = await parsePDF(buffer);
       text = pdf.text;
-      metadata = {
-        pages: pdf.pages,
-        title: pdf.metadata?.title,
-      };
     } else {
       text = buffer.toString('utf-8');
     }
@@ -57,16 +59,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const title = file.name.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ');
+
+    const analyzeFormData = new FormData();
+    analyzeFormData.set('text', text);
+    analyzeFormData.set('title', title);
+
+    const result = await analyzeContentAction(analyzeFormData);
+
+    if ('error' in result && result.error) {
+      return NextResponse.json({ error: result.error }, { status: 400 });
+    }
+
     return NextResponse.json({
       success: true,
       data: {
         filename,
-        originalName: file.name,
-        filetype: file.type,
-        size: file.size,
-        text,
-        wordCount,
-        metadata,
+        passageId: result.passageId,
+        originalLevel: result.originalLevel,
+        simplifiedLevel: result.simplifiedLevel,
+        questionCount: result.questionCount,
       },
     });
   } catch (error) {

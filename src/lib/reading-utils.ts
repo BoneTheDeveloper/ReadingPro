@@ -1,4 +1,4 @@
-import type { CEFRLevel } from '@prisma/client';
+
 
 export interface WordDefinition {
   word: string;
