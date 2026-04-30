@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { FileText, AlertCircle, Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { validateTextContent } from '@/lib/upload-validator';
+import { useState } from "react";
+import { FileText, AlertCircle, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { validateTextContent } from "@/lib/upload-validator";
 
 interface TextInputAreaProps {
   onSubmit: (text: string) => void;
@@ -11,8 +11,12 @@ interface TextInputAreaProps {
   disabled?: boolean;
 }
 
-export function TextInputArea({ onSubmit, isProcessing, disabled }: TextInputAreaProps) {
-  const [text, setText] = useState('');
+export function TextInputArea({
+  onSubmit,
+  isProcessing,
+  disabled,
+}: TextInputAreaProps) {
+  const [text, setText] = useState("");
   const [error, setError] = useState<string>();
 
   const handleSubmit = () => {
@@ -25,7 +29,10 @@ export function TextInputArea({ onSubmit, isProcessing, disabled }: TextInputAre
     onSubmit(text);
   };
 
-  const wordCount = text.trim().split(/\s+/).filter(w => w.length > 0).length;
+  const wordCount = text
+    .trim()
+    .split(/\s+/)
+    .filter((w) => w.length > 0).length;
 
   return (
     <div className="w-full">
@@ -44,24 +51,24 @@ export function TextInputArea({ onSubmit, isProcessing, disabled }: TextInputAre
           disabled={disabled || isProcessing}
           placeholder="Paste your English text content here..."
           className={cn(
-            'w-full p-6 min-h-[300px] resize-none focus:outline-none',
-            'font-serif text-lg leading-relaxed text-neutral-700',
-            'disabled:opacity-50 disabled:cursor-not-allowed'
+            "w-full p-6 min-h-75 resize-none focus:outline-none",
+            "font-serif text-lg leading-relaxed text-neutral-700",
+            "disabled:opacity-50 disabled:cursor-not-allowed",
           )}
         />
 
         <div className="flex items-center justify-between p-4 border-t border-neutral-200 bg-neutral-50">
           <span className="text-sm text-neutral-500">
-            {wordCount} {wordCount === 1 ? 'word' : 'words'}
+            {wordCount} {wordCount === 1 ? "word" : "words"}
           </span>
 
           <button
             onClick={handleSubmit}
             disabled={disabled || isProcessing || text.trim().length === 0}
             className={cn(
-              'px-6 py-2.5 rounded-lg font-medium transition-all',
-              'bg-primary-600 text-white hover:bg-primary-700',
-              'disabled:bg-neutral-300 disabled:cursor-not-allowed'
+              "px-6 py-2.5 rounded-lg font-medium transition-all",
+              "bg-primary-600 text-white hover:bg-primary-700",
+              "disabled:bg-neutral-300 disabled:cursor-not-allowed",
             )}
           >
             {isProcessing ? (
@@ -70,7 +77,7 @@ export function TextInputArea({ onSubmit, isProcessing, disabled }: TextInputAre
                 Processing...
               </span>
             ) : (
-              'Continue'
+              "Continue"
             )}
           </button>
         </div>
@@ -78,7 +85,7 @@ export function TextInputArea({ onSubmit, isProcessing, disabled }: TextInputAre
 
       {error && (
         <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700 text-sm">
-          <AlertCircle className="w-4 h-4 flex-shrink-0" />
+          <AlertCircle className="w-4 h-4 shrink-0" />
           <span>{error}</span>
         </div>
       )}
