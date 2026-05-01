@@ -10,7 +10,7 @@ import {
   ChevronLeft,
   Loader2,
 } from "lucide-react";
-import { cn } from "@/lib/shared/classname";
+import { cn } from "@/lib/shared/utils";
 
 interface ProgressStats {
   totalCards: number;

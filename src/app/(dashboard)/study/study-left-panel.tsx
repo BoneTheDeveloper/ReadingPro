@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import { UploadZone } from "@/components/upload-zone";
 import { TextInputArea } from "@/components/text-input-area";
 import { Loader2, FileText, Clock, RotateCcw } from "lucide-react";
-import { cn } from "@/lib/shared/classname";
+import { cn } from "@/lib/shared/utils";
 import { calculateReadingTime } from "@/lib/shared/reading-utils";
 import { getCEFRColor, getCEFRLabel } from "@/lib/shared/cefr-utils";
 import type { StudyStatus, PassageData } from "./study-types";
