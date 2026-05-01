@@ -32,15 +32,16 @@ export async function analyzeContentAction(formData: FormData) {
 
     try {
       Sentry.addBreadcrumb({ category: 'ai', message: 'Detecting CEFR level', level: 'info' });
-      const { object: cefrResult } = await generateObject({
-        model: google('gemini-1.5-flash'),
-        schema: cefrAnalysisSchema,
-        prompt: `Analyze text and return CEFR level: ${truncatedText.slice(0, 2000)}`,
+      const { object: cefrResult } = await Sentry.startSpan({ name: 'ai:cefr-detect', op: 'ai' }, async () => {
+        return generateObject({
+          model: google('gemini-1.5-flash'),
+          schema: cefrAnalysisSchema,
+          prompt: `Analyze text and return CEFR level: ${truncatedText.slice(0, 2000)}`,
+        });
       });
       originalLevel = cefrResult.level;
     } catch (error) {
       log.warn('CEFR detection failed, using heuristic');
-      Sentry.captureException(error, { level: 'warning', tags: { action: 'analyzeContent', step: 'cefr' } });
       originalLevel = getHeuristicCEFR(text);
     }
 
@@ -52,16 +53,17 @@ export async function analyzeContentAction(formData: FormData) {
 
       try {
         Sentry.addBreadcrumb({ category: 'ai', message: `Simplifying to ${targetLevel}`, level: 'info' });
-        const { object: simplified } = await generateObject({
-          model: google('gemini-1.5-flash'),
-          schema: simplifiedContentSchema,
-          prompt: `Simplify to ${targetLevel}: ${truncatedText}`,
+        const { object: simplified } = await Sentry.startSpan({ name: 'ai:content-simplify', op: 'ai' }, async () => {
+          return generateObject({
+            model: google('gemini-1.5-flash'),
+            schema: simplifiedContentSchema,
+            prompt: `Simplify to ${targetLevel}: ${truncatedText}`,
+          });
         });
         simplifiedContent = simplified.simplifiedText;
         simplifiedLevel = targetLevel;
       } catch (error) {
         log.warn('Simplification failed, using original');
-        Sentry.captureException(error, { level: 'warning', tags: { action: 'analyzeContent', step: 'simplify' } });
       }
     }
 
@@ -71,49 +73,51 @@ export async function analyzeContentAction(formData: FormData) {
 
     try {
       Sentry.addBreadcrumb({ category: 'ai', message: 'Generating comprehension questions', level: 'info' });
-      const { object: questionResult } = await generateObject({
-        model: google('gemini-1.5-flash'),
-        schema: questionGenerationSchema,
-        prompt: `Generate 5 comprehension questions for: ${contentToAnalyze.slice(0, 10000)}`,
+      const { object: questionResult } = await Sentry.startSpan({ name: 'ai:question-gen', op: 'ai' }, async () => {
+        return generateObject({
+          model: google('gemini-1.5-flash'),
+          schema: questionGenerationSchema,
+          prompt: `Generate 5 comprehension questions for: ${contentToAnalyze.slice(0, 10000)}`,
+        });
       });
       questions = questionResult.questions;
     } catch (error) {
       log.warn('Question generation failed');
-      Sentry.captureException(error, { level: 'warning', tags: { action: 'analyzeContent', step: 'questions' } });
     }
 
     const userEmail = 'demo@example.com';
-    let user = await db.user.findUnique({ where: { email: userEmail } });
-    if (!user) {
-      user = await db.user.create({
-        data: { email: userEmail, name: 'Demo User' },
-      });
-    }
+    let user = await Sentry.startSpan({ name: 'db:user-lookup', op: 'db' }, async () => {
+      let u = await db.user.findUnique({ where: { email: userEmail } });
+      if (!u) u = await db.user.create({ data: { email: userEmail, name: 'Demo User' } });
+      return u;
+    });
 
     Sentry.addBreadcrumb({ category: 'db', message: 'Creating passage with questions', level: 'info' });
-    const passage = await db.passage.create({
-      data: {
-        userId: user.id,
-        title,
-        content: text,
-        simplifiedContent,
-        originalLevel: originalLevel as 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2' | null,
-        simplifiedLevel: simplifiedLevel as 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2' | null,
-        wordCount: text.split(/\s+/).length,
-        sourceType: 'TEXT',
-        questions: {
-          create: questions.map(q => ({
-            questionText: q.questionText,
-            options: JSON.stringify(q.options),
-            correctOption: q.correctAnswer,
-            sourceText: q.sourceText,
-            sourceLine: q.sourceLine,
-            explanation: q.explanation,
-            questionType: q.questionType,
-            difficulty: q.difficulty,
-          })),
+    const passage = await Sentry.startSpan({ name: 'db:passage-create', op: 'db' }, async () => {
+      return db.passage.create({
+        data: {
+          userId: user.id,
+          title,
+          content: text,
+          simplifiedContent,
+          originalLevel: originalLevel as 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2' | null,
+          simplifiedLevel: simplifiedLevel as 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2' | null,
+          wordCount: text.split(/\s+/).length,
+          sourceType: 'TEXT',
+          questions: {
+            create: questions.map(q => ({
+              questionText: q.questionText,
+              options: JSON.stringify(q.options),
+              correctOption: q.correctAnswer,
+              sourceText: q.sourceText,
+              sourceLine: q.sourceLine,
+              explanation: q.explanation,
+              questionType: q.questionType,
+              difficulty: q.difficulty,
+            })),
+          },
         },
-      },
+      });
     });
 
     return {
@@ -140,15 +144,16 @@ export async function studyAnalyzeAction({ text, title }: { text: string; title:
 
     try {
       Sentry.addBreadcrumb({ category: 'ai', message: 'Detecting CEFR level', level: 'info' });
-      const { object: cefrResult } = await generateObject({
-        model: google('gemini-1.5-flash'),
-        schema: cefrAnalysisSchema,
-        prompt: `Analyze text and return CEFR level: ${truncatedText.slice(0, 2000)}`,
+      const { object: cefrResult } = await Sentry.startSpan({ name: 'ai:cefr-detect', op: 'ai' }, async () => {
+        return generateObject({
+          model: google('gemini-1.5-flash'),
+          schema: cefrAnalysisSchema,
+          prompt: `Analyze text and return CEFR level: ${truncatedText.slice(0, 2000)}`,
+        });
       });
       originalLevel = cefrResult.level;
     } catch (error) {
       originalLevel = getHeuristicCEFR(text);
-      Sentry.captureException(error, { level: 'warning', tags: { action: 'studyAnalyze', step: 'cefr' } });
     }
 
     if (originalLevel && originalLevel !== 'A1' && originalLevel !== 'A2') {
@@ -156,16 +161,17 @@ export async function studyAnalyzeAction({ text, title }: { text: string; title:
       const targetLevel = targetMap[originalLevel] || 'B1';
       try {
         Sentry.addBreadcrumb({ category: 'ai', message: `Simplifying to ${targetLevel}`, level: 'info' });
-        const { object: simplified } = await generateObject({
-          model: google('gemini-1.5-flash'),
-          schema: simplifiedContentSchema,
-          prompt: `Simplify to ${targetLevel}: ${truncatedText}`,
+        const { object: simplified } = await Sentry.startSpan({ name: 'ai:content-simplify', op: 'ai' }, async () => {
+          return generateObject({
+            model: google('gemini-1.5-flash'),
+            schema: simplifiedContentSchema,
+            prompt: `Simplify to ${targetLevel}: ${truncatedText}`,
+          });
         });
         simplifiedContent = simplified.simplifiedText;
         simplifiedLevel = targetLevel;
       } catch (error) {
         log.warn('Simplification failed');
-        Sentry.captureException(error, { level: 'warning', tags: { action: 'studyAnalyze', step: 'simplify' } });
       }
     }
 
@@ -174,48 +180,52 @@ export async function studyAnalyzeAction({ text, title }: { text: string; title:
 
     try {
       Sentry.addBreadcrumb({ category: 'ai', message: 'Generating comprehension questions', level: 'info' });
-      const { object: questionResult } = await generateObject({
-        model: google('gemini-1.5-flash'),
-        schema: questionGenerationSchema,
-        prompt: `Generate 5 comprehension questions for: ${contentToAnalyze.slice(0, 10000)}`,
+      const { object: questionResult } = await Sentry.startSpan({ name: 'ai:question-gen', op: 'ai' }, async () => {
+        return generateObject({
+          model: google('gemini-1.5-flash'),
+          schema: questionGenerationSchema,
+          prompt: `Generate 5 comprehension questions for: ${contentToAnalyze.slice(0, 10000)}`,
+        });
       });
       questions = questionResult.questions;
     } catch (error) {
       log.warn('Question generation failed');
-      Sentry.captureException(error, { level: 'warning', tags: { action: 'studyAnalyze', step: 'questions' } });
     }
 
     const userEmail = 'demo@example.com';
-    let user = await db.user.findUnique({ where: { email: userEmail } });
-    if (!user) {
-      user = await db.user.create({ data: { email: userEmail, name: 'Demo User' } });
-    }
+    let user = await Sentry.startSpan({ name: 'db:user-lookup', op: 'db' }, async () => {
+      let u = await db.user.findUnique({ where: { email: userEmail } });
+      if (!u) u = await db.user.create({ data: { email: userEmail, name: 'Demo User' } });
+      return u;
+    });
 
     Sentry.addBreadcrumb({ category: 'db', message: 'Creating passage with questions', level: 'info' });
-    const passage = await db.passage.create({
-      data: {
-        userId: user.id,
-        title,
-        content: text,
-        simplifiedContent,
-        originalLevel: originalLevel as 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2' | null,
-        simplifiedLevel: simplifiedLevel as 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2' | null,
-        wordCount: text.split(/\s+/).length,
-        sourceType: 'TEXT',
-        questions: {
-          create: questions.map(q => ({
-            questionText: q.questionText,
-            options: JSON.stringify(q.options),
-            correctOption: q.correctAnswer,
-            sourceText: q.sourceText,
-            sourceLine: q.sourceLine,
-            explanation: q.explanation,
-            questionType: q.questionType,
-            difficulty: q.difficulty,
-          })),
+    const passage = await Sentry.startSpan({ name: 'db:passage-create', op: 'db' }, async () => {
+      return db.passage.create({
+        data: {
+          userId: user.id,
+          title,
+          content: text,
+          simplifiedContent,
+          originalLevel: originalLevel as 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2' | null,
+          simplifiedLevel: simplifiedLevel as 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2' | null,
+          wordCount: text.split(/\s+/).length,
+          sourceType: 'TEXT',
+          questions: {
+            create: questions.map(q => ({
+              questionText: q.questionText,
+              options: JSON.stringify(q.options),
+              correctOption: q.correctAnswer,
+              sourceText: q.sourceText,
+              sourceLine: q.sourceLine,
+              explanation: q.explanation,
+              questionType: q.questionType,
+              difficulty: q.difficulty,
+            })),
+          },
         },
-      },
-      include: { questions: true },
+        include: { questions: true },
+      });
     });
 
     const passageData = {
