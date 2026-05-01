@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { writeFile, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
 import path from 'path';
+import * as Sentry from '@sentry/nextjs';
 import { parsePDF } from '@/lib/parsers/pdf';
 import { validateFile } from '@/lib/validation/upload';
 import { analyzeContentAction } from '@/app/actions/analyze';
@@ -41,6 +42,7 @@ export async function POST(request: NextRequest) {
     const filename = `${timestamp}-${safeName}`;
     const filepath = path.join(UPLOAD_DIR, filename);
 
+    Sentry.addBreadcrumb({ category: 'upload', message: 'Writing file to disk', level: 'info' });
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
     await writeFile(filepath, buffer);
@@ -48,6 +50,7 @@ export async function POST(request: NextRequest) {
     let text: string;
 
     if (file.type === 'application/pdf') {
+      Sentry.addBreadcrumb({ category: 'parse', message: 'Parsing PDF file', level: 'info' });
       const pdf = await parsePDF(buffer);
       text = pdf.text;
     } else {
@@ -86,6 +89,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     log.error({ err: error }, 'Upload failed');
+    Sentry.captureException(error, {
+      tags: { route: 'api:upload', method: 'POST' },
+    });
     return NextResponse.json(
       { error: 'Failed to process file' },
       { status: 500 }
