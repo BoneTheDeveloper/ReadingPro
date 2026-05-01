@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import * as Sentry from '@sentry/nextjs';
 import { validateTextContent } from '@/lib/validation/upload';
 import { analyzeContentAction } from '@/app/actions/analyze';
 import { createModuleLogger } from '@/lib/core/logger';
@@ -34,6 +35,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, data: result });
   } catch (error) {
     log.error({ err: error }, 'Text processing failed');
+    Sentry.captureException(error, {
+      tags: { route: 'api:upload:text', method: 'POST' },
+    });
     return NextResponse.json(
       { error: 'Failed to process text' },
       { status: 500 }
