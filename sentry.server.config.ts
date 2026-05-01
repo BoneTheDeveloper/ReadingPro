@@ -2,5 +2,19 @@ import * as Sentry from "@sentry/nextjs";
 import { getSentryConfig, isSentryEnabled } from "@/lib/core/sentry";
 
 if (isSentryEnabled()) {
-  Sentry.init(getSentryConfig());
+  const config = getSentryConfig();
+  Sentry.init({
+    ...config,
+    integrations: [
+      Sentry.pinoIntegration({
+        error: {
+          levels: ["error", "fatal"],
+          handled: true,
+        },
+        log: {
+          levels: ["warn", "error", "fatal"],
+        },
+      }),
+    ],
+  });
 }
