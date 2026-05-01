@@ -14,7 +14,6 @@ import type { StudyStatus, QuestionData } from "./study-types";
 interface StudyRightPanelProps {
   status: StudyStatus;
   questions: QuestionData[];
-  passageContent: string;
   passageTitle: string;
   onReset: () => void;
 }
@@ -22,7 +21,6 @@ interface StudyRightPanelProps {
 export function StudyRightPanel({
   status,
   questions,
-  passageContent,
   passageTitle,
   onReset,
 }: StudyRightPanelProps) {
@@ -41,11 +39,6 @@ export function StudyRightPanel({
     setIsComplete(false);
     setStreak(0);
   }, []);
-
-  // Reset test when new questions arrive
-  useEffect(() => {
-    if (questions.length > 0) resetTest();
-  }, [questions.length, resetTest]);
 
   const currentQuestion = questions[currentIndex];
   const progress =
