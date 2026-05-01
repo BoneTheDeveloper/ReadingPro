@@ -127,6 +127,11 @@ src/
 - Return user-friendly error messages, log details server-side
 - Don't expose stack traces to client
 - Validate input early (upload-validator.ts pattern)
+- Use `log.error({ err: error }, message)` (Pino) for server-side logging
+- Use `Sentry.captureException(error, { tags: { route, method } })` in API routes
+- Use `Sentry.withServerActionInstrumentation()` to wrap server actions
+- Use `Sentry.addBreadcrumb()` to track AI/DB operations with category and level
+- Use `Sentry.startSpan({ name, op }, fn)` for performance monitoring of AI (`op: 'ai'`) and DB (`op: 'db'`) operations
 
 ---
 
@@ -170,4 +175,4 @@ import type { CEFRLevel } from "@/lib/cefr-utils"
 ---
 
 **Status:** Active
-**Last Updated:** 2026-04-27
+**Last Updated:** 2026-05-01
