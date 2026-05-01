@@ -58,6 +58,8 @@ Modern web-based language learning platform combining text/PDF content processin
 | ESLint | Code quality (eslint-config-next) |
 | Prisma | Database ORM & migrations |
 | PostCSS | Tailwind CSS processing |
+| Pino | Structured server-side logging |
+| Sentry (@sentry/nextjs) | Error tracking, performance monitoring, log forwarding |
 
 ---
 
@@ -125,11 +127,13 @@ Modern web-based language learning platform combining text/PDF content processin
 
 | Phase | Status | Scope |
 |-------|--------|-------|
-| **Phase 1** | **In Progress** | Text + PDF upload, CEFR detection, simplification, flashcards, progress |
-| **Phase 2** | Planned | Authentication (NextAuth.js v5), user profiles |
-| **Phase 3** | Planned | YouTube transcription (Whisper), scanned PDF OCR |
-| **Phase 4** | Planned | Advanced analytics, detailed progress, custom themes |
-| **Production** | Future | PostgreSQL migration, Vercel deployment |
+| **Phase 1** | **Completed** | Text + PDF upload, CEFR detection, simplification, flashcards, progress |
+| **Phase 2** | **Completed** | Sentry integration (errors, server actions), Pino logging |
+| **Phase 3** | **Completed** | Pino→Sentry log forwarding, `Sentry.startSpan()` performance monitoring for AI/DB ops |
+| **Phase 4** | **Completed** | Sentry source maps upload for production debugging |
+| **Phase 5** | Planned | YouTube transcription (Whisper), scanned PDF OCR |
+| **Phase 6** | Planned | Advanced analytics, detailed progress, custom themes |
+| **Phase 7** | Future | PostgreSQL migration, Vercel deployment |
 
 ---
 
@@ -137,11 +141,11 @@ Modern web-based language learning platform combining text/PDF content processin
 
 1. When to add authentication (blocking for multi-user)?
 2. PDF size limits for production (currently 10MB)
-3. YouTube video length constraints for Phase 3
+3. YouTube video length constraints for Phase 5
 4. PostgreSQL migration timing (from SQLite)
 5. Offline capability requirements
 
 ---
 
 **Status:** Active
-**Last Updated:** 2026-04-27
+**Last Updated:** 2026-05-01
