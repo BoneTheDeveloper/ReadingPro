@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { FileText, AlertCircle, Loader2 } from "lucide-react";
-import { cn } from "@/lib/shared/classname";
+import { cn } from "@/lib/shared/utils";
 import { validateTextContent } from "@/lib/validation/upload";
 
 interface TextInputAreaProps {

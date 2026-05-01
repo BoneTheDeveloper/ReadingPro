@@ -8,7 +8,7 @@ import {
   ArrowRight,
   Trophy,
 } from "lucide-react";
-import { cn } from "@/lib/shared/classname";
+import { cn } from "@/lib/shared/utils";
 import type { StudyStatus, QuestionData } from "./study-types";
 
 interface StudyRightPanelProps {
