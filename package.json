@@ -14,6 +14,7 @@
     "@hookform/resolvers": "^5.2.2",
     "@prisma/adapter-better-sqlite3": "^7.8.0",
     "@prisma/client": "^7.8.0",
+    "@sentry/nextjs": "^10.51.0",
     "@types/bcryptjs": "^2.4.6",
     "ai": "^6.0.168",
     "better-sqlite3": "^12.9.0",
