@@ -3,7 +3,6 @@
 import { ChevronLeft } from "lucide-react";
 
 interface TestHeaderProps {
-  passageId: string;
   currentIndex: number;
   totalQuestions: number;
   progress: number;
@@ -12,7 +11,6 @@ interface TestHeaderProps {
 }
 
 export function TestHeader({
-  passageId,
   currentIndex,
   totalQuestions,
   progress,
