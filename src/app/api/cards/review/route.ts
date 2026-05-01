@@ -23,7 +23,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const updatedReview = await updateCardReview(cardReviewId, qualityRating);
+    const updatedReview = await Sentry.startSpan({ name: 'db:card-review-update', op: 'db' }, async () => {
+      return updateCardReview(cardReviewId, qualityRating);
+    });
 
     return NextResponse.json({ success: true, data: updatedReview });
   } catch (error) {
