@@ -62,9 +62,9 @@ export function StudyPageClient() {
 
         <div className="overflow-y-auto">
           <StudyRightPanel
+            key={state.passage?.id ?? 'empty'}
             status={state.status}
             questions={state.questions}
-            passageContent={state.passage?.content ?? ''}
             passageTitle={state.passage?.title ?? ''}
             onReset={handleReset}
           />

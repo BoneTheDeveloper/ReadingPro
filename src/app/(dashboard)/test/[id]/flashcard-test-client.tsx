@@ -105,7 +105,6 @@ export function FlashcardTestClient({
   return (
     <div className="min-h-screen bg-neutral-50">
       <TestHeader
-        passageId={passage.id}
         currentIndex={currentIndex}
         totalQuestions={questions.length}
         progress={progress}
