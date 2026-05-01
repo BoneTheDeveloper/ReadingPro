@@ -9,9 +9,13 @@ export default withSentryConfig(nextConfig, {
   // For all available options, see:
   // https://www.npmjs.com/package/@sentry/webpack-plugin#options
 
-  org: "pham-dac-luc",
+  org: process.env.SENTRY_ORG || "pham-dac-luc",
 
-  project: "javascript-nextjs",
+
+  project: process.env.SENTRY_PROJECT || "javascript-nextjs",
+
+  // Auth token for uploading source maps (CI only, keep secret!)
+  authToken: process.env.SENTRY_AUTH_TOKEN,
 
   // Only print logs for uploading source maps in CI
   silent: !process.env.CI,
