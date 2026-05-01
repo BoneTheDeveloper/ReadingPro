@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import * as Sentry from '@sentry/nextjs';
 import { db } from '@/lib/db/client';
 import { createModuleLogger } from '@/lib/core/logger';
 
@@ -28,6 +29,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, data: session });
   } catch (error) {
     log.error({ err: error }, 'Failed to create session');
+    Sentry.captureException(error, {
+      tags: { route: 'api:study-session', method: 'POST' },
+    });
     return NextResponse.json(
       { error: 'Failed to create session' },
       { status: 500 }
@@ -56,6 +60,9 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ success: true, data: session });
   } catch (error) {
     log.error({ err: error }, 'Failed to update session');
+    Sentry.captureException(error, {
+      tags: { route: 'api:study-session', method: 'PATCH' },
+    });
     return NextResponse.json(
       { error: 'Failed to update session' },
       { status: 500 }
