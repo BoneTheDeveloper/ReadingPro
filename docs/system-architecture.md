@@ -228,6 +228,43 @@ app/api/progress/stats/route.ts
 
 ---
 
+## Monitoring & Observability
+
+### Sentry Integration (Phase 01-03)
+- **Package**: `@sentry/nextjs` integrated in server components
+- **Configuration**: `sentry.server.config.ts` initializes Sentry with `isSentryEnabled()` check
+- **Server Actions**: Wrapped with `Sentry.withServerActionInstrumentation()` in `analyze.ts`
+- **API Routes**: Errors captured via `Sentry.captureException()` in upload, study-session, and cards/review routes
+- **Breadcrumbs**: `Sentry.addBreadcrumb()` tracks AI calls and DB operations with category (`ai`, `db`, `upload`, `parse`) and level
+
+### Log Forwarding (Phase 03)
+- **Pino Integration**: `sentry.server.config.ts` uses `Sentry.pinoIntegration()` to forward Pino logs to Sentry
+- **Log Levels**:
+  - Error/Fatal Pino logs → Sentry errors (handled: true)
+  - Warn/Error/Fatal Pino logs → Sentry logs
+- **Logger**: `lib/core/logger.ts` uses Pino for structured logging with environment-based level (`LOG_LEVEL` env var, defaults: `debug` in dev, `info` in prod)
+
+### Performance Monitoring (Phase 03)
+- **Spans**: `Sentry.startSpan()` wraps key operations with `op: 'ai'` or `op: 'db'`:
+  - **AI operations**: `ai:cefr-detect`, `ai:content-simplify`, `ai:question-gen`
+  - **DB operations**: `db:user-lookup`, `db:passage-create`, `db:session-create`, `db:session-update`, `db:card-review-update`
+  - **File operations**: `file-write`, `pdf-parse`
+
+### Source Maps Upload (Phase 04)
+- **Purpose**: Enable readable stack traces in Sentry for production debugging
+- **Configuration**: `next.config.ts` with `withSentryConfig()`:
+  - `authToken`: `process.env.SENTRY_AUTH_TOKEN` (CI only, kept secret)
+  - `org`: `process.env.SENTRY_ORG || "pham-dac-luc"` (configurable via env)
+  - `project`: `process.env.SENTRY_PROJECT || "javascript-nextjs"` (configurable via env)
+  - `widenClientFileUpload`: `true` — uploads larger set of source maps for prettier traces
+  - `tunnelRoute`: `"/monitoring"` — routes browser requests through Next.js rewrite to circumvent ad-blockers
+  - `silent`: `!process.env.CI` — only print upload logs in CI
+  - `webpack.treeshake.removeDebugLogging`: `true` — tree-shake Sentry logger for smaller bundle
+  - `webpack.automaticVercelMonitors`: `true` — auto-instrument Vercel Cron Monitors
+- **CI Setup**: Set `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT`, and `CI=true` as CI secrets/environment variables (see `.env.example`)
+
+---
+
 ## Rendering Strategy
 
 | Page | Type | Data Fetching |
@@ -253,4 +290,4 @@ app/api/progress/stats/route.ts
 ---
 
 **Status:** Active
-**Last Updated:** 2026-04-27
+**Last Updated:** 2026-05-01
