@@ -64,40 +64,40 @@ export function UploadZone({
         {...getRootProps()}
         className={cn(
           "relative flex flex-col items-center justify-center",
-          "border-2 border-dashed rounded-2xl p-12 text-center",
+          "border-2 border-dashed rounded-xl p-12 text-center",
           "transition-all duration-200 cursor-pointer",
           "min-h-[300px]",
-          isDragActive && "border-primary-500 bg-primary-50 scale-[1.02]",
+          isDragActive && "border-primary bg-accent scale-[1.02]",
           !isDragActive &&
-            "border-neutral-300 hover:border-primary-400 hover:bg-neutral-50",
+            "border-border hover:border-primary/40 hover:bg-accent/40",
           (disabled || isProcessing) && "opacity-50 cursor-not-allowed",
         )}
       >
         <input {...getInputProps()} />
 
-        <div className="flex flex-col items-center gap-6">
+        <div className="flex flex-col items-center gap-5">
           <div
             className={cn(
-              "w-16 h-16 rounded-xl flex items-center justify-center transition-transform",
-              isDragActive ? "bg-primary-200 scale-110" : "bg-primary-100",
+              "w-14 h-14 rounded-xl flex items-center justify-center transition-transform",
+              isDragActive ? "bg-accent scale-110" : "bg-accent",
             )}
           >
             {isProcessing ? (
-              <Loader2 className="w-8 h-8 text-primary-600 animate-spin" />
+              <Loader2 className="w-7 h-7 text-primary animate-spin" />
             ) : (
-              <Upload className="w-8 h-8 text-primary-600" />
+              <Upload className="w-7 h-7 text-primary" />
             )}
           </div>
 
           <div>
-            <h3 className="text-xl font-semibold text-neutral-900 mb-2">
+            <h3 className="text-[18px] font-semibold text-foreground mb-2">
               {isDragActive
                 ? "Drop your file here"
                 : isProcessing
                   ? "Processing..."
                   : "Upload your content"}
             </h3>
-            <p className="text-neutral-500 text-sm">
+            <p className="text-muted-foreground text-[14px]">
               {isProcessing
                 ? "Please wait while we process your file"
                 : "Drag and drop, or click to browse"}
@@ -105,12 +105,12 @@ export function UploadZone({
           </div>
 
           {!isProcessing && (
-            <div className="flex items-center gap-4 text-sm text-neutral-500">
-              <span className="flex items-center gap-1">
+            <div className="flex items-center gap-4 text-[14px] text-muted-foreground">
+              <span className="flex items-center gap-1.5">
                 <FileText className="w-4 h-4" />
                 .txt, .pdf
               </span>
-              <span>•</span>
+              <span className="text-border">|</span>
               <span>Max {formatFileSize(10 * 1024 * 1024)}</span>
             </div>
           )}
@@ -118,7 +118,7 @@ export function UploadZone({
       </div>
 
       {error && (
-        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700 text-sm">
+        <div className="mt-4 p-3 bg-error-container border border-destructive/20 rounded-lg flex items-center gap-2 text-destructive text-[14px]">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
           <span>{error}</span>
         </div>
