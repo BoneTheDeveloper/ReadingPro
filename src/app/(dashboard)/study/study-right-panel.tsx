@@ -96,11 +96,15 @@ export function StudyRightPanel({
   // Empty state
   if (status !== "ready" || questions.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full min-h-[300px]">
+      <div className="bg-surface-container-low rounded-xl border border-outline-variant/30 p-12 flex items-center justify-center flex-1 min-h-[400px]">
         <div className="text-center">
-          <BookOpen className="w-12 h-12 text-neutral-300 mx-auto mb-3" />
-          <p className="text-neutral-400 text-lg font-medium">No test yet</p>
-          <p className="text-neutral-300 text-sm mt-1">
+          <div className="w-14 h-14 bg-accent rounded-xl flex items-center justify-center mx-auto mb-4">
+            <BookOpen className="w-7 h-7 text-on-surface-variant" />
+          </div>
+          <p className="text-on-surface-variant text-[16px] font-medium">
+            No test yet
+          </p>
+          <p className="text-on-surface-variant/60 text-[14px] mt-1">
             Upload content to start testing
           </p>
         </div>
@@ -114,50 +118,51 @@ export function StudyRightPanel({
     const accuracy = Math.round((correctCount / questions.length) * 100);
 
     return (
-      <div className="flex items-center justify-center h-full min-h-[300px] p-6">
+      <div className="bg-surface-container-low rounded-xl border border-outline-variant/30 p-12 flex items-center justify-center flex-1 min-h-[400px]">
         <div className="text-center max-w-sm">
-          <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Trophy className="w-8 h-8 text-primary-600" />
+          <div className="w-16 h-16 bg-accent rounded-2xl flex items-center justify-center mx-auto mb-5">
+            <Trophy className="w-8 h-8 text-primary" />
           </div>
-          <h2 className="text-xl font-bold text-neutral-900 mb-1">
+          <h2 className="text-[24px] font-semibold text-on-surface mb-1">
             Test Complete!
           </h2>
-          <p className="text-neutral-500 text-sm mb-6">{passageTitle}</p>
+          <p className="text-[14px] text-on-surface-variant mb-8">
+            {passageTitle}
+          </p>
 
-          <div className="flex justify-center gap-4 mb-6">
-            <div className="bg-white rounded-xl p-4 shadow-sm">
-              <div className="text-2xl font-bold text-green-600">
+          <div className="flex justify-center gap-4 mb-8">
+            <div className="bg-surface-container-lowest rounded-xl p-5 shadow-[0px_4px_20px_rgba(0,0,0,0.04)] min-w-[100px]">
+              <div className="text-[28px] font-bold text-green-600">
                 {correctCount}
               </div>
-              <div className="text-xs text-neutral-500">Correct</div>
+              <div className="text-[12px] text-on-surface-variant font-medium">
+                Correct
+              </div>
             </div>
-            <div className="bg-white rounded-xl p-4 shadow-sm">
-              <div className="text-2xl font-bold text-red-500">
+            <div className="bg-surface-container-lowest rounded-xl p-5 shadow-[0px_4px_20px_rgba(0,0,0,0.04)] min-w-[100px]">
+              <div className="text-[28px] font-bold text-destructive">
                 {questions.length - correctCount}
               </div>
-              <div className="text-xs text-neutral-500">Wrong</div>
+              <div className="text-[12px] text-on-surface-variant font-medium">
+                Wrong
+              </div>
             </div>
           </div>
 
-          <p className="text-neutral-700 mb-6">
-            {accuracy >= 80
-              ? "Excellent!"
-              : accuracy >= 60
-                ? "Good job!"
-                : "Keep practicing!"}{" "}
-            {accuracy}%
+          <p className="text-on-surface text-[16px] mb-8">
+            {accuracy >= 80 ? "Excellent!" : accuracy >= 60 ? "Good job!" : "Keep practicing!"} {accuracy}%
           </p>
 
-          <div className="flex gap-3">
+          <div className="flex gap-4">
             <button
               onClick={resetTest}
-              className="flex-1 px-4 py-2.5 bg-white border border-neutral-200 rounded-lg text-sm font-medium hover:bg-neutral-50"
+              className="flex-1 py-4 border border-outline-variant rounded-xl text-[14px] font-semibold text-on-surface hover:bg-surface-container-highest transition-all"
             >
               Try Again
             </button>
             <button
               onClick={onReset}
-              className="flex-1 px-4 py-2.5 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700"
+              className="flex-1 py-4 bg-primary text-on-primary rounded-xl text-[14px] font-semibold hover:opacity-90 transition-all"
             >
               New Passage
             </button>
@@ -169,169 +174,150 @@ export function StudyRightPanel({
 
   // Test state
   return (
-    <div className="p-6">
-      {/* Progress header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className="w-32 bg-neutral-100 rounded-full h-1.5">
-            <div
-              className="bg-primary-600 h-1.5 rounded-full transition-all"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-          <span className="text-xs text-neutral-500">
-            {currentIndex + 1} of {questions.length}
-          </span>
-        </div>
-        <div className="flex items-center gap-1.5 text-sm">
-          <span>🔥</span>
-          <span className="font-semibold">{streak}</span>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-2xl border border-neutral-200 p-5">
-        {/* Question header */}
-        <div className="flex items-center gap-2 mb-3">
-          <span className="flex items-center justify-center w-6 h-6 bg-primary-100 text-primary-700 rounded-full text-xs font-semibold">
-            {currentQuestion.number}
-          </span>
-          <span className="text-xs text-neutral-500 uppercase tracking-wide font-medium">
+    <div className="bg-surface-container-low rounded-xl border border-outline-variant/30 p-12 flex flex-col relative overflow-hidden flex-1">
+      <div className="w-full flex flex-col h-full">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <span className="text-[12px] font-semibold text-primary uppercase tracking-[0.02em]">
             Multiple Choice
           </span>
+          <span className="text-[12px] font-medium text-on-surface-variant">
+            Question {currentIndex + 1}/{questions.length}
+          </span>
         </div>
 
-        <h3 className="text-base font-semibold text-neutral-900 mb-4 leading-relaxed">
-          {currentQuestion.questionText}
-        </h3>
+        {/* Progress bar */}
+        <div className="w-full h-1.5 bg-surface-container-highest rounded-full mb-8">
+          <div
+            className="h-full bg-primary rounded-full transition-all"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
 
-        {/* Answer options */}
-        <div className="space-y-2.5 mb-4">
-          {currentQuestion.options.map((option) => {
-            const isSelected = selectedAnswer === option.id;
-            const isCorrect = option.id === currentQuestion.correctAnswer;
+        {/* Question */}
+        <div className="flex-1">
+          <h3 className="text-[20px] font-bold text-on-surface mb-8 text-left leading-snug">
+            {currentQuestion.questionText}
+          </h3>
 
-            return (
-              <button
-                key={option.id}
-                onClick={() => handleSelectAnswer(option.id)}
-                disabled={showFeedback}
-                className={cn(
-                  "w-full p-3.5 rounded-xl text-left transition-all border-2 flex items-center gap-3",
-                  !showFeedback &&
-                    "border-neutral-200 hover:border-primary-300 hover:bg-primary-50",
-                  !showFeedback &&
-                    isSelected &&
-                    "border-primary-500 bg-primary-50",
-                  showFeedback && isCorrect && "border-green-500 bg-green-50",
-                  showFeedback &&
-                    isSelected &&
-                    !isCorrect &&
-                    "border-red-500 bg-red-50",
-                  showFeedback &&
-                    !isSelected &&
-                    !isCorrect &&
-                    "border-neutral-200 opacity-50",
-                )}
-              >
-                <span
+          {/* Options */}
+          <div className="space-y-4">
+            {currentQuestion.options.map((option) => {
+              const isSelected = selectedAnswer === option.id;
+              const isCorrect = option.id === currentQuestion.correctAnswer;
+
+              return (
+                <button
+                  key={option.id}
+                  onClick={() => handleSelectAnswer(option.id)}
+                  disabled={showFeedback}
                   className={cn(
-                    "w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 text-xs font-semibold",
-                    !showFeedback && !isSelected && "border-neutral-300",
-                    !showFeedback &&
-                      isSelected &&
-                      "border-primary-500 bg-primary-500 text-white",
-                    showFeedback &&
-                      isCorrect &&
-                      "border-green-500 bg-green-500 text-white",
-                    showFeedback &&
-                      isSelected &&
-                      !isCorrect &&
-                      "border-red-500 bg-red-500 text-white",
+                    "w-full p-6 text-left rounded-xl flex items-start gap-4 group transition-all",
+                    !showFeedback && "bg-surface-container-lowest border border-outline-variant hover:border-primary hover:bg-primary/5",
+                    !showFeedback && isSelected && "bg-primary/5 border-2 border-primary",
+                    showFeedback && isCorrect && "bg-green-50/60 border border-green-400/50",
+                    showFeedback && isSelected && !isCorrect && "bg-red-50/60 border border-destructive/40",
+                    showFeedback && !isSelected && !isCorrect && "bg-surface-container-lowest border border-outline-variant/50 opacity-50",
                   )}
                 >
-                  {option.id}
-                </span>
-                <span className="flex-1 text-sm text-neutral-700">
-                  {option.text}
-                </span>
-                {showFeedback && isCorrect && (
-                  <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
-                )}
-                {showFeedback && isSelected && !isCorrect && (
-                  <XCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
-                )}
-              </button>
-            );
-          })}
+                  <span
+                    className={cn(
+                      "w-8 h-8 rounded-full flex items-center justify-center text-[14px] font-bold shrink-0 transition-all",
+                      !showFeedback && !isSelected && "border border-outline-variant group-hover:border-primary group-hover:text-primary",
+                      !showFeedback && isSelected && "bg-primary text-on-primary",
+                      showFeedback && isCorrect && "bg-green-500 text-white",
+                      showFeedback && isSelected && !isCorrect && "bg-destructive text-white",
+                    )}
+                  >
+                    {option.id}
+                  </span>
+                  <span className={cn(
+                    "text-[16px] pt-0.5",
+                    !showFeedback && isSelected && "font-semibold text-on-surface",
+                    !showFeedback && !isSelected && "text-on-surface",
+                    showFeedback && isCorrect && "text-on-surface",
+                    showFeedback && isSelected && !isCorrect && "text-on-surface",
+                  )}>
+                    {option.text}
+                  </span>
+                  {showFeedback && isCorrect && (
+                    <CheckCircle className="w-5 h-5 text-green-500 shrink-0 mt-0.5" />
+                  )}
+                  {showFeedback && isSelected && !isCorrect && (
+                    <XCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        {/* Submit / Feedback */}
-        {!showFeedback ? (
-          <button
-            onClick={handleCheckAnswer}
-            disabled={!selectedAnswer}
-            className={cn(
-              "w-full py-2.5 rounded-lg text-sm font-medium transition-all",
-              selectedAnswer
-                ? "bg-primary-600 text-white hover:bg-primary-700"
-                : "bg-neutral-200 text-neutral-400 cursor-not-allowed",
-            )}
-          >
-            Check Answer
-          </button>
-        ) : (
-          <div className="space-y-3">
-            <div
-              className={cn(
-                "p-3 rounded-xl text-sm",
-                answers[currentQuestion.id]
-                  ? "bg-green-50 border border-green-200"
-                  : "bg-red-50 border border-red-200",
-              )}
-            >
-              <div
-                className={cn(
-                  "flex items-center gap-1.5 mb-1 font-semibold",
-                  answers[currentQuestion.id]
-                    ? "text-green-700"
-                    : "text-red-700",
-                )}
-              >
-                {answers[currentQuestion.id] ? (
-                  <CheckCircle className="w-3.5 h-3.5" />
-                ) : (
-                  <XCircle className="w-3.5 h-3.5" />
-                )}
-                <span>
-                  {answers[currentQuestion.id] ? "Correct!" : "Not quite right"}
-                </span>
-              </div>
-              <p className="text-neutral-700">{currentQuestion.explanation}</p>
-            </div>
-
-            <div className="bg-white border border-neutral-200 rounded-lg p-2.5">
-              <p className="text-xs text-neutral-500 mb-0.5 font-medium">
-                Source (Line {currentQuestion.sourceLine}):
-              </p>
-              <p className="text-sm text-neutral-600 italic font-serif">
-                &ldquo;{currentQuestion.sourceText}&rdquo;
-              </p>
-            </div>
-
+        {/* Action buttons */}
+        <div className="mt-8 pt-6 border-t border-outline-variant/30 flex gap-4">
+          {!showFeedback ? (
             <button
-              onClick={handleNext}
-              className="w-full py-2.5 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 flex items-center justify-center gap-1.5"
-            >
-              {currentIndex < questions.length - 1 ? (
-                <>
-                  Next Question <ArrowRight className="w-3.5 h-3.5" />
-                </>
-              ) : (
-                "View Results"
+              onClick={handleCheckAnswer}
+              disabled={!selectedAnswer}
+              className={cn(
+                "flex-1 py-4 rounded-xl text-[14px] font-semibold transition-all",
+                selectedAnswer
+                  ? "bg-primary text-on-primary hover:opacity-90"
+                  : "bg-surface-container-highest text-on-surface-variant cursor-not-allowed",
               )}
+            >
+              Check Answer
             </button>
-          </div>
-        )}
+          ) : (
+            <>
+              <div className="flex-1 space-y-3">
+                <div className={cn(
+                  "p-4 rounded-xl text-[14px]",
+                  answers[currentQuestion.id]
+                    ? "bg-green-50/60 border border-green-200/50"
+                    : "bg-red-50/60 border border-destructive/20",
+                )}>
+                  <div className={cn(
+                    "flex items-center gap-1.5 mb-1 font-semibold",
+                    answers[currentQuestion.id] ? "text-green-700" : "text-destructive",
+                  )}>
+                    {answers[currentQuestion.id] ? (
+                      <CheckCircle className="w-4 h-4" />
+                    ) : (
+                      <XCircle className="w-4 h-4" />
+                    )}
+                    <span>{answers[currentQuestion.id] ? "Correct!" : "Not quite right"}</span>
+                  </div>
+                  <p className="text-on-surface/80">{currentQuestion.explanation}</p>
+                </div>
+
+                <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-lg p-3">
+                  <p className="text-[12px] text-on-surface-variant mb-0.5 font-medium">
+                    Source (Line {currentQuestion.sourceLine}):
+                  </p>
+                  <p className="text-[14px] text-on-surface-variant italic">
+                    &ldquo;{currentQuestion.sourceText}&rdquo;
+                  </p>
+                </div>
+
+                <button
+                  onClick={handleNext}
+                  className="w-full py-4 bg-primary text-on-primary rounded-xl text-[14px] font-semibold hover:opacity-90 transition-all flex items-center justify-center gap-1.5"
+                >
+                  {currentIndex < questions.length - 1 ? (
+                    <>
+                      Next Question <ArrowRight className="w-4 h-4" />
+                    </>
+                  ) : (
+                    "View Results"
+                  )}
+                </button>
+              </div>
+            </>
+          )}
+          <button className="p-4 border border-outline-variant rounded-xl hover:bg-surface-container-highest transition-all shrink-0 self-start">
+            <ArrowRight className="w-5 h-5 text-on-surface-variant" />
+          </button>
+        </div>
       </div>
     </div>
   );
