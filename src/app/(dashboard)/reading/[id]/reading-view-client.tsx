@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Clock, FileText, ChevronLeft, Play } from "lucide-react";
-import { cn } from "@/lib/shared/classname";
+import { cn } from "@/lib/shared/utils";
 import { calculateReadingTime } from "@/lib/shared/reading-utils";
 import { getCEFRColor, getCEFRLabel } from "@/lib/shared/cefr-utils";
 
