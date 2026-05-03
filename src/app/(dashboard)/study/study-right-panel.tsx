@@ -11,19 +11,102 @@ import {
 import { cn } from "@/lib/shared/utils";
 import type { StudyStatus, QuestionData } from "./study-types";
 
-interface StudyRightPanelProps {
+interface StudyStudioPanelProps {
   status: StudyStatus;
   questions: QuestionData[];
   passageTitle: string;
   onReset: () => void;
 }
 
-export function StudyRightPanel({
+type StudioTab = "quiz" | "generate";
+
+export function StudyStudioPanel({
   status,
   questions,
   passageTitle,
   onReset,
-}: StudyRightPanelProps) {
+}: StudyStudioPanelProps) {
+  const [activeTab, setActiveTab] = useState<StudioTab>("quiz");
+
+  return (
+    <div className="w-[380px] bg-surface-container-low border-l border-outline-variant/30 flex flex-col shrink-0">
+      {/* Panel header */}
+      <div className="p-4 border-b border-outline-variant/30 bg-surface-container-low flex justify-between items-center">
+        <h2 className="text-[12px] font-semibold text-on-surface-variant uppercase tracking-[0.05em]">
+          Studio
+        </h2>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex border-b border-outline-variant/30 bg-surface-container-low px-4 pt-2">
+        <button
+          onClick={() => setActiveTab("quiz")}
+          className={cn(
+            "px-4 py-2 text-[14px] font-semibold transition-colors",
+            activeTab === "quiz"
+              ? "border-b-2 border-primary text-primary"
+              : "text-on-surface-variant hover:text-primary",
+          )}
+        >
+          Q&A
+        </button>
+        <button
+          onClick={() => setActiveTab("generate")}
+          className={cn(
+            "px-4 py-2 text-[14px] font-semibold transition-colors",
+            activeTab === "generate"
+              ? "border-b-2 border-primary text-primary"
+              : "text-on-surface-variant hover:text-primary",
+          )}
+        >
+          Generate
+        </button>
+      </div>
+
+      {/* Tab content */}
+      <div className="p-6 overflow-y-auto panel-scroll flex-1 flex flex-col">
+        {activeTab === "quiz" ? (
+          <QuizContent
+            status={status}
+            questions={questions}
+            passageTitle={passageTitle}
+            onReset={onReset}
+          />
+        ) : (
+          <GenerateContent />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function GenerateContent() {
+  return (
+    <div className="bg-surface-container-lowest rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.04)] border border-outline-variant/20 p-6 flex-1 flex flex-col items-center justify-center min-h-[300px]">
+      <div className="w-14 h-14 bg-accent rounded-xl flex items-center justify-center mx-auto mb-4">
+        <BookOpen className="w-7 h-7 text-on-surface-variant" />
+      </div>
+      <p className="text-on-surface-variant text-[16px] font-medium text-center">
+        Question generation
+      </p>
+      <p className="text-on-surface-variant/60 text-[14px] mt-1 text-center">
+        Questions are auto-generated when you upload content
+      </p>
+    </div>
+  );
+}
+
+function QuizContent({
+  status,
+  questions,
+  passageTitle,
+  onReset,
+}: {
+  status: StudyStatus;
+  questions: QuestionData[];
+  passageTitle: string;
+  onReset: () => void;
+}) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
@@ -96,7 +179,7 @@ export function StudyRightPanel({
   // Empty state
   if (status !== "ready" || questions.length === 0) {
     return (
-      <div className="bg-surface-container-low rounded-xl border border-outline-variant/30 p-12 flex items-center justify-center flex-1 min-h-[400px]">
+      <div className="bg-surface-container-lowest rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.04)] border border-outline-variant/20 p-6 flex items-center justify-center flex-1 min-h-[300px]">
         <div className="text-center">
           <div className="w-14 h-14 bg-accent rounded-xl flex items-center justify-center mx-auto mb-4">
             <BookOpen className="w-7 h-7 text-on-surface-variant" />
@@ -118,7 +201,7 @@ export function StudyRightPanel({
     const accuracy = Math.round((correctCount / questions.length) * 100);
 
     return (
-      <div className="bg-surface-container-low rounded-xl border border-outline-variant/30 p-12 flex items-center justify-center flex-1 min-h-[400px]">
+      <div className="bg-surface-container-lowest rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.04)] border border-outline-variant/20 p-6 flex items-center justify-center flex-1 min-h-[300px]">
         <div className="text-center max-w-sm">
           <div className="w-16 h-16 bg-accent rounded-2xl flex items-center justify-center mx-auto mb-5">
             <Trophy className="w-8 h-8 text-primary" />
@@ -150,7 +233,12 @@ export function StudyRightPanel({
           </div>
 
           <p className="text-on-surface text-[16px] mb-8">
-            {accuracy >= 80 ? "Excellent!" : accuracy >= 60 ? "Good job!" : "Keep practicing!"} {accuracy}%
+            {accuracy >= 80
+              ? "Excellent!"
+              : accuracy >= 60
+                ? "Good job!"
+                : "Keep practicing!"}{" "}
+            {accuracy}%
           </p>
 
           <div className="flex gap-4">
@@ -174,7 +262,7 @@ export function StudyRightPanel({
 
   // Test state
   return (
-    <div className="bg-surface-container-low rounded-xl border border-outline-variant/30 p-12 flex flex-col relative overflow-hidden flex-1">
+    <div className="bg-surface-container-lowest rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.04)] border border-outline-variant/20 p-6 flex flex-col relative overflow-hidden flex-1">
       <div className="w-full flex flex-col h-full">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -212,32 +300,52 @@ export function StudyRightPanel({
                   onClick={() => handleSelectAnswer(option.id)}
                   disabled={showFeedback}
                   className={cn(
-                    "w-full p-6 text-left rounded-xl flex items-start gap-4 group transition-all",
-                    !showFeedback && "bg-surface-container-lowest border border-outline-variant hover:border-primary hover:bg-primary/5",
-                    !showFeedback && isSelected && "bg-primary/5 border-2 border-primary",
-                    showFeedback && isCorrect && "bg-green-50/60 border border-green-400/50",
-                    showFeedback && isSelected && !isCorrect && "bg-red-50/60 border border-destructive/40",
-                    showFeedback && !isSelected && !isCorrect && "bg-surface-container-lowest border border-outline-variant/50 opacity-50",
+                    "w-full p-4 text-left rounded-xl flex items-start gap-4 group transition-all",
+                    !showFeedback &&
+                      "bg-surface-container-lowest border border-outline-variant hover:border-primary hover:bg-primary/5",
+                    !showFeedback &&
+                      isSelected &&
+                      "bg-primary/5 border-2 border-primary",
+                    showFeedback &&
+                      isCorrect &&
+                      "bg-green-50/60 border border-green-400/50",
+                    showFeedback &&
+                      isSelected &&
+                      !isCorrect &&
+                      "bg-red-50/60 border border-destructive/40",
+                    showFeedback &&
+                      !isSelected &&
+                      !isCorrect &&
+                      "bg-surface-container-lowest border border-outline-variant/50 opacity-50",
                   )}
                 >
                   <span
                     className={cn(
                       "w-8 h-8 rounded-full flex items-center justify-center text-[14px] font-bold shrink-0 transition-all",
-                      !showFeedback && !isSelected && "border border-outline-variant group-hover:border-primary group-hover:text-primary",
-                      !showFeedback && isSelected && "bg-primary text-on-primary",
+                      !showFeedback &&
+                        !isSelected &&
+                        "border border-outline-variant group-hover:border-primary group-hover:text-primary",
+                      !showFeedback &&
+                        isSelected &&
+                        "bg-primary text-on-primary",
                       showFeedback && isCorrect && "bg-green-500 text-white",
-                      showFeedback && isSelected && !isCorrect && "bg-destructive text-white",
+                      showFeedback &&
+                        isSelected &&
+                        !isCorrect &&
+                        "bg-destructive text-white",
                     )}
                   >
                     {option.id}
                   </span>
-                  <span className={cn(
-                    "text-[16px] pt-0.5",
-                    !showFeedback && isSelected && "font-semibold text-on-surface",
-                    !showFeedback && !isSelected && "text-on-surface",
-                    showFeedback && isCorrect && "text-on-surface",
-                    showFeedback && isSelected && !isCorrect && "text-on-surface",
-                  )}>
+                  <span
+                    className={cn(
+                      "text-[16px] pt-0.5",
+                      !showFeedback && isSelected && "font-semibold text-on-surface",
+                      !showFeedback && !isSelected && "text-on-surface",
+                      showFeedback && isCorrect && "text-on-surface",
+                      showFeedback && isSelected && !isCorrect && "text-on-surface",
+                    )}
+                  >
                     {option.text}
                   </span>
                   {showFeedback && isCorrect && (
@@ -268,51 +376,57 @@ export function StudyRightPanel({
               Check Answer
             </button>
           ) : (
-            <>
-              <div className="flex-1 space-y-3">
-                <div className={cn(
+            <div className="flex-1 space-y-3">
+              <div
+                className={cn(
                   "p-4 rounded-xl text-[14px]",
                   answers[currentQuestion.id]
                     ? "bg-green-50/60 border border-green-200/50"
                     : "bg-red-50/60 border border-destructive/20",
-                )}>
-                  <div className={cn(
+                )}
+              >
+                <div
+                  className={cn(
                     "flex items-center gap-1.5 mb-1 font-semibold",
-                    answers[currentQuestion.id] ? "text-green-700" : "text-destructive",
-                  )}>
-                    {answers[currentQuestion.id] ? (
-                      <CheckCircle className="w-4 h-4" />
-                    ) : (
-                      <XCircle className="w-4 h-4" />
-                    )}
-                    <span>{answers[currentQuestion.id] ? "Correct!" : "Not quite right"}</span>
-                  </div>
-                  <p className="text-on-surface/80">{currentQuestion.explanation}</p>
-                </div>
-
-                <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-lg p-3">
-                  <p className="text-[12px] text-on-surface-variant mb-0.5 font-medium">
-                    Source (Line {currentQuestion.sourceLine}):
-                  </p>
-                  <p className="text-[14px] text-on-surface-variant italic">
-                    &ldquo;{currentQuestion.sourceText}&rdquo;
-                  </p>
-                </div>
-
-                <button
-                  onClick={handleNext}
-                  className="w-full py-4 bg-primary text-on-primary rounded-xl text-[14px] font-semibold hover:opacity-90 transition-all flex items-center justify-center gap-1.5"
-                >
-                  {currentIndex < questions.length - 1 ? (
-                    <>
-                      Next Question <ArrowRight className="w-4 h-4" />
-                    </>
-                  ) : (
-                    "View Results"
+                    answers[currentQuestion.id]
+                      ? "text-green-700"
+                      : "text-destructive",
                   )}
-                </button>
+                >
+                  {answers[currentQuestion.id] ? (
+                    <CheckCircle className="w-4 h-4" />
+                  ) : (
+                    <XCircle className="w-4 h-4" />
+                  )}
+                  <span>
+                    {answers[currentQuestion.id] ? "Correct!" : "Not quite right"}
+                  </span>
+                </div>
+                <p className="text-on-surface/80">{currentQuestion.explanation}</p>
               </div>
-            </>
+
+              <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-lg p-3">
+                <p className="text-[12px] text-on-surface-variant mb-0.5 font-medium">
+                  Source (Line {currentQuestion.sourceLine}):
+                </p>
+                <p className="text-[14px] text-on-surface-variant italic">
+                  &ldquo;{currentQuestion.sourceText}&rdquo;
+                </p>
+              </div>
+
+              <button
+                onClick={handleNext}
+                className="w-full py-4 bg-primary text-on-primary rounded-xl text-[14px] font-semibold hover:opacity-90 transition-all flex items-center justify-center gap-1.5"
+              >
+                {currentIndex < questions.length - 1 ? (
+                  <>
+                    Next Question <ArrowRight className="w-4 h-4" />
+                  </>
+                ) : (
+                  "View Results"
+                )}
+              </button>
+            </div>
           )}
           <button className="p-4 border border-outline-variant rounded-xl hover:bg-surface-container-highest transition-all shrink-0 self-start">
             <ArrowRight className="w-5 h-5 text-on-surface-variant" />
