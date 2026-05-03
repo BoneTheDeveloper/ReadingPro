@@ -10,6 +10,14 @@ export interface PassageData {
   wordCount: number;
 }
 
+export interface DocumentItem {
+  id: string;
+  title: string;
+  date: string;
+  level: string | null;
+  wordCount: number;
+}
+
 export interface QuestionOption {
   id: string;
   text: string;
@@ -29,7 +37,8 @@ export interface QuestionData {
 }
 
 export interface StudyState {
-  passage: PassageData | null;
+  passages: PassageData[];
+  activePassageId: string | null;
   questions: QuestionData[];
   status: StudyStatus;
   error: string | null;
