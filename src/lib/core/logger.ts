@@ -4,6 +4,15 @@ const isDev = process.env.NODE_ENV !== "production";
 
 const logger = pino({
   level: process.env.LOG_LEVEL ?? (isDev ? "debug" : "info"),
+  serializers: {
+    err: (error) => ({
+      message: error.message,
+      name: error.name,
+      code: error.code,
+      statusCode: error.statusCode,
+      stack: error.stack,
+    }),
+  },
   ...(isDev
     ? {
         transport: {
