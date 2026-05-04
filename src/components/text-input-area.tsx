@@ -71,7 +71,7 @@ export function TextInputArea({
             className={cn(
               "px-6 py-2 rounded-lg text-[14px] font-semibold transition-all",
               "bg-primary text-primary-foreground hover:bg-primary/90",
-              "shadow-[0px_2px_8px_rgba(16,43,138,0.2)]",
+              "shadow-[0px_2px_8px_rgba(59,92,228,0.2)]",
               "disabled:bg-border disabled:text-muted-foreground disabled:shadow-none disabled:cursor-not-allowed",
             )}
           >

@@ -1,17 +1,16 @@
 'use server';
 
 import { generateObject } from 'ai';
-import { google } from '@ai-sdk/google';
+import { openai } from '@ai-sdk/openai';
 import { headers } from 'next/headers';
 import * as Sentry from '@sentry/nextjs';
 import { db } from '@/lib/db/client';
 import { createModuleLogger } from '@/lib/core/logger';
-
-const log = createModuleLogger('actions:analyze');
-import { cefrAnalysisSchema } from '@/lib/ai/cefr-detector';
+import { cefrAnalysisSchema, getHeuristicCEFR } from '@/lib/ai/cefr-detector';
 import { simplifiedContentSchema } from '@/lib/ai/content-simplifier';
 import { questionGenerationSchema, type QuestionGenerationResult } from '@/lib/ai/question-generator';
-import { getHeuristicCEFR } from '@/lib/ai/cefr-detector';
+
+const log = createModuleLogger('actions:analyze');
 
 export async function analyzeContentAction(formData: FormData) {
   return Sentry.withServerActionInstrumentation('analyzeContent', {
@@ -34,14 +33,15 @@ export async function analyzeContentAction(formData: FormData) {
       Sentry.addBreadcrumb({ category: 'ai', message: 'Detecting CEFR level', level: 'info' });
       const { object: cefrResult } = await Sentry.startSpan({ name: 'ai:cefr-detect', op: 'ai' }, async () => {
         return generateObject({
-          model: google('gemini-1.5-flash'),
+          model: openai('gpt-4o-mini'),
           schema: cefrAnalysisSchema,
           prompt: `Analyze text and return CEFR level: ${truncatedText.slice(0, 2000)}`,
         });
       });
       originalLevel = cefrResult.level;
     } catch (error) {
-      log.warn('CEFR detection failed, using heuristic');
+      const err = error instanceof Error ? error : new Error(String(error));
+      log.warn({ err, title }, 'CEFR detection failed — falling back to heuristic');
       originalLevel = getHeuristicCEFR(text);
     }
 
@@ -55,7 +55,7 @@ export async function analyzeContentAction(formData: FormData) {
         Sentry.addBreadcrumb({ category: 'ai', message: `Simplifying to ${targetLevel}`, level: 'info' });
         const { object: simplified } = await Sentry.startSpan({ name: 'ai:content-simplify', op: 'ai' }, async () => {
           return generateObject({
-            model: google('gemini-1.5-flash'),
+            model: openai('gpt-4o-mini'),
             schema: simplifiedContentSchema,
             prompt: `Simplify to ${targetLevel}: ${truncatedText}`,
           });
@@ -63,7 +63,8 @@ export async function analyzeContentAction(formData: FormData) {
         simplifiedContent = simplified.simplifiedText;
         simplifiedLevel = targetLevel;
       } catch (error) {
-        log.warn('Simplification failed, using original');
+        const err = error instanceof Error ? error : new Error(String(error));
+        log.warn({ err, targetLevel, originalLevel }, 'Content simplification failed — serving original text');
       }
     }
 
@@ -75,14 +76,15 @@ export async function analyzeContentAction(formData: FormData) {
       Sentry.addBreadcrumb({ category: 'ai', message: 'Generating comprehension questions', level: 'info' });
       const { object: questionResult } = await Sentry.startSpan({ name: 'ai:question-gen', op: 'ai' }, async () => {
         return generateObject({
-          model: google('gemini-1.5-flash'),
+          model: openai('gpt-4o-mini'),
           schema: questionGenerationSchema,
           prompt: `Generate 5 comprehension questions for: ${contentToAnalyze.slice(0, 10000)}`,
         });
       });
       questions = questionResult.questions;
     } catch (error) {
-      log.warn('Question generation failed');
+      const err = error instanceof Error ? error : new Error(String(error));
+      log.warn({ err, contentLength: contentToAnalyze.length }, 'Question generation failed — passage saved without questions');
     }
 
     const userEmail = 'demo@example.com';
@@ -130,6 +132,9 @@ export async function analyzeContentAction(formData: FormData) {
 }
 
 export async function studyAnalyzeAction({ text, title }: { text: string; title: string }) {
+  const pipelineStart = Date.now();
+  log.info({ title, charCount: text.length, wordCount: text.split(/\s+/).length }, 'Analysis pipeline started');
+
   return Sentry.withServerActionInstrumentation('studyAnalyze', {
     headers: await headers(),
   }, async () => {
@@ -142,20 +147,27 @@ export async function studyAnalyzeAction({ text, title }: { text: string; title:
     let simplifiedContent: string | null = null;
     let simplifiedLevel: string | null = null;
 
+    // Step 1: CEFR detection
+    const step1Start = Date.now();
     try {
       Sentry.addBreadcrumb({ category: 'ai', message: 'Detecting CEFR level', level: 'info' });
       const { object: cefrResult } = await Sentry.startSpan({ name: 'ai:cefr-detect', op: 'ai' }, async () => {
         return generateObject({
-          model: google('gemini-1.5-flash'),
+          model: openai('gpt-4o-mini'),
           schema: cefrAnalysisSchema,
           prompt: `Analyze text and return CEFR level: ${truncatedText.slice(0, 2000)}`,
         });
       });
       originalLevel = cefrResult.level;
+      log.info({ level: originalLevel, ms: Date.now() - step1Start }, 'Step 1/4 — CEFR detection done');
     } catch (error) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      log.warn({ err, title, ms: Date.now() - step1Start }, 'Step 1/4 — CEFR detection failed, using heuristic');
       originalLevel = getHeuristicCEFR(text);
     }
 
+    // Step 2: Content simplification (skip for A1/A2)
+    const step2Start = Date.now();
     if (originalLevel && originalLevel !== 'A1' && originalLevel !== 'A2') {
       const targetMap: Record<string, string> = { C2: 'C1', C1: 'B2', B2: 'B1', B1: 'A2' };
       const targetLevel = targetMap[originalLevel] || 'B1';
@@ -163,35 +175,45 @@ export async function studyAnalyzeAction({ text, title }: { text: string; title:
         Sentry.addBreadcrumb({ category: 'ai', message: `Simplifying to ${targetLevel}`, level: 'info' });
         const { object: simplified } = await Sentry.startSpan({ name: 'ai:content-simplify', op: 'ai' }, async () => {
           return generateObject({
-            model: google('gemini-1.5-flash'),
+            model: openai('gpt-4o-mini'),
             schema: simplifiedContentSchema,
             prompt: `Simplify to ${targetLevel}: ${truncatedText}`,
           });
         });
         simplifiedContent = simplified.simplifiedText;
         simplifiedLevel = targetLevel;
+        log.info({ from: originalLevel, to: targetLevel, ms: Date.now() - step2Start }, 'Step 2/4 — Content simplification done');
       } catch (error) {
-        log.warn('Simplification failed');
+        const err = error instanceof Error ? error : new Error(String(error));
+        log.warn({ err, targetLevel, originalLevel, ms: Date.now() - step2Start }, 'Step 2/4 — Content simplification failed, using original');
       }
+    } else {
+      log.info({ level: originalLevel, ms: Date.now() - step2Start }, 'Step 2/4 — Skipped (A1/A2 text)');
     }
 
+    // Step 3: Question generation
     const contentToAnalyze = simplifiedContent || text;
+    const step3Start = Date.now();
     let questions: QuestionGenerationResult['questions'] = [];
 
     try {
       Sentry.addBreadcrumb({ category: 'ai', message: 'Generating comprehension questions', level: 'info' });
       const { object: questionResult } = await Sentry.startSpan({ name: 'ai:question-gen', op: 'ai' }, async () => {
         return generateObject({
-          model: google('gemini-1.5-flash'),
+          model: openai('gpt-4o-mini'),
           schema: questionGenerationSchema,
           prompt: `Generate 5 comprehension questions for: ${contentToAnalyze.slice(0, 10000)}`,
         });
       });
       questions = questionResult.questions;
+      log.info({ count: questions.length, ms: Date.now() - step3Start }, 'Step 3/4 — Question generation done');
     } catch (error) {
-      log.warn('Question generation failed');
+      const err = error instanceof Error ? error : new Error(String(error));
+      log.warn({ err, contentLength: contentToAnalyze.length, ms: Date.now() - step3Start }, 'Step 3/4 — Question generation failed');
     }
 
+    // Step 4: DB save
+    const step4Start = Date.now();
     const userEmail = 'demo@example.com';
     let user = await Sentry.startSpan({ name: 'db:user-lookup', op: 'db' }, async () => {
       let u = await db.user.findUnique({ where: { email: userEmail } });
@@ -227,6 +249,8 @@ export async function studyAnalyzeAction({ text, title }: { text: string; title:
         include: { questions: true },
       });
     });
+    log.info({ passageId: passage.id, questionCount: passage.questions.length, ms: Date.now() - step4Start }, 'Step 4/4 — DB save done');
+    log.info({ totalMs: Date.now() - pipelineStart }, 'Analysis pipeline complete');
 
     const passageData = {
       id: passage.id,
