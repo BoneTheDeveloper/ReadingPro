@@ -1,5 +1,5 @@
 import { generateObject } from 'ai';
-import { google } from '@ai-sdk/google';
+import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
 import { createModuleLogger } from '@/lib/core/logger';
 
@@ -19,7 +19,7 @@ export type CEFRAnalysis = z.infer<typeof cefrAnalysisSchema>;
 export async function detectCEFRLevel(text: string): Promise<CEFRAnalysis | null> {
   try {
     const { object } = await generateObject({
-      model: google('gemini-1.5-flash'),
+      model: openai('gpt-4o-mini'),
       schema: cefrAnalysisSchema,
       system: `You are an expert English language educator specializing in CEFR level assessment. Analyze vocabulary complexity, grammar structures, sentence variety, and cohesion.`,
       prompt: `Analyze the following text and determine its CEFR level:

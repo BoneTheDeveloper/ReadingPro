@@ -1,5 +1,5 @@
 import { generateObject } from 'ai';
-import { google } from '@ai-sdk/google';
+import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
 import { createModuleLogger } from '@/lib/core/logger';
 
@@ -41,7 +41,7 @@ export async function generateComprehensionQuestions(
       .join('\n');
 
     const { object } = await generateObject({
-      model: google('gemini-1.5-flash'),
+      model: openai('gpt-4o-mini'),
       schema: questionGenerationSchema,
       system: `You are an expert English language educator. Generate multiple-choice reading comprehension questions that: test understanding (not memory), have clear answers from text, include line number citations, range factual to inferential, cover different parts of passage. Wrong answers should be plausible but clearly incorrect.`,
       prompt: `Generate ${questionCount} reading comprehension questions for this passage:
