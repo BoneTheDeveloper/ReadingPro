@@ -1,5 +1,5 @@
 import { generateObject } from 'ai';
-import { google } from '@ai-sdk/google';
+import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
 import { createModuleLogger } from '@/lib/core/logger';
 
@@ -28,7 +28,7 @@ export async function simplifyContent(
 ): Promise<SimplifiedContent | null> {
   try {
     const { object } = await generateObject({
-      model: google('gemini-1.5-flash'),
+      model: openai('gpt-4o-mini'),
       schema: simplifiedContentSchema,
       system: `You are an expert English language educator. Simplify text to target CEFR level while maintaining core meaning, logical flow, and key terminology (with context). Rules: simplify vocabulary, break complex sentences, use shorter paragraphs, add transitions, explain difficult terms in parentheses.`,
       prompt: `Simplify this text to CEFR level ${targetLevel} (${levelDescriptions[targetLevel] || ''}):

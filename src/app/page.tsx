@@ -122,7 +122,7 @@ export default function Home() {
               <Link
                 key={feature.title}
                 href={feature.href}
-                className="group bg-surface-container-lowest rounded-xl p-8 flex flex-col shadow-[0px_4px_20px_rgba(0,0,0,0.04)] hover:shadow-[0px_10px_30px_rgba(46,68,161,0.08)] transition-shadow duration-200"
+                className="group bg-surface-container-lowest rounded-xl p-8 flex flex-col shadow-[0px_4px_20px_rgba(0,0,0,0.04)] hover:shadow-[0px_10px_30px_rgba(59,92,228,0.08)] transition-shadow duration-200"
               >
                 <div className="w-14 h-14 bg-accent rounded-xl flex items-center justify-center mb-5 group-hover:scale-105 transition-transform duration-200">
                   <feature.icon className="w-7 h-7 text-primary" />
