@@ -54,10 +54,16 @@ export function StudySourcesPanel({
   };
 
   return (
-    <div className="flex flex-col h-full overflow-hidden border border-[#e5e7eb]" style={{ background: '#ffffff', borderRadius: '12px' }}>
+    <div
+      className="flex flex-col h-full overflow-hidden border border-[#e5e7eb]"
+      style={{ background: "#ffffff", borderRadius: "12px" }}
+    >
       {/* Panel header */}
-      <div className="p-4 flex items-center justify-between" style={{ borderBottom: '1px solid #e5e7eb' }}>
-        <h2 className="text-[12px] font-semibold text-on-surface-variant uppercase tracking-[0.05em]">
+      <div
+        className="p-4 flex items-center justify-between"
+        style={{ borderBottom: "1px solid #e5e7eb" }}
+      >
+        <h2 className="text-[12px] font-semibold text-on-surface-variant uppercase tracking-wider">
           Sources
         </h2>
         {documents.length > 0 && (
@@ -203,10 +209,14 @@ export function StudySourcesPanel({
                 </div>
 
                 {/* Source icon */}
-                <div className={cn(
-                  "w-8 h-8 rounded-lg flex items-center justify-center shrink-0",
-                  isActive ? "bg-primary/10 text-primary" : "bg-surface-container text-on-surface-variant",
-                )}>
+                <div
+                  className={cn(
+                    "w-8 h-8 rounded-lg flex items-center justify-center shrink-0",
+                    isActive
+                      ? "bg-primary/10 text-primary"
+                      : "bg-surface-container text-on-surface-variant",
+                  )}
+                >
                   <FileText className="w-4 h-4" />
                 </div>
 
@@ -223,11 +233,13 @@ export function StudySourcesPanel({
             );
           })}
 
-          {!isUploading && filteredDocs.length === 0 && documents.length > 0 && (
-            <p className="text-[12px] text-on-surface-variant text-center py-4">
-              No matching sources
-            </p>
-          )}
+          {!isUploading &&
+            filteredDocs.length === 0 &&
+            documents.length > 0 && (
+              <p className="text-[12px] text-on-surface-variant text-center py-4">
+                No matching sources
+              </p>
+            )}
 
           {!isUploading && documents.length === 0 && (
             <div className="flex-1 flex items-center justify-center py-8">

@@ -13,9 +13,9 @@
 |---------|--------|
 | Text content upload | ✅ Done |
 | PDF upload + parsing (pdf-parse) | ✅ Done |
-| CEFR level detection (Gemini + heuristic fallback) | ✅ Done |
-| Content simplification (Gemini) | ✅ Done |
-| Question generation (5 MC/TF per passage) | ✅ Done |
+| CEFR level detection (OpenAI gpt-4o-mini + heuristic fallback) | ✅ Done |
+| Content simplification (OpenAI gpt-4o-mini) | ✅ Done |
+| Question generation (OpenAI gpt-4o-mini, 5 MC/TF per passage) | ✅ Done |
 | Flashcard test UI (`/test/[id]`) | ✅ Done |
 | SM-2 spaced repetition algorithm | ✅ Done |
 | Progress dashboard (`/progress`) | ✅ Done |
@@ -88,6 +88,7 @@
 | Resizable three-panel study workspace (`/study`) | ✅ Done |
 | react-resizable-panels v4 with localStorage persistence | ✅ Done |
 | Study server actions (simplify, generate questions, upload) | ✅ Done |
+| Right panel results section refactor | ✅ Done |
 | Extended analytics dashboard | 🔲 Planned |
 | Detailed progress per passage/question | 🔲 Planned |
 | Custom UI themes (user preference) | 🔲 Planned |
@@ -115,7 +116,7 @@
 | Phase 3 (Sentry Performance) | 100% ✅ |
 | Phase 4 (Sentry Source Maps) | 100% ✅ |
 | Phase 5 (Content Expansion) | 0% 🔲 |
-| Phase 6 (Advanced Features) | 50% 🔧 |
+| Phase 6 (Advanced Features) | 60% 🔧 |
 | Phase 7 (Production Deployment) | 0% 🔲 |
 
 ---
@@ -132,3 +133,6 @@
 
 **Status:** Active  
 **Last Updated:** 2026-05-06
+
+---
+**Note:** AI provider changed from Google Gemini to OpenAI gpt-4o-mini, duplicate text-route.ts removed, study page refactored as primary workspace
