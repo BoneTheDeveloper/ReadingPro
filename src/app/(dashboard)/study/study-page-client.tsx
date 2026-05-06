@@ -1,11 +1,15 @@
 'use client';
 
 import { useState, useCallback, useMemo } from 'react';
-import { studyAnalyzeAction } from '@/app/actions/analyze';
+import { Group, Panel, Separator, useDefaultLayout } from 'react-resizable-panels';
+import { studySimplifyAction } from '@/app/actions/study-simplify-action';
+import type { SimplifyResult } from '@/app/actions/study-simplify-action';
+import { studyGenerateQuestionsAction } from '@/app/actions/study-generate-questions-action';
 import type { StudyState, PassageData, QuestionData, DocumentItem } from './study-types';
 import { StudySourcesPanel } from './study-left-panel';
 import { StudyContentPanel } from './study-content-panel';
 import { StudyStudioPanel } from './study-right-panel';
+import { StudyUploadModal } from './study-upload-modal';
 
 const initialState: StudyState = {
   passages: [],
@@ -13,10 +17,19 @@ const initialState: StudyState = {
   questions: [],
   status: 'idle',
   error: null,
+  simplifying: false,
+  generatingQuestions: false,
+  uploadModalOpen: false,
 };
 
 export function StudyPageClient() {
   const [state, setState] = useState<StudyState>(initialState);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadingFileName, setUploadingFileName] = useState<string>("");
+  const { defaultLayout, onLayoutChanged } = useDefaultLayout({
+    id: "study-panels",
+    storage: typeof window !== 'undefined' ? localStorage : { getItem: () => null, setItem: () => {} },
+  });
 
   const activePassage = useMemo(
     () => state.passages.find((p) => p.id === state.activePassageId) ?? null,
@@ -25,48 +38,104 @@ export function StudyPageClient() {
 
   const documents: DocumentItem[] = useMemo(
     () =>
-      state.passages.map((p) => ({
-        id: p.id,
-        title: p.title,
-        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-        level: p.originalLevel,
-        wordCount: p.wordCount,
-      })),
+      [...state.passages]
+        .sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0))
+        .map((p) => ({
+          id: p.id,
+          title: p.title,
+          date: new Date(p.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+          level: p.originalLevel,
+          wordCount: p.wordCount,
+        })),
     [state.passages],
   );
 
-  const handleAnalyze = useCallback(async (text: string, title: string) => {
-    setState((prev) => ({ ...prev, status: 'analyzing', error: null }));
+  const handleUploadStart = useCallback((fileName: string) => {
+    setIsUploading(true);
+    setUploadingFileName(fileName);
+  }, []);
+
+  const handleUploadComplete = useCallback((passage: PassageData) => {
+    setState((prev) => ({
+      ...prev,
+      passages: [...prev.passages, passage],
+      activePassageId: passage.id,
+      uploadModalOpen: false,
+      status: 'ready',
+      questions: [],
+      error: null,
+    }));
+    setIsUploading(false);
+    setUploadingFileName("");
+  }, []);
+
+  const handleSimplify = useCallback(async () => {
+    const passageId = state.activePassageId;
+    if (!passageId) return;
+    setState((prev) => ({ ...prev, simplifying: true, error: null }));
     try {
-      const result = await studyAnalyzeAction({ text, title });
-      if (result.error) {
-        setState((prev) => ({ ...prev, status: 'error', error: result.error }));
+      const result = await studySimplifyAction({ passageId });
+      if ('error' in result) {
+        setState((prev) => ({ ...prev, simplifying: false, error: result.error }));
         return;
       }
-      const passage = result.passage as PassageData;
-      const questions = result.questions as QuestionData[];
-      setState({
-        passages: [...(state.passages ?? []), passage],
-        activePassageId: passage.id,
-        questions,
-        status: 'ready',
-        error: null,
-      });
+      if ('skipped' in result) return;
+      setState((prev) => ({
+        ...prev,
+        simplifying: false,
+        passages: prev.passages.map((p) =>
+          p.id === prev.activePassageId
+            ? { ...p, simplifiedContent: result.simplifiedContent, simplifiedLevel: result.simplifiedLevel }
+            : p,
+        ),
+      }));
     } catch (err) {
       setState((prev) => ({
         ...prev,
-        status: 'error',
-        error: err instanceof Error ? err.message : 'Analysis failed',
+        simplifying: false,
+        error: err instanceof Error ? err.message : 'Simplification failed',
       }));
     }
-  }, [state.passages]);
+  }, [state.activePassageId]);
+
+  const handleGenerateQuestions = useCallback(async () => {
+    const passageId = state.activePassageId;
+    if (!passageId) return;
+    if (state.questions.length > 0) {
+      const confirmed = window.confirm('Regenerating will replace existing questions and reset quiz progress. Continue?');
+      if (!confirmed) return;
+    }
+    setState((prev) => ({ ...prev, generatingQuestions: true, error: null }));
+    try {
+      const result = await studyGenerateQuestionsAction({ passageId });
+      if ('error' in result) {
+        setState((prev) => ({ ...prev, generatingQuestions: false, error: result.error }));
+        return;
+      }
+      setState((prev) => ({ ...prev, generatingQuestions: false, questions: result.questions }));
+    } catch (err) {
+      setState((prev) => ({
+        ...prev,
+        generatingQuestions: false,
+        error: err instanceof Error ? err.message : 'Question generation failed',
+      }));
+    }
+  }, [state.activePassageId, state.questions.length]);
 
   const handleSelectDocument = useCallback((id: string) => {
-    setState((prev) => ({ ...prev, activePassageId: id }));
+    setState((prev) => ({ ...prev, activePassageId: id, questions: [], status: 'ready' }));
   }, []);
 
   const handleReset = useCallback(() => {
     setState(initialState);
+  }, []);
+
+  const handleOpenUploadModal = useCallback(() => {
+    setState((prev) => ({ ...prev, uploadModalOpen: true }));
+  }, []);
+
+  const handleCloseUploadModal = useCallback(() => {
+    setState((prev) => ({ ...prev, uploadModalOpen: false }));
   }, []);
 
   return (
@@ -77,39 +146,66 @@ export function StudyPageClient() {
       </div>
 
       {/* Three-panel workspace */}
-      <div className="pt-16 flex flex-1 h-[calc(100dvh-4rem)] overflow-hidden">
-        {/* Left panel: Sources */}
-        <StudySourcesPanel
-          documents={documents}
-          activeId={state.activePassageId}
-          onSelect={handleSelectDocument}
-          onAddNew={() => setState((prev) => ({ ...prev, activePassageId: null }))}
-        />
+      <div className="pt-16 flex flex-1 h-[calc(100dvh-4rem)] overflow-hidden" style={{ background: '#f5f5f5', padding: '4rem 8px 8px 8px' }}>
+        <Group
+          id="study-panels"
+          orientation="horizontal"
+          defaultLayout={defaultLayout}
+          onLayoutChanged={onLayoutChanged}
+          className="flex flex-1 h-full"
+        >
+          <Panel id="sources" defaultSize="22%" minSize={220} maxSize="70%">
+            <StudySourcesPanel
+              documents={documents}
+              activeId={state.activePassageId}
+              onSelect={handleSelectDocument}
+              onOpenUploadModal={handleOpenUploadModal}
+              isUploading={isUploading}
+              uploadingFileName={uploadingFileName}
+            />
+          </Panel>
 
-        {/* Center panel: Content */}
-        <main className="flex-1 bg-surface-container-lowest flex flex-col min-w-0">
-          {/* Content header */}
-          <div className="p-4 border-b border-outline-variant/30 bg-surface-container-lowest">
-            <h2 className="text-[12px] font-semibold text-on-surface-variant uppercase tracking-[0.05em]">
-              Content
-            </h2>
-          </div>
-          <StudyContentPanel
-            status={activePassage ? state.status : state.status === 'ready' ? 'idle' : state.status}
-            passage={activePassage}
-            error={state.error}
-            onAnalyze={handleAnalyze}
-          />
-        </main>
+          <Separator className="w-[16px] cursor-col-resize" />
 
-        {/* Right panel: Studio */}
-        <StudyStudioPanel
-          status={activePassage ? state.status : 'idle'}
-          questions={activePassage && state.activePassageId ? state.questions : []}
-          passageTitle={activePassage?.title ?? ''}
-          onReset={handleReset}
-        />
+          <Panel id="content" minSize={220}>
+            <div className="h-full bg-white flex flex-col overflow-hidden rounded-xl border border-[#e5e7eb]">
+              <div className="p-4 border-b" style={{ borderColor: '#e5e7eb' }}>
+                <h2 className="text-[12px] font-semibold text-on-surface-variant uppercase tracking-[0.05em]">
+                  Content
+                </h2>
+              </div>
+              <StudyContentPanel
+                passage={activePassage}
+                error={state.error}
+                simplifying={state.simplifying}
+                onSimplify={handleSimplify}
+              />
+            </div>
+          </Panel>
+
+          <Separator className="w-[16px] cursor-col-resize" />
+
+          <Panel id="studio" defaultSize="26%" minSize={220} maxSize="70%">
+            <StudyStudioPanel
+              questions={state.activePassageId ? state.questions : []}
+              passageTitle={activePassage?.title ?? ''}
+              hasActivePassage={!!state.activePassageId}
+              generatingQuestions={state.generatingQuestions}
+              onGenerateQuestions={handleGenerateQuestions}
+              onReset={handleReset}
+              onSimplify={handleSimplify}
+            />
+          </Panel>
+        </Group>
       </div>
+
+      {/* Upload modal */}
+      <StudyUploadModal
+        isOpen={state.uploadModalOpen}
+        onClose={handleCloseUploadModal}
+        onUploadStart={handleUploadStart}
+        onUploadComplete={handleUploadComplete}
+      />
     </>
   );
 }
