@@ -14,6 +14,50 @@
 
 ---
 
+## [2026-05-06] — Resizable Study Panels
+
+### Added
+- `react-resizable-panels` v4 (12KB gzip, 0 deps) — draggable 10px gaps between study panels
+- `study-page-client.tsx` — rewired with `Group`, `Panel`, `Separator` + `useDefaultLayout` hook for localStorage persistence
+- SSR-safe localStorage accessor (`typeof window` check)
+- `page.tsx` — `export const dynamic = 'force-dynamic'` to prevent SSR hydration crash
+- Group `id="study-panels"` for debugging
+- Separator `group` class for `group-data-*` hover/active state selectors
+
+### Changed
+- `study-left-panel.tsx` — removed `width: '220px'`, `shrink-0` → `h-full`
+- `study-right-panel.tsx` — removed `width: '260px'` from all 3 render paths, `shrink-0` → `h-full`
+- Panel size config: Left 22% (min 220px, max 70%), Center auto (min 220px), Right 26% (min 220px, max 70%)
+
+---
+
+## [2026-05-06] — Resizable Study Panels
+
+### Added
+- `react-resizable-panels@4.11.0` — draggable three-panel layout for `/study` page
+- `src/app/(dashboard)/study/` — complete study workspace:
+  - `page.tsx` — server entry with `export const dynamic = 'force-dynamic'`
+  - `study-page-client.tsx` — `Group` + `Panel` + `Separator` from react-resizable-panels
+  - `study-left-panel.tsx` — sources sidebar (document list, upload trigger)
+  - `study-content-panel.tsx` — center passage reader with simplify toggle
+  - `study-right-panel.tsx` — studio panel (quiz, flashcards, summary cards)
+  - `study-quiz-content.tsx` — quiz question rendering + answer feedback
+  - `study-upload-modal.tsx` — file/text upload modal
+  - `study-types.ts` — shared types (StudyState, PassageData, QuestionData, etc.)
+  - `error.tsx` — error boundary
+- `src/app/actions/study-simplify-action.ts` — server action for content simplification
+- `src/app/actions/study-generate-questions-action.ts` — server action for question generation
+- `src/app/actions/study-upload-action.ts` — server action for upload + analysis
+- `src/app/actions/study-shared.ts` — shared helpers for study server actions
+- `useDefaultLayout` hook — panel sizes persist to localStorage via react-resizable-panels
+
+### Changed
+- Replaced fixed-width three-panel layout with `react-resizable-panels` v4
+- Panel constraints: min 220px, max 70%, 10px draggable gaps (Separator components)
+- Panel layout persisted per-user via `localStorage` key `study-panels`
+
+---
+
 ## [2026-05-01] — Phase 04: Sentry Source Maps Upload
 
 ### Added
@@ -103,4 +147,4 @@
 ---
 
 **Status:** Active  
-**Last Updated:** 2026-05-01
+**Last Updated:** 2026-05-06
