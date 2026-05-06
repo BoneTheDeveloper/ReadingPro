@@ -18,7 +18,7 @@ AI-powered English reading comprehension trainer. Users upload text/PDF, app det
 |-------|-----------|
 | Framework | Next.js 16.2.4 (App Router, RSC) |
 | UI | React 19.2.4, shadcn/ui (base-nova), Tailwind CSS 4 |
-| AI | Vercel AI SDK v6 + Google Gemini 1.5 Flash (`@ai-sdk/google`) |
+| AI | Vercel AI SDK v6 + OpenAI gpt-4o-mini (`@ai-sdk/openai`) |
 | Database | SQLite via `better-sqlite3` + Prisma ORM v7.8 |
 | PDF | `pdf-parse` v2.4.5 |
 | Validation | Zod v4 |
@@ -45,7 +45,6 @@ src/
 │   ├── api/
 │   │   ├── upload/route.ts               # POST: file upload + analyze
 │   │   ├── upload/text/route.ts          # POST: text content + analyze
-│   │   ├── upload/text-route.ts          # POST: duplicate text route (leftover)
 │   │   ├── cards/review/route.ts         # POST: submit SM-2 card review
 │   │   ├── cards/due/route.ts            # GET: fetch due cards
 │   │   ├── study-session/route.ts        # POST+PATCH: session CRUD
@@ -83,18 +82,18 @@ src/
 │   ├── text-input-area.tsx               # Text paste input
 │   └── progress-dashboard.tsx            # Progress stats display
 └── lib/
-    ├── db.ts                             # Prisma client singleton
-    ├── db-utils.ts                       # DB operations (SM-2, CRUD)
-    ├── utils.ts                          # cn() utility
-    ├── pdf-parser.ts                     # PDF text extraction
-    ├── upload-validator.ts               # File/text validation
-    ├── cefr-utils.ts                     # CEFR color/label helpers
-    ├── reading-utils.ts                  # Reading time, word highlighting
-    ├── sm2-algorithm.ts                  # SM-2 standalone implementation
+    ├── db/client.ts                     # Prisma client singleton
+    ├── db/utils.ts                      # DB operations (SM-2, CRUD)
+    ├── shared/utils.ts                  # cn() utility
+    ├── parsers/pdf.ts                   # PDF text extraction
+    ├── validation/upload.ts            # File/text validation
+    ├── shared/cefr-utils.ts             # CEFR color/label helpers
+    ├── shared/reading-utils.ts          # Reading time, word highlighting
+    ├── algorithms/sm2.ts                # SM-2 standalone implementation
     └── ai/
-        ├── cefr-detector.ts              # AI CEFR detection + heuristic fallback
-        ├── content-simplifier.ts         # AI text simplification
-        └── question-generator.ts         # AI question generation
+        ├── cefr-detector.ts            # AI CEFR detection + heuristic fallback
+        ├── content-simplifier.ts       # AI text simplification
+        └── question-generator.ts        # AI question generation
 ```
 
 ---
@@ -146,15 +145,15 @@ All routes use hardcoded `demo@example.com` user.
 ## Key Features Implemented
 
 1. Content upload (txt/pdf, max 10MB) or text paste (50-100k chars)
-2. AI CEFR detection (Gemini + heuristic fallback)
-3. AI content simplification (one CEFR level below)
-4. AI comprehension question generation (5 questions, MC/TF, with source citations)
+2. AI CEFR detection (OpenAI gpt-4o-mini + heuristic fallback)
+3. AI content simplification (OpenAI gpt-4o-mini, one CEFR level below)
+4. AI comprehension question generation (OpenAI gpt-4o-mini, 5 questions, MC/TF, with source citations)
 5. Reading view with original/simplified toggle
 6. Flashcard test mode (progress bar, streaks, keyboard shortcuts 1-4/Enter)
 7. SM-2 spaced repetition for review scheduling
 8. Progress dashboard (total, mature, due, today's reviews)
 9. Study session tracking
-10. Resizable study workspace — three-panel layout (sources, content, studio) with draggable dividers, persisted sizes via localStorage, 220px min / 70% max constraints
+10. Resizable study workspace — three-panel layout (sources, content, studio) with draggable dividers, persisted sizes via localStorage, 220px min / 70% max constraints (STUDY PAGE IS NOW PRIMARY WORKSPACE)
 
 ---
 
@@ -163,14 +162,14 @@ All routes use hardcoded `demo@example.com` user.
 | Variable | Purpose |
 |----------|---------|
 | `DATABASE_URL` | SQLite connection string (default: `file:./dev.db`) |
-| `GOOGLE_GENERATIVE_AI_API_KEY` | Gemini API key (required) |
+| `OPENAI_API_KEY` | OpenAI API key (required) |
 
 ---
 
 ## Known Issues
 
 - No authentication (hardcoded demo user)
-- Duplicate route: `api/upload/text-route.ts` duplicates `api/upload/text/route.ts`
+- Sentry example API route: `/api/sentry-example-api/route.ts`
 - Processing page is simulated (fake progress, auto-redirects after ~6s)
 - SM-2 calculation duplicated in `sm2-algorithm.ts` and `db-utils.ts`
 - No tests exist
@@ -182,3 +181,6 @@ All routes use hardcoded `demo@example.com` user.
 
 **Status:** Active
 **Last Updated:** 2026-05-06
+
+---
+**Current State:** AI provider changed to OpenAI gpt-4o-mini, duplicate text-route.ts removed, DB client moved to lib/db/client.ts, logger at lib/core/logger.ts, Sentry at lib/core/sentry.ts, study page is now primary three-panel workspace

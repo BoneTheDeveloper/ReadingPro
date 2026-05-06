@@ -1,14 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import {
-  X,
-  Upload,
-  Type,
-  Globe,
-  Search,
-  FileText,
-} from "lucide-react";
+import { X, Upload, Type, Globe, Search, FileText } from "lucide-react";
 import { useDropzone, type FileRejection } from "react-dropzone";
 import { validateFile, formatFileSize } from "@/lib/validation/upload";
 import { cn } from "@/lib/shared/utils";
@@ -114,10 +107,7 @@ export function StudyUploadModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div
-        className="absolute inset-0 bg-black/30"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-black/30" onClick={onClose} />
 
       <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 max-h-[90vh] flex flex-col">
         {/* Header */}
@@ -165,7 +155,7 @@ export function StudyUploadModal({
               <div
                 {...getRootProps()}
                 className={cn(
-                  "flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all min-h-[160px]",
+                  "flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all min-h-",
                 )}
                 style={{
                   borderColor: isDragActive ? blue.active : blue.border,
@@ -181,7 +171,9 @@ export function StudyUploadModal({
                   className="text-[14px] font-medium"
                   style={{ color: blue.primary }}
                 >
-                  {isDragActive ? "Drop your file here" : "or drop your files here"}
+                  {isDragActive
+                    ? "Drop your file here"
+                    : "or drop your files here"}
                 </p>
                 <p className="text-[12px] mt-1" style={{ color: blue.gray }}>
                   .txt, .pdf — max {formatFileSize(10 * 1024 * 1024)}
@@ -338,7 +330,7 @@ export function StudyUploadModal({
               <div
                 {...getRootProps()}
                 className={cn(
-                  "flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all min-h-[220px]",
+                  "flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all min-h-55",
                 )}
                 style={{
                   borderColor: isDragActive ? blue.active : blue.border,
@@ -353,10 +345,7 @@ export function StudyUploadModal({
                     borderColor: blue.border,
                   }}
                 >
-                  <Upload
-                    className="w-7 h-7"
-                    style={{ color: blue.primary }}
-                  />
+                  <Upload className="w-7 h-7" style={{ color: blue.primary }} />
                 </div>
                 <p
                   className="text-[16px] font-semibold mb-1"
@@ -400,10 +389,7 @@ export function StudyUploadModal({
                     backgroundColor: blue.surface,
                   }}
                 >
-                  <Type
-                    className="w-4 h-4"
-                    style={{ color: blue.primary }}
-                  />
+                  <Type className="w-4 h-4" style={{ color: blue.primary }} />
                   <h3
                     className="text-[13px] font-semibold"
                     style={{ color: blue.primary }}
@@ -418,7 +404,7 @@ export function StudyUploadModal({
                     setError(null);
                   }}
                   placeholder="Paste your English text content here..."
-                  className="w-full p-5 min-h-[180px] resize-none focus:outline-none text-[16px] leading-relaxed"
+                  className="w-full p-5 min-h-45 resize-none focus:outline-none text-[16px] leading-relaxed"
                   style={{
                     color: blue.heading,
                     backgroundColor: "#ffffff",
@@ -432,7 +418,12 @@ export function StudyUploadModal({
                   }}
                 >
                   <span className="text-[12px]" style={{ color: blue.gray }}>
-                    {pastedText.trim().split(/\s+/).filter((w) => w).length}{" "}
+                    {
+                      pastedText
+                        .trim()
+                        .split(/\s+/)
+                        .filter((w) => w).length
+                    }{" "}
                     words
                   </span>
                   <button

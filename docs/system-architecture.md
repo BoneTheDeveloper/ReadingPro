@@ -24,9 +24,10 @@
     ┌─────┴──┐  ┌────┴────┐  ┌─┴──┐     ┌──┴───┐
     ▼        ▼  ▼         ▼  ▼    ▼     ▼      ▼
 ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐
-│Gemini│ │pdf-  │ │ SM-2 │ │SQLite│
+│OpenAI│ │pdf-  │ │ SM-2 │ │SQLite│
 │  AI  │ │parse │ │Algo  │ │ DB   │
-│(1.5F)│ │      │ │      │ │      │
+│(gpt-4o│ │      │ │      │ │      │
+│mini) │ │      │ │      │ │      │
 └──────┘ └──────┘ └──────┘ └──────┘
 ```
 
@@ -203,17 +204,17 @@ User navigates to /progress → clicks "Study Now"
 ```
 app/actions/analyze.ts (orchestrator)
 ├── lib/ai/cefr-detector.ts
-│   └── ai SDK (@ai-sdk/google)
+│   └── ai SDK (@ai-sdk/openai)
 ├── lib/ai/content-simplifier.ts
 │   └── ai SDK
 ├── lib/ai/question-generator.ts
 │   └── ai SDK
 └── lib/db-utils.ts
-    └── lib/db.ts (Prisma client)
+    └── lib/db/client.ts (Prisma client)
 
 app/api/upload/route.ts
-├── lib/upload-validator.ts
-├── lib/pdf-parser.ts
+├── lib/validation/upload.ts
+├── lib/parsers/pdf.ts
 └── app/actions/analyze.ts
 
 app/api/cards/review/route.ts
@@ -283,7 +284,7 @@ app/api/progress/stats/route.ts
 ## Current Limitations
 
 1. **No authentication** - All data tied to `demo@example.com`
-2. **No shared dashboard layout** - No navigation, no auth guard
+2. **Dashboard layout exists** - Navigation sidebar now implemented
 3. **Simulated processing** - `/processing` fakes progress, doesn't poll real status
 4. **No real-time updates** - No WebSockets or SSE
 5. **SQLite only** - Single-file DB, no concurrent write handling beyond SQLite's built-in
@@ -293,3 +294,6 @@ app/api/progress/stats/route.ts
 
 **Status:** Active
 **Last Updated:** 2026-05-06
+
+---
+**Note:** AI provider changed to OpenAI gpt-4o-mini, DB client moved to lib/db/client.ts, duplicate text-route.ts removed, study page is now primary three-panel workspace

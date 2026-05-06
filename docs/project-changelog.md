@@ -14,47 +14,37 @@
 
 ---
 
-## [2026-05-06] — Resizable Study Panels
+## [2026-05-06] — AI Provider Switch & Study Page Refactor
 
 ### Added
-- `react-resizable-panels` v4 (12KB gzip, 0 deps) — draggable 10px gaps between study panels
-- `study-page-client.tsx` — rewired with `Group`, `Panel`, `Separator` + `useDefaultLayout` hook for localStorage persistence
-- SSR-safe localStorage accessor (`typeof window` check)
-- `page.tsx` — `export const dynamic = 'force-dynamic'` to prevent SSR hydration crash
-- Group `id="study-panels"` for debugging
-- Separator `group` class for `group-data-*` hover/active state selectors
+- `@ai-sdk/openai` integration with `openai('gpt-4o-mini')` model replacing Google Gemini
+- `api/sentry-example-api/route.ts` — Sentry test endpoint
+- Enhanced study page with three-panel resizable workspace (sources, content, studio)
+- `lib/db/client.ts` — centralized Prisma client singleton
+- `lib/core/logger.ts` — Pino structured logging with module-based loggers
+- `lib/core/sentry.ts` — Sentry client configuration with PII stripping
+- Removed duplicate `api/upload/text-route.ts` (only `api/upload/text/route.ts` remains)
 
 ### Changed
-- `study-left-panel.tsx` — removed `width: '220px'`, `shrink-0` → `h-full`
-- `study-right-panel.tsx` — removed `width: '260px'` from all 3 render paths, `shrink-0` → `h-full`
-- Panel size config: Left 22% (min 220px, max 70%), Center auto (min 220px), Right 26% (min 220px, max 70%)
+- All AI modules (`cefr-detector.ts`, `content-simplifier.ts`, `question-generator.ts`) switched from Google Gemini to OpenAI gpt-4o-mini
+- Study page elevated to primary workspace with modal upload, quiz, and results sections
+- DB client moved from `lib/db.ts` to `lib/db/client.ts`
+- File structure reorganized: `lib/db/utils.ts`, `lib/algorithms/sm2.ts`, `lib/parsers/pdf.ts`, `lib/validation/upload.ts`, `lib/shared/*`
+- Dashboard layout now includes navigation sidebar
 
 ---
 
-## [2026-05-06] — Resizable Study Panels
+## [2026-05-06] — Study Page Right Panel Refactor
 
 ### Added
-- `react-resizable-panels@4.11.0` — draggable three-panel layout for `/study` page
-- `src/app/(dashboard)/study/` — complete study workspace:
-  - `page.tsx` — server entry with `export const dynamic = 'force-dynamic'`
-  - `study-page-client.tsx` — `Group` + `Panel` + `Separator` from react-resizable-panels
-  - `study-left-panel.tsx` — sources sidebar (document list, upload trigger)
-  - `study-content-panel.tsx` — center passage reader with simplify toggle
-  - `study-right-panel.tsx` — studio panel (quiz, flashcards, summary cards)
-  - `study-quiz-content.tsx` — quiz question rendering + answer feedback
-  - `study-upload-modal.tsx` — file/text upload modal
-  - `study-types.ts` — shared types (StudyState, PassageData, QuestionData, etc.)
-  - `error.tsx` — error boundary
-- `src/app/actions/study-simplify-action.ts` — server action for content simplification
-- `src/app/actions/study-generate-questions-action.ts` — server action for question generation
-- `src/app/actions/study-upload-action.ts` — server action for upload + analysis
-- `src/app/actions/study-shared.ts` — shared helpers for study server actions
-- `useDefaultLayout` hook — panel sizes persist to localStorage via react-resizable-panels
+- Enhanced right panel with unified results section for quiz and study outcomes
+- Improved item type handling for consistent display across different result types
+- Better visual feedback for study session outcomes and quiz results
 
 ### Changed
-- Replaced fixed-width three-panel layout with `react-resizable-panels` v4
-- Panel constraints: min 220px, max 70%, 10px draggable gaps (Separator components)
-- Panel layout persisted per-user via `localStorage` key `study-panels`
+- Refactored `study-right-panel.tsx` to consolidate quiz and results rendering
+- Standardized data structures for consistent result display
+- Improved user experience with clearer result presentation
 
 ---
 
@@ -126,19 +116,19 @@
 - Text and PDF content upload (`/upload` page, `app/api/upload/route.ts`)
 - PDF text extraction via `pdf-parse`
 - CEFR level detection:
-  - Primary: Google Gemini 1.5 Flash via Vercel AI SDK (`@ai-sdk/google`)
+  - Primary: OpenAI gpt-4o-mini via Vercel AI SDK (`@ai-sdk/openai`)
   - Fallback: Heuristic (avg sentence length + complex word ratio)
 - Content simplification to one CEFR level below original
 - Comprehension question generation (5 MC/TF per passage with source citations)
 - Flashcard test UI (`/test/[id]`) with multiple choice and true/false questions
-- SM-2 spaced repetition algorithm (`lib/sm2-algorithm.ts`)
+- SM-2 spaced repetition algorithm (`lib/algorithms/sm2.ts`)
 - SQLite database via Prisma ORM (`prisma/schema.prisma`):
   - User, Passage, Question, CardReview, StudySession models
 - Progress dashboard (`/progress`) with stats and due cards
 - Study session tracking (start/complete with cards reviewed, accuracy rate)
-- `app/actions/analyze.ts` — orchestrstrator server action
-- `lib/db-utils.ts` — centralized DB operations
-- `lib/upload-validator.ts` — file validation (type, size 10MB, text length 50-100k)
+- `app/actions/analyze.ts` — orchestrator server action
+- `lib/db/utils.ts` — centralized DB operations
+- `lib/validation/upload.ts` — file validation (type, size 10MB, text length 50-100k)
 
 ### Fixed
 - Question options parsing (JSON string → typed array) in flashcard test page
