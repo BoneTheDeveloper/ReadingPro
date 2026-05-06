@@ -52,7 +52,7 @@ export function DashboardSidebar({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <div className="min-h-[100dvh] flex bg-background">
+    <div className="h-[100dvh] flex bg-background overflow-hidden">
       {/* Desktop icon sidebar */}
       <aside className="hidden lg:flex lg:flex-col lg:w-20 lg:fixed lg:inset-y-0 bg-surface-container-low border-r border-outline-variant/30 items-center py-8 z-40">
         <SidebarContent isActive={isActive} />
@@ -77,11 +77,11 @@ export function DashboardSidebar({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Main content area */}
-      <div className="flex-1 lg:ml-20 flex flex-col min-h-[100dvh]">
+      <div className="flex-1 lg:ml-20 flex flex-col h-[100dvh] overflow-hidden">
         {/* Top bar */}
         <TopBar onMenuToggle={() => setMobileOpen(true)} />
 
-        <main className="flex-1 flex flex-col">{children}</main>
+        <main className="flex-1 flex flex-col min-h-0 overflow-hidden">{children}</main>
       </div>
     </div>
   );

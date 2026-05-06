@@ -64,3 +64,23 @@ export interface StudioCard {
   iconName: string;
   disabled?: boolean;
 }
+
+export type ResultItemType = 'quiz' | 'summary';
+export type ResultItemStatus = 'running' | 'completed' | 'error';
+
+export interface ResultItemData {
+  questions?: QuestionData[];
+  simplifiedContent?: string | null;
+  simplifiedLevel?: string | null;
+}
+
+export interface ResultItem {
+  id: string;
+  type: ResultItemType;
+  passageId: string;
+  passageTitle: string;
+  status: ResultItemStatus;
+  startedAt: number;
+  completedAt?: number;
+  data?: ResultItemData;
+}
