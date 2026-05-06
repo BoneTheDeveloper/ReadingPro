@@ -21,6 +21,7 @@ Modern web-based language learning platform combining text/PDF content processin
 | **State Management** | React Context + useState | - | Simple, sufficient for MVP scope |
 | **Forms** | React Hook Form + Zod | 7.73.1 / 4.3.6 | Declared but not yet used in UI |
 | **File Upload** | react-dropzone | 15 | Drag-and-drop file upload |
+| **Panel Layout** | react-resizable-panels | 4.11.0 | Draggable resizable panels with localStorage persistence |
 
 ## Backend Stack
 
@@ -107,6 +108,7 @@ Modern web-based language learning platform combining text/PDF content processin
 - `@prisma/client` ^7.8.0, `@prisma/adapter-better-sqlite3` ^7.8.0, `better-sqlite3` ^12.9.0
 - `zod` ^4.3.6, `pdf-parse` ^2.4.5, `react-dropzone` ^15.0.0
 - `lucide-react` ^1.8.0, `class-variance-authority` ^0.7.1, `clsx` ^2.1.1, `tailwind-merge` ^3.5.0
+- `react-resizable-panels` ^4.11.0
 - `dotenv` ^17.4.2, `shadcn` ^4.4.0
 
 **Unused (declared but not used):**
@@ -148,4 +150,4 @@ Modern web-based language learning platform combining text/PDF content processin
 ---
 
 **Status:** Active
-**Last Updated:** 2026-05-01
+**Last Updated:** 2026-05-06

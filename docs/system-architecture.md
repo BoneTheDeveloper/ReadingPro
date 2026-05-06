@@ -274,7 +274,9 @@ app/api/progress/stats/route.ts
 | `/processing` | Client Component | None (simulated) |
 | `/reading/[id]` | Server → Client | Server fetches passage, passes to client |
 | `/test/[id]` | Server → Client | Server fetches passage+questions, passes to client |
+| `/study` | Client Component (`force-dynamic`) | Three resizable panels (react-resizable-panels), no server data fetch |
 | `/progress` | Server → Client | Server fetches stats, passes to client |
+| `/study` | Server → Client | `force-dynamic`, client uses react-resizable-panels Group/Panel/Separator |
 
 ---
 
@@ -290,4 +292,4 @@ app/api/progress/stats/route.ts
 ---
 
 **Status:** Active
-**Last Updated:** 2026-05-01
+**Last Updated:** 2026-05-06

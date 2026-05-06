@@ -80,11 +80,14 @@
 
 ---
 
-### Phase 6: Advanced Features (Planned)
-**Scope:** Advanced analytics, detailed progress, custom themes
+### Phase 6: Advanced Features (In Progress)
+**Scope:** Resizable study workspace, advanced analytics, detailed progress, custom themes
 
 | Feature | Status |
 |---------|--------|
+| Resizable three-panel study workspace (`/study`) | ✅ Done |
+| react-resizable-panels v4 with localStorage persistence | ✅ Done |
+| Study server actions (simplify, generate questions, upload) | ✅ Done |
 | Extended analytics dashboard | 🔲 Planned |
 | Detailed progress per passage/question | 🔲 Planned |
 | Custom UI themes (user preference) | 🔲 Planned |
@@ -112,7 +115,7 @@
 | Phase 3 (Sentry Performance) | 100% ✅ |
 | Phase 4 (Sentry Source Maps) | 100% ✅ |
 | Phase 5 (Content Expansion) | 0% 🔲 |
-| Phase 6 (Advanced Features) | 0% 🔲 |
+| Phase 6 (Advanced Features) | 50% 🔧 |
 | Phase 7 (Production Deployment) | 0% 🔲 |
 
 ---
@@ -128,4 +131,4 @@
 ---
 
 **Status:** Active  
-**Last Updated:** 2026-05-01
+**Last Updated:** 2026-05-06
