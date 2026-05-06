@@ -2,11 +2,12 @@ import { generateObject } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
 import { createModuleLogger } from '@/lib/core/logger';
+import { wrapUserText } from './prompt-utils';
 
 const log = createModuleLogger('ai:content-simplifier');
 
 export const simplifiedContentSchema = z.object({
-  simplifiedText: z.string(),
+  simplifiedText: z.string().max(15000, 'Simplified text must be under 15000 characters'),
   changes: z.array(z.string()),
   retainedKeyTerms: z.array(z.string()),
 });
@@ -33,7 +34,7 @@ export async function simplifyContent(
       system: `You are an expert English language educator. Simplify text to target CEFR level while maintaining core meaning, logical flow, and key terminology (with context). Rules: simplify vocabulary, break complex sentences, use shorter paragraphs, add transitions, explain difficult terms in parentheses.`,
       prompt: `Simplify this text to CEFR level ${targetLevel} (${levelDescriptions[targetLevel] || ''}):
 
-Original: ${text}`,
+${wrapUserText(text)}`,
     });
     return object;
   } catch (error) {
