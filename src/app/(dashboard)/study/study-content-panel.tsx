@@ -1,72 +1,60 @@
 "use client";
 
 import { useState } from "react";
-import { UploadZone } from "@/components/upload-zone";
-import { TextInputArea } from "@/components/text-input-area";
 import {
   Loader2,
   FileText,
   Clock,
-  RotateCcw,
   Languages,
   Bookmark,
   Share2,
-  Upload,
-  Type,
+  FileSearch,
 } from "lucide-react";
 import { cn } from "@/lib/shared/utils";
 import { calculateReadingTime } from "@/lib/shared/reading-utils";
 import { getCEFRColor, getCEFRLabel } from "@/lib/shared/cefr-utils";
-import type { StudyStatus, PassageData } from "./study-types";
+import type { PassageData } from "./study-types";
 
 interface StudyContentPanelProps {
-  status: StudyStatus;
   passage: PassageData | null;
   error: string | null;
-  onAnalyze: (text: string, title: string) => void;
+  simplifying: boolean;
+  onSimplify: () => void;
 }
 
 type ViewMode = "original" | "simplified";
-type InputMode = "file" | "text";
+
+const SKIP_SIMPLIFY_LEVELS = new Set(["A1", "A2"]);
 
 export function StudyContentPanel({
-  status,
   passage,
   error,
-  onAnalyze,
+  simplifying,
+  onSimplify,
 }: StudyContentPanelProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("simplified");
-  const [inputMode, setInputMode] = useState<InputMode>("file");
-  const [isUploading, setIsUploading] = useState(false);
 
-  const handleFileUpload = async (file: File) => {
-    setIsUploading(true);
-    try {
-      const text = await file.text();
-      if (text.split(/\s+/).filter((w) => w.length > 0).length < 50) {
-        throw new Error("Text too short (minimum 50 words)");
-      }
-      onAnalyze(text, file.name.replace(/\.(txt|pdf)$/, ""));
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Upload failed");
-    } finally {
-      setIsUploading(false);
-    }
-  };
+  // Empty state
+  if (!passage) {
+    return (
+      <div className="flex items-center justify-center h-full min-h-[400px]">
+        <div className="text-center">
+          <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center mx-auto mb-4">
+            <FileSearch className="w-6 h-6 text-on-surface-variant" />
+          </div>
+          <p className="text-[16px] font-medium text-on-surface">
+            Select a document from Sources
+          </p>
+          <p className="text-[14px] text-on-surface-variant mt-1">
+            Choose from your recent documents or add a new one
+          </p>
+        </div>
+      </div>
+    );
+  }
 
-  const handleTextSubmit = async (text: string) => {
-    setIsUploading(true);
-    try {
-      onAnalyze(text, "Pasted Text");
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  const isProcessing = isUploading || status === "analyzing";
-
-  // Analyzing state
-  if (status === "analyzing") {
+  // Simplifying loading state
+  if (simplifying) {
     return (
       <div className="flex items-center justify-center h-full min-h-[400px]">
         <div className="text-center">
@@ -74,7 +62,7 @@ export function StudyContentPanel({
             <Loader2 className="w-6 h-6 text-primary animate-spin" />
           </div>
           <p className="text-[16px] font-medium text-on-surface">
-            Analyzing content...
+            Simplifying content...
           </p>
           <p className="text-[14px] text-on-surface-variant mt-1">
             This may take a moment
@@ -85,27 +73,31 @@ export function StudyContentPanel({
   }
 
   // Reading state
-  if (status === "ready" && passage) {
-    const currentContent =
-      viewMode === "simplified" && passage.simplifiedContent
-        ? passage.simplifiedContent
-        : passage.content;
-    const currentLevel =
-      viewMode === "simplified"
-        ? passage.simplifiedLevel
-        : passage.originalLevel;
-    const level = (
-      currentLevel ||
-      passage.originalLevel ||
-      "B2"
-    ) as Parameters<typeof getCEFRColor>[0];
-    const readingTime = calculateReadingTime(passage.wordCount, level);
+  const currentContent =
+    viewMode === "simplified" && passage.simplifiedContent
+      ? passage.simplifiedContent
+      : passage.content;
+  const currentLevel =
+    viewMode === "simplified"
+      ? passage.simplifiedLevel
+      : passage.originalLevel;
+  const level = (
+    currentLevel ||
+    passage.originalLevel ||
+    "B2"
+  ) as Parameters<typeof getCEFRColor>[0];
+  const readingTime = calculateReadingTime(passage.wordCount, level);
+  const canSimplify =
+    !passage.simplifiedContent &&
+    passage.originalLevel &&
+    !SKIP_SIMPLIFY_LEVELS.has(passage.originalLevel);
 
-    return (
-      <div className="p-8 overflow-y-auto panel-scroll flex-1">
-        <div className="max-w-3xl mx-auto">
-          {/* Controls & Metadata */}
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
+  return (
+    <div className="p-8 overflow-y-auto panel-scroll flex-1">
+      <div className="max-w-3xl mx-auto">
+        {/* Controls & Metadata */}
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
+          <div className="flex items-center gap-2">
             {passage.simplifiedContent ? (
               <div className="flex bg-surface-container-high p-1 rounded-lg">
                 <button
@@ -131,111 +123,66 @@ export function StudyContentPanel({
                   Original ({passage.originalLevel})
                 </button>
               </div>
-            ) : (
-              <div />
-            )}
-            <div className="flex items-center gap-2">
-              <span
-                className={cn(
-                  "px-3 py-1 bg-primary/10 text-primary rounded-full text-[12px] font-medium border border-primary/20",
-                )}
+            ) : canSimplify ? (
+              <button
+                onClick={onSimplify}
+                disabled={simplifying}
+                className="flex items-center gap-2 px-4 py-1.5 rounded-lg bg-primary text-on-primary text-[12px] font-semibold hover:opacity-90 transition-all shadow-sm disabled:opacity-50"
               >
-                {getCEFRLabel(level)}
-              </span>
-              <div className="flex items-center gap-1 text-on-surface-variant text-[12px]">
-                <Clock className="w-3.5 h-3.5" />
-                {readingTime}
-              </div>
-              <div className="flex items-center gap-1 text-on-surface-variant text-[12px]">
-                <FileText className="w-3.5 h-3.5" />
-                {passage.wordCount} words
-              </div>
+                <Languages className="w-3.5 h-3.5" />
+                Simplify
+              </button>
+            ) : null}
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-[12px] font-medium border border-primary/20">
+              {getCEFRLabel(level)}
+            </span>
+            <div className="flex items-center gap-1 text-on-surface-variant text-[12px]">
+              <Clock className="w-3.5 h-3.5" />
+              {readingTime}
+            </div>
+            <div className="flex items-center gap-1 text-on-surface-variant text-[12px]">
+              <FileText className="w-3.5 h-3.5" />
+              {passage.wordCount} words
             </div>
           </div>
+        </div>
 
-          {/* Text content */}
-          <div className="max-w-none">
-            <h3 className="text-[24px] font-bold text-on-surface mb-4">
-              {passage.title}
-            </h3>
-            <div className="text-[18px] leading-[1.6] text-on-surface">
-              {currentContent.split("\n\n").map((paragraph, i) => (
-                <p key={i} className="mb-6 last:mb-0">
-                  {paragraph}
-                </p>
-              ))}
-            </div>
+        {/* Text content */}
+        <div className="max-w-none">
+          <h3 className="text-[24px] font-bold text-on-surface mb-4">
+            {passage.title}
+          </h3>
+          <div className="text-[18px] leading-[1.6] text-on-surface">
+            {currentContent.split("\n\n").map((paragraph, i) => (
+              <p key={i} className="mb-6 last:mb-0">
+                {paragraph}
+              </p>
+            ))}
           </div>
+        </div>
 
-          {/* Bottom actions */}
-          <div className="mt-8 pt-6 border-t border-outline-variant flex justify-between items-center">
-            <button className="flex items-center gap-2 text-primary text-[14px] font-semibold hover:underline">
-              <Languages className="w-4 h-4" />
-              Translate passage
+        {/* Bottom actions */}
+        <div className="mt-8 pt-6 border-t border-outline-variant flex justify-between items-center">
+          <button className="flex items-center gap-2 text-primary text-[14px] font-semibold hover:underline">
+            <Languages className="w-4 h-4" />
+            Translate passage
+          </button>
+          <div className="flex gap-4">
+            <button className="p-2 hover:bg-surface-container-high rounded-full transition-colors">
+              <Bookmark className="w-5 h-5 text-on-surface-variant" />
             </button>
-            <div className="flex gap-4">
-              <button className="p-2 hover:bg-surface-container-high rounded-full transition-colors">
-                <Bookmark className="w-5 h-5 text-on-surface-variant" />
-              </button>
-              <button className="p-2 hover:bg-surface-container-high rounded-full transition-colors">
-                <Share2 className="w-5 h-5 text-on-surface-variant" />
-              </button>
-            </div>
+            <button className="p-2 hover:bg-surface-container-high rounded-full transition-colors">
+              <Share2 className="w-5 h-5 text-on-surface-variant" />
+            </button>
           </div>
         </div>
-      </div>
-    );
-  }
 
-  // Upload state (idle or error)
-  return (
-    <div className="p-8 overflow-y-auto panel-scroll flex-1">
-      <div className="max-w-3xl mx-auto">
-        <div className="flex gap-3 mb-6">
-          <button
-            onClick={() => setInputMode("file")}
-            className={cn(
-              "px-4 py-2.5 rounded-lg text-[14px] font-semibold transition-all flex items-center gap-2",
-              inputMode === "file"
-                ? "bg-primary text-on-primary shadow-[0px_2px_8px_rgba(59,92,228,0.2)]"
-                : "bg-transparent text-on-surface-variant border border-outline-variant hover:text-on-surface",
-            )}
-          >
-            <Upload className="w-4 h-4" />
-            Upload File
-          </button>
-          <button
-            onClick={() => setInputMode("text")}
-            className={cn(
-              "px-4 py-2.5 rounded-lg text-[14px] font-semibold transition-all flex items-center gap-2",
-              inputMode === "text"
-                ? "bg-primary text-on-primary shadow-[0px_2px_8px_rgba(59,92,228,0.2)]"
-                : "bg-transparent text-on-surface-variant border border-outline-variant hover:text-on-surface",
-            )}
-          >
-            <Type className="w-4 h-4" />
-            Paste Text
-          </button>
-        </div>
-
-        {inputMode === "file" ? (
-          <UploadZone
-            onFileSelect={handleFileUpload}
-            isProcessing={isProcessing}
-            disabled={isProcessing}
-          />
-        ) : (
-          <TextInputArea
-            onSubmit={handleTextSubmit}
-            isProcessing={isProcessing}
-            disabled={isProcessing}
-          />
-        )}
-
+        {/* Error display */}
         {error && (
-          <div className="mt-4 p-3 bg-error-container border border-destructive/20 rounded-lg flex items-center gap-2 text-destructive text-[14px]">
-            <RotateCcw className="w-4 h-4 flex-shrink-0" />
-            <span>{error}</span>
+          <div className="mt-4 p-3 bg-error-container border border-destructive/20 rounded-lg text-destructive text-[14px]">
+            {error}
           </div>
         )}
       </div>

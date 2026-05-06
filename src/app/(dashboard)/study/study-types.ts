@@ -8,6 +8,7 @@ export interface PassageData {
   originalLevel: string | null;
   simplifiedLevel: string | null;
   wordCount: number;
+  createdAt: number;
 }
 
 export interface DocumentItem {
@@ -42,4 +43,24 @@ export interface StudyState {
   questions: QuestionData[];
   status: StudyStatus;
   error: string | null;
+  simplifying: boolean;
+  generatingQuestions: boolean;
+  uploadModalOpen: boolean;
+}
+
+export interface StudyUploadModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onUploadStart: (fileName: string) => void;
+  onUploadComplete: (passage: PassageData) => void;
+}
+
+export type StudioCardId = 'quiz' | 'flashcards' | 'summary' | 'mindmap' | 'translate';
+
+export interface StudioCard {
+  id: StudioCardId;
+  label: string;
+  description: string;
+  iconName: string;
+  disabled?: boolean;
 }
