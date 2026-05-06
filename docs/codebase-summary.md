@@ -23,6 +23,7 @@ AI-powered English reading comprehension trainer. Users upload text/PDF, app det
 | PDF | `pdf-parse` v2.4.5 |
 | Validation | Zod v4 |
 | File Upload | `react-dropzone` v15 |
+| Panel Layout | `react-resizable-panels` v4 |
 | Icons | Lucide React |
 | TypeScript | Strict mode |
 
@@ -37,6 +38,10 @@ src/
 │   ├── layout.tsx                        # Root layout (Geist fonts)
 │   ├── globals.css                       # Tailwind + shadcn theme
 │   ├── actions/analyze.ts                # Server action: full analysis pipeline
+│   │   study-simplify-action.ts           # Server action: simplify passage content
+│   │   study-generate-questions-action.ts # Server action: generate quiz questions
+│   │   study-upload-action.ts             # Server action: upload + analyze for study page
+│   │   study-shared.ts                    # Shared helpers for study actions
 │   ├── api/
 │   │   ├── upload/route.ts               # POST: file upload + analyze
 │   │   ├── upload/text/route.ts          # POST: text content + analyze
@@ -45,16 +50,33 @@ src/
 │   │   ├── cards/due/route.ts            # GET: fetch due cards
 │   │   ├── study-session/route.ts        # POST+PATCH: session CRUD
 │   │   └── progress/stats/route.ts       # GET: user progress stats
-│   └── (dashboard)/
-│       ├── upload/page.tsx               # File/text upload with toggle
-│       ├── progress/page.tsx             # Progress dashboard
-│       ├── processing/page.tsx           # Processing animation (simulated)
-│       ├── reading/[id]/
+│       └── (dashboard)/
+│           ├── upload/page.tsx               # File/text upload with toggle
+│           ├── progress/page.tsx             # Progress dashboard
+│           ├── processing/page.tsx           # Processing animation (simulated)
+│           ├── study/
+│           │   ├── page.tsx                  # Study page (force-dynamic)
+│           │   ├── study-page-client.tsx     # Resizable 3-panel layout (Group/Panel/Separator)
+│           │   ├── study-left-panel.tsx      # Sources panel
+│           │   ├── study-right-panel.tsx     # Studio panel (quiz, summary, default)
+│           │   ├── study-content-panel.tsx   # Center content panel
+│           │   └── study-studio-panel.tsx    # Studio panel wrapper
+│           ├── reading/[id]/
 │       │   ├── page.tsx                  # Reading view (server)
 │       │   └── reading-view-client.tsx   # Reading view (client)
 │       └── test/[id]/
 │           ├── page.tsx                  # Flashcard test (server)
 │           └── flashcard-test-client.tsx # Flashcard test (client)
+│   └── study/
+│       ├── page.tsx                      # Study workspace (force-dynamic)
+│       ├── study-page-client.tsx         # Three resizable panels (react-resizable-panels)
+│       ├── study-left-panel.tsx          # Sources sidebar (document list + upload trigger)
+│       ├── study-content-panel.tsx       # Center: passage reader with simplify toggle
+│       ├── study-right-panel.tsx         # Studio: quiz, flashcards, summary cards
+│       ├── study-quiz-content.tsx        # Quiz question rendering + answer feedback
+│       ├── study-upload-modal.tsx        # Upload modal (file/text)
+│       ├── study-types.ts                # Shared types (StudyState, PassageData, QuestionData)
+│       └── error.tsx                     # Error boundary
 ├── components/
 │   ├── ui/                               # shadcn/ui primitives
 │   ├── upload-zone.tsx                   # Drag-and-drop upload
@@ -116,6 +138,7 @@ All routes use hardcoded `demo@example.com` user.
 | `/processing` | Simulated processing animation |
 | `/reading/[id]` | Reading view with original/simplified toggle |
 | `/test/[id]` | Flashcard test with feedback and scoring |
+| `/study` | Three-panel resizable workspace (sources, content, studio) |
 | `/progress` | Progress dashboard with stats |
 
 ---
@@ -131,6 +154,7 @@ All routes use hardcoded `demo@example.com` user.
 7. SM-2 spaced repetition for review scheduling
 8. Progress dashboard (total, mature, due, today's reviews)
 9. Study session tracking
+10. Resizable study workspace — three-panel layout (sources, content, studio) with draggable dividers, persisted sizes via localStorage, 220px min / 70% max constraints
 
 ---
 
@@ -157,4 +181,4 @@ All routes use hardcoded `demo@example.com` user.
 ---
 
 **Status:** Active
-**Last Updated:** 2026-04-27
+**Last Updated:** 2026-05-06
