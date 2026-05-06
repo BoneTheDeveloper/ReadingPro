@@ -1,12 +1,11 @@
 'use server';
 
-import { generateObject } from 'ai';
-import { openai } from '@ai-sdk/openai';
 import { headers } from 'next/headers';
 import * as Sentry from '@sentry/nextjs';
 import { db } from '@/lib/db/client';
 import { createModuleLogger } from '@/lib/core/logger';
-import { cefrAnalysisSchema, getHeuristicCEFR } from '@/lib/ai/cefr-detector';
+import { detectCEFRLevel, getHeuristicCEFR } from '@/lib/ai/cefr-detector';
+import type { CEFRLevel } from '@/lib/shared/cefr-utils';
 import { getOrCreateDemoUser } from './study-shared';
 
 const log = createModuleLogger('actions:study-upload');
@@ -35,21 +34,16 @@ export async function studyUploadAction({ text, title }: { text: string; title: 
       return { error: 'Text too short (minimum 50 characters)' };
     }
 
-    const truncatedText = text.slice(0, 10000);
-    let originalLevel: string | null = null;
+    let originalLevel: CEFRLevel | null = null;
 
-    // CEFR detection
+    // CEFR detection via module function (includes system prompt + prompt injection protection)
     const detectStart = Date.now();
     try {
       Sentry.addBreadcrumb({ category: 'ai', message: 'Detecting CEFR level', level: 'info' });
-      const { object: cefrResult } = await Sentry.startSpan({ name: 'ai:cefr-detect', op: 'ai' }, async () => {
-        return generateObject({
-          model: openai('gpt-4o-mini'),
-          schema: cefrAnalysisSchema,
-          prompt: `Analyze text and return CEFR level: ${truncatedText.slice(0, 2000)}`,
-        });
+      const cefrResult = await Sentry.startSpan({ name: 'ai:cefr-detect', op: 'ai' }, async () => {
+        return detectCEFRLevel(text);
       });
-      originalLevel = cefrResult.level;
+      originalLevel = cefrResult?.level ?? null;
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error));
       log.warn({ err, title, ms: Date.now() - detectStart }, 'CEFR detection failed, using heuristic');
@@ -67,8 +61,8 @@ export async function studyUploadAction({ text, title }: { text: string; title: 
           userId: user.id,
           title,
           content: text,
-          originalLevel: originalLevel as 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2' | null,
-          wordCount: text.split(/\s+/).length,
+          originalLevel,
+          wordCount: text.split(/\s+/).filter(w => w.length > 0).length,
           sourceType: 'TEXT',
         },
       });

@@ -2,6 +2,8 @@ import { generateObject } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
 import { createModuleLogger } from '@/lib/core/logger';
+import { wrapUserText } from './prompt-utils';
+import type { CEFRLevel } from '@/lib/shared/cefr-utils';
 
 const log = createModuleLogger('ai:cefr-detector');
 
@@ -24,7 +26,7 @@ export async function detectCEFRLevel(text: string): Promise<CEFRAnalysis | null
       system: `You are an expert English language educator specializing in CEFR level assessment. Analyze vocabulary complexity, grammar structures, sentence variety, and cohesion.`,
       prompt: `Analyze the following text and determine its CEFR level:
 
-Text: ${text.slice(0, 2000)}`,
+${wrapUserText(text.slice(0, 2000))}`,
     });
     return object;
   } catch (error) {
@@ -33,7 +35,7 @@ Text: ${text.slice(0, 2000)}`,
   }
 }
 
-export function getHeuristicCEFR(text: string): string {
+export function getHeuristicCEFR(text: string): CEFRLevel {
   const words = text.split(/\s+/);
   const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
   const avgWordsPerSentence = words.length / Math.max(sentences.length, 1);
