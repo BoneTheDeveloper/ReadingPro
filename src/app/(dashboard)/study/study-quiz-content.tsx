@@ -81,17 +81,26 @@ export function QuizContent({
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [currentQuestion, showFeedback, selectedAnswer, handleSelectAnswer, handleCheckAnswer, handleNext]);
+  }, [
+    currentQuestion,
+    showFeedback,
+    selectedAnswer,
+    handleSelectAnswer,
+    handleCheckAnswer,
+    handleNext,
+  ]);
 
   // Empty state
   if (questions.length === 0) {
     return (
-      <div className="bg-surface-container-lowest rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.04)] border border-outline-variant/20 p-6 flex items-center justify-center flex-1 min-h-[300px]">
+      <div className="bg-surface-container-lowest rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.04)] border border-outline-variant/20 p-6 flex items-center justify-center flex-1 min-h-75">
         <div className="text-center">
           <div className="w-14 h-14 bg-accent rounded-xl flex items-center justify-center mx-auto mb-4">
             <BookOpen className="w-7 h-7 text-on-surface-variant" />
           </div>
-          <p className="text-on-surface-variant text-[16px] font-medium">No test yet</p>
+          <p className="text-on-surface-variant text-[16px] font-medium">
+            No test yet
+          </p>
           <p className="text-on-surface-variant/60 text-[14px] mt-1">
             Generate questions to start testing
           </p>
@@ -106,27 +115,44 @@ export function QuizContent({
     const accuracy = Math.round((correctCount / questions.length) * 100);
 
     return (
-      <div className="bg-surface-container-lowest rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.04)] border border-outline-variant/20 p-6 flex items-center justify-center flex-1 min-h-[300px]">
+      <div className="bg-surface-container-lowest rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.04)] border border-outline-variant/20 p-6 flex items-center justify-center flex-1 min-h-75">
         <div className="text-center max-w-sm">
           <div className="w-16 h-16 bg-accent rounded-2xl flex items-center justify-center mx-auto mb-5">
             <Trophy className="w-8 h-8 text-primary" />
           </div>
-          <h2 className="text-[24px] font-semibold text-on-surface mb-1">Test Complete!</h2>
-          <p className="text-[14px] text-on-surface-variant mb-8">{passageTitle}</p>
+          <h2 className="text-[24px] font-semibold text-on-surface mb-1">
+            Test Complete!
+          </h2>
+          <p className="text-[14px] text-on-surface-variant mb-8">
+            {passageTitle}
+          </p>
 
           <div className="flex justify-center gap-4 mb-8">
-            <div className="bg-surface-container-lowest rounded-xl p-5 shadow-[0px_4px_20px_rgba(0,0,0,0.04)] min-w-[100px]">
-              <div className="text-[28px] font-bold text-green-600">{correctCount}</div>
-              <div className="text-[12px] text-on-surface-variant font-medium">Correct</div>
+            <div className="bg-surface-container-lowest rounded-xl p-5 shadow-[0px_4px_20px_rgba(0,0,0,0.04)] min-w-25">
+              <div className="text-[28px] font-bold text-green-600">
+                {correctCount}
+              </div>
+              <div className="text-[12px] text-on-surface-variant font-medium">
+                Correct
+              </div>
             </div>
-            <div className="bg-surface-container-lowest rounded-xl p-5 shadow-[0px_4px_20px_rgba(0,0,0,0.04)] min-w-[100px]">
-              <div className="text-[28px] font-bold text-destructive">{questions.length - correctCount}</div>
-              <div className="text-[12px] text-on-surface-variant font-medium">Wrong</div>
+            <div className="bg-surface-container-lowest rounded-xl p-5 shadow-[0px_4px_20px_rgba(0,0,0,0.04)] min-w-25">
+              <div className="text-[28px] font-bold text-destructive">
+                {questions.length - correctCount}
+              </div>
+              <div className="text-[12px] text-on-surface-variant font-medium">
+                Wrong
+              </div>
             </div>
           </div>
 
           <p className="text-on-surface text-[16px] mb-8">
-            {accuracy >= 80 ? "Excellent!" : accuracy >= 60 ? "Good job!" : "Keep practicing!"} {accuracy}%
+            {accuracy >= 80
+              ? "Excellent!"
+              : accuracy >= 60
+                ? "Good job!"
+                : "Keep practicing!"}{" "}
+            {accuracy}%
           </p>
 
           <div className="flex gap-4">
@@ -154,7 +180,9 @@ export function QuizContent({
       <div className="w-full flex flex-col h-full">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
-          <span className="text-[12px] font-semibold text-primary uppercase tracking-[0.02em]">Multiple Choice</span>
+          <span className="text-[12px] font-semibold text-primary uppercase tracking-[0.02em]">
+            Multiple Choice
+          </span>
           <span className="text-[12px] font-medium text-on-surface-variant">
             Question {currentIndex + 1}/{questions.length}
           </span>
@@ -162,7 +190,10 @@ export function QuizContent({
 
         {/* Progress bar */}
         <div className="w-full h-1.5 bg-surface-container-highest rounded-full mb-8">
-          <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${progress}%` }} />
+          <div
+            className="h-full bg-primary rounded-full transition-all"
+            style={{ width: `${progress}%` }}
+          />
         </div>
 
         {/* Question */}
@@ -181,32 +212,62 @@ export function QuizContent({
                   disabled={showFeedback}
                   className={cn(
                     "w-full p-4 text-left rounded-xl flex items-start gap-4 group transition-all",
-                    !showFeedback && "bg-surface-container-lowest border border-outline-variant hover:border-primary hover:bg-primary/5",
-                    !showFeedback && isSelected && "bg-primary/5 border-2 border-primary",
-                    showFeedback && isCorrect && "bg-green-50/60 border border-green-400/50",
-                    showFeedback && isSelected && !isCorrect && "bg-red-50/60 border border-destructive/40",
-                    showFeedback && !isSelected && !isCorrect && "bg-surface-container-lowest border border-outline-variant/50 opacity-50",
+                    !showFeedback &&
+                      "bg-surface-container-lowest border border-outline-variant hover:border-primary hover:bg-primary/5",
+                    !showFeedback &&
+                      isSelected &&
+                      "bg-primary/5 border-2 border-primary",
+                    showFeedback &&
+                      isCorrect &&
+                      "bg-green-50/60 border border-green-400/50",
+                    showFeedback &&
+                      isSelected &&
+                      !isCorrect &&
+                      "bg-red-50/60 border border-destructive/40",
+                    showFeedback &&
+                      !isSelected &&
+                      !isCorrect &&
+                      "bg-surface-container-lowest border border-outline-variant/50 opacity-50",
                   )}
                 >
-                  <span className={cn(
-                    "w-8 h-8 rounded-full flex items-center justify-center text-[14px] font-bold shrink-0 transition-all",
-                    !showFeedback && !isSelected && "border border-outline-variant group-hover:border-primary group-hover:text-primary",
-                    !showFeedback && isSelected && "bg-primary text-on-primary",
-                    showFeedback && isCorrect && "bg-green-500 text-white",
-                    showFeedback && isSelected && !isCorrect && "bg-destructive text-white",
-                  )}>
+                  <span
+                    className={cn(
+                      "w-8 h-8 rounded-full flex items-center justify-center text-[14px] font-bold shrink-0 transition-all",
+                      !showFeedback &&
+                        !isSelected &&
+                        "border border-outline-variant group-hover:border-primary group-hover:text-primary",
+                      !showFeedback &&
+                        isSelected &&
+                        "bg-primary text-on-primary",
+                      showFeedback && isCorrect && "bg-green-500 text-white",
+                      showFeedback &&
+                        isSelected &&
+                        !isCorrect &&
+                        "bg-destructive text-white",
+                    )}
+                  >
                     {option.id}
                   </span>
-                  <span className={cn(
-                    "text-[16px] pt-0.5",
-                    (!showFeedback && isSelected) && "font-semibold text-on-surface",
-                    (!showFeedback && !isSelected) && "text-on-surface",
-                    (showFeedback && (isCorrect || (isSelected && !isCorrect))) && "text-on-surface",
-                  )}>
+                  <span
+                    className={cn(
+                      "text-[16px] pt-0.5",
+                      !showFeedback &&
+                        isSelected &&
+                        "font-semibold text-on-surface",
+                      !showFeedback && !isSelected && "text-on-surface",
+                      showFeedback &&
+                        (isCorrect || (isSelected && !isCorrect)) &&
+                        "text-on-surface",
+                    )}
+                  >
                     {option.text}
                   </span>
-                  {showFeedback && isCorrect && <CheckCircle className="w-5 h-5 text-green-500 shrink-0 mt-0.5" />}
-                  {showFeedback && isSelected && !isCorrect && <XCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />}
+                  {showFeedback && isCorrect && (
+                    <CheckCircle className="w-5 h-5 text-green-500 shrink-0 mt-0.5" />
+                  )}
+                  {showFeedback && isSelected && !isCorrect && (
+                    <XCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+                  )}
                 </button>
               );
             })}
@@ -230,28 +291,56 @@ export function QuizContent({
             </button>
           ) : (
             <div className="flex-1 space-y-3">
-              <div className={cn(
-                "p-4 rounded-xl text-[14px]",
-                answers[currentQuestion.id] ? "bg-green-50/60 border border-green-200/50" : "bg-red-50/60 border border-destructive/20",
-              )}>
-                <div className={cn(
-                  "flex items-center gap-1.5 mb-1 font-semibold",
-                  answers[currentQuestion.id] ? "text-green-700" : "text-destructive",
-                )}>
-                  {answers[currentQuestion.id] ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
-                  <span>{answers[currentQuestion.id] ? "Correct!" : "Not quite right"}</span>
+              <div
+                className={cn(
+                  "p-4 rounded-xl text-[14px]",
+                  answers[currentQuestion.id]
+                    ? "bg-green-50/60 border border-green-200/50"
+                    : "bg-red-50/60 border border-destructive/20",
+                )}
+              >
+                <div
+                  className={cn(
+                    "flex items-center gap-1.5 mb-1 font-semibold",
+                    answers[currentQuestion.id]
+                      ? "text-green-700"
+                      : "text-destructive",
+                  )}
+                >
+                  {answers[currentQuestion.id] ? (
+                    <CheckCircle className="w-4 h-4" />
+                  ) : (
+                    <XCircle className="w-4 h-4" />
+                  )}
+                  <span>
+                    {answers[currentQuestion.id]
+                      ? "Correct!"
+                      : "Not quite right"}
+                  </span>
                 </div>
-                <p className="text-on-surface/80">{currentQuestion.explanation}</p>
+                <p className="text-on-surface/80">
+                  {currentQuestion.explanation}
+                </p>
               </div>
               <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-lg p-3">
-                <p className="text-[12px] text-on-surface-variant mb-0.5 font-medium">Source (Line {currentQuestion.sourceLine}):</p>
-                <p className="text-[14px] text-on-surface-variant italic">&ldquo;{currentQuestion.sourceText}&rdquo;</p>
+                <p className="text-[12px] text-on-surface-variant mb-0.5 font-medium">
+                  Source (Line {currentQuestion.sourceLine}):
+                </p>
+                <p className="text-[14px] text-on-surface-variant italic">
+                  &ldquo;{currentQuestion.sourceText}&rdquo;
+                </p>
               </div>
               <button
                 onClick={handleNext}
                 className="w-full py-4 bg-primary text-on-primary rounded-xl text-[14px] font-semibold hover:opacity-90 transition-all flex items-center justify-center gap-1.5"
               >
-                {currentIndex < questions.length - 1 ? <>Next Question <ArrowRight className="w-4 h-4" /></> : "View Results"}
+                {currentIndex < questions.length - 1 ? (
+                  <>
+                    Next Question <ArrowRight className="w-4 h-4" />
+                  </>
+                ) : (
+                  "View Results"
+                )}
               </button>
             </div>
           )}

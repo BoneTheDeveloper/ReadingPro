@@ -37,11 +37,11 @@ Modern web-based language learning platform combining text/PDF content processin
 
 | Function | Technology | Notes |
 |----------|-----------|-------|
-| **AI Model** | Google Gemini 1.5 Flash | Via `@ai-sdk/google` + Vercel AI SDK v6 |
+| **AI Model** | OpenAI gpt-4o-mini | Via `@ai-sdk/openai` + Vercel AI SDK v6 |
 | **PDF Text Extraction** | pdf-parse | Client-side JS, no Python service needed |
-| **CEFR Detection** | Gemini + heuristic fallback | Heuristic uses avg sentence length + complex word ratio |
-| **Content Simplification** | Gemini | Simplifies to one CEFR level below |
-| **Question Generation** | Gemini | 5 MC/TF questions with source citations, Zod schema |
+| **CEFR Detection** | OpenAI gpt-4o-mini + heuristic fallback | Heuristic uses avg sentence length + complex word ratio |
+| **Content Simplification** | OpenAI gpt-4o-mini | Simplifies to one CEFR level below |
+| **Question Generation** | OpenAI gpt-4o-mini | 5 MC/TF questions with source citations, Zod schema |
 
 ## Flashcard System
 
@@ -104,7 +104,7 @@ Modern web-based language learning platform combining text/PDF content processin
 
 **Production:**
 - `next` 16.2.4, `react` 19.2.4, `react-dom` 19.2.4
-- `@ai-sdk/google` ^3.0.64, `ai` ^6.0.168
+- `@ai-sdk/openai` ^3.0.58, `ai` ^6.0.168
 - `@prisma/client` ^7.8.0, `@prisma/adapter-better-sqlite3` ^7.8.0, `better-sqlite3` ^12.9.0
 - `zod` ^4.3.6, `pdf-parse` ^2.4.5, `react-dropzone` ^15.0.0
 - `lucide-react` ^1.8.0, `class-variance-authority` ^0.7.1, `clsx` ^2.1.1, `tailwind-merge` ^3.5.0
@@ -121,7 +121,7 @@ Modern web-based language learning platform combining text/PDF content processin
 | Variable | Purpose | Default |
 |----------|---------|---------|
 | `DATABASE_URL` | SQLite connection | `file:./dev.db` |
-| `GOOGLE_GENERATIVE_AI_API_KEY` | Gemini API access | None (required) |
+| `OPENAI_API_KEY` | OpenAI API access | None (required) |
 
 ---
 
@@ -134,7 +134,7 @@ Modern web-based language learning platform combining text/PDF content processin
 | **Phase 3** | **Completed** | Pino→Sentry log forwarding, `Sentry.startSpan()` performance monitoring for AI/DB ops |
 | **Phase 4** | **Completed** | Sentry source maps upload for production debugging |
 | **Phase 5** | Planned | YouTube transcription (Whisper), scanned PDF OCR |
-| **Phase 6** | Planned | Advanced analytics, detailed progress, custom themes |
+| **Phase 6** | **In Progress** | Resizable study workspace, AI provider switch to OpenAI, advanced analytics |
 | **Phase 7** | Future | PostgreSQL migration, Vercel deployment |
 
 ---
@@ -151,3 +151,6 @@ Modern web-based language learning platform combining text/PDF content processin
 
 **Status:** Active
 **Last Updated:** 2026-05-06
+
+---
+**Note:** AI provider switched from Google Gemini to OpenAI gpt-4o-mini, `@ai-sdk/google` still in package.json but unused, `@ai-sdk/openai` now used in all AI modules
