@@ -1,12 +1,10 @@
 'use server';
 
-import { generateObject } from 'ai';
-import { openai } from '@ai-sdk/openai';
 import { headers } from 'next/headers';
 import * as Sentry from '@sentry/nextjs';
 import { db } from '@/lib/db/client';
 import { createModuleLogger } from '@/lib/core/logger';
-import { simplifiedContentSchema } from '@/lib/ai/content-simplifier';
+import { simplifyContent } from '@/lib/ai/content-simplifier';
 
 const log = createModuleLogger('actions:study-simplify');
 
@@ -42,16 +40,16 @@ export async function studySimplifyAction({ passageId }: { passageId: string }):
 
     const targetLevel = TARGET_LEVEL_MAP[originalLevel] || 'B1';
 
-    // Simplify content
+    // Simplify content via module function (includes system prompt + prompt injection protection)
     try {
       Sentry.addBreadcrumb({ category: 'ai', message: `Simplifying to ${targetLevel}`, level: 'info' });
-      const { object: simplified } = await Sentry.startSpan({ name: 'ai:content-simplify', op: 'ai' }, async () => {
-        return generateObject({
-          model: openai('gpt-4o-mini'),
-          schema: simplifiedContentSchema,
-          prompt: `Simplify to ${targetLevel}: ${passage.content.slice(0, 10000)}`,
-        });
+      const simplified = await Sentry.startSpan({ name: 'ai:content-simplify', op: 'ai' }, async () => {
+        return simplifyContent(passage.content.slice(0, 10000), targetLevel);
       });
+
+      if (!simplified) {
+        return { error: 'Simplification failed — try again' };
+      }
 
       // Update passage in DB
       await Sentry.startSpan({ name: 'db:passage-update', op: 'db' }, async () => {
