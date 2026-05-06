@@ -1,0 +1,79 @@
+'use server';
+
+import { generateObject } from 'ai';
+import { openai } from '@ai-sdk/openai';
+import { headers } from 'next/headers';
+import * as Sentry from '@sentry/nextjs';
+import { db } from '@/lib/db/client';
+import { createModuleLogger } from '@/lib/core/logger';
+import { simplifiedContentSchema } from '@/lib/ai/content-simplifier';
+
+const log = createModuleLogger('actions:study-simplify');
+
+const TARGET_LEVEL_MAP: Record<string, string> = {
+  C2: 'C1', C1: 'B2', B2: 'B1', B1: 'A2',
+};
+
+export type SimplifyResult =
+  | { simplifiedContent: string; simplifiedLevel: string }
+  | { skipped: true; reason: string }
+  | { error: string };
+
+export async function studySimplifyAction({ passageId }: { passageId: string }): Promise<SimplifyResult> {
+  const start = Date.now();
+  log.info({ passageId }, 'Simplify action started');
+
+  return Sentry.withServerActionInstrumentation('studySimplify', {
+    headers: await headers(),
+  }, async () => {
+    // Fetch passage
+    const passage = await Sentry.startSpan({ name: 'db:passage-fetch', op: 'db' }, async () => {
+      return db.passage.findUnique({ where: { id: passageId } });
+    });
+
+    if (!passage) {
+      return { error: 'Passage not found' };
+    }
+
+    const { originalLevel } = passage;
+    if (!originalLevel || originalLevel === 'A1' || originalLevel === 'A2') {
+      return { skipped: true as const, reason: `Text is already ${originalLevel || 'unknown'} level` };
+    }
+
+    const targetLevel = TARGET_LEVEL_MAP[originalLevel] || 'B1';
+
+    // Simplify content
+    try {
+      Sentry.addBreadcrumb({ category: 'ai', message: `Simplifying to ${targetLevel}`, level: 'info' });
+      const { object: simplified } = await Sentry.startSpan({ name: 'ai:content-simplify', op: 'ai' }, async () => {
+        return generateObject({
+          model: openai('gpt-4o-mini'),
+          schema: simplifiedContentSchema,
+          prompt: `Simplify to ${targetLevel}: ${passage.content.slice(0, 10000)}`,
+        });
+      });
+
+      // Update passage in DB
+      await Sentry.startSpan({ name: 'db:passage-update', op: 'db' }, async () => {
+        return db.passage.update({
+          where: { id: passageId },
+          data: {
+            simplifiedContent: simplified.simplifiedText,
+            simplifiedLevel: targetLevel as 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2',
+          },
+        });
+      });
+
+      log.info({ passageId, from: originalLevel, to: targetLevel, totalMs: Date.now() - start }, 'Simplify action complete');
+
+      return {
+        simplifiedContent: simplified.simplifiedText,
+        simplifiedLevel: targetLevel,
+      };
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      log.warn({ err, passageId, targetLevel, totalMs: Date.now() - start }, 'Simplification failed');
+      return { error: 'Simplification failed — try again' };
+    }
+  });
+}
