@@ -38,7 +38,7 @@ An integrated pipeline: **Upload → Analyze → Read → Test → Retain**
 | Feature | Status | Description |
 |---------|--------|-------------|
 | Content Upload | Done | File upload (txt/pdf, max 10MB) or text paste (50-100k chars) |
-| CEFR Detection | Done | AI (Gemini) + heuristic fallback, 6 levels (A1-C2) |
+| CEFR Detection | Done | AI (OpenAI gpt-4o-mini) + heuristic fallback, 6 levels (A1-C2) |
 | Content Simplification | Done | AI simplification to one CEFR level below |
 | Question Generation | Done | 5 MC/TF questions per passage with source citations |
 | Reading View | Done | Original/simplified toggle, reading time, word count |
@@ -92,7 +92,7 @@ Progress Dashboard → Due Cards → Review Session → Session Summary
 
 | Phase | Scope | Status |
 |-------|-------|--------|
-| **MVP** | Upload, CEFR detect, simplify, questions, flashcards, progress | **In Progress** |
+| **MVP** | Upload, CEFR detect, simplify, questions, flashcards, progress | **Done** |
 | **Phase 2** | Authentication, user profiles, shared dashboard layout | Planned |
 | **Phase 3** | YouTube input, scanned PDF OCR, multi-language | Planned |
 | **Phase 4** | Advanced analytics, export, collaboration features | Planned |
@@ -126,4 +126,4 @@ Progress Dashboard → Due Cards → Review Session → Session Summary
 ---
 
 **Status:** Active
-**Last Updated:** 2026-04-27
+**Last Updated:** 2026-05-06

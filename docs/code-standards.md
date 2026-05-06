@@ -100,7 +100,7 @@ src/
 - Use `prisma.config.ts` for configuration
 - Run migrations via `npx prisma migrate dev`
 - DB operations centralized in `lib/db-utils.ts`
-- Prisma client singleton in `lib/db.ts`
+- Prisma client singleton in `lib/db/client.ts`
 
 ### Query Patterns
 
@@ -114,7 +114,7 @@ src/
 ## AI Integration
 
 - All AI calls go through Vercel AI SDK (`ai` package)
-- Model: Google Gemini 1.5 Flash via `@ai-sdk/google`
+- Model: OpenAI gpt-4o-mini via `@ai-sdk/openai`
 - Zod schemas for structured AI output
 - Fallback heuristics when AI fails (e.g., CEFR detector)
 - AI modules in `lib/ai/` — one file per capability
@@ -142,11 +142,11 @@ src/
 import { useState } from "react"
 
 // 2. External packages
-import { prisma } from "@/lib/db"
+import { prisma } from "@/lib/db/client"
 
 // 3. Internal modules
 import { cn } from "@/lib/utils"
-import { calculateSM2Interval } from "@/lib/sm2-algorithm"
+import { calculateSM2Interval } from "@/lib/algorithms/sm2"
 
 // 4. Types
 import type { CEFRLevel } from "@/lib/cefr-utils"
@@ -175,4 +175,4 @@ import type { CEFRLevel } from "@/lib/cefr-utils"
 ---
 
 **Status:** Active
-**Last Updated:** 2026-05-01
+**Last Updated:** 2026-05-06
