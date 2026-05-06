@@ -2,6 +2,7 @@ import { generateObject } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
 import { createModuleLogger } from '@/lib/core/logger';
+import { wrapUserText } from './prompt-utils';
 
 const log = createModuleLogger('ai:question-generator');
 
@@ -12,14 +13,17 @@ export const questionOptionSchema = z.object({
 
 export const generatedQuestionSchema = z.object({
   questionText: z.string(),
-  options: z.array(questionOptionSchema),
+  options: z.array(questionOptionSchema).min(2),
   correctAnswer: z.string(),
   sourceText: z.string(),
   sourceLine: z.number().int().positive(),
   explanation: z.string(),
   questionType: z.enum(['MULTIPLE_CHOICE', 'TRUE_FALSE']),
   difficulty: z.number().int().min(1).max(5),
-});
+}).refine(
+  (q) => q.options.some(opt => opt.id === q.correctAnswer),
+  { message: 'correctAnswer must match one of the option ids', path: ['correctAnswer'] }
+);
 
 export const questionGenerationSchema = z.object({
   questions: z.array(generatedQuestionSchema),
@@ -46,7 +50,7 @@ export async function generateComprehensionQuestions(
       system: `You are an expert English language educator. Generate multiple-choice reading comprehension questions that: test understanding (not memory), have clear answers from text, include line number citations, range factual to inferential, cover different parts of passage. Wrong answers should be plausible but clearly incorrect.`,
       prompt: `Generate ${questionCount} reading comprehension questions for this passage:
 
-${numberedPassage}`,
+${wrapUserText(numberedPassage)}`,
     });
 
     return object;
@@ -56,9 +60,3 @@ ${numberedPassage}`,
   }
 }
 
-export function parsePassageLines(passage: string): Array<{ lineNumber: number; text: string }> {
-  return passage
-    .split('\n')
-    .map((line, i) => ({ lineNumber: i + 1, text: line.trim() }))
-    .filter(line => line.text.length > 0);
-}

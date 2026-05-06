@@ -1,12 +1,10 @@
 'use server';
 
-import { generateObject } from 'ai';
-import { openai } from '@ai-sdk/openai';
 import { headers } from 'next/headers';
 import * as Sentry from '@sentry/nextjs';
 import { db } from '@/lib/db/client';
 import { createModuleLogger } from '@/lib/core/logger';
-import { questionGenerationSchema, type QuestionGenerationResult } from '@/lib/ai/question-generator';
+import { generateComprehensionQuestions, type GeneratedQuestion } from '@/lib/ai/question-generator';
 
 const log = createModuleLogger('actions:study-generate-questions');
 
@@ -34,17 +32,17 @@ export async function studyGenerateQuestionsAction({ passageId }: { passageId: s
 
     const contentToAnalyze = passage.simplifiedContent || passage.content;
 
-    // Generate questions
-    let questions: QuestionGenerationResult['questions'] = [];
+    // Generate questions via module function (includes system prompt + prompt injection protection)
+    let questions: GeneratedQuestion[] = [];
     try {
       Sentry.addBreadcrumb({ category: 'ai', message: 'Generating comprehension questions', level: 'info' });
-      const { object: questionResult } = await Sentry.startSpan({ name: 'ai:question-gen', op: 'ai' }, async () => {
-        return generateObject({
-          model: openai('gpt-4o-mini'),
-          schema: questionGenerationSchema,
-          prompt: `Generate 5 comprehension questions for: ${contentToAnalyze.slice(0, 10000)}`,
-        });
+      const questionResult = await Sentry.startSpan({ name: 'ai:question-gen', op: 'ai' }, async () => {
+        return generateComprehensionQuestions(contentToAnalyze.slice(0, 10000), 5);
       });
+
+      if (!questionResult) {
+        return { error: 'Question generation failed — try again' };
+      }
       questions = questionResult.questions;
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error));
@@ -56,22 +54,24 @@ export async function studyGenerateQuestionsAction({ passageId }: { passageId: s
       return { error: 'No questions generated — try again' };
     }
 
-    // Replace existing questions
+    // Replace existing questions (atomic)
     await Sentry.startSpan({ name: 'db:questions-replace', op: 'db' }, async () => {
-      await db.question.deleteMany({ where: { passageId } });
-      await db.question.createMany({
-        data: questions.map(q => ({
-          passageId,
-          questionText: q.questionText,
-          options: JSON.stringify(q.options),
-          correctOption: q.correctAnswer,
-          sourceText: q.sourceText,
-          sourceLine: q.sourceLine,
-          explanation: q.explanation,
-          questionType: q.questionType,
-          difficulty: q.difficulty,
-        })),
-      });
+      await db.$transaction([
+        db.question.deleteMany({ where: { passageId } }),
+        db.question.createMany({
+          data: questions.map(q => ({
+            passageId,
+            questionText: q.questionText,
+            options: JSON.stringify(q.options),
+            correctOption: q.correctAnswer,
+            sourceText: q.sourceText,
+            sourceLine: q.sourceLine,
+            explanation: q.explanation,
+            questionType: q.questionType,
+            difficulty: q.difficulty,
+          })),
+        }),
+      ]);
     });
 
     const questionsData = questions.map((q, i) => ({
