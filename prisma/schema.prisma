@@ -13,22 +13,25 @@ datasource db {
 }
 
 // ============================================
-// USER MODEL
+// USER PROFILE MODEL
 // ============================================
-model User {
-  id              String    @id @default(cuid())
-  email           String    @unique
-  name            String?
-  supabaseAuthId  String?   @unique
-  targetLevel     CEFRLevel @default(B2)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+model UserProfile {
+  id               String    @id
+  email            String?   @unique
+  name             String?
+  avatarUrl        String?
+  bio              String?
+  targetLevel      CEFRLevel @default(B2)
+  tier             Tier      @default(FREE)
+  stripeCustomerId String?   @unique
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   passages      Passage[]
   studySessions StudySession[]
   cardReviews   CardReview[]
 
-  @@map("users")
+  @@map("profiles")
 }
 
 // ============================================
@@ -48,7 +51,7 @@ model Passage {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
   questions Question[]
 
   @@index([userId])
@@ -95,8 +98,8 @@ model CardReview {
   nextReviewDate DateTime  @default(now())
   reviewedAt     DateTime  @default(now())
 
-  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  user     UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([questionId, userId])
   @@index([userId, nextReviewDate])
@@ -120,7 +123,7 @@ model StudySession {
   incorrectCount Int     @default(0)
   accuracyRate  Float?
 
-  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user    UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, startedAt])
   @@map("study_sessions")
@@ -146,4 +149,9 @@ enum SourceType {
 enum QuestionType {
   MULTIPLE_CHOICE
   TRUE_FALSE
+}
+
+enum Tier {
+  FREE
+  PRO
 }
