@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
 import { parsePDF } from '@/lib/parsers/pdf';
-import { validateFile } from '@/lib/validation/upload';
+import { validateFile, sanitizeFilename, sanitizeTitle } from '@/lib/validation/upload';
 import { analyzeContentAction } from '@/app/actions/analyze';
 import { uploadFile } from '@/lib/storage/supabase-storage';
 import { getAuthenticatedUser } from '@/lib/auth/auth-utils';
@@ -28,9 +28,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
+    const nameResult = sanitizeFilename(file.name);
+    if (!nameResult.valid) {
+      return NextResponse.json({ error: nameResult.error }, { status: 400 });
+    }
+
     const timestamp = Date.now();
-    const safeName = file.name.replace(/[^a-zA-Z0-9]/g, '_');
-    const filename = `${user.id}/${timestamp}-${safeName}`;
+    const filename = `${user.id}/${timestamp}-${nameResult.sanitized}`;
 
     Sentry.addBreadcrumb({ category: 'upload', message: 'Uploading file to Supabase Storage', level: 'info' });
     const bytes = await file.arrayBuffer();
@@ -67,7 +71,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const title = file.name.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ');
+    const title = sanitizeTitle(file.name);
 
     const analyzeFormData = new FormData();
     analyzeFormData.set('text', text);

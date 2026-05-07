@@ -2,9 +2,10 @@
 
 import { headers } from 'next/headers';
 import * as Sentry from '@sentry/nextjs';
-import { db } from '@/lib/db/client';
+import { withUserContext } from '@/lib/db/client';
 import { createModuleLogger } from '@/lib/core/logger';
 import { generateComprehensionQuestions, type GeneratedQuestion } from '@/lib/ai/question-generator';
+import { getAuthenticatedUser } from './study-shared';
 
 const log = createModuleLogger('actions:study-generate-questions');
 
@@ -21,9 +22,12 @@ export async function studyGenerateQuestionsAction({ passageId }: { passageId: s
   return Sentry.withServerActionInstrumentation('studyGenerateQuestions', {
     headers: await headers(),
   }, async () => {
-    // Fetch passage
+    const user = await getAuthenticatedUser();
+    const userDb = withUserContext(user.id);
+
+    // Fetch passage (auto-scoped by extension)
     const passage = await Sentry.startSpan({ name: 'db:passage-fetch', op: 'db' }, async () => {
-      return db.passage.findUnique({ where: { id: passageId } });
+      return userDb.passage.findUnique({ where: { id: passageId } });
     });
 
     if (!passage) {
@@ -54,11 +58,11 @@ export async function studyGenerateQuestionsAction({ passageId }: { passageId: s
       return { error: 'No questions generated — try again' };
     }
 
-    // Replace existing questions (atomic)
+    // Replace existing questions (atomic — passage already verified above)
     await Sentry.startSpan({ name: 'db:questions-replace', op: 'db' }, async () => {
-      await db.$transaction([
-        db.question.deleteMany({ where: { passageId } }),
-        db.question.createMany({
+      await userDb.$transaction([
+        userDb.question.deleteMany({ where: { passageId } }),
+        userDb.question.createMany({
           data: questions.map(q => ({
             passageId,
             questionText: q.questionText,

@@ -48,6 +48,31 @@ export function validateTextContent(text: string): FileValidationResult {
   return { valid: true };
 }
 
+const MAX_FILENAME_LENGTH = 100;
+
+export function sanitizeFilename(name: string): FileValidationResult & { sanitized?: string } {
+  if (name.length > MAX_FILENAME_LENGTH) {
+    return { valid: false, error: `Filename exceeds ${MAX_FILENAME_LENGTH} character limit` };
+  }
+  const sanitized = name.replace(/[^a-zA-Z0-9._-]/g, '_');
+  if (!sanitized || sanitized === '.' || sanitized === '..') {
+    return { valid: false, error: 'Invalid filename' };
+  }
+  if (sanitized.includes('..') || sanitized.startsWith('/') || sanitized.startsWith('\\')) {
+    return { valid: false, error: 'Invalid filename' };
+  }
+  return { valid: true, sanitized };
+}
+
+export function sanitizeTitle(name: string): string {
+  return name
+    .replace(/\.[^/.]+$/, '')
+    .replace(/[^a-zA-Z0-9\s'-]/g, '')
+    .replace(/[_-]+/g, ' ')
+    .trim()
+    .slice(0, 200) || 'Untitled';
+}
+
 export function formatFileSize(bytes: number): string {
   if (bytes === 0) return '0 Bytes';
   const k = 1024;

@@ -1,3 +1,8 @@
+-- NOTE: Prisma connects via service role and bypasses RLS.
+-- App-level auth (requireAuth) is the primary authorization layer.
+-- RLS is kept enabled as defense-in-depth for direct Supabase client queries.
+-- See prisma/SECURITY.md for details.
+
 -- Enable RLS on all tables
 ALTER TABLE "profiles" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE passages ENABLE ROW LEVEL SECURITY;
