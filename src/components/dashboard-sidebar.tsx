@@ -6,9 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   BookOpen,
   BarChart3,
-  Upload,
   Menu,
-  X,
   GraduationCap,
   LayoutDashboard,
   Settings,
@@ -16,6 +14,8 @@ import {
   Plus,
 } from "lucide-react";
 import { cn } from "@/lib/shared/utils";
+import { UserMenu } from "@/components/user-menu";
+import { SignOutButton } from "@/components/sign-out-button";
 
 const navItems = [
   {
@@ -108,19 +108,7 @@ function TopBar({ onMenuToggle }: { onMenuToggle: () => void }) {
           <button className="text-on-surface-variant hover:text-primary transition-all">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
           </button>
-          <div className="flex items-center gap-3">
-            <div className="text-right">
-              <p className="text-[14px] font-semibold text-on-surface leading-none">
-                Placeholder
-              </p>
-              <p className="text-[10px] text-on-surface-variant uppercase tracking-widest font-bold mt-0.5">
-                Placeholder
-              </p>
-            </div>
-            <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
-              <span className="text-primary text-[14px] font-bold">P</span>
-            </div>
-          </div>
+          <UserMenu />
         </div>
       </header>
 
@@ -202,6 +190,7 @@ function SidebarContent({
         <button className="w-full flex justify-center p-2 rounded-lg text-on-surface-variant hover:bg-accent/60 transition-colors" title="Help">
           <HelpCircle className="w-5 h-5" />
         </button>
+        <SignOutButton />
       </div>
     </div>
   );
@@ -261,6 +250,10 @@ function MobileSidebarContent({
           );
         })}
       </nav>
+
+      <div className="px-3 py-3 border-t border-outline-variant/30">
+        <SignOutButton />
+      </div>
     </div>
   );
 }

@@ -13,6 +13,23 @@
 - Replace demo user with authenticated user in all actions/routes (Phase 04)
 
 ---
+## [2026-05-07] — Phase 05-06: Auth UI Updates & Testing
+
+### Added
+- `src/components/ui/dropdown-menu.tsx` — shadcn/ui dropdown menu for user menu
+- `src/components/user-menu.tsx` — UserMenu component with real user name/email display and avatar
+- `src/hooks/use-sign-out.ts` — `useSignOut` shared hook for sign-out functionality
+- `src/components/sign-out-button.tsx` — SignOutButton component for sidebar sign-out
+- User dropdown menu in desktop sidebar with real user data display
+- Mobile menu support with dropdown and sign-out button
+- Test coverage for auth-related components and utilities
+
+### Changed
+- Phase 05 status updated to **Completed** — UserMenu and sign-out functionality implemented
+- Phase 06 status updated to **Completed** — Build, lint, and TypeScript compilation pass
+- Demo user references remain in server actions/routes (Phase 02-04 scope)
+
+---
 
 ## [2026-05-07] — Supabase Authentication
 
