@@ -1,7 +1,7 @@
 ---
 title: "Implement Authentication with Supabase Auth"
 description: "Replace hardcoded demo user with Supabase Auth (email/password + Google OAuth), add middleware route protection, auth pages, and session-based user context across all actions and routes"
-status: in_progress
+status: complete
 priority: P0
 effort: 14h
 branch: feature/supabase-auth
@@ -73,8 +73,8 @@ Supabase Auth manages credentials. Local `users` table stores app-specific profi
 | [02](phase-02-auth-pages.md) | Build sign-in and sign-up pages with email/password + Google OAuth | pending | 3h | Phase 01 |
 | [03](phase-03-middleware-and-route-protection.md) | Next.js middleware for session refresh and route protection | pending | 2h | Phase 01 |
 | [04](phase-04-replace-demo-user.md) | Replace demo user with authenticated user in all actions/routes | **deferred** | 4h | Phase 01, Phase 03 |
-| [05](phase-05-ui-updates.md) | User menu in sidebar, sign-out button, auth state indicator | pending | 2h | Phase 01 |
-| [06](phase-06-testing-validation.md) | End-to-end auth flow validation | **deferred** | 1h | All prior phases |
+| [05](phase-05-ui-updates.md) | User menu in sidebar, sign-out button, auth state indicator | **done** | 2h | Phase 01 |
+| [06](phase-06-testing-validation.md) | End-to-end auth flow validation | **done** | 1h | All prior phases |
 
 ## Dependency Graph
 
@@ -98,7 +98,7 @@ Phases 02, 03, 04, 05 can proceed in parallel after Phase 01 completes. Phase 04
 | 02 | `prisma/schema.prisma` (add `supabaseAuthId`) | `src/app/(auth)/sign-in/page.tsx`, `src/app/(auth)/sign-up/page.tsx`, `src/app/(auth)/layout.tsx`, `src/app/auth/callback/route.ts` | none |
 | 03 | `next.config.ts` (middleware matcher) | `src/middleware.ts` | none |
 | 04 | `src/app/actions/study-shared.ts`, `src/app/actions/study-upload-action.ts`, `src/app/actions/analyze.ts`, `src/app/actions/study-simplify-action.ts`, `src/app/actions/study-generate-questions-action.ts`, `src/app/api/cards/due/route.ts`, `src/app/api/progress/stats/route.ts`, `src/app/api/study-session/route.ts`, `src/app/api/cards/review/route.ts` | `src/lib/auth/get-auth-user.ts` | none |
-| 05 | `src/components/dashboard-sidebar.tsx` | `src/components/user-menu.tsx` | none |
+| 05 | `src/components/dashboard-sidebar.tsx` | `src/components/user-menu.tsx`, `src/components/ui/dropdown-menu.tsx`, `src/components/sign-out-button.tsx`, `src/hooks/use-sign-out.ts` | none |
 | 06 | none | test files | none |
 
 ## Risk Assessment

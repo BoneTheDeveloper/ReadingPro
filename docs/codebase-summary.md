@@ -8,7 +8,7 @@
 
 AI-powered English reading comprehension trainer. Users upload text/PDF, app detects CEFR level (A1-C2), simplifies content, generates comprehension questions with source citations, and tracks learning via SM-2 spaced repetition.
 
-**Stage:** Early MVP (no auth, hardcoded demo user)
+**Stage:** MVP with authentication UI, hardcoded demo user pending replacement
 
 ---
 
@@ -19,6 +19,7 @@ AI-powered English reading comprehension trainer. Users upload text/PDF, app det
 | Framework | Next.js 16.2.4 (App Router, RSC) |
 | UI | React 19.2.4, shadcn/ui (base-nova), Tailwind CSS 4 |
 | AI | Vercel AI SDK v6 + OpenAI gpt-4o-mini (`@ai-sdk/openai`) |
+| Auth | Supabase Auth (`@supabase/supabase-js` + `@supabase/ssr`) |
 | Database | SQLite via `better-sqlite3` + Prisma ORM v7.8 |
 | PDF | `pdf-parse` v2.4.5 |
 | Validation | Zod v4 |
@@ -76,12 +77,23 @@ src/
 │       ├── study-upload-modal.tsx        # Upload modal (file/text)
 │       ├── study-types.ts                # Shared types (StudyState, PassageData, QuestionData)
 │       └── error.tsx                     # Error boundary
+│   ├── (auth)/
+│   │   ├── layout.tsx                    # Auth pages centered layout
+│   │   ├── sign-in/page.tsx              # Email/password + Google OAuth sign-in
+│   │   └── sign-up/page.tsx              # Email/password + Google OAuth sign-up
+│   └── auth/callback/route.ts           # OAuth callback handler
 ├── components/
 │   ├── ui/                               # shadcn/ui primitives
+│   ├── user-menu.tsx                    # User dropdown menu with real data
+│   ├── sign-out-button.tsx              # Sign-out button for sidebar
 │   ├── upload-zone.tsx                   # Drag-and-drop upload
 │   ├── text-input-area.tsx               # Text paste input
 │   └── progress-dashboard.tsx            # Progress stats display
 └── lib/
+    ├── supabase/
+    │   ├── client.ts                    # Browser client
+    │   ├── server.ts                    # Server client
+    │   └── middleware.ts                # Session management
     ├── db/client.ts                     # Prisma client singleton
     ├── db/utils.ts                      # DB operations (SM-2, CRUD)
     ├── shared/utils.ts                  # cn() utility
@@ -90,6 +102,8 @@ src/
     ├── shared/cefr-utils.ts             # CEFR color/label helpers
     ├── shared/reading-utils.ts          # Reading time, word highlighting
     ├── algorithms/sm2.ts                # SM-2 standalone implementation
+    ├── core/logger.ts                   # Pino structured logging
+    ├── core/sentry.ts                   # Sentry client configuration
     └── ai/
         ├── cefr-detector.ts            # AI CEFR detection + heuristic fallback
         ├── content-simplifier.ts       # AI text simplification
@@ -102,7 +116,7 @@ src/
 
 | Model | Key Fields |
 |-------|-----------|
-| **User** | id, email, name?, targetLevel (CEFR, default B2) |
+| **User** | id, email, name?, supabaseAuthId (nullable, unique), targetLevel (CEFR, default B2) |
 | **Passage** | id, userId, title, content, simplifiedContent?, originalLevel?, simplifiedLevel?, wordCount, sourceType |
 | **Question** | id, passageId, questionText, options (JSON), correctOption, sourceText, sourceLine, explanation, questionType, difficulty |
 | **CardReview** | id, questionId, userId, qualityRating, easeFactor, intervalDays, repetitions, nextReviewDate |
@@ -124,7 +138,7 @@ src/
 | PATCH | `/api/study-session` | Update session with completion data |
 | GET | `/api/progress/stats` | Get progress stats (total, mature, due, today) |
 
-All routes use hardcoded `demo@example.com` user.
+All routes use hardcoded `demo@example.com` user (except auth routes which use real Supabase users)
 
 ---
 
@@ -139,6 +153,7 @@ All routes use hardcoded `demo@example.com` user.
 | `/test/[id]` | Flashcard test with feedback and scoring |
 | `/study` | Three-panel resizable workspace (sources, content, studio) |
 | `/progress` | Progress dashboard with stats |
+| `/auth/callback` | OAuth callback handler |
 
 ---
 
@@ -163,24 +178,38 @@ All routes use hardcoded `demo@example.com` user.
 |----------|---------|
 | `DATABASE_URL` | SQLite connection string (default: `file:./dev.db`) |
 | `OPENAI_API_KEY` | OpenAI API key (required) |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anonymous public key |
 
 ---
 
 ## Known Issues
 
-- No authentication (hardcoded demo user)
+- **Authentication UI complete** - UserMenu, sign-out components implemented, but server actions still use hardcoded demo user
 - Sentry example API route: `/api/sentry-example-api/route.ts`
 - Processing page is simulated (fake progress, auto-redirects after ~6s)
 - SM-2 calculation duplicated in `sm2-algorithm.ts` and `db-utils.ts`
 - No tests exist
-- No dashboard layout (no shared nav/auth)
-- Unused deps: `react-hook-form`, `date-fns`, `@base-ui/react`, `@types/bcryptjs`
+- Dashboard layout with navigation sidebar implemented
+- Unused deps: `react-hook-form`, `date-fns`, `@base-ui/react`
 - Home page "Study Cards" links to `/progress` (no dedicated review page)
 
 ---
 
-**Status:** Active
-**Last Updated:** 2026-05-06
+## Recent Updates
+
+### Phase 05-06: Authentication UI & Testing
+- ✅ UserMenu component with real user name/email display and avatar
+- ✅ Dropdown menu for user actions in desktop sidebar
+- ✅ Mobile menu support with dropdown and sign-out button
+- ✅ `useSignOut` shared hook for sign-out functionality
+- ✅ SignOutButton components for sidebar integration
+- ✅ Build, lint, and TypeScript compilation passing
+- ⏳ Demo user replacement in server actions/routes pending (Phase 07)
 
 ---
-**Current State:** AI provider changed to OpenAI gpt-4o-mini, duplicate text-route.ts removed, DB client moved to lib/db/client.ts, logger at lib/core/logger.ts, Sentry at lib/core/sentry.ts, study page is now primary three-panel workspace
+**Status:** Active
+**Last Updated:** 2026-05-07
+
+---
+**Current State:** Supabase Auth (email/password + Google OAuth) implemented with UI components, middleware route protection active, UserMenu and sign-out functionality complete
