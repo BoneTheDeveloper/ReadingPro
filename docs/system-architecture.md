@@ -10,25 +10,27 @@
 ┌─────────────────────────────────────────────────────────────────┐
 │                        Client (Browser)                          │
 │  React 19 + Next.js App Router + Tailwind CSS + shadcn/ui       │
+│  @supabase/ssr (browser client for auth)                        │
 └────────────────────────────┬────────────────────────────────────┘
                              │
                              ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                     Next.js Server (Node.js)                     │
-│  ┌─────────────────────────────────────────────────────────┐    │
-│  │              Server Actions / API Routes                 │    │
-│  │  analyze.ts │ upload │ cards │ study-session │ progress │    │
-│  └──────┬──────────┬──────────┬────────────┬──────────────┘    │
-└─────────┼──────────┼──────────┼────────────┼───────────────────┘
-          │          │          │            │
-    ┌─────┴──┐  ┌────┴────┐  ┌─┴──┐     ┌──┴───┐
-    ▼        ▼  ▼         ▼  ▼    ▼     ▼      ▼
-┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐
-│OpenAI│ │pdf-  │ │ SM-2 │ │SQLite│
-│  AI  │ │parse │ │Algo  │ │ DB   │
-│(gpt-4o│ │      │ │      │ │      │
-│mini) │ │      │ │      │ │      │
-└──────┘ └──────┘ └──────┘ └──────┘
+│  ┌──────────────────┐  ┌─────────────────────────────────────┐  │
+│  │    Middleware     │  │        Server Actions / API Routes   │  │
+│  │  Session refresh │  │  analyze │ upload │ cards │ progress │  │
+│  │  Route protect   │  └──────┬──────────┬────────┬───────────┘  │
+│  └──────────────────┘         │          │        │              │
+└───────────────────────────────┼──────────┼────────┼──────────────┘
+                                │          │        │
+                          ┌─────┴──┐  ┌────┴────┐  ┌─┴──┐  ┌──────┐
+                          ▼        ▼  ▼         ▼  ▼    ▼  ▼      ▼
+                       ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐┌──────┐
+                       │OpenAI│ │pdf-  │ │ SM-2 │ │SQLite││Supa- │
+                       │  AI  │ │parse │ │Algo  │ │ DB   ││base  │
+                       │(gpt-4o│ │      │ │      │ │      ││Auth  │
+                       │mini) │ │      │ │      │ │      ││      │
+                       └──────┘ └──────┘ └──────┘ └──────┘└──────┘
 ```
 
 ---
@@ -149,6 +151,38 @@ User navigates to /progress → clicks "Study Now"
 
 ---
 
+## Data Flow: Authentication
+
+```
+User visits protected route (e.g. /study)
+         │
+         ▼
+┌──────────────────┐
+│   Middleware      │  src/middleware.ts
+│  updateSession() │  Refreshes Supabase session via cookie exchange
+│  Route protect   │  No auth cookie → redirect to /sign-in?next=/study
+└────────┬─────────┘
+         │
+         ▼ (has session)
+┌──────────────────┐
+│  Server Action / │  Uses createServerActionClient()
+│  API Route       │  Gets authenticated user via supabase.auth.getUser()
+└──────────────────┘
+
+Email/Password Sign-In:
+  /sign-in → signInWithPassword() → redirect to /study
+
+Google OAuth Sign-In:
+  /sign-in → signInWithOAuth() → Google consent → /auth/callback
+  → exchangeCodeForSession() → syncUser() → redirect to /study
+
+User Sync (on first sign-up):
+  Supabase Auth user.id → upsert into local users.supabaseAuthId
+  Creates local User row with email + name from auth metadata
+```
+
+---
+
 ## Database Schema
 
 ```
@@ -158,12 +192,12 @@ User navigates to /progress → clicks "Study Now"
 │ id (PK)     │──┐    │ id (PK)      │──┐    │ id (PK)      │
 │ email (UQ)  │  │    │ userId (FK)  │◄─┘    │ passageId(FK)│◄─┐
 │ name        │  │    │ title        │       │ questionText │  │
-│ targetLevel │  │    │ content      │       │ options (J)  │  │
-│ createdAt   │  │    │ simplifiedC  │       │ correctOpt   │  │
-│ updatedAt   │  │    │ originalLvl  │       │ sourceText   │  │
-└──────┬──────┘  │    │ simplifiedLv │       │ sourceLine   │  │
-       │         │    │ wordCount    │       │ explanation  │  │
-       │         │    │ sourceType   │       │ questionType │  │
+│ supabaseAuth│  │    │ content      │       │ options (J)  │  │
+│   Id (UQ)  │  │    │ simplifiedC  │       │ correctOpt   │  │
+│ targetLevel │  │    │ originalLvl  │       │ sourceText   │  │
+│ createdAt   │  │    │ simplifiedLv │       │ sourceLine   │  │
+│ updatedAt   │  │    │ wordCount    │       │ explanation  │  │
+└──────┬──────┘  │    │ sourceType   │       │ questionType │  │
        │         │    │ createdAt    │       │ difficulty   │  │
        │         │    │ updatedAt    │       │ createdAt    │  │
        │         │    └──────────────┘       └──────┬───────┘  │
@@ -271,6 +305,9 @@ app/api/progress/stats/route.ts
 | Page | Type | Data Fetching |
 |------|------|--------------|
 | `/` | Server Component | Static |
+| `/sign-in` | Client Component | None (auth page, no sidebar) |
+| `/sign-up` | Client Component | None (auth page, no sidebar) |
+| `/auth/callback` | Route Handler | OAuth code exchange + user sync |
 | `/upload` | Client Component | None |
 | `/processing` | Client Component | None (simulated) |
 | `/reading/[id]` | Server → Client | Server fetches passage, passes to client |
@@ -283,7 +320,7 @@ app/api/progress/stats/route.ts
 
 ## Current Limitations
 
-1. **No authentication** - All data tied to `demo@example.com`
+1. **Auth pages exist, demo user not yet replaced** - Auth UI and middleware active, but actions still use `getOrCreateDemoUser()` (Phase 04)
 2. **Dashboard layout exists** - Navigation sidebar now implemented
 3. **Simulated processing** - `/processing` fakes progress, doesn't poll real status
 4. **No real-time updates** - No WebSockets or SSE
@@ -293,7 +330,7 @@ app/api/progress/stats/route.ts
 ---
 
 **Status:** Active
-**Last Updated:** 2026-05-06
+**Last Updated:** 2026-05-07
 
 ---
-**Note:** AI provider changed to OpenAI gpt-4o-mini, DB client moved to lib/db/client.ts, duplicate text-route.ts removed, study page is now primary three-panel workspace
+**Note:** AI provider changed to OpenAI gpt-4o-mini, Supabase Auth added (email/password + Google OAuth), middleware route protection active
