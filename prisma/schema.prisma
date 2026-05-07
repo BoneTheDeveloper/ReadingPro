@@ -2,8 +2,14 @@ generator client {
   provider = "prisma-client-js"
 }
 
+generator erd {
+  provider        = "prisma-erd-generator"
+  output          = "../prisma/ERD.md"
+  puppeteerConfig = "puppeteer-config.json"
+}
+
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 // ============================================
