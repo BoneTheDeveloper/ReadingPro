@@ -5,11 +5,19 @@ const READ_OPS = new Set(['findFirst', 'findMany', 'count', 'aggregate', 'groupB
 const FIND_UNIQUE_OPS = new Set(['findUnique', 'findUniqueOrThrow']);
 const WRITE_OPS = new Set(['update', 'updateMany', 'delete', 'deleteMany']);
 
-type OperationContext = { args: any; query: (args: any) => Promise<any>; operation: string };
+type PrismaQueryCtx = {
+  args: Record<string, unknown>;
+  query: (args: Record<string, unknown>) => Promise<unknown>;
+  operation: string;
+};
 
-async function verifyFindUniqueOwnership(ctx: OperationContext, userId: string): Promise<any> {
+function isOwnedRecord(result: unknown): result is { userId: string } {
+  return typeof result === 'object' && result !== null && 'userId' in result;
+}
+
+async function verifyFindUniqueOwnership(ctx: PrismaQueryCtx, userId: string): Promise<unknown> {
   const result = await ctx.query(ctx.args);
-  if (result && result.userId !== userId) {
+  if (isOwnedRecord(result) && result.userId !== userId) {
     if (ctx.operation === 'findUniqueOrThrow') {
       throw new Prisma.PrismaClientKnownRequestError(
         'Record not found',
@@ -21,9 +29,9 @@ async function verifyFindUniqueOwnership(ctx: OperationContext, userId: string):
   return result;
 }
 
-async function enforceUserScope(ctx: OperationContext, userId: string): Promise<any> {
+async function enforceUserScope(ctx: PrismaQueryCtx, userId: string): Promise<unknown> {
   if (ctx.operation === 'create') {
-    ctx.args.data = { ...ctx.args.data, userId };
+    ctx.args.data = { ...(ctx.args.data as Record<string, unknown>), userId };
     return ctx.query(ctx.args);
   }
 
@@ -32,9 +40,7 @@ async function enforceUserScope(ctx: OperationContext, userId: string): Promise<
   }
 
   if (READ_OPS.has(ctx.operation) || WRITE_OPS.has(ctx.operation)) {
-    // Inject userId into where clause. Works at runtime for all these operations
-    // (including update/delete which accept compound where at the SQL level).
-    ctx.args.where = { ...ctx.args.where, userId };
+    ctx.args.where = { ...(ctx.args.where as Record<string, unknown>), userId };
     return ctx.query(ctx.args);
   }
 
@@ -42,13 +48,17 @@ async function enforceUserScope(ctx: OperationContext, userId: string): Promise<
 }
 
 export function withUserContext(userId: string) {
-  const scope = { $allOperations: (ctx: OperationContext) => enforceUserScope(ctx, userId) };
-
   return db.$extends({
     query: {
-      passage: scope,
-      cardReview: scope,
-      studySession: scope,
+      passage: {
+        $allOperations: (ctx: PrismaQueryCtx) => enforceUserScope(ctx, userId),
+      },
+      cardReview: {
+        $allOperations: (ctx: PrismaQueryCtx) => enforceUserScope(ctx, userId),
+      },
+      studySession: {
+        $allOperations: (ctx: PrismaQueryCtx) => enforceUserScope(ctx, userId),
+      },
     },
   });
 }
