@@ -1,8 +1,9 @@
 name: PR Agent
 on:
   pull_request:
-    types: [opened, reopened, ready_for_review]
+    types: [opened, reopened, ready_for_review, synchronize]
   issue_comment:
+    types: [created]
 jobs:
   pr_agent_job:
     if: ${{ github.event.sender.type != 'Bot' }}
@@ -13,14 +14,14 @@ jobs:
       contents: write
     steps:
       - name: PR Agent action step
-        uses: qodo-ai/pr-agent@main
+        uses: the-pr-agent/pr-agent@v0.34.3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENAI_KEY: ${{ secrets.ZAI_API_KEY }}
           OPENAI.API_BASE: ${{ secrets.ZAI_API_BASE }}
           OPENAI.API_TYPE: "openai"
-          config.model: "glm-4.5-air"
-          config.fallback_models: '["glm-4.5-air"]'
+          config.model: "glm-4-air"
+Sconfig.fallback_models: '["glm-4-flash"]'
           github_action_config.auto_review: "true"
           github_action_config.auto_describe: "true"
           github_action_config.auto_improve: "false"
