@@ -65,9 +65,12 @@ src/components/dashboard-sidebar.tsx  # Modified: Replace placeholder with UserM
 
 ### Create
 - `src/components/user-menu.tsx`
+- `src/components/ui/dropdown-menu.tsx`
+- `src/components/sign-out-button.tsx`
+- `src/hooks/use-sign-out.ts`
 
 ### Modify
-- `src/components/dashboard-sidebar.tsx` — replace placeholder with `<UserMenu />`
+- `src/components/dashboard-sidebar.tsx` — replace placeholder with `<UserMenu />`, add mobile sign-out
 
 ## Implementation Steps
 
@@ -202,14 +205,18 @@ Since `MobileSidebarContent` is not a client component and doesn't have access t
 
 ## Todo List
 
-- [ ] Check/install shadcn/ui DropdownMenu component
-- [ ] Create `src/components/user-menu.tsx`
-- [ ] Replace placeholder in TopBar with `<UserMenu />`
-- [ ] Add mobile sign-out option
-- [ ] Test: user name/email displays correctly
-- [ ] Test: sign-out clears session and redirects to `/sign-in`
-- [ ] Test: after sign-out, accessing protected routes redirects to `/sign-in`
-- [ ] Verify TypeScript compilation
+- [x] Check/install shadcn/ui DropdownMenu component
+- [x] Create `src/components/user-menu.tsx`
+- [x] Create `src/components/ui/dropdown-menu.tsx`
+- [x] Create `src/hooks/use-sign-out.ts`
+- [x] Create `src/components/sign-out-button.tsx`
+- [x] Replace placeholder in TopBar with `<UserMenu />`
+- [x] Add mobile sign-out option (`<SignOutButton />` in sidebar)
+- [x] Test: user name/email displays correctly
+- [x] Test: sign-out clears session and redirects to `/sign-in`
+- [x] Test: after sign-out, accessing protected routes redirects to `/sign-in`
+- [x] Verify TypeScript compilation
+- [x] Verify lint passes
 
 ## Success Criteria
 
@@ -235,4 +242,4 @@ Since `MobileSidebarContent` is not a client component and doesn't have access t
 
 ## Next Steps
 
-- Phase 06: Testing and validation
+- Phase 06: Testing and validation (completed)
