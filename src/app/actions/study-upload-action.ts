@@ -2,7 +2,7 @@
 
 import { headers } from 'next/headers';
 import * as Sentry from '@sentry/nextjs';
-import { db } from '@/lib/db/client';
+import { withUserContext } from '@/lib/db/client';
 import { createModuleLogger } from '@/lib/core/logger';
 import { detectCEFRLevel, getHeuristicCEFR } from '@/lib/ai/cefr-detector';
 import type { CEFRLevel } from '@/lib/shared/cefr-utils';
@@ -53,10 +53,11 @@ export async function studyUploadAction({ text, title }: { text: string; title: 
 
     // DB save (passage only, no questions, no simplified content)
     const user = await getAuthenticatedUser();
+    const userDb = withUserContext(user.id);
 
     Sentry.addBreadcrumb({ category: 'db', message: 'Creating passage', level: 'info' });
     const passage = await Sentry.startSpan({ name: 'db:passage-create', op: 'db' }, async () => {
-      return db.passage.create({
+      return userDb.passage.create({
         data: {
           userId: user.id,
           title,

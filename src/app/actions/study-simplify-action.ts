@@ -2,9 +2,10 @@
 
 import { headers } from 'next/headers';
 import * as Sentry from '@sentry/nextjs';
-import { db } from '@/lib/db/client';
+import { withUserContext } from '@/lib/db/client';
 import { createModuleLogger } from '@/lib/core/logger';
 import { simplifyContent } from '@/lib/ai/content-simplifier';
+import { getAuthenticatedUser } from './study-shared';
 
 const log = createModuleLogger('actions:study-simplify');
 
@@ -24,9 +25,12 @@ export async function studySimplifyAction({ passageId }: { passageId: string }):
   return Sentry.withServerActionInstrumentation('studySimplify', {
     headers: await headers(),
   }, async () => {
-    // Fetch passage
+    const user = await getAuthenticatedUser();
+    const userDb = withUserContext(user.id);
+
+    // Fetch passage (auto-scoped by extension)
     const passage = await Sentry.startSpan({ name: 'db:passage-fetch', op: 'db' }, async () => {
-      return db.passage.findUnique({ where: { id: passageId } });
+      return userDb.passage.findUnique({ where: { id: passageId } });
     });
 
     if (!passage) {
@@ -51,9 +55,9 @@ export async function studySimplifyAction({ passageId }: { passageId: string }):
         return { error: 'Simplification failed — try again' };
       }
 
-      // Update passage in DB
+      // Update passage in DB (auto-scoped by extension)
       await Sentry.startSpan({ name: 'db:passage-update', op: 'db' }, async () => {
-        return db.passage.update({
+        return userDb.passage.update({
           where: { id: passageId },
           data: {
             simplifiedContent: simplified.simplifiedText,

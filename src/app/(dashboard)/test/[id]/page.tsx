@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
-import { db } from '@/lib/db/client';
+import { withUserContext } from '@/lib/db/client';
+import { getAuthenticatedUser } from '@/lib/auth/auth-utils';
 import { FlashcardTestClient } from './flashcard-test-client';
 
 interface TestPageProps {
@@ -9,8 +10,10 @@ interface TestPageProps {
 export default async function TestPage({ params }: TestPageProps) {
   const { id } = await params;
   const passageId = decodeURIComponent(id);
+  const user = await getAuthenticatedUser();
+  const userDb = withUserContext(user.id);
 
-  const passage = await db.passage.findUnique({
+  const passage = await userDb.passage.findUnique({
     where: { id: passageId },
     include: { questions: true },
   });
