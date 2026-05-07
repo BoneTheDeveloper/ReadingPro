@@ -320,7 +320,7 @@ app/api/progress/stats/route.ts
 
 ## Current Limitations
 
-1. **Auth UI complete, demo user not yet replaced** - UserMenu, sign-out, and auth UI components active, but actions still use `getOrCreateDemoUser()` (Phase 04)
+1. **Auth UI complete, demo user replaced** - UserMenu, sign-out, and auth UI components active, actions now use authenticated users via Supabase auth (Phase 07)
 2. **Dashboard layout exists** - Navigation sidebar now implemented
 3. **Simulated processing** - `/processing` fakes progress, doesn't poll real status
 4. **No real-time updates** - No WebSockets or SSE
@@ -333,4 +333,4 @@ app/api/progress/stats/route.ts
 **Last Updated:** 2026-05-07
 
 ---
-**Note:** AI provider changed to OpenAI gpt-4o-mini, Supabase Auth added (email/password + Google OAuth), middleware route protection active, UserMenu and sign-out components implemented
+**Note:** AI provider changed to OpenAI gpt-4o-mini, Supabase Auth added (email/password + Google OAuth), middleware route protection active, UserMenu and sign-out components implemented, demo user replaced with authenticated users

@@ -6,7 +6,7 @@ import { db } from '@/lib/db/client';
 import { createModuleLogger } from '@/lib/core/logger';
 import { detectCEFRLevel, getHeuristicCEFR } from '@/lib/ai/cefr-detector';
 import type { CEFRLevel } from '@/lib/shared/cefr-utils';
-import { getOrCreateDemoUser } from './study-shared';
+import { getAuthenticatedUser } from './study-shared';
 
 const log = createModuleLogger('actions:study-upload');
 
@@ -52,7 +52,7 @@ export async function studyUploadAction({ text, title }: { text: string; title: 
     log.info({ level: originalLevel, ms: Date.now() - detectStart }, 'CEFR detection done');
 
     // DB save (passage only, no questions, no simplified content)
-    const user = await getOrCreateDemoUser();
+    const user = await getAuthenticatedUser();
 
     Sentry.addBreadcrumb({ category: 'db', message: 'Creating passage', level: 'info' });
     const passage = await Sentry.startSpan({ name: 'db:passage-create', op: 'db' }, async () => {
