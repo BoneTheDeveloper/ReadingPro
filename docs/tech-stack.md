@@ -31,7 +31,7 @@ Modern web-based language learning platform combining text/PDF content processin
 | **API Layer** | Next.js API Routes + Server Actions | - | Collocated with frontend, type-safe |
 | **Database** | SQLite | - | Local dev via better-sqlite3 |
 | **ORM** | Prisma | 7.8.0 | Schema, migrations, client |
-| **Auth** | None (planned: NextAuth.js v5) | - | Hardcoded demo user for MVP |
+| **Auth** | Supabase Auth (`@supabase/ssr`) | - | Email/password + Google OAuth, cookie-based PKCE |
 
 ## AI & Content Processing
 
@@ -109,10 +109,11 @@ Modern web-based language learning platform combining text/PDF content processin
 - `zod` ^4.3.6, `pdf-parse` ^2.4.5, `react-dropzone` ^15.0.0
 - `lucide-react` ^1.8.0, `class-variance-authority` ^0.7.1, `clsx` ^2.1.1, `tailwind-merge` ^3.5.0
 - `react-resizable-panels` ^4.11.0
+- `@supabase/supabase-js` ^2.x, `@supabase/ssr` ^0.x
 - `dotenv` ^17.4.2, `shadcn` ^4.4.0
 
 **Unused (declared but not used):**
-- `react-hook-form`, `@hookform/resolvers`, `date-fns`, `@base-ui/react`, `@types/bcryptjs`
+- `react-hook-form`, `@hookform/resolvers`, `date-fns`, `@base-ui/react`
 
 ---
 
@@ -122,6 +123,8 @@ Modern web-based language learning platform combining text/PDF content processin
 |----------|---------|---------|
 | `DATABASE_URL` | SQLite connection | `file:./dev.db` |
 | `OPENAI_API_KEY` | OpenAI API access | None (required) |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL | None (required for auth) |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon (public) key | None (required for auth) |
 
 ---
 
@@ -135,22 +138,22 @@ Modern web-based language learning platform combining text/PDF content processin
 | **Phase 4** | **Completed** | Sentry source maps upload for production debugging |
 | **Phase 5** | Planned | YouTube transcription (Whisper), scanned PDF OCR |
 | **Phase 6** | **In Progress** | Resizable study workspace, AI provider switch to OpenAI, advanced analytics |
-| **Phase 7** | Future | PostgreSQL migration, Vercel deployment |
+| **Phase 7** | **In Progress** | Supabase Auth, middleware route protection |
+| **Phase 8** | Future | PostgreSQL migration, Vercel deployment |
 
 ---
 
 ## Unresolved Questions
 
-1. When to add authentication (blocking for multi-user)?
-2. PDF size limits for production (currently 10MB)
-3. YouTube video length constraints for Phase 5
-4. PostgreSQL migration timing (from SQLite)
-5. Offline capability requirements
+1. PDF size limits for production (currently 10MB)
+2. YouTube video length constraints for Phase 5
+3. PostgreSQL migration timing (from SQLite)
+4. Offline capability requirements
 
 ---
 
 **Status:** Active
-**Last Updated:** 2026-05-06
+**Last Updated:** 2026-05-07
 
 ---
 **Note:** AI provider switched from Google Gemini to OpenAI gpt-4o-mini, `@ai-sdk/google` still in package.json but unused, `@ai-sdk/openai` now used in all AI modules

@@ -10,10 +10,11 @@ datasource db {
 // USER MODEL
 // ============================================
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  name         String?
-  targetLevel  CEFRLevel @default(B2)
+  id              String    @id @default(cuid())
+  email           String    @unique
+  name            String?
+  supabaseAuthId  String?   @unique
+  targetLevel     CEFRLevel @default(B2)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

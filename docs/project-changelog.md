@@ -10,7 +10,30 @@
 - YouTube transcription (Whisper API)
 - Scanned PDF OCR support
 - Advanced analytics dashboard
-- Authentication (NextAuth.js v5)
+- Replace demo user with authenticated user in all actions/routes (Phase 04)
+
+---
+
+## [2026-05-07] — Supabase Authentication
+
+### Added
+- `@supabase/supabase-js` + `@supabase/ssr` packages (removed `@types/bcryptjs`)
+- `lib/supabase/client.ts` — browser client via `createBrowserClient`
+- `lib/supabase/server.ts` — server component client (read-only) + server action client (read+write)
+- `lib/supabase/middleware.ts` — middleware client with `updateSession()` for cookie exchange
+- `lib/auth/sync-user.ts` — upserts local User row keyed by Supabase Auth UUID
+- `(auth)/layout.tsx` — centered card layout with ReadingPro branding
+- `(auth)/sign-in/page.tsx` — email/password + Google OAuth sign-in (Suspense-wrapped)
+- `(auth)/sign-up/page.tsx` — email/password/confirm + Google OAuth sign-up
+- `auth/callback/route.ts` — OAuth code exchange + user sync + redirect
+- `middleware.ts` — session refresh, route protection, `?next=` redirect preservation
+- `docs/auth/oauth-setup-guide.md` — OAuth setup for local, Vercel preview, and production
+- `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` to `.env.example`
+
+### Changed
+- `prisma/schema.prisma` — added `supabaseAuthId` column (nullable, unique) to User model
+- Unauthenticated users redirected to `/sign-in` for all protected routes
+- Auth pages (`/sign-in`, `/sign-up`) accessible without authentication
 
 ---
 
