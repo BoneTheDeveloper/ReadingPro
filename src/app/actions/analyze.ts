@@ -7,7 +7,7 @@ import { createModuleLogger } from '@/lib/core/logger';
 import { detectCEFRLevel, getHeuristicCEFR } from '@/lib/ai/cefr-detector';
 import { simplifyContent } from '@/lib/ai/content-simplifier';
 import { generateComprehensionQuestions, type GeneratedQuestion } from '@/lib/ai/question-generator';
-import { getOrCreateDemoUser } from './study-shared';
+import { getAuthenticatedUser } from './study-shared';
 
 const log = createModuleLogger('actions:analyze');
 
@@ -74,7 +74,7 @@ export async function analyzeContentAction(formData: FormData) {
       log.warn({ err, contentLength: contentToAnalyze.length }, 'Question generation failed — passage saved without questions');
     }
 
-    const user = await getOrCreateDemoUser();
+    const user = await getAuthenticatedUser();
 
     Sentry.addBreadcrumb({ category: 'db', message: 'Creating passage with questions', level: 'info' });
     const passage = await Sentry.startSpan({ name: 'db:passage-create', op: 'db' }, async () => {

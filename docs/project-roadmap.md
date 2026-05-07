@@ -109,7 +109,7 @@
 | Middleware route protection (redirect to `/sign-in`) | ✅ Done |
 | User menu in sidebar with sign-out | ✅ Done |
 | Sign-out components and hooks | ✅ Done |
-| Replace demo user in all actions/routes | 🔲 Pending |
+| Replace demo user in all actions/routes | ✅ Done |
 
 ---
 
@@ -134,7 +134,7 @@
 | Phase 4 (Sentry Source Maps) | 100% ✅ |
 | Phase 5 (Content Expansion) | 0% 🔲 |
 | Phase 6 (Advanced Features) | 60% 🔧 |
-| Phase 7 (Supabase Auth) | 70% 🔧 |
+| Phase 7 (Supabase Auth) | 100% ✅ |
 | Phase 8 (Production Deployment) | 0% 🔲 |
 
 ---
