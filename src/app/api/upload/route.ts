@@ -1,26 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
-import { existsSync } from 'fs';
-import path from 'path';
 import * as Sentry from '@sentry/nextjs';
 import { parsePDF } from '@/lib/parsers/pdf';
 import { validateFile } from '@/lib/validation/upload';
 import { analyzeContentAction } from '@/app/actions/analyze';
+import { uploadFile } from '@/lib/storage/supabase-storage';
+import { getAuthenticatedUser } from '@/lib/auth/auth-utils';
 import { createModuleLogger } from '@/lib/core/logger';
 
 const log = createModuleLogger('api:upload');
 
-const UPLOAD_DIR = path.join(process.cwd(), 'uploads', 'content');
-
-async function ensureUploadDir() {
-  if (!existsSync(UPLOAD_DIR)) {
-    await mkdir(UPLOAD_DIR, { recursive: true });
-  }
-}
-
 export async function POST(request: NextRequest) {
   try {
-    await ensureUploadDir();
+    const user = await getAuthenticatedUser();
 
     const formData = await request.formData();
     const file = formData.get('file') as File;
@@ -39,15 +30,22 @@ export async function POST(request: NextRequest) {
 
     const timestamp = Date.now();
     const safeName = file.name.replace(/[^a-zA-Z0-9]/g, '_');
-    const filename = `${timestamp}-${safeName}`;
-    const filepath = path.join(UPLOAD_DIR, filename);
+    const filename = `${user.id}/${timestamp}-${safeName}`;
 
-    Sentry.addBreadcrumb({ category: 'upload', message: 'Writing file to disk', level: 'info' });
+    Sentry.addBreadcrumb({ category: 'upload', message: 'Uploading file to Supabase Storage', level: 'info' });
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    await Sentry.startSpan({ name: 'file-write', op: 'function' }, async () => {
-      await writeFile(filepath, buffer);
+
+    const storageResult = await Sentry.startSpan({ name: 'storage-upload', op: 'function' }, async () => {
+      return uploadFile(filename, buffer, file.type);
     });
+
+    if (!storageResult) {
+      return NextResponse.json(
+        { error: 'Failed to store file' },
+        { status: 500 }
+      );
+    }
 
     let text: string;
 
@@ -85,6 +83,7 @@ export async function POST(request: NextRequest) {
       success: true,
       data: {
         filename,
+        fileUrl: storageResult.url,
         passageId: result.passageId,
         originalLevel: result.originalLevel,
         simplifiedLevel: result.simplifiedLevel,
