@@ -1,9 +1,9 @@
 import { db } from '@/lib/db/client'
 
-export async function syncUser(supabaseAuthId: string, email: string, name?: string) {
-  return db.user.upsert({
-    where: { supabaseAuthId },
-    update: { email, name },
-    create: { email, name: name || email.split('@')[0], supabaseAuthId },
+export async function syncUser(authId: string, email?: string, name?: string, avatarUrl?: string) {
+  return db.userProfile.upsert({
+    where: { id: authId },
+    update: { email: email || null, name: name || null, avatarUrl: avatarUrl || null },
+    create: { id: authId, email: email || null, name: name || null, avatarUrl: avatarUrl || null },
   })
 }

@@ -133,18 +133,6 @@ export async function getUserProgress(userId: string) {
   };
 }
 
-export async function createUser(email: string, name?: string) {
-  return db.user.create({
-    data: { email, name },
-  });
-}
-
-export async function getOrCreateUser(email: string, name?: string) {
-  const existing = await db.user.findUnique({ where: { email } });
-  if (existing) return existing;
-  return createUser(email, name);
-}
-
 export async function createPassage(data: {
   userId: string;
   title: string;

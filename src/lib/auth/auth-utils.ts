@@ -27,10 +27,8 @@ export async function getCurrentUser() {
       return null;
     }
 
-    // Sync user with local database if needed
-    const dbUser = await syncUserWithDatabase(user);
-
-    return dbUser;
+    const profile = await ensureProfile(user);
+    return profile;
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error));
     log.error({ err }, 'Failed to get current user');
@@ -41,45 +39,25 @@ export async function getCurrentUser() {
   }
 }
 
-export async function syncUserWithDatabase(supabaseUser: { id: string; email?: string | null; user_metadata?: { name?: string } }) {
-  return Sentry.startSpan({ name: 'db:user-sync', op: 'db' }, async () => {
-    let dbUser = await db.user.findUnique({
-      where: { supabaseAuthId: supabaseUser.id }
+async function ensureProfile(supabaseUser: { id: string; email?: string | null; user_metadata?: Record<string, unknown> }) {
+  return Sentry.startSpan({ name: 'db:ensure-profile', op: 'db' }, async () => {
+    let profile = await db.userProfile.findUnique({
+      where: { id: supabaseUser.id }
     });
 
-    if (!dbUser) {
-      // Check if user already exists by email (for migration)
-      if (supabaseUser.email) {
-        dbUser = await db.user.findUnique({
-          where: { email: supabaseUser.email }
-        });
-      }
-
-      if (dbUser) {
-        // Link existing user with Supabase auth ID
-        dbUser = await db.user.update({
-          where: { id: dbUser.id },
-          data: {
-            supabaseAuthId: supabaseUser.id,
-            name: supabaseUser.user_metadata?.name || supabaseUser.email?.split('@')[0]
-          }
-        });
-        log.info({ userId: dbUser.id }, 'Linked existing user with Supabase auth');
-      } else {
-        // Create new user
-        dbUser = await db.user.create({
-          data: {
-            email: supabaseUser.email || '',
-            name: supabaseUser.user_metadata?.name || (supabaseUser.email ? supabaseUser.email.split('@')[0] : 'User'),
-            supabaseAuthId: supabaseUser.id,
-            targetLevel: 'B2' // default CEFR level
-          }
-        });
-        log.info({ userId: dbUser.id }, 'Created new user from Supabase auth');
-      }
+    if (!profile) {
+      profile = await db.userProfile.create({
+        data: {
+          id: supabaseUser.id,
+          email: supabaseUser.email || null,
+          name: (supabaseUser.user_metadata?.name as string) || (supabaseUser.user_metadata?.full_name as string) || null,
+          avatarUrl: (supabaseUser.user_metadata?.avatar_url as string) || null,
+        }
+      });
+      log.info({ userId: profile.id }, 'Created profile from Supabase auth');
     }
 
-    return dbUser;
+    return profile;
   });
 }
 

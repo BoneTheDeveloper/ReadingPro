@@ -12,7 +12,12 @@ export async function GET(request: Request) {
     const { data: { user }, error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error && user) {
-      await syncUser(user.id, user.email!, user.user_metadata?.name)
+      await syncUser(
+        user.id,
+        user.email!,
+        user.user_metadata?.name as string || user.user_metadata?.full_name as string,
+        user.user_metadata?.avatar_url as string,
+      )
       return NextResponse.redirect(`${origin}${next}`)
     }
   }
