@@ -95,14 +95,30 @@
 
 ---
 
-### Phase 7: Production Deployment (Future)
+### Phase 7: Supabase Authentication (In Progress)
+**Scope:** Email/password + Google OAuth, middleware route protection, user sync
+
+| Feature | Status |
+|---------|--------|
+| `@supabase/supabase-js` + `@supabase/ssr` packages | ✅ Done |
+| Supabase client utilities (browser, server, middleware) | ✅ Done |
+| `supabaseAuthId` column in User model | ✅ Done |
+| Sign-in page (`/sign-in`) with email/password + Google OAuth | ✅ Done |
+| Sign-up page (`/sign-up`) with email/password + Google OAuth | ✅ Done |
+| OAuth callback route (`/auth/callback`) with user sync | ✅ Done |
+| Middleware route protection (redirect to `/sign-in`) | ✅ Done |
+| Replace demo user in all actions/routes | 🔲 Pending |
+| User menu in sidebar with sign-out | 🔲 Pending |
+
+---
+
+### Phase 8: Production Deployment (Future)
 **Scope:** PostgreSQL migration, Vercel deployment, multi-user auth
 
 | Feature | Status |
 |---------|--------|
 | SQLite → PostgreSQL migration | 🔲 Future |
 | Vercel deployment setup | 🔲 Future |
-| Authentication (NextAuth.js v5) | 🔲 Future |
 | Multi-user support (remove demo user) | 🔲 Future |
 
 ---
@@ -117,22 +133,22 @@
 | Phase 4 (Sentry Source Maps) | 100% ✅ |
 | Phase 5 (Content Expansion) | 0% 🔲 |
 | Phase 6 (Advanced Features) | 60% 🔧 |
-| Phase 7 (Production Deployment) | 0% 🔲 |
+| Phase 7 (Supabase Auth) | 60% 🔧 |
+| Phase 8 (Production Deployment) | 0% 🔲 |
 
 ---
 
 ## Unresolved Questions
 
-1. When to add authentication (blocking for multi-user)?
-2. PDF size limits for production (currently 10MB)
-3. YouTube video length constraints for Phase 5
-4. PostgreSQL migration timing (from SQLite)
-5. Offline capability requirements
+1. PDF size limits for production (currently 10MB)
+2. YouTube video length constraints for Phase 5
+3. PostgreSQL migration timing (from SQLite)
+4. Offline capability requirements
 
 ---
 
 **Status:** Active  
-**Last Updated:** 2026-05-06
+**Last Updated:** 2026-05-07
 
 ---
-**Note:** AI provider changed from Google Gemini to OpenAI gpt-4o-mini, duplicate text-route.ts removed, study page refactored as primary workspace
+**Note:** Supabase Auth (email/password + Google OAuth) in progress, middleware route protection active, OAuth setup guide at docs/auth/oauth-setup-guide.md
