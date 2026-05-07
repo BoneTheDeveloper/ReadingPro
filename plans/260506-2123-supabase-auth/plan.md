@@ -1,7 +1,7 @@
 ---
 title: "Implement Authentication with Supabase Auth"
 description: "Replace hardcoded demo user with Supabase Auth (email/password + Google OAuth), add middleware route protection, auth pages, and session-based user context across all actions and routes"
-status: pending
+status: in_progress
 priority: P0
 effort: 14h
 branch: feature/supabase-auth
@@ -69,12 +69,12 @@ Supabase Auth manages credentials. Local `users` table stores app-specific profi
 
 | Phase | Description | Status | Effort | Blocked By |
 |-------|-------------|--------|--------|------------|
-| [01](phase-01-package-setup-and-client-utils.md) | Install packages, create Supabase client utilities, add env vars | pending | 2h | none |
+| [01](phase-01-package-setup-and-client-utils.md) | Install packages, create Supabase client utilities, add env vars | **done** | 2h | none |
 | [02](phase-02-auth-pages.md) | Build sign-in and sign-up pages with email/password + Google OAuth | pending | 3h | Phase 01 |
 | [03](phase-03-middleware-and-route-protection.md) | Next.js middleware for session refresh and route protection | pending | 2h | Phase 01 |
-| [04](phase-04-replace-demo-user.md) | Replace demo user with authenticated user in all actions/routes | pending | 4h | Phase 01, Phase 03 |
+| [04](phase-04-replace-demo-user.md) | Replace demo user with authenticated user in all actions/routes | **deferred** | 4h | Phase 01, Phase 03 |
 | [05](phase-05-ui-updates.md) | User menu in sidebar, sign-out button, auth state indicator | pending | 2h | Phase 01 |
-| [06](phase-06-testing-validation.md) | End-to-end auth flow validation | pending | 1h | All prior phases |
+| [06](phase-06-testing-validation.md) | End-to-end auth flow validation | **deferred** | 1h | All prior phases |
 
 ## Dependency Graph
 
