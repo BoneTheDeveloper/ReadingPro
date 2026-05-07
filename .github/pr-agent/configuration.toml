@@ -1,2 +1,5 @@
 [config]
 model = "openai/glm-4.7"
+
+[pr_reviewer]
+on_synchronize = true
