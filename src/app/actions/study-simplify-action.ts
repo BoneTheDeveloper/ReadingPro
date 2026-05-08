@@ -2,7 +2,7 @@
 
 import { headers } from 'next/headers';
 import * as Sentry from '@sentry/nextjs';
-import { withUserContext } from '@/lib/db/client';
+import { db } from '@/lib/db/client';
 import { createModuleLogger } from '@/lib/core/logger';
 import { simplifyContent } from '@/lib/ai/content-simplifier';
 import { getAuthenticatedUser } from './study-shared';
@@ -26,11 +26,9 @@ export async function studySimplifyAction({ passageId }: { passageId: string }):
     headers: await headers(),
   }, async () => {
     const user = await getAuthenticatedUser();
-    const userDb = withUserContext(user.id);
 
-    // Fetch passage (auto-scoped by extension)
     const passage = await Sentry.startSpan({ name: 'db:passage-fetch', op: 'db' }, async () => {
-      return userDb.passage.findUnique({ where: { id: passageId } });
+      return db.passage.findUnique({ where: { id: passageId, userId: user.id } });
     });
 
     if (!passage) {
@@ -44,7 +42,6 @@ export async function studySimplifyAction({ passageId }: { passageId: string }):
 
     const targetLevel = TARGET_LEVEL_MAP[originalLevel] || 'B1';
 
-    // Simplify content via module function (includes system prompt + prompt injection protection)
     try {
       Sentry.addBreadcrumb({ category: 'ai', message: `Simplifying to ${targetLevel}`, level: 'info' });
       const simplified = await Sentry.startSpan({ name: 'ai:content-simplify', op: 'ai' }, async () => {
@@ -55,10 +52,9 @@ export async function studySimplifyAction({ passageId }: { passageId: string }):
         return { error: 'Simplification failed — try again' };
       }
 
-      // Update passage in DB (auto-scoped by extension)
       await Sentry.startSpan({ name: 'db:passage-update', op: 'db' }, async () => {
-        return userDb.passage.update({
-          where: { id: passageId },
+        return db.passage.update({
+          where: { id: passageId, userId: user.id },
           data: {
             simplifiedContent: simplified.simplifiedText,
             simplifiedLevel: targetLevel as 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2',

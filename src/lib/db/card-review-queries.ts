@@ -1,8 +1,5 @@
-import type { PrismaClient } from '@prisma/client';
-import { withUserContext } from './user-scoped-client';
+import { db } from './client';
 export { getCEFRColor, getCEFRLabel } from '../shared/cefr-utils';
-
-type ScopedClient = ReturnType<typeof withUserContext>;
 
 export function calculateSM2Interval(
   previousEaseFactor: number,
@@ -45,32 +42,27 @@ export function calculateSM2Interval(
   };
 }
 
-export async function getDueCards(client: ScopedClient) {
-  return client.cardReview.findMany({
+export async function getDueCards(userId: string) {
+  return db.cardReview.findMany({
     where: {
+      userId,
       nextReviewDate: { lte: new Date() },
     },
     include: {
-      question: {
-        include: {
-          passage: true,
-        },
-      },
+      question: { include: { passage: true } },
     },
-    orderBy: {
-      nextReviewDate: 'asc',
-    },
+    orderBy: { nextReviewDate: 'asc' },
     take: 20,
   });
 }
 
 export async function updateCardReview(
-  client: ScopedClient,
+  userId: string,
   cardReviewId: string,
   qualityRating: number
 ) {
-  const existing = await client.cardReview.findUniqueOrThrow({
-    where: { id: cardReviewId },
+  const existing = await db.cardReview.findUniqueOrThrow({
+    where: { id: cardReviewId, userId },
   });
 
   const sm2 = calculateSM2Interval(
@@ -83,7 +75,7 @@ export async function updateCardReview(
   const nextReviewDate = new Date();
   nextReviewDate.setDate(nextReviewDate.getDate() + sm2.intervalDays);
 
-  return client.cardReview.update({
+  return db.cardReview.update({
     where: { id: cardReviewId },
     data: {
       qualityRating,
@@ -97,11 +89,10 @@ export async function updateCardReview(
 }
 
 export async function createCardReview(
-  client: ScopedClient,
   userId: string,
   questionId: string
 ) {
-  return client.cardReview.create({
+  return db.cardReview.create({
     data: {
       userId,
       questionId,
@@ -113,28 +104,18 @@ export async function createCardReview(
   });
 }
 
-export async function getUserProgress(client: ScopedClient) {
+export async function getUserProgress(userId: string) {
   const [totalCards, matureCards, dueCards, todayReviews] = await Promise.all([
-    client.cardReview.count({}),
-    client.cardReview.count({
-      where: { intervalDays: { gte: 21 } },
-    }),
-    client.cardReview.count({
-      where: { nextReviewDate: { lte: new Date() } },
-    }),
-    client.cardReview.count({
+    db.cardReview.count({ where: { userId } }),
+    db.cardReview.count({ where: { userId, intervalDays: { gte: 21 } } }),
+    db.cardReview.count({ where: { userId, nextReviewDate: { lte: new Date() } } }),
+    db.cardReview.count({
       where: {
-        reviewedAt: {
-          gte: new Date(new Date().setHours(0, 0, 0, 0)),
-        },
+        userId,
+        reviewedAt: { gte: new Date(new Date().setHours(0, 0, 0, 0)) },
       },
     }),
   ]);
 
-  return {
-    totalCards,
-    matureCards,
-    dueCards,
-    todayReviews,
-  };
+  return { totalCards, matureCards, dueCards, todayReviews };
 }

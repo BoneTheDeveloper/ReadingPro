@@ -1,19 +1,13 @@
-import { withUserContext } from './user-scoped-client';
+import { db } from './client';
 
-type ScopedClient = ReturnType<typeof withUserContext>;
-
-export async function createStudySession(
-  client: ScopedClient,
-  userId: string,
-  passageId?: string
-) {
-  return client.studySession.create({
+export async function createStudySession(userId: string, passageId?: string) {
+  return db.studySession.create({
     data: { userId, passageId },
   });
 }
 
 export async function updateStudySession(
-  client: ScopedClient,
+  userId: string,
   sessionId: string,
   data: {
     completedAt?: Date;
@@ -24,7 +18,11 @@ export async function updateStudySession(
     accuracyRate?: number;
   }
 ) {
-  return client.studySession.update({
+  await db.studySession.findUniqueOrThrow({
+    where: { id: sessionId, userId },
+  });
+
+  return db.studySession.update({
     where: { id: sessionId },
     data,
   });

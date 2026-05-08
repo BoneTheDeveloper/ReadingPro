@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
-import { withUserContext } from '@/lib/db/client';
 import { updateCardReview } from '@/lib/db/card-review-queries';
 import { getAuthenticatedUser } from '@/lib/auth/auth-utils';
 import { createModuleLogger } from '@/lib/core/logger';
@@ -11,7 +10,6 @@ export async function POST(request: NextRequest) {
   try {
     const { cardReviewId, qualityRating } = await request.json();
     const user = await getAuthenticatedUser();
-    const userDb = withUserContext(user.id);
 
     if (!cardReviewId || typeof qualityRating !== 'number') {
       return NextResponse.json(
@@ -28,12 +26,7 @@ export async function POST(request: NextRequest) {
     }
 
     const updatedReview = await Sentry.startSpan({ name: 'db:card-review-update', op: 'db' }, async () => {
-      // findUniqueOrThrow auto-scoped by extension — throws NotFound if wrong user
-      await userDb.cardReview.findUniqueOrThrow({
-        where: { id: cardReviewId },
-      });
-
-      return updateCardReview(userDb, cardReviewId, qualityRating);
+      return updateCardReview(user.id, cardReviewId, qualityRating);
     });
 
     return NextResponse.json({ success: true, data: updatedReview });

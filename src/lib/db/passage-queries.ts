@@ -1,27 +1,21 @@
-import type { PrismaClient } from '@prisma/client';
 import type { CEFRLevel } from '../shared/cefr-utils';
-import { withUserContext } from './user-scoped-client';
+import { db } from './client';
 
-type ScopedClient = ReturnType<typeof withUserContext>;
-
-export async function getUserPassages(client: ScopedClient) {
-  return client.passage.findMany({
+export async function getUserPassages(userId: string) {
+  return db.passage.findMany({
+    where: { userId },
     orderBy: { createdAt: 'desc' },
   });
 }
 
-export async function getPassageWithQuestions(
-  client: ScopedClient,
-  passageId: string
-) {
-  return client.passage.findUnique({
-    where: { id: passageId },
+export async function getPassageWithQuestions(passageId: string, userId: string) {
+  return db.passage.findUnique({
+    where: { id: passageId, userId },
     include: { questions: true },
   });
 }
 
 export async function createPassage(
-  client: ScopedClient,
   userId: string,
   data: {
     title: string;
@@ -34,11 +28,10 @@ export async function createPassage(
     fileUrl?: string;
   }
 ) {
-  return client.passage.create({ data: { userId, ...data } });
+  return db.passage.create({ data: { userId, ...data } });
 }
 
 export async function createQuestion(
-  client: PrismaClient,
   data: {
     passageId: string;
     questionText: string;
@@ -49,11 +42,11 @@ export async function createQuestion(
     explanation: string;
   }
 ) {
-  return client.question.create({ data });
+  return db.question.create({ data });
 }
 
 export async function getNewCards(userId: string, passageId: string) {
-  return withUserContext(userId).question.findMany({
+  return db.question.findMany({
     where: {
       passageId,
       reviews: {

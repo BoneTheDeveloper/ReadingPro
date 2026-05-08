@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
-import { withUserContext } from '@/lib/db/client';
+import { db } from '@/lib/db/client';
 import { getAuthenticatedUser } from '@/lib/auth/auth-utils';
 import { createModuleLogger } from '@/lib/core/logger';
 
@@ -10,10 +10,9 @@ export async function POST(request: NextRequest) {
   try {
     const { passageId } = await request.json();
     const user = await getAuthenticatedUser();
-    const userDb = withUserContext(user.id);
 
     const session = await Sentry.startSpan({ name: 'db:session-create', op: 'db' }, async () => {
-      return userDb.studySession.create({
+      return db.studySession.create({
         data: {
           userId: user.id,
           passageId,
@@ -40,10 +39,14 @@ export async function PATCH(request: NextRequest) {
     const { sessionId, cardsReviewed, correctCount, incorrectCount } =
       await request.json();
     const user = await getAuthenticatedUser();
-    const userDb = withUserContext(user.id);
+
+    // Verify ownership
+    await db.studySession.findUniqueOrThrow({
+      where: { id: sessionId, userId: user.id },
+    });
 
     const session = await Sentry.startSpan({ name: 'db:session-update', op: 'db' }, async () => {
-      return userDb.studySession.update({
+      return db.studySession.update({
         where: { id: sessionId },
         data: {
           completedAt: new Date(),

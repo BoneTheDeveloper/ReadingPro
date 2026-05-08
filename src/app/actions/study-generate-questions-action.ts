@@ -2,7 +2,7 @@
 
 import { headers } from 'next/headers';
 import * as Sentry from '@sentry/nextjs';
-import { withUserContext } from '@/lib/db/client';
+import { db } from '@/lib/db/client';
 import { createModuleLogger } from '@/lib/core/logger';
 import { generateComprehensionQuestions, type GeneratedQuestion } from '@/lib/ai/question-generator';
 import { getAuthenticatedUser } from './study-shared';
@@ -23,11 +23,9 @@ export async function studyGenerateQuestionsAction({ passageId }: { passageId: s
     headers: await headers(),
   }, async () => {
     const user = await getAuthenticatedUser();
-    const userDb = withUserContext(user.id);
 
-    // Fetch passage (auto-scoped by extension)
     const passage = await Sentry.startSpan({ name: 'db:passage-fetch', op: 'db' }, async () => {
-      return userDb.passage.findUnique({ where: { id: passageId } });
+      return db.passage.findUnique({ where: { id: passageId, userId: user.id } });
     });
 
     if (!passage) {
@@ -36,7 +34,6 @@ export async function studyGenerateQuestionsAction({ passageId }: { passageId: s
 
     const contentToAnalyze = passage.simplifiedContent || passage.content;
 
-    // Generate questions via module function (includes system prompt + prompt injection protection)
     let questions: GeneratedQuestion[] = [];
     try {
       Sentry.addBreadcrumb({ category: 'ai', message: 'Generating comprehension questions', level: 'info' });
@@ -58,11 +55,11 @@ export async function studyGenerateQuestionsAction({ passageId }: { passageId: s
       return { error: 'No questions generated — try again' };
     }
 
-    // Replace existing questions (atomic — passage already verified above)
+    // Replace existing questions (atomic — passage ownership already verified)
     await Sentry.startSpan({ name: 'db:questions-replace', op: 'db' }, async () => {
-      await userDb.$transaction([
-        userDb.question.deleteMany({ where: { passageId } }),
-        userDb.question.createMany({
+      await db.$transaction([
+        db.question.deleteMany({ where: { passageId } }),
+        db.question.createMany({
           data: questions.map(q => ({
             passageId,
             questionText: q.questionText,
