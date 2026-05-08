@@ -1,41 +1,32 @@
-# Prisma & Supabase RLS — Security Model
+# Prisma & Supabase — Security Model
 
 ## Key Fact
 
-Prisma connects via the **service role** (`DB_USER`/`DB_PASSWORD`), which **bypasses Supabase RLS entirely**.
+Prisma connects via a dedicated `prisma` database user with `bypassrls`, using `@prisma/adapter-pg` (Prisma 7 requires explicit driver adapters).
+RLS policies exist as a safety net for direct DB access but do not apply to Prisma queries.
 
-RLS policies in `supabase/migrations/enable_rls.sql` do **not** protect Prisma queries.
+## Connection Setup
+
+| Purpose | Env Var | Port | Description |
+|---------|---------|------|-------------|
+| App queries | `DATABASE_URL` | 6543 | Pooled via Supavisor (`?pgbouncer=true`) |
+| Migrations | `DIRECT_URL` | 5432 | Direct connection, configured in `prisma.config.ts` |
+
+Prisma 7 removed the built-in PostgreSQL driver. `@prisma/adapter-pg` is mandatory — no standalone `PrismaClient()` possible.
 
 ## Security Model
 
 | Layer | Mechanism | Protects |
 |-------|-----------|----------|
-| Primary | `withUserContext(userId)` extension | Auto-scopes Passage, CardReview, StudySession |
-| Required | `getAuthenticatedUser()` before any DB call | Auth check must happen before scoped client is created |
-| Secondary | Supabase RLS policies | Direct Supabase client queries (if any) |
-
-## User Context Extension
-
-`src/lib/db/user-scoped-client.ts` provides `withUserContext(userId)` which returns a Prisma client that **automatically scopes** all queries on user-owned models:
-
-- **Passage** — `userId` auto-injected on create, auto-filtered on read/write
-- **CardReview** — `userId` auto-filtered on all operations
-- **StudySession** — `userId` auto-injected on create, auto-filtered on read/write
-
-```typescript
-const user = await getAuthenticatedUser();
-const userDb = withUserContext(user.id);
-const passage = await userDb.passage.findUnique({ where: { id: passageId } }); // auto-scoped
-```
-
-**Not scoped** (intentionally):
-- `UserProfile` — managed by auth infrastructure (`sync-user.ts`, `auth-utils.ts`)
-- `Question` — protected by passage ownership (always accessed via a scoped passage)
+| Primary | Explicit `where: { userId }` on all queries | Every read/write scoped to authenticated user |
+| Required | `getAuthenticatedUser()` before any DB call | Auth check must precede all DB operations |
+| Secondary | Supabase RLS policies | Direct DB access via non-Prisma clients |
 
 ## Rules
 
-1. **Use `withUserContext()` for all app code** — Never import `db` directly in API routes, server actions, or page components
-2. **Never skip `getAuthenticatedUser()`** — The scoped client requires a valid userId from auth
-3. **`db` is for auth infrastructure only** — `sync-user.ts` and `auth-utils.ts` may use `db` directly for profile management
-4. **Prisma is server-side only** — Never expose Prisma client to client components
-5. **RLS stays enabled** — Defense-in-depth for direct Supabase client usage
+1. **Always include `userId` in `where` clauses** for Passage, CardReview, StudySession queries
+2. **Never skip `getAuthenticatedUser()`** — userId must come from auth, never from request body
+3. **Verify ownership before update/delete** — fetch with userId, then mutate by id
+4. **`db` is the single Prisma client** — import from `@/lib/db/client`
+5. **Prisma is server-side only** — never expose to client components
+6. **RLS stays enabled** — defense-in-depth for direct DB access

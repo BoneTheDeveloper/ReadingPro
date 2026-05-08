@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { withUserContext } from '@/lib/db/client';
 import { getDueCards } from '@/lib/db/card-review-queries';
 import { getAuthenticatedUser } from '@/lib/auth/auth-utils';
 import { createModuleLogger } from '@/lib/core/logger';
@@ -9,8 +8,7 @@ const log = createModuleLogger('api:cards:due');
 export async function GET() {
   try {
     const user = await getAuthenticatedUser();
-    const userDb = withUserContext(user.id);
-    const dueCards = await getDueCards(userDb);
+    const dueCards = await getDueCards(user.id);
 
     return NextResponse.json({ success: true, data: dueCards });
   } catch (error) {
