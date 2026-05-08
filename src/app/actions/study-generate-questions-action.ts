@@ -5,6 +5,7 @@ import * as Sentry from '@sentry/nextjs';
 import { db } from '@/lib/db/client';
 import { createModuleLogger } from '@/lib/core/logger';
 import { generateComprehensionQuestions, type GeneratedQuestion } from '@/lib/ai/question-generator';
+import { questionDataSchema } from '@/lib/db/passage-queries';
 import { getAuthenticatedUser } from './study-shared';
 
 const log = createModuleLogger('actions:study-generate-questions');
@@ -55,12 +56,28 @@ export async function studyGenerateQuestionsAction({ passageId }: { passageId: s
       return { error: 'No questions generated — try again' };
     }
 
+    const validQuestions = questions.filter(q => {
+      const result = questionDataSchema.safeParse({
+        questionText: q.questionText,
+        options: q.options,
+        correctOption: q.correctAnswer,
+        sourceText: q.sourceText,
+        sourceLine: q.sourceLine,
+        explanation: q.explanation,
+      });
+      return result.success;
+    });
+
+    if (validQuestions.length === 0) {
+      return { error: 'All generated questions failed validation — try again' };
+    }
+
     // Replace existing questions (atomic — passage ownership already verified)
     await Sentry.startSpan({ name: 'db:questions-replace', op: 'db' }, async () => {
       await db.$transaction([
         db.question.deleteMany({ where: { passageId } }),
         db.question.createMany({
-          data: questions.map(q => ({
+          data: validQuestions.map(q => ({
             passageId,
             questionText: q.questionText,
             options: JSON.stringify(q.options),
