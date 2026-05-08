@@ -90,8 +90,8 @@
     body {
         @apply bg-background text-foreground;
     }
-    get type check error for any at  [@user-scoped-client.ts](file:///home/luc/Project/english-reading-training-app/src/lib/db/user-scoped-client.ts)  Unexpected any. Specify a different type.
-  html {
+
+    html {
         @apply font-sans;
     }
 }
