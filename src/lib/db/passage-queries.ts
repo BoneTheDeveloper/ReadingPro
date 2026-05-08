@@ -1,5 +1,23 @@
+import { z } from 'zod';
 import type { CEFRLevel } from '../shared/cefr-utils';
 import { db } from './client';
+
+export const questionOptionSchema = z.object({
+  id: z.string(),
+  text: z.string(),
+});
+
+export const questionDataSchema = z.object({
+  questionText: z.string(),
+  options: z.array(questionOptionSchema).min(2),
+  correctOption: z.string(),
+  sourceText: z.string(),
+  sourceLine: z.number().int().positive(),
+  explanation: z.string(),
+}).refine(
+  (q) => q.options.some(opt => opt.id === q.correctOption),
+  { message: 'correctOption must match one of the option ids', path: ['correctOption'] }
+);
 
 export async function getUserPassages(userId: string) {
   return db.passage.findMany({
@@ -42,6 +60,10 @@ export async function createQuestion(
     explanation: string;
   }
 ) {
+  const result = questionDataSchema.safeParse(data);
+  if (!result.success) {
+    throw new Error(`Invalid question data: ${result.error.issues.map(i => i.message).join(', ')}`);
+  }
   return db.question.create({ data });
 }
 
