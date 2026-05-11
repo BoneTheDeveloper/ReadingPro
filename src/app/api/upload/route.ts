@@ -1,26 +1,30 @@
-import { NextRequest, NextResponse } from 'next/server';
-import * as Sentry from '@sentry/nextjs';
-import { parsePDF } from '@/lib/parsers/pdf';
-import { validateFile, sanitizeFilename, sanitizeTitle } from '@/lib/validation/upload';
-import { analyzeContentAction } from '@/app/actions/analyze';
-import { uploadFile } from '@/lib/storage/supabase-storage';
-import { getAuthenticatedUser } from '@/lib/auth/auth-utils';
-import { createModuleLogger } from '@/lib/core/logger';
+import { NextRequest, NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
+import { parsePDF } from "@/lib/parsers/pdf";
+import {
+  validateFile,
+  sanitizeFilename,
+  sanitizeTitle,
+} from "@/lib/validation/upload";
+import { analyzeContentAction } from "@/app/actions/analyze";
+import { uploadFile, deleteFile } from "@/lib/storage/supabase-storage";
+import { getAuthenticatedUser } from "@/lib/auth/auth-utils";
+import { createModuleLogger } from "@/lib/core/logger";
 
-const log = createModuleLogger('api:upload');
+const log = createModuleLogger("api:upload");
 
 export async function POST(request: NextRequest) {
+  let filename = "";
+  const storedInStorage = false;
+
   try {
     const user = await getAuthenticatedUser();
 
     const formData = await request.formData();
-    const file = formData.get('file') as File;
+    const file = formData.get("file") as File;
 
     if (!file) {
-      return NextResponse.json(
-        { error: 'No file provided' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
     const validation = validateFile(file);
@@ -34,52 +38,68 @@ export async function POST(request: NextRequest) {
     }
 
     const timestamp = Date.now();
-    const filename = `${user.id}/${timestamp}-${nameResult.sanitized}`;
+    filename = `${user.id}/${timestamp}-${nameResult.sanitized}`;
 
-    Sentry.addBreadcrumb({ category: 'upload', message: 'Uploading file to Supabase Storage', level: 'info' });
+    Sentry.addBreadcrumb({
+      category: "upload",
+      message: "Uploading file to Supabase Storage",
+      level: "info",
+    });
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    const storageResult = await Sentry.startSpan({ name: 'storage-upload', op: 'function' }, async () => {
-      return uploadFile(filename, buffer, file.type);
-    });
+    const storageResult = await Sentry.startSpan(
+      { name: "storage-upload", op: "function" },
+      async () => {
+        return uploadFile(filename, buffer, file.type);
+      },
+    );
 
     if (!storageResult) {
       return NextResponse.json(
-        { error: 'Failed to store file' },
-        { status: 500 }
+        { error: "Failed to store file" },
+        { status: 500 },
       );
     }
 
     let text: string;
 
-    if (file.type === 'application/pdf') {
-      Sentry.addBreadcrumb({ category: 'parse', message: 'Parsing PDF file', level: 'info' });
-      text = await Sentry.startSpan({ name: 'pdf-parse', op: 'function' }, async () => {
-        const pdf = await parsePDF(buffer);
-        return pdf.text;
+    if (file.type === "application/pdf") {
+      Sentry.addBreadcrumb({
+        category: "parse",
+        message: "Parsing PDF file",
+        level: "info",
       });
+      text = await Sentry.startSpan(
+        { name: "pdf-parse", op: "function" },
+        async () => {
+          const pdf = await parsePDF(buffer);
+          return pdf.text;
+        },
+      );
     } else {
-      text = buffer.toString('utf-8');
+      text = buffer.toString("utf-8");
     }
 
-    const wordCount = text.split(/\s+/).filter(w => w.length > 0).length;
+    const wordCount = text.split(/\s+/).filter((w) => w.length > 0).length;
     if (wordCount < 50) {
+      await deleteFile(filename).catch(() => {});
       return NextResponse.json(
-        { error: 'Extracted text is too short (minimum 50 words)' },
-        { status: 400 }
+        { error: "Extracted text is too short (minimum 50 words)" },
+        { status: 400 },
       );
     }
 
     const title = sanitizeTitle(file.name);
 
     const analyzeFormData = new FormData();
-    analyzeFormData.set('text', text);
-    analyzeFormData.set('title', title);
+    analyzeFormData.set("text", text);
+    analyzeFormData.set("title", title);
 
     const result = await analyzeContentAction(analyzeFormData);
 
-    if ('error' in result && result.error) {
+    if ("error" in result && result.error) {
+      await deleteFile(filename).catch(() => {});
       return NextResponse.json({ error: result.error }, { status: 400 });
     }
 
@@ -95,13 +115,16 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    log.error({ err: error }, 'Upload failed');
+    if (storedInStorage) {
+      await deleteFile(filename).catch(() => {});
+    }
+    log.error({ err: error }, "Upload failed");
     Sentry.captureException(error, {
-      tags: { route: 'api:upload', method: 'POST' },
+      tags: { route: "api:upload", method: "POST" },
     });
     return NextResponse.json(
-      { error: 'Failed to process file' },
-      { status: 500 }
+      { error: "Failed to process file" },
+      { status: 500 },
     );
   }
 }

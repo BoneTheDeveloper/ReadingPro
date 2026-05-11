@@ -1,8 +1,15 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Plus, FileText, Search, CheckSquare, Square } from "lucide-react";
+import { Plus, FileText, Search, CheckSquare, Square, MoreHorizontal, Trash2, Pencil } from "lucide-react";
 import { cn } from "@/lib/shared/utils";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import type { DocumentItem } from "./study-types";
 
 interface StudySourcesPanelProps {
@@ -12,6 +19,7 @@ interface StudySourcesPanelProps {
   onOpenUploadModal: () => void;
   isUploading?: boolean;
   uploadingFileName?: string;
+  onDelete: (id: string) => void;
 }
 
 export function StudySourcesPanel({
@@ -21,6 +29,7 @@ export function StudySourcesPanel({
   onOpenUploadModal,
   isUploading,
   uploadingFileName,
+  onDelete,
 }: StudySourcesPanelProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -181,11 +190,14 @@ export function StudySourcesPanel({
             const isSelected = selectedIds.has(doc.id);
             const isActive = activeId === doc.id;
             return (
-              <button
+              <div
                 key={doc.id}
+                role="button"
+                tabIndex={0}
                 onClick={() => onSelect(doc.id)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onSelect(doc.id); }}
                 className={cn(
-                  "w-full p-3 text-left flex items-center gap-3 rounded-xl transition-colors border group",
+                  "w-full p-3 text-left flex items-center gap-3 rounded-xl transition-colors border group cursor-pointer",
                   isActive
                     ? "bg-primary/8 border-primary/20"
                     : "border-transparent hover:bg-surface-container-high hover:border-outline-variant/20",
@@ -229,7 +241,36 @@ export function StudySourcesPanel({
                     {doc.date}
                   </p>
                 </div>
-              </button>
+
+                {/* Kebab menu */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      onClick={(e) => e.stopPropagation()}
+                      className="shrink-0 p-1 rounded-lg text-on-surface-variant/40 hover:text-on-surface hover:bg-surface-container-high transition-colors opacity-0 group-hover:opacity-100"
+                    >
+                      <MoreHorizontal className="w-4 h-4" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent side="right" align="end">
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(doc.id);
+                      }}
+                      className="text-red-600 focus:text-red-600"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Delete source
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem disabled>
+                      <Pencil className="w-4 h-4" />
+                      Rename source
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             );
           })}
 
