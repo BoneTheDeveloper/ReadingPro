@@ -33,25 +33,6 @@ An integrated pipeline: **Upload → Analyze → Read → Test → Retain**
 
 ---
 
-## Core Features
-
-| Feature | Status | Description |
-|---------|--------|-------------|
-| Content Upload | Done | File upload (txt/pdf, max 10MB) or text paste (50-100k chars) |
-| CEFR Detection | Done | AI (OpenAI gpt-4o-mini) + heuristic fallback, 6 levels (A1-C2) |
-| Content Simplification | Done | AI simplification to one CEFR level below |
-| Question Generation | Done | 5 MC/TF questions per passage with source citations |
-| Reading View | Done | Original/simplified toggle, reading time, word count |
-| Flashcard Test | Done | Interactive quiz with streaks, keyboard shortcuts, scoring |
-| SM-2 Spaced Repetition | Done | Review scheduling, due card tracking |
-| Progress Dashboard | Done | Total/mature/due cards, today's reviews |
-| Study Sessions | Done | Session tracking with accuracy rates |
-| Authentication | Planned | NextAuth.js v5 (currently hardcoded demo user) |
-| YouTube Transcription | Planned | Whisper-based video transcription |
-| Advanced Analytics | Planned | Detailed progress charts, retention curves |
-
----
-
 ## User Flows
 
 ### Primary Flow: Upload & Study
@@ -66,64 +47,34 @@ Progress Dashboard → Due Cards → Review Session → Session Summary
 
 ---
 
-## Non-Functional Requirements
+## Current State (2026-05-11)
 
-| Category | Requirement |
-|----------|------------|
-| **Performance** | AI analysis under 30s, page load under 2s |
-| **Usability** | Keyboard accessible, mobile responsive, WCAG 2.1 AA |
-| **Data** | All data persisted locally (SQLite), export-ready |
-| **Security** | No auth yet (MVP); env vars for API keys |
-| **Scalability** | SQLite sufficient for single-user MVP; migration path to PostgreSQL |
+Fully functional MVP with Supabase Auth + PostgreSQL + Supabase Storage. All core features operational: upload/analyze pipeline, three-panel study workspace, SM-2 spaced repetition, progress tracking.
 
----
-
-## Design Principles
-
-1. **Typography-first** — Readability over decoration
-2. **Calm interface** — Minimal cognitive load, focus on content
-3. **Source-backed** — Every answer traceable to passage text
-4. **Progressive difficulty** — Content adapts to learner level
-5. **Spaced retention** — SM-2 algorithm for long-term memory
-
----
-
-## Milestones
-
-| Phase | Scope | Status |
-|-------|-------|--------|
-| **MVP** | Upload, CEFR detect, simplify, questions, flashcards, progress | **Done** |
-| **Phase 2** | Authentication, user profiles, shared dashboard layout | Planned |
-| **Phase 3** | YouTube input, scanned PDF OCR, multi-language | Planned |
-| **Phase 4** | Advanced analytics, export, collaboration features | Planned |
-| **Production** | PostgreSQL, Vercel deploy, multi-tenant | Future |
+**Completed milestones:**
+- Phase 1-4: Core MVP + Sentry integration (2026-04-27 to 2026-05-01)
+- Phase 6 (partial): Three-panel resizable study workspace
+- Phase 7: Supabase Auth — email/password + Google OAuth, middleware protection
+- Phase 8 (partial): PostgreSQL migration (Supabase), Supabase Storage for file uploads
+- Prisma client security extension for auto user context injection
+- Zod validation across all server actions and API routes
 
 ---
 
 ## Out of Scope (Current)
 
-- Multi-user support (no auth)
-- Real-time collaboration
-- Social features (leaderboards, sharing)
-- Mobile native apps
-- Payment/billing
-- Content library/curation
-- Audio pronunciation
-- Grammar exercises
+- Real-time collaboration, social features
+- Mobile native apps, payment/billing
+- Content library/curation, audio pronunciation, grammar exercises
 
 ---
 
-## Success Metrics (Future)
-
-| Metric | Target |
-|--------|--------|
-| CEFR detection accuracy | >80% agreement with human assessment |
-| User retention (7-day) | >40% return rate |
-| Cards reaching maturity | >60% of studied cards |
-| Average session duration | >5 minutes |
-| Question quality score | >4/5 user rating |
+**See also:**
+- Business goals & metrics → [`docs/database/brd.md`](database/brd.md)
+- Functional requirements → [`docs/database/srs.md`](database/srs.md)
+- Use cases → [`docs/database/use-case.md`](database/use-case.md)
 
 ---
 
 **Status:** Active
-**Last Updated:** 2026-05-06
+**Last Updated:** 2026-05-11

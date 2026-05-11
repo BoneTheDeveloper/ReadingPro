@@ -36,7 +36,7 @@ const features = [
 
 export default function Home() {
   return (
-    <div className="min-h-[100dvh] flex bg-background">
+    <div className="min-h-dvh flex bg-background">
       {/* Icon sidebar */}
       <aside className="hidden lg:flex lg:flex-col lg:w-20 lg:fixed lg:inset-y-0 bg-surface-container-low border-r border-outline-variant/30 items-center py-8 z-40">
         <div className="mb-10 text-primary">
@@ -44,7 +44,10 @@ export default function Home() {
         </div>
 
         <nav className="flex-1 w-full px-3 space-y-2 flex flex-col items-center">
-          <span className="w-full flex justify-center items-center p-3 rounded-lg text-primary bg-accent/80 border-r-4 border-primary transition-colors duration-200" title="Dashboard">
+          <span
+            className="w-full flex justify-center items-center p-3 rounded-lg text-primary bg-accent/80 border-r-4 border-primary transition-colors duration-200"
+            title="Dashboard"
+          >
             <LayoutDashboard className="w-5 h-5" />
           </span>
           <Link
@@ -74,10 +77,16 @@ export default function Home() {
         </div>
 
         <div className="mt-auto pt-6 w-full px-3 border-t border-outline-variant/30 space-y-2 flex flex-col items-center">
-          <button className="w-full flex justify-center p-2 rounded-lg text-on-surface-variant hover:bg-accent/60 transition-colors" title="Settings">
+          <button
+            className="w-full flex justify-center p-2 rounded-lg text-on-surface-variant hover:bg-accent/60 transition-colors"
+            title="Settings"
+          >
             <Settings className="w-5 h-5" />
           </button>
-          <button className="w-full flex justify-center p-2 rounded-lg text-on-surface-variant hover:bg-accent/60 transition-colors" title="Help">
+          <button
+            className="w-full flex justify-center p-2 rounded-lg text-on-surface-variant hover:bg-accent/60 transition-colors"
+            title="Help"
+          >
             <HelpCircle className="w-5 h-5" />
           </button>
         </div>
@@ -106,7 +115,7 @@ export default function Home() {
         </header>
 
         {/* Hero */}
-        <main className="flex-1 pt-16 px-12 pb-12 max-w-[1440px] mx-auto w-full">
+        <main className="flex-1 pt-16 px-12 pb-12 max-w-360 mx-auto w-full">
           <header className="mb-12 pt-8">
             <h2 className="text-[32px] font-bold text-primary tracking-[-0.02em] leading-[1.2]">
               English Reading Training
@@ -130,7 +139,7 @@ export default function Home() {
                 <h3 className="text-[16px] font-semibold text-on-surface mb-2">
                   {feature.title}
                 </h3>
-                <p className="text-[14px] text-on-surface-variant leading-[1.5]">
+                <p className="text-[14px] text-on-surface-variant leading-normal">
                   {feature.description}
                 </p>
               </Link>

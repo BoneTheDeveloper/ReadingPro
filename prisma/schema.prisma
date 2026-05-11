@@ -38,18 +38,18 @@ model UserProfile {
 // PASSAGE MODEL
 // ============================================
 model Passage {
-  id               String   @id @default(cuid())
-  userId           String
-  title            String
-  content          String
+  id                String     @id @default(cuid())
+  userId            String
+  title             String
+  content           String
   simplifiedContent String?
-  originalLevel    CEFRLevel?
-  simplifiedLevel  CEFRLevel?
-  wordCount        Int
-  sourceType       SourceType
-  fileUrl          String?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  originalLevel     CEFRLevel?
+  simplifiedLevel   CEFRLevel?
+  wordCount         Int
+  sourceType        SourceType
+  fileUrl           String?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
 
   user      UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
   questions Question[]
@@ -63,20 +63,20 @@ model Passage {
 // QUESTION MODEL (Flashcards)
 // ============================================
 model Question {
-  id             String   @id @default(cuid())
-  passageId      String
-  questionText   String
-  options        Json
-  correctOption  String
-  sourceText     String
-  sourceLine     Int
-  explanation    String
-  questionType   QuestionType @default(MULTIPLE_CHOICE)
-  difficulty     Int      @default(3)
-  createdAt      DateTime @default(now())
+  id            String       @id @default(cuid())
+  passageId     String
+  questionText  String
+  options       Json
+  correctOption String
+  sourceText    String
+  sourceLine    Int
+  explanation   String
+  questionType  QuestionType @default(MULTIPLE_CHOICE)
+  difficulty    Int          @default(3)
+  createdAt     DateTime     @default(now())
 
-  passage  Passage      @relation(fields: [passageId], references: [id], onDelete: Cascade)
-  reviews  CardReview[]
+  passage Passage      @relation(fields: [passageId], references: [id], onDelete: Cascade)
+  reviews CardReview[]
 
   @@index([passageId])
   @@map("questions")
@@ -86,17 +86,17 @@ model Question {
 // CARD REVIEW MODEL (SM-2 Tracking)
 // ============================================
 model CardReview {
-  id             String    @id @default(cuid())
-  questionId     String
-  userId         String
+  id         String @id @default(cuid())
+  questionId String
+  userId     String
 
-  qualityRating  Int
-  easeFactor     Float     @default(2.5)
-  intervalDays   Int       @default(1)
-  repetitions    Int       @default(0)
+  qualityRating Int
+  easeFactor    Float @default(2.5)
+  intervalDays  Int   @default(1)
+  repetitions   Int   @default(0)
 
-  nextReviewDate DateTime  @default(now())
-  reviewedAt     DateTime  @default(now())
+  nextReviewDate DateTime @default(now())
+  reviewedAt     DateTime @default(now())
 
   question Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
   user     UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -110,20 +110,20 @@ model CardReview {
 // STUDY SESSION MODEL
 // ============================================
 model StudySession {
-  id            String   @id @default(cuid())
-  userId        String
-  passageId     String?
+  id        String  @id @default(cuid())
+  userId    String
+  passageId String?
 
-  startedAt     DateTime @default(now())
-  completedAt   DateTime?
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
 
-  cardsReviewed Int      @default(0)
-  newCards      Int      @default(0)
-  correctCount  Int      @default(0)
-  incorrectCount Int     @default(0)
-  accuracyRate  Float?
+  cardsReviewed  Int    @default(0)
+  newCards       Int    @default(0)
+  correctCount   Int    @default(0)
+  incorrectCount Int    @default(0)
+  accuracyRate   Float?
 
-  user    UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, startedAt])
   @@map("study_sessions")

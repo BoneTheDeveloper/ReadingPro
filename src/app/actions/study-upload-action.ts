@@ -4,8 +4,7 @@ import { headers } from 'next/headers';
 import * as Sentry from '@sentry/nextjs';
 import { db } from '@/lib/db/client';
 import { createModuleLogger } from '@/lib/core/logger';
-import { detectCEFRLevel, getHeuristicCEFR } from '@/lib/ai/cefr-detector';
-import type { CEFRLevel } from '@/lib/shared/cefr-utils';
+import { getHeuristicCEFR, type CEFRLevel } from '@/lib/shared/cefr-utils';
 import { getAuthenticatedUser } from './study-shared';
 
 const log = createModuleLogger('actions:study-upload');
@@ -37,18 +36,8 @@ export async function studyUploadAction({ text, title }: { text: string; title: 
     let originalLevel: CEFRLevel | null = null;
 
     const detectStart = Date.now();
-    try {
-      Sentry.addBreadcrumb({ category: 'ai', message: 'Detecting CEFR level', level: 'info' });
-      const cefrResult = await Sentry.startSpan({ name: 'ai:cefr-detect', op: 'ai' }, async () => {
-        return detectCEFRLevel(text);
-      });
-      originalLevel = cefrResult?.level ?? null;
-    } catch (error) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      log.warn({ err, title, ms: Date.now() - detectStart }, 'CEFR detection failed, using heuristic');
-      originalLevel = getHeuristicCEFR(text);
-    }
-    log.info({ level: originalLevel, ms: Date.now() - detectStart }, 'CEFR detection done');
+    originalLevel = getHeuristicCEFR(text);
+    log.info({ level: originalLevel, ms: Date.now() - detectStart }, 'CEFR level computed');
 
     const user = await getAuthenticatedUser();
 

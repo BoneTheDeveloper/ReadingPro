@@ -10,7 +10,7 @@
 ┌─────────────────────────────────────────────────────────────────┐
 │                        Client (Browser)                          │
 │  React 19 + Next.js App Router + Tailwind CSS + shadcn/ui       │
-│  @supabase/ssr (browser client for auth)                        │
+│  @supabase/ssr (browser client for auth + storage)               │
 └────────────────────────────┬────────────────────────────────────┘
                              │
                              ▼
@@ -26,10 +26,10 @@
                           ┌─────┴──┐  ┌────┴────┐  ┌─┴──┐  ┌──────┐
                           ▼        ▼  ▼         ▼  ▼    ▼  ▼      ▼
                        ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐┌──────┐
-                       │OpenAI│ │pdf-  │ │ SM-2 │ │SQLite││Supa- │
-                       │  AI  │ │parse │ │Algo  │ │ DB   ││base  │
-                       │(gpt-4o│ │      │ │      │ │      ││Auth  │
-                       │mini) │ │      │ │      │ │      ││      │
+                       │OpenAI│ │pdf-  │ │ SM-2 │ │Post- ││Supa- │
+                       │  AI  │ │parse │ │Algo  │ │greSQL││base  │
+                       │(gpt-4o│ │      │ │      │ │(Supa-││Auth +│
+                       │mini) │ │      │ │      │ │base) ││Stor. │
                        └──────┘ └──────┘ └──────┘ └──────┘└──────┘
 ```
 
@@ -55,22 +55,25 @@ User uploads file/pastes text
          ▼
 ┌──────────────────┐
 │  analyzeContent  │  Server action (orchestrator)
-│  Action          │  Calls 3 AI services sequentially
+│  Action          │  Calls 2 AI services + heuristic CEFR
 └────────┬─────────┘
          │
-    ┌────┴────┬────────────┐
-    ▼         ▼            ▼
+    ┌────┴─────┬────────────┐
+    ▼          ▼            ▼
 ┌────────┐ ┌─────────┐ ┌──────────┐
 │ CEFR   │ │Content  │ │Question  │
-│Detect  │→│Simplify │→│Generator │
+│Heuris- │→│Simplify │→│Generator │
+│tic     │ │         │ │          │
 └────────┘ └─────────┘ └────┬─────┘
                                 │
                                 ▼
                     ┌──────────────────┐
-                    │  SQLite Database │
+                    │  PostgreSQL DB   │
+                    │  (Supabase)      │
                     │  Persist:        │
                     │  - Passage       │
                     │  - Questions     │
+                    │  - File → Storage│
                     └──────────────────┘
 ```
 
@@ -84,7 +87,7 @@ User navigates to /test/[id]
          ▼
 ┌──────────────────┐
 │  GET Passage +   │  Server component fetches from DB
-│  Questions       │
+│  Questions       │  (via passage-queries.ts)
 └────────┬─────────┘
          │
          ▼
@@ -102,7 +105,8 @@ User navigates to /test/[id]
          ▼
 ┌──────────────────┐
 │  SM-2 Algorithm  │  Calculate new easeFactor,
-│  (db-utils.ts)   │  intervalDays, nextReviewDate
+│  (card-review-   │  intervalDays, nextReviewDate
+│   queries.ts)    │
 └────────┬─────────┘
          │
          ▼
@@ -154,82 +158,37 @@ User navigates to /progress → clicks "Study Now"
 ## Data Flow: Authentication
 
 ```
-User visits protected route (e.g. /study)
-         │
-         ▼
-┌──────────────────┐
-│   Middleware      │  src/middleware.ts
-│  updateSession() │  Refreshes Supabase session via cookie exchange
-│  Route protect   │  No auth cookie → redirect to /sign-in?next=/study
-└────────┬─────────┘
-         │
-         ▼ (has session)
-┌──────────────────┐
-│  Server Action / │  Uses createServerActionClient()
-│  API Route       │  Gets authenticated user via supabase.auth.getUser()
-└──────────────────┘
+Protected route → Middleware session refresh
+    → No session → redirect /sign-in?next={original}
+    → Has session → Server action/route uses authenticated user
 
-Email/Password Sign-In:
-  /sign-in → signInWithPassword() → redirect to /study
+Email/Password: /sign-in → signInWithPassword() → redirect
+Google OAuth:   /sign-in → Google consent → /auth/callback → syncUser → redirect
 
-Google OAuth Sign-In:
-  /sign-in → signInWithOAuth() → Google consent → /auth/callback
-  → exchangeCodeForSession() → syncUser() → redirect to /study
-
-User Sync (on first sign-up):
-  Supabase Auth user.id → upsert into local users.supabaseAuthId
-  Creates local User row with email + name from auth metadata
+All server actions/routes:
+  getAuthenticatedUser() → requireAuth() → getCurrentUser()
+  Prisma client extension auto-injects userId from Supabase session
 ```
 
 ---
 
-## Database Schema
+## Data Flow: File Storage
 
 ```
-┌─────────────┐       ┌──────────────┐       ┌──────────────┐
-│    User     │       │   Passage    │       │   Question   │
-├─────────────┤       ├──────────────┤       ├──────────────┤
-│ id (PK)     │──┐    │ id (PK)      │──┐    │ id (PK)      │
-│ email (UQ)  │  │    │ userId (FK)  │◄─┘    │ passageId(FK)│◄─┐
-│ name        │  │    │ title        │       │ questionText │  │
-│ supabaseAuth│  │    │ content      │       │ options (J)  │  │
-│   Id (UQ)  │  │    │ simplifiedC  │       │ correctOpt   │  │
-│ targetLevel │  │    │ originalLvl  │       │ sourceText   │  │
-│ createdAt   │  │    │ simplifiedLv │       │ sourceLine   │  │
-│ updatedAt   │  │    │ wordCount    │       │ explanation  │  │
-└──────┬──────┘  │    │ sourceType   │       │ questionType │  │
-       │         │    │ createdAt    │       │ difficulty   │  │
-       │         │    │ updatedAt    │       │ createdAt    │  │
-       │         │    └──────────────┘       └──────┬───────┘  │
-       │         │                                   │          │
-       │         │    ┌──────────────┐               │          │
-       │         │    │  CardReview  │               │          │
-       │         │    ├──────────────┤               │          │
-       │         └───►│ id (PK)      │               │          │
-       │              │ questionId(FK)│───────────────┘          │
-       │              │ userId (FK)  │◄──────────────────────────┘
-       │              │ qualityRating│
-       │              │ easeFactor   │
-       │              │ intervalDays │
-       │              │ repetitions  │
-       │              │ nextReviewDt │
-       │              │ reviewedAt   │
-       │              └──────────────┘
-       │
-       │         ┌──────────────┐
-       └────────►│ StudySession │
-                ├──────────────┤
-                │ id (PK)      │
-                │ userId (FK)  │
-                │ passageId(FK)│
-                │ startedAt    │
-                │ completedAt  │
-                │ cardsReviewed│
-                │ accuracyRate │
-                └──────────────┘
+User uploads PDF
+         │
+         ▼
+┌──────────────────┐
+│  Upload API      │  POST /api/upload
+│  route.ts        │
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────┐
+│  Supabase Storage│  uploadFile() → {bucket}/{userId}/{filename}
+│  (lib/storage/)  │  Returns public URL stored in Passage.fileUrl
+└──────────────────┘
 ```
-
-**Indexes:** `[userId, createdAt]` on Passage, `[userId, nextReviewDate]` on CardReview, `[userId, startedAt]` on StudySession
 
 ---
 
@@ -237,66 +196,45 @@ User Sync (on first sign-up):
 
 ```
 app/actions/analyze.ts (orchestrator)
-├── lib/ai/cefr-detector.ts
-│   └── ai SDK (@ai-sdk/openai)
-├── lib/ai/content-simplifier.ts
-│   └── ai SDK
-├── lib/ai/question-generator.ts
-│   └── ai SDK
-└── lib/db-utils.ts
-    └── lib/db/client.ts (Prisma client)
+├── lib/shared/cefr-utils.ts     → heuristic CEFR detection
+├── lib/ai/content-simplifier.ts → ai SDK
+├── lib/ai/question-generator.ts → ai SDK
+├── lib/ai/prompt-utils.ts       → text wrapping helpers
+└── lib/db/passage-queries.ts    → lib/db/client.ts (Prisma + PrismaPg)
 
 app/api/upload/route.ts
 ├── lib/validation/upload.ts
 ├── lib/parsers/pdf.ts
+├── lib/storage/supabase-storage.ts  → Supabase Storage
 └── app/actions/analyze.ts
 
-app/api/cards/review/route.ts
-└── lib/db-utils.ts (calculateSM2Interval, updateCardReview)
+app/api/cards/review/route.ts    → lib/db/card-review-queries.ts (SM-2, upsert)
+app/api/cards/due/route.ts       → lib/db/card-review-queries.ts (getDueCards)
+app/api/progress/stats/route.ts  → lib/db/card-review-queries.ts (getUserProgress)
+app/api/study-session/route.ts   → lib/db/study-session-queries.ts
 
-app/api/cards/due/route.ts
-└── lib/db-utils.ts (getDueCards)
+lib/auth/auth-utils.ts
+├── lib/supabase/server.ts       → @supabase/ssr
+└── lib/db/client.ts              → Prisma (auto user context via extension)
 
-app/api/progress/stats/route.ts
-└── lib/db-utils.ts (getUserProgress)
+lib/auth/sync-user.ts            → lib/db/client.ts
 ```
 
 ---
 
-## Monitoring & Observability
+## Database Layer Architecture
 
-### Sentry Integration (Phase 01-03)
-- **Package**: `@sentry/nextjs` integrated in server components
-- **Configuration**: `sentry.server.config.ts` initializes Sentry with `isSentryEnabled()` check
-- **Server Actions**: Wrapped with `Sentry.withServerActionInstrumentation()` in `analyze.ts`
-- **API Routes**: Errors captured via `Sentry.captureException()` in upload, study-session, and cards/review routes
-- **Breadcrumbs**: `Sentry.addBreadcrumb()` tracks AI calls and DB operations with category (`ai`, `db`, `upload`, `parse`) and level
+```
+Prisma Client (lib/db/client.ts)
+├── PrismaPg adapter (PostgreSQL via DATABASE_URL)
+├── Security extension: auto userId injection from Supabase session
+└── Singleton pattern via globalThis
 
-### Log Forwarding (Phase 03)
-- **Pino Integration**: `sentry.server.config.ts` uses `Sentry.pinoIntegration()` to forward Pino logs to Sentry
-- **Log Levels**:
-  - Error/Fatal Pino logs → Sentry errors (handled: true)
-  - Warn/Error/Fatal Pino logs → Sentry logs
-- **Logger**: `lib/core/logger.ts` uses Pino for structured logging with environment-based level (`LOG_LEVEL` env var, defaults: `debug` in dev, `info` in prod)
-
-### Performance Monitoring (Phase 03)
-- **Spans**: `Sentry.startSpan()` wraps key operations with `op: 'ai'` or `op: 'db'`:
-  - **AI operations**: `ai:cefr-detect`, `ai:content-simplify`, `ai:question-gen`
-  - **DB operations**: `db:user-lookup`, `db:passage-create`, `db:session-create`, `db:session-update`, `db:card-review-update`
-  - **File operations**: `file-write`, `pdf-parse`
-
-### Source Maps Upload (Phase 04)
-- **Purpose**: Enable readable stack traces in Sentry for production debugging
-- **Configuration**: `next.config.ts` with `withSentryConfig()`:
-  - `authToken`: `process.env.SENTRY_AUTH_TOKEN` (CI only, kept secret)
-  - `org`: `process.env.SENTRY_ORG || "pham-dac-luc"` (configurable via env)
-  - `project`: `process.env.SENTRY_PROJECT || "javascript-nextjs"` (configurable via env)
-  - `widenClientFileUpload`: `true` — uploads larger set of source maps for prettier traces
-  - `tunnelRoute`: `"/monitoring"` — routes browser requests through Next.js rewrite to circumvent ad-blockers
-  - `silent`: `!process.env.CI` — only print upload logs in CI
-  - `webpack.treeshake.removeDebugLogging`: `true` — tree-shake Sentry logger for smaller bundle
-  - `webpack.automaticVercelMonitors`: `true` — auto-instrument Vercel Cron Monitors
-- **CI Setup**: Set `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT`, and `CI=true` as CI secrets/environment variables (see `.env.example`)
+Query Modules (per domain):
+├── passage-queries.ts      → getUserPassages, getPassageWithQuestions, createPassage, createQuestion, getNewCards
+├── card-review-queries.ts  → getDueCards, updateCardReview, createCardReview, getUserProgress, calculateSM2Interval
+└── study-session-queries.ts → createStudySession, updateStudySession, computeSessionAccuracy
+```
 
 ---
 
@@ -305,32 +243,22 @@ app/api/progress/stats/route.ts
 | Page | Type | Data Fetching |
 |------|------|--------------|
 | `/` | Server Component | Static |
-| `/sign-in` | Client Component | None (auth page, no sidebar) |
-| `/sign-up` | Client Component | None (auth page, no sidebar) |
-| `/auth/callback` | Route Handler | OAuth code exchange + user sync |
+| `/sign-in`, `/sign-up` | Client Component | None (auth pages) |
+| `/auth/callback` | Route Handler | OAuth code exchange |
 | `/upload` | Client Component | None |
-| `/processing` | Client Component | None (simulated) |
-| `/reading/[id]` | Server → Client | Server fetches passage, passes to client |
-| `/test/[id]` | Server → Client | Server fetches passage+questions, passes to client |
-| `/study` | Client Component (`force-dynamic`) | Three resizable panels (react-resizable-panels), no server data fetch |
-| `/progress` | Server → Client | Server fetches stats, passes to client |
-| `/study` | Server → Client | `force-dynamic`, client uses react-resizable-panels Group/Panel/Separator |
+| `/reading/[id]` | Server → Client | Server fetches passage |
+| `/test/[id]` | Server → Client | Server fetches passage+questions |
+| `/study` | Client Component | `force-dynamic`, actions for data |
+| `/progress` | Server → Client | Server fetches stats |
 
 ---
 
-## Current Limitations
-
-1. **Auth UI complete, demo user replaced** - UserMenu, sign-out, and auth UI components active, actions now use authenticated users via Supabase auth (Phase 07)
-2. **Dashboard layout exists** - Navigation sidebar now implemented
-3. **Simulated processing** - `/processing` fakes progress, doesn't poll real status
-4. **No real-time updates** - No WebSockets or SSE
-5. **SQLite only** - Single-file DB, no concurrent write handling beyond SQLite's built-in
-6. **No caching** - AI calls not cached, DB queries not cached
+**See also:**
+- Data models & schema → [`docs/database/data-dictionary.md`](database/data-dictionary.md)
+- ERD → [`docs/database/erd.md`](database/erd.md)
+- API endpoints & requirements → [`docs/database/srs.md`](database/srs.md)
 
 ---
 
 **Status:** Active
-**Last Updated:** 2026-05-07
-
----
-**Note:** AI provider changed to OpenAI gpt-4o-mini, Supabase Auth added (email/password + Google OAuth), middleware route protection active, UserMenu and sign-out components implemented, demo user replaced with authenticated users
+**Last Updated:** 2026-05-11

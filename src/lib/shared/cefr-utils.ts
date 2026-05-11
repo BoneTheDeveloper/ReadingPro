@@ -23,3 +23,18 @@ export function getCEFRLabel(level: CEFRLevel): string {
   };
   return labels[level];
 }
+
+export function getHeuristicCEFR(text: string): CEFRLevel {
+  const words = text.split(/\s+/);
+  const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+  const avgWordsPerSentence = words.length / Math.max(sentences.length, 1);
+  const complexWords = words.filter(w => w.length > 6).length;
+  const complexWordRatio = complexWords / Math.max(words.length, 1);
+
+  if (avgWordsPerSentence < 10 && complexWordRatio < 0.1) return 'A1';
+  if (avgWordsPerSentence < 12 && complexWordRatio < 0.15) return 'A2';
+  if (avgWordsPerSentence < 15 && complexWordRatio < 0.2) return 'B1';
+  if (avgWordsPerSentence < 18 && complexWordRatio < 0.25) return 'B2';
+  if (avgWordsPerSentence < 22 && complexWordRatio < 0.3) return 'C1';
+  return 'C2';
+}
