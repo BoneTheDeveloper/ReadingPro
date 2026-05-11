@@ -2,7 +2,9 @@ import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  turbopack: {
+    root: "/home/luc/Project/english-reading-training-app",
+  },
 };
 
 export default withSentryConfig(nextConfig, {

@@ -5,7 +5,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Overview
 
 AI-powered English reading comprehension trainer for non-native speakers. Pipeline: Upload text/PDF → AI detects CEFR level → Content simplified → Comprehension questions generated with source citations → SM-2 spaced repetition schedules reviews.
+## Codebase Navigation (GKG MCP) — MANDATORY
 
+⚠️ **RULE**: This project is indexed in the Knowledge Graph (GKG).  
+**You MUST use GKG tools FIRST for ALL code navigation. Using raw grep/glob/read without trying GKG first is a violation.**
+
+### Required tools (use in this order):
+- **`search_codebase_definitions`** — Find function/class/constant definitions by name
+- **`read_definitions`** — Read full implementation bodies (group by file for efficiency)  
+- **`get_definition`** — Go-to-definition for a symbol on a specific line
+- **`get_references`** — Find all call sites/usages across the project
+- **`repo_map`** — Get structural map of directories/files (start here for orientation)
+- **`import_usage`** — Analyze import relationships for specific packages
+
+### Fallback policy:
+Only use Read/Glob/Grep if a GKG tool explicitly fails or returns no results.  
+If falling back, state why: _"GKG returned no results, falling back to grep"_
+
+Re-index after substantial changes: `index_project` with `project_absolute_path: "/home/luc/Project/english-reading-training-app"`
 ## Commands
 
 ```bash
@@ -81,6 +98,7 @@ src/app/
 ### Database Client
 
 `src/lib/db/client.ts` — Prisma singleton with PostgreSQL adapter. Import as `import { db } from '@/lib/db/client'`. Uses `PrismaPg` adapter with `DATABASE_URL` env var. `prisma.config.ts` uses `DIRECT_URL` for migrations.
+
 
 ## Conventions
 

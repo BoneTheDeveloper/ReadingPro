@@ -96,7 +96,9 @@ src/
     │   └── sync-user.ts                  # Upsert user profile on OAuth
     ├── db/
     │   ├── client.ts                     # Prisma singleton + PrismaPg + security extension
-    │   ├── passage-queries.ts            # Passage CRUD + question creation
+    │   ├── 
+
+    # Passage CRUD + question creation
     │   ├── card-review-queries.ts        # SM-2 logic, due cards, progress stats
     │   └── study-session-queries.ts      # Session CRUD + accuracy computation
     ├── storage/

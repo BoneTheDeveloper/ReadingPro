@@ -53,6 +53,7 @@ export interface StudyUploadModalProps {
   onClose: () => void;
   onUploadStart: (fileName: string) => void;
   onUploadComplete: (passage: PassageData) => void;
+  onUploadError: (error: string) => void;
 }
 
 export type StudioCardId = 'quiz' | 'flashcards' | 'summary' | 'mindmap' | 'translate';
