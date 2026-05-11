@@ -67,6 +67,12 @@ export async function createQuestion(
   return db.question.create({ data });
 }
 
+export async function deletePassage(passageId: string, userId: string) {
+  return db.passage.delete({
+    where: { id: passageId, userId },
+  });
+}
+
 export async function getNewCards(userId: string, passageId: string) {
   return db.question.findMany({
     where: {

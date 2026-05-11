@@ -15,6 +15,7 @@ export function StudyUploadModal({
   onClose,
   onUploadStart,
   onUploadComplete,
+  onUploadError,
 }: StudyUploadModalProps) {
   const [activeMode, setActiveMode] = useState<InputMode>(null);
   const [error, setError] = useState<string | null>(null);
@@ -32,12 +33,12 @@ export function StudyUploadModal({
         title: fileName,
       });
       if ("error" in result) {
-        setError(result.error);
+        onUploadError(result.error);
         return;
       }
       onUploadComplete(result.passage);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Upload failed");
+      onUploadError(err instanceof Error ? err.message : "Upload failed");
     }
   };
 
@@ -52,12 +53,12 @@ export function StudyUploadModal({
         title: "Pasted Text",
       });
       if ("error" in result) {
-        setError(result.error);
+        onUploadError(result.error);
         return;
       }
       onUploadComplete(result.passage);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Upload failed");
+      onUploadError(err instanceof Error ? err.message : "Upload failed");
     }
   };
 

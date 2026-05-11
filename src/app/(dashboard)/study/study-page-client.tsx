@@ -9,6 +9,7 @@ import {
 } from "react-resizable-panels";
 import { studySimplifyAction } from "@/app/actions/study-simplify-action";
 import { studyGenerateQuestionsAction } from "@/app/actions/study-generate-questions-action";
+import { studyDeletePassageAction } from "@/app/actions/study-delete-passage-action";
 import type {
   StudyState,
   PassageData,
@@ -24,19 +25,21 @@ import { StudyUploadModal } from "./study-upload-modal";
 
 const noopStorage = { getItem: () => null, setItem: () => {} };
 
-const initialState: StudyState = {
-  passages: [],
-  activePassageId: null,
-  questions: [],
-  status: "idle",
-  error: null,
-  simplifying: false,
-  generatingQuestions: false,
-  uploadModalOpen: false,
-};
-
-export function StudyPageClient() {
-  const [state, setState] = useState<StudyState>(initialState);
+export function StudyPageClient({
+  initialPassages,
+}: {
+  initialPassages: PassageData[];
+}) {
+  const [state, setState] = useState<StudyState>(() => ({
+    passages: initialPassages,
+    activePassageId: null,
+    questions: [],
+    status: "idle",
+    error: null,
+    simplifying: false,
+    generatingQuestions: false,
+    uploadModalOpen: false,
+  }));
   const [isUploading, setIsUploading] = useState(false);
   const [uploadingFileName, setUploadingFileName] = useState<string>("");
   const [results, setResults] = useState<ResultItem[]>([]);
@@ -91,6 +94,12 @@ export function StudyPageClient() {
     setUploadingFileName("");
   }, []);
 
+  const handleUploadError = useCallback((error: string) => {
+    setState((prev) => ({ ...prev, error }));
+    setIsUploading(false);
+    setUploadingFileName("");
+  }, []);
+
   const handleSimplify = useCallback(async () => {
     const passageId = state.activePassageId;
     if (!passageId) return;
@@ -141,9 +150,18 @@ export function StudyPageClient() {
   }, []);
 
   const handleReset = useCallback(() => {
-    setState(initialState);
+    setState({
+      passages: initialPassages,
+      activePassageId: null,
+      questions: [],
+      status: "idle",
+      error: null,
+      simplifying: false,
+      generatingQuestions: false,
+      uploadModalOpen: false,
+    });
     setResults([]);
-  }, []);
+  }, [initialPassages]);
 
   const handleActionClick = useCallback(
     async (cardId: StudioCardId) => {
@@ -310,6 +328,21 @@ export function StudyPageClient() {
     setState((prev) => ({ ...prev, uploadModalOpen: false }));
   }, []);
 
+  const handleDeletePassage = useCallback(async (passageId: string) => {
+    const result = await studyDeletePassageAction({ passageId });
+    if ("error" in result) {
+      setState((prev) => ({ ...prev, error: result.error }));
+      return;
+    }
+    setState((prev) => ({
+      ...prev,
+      passages: prev.passages.filter((p) => p.id !== passageId),
+      activePassageId: prev.activePassageId === passageId ? null : prev.activePassageId,
+      questions: prev.activePassageId === passageId ? [] : prev.questions,
+      status: prev.activePassageId === passageId ? "idle" : prev.status,
+    }));
+  }, []);
+
   return (
     <>
       {/* Sticky reading progress bar */}
@@ -340,15 +373,16 @@ export function StudyPageClient() {
               onOpenUploadModal={handleOpenUploadModal}
               isUploading={isUploading}
               uploadingFileName={uploadingFileName}
+              onDelete={handleDeletePassage}
             />
           </Panel>
 
-          <Separator className="w-[16px] cursor-col-resize" />
+          <Separator className="w-4 cursor-col-resize" />
 
           <Panel id="content" minSize={220}>
             <div className="h-full bg-white flex flex-col overflow-hidden rounded-xl border border-[#e5e7eb]">
               <div className="p-4 border-b" style={{ borderColor: "#e5e7eb" }}>
-                <h2 className="text-[12px] font-semibold text-on-surface-variant uppercase tracking-[0.05em]">
+                <h2 className="text-[12px] font-semibold text-on-surface-variant uppercase tracking-wider">
                   Content
                 </h2>
               </div>
@@ -361,7 +395,7 @@ export function StudyPageClient() {
             </div>
           </Panel>
 
-          <Separator className="w-[16px] cursor-col-resize" />
+          <Separator className="w-4 cursor-col-resize" />
 
           <Panel id="studio" defaultSize="26%" minSize={240} maxSize="70%">
             <StudyStudioPanel
@@ -380,6 +414,7 @@ export function StudyPageClient() {
         onClose={handleCloseUploadModal}
         onUploadStart={handleUploadStart}
         onUploadComplete={handleUploadComplete}
+        onUploadError={handleUploadError}
       />
     </>
   );
