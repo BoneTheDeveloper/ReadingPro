@@ -4,7 +4,7 @@ import { headers } from 'next/headers';
 import * as Sentry from '@sentry/nextjs';
 import { db } from '@/lib/db/client';
 import { createModuleLogger } from '@/lib/core/logger';
-import { detectCEFRLevel, getHeuristicCEFR } from '@/lib/ai/cefr-detector';
+import { getHeuristicCEFR } from '@/lib/shared/cefr-utils';
 import { simplifyContent } from '@/lib/ai/content-simplifier';
 import { generateComprehensionQuestions, type GeneratedQuestion } from '@/lib/ai/question-generator';
 import { getAuthenticatedUser } from './study-shared';
@@ -27,17 +27,8 @@ export async function analyzeContentAction(formData: FormData) {
     let simplifiedContent: string | null = null;
     let simplifiedLevel: string | null = null;
 
-    try {
-      Sentry.addBreadcrumb({ category: 'ai', message: 'Detecting CEFR level', level: 'info' });
-      const cefrResult = await Sentry.startSpan({ name: 'ai:cefr-detect', op: 'ai' }, async () => {
-        return detectCEFRLevel(truncatedText.slice(0, 2000));
-      });
-      originalLevel = cefrResult?.level ?? null;
-    } catch (error) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      log.warn({ err, title }, 'CEFR detection failed — falling back to heuristic');
-      originalLevel = getHeuristicCEFR(text);
-    }
+    Sentry.addBreadcrumb({ category: 'analysis', message: 'Computing CEFR level', level: 'info' });
+    originalLevel = getHeuristicCEFR(truncatedText);
 
     if (originalLevel && originalLevel !== 'A1' && originalLevel !== 'A2') {
       const targetMap: Record<string, string> = { C2: 'C1', C1: 'B2', B2: 'B1', B1: 'A2' };
