@@ -5,8 +5,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Overview
 
 AI-powered English reading comprehension trainer for non-native speakers. Pipeline: Upload text/PDF → AI detects CEFR level → Content simplified → Comprehension questions generated with source citations → SM-2 spaced repetition schedules reviews.
-## Codebase Navigation (GKG MCP) — MANDATORY
 
+
+## Plans & Documentation
+
+- **Plans** go in `./plans/` directory — NEVER in `~/.claude/plans/`. Naming: `{date}-{issue}-{slug}/plan.md`
+- **Docs** in `docs/` directory:
+  - `docs/project-overview-pdr.md` — Product requirements
+  - `docs/system-architecture.md` — Architecture diagrams and data flows
+  - `docs/code-standards.md` — Coding conventions (detailed)
+  - `docs/codebase-summary.md` — Directory structure and known issues
+  - `docs/database/` — BRD, SRS, ERD, data dictionary, use cases
+## Codebase Navigation (GKG MCP) — MANDATORY
 ⚠️ **RULE**: This project is indexed in the Knowledge Graph (GKG).  
 **You MUST use GKG tools FIRST for ALL code navigation. Using raw grep/glob/read without trying GKG first is a violation.**
 
@@ -110,6 +120,16 @@ src/app/
 - Keep files under 200 lines; split when larger
 - `cn()` from `@/lib/shared/utils` for conditional Tailwind classes
 
+### Styling Rules
+
+Full rules: `docs/code-standards.md` → Styling section. Token values: `src/app/globals.css` `:root`.
+
+**FORBIDDEN:** `bg-primary-600`, `bg-neutral-*`, `text-primary-700`, hardcoded hex (`#185FA5`), `style={{ color: "#" }}` for static values, raw `<button>`/`<input>`/`<textarea>` (use shadcn), inline SVGs (use Lucide), `onMouseEnter`/`onMouseLeave` (use `hover:`).
+
+**USE:** Theme token classes (`bg-primary`, `bg-muted`, `text-muted-foreground`, `border-border`, etc.), shadcn primitives (13 components in `src/components/ui/`), `cn()` for conditional classes.
+
+**Exceptions:** Dynamic inline styles (progress widths), error-boundary raw buttons (must work if shadcn fails).
+
 ## Environment Variables
 
 Required in `.env.local`:
@@ -118,13 +138,3 @@ Required in `.env.local`:
 - `DIRECT_URL` — PostgreSQL direct connection (for Prisma migrations)
 - `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` — Supabase client
 - `SUPABASE_SERVICE_ROLE_KEY` — Supabase admin access
-
-## Plans & Documentation
-
-- **Plans** go in `./plans/` directory — NEVER in `~/.claude/plans/`. Naming: `{date}-{issue}-{slug}/plan.md`
-- **Docs** in `docs/` directory:
-  - `docs/project-overview-pdr.md` — Product requirements
-  - `docs/system-architecture.md` — Architecture diagrams and data flows
-  - `docs/code-standards.md` — Coding conventions (detailed)
-  - `docs/codebase-summary.md` — Directory structure and known issues
-  - `docs/database/` — BRD, SRS, ERD, data dictionary, use cases
