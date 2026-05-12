@@ -13,6 +13,8 @@ import {
   HelpCircle,
 } from "lucide-react";
 import { cn } from "@/lib/shared/utils";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import type { ResultItem, ResultItemType, StudioCardId } from "./study-types";
 import { QuizContent } from "./study-quiz-content";
 
@@ -30,45 +32,14 @@ const studioCards: {
   icon: typeof BookOpen;
   disabled?: boolean;
 }[] = [
-  {
-    id: "quiz",
-    label: "Quiz",
-    description: "Test comprehension",
-    icon: HelpCircle,
-  },
-  {
-    id: "flashcards",
-    label: "Flashcards",
-    description: "Key vocabulary",
-    icon: Layers,
-    disabled: true,
-  },
-  {
-    id: "summary",
-    label: "Summary",
-    description: "Simplified text",
-    icon: FileText,
-  },
-  {
-    id: "mindmap",
-    label: "Mind Map",
-    description: "Visual overview",
-    icon: GitBranch,
-    disabled: true,
-  },
-  {
-    id: "translate",
-    label: "Translate",
-    description: "Vietnamese translation",
-    icon: Languages,
-    disabled: true,
-  },
+  { id: "quiz", label: "Quiz", description: "Test comprehension", icon: HelpCircle },
+  { id: "flashcards", label: "Flashcards", description: "Key vocabulary", icon: Layers, disabled: true },
+  { id: "summary", label: "Summary", description: "Simplified text", icon: FileText },
+  { id: "mindmap", label: "Mind Map", description: "Visual overview", icon: GitBranch, disabled: true },
+  { id: "translate", label: "Translate", description: "Vietnamese translation", icon: Languages, disabled: true },
 ];
 
-const resultMeta: Record<
-  ResultItemType,
-  { icon: typeof HelpCircle; label: string }
-> = {
+const resultMeta: Record<ResultItemType, { icon: typeof HelpCircle; label: string }> = {
   quiz: { icon: HelpCircle, label: "Quiz" },
   summary: { icon: FileText, label: "Summary" },
 };
@@ -91,57 +62,45 @@ export function StudyStudioPanel({
 }: StudyStudioPanelProps) {
   const [viewingResult, setViewingResult] = useState<ResultItem | null>(null);
 
-  // Result detail view (panel replacement)
   if (viewingResult) {
-    const meta = resultMeta[viewingResult.type] ?? {
-      icon: HelpCircle,
-      label: viewingResult.type,
-    };
+    const meta = resultMeta[viewingResult.type] ?? { icon: HelpCircle, label: viewingResult.type };
     const Icon = meta.icon;
 
     return (
-      <div
-        className="flex flex-col h-full overflow-hidden border border-[#e5e7eb]"
-        style={{ background: "#ffffff", borderRadius: "12px" }}
-      >
-        <div
-          className="p-4 flex items-center gap-3"
-          style={{ borderBottom: "1px solid #e5e7eb" }}
-        >
-          <button
-            onClick={() => setViewingResult(null)}
-            className="p-1.5 rounded-lg hover:bg-surface-container-highest transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4 text-on-surface-variant" />
-          </button>
-          <Icon className="w-4 h-4 text-on-surface-variant" />
-          <h2 className="text-[14px] font-semibold text-on-surface truncate">
-            {meta.label}: {viewingResult.passageTitle}
-          </h2>
-        </div>
-        <div className="flex-1 overflow-y-auto panel-scroll p-4">
-          {viewingResult.type === "quiz" && viewingResult.data?.questions && (
-            <QuizContent
-              questions={viewingResult.data.questions}
-              passageTitle={viewingResult.passageTitle}
-              onReset={() => setViewingResult(null)}
-            />
-          )}
-          {viewingResult.type === "summary" &&
-            viewingResult.data?.simplifiedContent && (
+      <Card className="h-full flex flex-col overflow-hidden">
+        <CardContent className="p-0 flex flex-col h-full">
+          <div className="p-4 flex items-center gap-3 border-b border-border">
+            <Button variant="ghost" size="icon" className="shrink-0" onClick={() => setViewingResult(null)}>
+              <ArrowLeft className="w-4 h-4 text-muted-foreground" />
+            </Button>
+            <Icon className="w-4 h-4 text-muted-foreground" />
+            <h2 className="text-sm font-semibold text-foreground truncate">
+              {meta.label}: {viewingResult.passageTitle}
+            </h2>
+          </div>
+          <div className="flex-1 overflow-y-auto panel-scroll p-4">
+            {viewingResult.type === "quiz" && viewingResult.data?.questions && (
+              <QuizContent
+                questions={viewingResult.data.questions}
+                passageTitle={viewingResult.passageTitle}
+                onReset={() => setViewingResult(null)}
+              />
+            )}
+            {viewingResult.type === "summary" && viewingResult.data?.simplifiedContent && (
               <div>
                 {viewingResult.data.simplifiedLevel && (
-                  <span className="text-[12px] font-medium text-primary bg-primary/10 px-2 py-0.5 rounded">
+                  <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded">
                     {viewingResult.data.simplifiedLevel}
                   </span>
                 )}
-                <p className="text-[14px] text-on-surface leading-relaxed whitespace-pre-wrap mt-3">
+                <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap mt-3">
                   {viewingResult.data.simplifiedContent}
                 </p>
               </div>
             )}
-        </div>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -149,185 +108,122 @@ export function StudyStudioPanel({
   const maxConcurrent = 3;
   const isCardLocked = (cardId: StudioCardId) => {
     if (cardId === "summary")
-      return (
-        simplifying ||
-        results.some((r) => r.status === "running" && r.type === "summary")
-      );
+      return simplifying || results.some((r) => r.status === "running" && r.type === "summary");
     if (cardId === "quiz")
       return results.some((r) => r.status === "running" && r.type === "quiz");
     return false;
   };
 
   return (
-    <div
-      className="flex flex-col h-full overflow-hidden border border-[#e5e7eb]"
-      style={{ background: "#ffffff", borderRadius: "12px" }}
-    >
-      <div className="px-4 pt-4 pb-2">
-        <h2 className="text-[12px] font-semibold text-on-surface-variant uppercase tracking-wider">
-          Studio
-        </h2>
-      </div>
+    <Card className="h-full flex flex-col overflow-hidden">
+      <CardContent className="p-0 flex flex-col h-full">
+        <div className="px-4 pt-4 pb-2">
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Studio</h2>
+        </div>
 
-      {/* Action cards grid (unchanged) */}
-      <div className="px-3 pb-3 grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] gap-2">
-        {studioCards.map((card) => {
-          const locked =
-            !card.disabled && hasActivePassage && isCardLocked(card.id);
-          const disabled =
-            card.disabled ||
-            !hasActivePassage ||
-            runningCount >= maxConcurrent ||
-            locked;
-          return (
-            <button
-              key={card.id}
-              onClick={() => !disabled && onActionClick(card.id)}
-              disabled={disabled}
-              className={cn(
-                "flex flex-col items-start gap-2 p-3 rounded-lg transition-all relative overflow-hidden",
-                card.disabled
-                  ? "opacity-40 cursor-not-allowed bg-neutral-100 border border-neutral-200"
-                  : locked
-                    ? "border cursor-wait"
-                    : "bg-primary/8 border border-primary/15 hover:bg-primary/15 hover:border-primary/30 hover:shadow-sm cursor-pointer",
-                !card.disabled &&
-                  !hasActivePassage &&
-                  "opacity-50 cursor-not-allowed",
-                !card.disabled &&
-                  hasActivePassage &&
-                  runningCount >= maxConcurrent &&
-                  !locked &&
-                  "opacity-50 cursor-not-allowed",
-              )}
-              style={locked ? { borderColor: "#B5D4F4" } : undefined}
-            >
-              {locked && (
-                <div
-                  className="absolute inset-0 z-0"
-                  style={{
-                    backgroundColor: "#E6F1FB",
-                    animation: "upload-fill 2.8s ease-in-out forwards",
-                  }}
-                >
-                  <div
-                    className="absolute inset-y-0 w-16"
-                    style={{
-                      right: 0,
-                      background:
-                        "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.55) 50%, transparent 100%)",
-                      animation: "upload-shimmer 1.4s ease-in-out infinite",
-                    }}
-                  />
-                </div>
-              )}
-              <div
+        <div className="px-3 pb-3 grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] gap-2">
+          {studioCards.map((card) => {
+            const locked = !card.disabled && hasActivePassage && isCardLocked(card.id);
+            const disabled = card.disabled || !hasActivePassage || runningCount >= maxConcurrent || locked;
+
+            return (
+              <Button
+                key={card.id}
+                variant="outline"
+                onClick={() => !disabled && onActionClick(card.id)}
+                disabled={disabled}
                 className={cn(
-                  "w-8 h-8 rounded-md flex items-center justify-center relative z-10",
-                  card.disabled
-                    ? "bg-neutral-200 text-on-surface-variant/50"
-                    : "bg-primary/12 text-primary",
-                  locked && "bg-[#E6F1FB] text-[#378ADD]",
+                  "h-auto flex flex-col items-start gap-2 p-3 relative overflow-hidden",
+                  card.disabled && "opacity-40 cursor-not-allowed bg-muted",
+                  !card.disabled && !hasActivePassage && "opacity-50 cursor-not-allowed",
+                  !card.disabled && hasActivePassage && runningCount >= maxConcurrent && !locked && "opacity-50 cursor-not-allowed",
+                  !disabled && "bg-primary/10 border-primary/15 hover:bg-primary/15 hover:border-primary/30 hover:shadow-sm cursor-pointer",
                 )}
               >
-                <card.icon className="w-4 h-4" />
-              </div>
-              <p
-                className={cn(
-                  "text-[12px] font-semibold leading-tight relative z-10",
-                  card.disabled
-                    ? "text-on-surface-variant/50"
-                    : locked
-                      ? "text-[#0a1a2e]"
-                      : "text-on-surface",
-                )}
-              >
-                {card.label}
-              </p>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Results section */}
-      <div className="flex-1 overflow-y-auto panel-scroll px-4 pb-4">
-        {results.length > 0 && (
-          <div className="space-y-1">
-            <h3 className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider px-1 mb-2">
-              Results
-            </h3>
-            {results.map((result) => {
-              const meta = resultMeta[result.type] ?? {
-                icon: HelpCircle,
-                label: result.type,
-              };
-              const Icon = meta.icon;
-              return (
-                <button
-                  key={result.id}
-                  onClick={() =>
-                    result.status === "completed" && setViewingResult(result)
-                  }
-                  disabled={result.status !== "completed"}
-                  className={cn(
-                    "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-left",
-                    result.status === "running" &&
-                      "bg-primary/5 border border-primary/15",
-                    result.status === "completed" &&
-                      "hover:bg-surface-container-highest cursor-pointer",
-                    result.status === "error" &&
-                      "bg-destructive/5 border border-destructive/15 opacity-60",
-                  )}
-                >
-                  {result.status === "running" ? (
-                    <Loader2 className="w-4 h-4 text-primary animate-spin shrink-0" />
-                  ) : (
-                    <Icon className="w-4 h-4 text-on-surface-variant shrink-0" />
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[13px] font-medium text-on-surface truncate">
-                      {meta.label}: {result.passageTitle}
-                    </p>
-                    <p className="text-[11px] text-on-surface-variant">
-                      {result.status === "running"
-                        ? "Generating..."
-                        : result.status === "error"
-                          ? "Failed"
-                          : formatRelativeTime(
-                              result.completedAt ?? result.startedAt,
-                            )}
-                    </p>
+                {locked && (
+                  <div className="absolute inset-0 z-0 bg-accent animate-[upload-fill_2.8s_ease-in-out_forwards]">
+                    <div className="absolute inset-y-0 w-16 right-0 bg-linear-to-r from-transparent via-white/55 to-transparent animate-[upload-shimmer_1.4s_ease-in-out_infinite]" />
                   </div>
-                </button>
-              );
-            })}
-          </div>
-        )}
+                )}
+                <div className={cn(
+                  "w-8 h-8 rounded-md flex items-center justify-center relative z-10",
+                  card.disabled ? "bg-muted text-muted-foreground/50" : locked ? "bg-accent text-primary" : "bg-primary/10 text-primary",
+                )}>
+                  <card.icon className="w-4 h-4" />
+                </div>
+                <p className={cn(
+                  "text-xs font-semibold leading-tight relative z-10",
+                  card.disabled ? "text-muted-foreground/50" : "text-foreground",
+                )}>
+                  {card.label}
+                </p>
+              </Button>
+            );
+          })}
+        </div>
 
-        {results.length === 0 && hasActivePassage && (
-          <div className="flex flex-col items-center justify-center py-8 text-center">
-            <Sparkles className="w-8 h-8 text-on-surface-variant/30 mb-3" />
-            <p className="text-[13px] text-on-surface-variant/60">
-              No results yet
-            </p>
-            <p className="text-[11px] text-on-surface-variant/40 mt-1">
-              Click a card above to generate
-            </p>
-          </div>
-        )}
+        <div className="flex-1 overflow-y-auto panel-scroll px-4 pb-4">
+          {results.length > 0 && (
+            <div className="space-y-1">
+              <h3 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-1 mb-2">
+                Results
+              </h3>
+              {results.map((result) => {
+                const meta = resultMeta[result.type] ?? { icon: HelpCircle, label: result.type };
+                const Icon = meta.icon;
+                return (
+                  <Button
+                    key={result.id}
+                    variant="ghost"
+                    onClick={() => result.status === "completed" && setViewingResult(result)}
+                    disabled={result.status !== "completed"}
+                    className={cn(
+                      "w-full flex items-center gap-3 px-3 py-2.5 h-auto text-left",
+                      result.status === "running" && "bg-primary/5 border border-primary/15",
+                      result.status === "completed" && "hover:bg-muted cursor-pointer",
+                      result.status === "error" && "bg-destructive/5 border border-destructive/15 opacity-60",
+                    )}
+                  >
+                    {result.status === "running" ? (
+                      <Loader2 className="w-4 h-4 text-primary animate-spin shrink-0" />
+                    ) : (
+                      <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[13px] font-medium text-foreground truncate">
+                        {meta.label}: {result.passageTitle}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {result.status === "running"
+                          ? "Generating..."
+                          : result.status === "error"
+                            ? "Failed"
+                            : formatRelativeTime(result.completedAt ?? result.startedAt)}
+                      </p>
+                    </div>
+                  </Button>
+                );
+              })}
+            </div>
+          )}
 
-        {!hasActivePassage && (
-          <div className="flex flex-col items-center justify-center py-8 text-center">
-            <BookOpen className="w-8 h-8 text-on-surface-variant/30 mb-3" />
-            <p className="text-[13px] text-on-surface-variant/60">
-              Select a passage
-            </p>
-            <p className="text-[11px] text-on-surface-variant/40 mt-1">
-              Upload or select from sources
-            </p>
-          </div>
-        )}
-      </div>
-    </div>
+          {results.length === 0 && hasActivePassage && (
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <Sparkles className="w-8 h-8 text-muted-foreground/30 mb-3" />
+              <p className="text-[13px] text-muted-foreground/60">No results yet</p>
+              <p className="text-[11px] text-muted-foreground/40 mt-1">Click a card above to generate</p>
+            </div>
+          )}
+
+          {!hasActivePassage && (
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <BookOpen className="w-8 h-8 text-muted-foreground/30 mb-3" />
+              <p className="text-[13px] text-muted-foreground/60">Select a passage</p>
+              <p className="text-[11px] text-muted-foreground/40 mt-1">Upload or select from sources</p>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 }

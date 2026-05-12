@@ -355,8 +355,7 @@ export function StudyPageClient({
 
       {/* Three-panel workspace */}
       <div
-        className="flex-1 min-h-0 overflow-hidden"
-        style={{ background: "#f5f5f5", padding: "4rem 8px 8px 8px" }}
+        className="flex-1 min-h-0 overflow-hidden bg-muted px-2 pb-2 pt-16"
       >
         <Group
           id="study-panels"
@@ -380,9 +379,9 @@ export function StudyPageClient({
           <Separator className="w-4 cursor-col-resize" />
 
           <Panel id="content" minSize={220}>
-            <div className="h-full bg-white flex flex-col overflow-hidden rounded-xl border border-[#e5e7eb]">
-              <div className="p-4 border-b" style={{ borderColor: "#e5e7eb" }}>
-                <h2 className="text-[12px] font-semibold text-on-surface-variant uppercase tracking-wider">
+            <div className="h-full bg-background flex flex-col overflow-hidden rounded-xl border border-border">
+              <div className="p-4 border-b border-border">
+                <h2 className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                   Content
                 </h2>
               </div>
