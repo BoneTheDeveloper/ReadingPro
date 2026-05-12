@@ -13,7 +13,7 @@ export default async function TestPage({ params }: TestPageProps) {
   const user = await getAuthenticatedUser();
 
   const passage = await db.passage.findUnique({
-    where: { id: passageId, userId: user.id },
+    where: { id: passageId, userId: user.id, deletedAt: null },
     include: { questions: true },
   });
 

@@ -26,7 +26,7 @@ export async function studyGenerateQuestionsAction({ passageId }: { passageId: s
     const user = await getAuthenticatedUser();
 
     const passage = await Sentry.startSpan({ name: 'db:passage-fetch', op: 'db' }, async () => {
-      return db.passage.findUnique({ where: { id: passageId, userId: user.id } });
+      return db.passage.findUnique({ where: { id: passageId, userId: user.id, deletedAt: null } });
     });
 
     if (!passage) {

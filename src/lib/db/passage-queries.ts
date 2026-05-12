@@ -21,14 +21,14 @@ export const questionDataSchema = z.object({
 
 export async function getUserPassages(userId: string) {
   return db.passage.findMany({
-    where: { userId },
+    where: { userId, deletedAt: null },
     orderBy: { createdAt: 'desc' },
   });
 }
 
 export async function getPassageWithQuestions(passageId: string, userId: string) {
   return db.passage.findUnique({
-    where: { id: passageId, userId },
+    where: { id: passageId, userId, deletedAt: null },
     include: { questions: true },
   });
 }
@@ -68,8 +68,9 @@ export async function createQuestion(
 }
 
 export async function deletePassage(passageId: string, userId: string) {
-  return db.passage.delete({
+  return db.passage.update({
     where: { id: passageId, userId },
+    data: { deletedAt: new Date() },
   });
 }
 

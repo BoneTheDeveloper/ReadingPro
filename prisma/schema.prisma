@@ -48,6 +48,7 @@ model Passage {
   wordCount         Int
   sourceType        SourceType
   fileUrl           String?
+  deletedAt         DateTime?
   createdAt         DateTime   @default(now())
   updatedAt         DateTime   @updatedAt
 
@@ -56,6 +57,7 @@ model Passage {
 
   @@index([userId])
   @@index([createdAt])
+  @@index([userId, deletedAt])
   @@map("passages")
 }
 

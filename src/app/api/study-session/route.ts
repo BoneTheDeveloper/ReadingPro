@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     const user = await getAuthenticatedUser();
 
     if (passageId) {
-      const passage = await db.passage.findUnique({ where: { id: passageId, userId: user.id } });
+      const passage = await db.passage.findUnique({ where: { id: passageId, userId: user.id, deletedAt: null } });
       if (!passage) {
         return NextResponse.json({ error: 'Passage not found or not owned by user' }, { status: 400 });
       }

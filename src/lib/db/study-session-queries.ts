@@ -64,7 +64,7 @@ export async function createStudySession(userId: string, passageId?: string) {
 
   if (validated.passageId) {
     const passage = await db.passage.findUnique({
-      where: { id: validated.passageId, userId: validated.userId },
+      where: { id: validated.passageId, userId: validated.userId, deletedAt: null },
     });
     if (!passage) {
       throw new z.ZodError([
