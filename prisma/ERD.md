@@ -55,6 +55,7 @@ PRO PRO
     Int wordCount 
     SourceType sourceType 
     String fileUrl "❓"
+    DateTime deletedAt "❓"
     DateTime createdAt 
     DateTime updatedAt 
     }

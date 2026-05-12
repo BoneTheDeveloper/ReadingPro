@@ -1,140 +1,100 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
 ## Project Overview
 
-AI-powered English reading comprehension trainer for non-native speakers. Pipeline: Upload text/PDF → AI detects CEFR level → Content simplified → Comprehension questions generated with source citations → SM-2 spaced repetition schedules reviews.
-
+AI-powered English reading comprehension trainer for non-native speakers. Upload text/PDF → AI detects CEFR level → Content simplified → Comprehension questions with source citations → SM-2 spaced repetition schedules reviews.
 
 ## Plans & Documentation
 
-- **Plans** go in `./plans/` directory — NEVER in `~/.claude/plans/`. Naming: `{date}-{issue}-{slug}/plan.md`
-- **Docs** in `docs/` directory:
-  - `docs/project-overview-pdr.md` — Product requirements
-  - `docs/system-architecture.md` — Architecture diagrams and data flows
-  - `docs/code-standards.md` — Coding conventions (detailed)
-  - `docs/codebase-summary.md` — Directory structure and known issues
-  - `docs/database/` — BRD, SRS, ERD, data dictionary, use cases
+- **Plans:** `./plans/` — naming: `{date}-{issue}-{slug}/plan.md`
+- **Docs:** `docs/` — `project-overview-pdr.md`, `system-architecture.md`, `code-standards.md`, `codebase-summary.md`, `database/`
+
 ## Codebase Navigation (GKG MCP) — MANDATORY
-⚠️ **RULE**: This project is indexed in the Knowledge Graph (GKG).  
-**You MUST use GKG tools FIRST for ALL code navigation. Using raw grep/glob/read without trying GKG first is a violation.**
 
-### Required tools (use in this order):
-- **`search_codebase_definitions`** — Find function/class/constant definitions by name
-- **`read_definitions`** — Read full implementation bodies (group by file for efficiency)  
-- **`get_definition`** — Go-to-definition for a symbol on a specific line
-- **`get_references`** — Find all call sites/usages across the project
-- **`repo_map`** — Get structural map of directories/files (start here for orientation)
-- **`import_usage`** — Analyze import relationships for specific packages
+Use GKG tools FIRST for ALL code navigation. Fallback to Read/Glob/Grep only if GKG fails (state why).
 
-### Fallback policy:
-Only use Read/Glob/Grep if a GKG tool explicitly fails or returns no results.  
-If falling back, state why: _"GKG returned no results, falling back to grep"_
+1. `search_codebase_definitions` → find definitions
+2. `read_definitions` → read implementations
+3. `get_definition` → go-to-definition
+4. `get_references` → find usages
+5. `repo_map` → directory structure
+6. `import_usage` → analyze imports
 
-Re-index after substantial changes: `index_project` with `project_absolute_path: "/home/luc/Project/english-reading-training-app"`
+Re-index: `index_project` with `project_absolute_path: "/home/luc/Project/english-reading-training-app"`
+
 ## Commands
 
 ```bash
-npm run dev                # Start dev server
+npm run dev                # Dev server
 npm run build              # Production build (run before push)
 npm run lint               # ESLint
-
-# Database
-npm run db:generate        # Regenerate Prisma client after schema changes
-npm run db:migrate:dev     # Create & apply migration (interactive name prompt)
+npx tsc --noEmit           # Type check
+npm run db:generate        # Regenerate Prisma client
+npm run db:migrate:dev     # Create & apply migration
 npm run db:migrate:deploy  # Apply migrations to production
-npm run db:push            # Push schema without migration (dev only)
-npm run db:studio          # Open Prisma Studio GUI
-
-# Type checking
-npx tsc --noEmit           # Check TypeScript without emitting
+npm run db:push            # Push schema (dev only)
+npm run db:studio          # Prisma Studio GUI
 ```
 
 ## Tech Stack
 
-- **Framework:** Next.js 16 (App Router, RSC) + React 19 + TypeScript (strict)
-- **UI:** Tailwind CSS 4 + shadcn/ui (base-nova theme) + Lucide icons
-- **AI:** Vercel AI SDK v6 + OpenAI gpt-4o-mini (`@ai-sdk/openai`)
-- **Auth:** Supabase Auth (email/password + Google OAuth via `@supabase/ssr`)
-- **Database:** PostgreSQL (Supabase) + Prisma v7.8 with `@prisma/adapter-pg`
-- **Validation:** Zod v4
-- **Logging:** Pino structured logging
-- **Monitoring:** Sentry (server + edge configs)
-- **PDF:** `pdf-parse`
+Next.js 16 (App Router, RSC) + React 19 + TypeScript (strict) | Tailwind CSS 4 + shadcn/ui + Lucide | Vercel AI SDK v6 + OpenAI gpt-4o-mini | Supabase Auth (email/password + Google OAuth) | PostgreSQL (Supabase) + Prisma v7.8 (`@prisma/adapter-pg`) | Zod v4 | Pino | Sentry | `pdf-parse`
 
 ## Architecture
 
-### App Router Structure
-
 ```
 src/app/
-├── (auth)/           # Sign-in, sign-up pages (no auth required)
-├── (dashboard)/      # All authenticated pages
-│   ├── study/        # Three-panel resizable workspace (main feature)
-│   ├── upload/       # File/text upload
-│   ├── reading/[id]/ # Reading view
-│   ├── test/[id]/    # Flashcard test
-│   └── progress/     # Stats dashboard
-├── actions/          # Server actions (orchestrators for AI pipeline)
+├── (auth)/           # Sign-in, sign-up
+├── (dashboard)/      # Authenticated pages: study/, upload/, reading/[id]/, test/[id]/, progress/
+├── actions/          # Server actions (AI pipeline orchestrators)
 ├── api/              # REST endpoints (cards, sessions, upload, progress)
-└── middleware.ts      # Auth route protection (Supabase SSR session)
+└── middleware.ts      # Auth route protection
 ```
 
-### Key Modules
+**Key modules:** `src/lib/db/` (Prisma + queries), `src/lib/ai/` (CEFR detect, simplifier, question gen), `src/lib/supabase/` (auth clients), `src/lib/core/` (logger, Sentry), `src/lib/algorithms/sm2.ts`, `src/components/ui/` (shadcn primitives — compose, don't modify)
 
-- `src/lib/db/` — Prisma client singleton + query files per model (passage, card-review, study-session)
-- `src/lib/ai/` — AI service modules: `cefr-detector.ts`, `content-simplifier.ts`, `question-generator.ts`
-- `src/lib/supabase/` — Auth clients: browser (`client.ts`), server (`server.ts`), middleware (`middleware.ts`)
-- `src/lib/core/` — Logger (`logger.ts`), Sentry config (`sentry.ts`)
-- `src/lib/algorithms/sm2.ts` — Standalone SM-2 spaced repetition implementation
-- `src/components/ui/` — shadcn/ui primitives (never modify directly, compose instead)
+**Data flow:** Upload → `study-upload-action.ts` → Passage → `analyze.ts` pipeline (CEFR → simplify → questions) → DB → quiz → CardReview (SM-2) → study sessions
 
-### Data Flow (Study Page)
+**Auth:** `middleware.ts` protects `/(dashboard)/*` | Server components: `createClient()` from `src/lib/supabase/server.ts` | Server actions: `getAuthenticatedUser()` from `src/lib/auth/auth-utils.ts` | API routes: Supabase SSR session
 
-1. User uploads text/PDF → `study-upload-action.ts` → creates Passage → runs AI pipeline
-2. AI pipeline: `analyze.ts` orchestrates CEFR detect → simplify → question generate
-3. Each AI call uses Vercel AI SDK with Zod-structured output + Sentry spans
-4. Questions stored in DB → served to quiz component → answers tracked via CardReview (SM-2)
-5. Study sessions track activities via `study-session-queries.ts`
+**DB client:** `import { db } from '@/lib/db/client'` — Prisma singleton with `PrismaPg` adapter (`DATABASE_URL`). Migrations use `DIRECT_URL` via `prisma.config.ts`.
 
-### Auth Pattern
+## Prisma Migrations
 
-- `src/app/middleware.ts` protects `/(dashboard)/*` routes
-- Server components call `createClient()` from `src/lib/supabase/server.ts`
-- Server actions call `getAuthenticatedUser()` from `src/lib/auth/auth-utils.ts`
-- API routes validate auth via Supabase SSR session
+```
+Never edit an applied migration — Prisma hashes content, editing will cause errors
+Never delete the migrations/ folder — required for migrate deploy and team sync
+Always commit migrations/ to git
+Schema change → always create a new migration, never modify old ones
+Manually edit migration.sql only for: renaming columns, migrating existing data, or custom SQL (indexes, triggers)
+Always review .sql files before applying, especially on production
+```
 
-### Database Client
-
-`src/lib/db/client.ts` — Prisma singleton with PostgreSQL adapter. Import as `import { db } from '@/lib/db/client'`. Uses `PrismaPg` adapter with `DATABASE_URL` env var. `prisma.config.ts` uses `DIRECT_URL` for migrations.
-
+```bash
+npx prisma migrate dev --name describe_change   # local
+npx prisma migrate deploy                        # production
+```
 
 ## Conventions
 
 - Server Components by default; `"use client"` only when state/effects needed
-- Zod schemas at API/action boundaries for input validation
+- Zod schemas at API/action boundaries
 - API responses: `{ success: boolean, data?: T, error?: string }`
-- Error handling: try/catch at route/action boundaries, Pino for server logs, Sentry for monitoring
-- File naming: kebab-case for all non-Next-convention files (long descriptive names OK)
-- Keep files under 200 lines; split when larger
-- `cn()` from `@/lib/shared/utils` for conditional Tailwind classes
+- Error handling: try/catch at boundaries, Pino logs, Sentry monitoring
+- File naming: kebab-case (long descriptive names OK)
+- Files under 200 lines; split when larger
+- `cn()` from `@/lib/shared/utils` for conditional classes
 
-### Styling Rules
+### Styling
 
-Full rules: `docs/code-standards.md` → Styling section. Token values: `src/app/globals.css` `:root`.
+Full rules: `docs/code-standards.md`. Token values: `src/app/globals.css` `:root`.
 
-**FORBIDDEN:** `bg-primary-600`, `bg-neutral-*`, `text-primary-700`, hardcoded hex (`#185FA5`), `style={{ color: "#" }}` for static values, raw `<button>`/`<input>`/`<textarea>` (use shadcn), inline SVGs (use Lucide), `onMouseEnter`/`onMouseLeave` (use `hover:`).
+**FORBIDDEN:** `bg-primary-600`, `bg-neutral-*`, `text-primary-700`, hardcoded hex, `style={{ color: "#" }}` for static values, raw `<button>`/`<input>`/`<textarea>`, inline SVGs, `onMouseEnter`/`onMouseLeave`.
 
-**USE:** Theme token classes (`bg-primary`, `bg-muted`, `text-muted-foreground`, `border-border`, etc.), shadcn primitives (13 components in `src/components/ui/`), `cn()` for conditional classes.
+**USE:** Theme tokens (`bg-primary`, `bg-muted`, `text-muted-foreground`, `border-border`), shadcn primitives, `cn()`.
 
-**Exceptions:** Dynamic inline styles (progress widths), error-boundary raw buttons (must work if shadcn fails).
+**Exceptions:** Dynamic inline styles (progress widths), error-boundary raw buttons.
 
 ## Environment Variables
 
-Required in `.env.local`:
-- `OPENAI_API_KEY` — OpenAI API key
-- `DATABASE_URL` — PostgreSQL connection string (Supabase pooled)
-- `DIRECT_URL` — PostgreSQL direct connection (for Prisma migrations)
-- `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` — Supabase client
-- `SUPABASE_SERVICE_ROLE_KEY` — Supabase admin access
+`OPENAI_API_KEY` | `DATABASE_URL` (pooled) | `DIRECT_URL` (migrations) | `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `SUPABASE_SERVICE_ROLE_KEY`
