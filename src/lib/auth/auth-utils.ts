@@ -2,6 +2,7 @@ import * as Sentry from '@sentry/nextjs';
 import { db } from '@/lib/db/client';
 import { createServerActionClient } from '@/lib/supabase/server';
 import { createModuleLogger } from '@/lib/core/logger';
+import { getCachedProfile, setCachedProfile } from './auth-cache';
 
 const log = createModuleLogger('auth:utils');
 
@@ -16,6 +17,15 @@ export async function getAuthenticatedUser() {
 export async function getCurrentUser() {
   try {
     const supabase = await createServerActionClient();
+
+    // Fast path: getSession() is a local JWT decode (no network call)
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.access_token) {
+      const cached = getCachedProfile(session.access_token);
+      if (cached) return cached;
+    }
+
+    // Slow path: validate token with Supabase + fetch/create profile
     const { data: { user }, error } = await supabase.auth.getUser();
 
     if (error) {
@@ -28,6 +38,11 @@ export async function getCurrentUser() {
     }
 
     const profile = await ensureProfile(user);
+
+    if (session?.access_token) {
+      setCachedProfile(session.access_token, profile);
+    }
+
     return profile;
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error));

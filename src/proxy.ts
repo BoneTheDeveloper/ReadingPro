@@ -24,10 +24,15 @@ export async function proxy(request: NextRequest) {
     },
   );
 
-  // Refresh session and get user — this sets refreshed cookies on the response
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Fast path: getSession() decodes JWT locally (~0ms), checks exp claim
+  // Slow path: getUser() validates with Supabase + refreshes expired sessions
+  const { data: { session } } = await supabase.auth.getSession();
+  let user = session?.user ?? null;
+
+  if (!user) {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  }
 
   const { pathname } = request.nextUrl;
 
