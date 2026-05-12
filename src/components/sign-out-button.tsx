@@ -1,19 +1,22 @@
 "use client"
 
 import { LogOut } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import { useSignOut } from "@/hooks/use-sign-out"
 
 export function SignOutButton() {
   const signOut = useSignOut()
 
   return (
-    <button
+    <Button
+      variant="ghost"
+      size="icon"
       onClick={signOut}
-      className="w-full flex justify-center p-2 rounded-lg text-on-surface-variant hover:bg-accent/60 hover:text-red-600 transition-colors"
+      className="w-full text-muted-foreground hover:text-destructive"
       title="Sign out"
       aria-label="Sign out"
     >
       <LogOut className="w-5 h-5" />
-    </button>
+    </Button>
   )
 }

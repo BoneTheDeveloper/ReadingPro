@@ -1,6 +1,8 @@
 "use client";
 
 import { cn } from "@/lib/shared/utils";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
 interface TestPassagePanelProps {
   title: string;
@@ -23,15 +25,12 @@ export function TestPassagePanel({
 
   return (
     <div className="mb-6 lg:mb-0">
-      <div className="bg-white rounded-2xl border border-neutral-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-neutral-200 bg-neutral-50 flex items-center justify-between">
-          <h2 className="font-semibold text-neutral-900 text-sm">{title}</h2>
-          <button
-            onClick={onTogglePassage}
-            className="text-xs text-primary-600 hover:underline lg:hidden"
-          >
+      <Card className="overflow-hidden">
+        <div className="px-6 py-4 border-b border-border bg-muted flex items-center justify-between">
+          <h2 className="font-semibold text-foreground text-sm">{title}</h2>
+          <Button variant="ghost" size="sm" onClick={onTogglePassage} className="lg:hidden text-primary">
             {showPassage ? "Hide" : "Show"} Passage
-          </button>
+          </Button>
         </div>
         <div
           className={cn(
@@ -44,20 +43,16 @@ export function TestPassagePanel({
             <div
               key={i}
               className={cn(
-                "relative pl-8 mb-3 text-neutral-700 font-serif",
-                showFeedback &&
-                  i + 1 === highlightedLine &&
-                  "bg-primary-50 rounded px-2 -mx-2 pl-10",
+                "relative pl-8 mb-3 text-foreground font-serif",
+                showFeedback && i + 1 === highlightedLine && "bg-primary/10 rounded px-2 -mx-2 pl-10",
               )}
             >
-              <span className="absolute left-0 top-0 text-xs text-neutral-400 font-sans w-5 text-right">
+              <span className="absolute left-0 top-0 text-xs text-muted-foreground font-sans w-5 text-right">
                 {i + 1}
               </span>
               <span
                 className={cn(
-                  showFeedback &&
-                    i + 1 === highlightedLine &&
-                    "bg-gradient-to-t from-primary-100 to-transparent",
+                  showFeedback && i + 1 === highlightedLine && "bg-linear-to-t from-primary/10 to-transparent",
                 )}
               >
                 {line}
@@ -65,7 +60,7 @@ export function TestPassagePanel({
             </div>
           ))}
         </div>
-      </div>
+      </Card>
     </div>
   );
 }

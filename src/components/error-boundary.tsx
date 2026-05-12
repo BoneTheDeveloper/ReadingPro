@@ -41,6 +41,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
           <p className="text-sm text-muted-foreground">
             Something went wrong.
           </p>
+          {/* Raw button intentional — error boundary must work if shadcn fails to load */}
           <button
             type="button"
             onClick={this.handleReset}

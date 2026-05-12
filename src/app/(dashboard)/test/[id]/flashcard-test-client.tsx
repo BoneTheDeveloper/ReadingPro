@@ -103,7 +103,7 @@ export function FlashcardTestClient({
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50">
+    <div className="min-h-screen bg-muted">
       <TestHeader
         currentIndex={currentIndex}
         totalQuestions={questions.length}
