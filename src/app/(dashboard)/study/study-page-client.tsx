@@ -47,26 +47,41 @@ export function StudyPageClient({
   const [mounted, setMounted] = useState(false);
   const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(false);
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false);
+
   const leftPanelRef = useRef<PanelImperativeHandle>(null);
   const rightPanelRef = useRef<PanelImperativeHandle>(null);
 
-  const toggleLeftPanel = useCallback(() => {
-    setLeftPanelCollapsed((prev) => !prev);
+  const toggleLeft = useCallback(() => {
+    const panel = leftPanelRef.current;
+
+    if (!panel) return;
+
+    const nextCollapsed = !panel.isCollapsed();
+
+    if (nextCollapsed) {
+      panel.collapse();
+    } else {
+      panel.expand();
+    }
+
+    setLeftPanelCollapsed(nextCollapsed);
   }, []);
 
-  const toggleRightPanel = useCallback(() => {
-    setRightPanelCollapsed((prev) => !prev);
+  const toggleRight = useCallback(() => {
+    const panel = rightPanelRef.current;
+
+    if (!panel) return;
+
+    const nextCollapsed = !panel.isCollapsed();
+
+    if (nextCollapsed) {
+      panel.collapse();
+    } else {
+      panel.expand();
+    }
+
+    setRightPanelCollapsed(nextCollapsed);
   }, []);
-
-  useEffect(() => {
-    if (leftPanelCollapsed) leftPanelRef.current?.collapse();
-    else leftPanelRef.current?.expand();
-  }, [leftPanelCollapsed]);
-
-  useEffect(() => {
-    if (rightPanelCollapsed) rightPanelRef.current?.collapse();
-    else rightPanelRef.current?.expand();
-  }, [rightPanelCollapsed]);
 
   const { defaultLayout, onLayoutChanged } = useDefaultLayout({
     id: "study-panels",
@@ -389,12 +404,12 @@ export function StudyPageClient({
         >
           <Panel
             panelRef={leftPanelRef}
-            id="sources"
-            defaultSize="22%"
-            collapsible
-            collapsedSize={60}
-            minSize={220}
-            maxSize="70%"
+            id="source"
+            collapsible={true}
+            collapsedSize="60px"
+            defaultSize="280px"
+            minSize={leftPanelCollapsed ? "60px" : "200px"}
+            maxSize="800px"
           >
             <StudySourcesPanel
               documents={documents}
@@ -405,7 +420,7 @@ export function StudyPageClient({
               uploadingFileName={uploadingFileName}
               onDelete={handleDeletePassage}
               collapsed={leftPanelCollapsed}
-              onToggleCollapse={toggleLeftPanel}
+              onToggleCollapse={toggleLeft}
             />
           </Panel>
 
@@ -437,11 +452,10 @@ export function StudyPageClient({
           <Panel
             panelRef={rightPanelRef}
             id="studio"
-            defaultSize="26%"
-            collapsible
-            collapsedSize={60}
-            minSize={240}
-            maxSize="70%"
+            collapsible={true}
+            collapsedSize="60px"
+            defaultSize="280px"
+            minSize={rightPanelCollapsed ? "60px" : "200px"}
           >
             <StudyStudioPanel
               results={results}
@@ -449,7 +463,7 @@ export function StudyPageClient({
               simplifying={state.simplifying}
               onActionClick={handleActionClick}
               collapsed={rightPanelCollapsed}
-              onToggleCollapse={toggleRightPanel}
+              onToggleCollapse={toggleRight}
             />
           </Panel>
         </Group>

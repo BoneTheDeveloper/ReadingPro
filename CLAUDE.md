@@ -1,5 +1,3 @@
-# CLAUDE.md
-
 ## Project Overview
 
 AI-powered English reading comprehension trainer for non-native speakers. Upload text/PDF → AI detects CEFR level → Content simplified → Comprehension questions with source citations → SM-2 spaced repetition schedules reviews.
