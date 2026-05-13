@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import {
   Group,
   Panel,
   Separator,
   useDefaultLayout,
 } from "react-resizable-panels";
+import type { PanelImperativeHandle } from "react-resizable-panels";
 import { studySimplifyAction } from "@/app/actions/study-simplify-action";
 import { studyGenerateQuestionsAction } from "@/app/actions/study-generate-questions-action";
 import { studyDeletePassageAction } from "@/app/actions/study-delete-passage-action";
@@ -44,6 +45,28 @@ export function StudyPageClient({
   const [uploadingFileName, setUploadingFileName] = useState<string>("");
   const [results, setResults] = useState<ResultItem[]>([]);
   const [mounted, setMounted] = useState(false);
+  const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(false);
+  const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false);
+  const leftPanelRef = useRef<PanelImperativeHandle>(null);
+  const rightPanelRef = useRef<PanelImperativeHandle>(null);
+
+  const toggleLeftPanel = useCallback(() => {
+    setLeftPanelCollapsed((prev) => !prev);
+  }, []);
+
+  const toggleRightPanel = useCallback(() => {
+    setRightPanelCollapsed((prev) => !prev);
+  }, []);
+
+  useEffect(() => {
+    if (leftPanelCollapsed) leftPanelRef.current?.collapse();
+    else leftPanelRef.current?.expand();
+  }, [leftPanelCollapsed]);
+
+  useEffect(() => {
+    if (rightPanelCollapsed) rightPanelRef.current?.collapse();
+    else rightPanelRef.current?.expand();
+  }, [rightPanelCollapsed]);
 
   const { defaultLayout, onLayoutChanged } = useDefaultLayout({
     id: "study-panels",
@@ -71,6 +94,7 @@ export function StudyPageClient({
           }),
           level: p.originalLevel,
           wordCount: p.wordCount,
+          sourceType: p.sourceType,
         })),
     [state.passages],
   );
@@ -337,7 +361,8 @@ export function StudyPageClient({
     setState((prev) => ({
       ...prev,
       passages: prev.passages.filter((p) => p.id !== passageId),
-      activePassageId: prev.activePassageId === passageId ? null : prev.activePassageId,
+      activePassageId:
+        prev.activePassageId === passageId ? null : prev.activePassageId,
       questions: prev.activePassageId === passageId ? [] : prev.questions,
       status: prev.activePassageId === passageId ? "idle" : prev.status,
     }));
@@ -354,9 +379,7 @@ export function StudyPageClient({
       </div>
 
       {/* Three-panel workspace */}
-      <div
-        className="flex-1 min-h-0 overflow-hidden bg-muted px-2 pb-2 pt-16"
-      >
+      <div className="flex-1 min-h-0 overflow-hidden bg-muted px-2 pb-2 pt-16">
         <Group
           id="study-panels"
           orientation="horizontal"
@@ -364,7 +387,15 @@ export function StudyPageClient({
           onLayoutChanged={onLayoutChanged}
           className="flex flex-1 h-full"
         >
-          <Panel id="sources" defaultSize="22%" minSize={220} maxSize="70%">
+          <Panel
+            panelRef={leftPanelRef}
+            id="sources"
+            defaultSize="22%"
+            collapsible
+            collapsedSize={60}
+            minSize={220}
+            maxSize="70%"
+          >
             <StudySourcesPanel
               documents={documents}
               activeId={state.activePassageId}
@@ -373,11 +404,15 @@ export function StudyPageClient({
               isUploading={isUploading}
               uploadingFileName={uploadingFileName}
               onDelete={handleDeletePassage}
+              collapsed={leftPanelCollapsed}
+              onToggleCollapse={toggleLeftPanel}
             />
           </Panel>
 
-          <Separator className="w-4 cursor-col-resize" />
-
+          <Separator
+            disabled={leftPanelCollapsed}
+            className={`w-4 ${leftPanelCollapsed ? "cursor-default! pointer-events-auto" : ""}`}
+          />
           <Panel id="content" minSize={220}>
             <div className="h-full bg-background flex flex-col overflow-hidden rounded-xl border border-border">
               <div className="p-4 border-b border-border">
@@ -394,14 +429,27 @@ export function StudyPageClient({
             </div>
           </Panel>
 
-          <Separator className="w-4 cursor-col-resize" />
+          <Separator
+            disabled={rightPanelCollapsed}
+            className={`w-4 ${rightPanelCollapsed ? "cursor-default! pointer-events-auto" : ""}`}
+          />
 
-          <Panel id="studio" defaultSize="26%" minSize={240} maxSize="70%">
+          <Panel
+            panelRef={rightPanelRef}
+            id="studio"
+            defaultSize="26%"
+            collapsible
+            collapsedSize={60}
+            minSize={240}
+            maxSize="70%"
+          >
             <StudyStudioPanel
               results={results}
               hasActivePassage={!!state.activePassageId}
               simplifying={state.simplifying}
               onActionClick={handleActionClick}
+              collapsed={rightPanelCollapsed}
+              onToggleCollapse={toggleRightPanel}
             />
           </Panel>
         </Group>

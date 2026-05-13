@@ -11,6 +11,7 @@ import {
   Layers,
   GitBranch,
   HelpCircle,
+  PanelRight,
 } from "lucide-react";
 import { cn } from "@/lib/shared/utils";
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,6 +24,8 @@ interface StudyStudioPanelProps {
   hasActivePassage: boolean;
   simplifying: boolean;
   onActionClick: (cardId: StudioCardId) => void;
+  collapsed?: boolean;
+  onToggleCollapse: () => void;
 }
 
 const studioCards: {
@@ -59,6 +62,8 @@ export function StudyStudioPanel({
   hasActivePassage,
   simplifying,
   onActionClick,
+  collapsed = false,
+  onToggleCollapse,
 }: StudyStudioPanelProps) {
   const [viewingResult, setViewingResult] = useState<ResultItem | null>(null);
 
@@ -104,6 +109,76 @@ export function StudyStudioPanel({
     );
   }
 
+  // Collapsed mode: icon-only strip
+  if (collapsed) {
+    return (
+      <Card className="h-full flex flex-col overflow-hidden">
+        <CardContent className="p-0 flex flex-col h-full items-center">
+          <div className="w-full p-2 flex justify-center border-b border-border">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onToggleCollapse}
+              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            >
+              <PanelRight className="w-5 h-5" />
+            </Button>
+          </div>
+
+          {/* Icon-only action cards */}
+          <div className="w-full px-2 py-2 flex flex-col items-center gap-1">
+            {studioCards.map((card) => (
+              <button
+                key={card.id}
+                onClick={() => !card.disabled && hasActivePassage && onActionClick(card.id)}
+                disabled={card.disabled || !hasActivePassage}
+                title={card.label}
+                className={cn(
+                  "w-11 h-11 rounded-lg flex items-center justify-center transition-colors cursor-pointer",
+                  card.disabled
+                    ? "text-muted-foreground/30 cursor-not-allowed"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                )}
+              >
+                <card.icon className="w-5 h-5" />
+              </button>
+            ))}
+          </div>
+
+          {/* Running indicators */}
+          {results.filter((r) => r.status === "running").length > 0 && (
+            <div className="w-full px-2 py-1 flex flex-col items-center gap-1">
+              {results.filter((r) => r.status === "running").map((r) => (
+                <div key={r.id} className="w-11 h-11 rounded-lg flex items-center justify-center bg-primary/10">
+                  <Loader2 className="w-5 h-5 text-primary animate-spin" />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Completed results as icons */}
+          <div className="flex-1 overflow-y-auto panel-scroll w-full px-2 py-1">
+            <div className="flex flex-col items-center gap-1">
+              {results.filter((r) => r.status === "completed").map((result) => {
+                const meta = resultMeta[result.type] ?? { icon: HelpCircle, label: result.type };
+                const Icon = meta.icon;
+                return (
+                  <button
+                    key={result.id}
+                    onClick={() => setViewingResult(result)}
+                    title={`${meta.label}: ${result.passageTitle}`}
+                    className="w-11 h-11 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
+                  >
+                    <Icon className="w-5 h-5" />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
   const runningCount = results.filter((r) => r.status === "running").length;
   const maxConcurrent = 3;
   const isCardLocked = (cardId: StudioCardId) => {
@@ -117,8 +192,16 @@ export function StudyStudioPanel({
   return (
     <Card className="h-full flex flex-col overflow-hidden">
       <CardContent className="p-0 flex flex-col h-full">
-        <div className="px-4 pt-4 pb-2">
+        <div className="px-4 pt-4 pb-2 flex items-center justify-between">
           <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Studio</h2>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onToggleCollapse}
+            className="h-7 w-7 text-muted-foreground hover:text-foreground"
+          >
+            <PanelRight className="w-4 h-4" />
+          </Button>
         </div>
 
         <div className="px-3 pb-3 grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] gap-2">

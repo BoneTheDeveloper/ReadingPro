@@ -114,6 +114,11 @@
     }
 }
 
+/* Disabled panel separators: show default cursor */
+[data-panel-resize-handle-id][data-disabled] {
+    cursor: default;
+}
+
 /* Panel scrollbars */
 .panel-scroll {
     scrollbar-width: thin;

@@ -58,12 +58,13 @@ export function StudyUploadModal({
 
   const handleFileUpload = async (file: File) => {
     const fileName = file.name.replace(/\.(txt|pdf)$/, "");
+    const fileType = file.name.endsWith(".pdf") ? "PDF" : "TEXT";
     onUploadStart(fileName);
     onClose();
     setError(null);
     try {
       const text = await file.text();
-      const result = await studyUploadAction({ text, title: fileName });
+      const result = await studyUploadAction({ text, title: fileName, sourceType: fileType });
       if ("error" in result) { onUploadError(result.error); return; }
       onUploadComplete(result.passage);
     } catch (err) {

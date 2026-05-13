@@ -20,9 +20,12 @@ interface PassageData {
   simplifiedLevel: string | null;
   wordCount: number;
   createdAt: number;
+  sourceType: SourceType;
 }
 
-export async function studyUploadAction({ text, title }: { text: string; title: string }): Promise<UploadResult> {
+export type SourceType = 'TEXT' | 'PDF';
+
+export async function studyUploadAction({ text, title, sourceType = 'TEXT' }: { text: string; title: string; sourceType?: SourceType }): Promise<UploadResult> {
   const start = Date.now();
   log.info({ title, charCount: text.length }, 'Upload action started');
 
@@ -50,7 +53,7 @@ export async function studyUploadAction({ text, title }: { text: string; title: 
           content: text,
           originalLevel,
           wordCount: text.split(/\s+/).filter(w => w.length > 0).length,
-          sourceType: 'TEXT',
+          sourceType,
         },
       });
     });
@@ -67,6 +70,7 @@ export async function studyUploadAction({ text, title }: { text: string; title: 
         simplifiedLevel: passage.simplifiedLevel,
         wordCount: passage.wordCount,
         createdAt: passage.createdAt.getTime(),
+        sourceType: passage.sourceType,
       },
     };
   });

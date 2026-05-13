@@ -18,6 +18,7 @@ export default async function StudyPage() {
     simplifiedLevel: p.simplifiedLevel,
     wordCount: p.wordCount,
     createdAt: p.createdAt.getTime(),
+    sourceType: p.sourceType,
   }));
 
   return <StudyPageClient initialPassages={initialPassages} />;

@@ -1,7 +1,18 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Plus, FileText, Search, CheckSquare, Square, MoreHorizontal, Trash2, Pencil } from "lucide-react";
+import {
+  Plus,
+  FileText,
+  Search,
+  CheckSquare,
+  Square,
+  MoreVertical,
+  Trash2,
+  Pencil,
+  PanelLeft,
+  Video,
+} from "lucide-react";
 import { cn } from "@/lib/shared/utils";
 import {
   DropdownMenu,
@@ -23,6 +34,8 @@ interface StudySourcesPanelProps {
   isUploading?: boolean;
   uploadingFileName?: string;
   onDelete: (id: string) => void;
+  collapsed?: boolean;
+  onToggleCollapse: () => void;
 }
 
 export function StudySourcesPanel({
@@ -33,6 +46,8 @@ export function StudySourcesPanel({
   isUploading,
   uploadingFileName,
   onDelete,
+  collapsed = false,
+  onToggleCollapse,
 }: StudySourcesPanelProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -49,7 +64,9 @@ export function StudySourcesPanel({
     filteredDocs.length > 0 && filteredDocs.every((d) => selectedIds.has(d.id));
 
   const toggleSelectAll = () => {
-    setSelectedIds(allSelected ? new Set() : new Set(filteredDocs.map((d) => d.id)));
+    setSelectedIds(
+      allSelected ? new Set() : new Set(filteredDocs.map((d) => d.id)),
+    );
   };
 
   const toggleSelect = (id: string) => {
@@ -61,6 +78,71 @@ export function StudySourcesPanel({
     });
   };
 
+  // Collapsed mode: icon-only strip
+  if (collapsed) {
+    return (
+      <Card className="h-full flex flex-col overflow-hidden">
+        <CardContent className="p-0 flex flex-col h-full items-center">
+          {/* Collapse toggle */}
+          <div className="w-full p-2 flex justify-center border-b border-border">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onToggleCollapse}
+              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            >
+              <PanelLeft className="w-5 h-5" />
+            </Button>
+          </div>
+
+          {/* Add source icon */}
+          <div className="w-full px-2 pt-2 pb-1 flex justify-center">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onOpenUploadModal}
+              disabled={isUploading}
+              className="h-9 w-9 text-muted-foreground hover:text-foreground"
+            >
+              <Plus className="w-5 h-5" />
+            </Button>
+          </div>
+
+          {/* Icon-only document list */}
+          <div className="flex-1 overflow-y-auto panel-scroll w-full px-2 py-1">
+            <div className="flex flex-col items-center gap-1">
+              {documents.map((doc) => {
+                const isActive = activeId === doc.id;
+                const isYoutube = doc.sourceType === "YOUTUBE";
+                const DocIcon = isYoutube ? Video : FileText;
+                return (
+                  <button
+                    key={doc.id}
+                    onClick={() => onSelect(doc.id)}
+                    title={doc.title}
+                    className={cn(
+                      "w-11 h-11 rounded-lg flex items-center justify-center transition-colors cursor-pointer",
+                      isActive && isYoutube
+                        ? "bg-red-500/10 text-red-500"
+                        : isActive
+                          ? "bg-primary/10 text-primary"
+                          : isYoutube
+                            ? "text-red-400 hover:bg-red-500/10 hover:text-red-500"
+                            : "text-blue-400 hover:bg-primary/10 hover:text-primary",
+                    )}
+                  >
+                    <DocIcon className="w-5 h-5" />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Expanded mode
   return (
     <Card className="h-full flex flex-col overflow-hidden">
       <CardContent className="p-0 flex flex-col h-full">
@@ -69,11 +151,14 @@ export function StudySourcesPanel({
           <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             Sources
           </h2>
-          {documents.length > 0 && (
-            <span className="text-[11px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-              {documents.length}
-            </span>
-          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onToggleCollapse}
+            className="h-7 w-7 text-muted-foreground hover:text-foreground"
+          >
+            <PanelLeft className="w-4 h-4" />
+          </Button>
         </div>
 
         {/* Search bar */}
@@ -147,13 +232,17 @@ export function StudySourcesPanel({
             {filteredDocs.map((doc) => {
               const isSelected = selectedIds.has(doc.id);
               const isActive = activeId === doc.id;
+              const isYoutube = doc.sourceType === "YOUTUBE";
+              const DocIcon = isYoutube ? Video : FileText;
               return (
                 <div
                   key={doc.id}
                   role="button"
                   tabIndex={0}
                   onClick={() => onSelect(doc.id)}
-                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onSelect(doc.id); }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") onSelect(doc.id);
+                  }}
                   className={cn(
                     "w-full p-3 text-left flex items-center gap-3 rounded-xl transition-colors border group cursor-pointer",
                     isActive
@@ -162,23 +251,18 @@ export function StudySourcesPanel({
                   )}
                 >
                   <div
-                    role="checkbox"
-                    aria-checked={isSelected}
-                    onClick={(e) => { e.stopPropagation(); toggleSelect(doc.id); }}
-                    className="shrink-0 cursor-pointer"
-                  >
-                    {isSelected ? (
-                      <CheckSquare className="w-4 h-4 text-primary" />
-                    ) : (
-                      <Square className="w-4 h-4 text-muted-foreground/50 group-hover:text-muted-foreground" />
+                    className={cn(
+                      "w-8 h-8 rounded-lg flex items-center justify-center shrink-0",
+                      isActive && isYoutube
+                        ? "bg-red-500/10 text-red-500"
+                        : isActive
+                          ? "bg-primary/10 text-primary"
+                          : isYoutube
+                            ? "bg-red-500/5 text-red-400"
+                            : "bg-blue-500/5 text-blue-400",
                     )}
-                  </div>
-
-                  <div className={cn(
-                    "w-8 h-8 rounded-lg flex items-center justify-center shrink-0",
-                    isActive ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground",
-                  )}>
-                    <FileText className="w-4 h-4" />
+                  >
+                    <DocIcon className="w-4 h-4" />
                   </div>
 
                   <div className="flex-1 overflow-hidden">
@@ -196,36 +280,65 @@ export function StudySourcesPanel({
                         onClick={(e) => e.stopPropagation()}
                         className="shrink-0 p-1 rounded-lg text-muted-foreground/40 hover:text-foreground hover:bg-muted transition-colors opacity-0 group-hover:opacity-100"
                       >
-                        <MoreHorizontal className="w-4 h-4" />
+                        <MoreVertical className="w-4 h-4" />
                       </button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent side="right" align="end">
-                      <DropdownMenuItem
-                        onClick={(e) => { e.stopPropagation(); onDelete(doc.id); }}
-                        className="text-destructive focus:text-destructive"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                        Delete source
+                    <DropdownMenuContent
+                      side="right"
+                      align="end"
+                      className="min-w-40"
+                    >
+                      <DropdownMenuItem disabled className="opacity-60">
+                        <Pencil className="w-4 h-4 mr-2" />
+                        Rename source
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem disabled>
-                        <Pencil className="w-4 h-4" />
-                        Rename source
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDelete(doc.id);
+                        }}
+                        className="text-destructive focus:text-destructive font-medium"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete source
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
+
+                  <div
+                    role="checkbox"
+                    aria-checked={isSelected}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleSelect(doc.id);
+                    }}
+                    className="shrink-0 cursor-pointer"
+                  >
+                    {isSelected ? (
+                      <CheckSquare className="w-5 h-5 text-primary" />
+                    ) : (
+                      <Square className="w-5 h-5 text-white border border-muted-foreground/30 rounded-sm" />
+                    )}
+                  </div>
                 </div>
               );
             })}
 
-            {!isUploading && filteredDocs.length === 0 && documents.length > 0 && (
-              <p className="text-xs text-muted-foreground text-center py-4">No matching sources</p>
-            )}
+            {!isUploading &&
+              filteredDocs.length === 0 &&
+              documents.length > 0 && (
+                <p className="text-xs text-muted-foreground text-center py-4">
+                  No matching sources
+                </p>
+              )}
 
             {!isUploading && documents.length === 0 && (
               <div className="flex-1 flex items-center justify-center py-8">
                 <p className="text-[13px] text-muted-foreground text-center">
-                  No sources yet.<br />Add a source to get started.
+                  No sources yet.
+                  <br />
+                  Add a source to get started.
                 </p>
               </div>
             )}

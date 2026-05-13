@@ -15,7 +15,7 @@ export default function StudyError({
   }, [error]);
 
   return (
-    <div className="flex min-h-[400px] flex-col items-center justify-center gap-4 p-8 text-center">
+    <div className="flex min-h-100 flex-col items-center justify-center gap-4 p-8 text-center">
       <h2 className="text-xl font-semibold">Failed to load study session</h2>
       <p className="text-sm text-muted-foreground">
         We couldn&apos;t start your study session. Please try again.

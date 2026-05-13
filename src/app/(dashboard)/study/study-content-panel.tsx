@@ -37,7 +37,7 @@ export function StudyContentPanel({
   // Empty state
   if (!passage) {
     return (
-      <div className="flex items-center justify-center h-full min-h-[400px]">
+      <div className="flex items-center justify-center h-full min-h-100">
         <div className="text-center">
           <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center mx-auto mb-4">
             <FileSearch className="w-6 h-6 text-on-surface-variant" />
@@ -56,7 +56,7 @@ export function StudyContentPanel({
   // Simplifying loading state
   if (simplifying) {
     return (
-      <div className="flex items-center justify-center h-full min-h-[400px]">
+      <div className="flex items-center justify-center h-full min-h-100">
         <div className="text-center">
           <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center mx-auto mb-4">
             <Loader2 className="w-6 h-6 text-primary animate-spin" />
@@ -78,14 +78,10 @@ export function StudyContentPanel({
       ? passage.simplifiedContent
       : passage.content;
   const currentLevel =
-    viewMode === "simplified"
-      ? passage.simplifiedLevel
-      : passage.originalLevel;
-  const level = (
-    currentLevel ||
-    passage.originalLevel ||
-    "B2"
-  ) as Parameters<typeof getCEFRColor>[0];
+    viewMode === "simplified" ? passage.simplifiedLevel : passage.originalLevel;
+  const level = (currentLevel || passage.originalLevel || "B2") as Parameters<
+    typeof getCEFRColor
+  >[0];
   const readingTime = calculateReadingTime(passage.wordCount, level);
   const canSimplify =
     !passage.simplifiedContent &&

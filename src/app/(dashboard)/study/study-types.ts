@@ -1,5 +1,7 @@
 export type StudyStatus = 'idle' | 'uploading' | 'analyzing' | 'ready' | 'error';
 
+export type SourceType = 'TEXT' | 'PDF' | 'YOUTUBE';
+
 export interface PassageData {
   id: string;
   title: string;
@@ -9,6 +11,7 @@ export interface PassageData {
   simplifiedLevel: string | null;
   wordCount: number;
   createdAt: number;
+  sourceType: SourceType;
 }
 
 export interface DocumentItem {
@@ -17,6 +20,7 @@ export interface DocumentItem {
   date: string;
   level: string | null;
   wordCount: number;
+  sourceType: SourceType;
 }
 
 export interface QuestionOption {
