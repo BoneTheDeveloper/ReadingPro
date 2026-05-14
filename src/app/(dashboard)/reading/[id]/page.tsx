@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { db } from '@/lib/db/client';
 import { getAuthenticatedUser } from '@/lib/auth/auth-utils';
-import { ReadingViewClient } from './reading-view-client';
+import { ReadingViewClient } from '@/features/reading/reading-view-client';
 
 interface ReadingPageProps {
   params: Promise<{ id: string }>;

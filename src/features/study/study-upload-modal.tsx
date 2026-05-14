@@ -5,7 +5,7 @@ import { Upload, Type, Globe, Search, FileText } from "lucide-react";
 import { useDropzone, type FileRejection } from "react-dropzone";
 import { validateFile, formatFileSize } from "@/lib/validation/upload";
 import { cn } from "@/lib/shared/utils";
-import { studyUploadAction } from "@/app/actions/study-upload-action";
+import { studyUploadAction } from "@/features/study/actions/study-upload-action";
 import {
   Dialog,
   DialogContent,

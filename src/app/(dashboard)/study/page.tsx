@@ -1,7 +1,7 @@
 import { getAuthenticatedUser } from '@/lib/auth/auth-utils';
 import { getUserPassages } from '@/lib/db/passage-queries';
-import { StudyPageClient } from './study-page-client';
-import type { PassageData } from './study-types';
+import { StudyPageClient } from '@/features/study/study-page-client';
+import type { PassageData } from '@/features/study/study-types';
 
 export const dynamic = 'force-dynamic';
 

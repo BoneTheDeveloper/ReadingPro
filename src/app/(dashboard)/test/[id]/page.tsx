@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { db } from '@/lib/db/client';
 import { getAuthenticatedUser } from '@/lib/auth/auth-utils';
-import { FlashcardTestClient } from './flashcard-test-client';
+import { FlashcardTestClient } from '@/features/test/flashcard-test-client';
 
 interface TestPageProps {
   params: Promise<{ id: string }>;

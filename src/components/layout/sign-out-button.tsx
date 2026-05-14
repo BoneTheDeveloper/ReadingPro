@@ -2,7 +2,7 @@
 
 import { LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useSignOut } from "@/hooks/use-sign-out"
+import { useSignOut } from "./use-sign-out"
 
 export function SignOutButton() {
   const signOut = useSignOut()

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { LogOut } from "lucide-react"
-import { useSignOut } from "@/hooks/use-sign-out"
+import { useSignOut } from "./use-sign-out"
 import {
   DropdownMenu,
   DropdownMenuContent,

@@ -8,9 +8,9 @@
 
 | Layer | Technology |
 |-------|-----------|
-| Framework | Next.js 16.2.4 (App Router, RSC) |
-| UI | React 19.2.4, shadcn/ui (base-nova), Tailwind CSS 4 |
-| AI | Vercel AI SDK v6 + OpenAI gpt-4o-mini (`@ai-sdk/openai`) |
+| Framework | Next.js 16.2.6 (App Router, RSC) |
+| UI | React 19.2.6, shadcn/ui, Tailwind CSS 4 |
+| AI | Vercel AI SDK v6 + OpenAI/Google providers (`@ai-sdk/openai`, `@ai-sdk/google`) |
 | Auth | Supabase Auth (`@supabase/supabase-js` + `@supabase/ssr`) |
 | Database | PostgreSQL (Supabase) + Prisma ORM v7.8 (`@prisma/adapter-pg`) |
 | Storage | Supabase Storage (file uploads) |
@@ -27,19 +27,20 @@
 
 ## Directory Structure
 
+The codebase now separates routing from feature implementation:
+
+- `src/app/` contains route entrypoints and API route handlers.
+- `src/features/<name>/` contains feature-specific UI, types, server actions, and workflow logic.
+- `src/components/ui/` contains reusable UI primitives.
+- `src/components/layout/` contains dashboard shell and account controls.
+- `src/lib/` contains cross-feature infrastructure and reusable domain utilities.
+
 ```
 src/
 ├── app/
 │   ├── page.tsx                          # Landing page
 │   ├── layout.tsx                        # Root layout (Geist fonts)
 │   ├── globals.css                       # Tailwind + shadcn theme
-│   ├── middleware.ts                      # Auth route protection
-│   ├── actions/
-│   │   ├── analyze.ts                    # Full analysis pipeline orchestrator
-│   │   ├── study-simplify-action.ts       # Simplify passage content
-│   │   ├── study-generate-questions-action.ts  # Generate quiz questions
-│   │   ├── study-upload-action.ts         # Upload + analyze for study page
-│   │   └── study-shared.ts               # Shared helpers for study actions
 │   ├── api/
 │   │   ├── upload/route.ts               # POST: file upload + analyze
 │   │   ├── upload/text/route.ts          # POST: text content + analyze
@@ -56,70 +57,89 @@ src/
 │   └── (dashboard)/
 │       ├── layout.tsx                    # Dashboard layout (sidebar)
 │       ├── error.tsx                     # Dashboard error boundary
-│       ├── upload/page.tsx               # File/text upload with toggle
-│       ├── progress/page.tsx             # Progress dashboard
-│       ├── processing/page.tsx           # Processing animation (simulated)
-│       ├── reading/[id]/                 # Reading view (server + client)
-│       ├── test/[id]/                    # Flashcard test (server + client)
-│       └── study/                        # Three-panel workspace
-│           ├── page.tsx                  # force-dynamic page
-│           ├── study-page-client.tsx     # Resizable 3-panel layout
-│           ├── study-left-panel.tsx      # Sources panel
-│           ├── study-content-panel.tsx   # Center content panel
-│           ├── study-right-panel.tsx     # Studio panel
-│           ├── study-quiz-content.tsx    # Quiz rendering + feedback
-│           ├── study-upload-modal.tsx    # Upload modal
-│           ├── study-types.ts            # Shared types
-│           └── error.tsx                 # Error boundary
+│       ├── upload/page.tsx               # Thin route: renders upload feature client
+│       ├── progress/page.tsx             # Thin route: renders progress feature
+│       ├── processing/page.tsx           # Thin route: renders processing feature client
+│       ├── reading/[id]/                 # Server route: loads passage, renders reading feature
+│       ├── test/[id]/                    # Server route: loads questions, renders test feature
+│       └── study/                        # Server route + error boundary for study workspace
 ├── components/
 │   ├── ui/                               # shadcn/ui primitives (don't modify)
-│   ├── test/                             # Flashcard test components
+│   ├── layout/                           # Dashboard shell and account controls
+│   │   ├── dashboard-sidebar.tsx         # Dashboard navigation/sidebar/top bar
+│   │   ├── user-menu.tsx                 # User dropdown menu
+│   │   ├── sign-out-button.tsx           # Sign-out icon button
+│   │   └── use-sign-out.ts               # Layout-owned sign-out hook
+│   └── error-boundary.tsx                # Global error boundary
+├── features/
+│   ├── study/
+│   │   ├── study-page-client.tsx         # Resizable 3-panel study workspace
+│   │   ├── study-left-panel.tsx          # Sources panel
+│   │   ├── study-content-panel.tsx       # Center content panel
+│   │   ├── study-right-panel.tsx         # Studio panel
+│   │   ├── study-quiz-content.tsx        # Quiz rendering + feedback
+│   │   ├── study-quiz-results.tsx        # Quiz results UI
+│   │   ├── study-upload-modal.tsx        # Study upload modal
+│   │   ├── study-types.ts                # Study feature types
+│   │   └── actions/                      # Study-specific server actions
+│   │       ├── study-simplify-action.ts
+│   │       ├── study-generate-questions-action.ts
+│   │       ├── study-delete-passage-action.ts
+│   │       ├── study-upload-action.ts
+│   │       └── study-shared.ts
+│   ├── upload/
+│   │   ├── upload-page-client.tsx        # File/text upload page UI
+│   │   ├── processing-page-client.tsx    # Processing animation UI
+│   │   ├── upload-zone.tsx               # Drag-and-drop upload
+│   │   ├── text-input-area.tsx           # Text paste input
+│   │   └── analyze-content-action.ts     # Upload analysis pipeline action
+│   ├── reading/
+│   │   └── reading-view-client.tsx       # Reading view with original/simplified toggle
+│   ├── test/
+│   │   ├── flashcard-test-client.tsx     # Flashcard test state and flow
 │   │   ├── test-types.ts                 # Test data types
 │   │   ├── test-header.tsx               # Test header with progress
 │   │   ├── test-passage-panel.tsx        # Passage display panel
 │   │   ├── test-question-card.tsx        # Question card UI
 │   │   └── test-results-screen.tsx       # Results summary screen
-│   ├── dashboard-sidebar.tsx             # Dashboard navigation sidebar
-│   ├── error-boundary.tsx                # Global error boundary
-│   ├── user-menu.tsx                     # User dropdown menu
-│   ├── sign-out-button.tsx               # Sign-out button
-│   ├── upload-zone.tsx                   # Drag-and-drop upload
-│   ├── text-input-area.tsx               # Text paste input
-│   └── progress-dashboard.tsx            # Progress stats display
-└── lib/
-    ├── supabase/
-    │   ├── client.ts                     # Browser client
-    │   ├── server.ts                     # Server client (component + action)
-    │   └── middleware.ts                 # Session management
-    ├── auth/
-    │   ├── auth-utils.ts                 # getAuthenticatedUser, requireAuth, ensureProfile
-    │   └── sync-user.ts                  # Upsert user profile on OAuth
-    ├── db/
-    │   ├── client.ts                     # Prisma singleton + PrismaPg + security extension
-    │   ├── 
-
-    # Passage CRUD + question creation
-    │   ├── card-review-queries.ts        # SM-2 logic, due cards, progress stats
-    │   └── study-session-queries.ts      # Session CRUD + accuracy computation
-    ├── storage/
-    │   └── supabase-storage.ts           # File upload/download/delete via Supabase Storage
-    ├── shared/
-    │   ├── utils.ts                      # cn() utility
-    │   ├── cefr-utils.ts                 # CEFR color/label helpers
-    │   └── reading-utils.ts              # Reading time, word highlighting
-    ├── parsers/
-    │   └── pdf.ts                        # PDF text extraction
-    ├── validation/
-    │   └── upload.ts                     # File/text validation
-    ├── algorithms/
-    │   └── sm2.ts                        # SM-2 standalone implementation
-    ├── core/
-    │   ├── logger.ts                     # Pino structured logging
-    │   └── sentry.ts                     # Sentry client configuration
-    └── ai/
-        ├── content-simplifier.ts         # AI text simplification
-        ├── question-generator.ts         # AI question generation
-        └── prompt-utils.ts               # Text wrapping helpers for AI prompts
+│   └── progress/
+│       └── progress-dashboard.tsx        # Progress stats display
+├── lib/
+│   ├── supabase/
+│   │   ├── client.ts                     # Browser client
+│   │   ├── server.ts                     # Server client (component + action)
+│   │   └── middleware.ts                 # Session management
+│   ├── auth/
+│   │   ├── auth-utils.ts                 # getAuthenticatedUser, requireAuth, ensureProfile
+│   │   └── sync-user.ts                  # Upsert user profile on OAuth
+│   ├── db/
+│   │   ├── client.ts                     # Prisma singleton + PrismaPg + security extension
+│   │   ├── passage-queries.ts            # Passage CRUD + question creation
+│   │   ├── card-review-queries.ts        # SM-2 logic, due cards, progress stats
+│   │   └── study-session-queries.ts      # Session CRUD + accuracy computation
+│   ├── storage/
+│   │   └── supabase-storage.ts           # File upload/download/delete via Supabase Storage
+│   ├── shared/
+│   │   ├── utils.ts                      # cn() utility
+│   │   ├── cefr-utils.ts                 # CEFR color/label helpers
+│   │   └── reading-utils.ts              # Reading time, word highlighting
+│   ├── parsers/
+│   │   └── pdf.ts                        # PDF text extraction
+│   ├── validation/
+│   │   └── upload.ts                     # File/text validation
+│   ├── algorithms/
+│   │   └── sm2.ts                        # SM-2 standalone implementation
+│   ├── core/
+│   │   ├── logger.ts                     # Pino structured logging
+│   │   └── sentry.ts                     # Sentry client configuration
+│   └── ai/
+│       ├── content-simplifier.ts         # AI text simplification
+│       ├── question-generator.ts         # AI question generation
+│       └── prompt-utils.ts               # Text wrapping helpers for AI prompts
+├── generated/prisma/                     # Generated Prisma client
+├── instrumentation.ts                    # Sentry server instrumentation
+├── instrumentation-client.ts             # Sentry client instrumentation
+└── proxy.ts                              # Auth route protection and redirects
 ```
 
 ---
@@ -162,7 +182,7 @@ src/
 - Processing page is simulated (fake progress, auto-redirects after ~6s)
 - No real-time updates (no WebSockets/SSE)
 - No caching on AI calls or DB queries
-- Unused deps: `react-hook-form`, `date-fns`, `@base-ui-react`
+- Unused deps pending audit: `react-hook-form`, `@hookform/resolvers`, `date-fns`, `@base-ui/react`
 
 ---
 
@@ -174,4 +194,4 @@ src/
 ---
 
 **Status:** Active
-**Last Updated:** 2026-05-11
+**Last Updated:** 2026-05-15

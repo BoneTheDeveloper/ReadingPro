@@ -7,7 +7,7 @@ import { createModuleLogger } from '@/lib/core/logger';
 import { getHeuristicCEFR } from '@/lib/shared/cefr-utils';
 import { simplifyContent } from '@/lib/ai/content-simplifier';
 import { generateComprehensionQuestions, type GeneratedQuestion } from '@/lib/ai/question-generator';
-import { getAuthenticatedUser } from './study-shared';
+import { getAuthenticatedUser } from '@/lib/auth/auth-utils';
 
 const log = createModuleLogger('actions:analyze');
 

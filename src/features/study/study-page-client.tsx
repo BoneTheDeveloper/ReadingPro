@@ -8,9 +8,9 @@ import {
   useDefaultLayout,
 } from "react-resizable-panels";
 import type { PanelImperativeHandle } from "react-resizable-panels";
-import { studySimplifyAction } from "@/app/actions/study-simplify-action";
-import { studyGenerateQuestionsAction } from "@/app/actions/study-generate-questions-action";
-import { studyDeletePassageAction } from "@/app/actions/study-delete-passage-action";
+import { studySimplifyAction } from "@/features/study/actions/study-simplify-action";
+import { studyGenerateQuestionsAction } from "@/features/study/actions/study-generate-questions-action";
+import { studyDeletePassageAction } from "@/features/study/actions/study-delete-passage-action";
 import type {
   StudyState,
   PassageData,
@@ -197,20 +197,6 @@ export function StudyPageClient({
       status: "ready",
     }));
   }, []);
-
-  const handleReset = useCallback(() => {
-    setState({
-      passages: initialPassages,
-      activePassageId: null,
-      questions: [],
-      status: "idle",
-      error: null,
-      simplifying: false,
-      generatingQuestions: false,
-      uploadModalOpen: false,
-    });
-    setResults([]);
-  }, [initialPassages]);
 
   const handleActionClick = useCallback(
     async (cardId: StudioCardId) => {

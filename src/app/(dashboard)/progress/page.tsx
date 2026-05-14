@@ -1,4 +1,4 @@
-import { ProgressDashboard } from '@/components/progress-dashboard';
+import { ProgressDashboard } from '@/features/progress/progress-dashboard';
 
 export default function ProgressPage() {
   return <ProgressDashboard />;

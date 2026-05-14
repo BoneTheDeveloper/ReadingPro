@@ -2,11 +2,11 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { TestHeader } from "@/components/test/test-header";
-import { TestPassagePanel } from "@/components/test/test-passage-panel";
-import { TestQuestionCard } from "@/components/test/test-question-card";
-import { TestResultsScreen } from "@/components/test/test-results-screen";
-import type { TestQuestion, TestPassage } from "@/components/test/test-types";
+import { TestHeader } from "./test-header";
+import { TestPassagePanel } from "./test-passage-panel";
+import { TestQuestionCard } from "./test-question-card";
+import { TestResultsScreen } from "./test-results-screen";
+import type { TestQuestion, TestPassage } from "./test-types";
 
 interface FlashcardTestClientProps {
   passage: TestPassage;

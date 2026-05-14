@@ -18,8 +18,8 @@ import {
 import { cn } from "@/lib/shared/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { UserMenu } from "@/components/user-menu";
-import { SignOutButton } from "@/components/sign-out-button";
+import { UserMenu } from "./user-menu";
+import { SignOutButton } from "./sign-out-button";
 
 const navItems = [
   { href: "/study", label: "Study", icon: BookOpen },

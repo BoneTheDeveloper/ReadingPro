@@ -6,7 +6,7 @@ import {
   sanitizeFilename,
   sanitizeTitle,
 } from "@/lib/validation/upload";
-import { analyzeContentAction } from "@/app/actions/analyze";
+import { analyzeContentAction } from "@/features/upload/analyze-content-action";
 import { uploadFile, deleteFile } from "@/lib/storage/supabase-storage";
 import { getAuthenticatedUser } from "@/lib/auth/auth-utils";
 import { createModuleLogger } from "@/lib/core/logger";

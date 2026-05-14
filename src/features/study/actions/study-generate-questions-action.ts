@@ -10,7 +10,7 @@ import { getAuthenticatedUser } from './study-shared';
 
 const log = createModuleLogger('actions:study-generate-questions');
 
-import type { QuestionData } from '@/app/(dashboard)/study/study-types';
+import type { QuestionData } from '@/features/study/study-types';
 
 export type GenerateQuestionsResult =
   | { questions: QuestionData[] }

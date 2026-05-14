@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
 import { validateTextContent } from '@/lib/validation/upload';
-import { analyzeContentAction } from '@/app/actions/analyze';
+import { analyzeContentAction } from '@/features/upload/analyze-content-action';
 import { createModuleLogger } from '@/lib/core/logger';
 
 const log = createModuleLogger('api:upload:text');
