@@ -1,6 +1,6 @@
 # Manual Test Checklist — Upload Flow E2E
 
-Run the dev server (`npm run dev`) before testing. Work through each section.
+Run the dev server (`pnpm dev`) before testing. Work through each section.
 
 ---
 

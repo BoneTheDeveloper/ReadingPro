@@ -106,7 +106,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 
 ## Step 4: Verify
 
-1. Start dev server: `npm run dev`
+1. Start dev server: `pnpm dev`
 2. Navigate to `http://localhost:3000/sign-in`
 3. Click "Sign in with Google"
 4. You should be redirected to Google sign-in, then back to `/study`

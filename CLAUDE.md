@@ -24,7 +24,7 @@ See `docs/system-architecture.md` for full details.
 
 - Code standards: see `docs/code-standards.md` — TS rules, file naming, project structure, components, API responses, error handling, Prisma patterns
 - Styling: see `docs/styling-guide.md` — theme tokens, forbidden patterns, shadcn rules
-- Commands: see `package.json` scripts; `npx tsc --noEmit` for type check
+- Commands: see `package.json` scripts; `pnpm tsc --noEmit` for type check
 
 ## Prisma Migrations
 
