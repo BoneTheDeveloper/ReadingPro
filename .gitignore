@@ -51,8 +51,10 @@ next-env.d.ts
 
 /src/generated/prisma
 
-# claude
+# agent file 
 .claude
+.codex
+.agents
 
 # Sentry Config File
 .env.sentry-build-plugin
