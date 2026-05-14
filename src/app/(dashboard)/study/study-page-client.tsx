@@ -46,41 +46,51 @@ export function StudyPageClient({
   const [results, setResults] = useState<ResultItem[]>([]);
   const [mounted, setMounted] = useState(false);
   const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(false);
+  const [leftCollapsible, setLeftCollapsible] = useState(false);
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false);
+  const [rightCollapsible, setRightCollapsible] = useState(false);
 
   const leftPanelRef = useRef<PanelImperativeHandle>(null);
   const rightPanelRef = useRef<PanelImperativeHandle>(null);
 
   const toggleLeft = useCallback(() => {
     const panel = leftPanelRef.current;
-
     if (!panel) return;
 
-    const nextCollapsed = !panel.isCollapsed();
-
-    if (nextCollapsed) {
-      panel.collapse();
+    if (!panel.isCollapsed()) {
+      // Enable collapsible BEFORE calling collapse()
+      setLeftCollapsible(true);
+      // Wait for React to re-render collapsible=true
+      setTimeout(() => {
+        panel.collapse();
+        setLeftPanelCollapsed(true);
+      }, 0);
     } else {
       panel.expand();
+      setLeftPanelCollapsed(false);
+      // Disable collapsible after expand finishes
+      setTimeout(() => setLeftCollapsible(false), 150);
     }
-
-    setLeftPanelCollapsed(nextCollapsed);
   }, []);
 
   const toggleRight = useCallback(() => {
     const panel = rightPanelRef.current;
-
     if (!panel) return;
 
-    const nextCollapsed = !panel.isCollapsed();
-
-    if (nextCollapsed) {
-      panel.collapse();
+    if (!panel.isCollapsed()) {
+      // Enable collapsible BEFORE calling collapse()
+      setRightCollapsible(true);
+      // Wait for React to re-render collapsible=true
+      setTimeout(() => {
+        panel.collapse();
+        setRightPanelCollapsed(true);
+      }, 0);
     } else {
       panel.expand();
+      setRightPanelCollapsed(false);
+      // Disable collapsible after expand finishes
+      setTimeout(() => setRightCollapsible(false), 150);
     }
-
-    setRightPanelCollapsed(nextCollapsed);
   }, []);
 
   const { defaultLayout, onLayoutChanged } = useDefaultLayout({
@@ -405,10 +415,10 @@ export function StudyPageClient({
           <Panel
             panelRef={leftPanelRef}
             id="source"
-            collapsible={true}
+            collapsible={leftCollapsible}
             collapsedSize="60px"
             defaultSize="280px"
-            minSize={leftPanelCollapsed ? "60px" : "200px"}
+            minSize="200px"
             maxSize="800px"
           >
             <StudySourcesPanel
@@ -452,10 +462,10 @@ export function StudyPageClient({
           <Panel
             panelRef={rightPanelRef}
             id="studio"
-            collapsible={true}
+            collapsible={rightCollapsible}
             collapsedSize="60px"
             defaultSize="280px"
-            minSize={rightPanelCollapsed ? "60px" : "200px"}
+            minSize="200px"
           >
             <StudyStudioPanel
               results={results}
