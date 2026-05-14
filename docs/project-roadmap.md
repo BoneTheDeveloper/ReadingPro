@@ -16,6 +16,8 @@
 | Phase 6: Advanced Features | Resizable workspace, analytics dashboard | 70% 🔧 |
 | Phase 7: Supabase Auth | Email/password + Google OAuth, middleware, user sync | 100% ✅ |
 | Phase 8: Production Infra | PostgreSQL migration, Supabase Storage, Vercel deploy | 60% 🔧 |
+| Phase 9: Study Chat | AI chat assistant in Studio panel with passage context | 0% 🔲 |
+| Phase 10: Translation | Word-by-word dictionary + paragraph translation via chat | 0% 🔲 |
 
 ---
 
@@ -89,6 +91,32 @@ Supabase Auth (email/password + Google OAuth), middleware route protection, sign
 4. Offline capability requirements
 
 ---
+
+### Phase 9: Study Chat (Planned)
+
+**Goal:** AI chat assistant embedded in the Studio panel, context-aware of the active passage.
+
+**Scope:**
+- `POST /api/study-chat` route handler using `streamText` (Vercel AI SDK v6) with passage content in system prompt
+- `useChat` hook (`@ai-sdk/react`) for streaming chat UI in Studio panel
+- New `StudioCardId: 'chat'` card in Studio panel — opens inline chat view
+- Chat history scoped to current passage session
+- System prompt: English reading tutor that explains vocabulary, grammar, and meaning
+
+**Depends on:** `@ai-sdk/react` package (needs install)
+
+### Phase 10: Translation (Planned)
+
+**Goal:** Word-by-word dictionary lookup + paragraph translation using the chat function.
+
+**Scope:**
+- Word-by-word: Click/tap any word in `StudyContentPanel` → popover with dictionary definition (Free Dictionary API) + Vietnamese translation (via AI chat)
+- Paragraph translation: "Translate passage" button sends paragraph to chat endpoint with translation system prompt
+- New `StudioCardId: 'translate'` card in Studio panel — enables/disabled
+- Word selection hook (`use-word-selection`) for detecting clicked words
+- Dictionary popover component
+
+**Depends on:** Phase 9 (uses chat endpoint for AI-powered translation)
 
 **See also:** Business milestones → [`docs/database/brd.md`](database/brd.md)
 
