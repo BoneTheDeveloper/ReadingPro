@@ -1,4 +1,4 @@
-import type { UserProfile } from '@prisma/client';
+import type { UserProfile } from '@/generated/prisma/client';
 
 const CACHE_TTL_MS = 30_000;
 const cache = new Map<string, { profile: UserProfile; expiresAt: number }>();

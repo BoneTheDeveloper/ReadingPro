@@ -84,7 +84,7 @@ src/
 
 - API responses: `{ success: boolean, data?: T, error?: string }`
 - shadcn/ui primitives in `src/components/ui/` — compose, don't modify
-- Import `db` from `@/lib/db/client` — never use `@prisma/client` directly in components
+- Import `db` from `@/lib/db/client` — never use generated Prisma client imports directly in components
 
 ## Error Handling
 
