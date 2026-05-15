@@ -455,6 +455,7 @@ export function StudyPageClient({
           >
             <StudyStudioPanel
               results={results}
+              activePassage={activePassage}
               hasActivePassage={!!state.activePassageId}
               simplifying={state.simplifying}
               onActionClick={handleActionClick}

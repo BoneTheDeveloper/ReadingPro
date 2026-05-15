@@ -1,6 +1,11 @@
-export type StudyStatus = 'idle' | 'uploading' | 'analyzing' | 'ready' | 'error';
+export type StudyStatus =
+  | "idle"
+  | "uploading"
+  | "analyzing"
+  | "ready"
+  | "error";
 
-export type SourceType = 'TEXT' | 'PDF' | 'YOUTUBE';
+export type SourceType = "TEXT" | "PDF" | "YOUTUBE";
 
 export interface PassageData {
   id: string;
@@ -60,7 +65,13 @@ export interface StudyUploadModalProps {
   onUploadError: (error: string) => void;
 }
 
-export type StudioCardId = 'quiz' | 'flashcards' | 'summary' | 'mindmap' | 'translate';
+export type StudioCardId =
+  | "quiz"
+  | "flashcards"
+  | "summary"
+  | "chat"
+  | "mindmap"
+  | "translate";
 
 export interface StudioCard {
   id: StudioCardId;
@@ -70,8 +81,8 @@ export interface StudioCard {
   disabled?: boolean;
 }
 
-export type ResultItemType = 'quiz' | 'summary';
-export type ResultItemStatus = 'running' | 'completed' | 'error';
+export type ResultItemType = "quiz" | "summary";
+export type ResultItemStatus = "running" | "completed" | "error";
 
 export interface ResultItemData {
   questions?: QuestionData[];
