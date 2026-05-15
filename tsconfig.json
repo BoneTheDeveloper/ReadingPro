@@ -19,8 +19,7 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"],
-      "@ai-sdk/react": ["./src/lib/ai-sdk-react"]
+      "@/*": ["./src/*"]
     }
   },
   "include": [

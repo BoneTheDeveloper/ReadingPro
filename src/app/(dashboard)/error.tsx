@@ -15,7 +15,7 @@ export default function DashboardError({
   }, [error]);
 
   return (
-    <div className="flex min-h-[400px] flex-col items-center justify-center gap-4 p-8 text-center">
+    <div className="flex min-h-100 flex-col items-center justify-center gap-4 p-8 text-center">
       <h2 className="text-xl font-semibold">Something went wrong</h2>
       <p className="text-sm text-muted-foreground">
         An unexpected error occurred. Please try again.

@@ -2,43 +2,51 @@
 
 ## Flow Diagram
 
-```
-Study Page                      API                      Database
-──────────                      ───                      ────────
-
-1. User submits text
-   └─► studyAnalyzeAction()
-       ├─► AI pipeline (CEFR + simplify + questions)
-       ├─► create Passage + Questions
-       └─► return { passage, questions[] }
-
-2. User starts flashcard test
-   └─► POST /api/study-session { passageId }
-       └─► create StudySession (startedAt: now)
-           └─► return { id, ... }
-
-3. User answers each question
-   └─► (client-side tracking of correct/incorrect)
-
-4. User finishes test
-   └─► PATCH /api/study-session
-       { sessionId, cardsReviewed, correctCount, incorrectCount }
-       └─► update StudySession (completedAt, accuracyRate)
-
-5. Spaced repetition review
-   └─► GET /api/cards/due
-       └─► return up to 20 due CardReviews (nextReviewDate <= now)
-
-6. User rates recall quality
-   └─► POST /api/cards/review
-       { cardReviewId, qualityRating: 0-5 }
-       └─► SM-2 algorithm calculates:
-           easeFactor, intervalDays, repetitions, nextReviewDate
-           └─► update CardReview
-
-7. Progress dashboard
-   └─► GET /api/progress/stats
-       └─► return { totalCards, matureCards, dueCards, todayReviews }
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant SP as Study Page
+    participant API as API Endpoint
+    participant DB as Database
+    participant AI as AI Pipeline
+    
+    U->>SP: Submit text
+    SP->>AI: studyAnalyzeAction()
+    AI->>DB: AI pipeline (CEFR + simplify + questions)
+    AI->>DB: create Passage + Questions
+    AI->>SP: return { passage, questions[] }
+    
+    U->>API: POST /api/study-session { passageId }
+    API->>DB: create StudySession (startedAt: now)
+    DB-->>API: return { id, ... }
+    API-->>U: return { id, ... }
+    
+    U->>SP: Answer questions (client-side)
+    SP->>SP: Track correct/incorrect
+    
+    U->>API: PATCH /api/study-session
+    API->>DB: update StudySession (completedAt, accuracyRate)
+    DB-->>API: Updated session
+    API-->>U: return updated session
+    
+    U->>API: GET /api/cards/due
+    API->>DB: fetch due CardReviews
+    DB-->>API: up to 20 due cards
+    API-->>U: return due cards
+    
+    U->>API: POST /api/cards/review { cardReviewId, qualityRating }
+    API->>DB: SM-2 algorithm calculations
+    DB->>DB: update CardReview
+    DB-->>API: Updated card
+    API-->>U: return updated card
+    
+    U->>API: GET /api/progress/stats
+    API->>DB: fetch progress stats
+    DB-->>API: { totalCards, matureCards, dueCards, todayReviews }
+    API-->>U: return stats
+    
+    note over U,AI: Client-side tracking during flashcard test
+    note over API,DB: SM-2 calculations update spaced repetition
 ```
 
 ---
