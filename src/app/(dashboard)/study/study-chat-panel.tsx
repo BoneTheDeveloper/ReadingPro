@@ -136,7 +136,7 @@ export function StudyChatPanel({
                     : "rounded-bl-md border border-border bg-muted text-foreground",
                 )}
               >
-                <p className="whitespace-pre-wrap wrap-break-word">{text}</p>
+                <p className="whitespace-pre-wrap break-word">{text}</p>
               </div>
             </div>
           );
