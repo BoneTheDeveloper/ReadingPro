@@ -15,12 +15,12 @@ Wire `StudyChatPanel` to the official `@ai-sdk/react` `useChat` hook while prese
 
 ## Requirements
 
-- Functional: Chat messages stream in the existing Study Studio panel, and each request includes the active passage id and content.
+- Functional: Chat messages stream in the existing Study Studio panel, and each request includes only the active passage id.
 - Non-functional: Keep UI behavior and styling scoped to the existing component.
 
 ## Architecture
 
-Use `DefaultChatTransport` from `ai` with API `/api/study-chat`. Pass `passageId` and `passageContent` using the v6 transport request body so the server can build a passage-grounded prompt.
+Use `DefaultChatTransport` from `ai` with API `/api/study-chat`. Pass only `passageId` using the v6 transport request body; the server loads passage content from the database to build the passage-grounded prompt.
 
 ## Related Code Files
 
@@ -36,7 +36,7 @@ Use `DefaultChatTransport` from `ai` with API `/api/study-chat`. Pass `passageId
 ## Success Criteria
 
 - [ ] Study Chat compiles with official `@ai-sdk/react`.
-- [ ] Requests still include `passageId` and `passageContent`.
+- [ ] Requests include `passageId` only.
 - [ ] Existing chat UI behavior remains intact.
 
 ## Risk Assessment
