@@ -1,6 +1,7 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport } from "ai";
 import { Loader2, Send, Sparkles, StopCircle } from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,6 @@ import { cn } from "@/lib/shared/utils";
 
 interface StudyChatPanelProps {
   passageId: string;
-  passageContent: string;
   passageTitle: string;
 }
 
@@ -41,19 +41,15 @@ function getMessageText(message: {
  */
 export function StudyChatPanel({
   passageId,
-  passageContent,
   passageTitle,
 }: StudyChatPanelProps) {
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
-  const requestBody = useMemo(
-    () => ({ passageId, passageContent }),
-    [passageContent, passageId],
+  const transport = useMemo(
+    () => new DefaultChatTransport({ api: "/api/study-chat", body: { passageId } }),
+    [passageId],
   );
-  const { messages, sendMessage, status, error, stop } = useChat({
-    api: "/api/study-chat",
-    body: requestBody,
-  });
+  const { messages, sendMessage, status, error, stop } = useChat({ transport });
   const isStreaming = status === "submitted" || status === "streaming";
 
   useEffect(() => {
@@ -69,7 +65,7 @@ export function StudyChatPanel({
     if (!trimmed || isStreaming) return;
 
     setInput("");
-    await sendMessage({ text: trimmed }, { body: requestBody });
+    await sendMessage({ text: trimmed });
   };
 
   /**
@@ -156,7 +152,7 @@ export function StudyChatPanel({
 
         {error && (
           <div className="rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2 text-xs text-destructive">
-            {error.message || "Chat failed. Please try again."}
+            Chat failed. Please try again.
           </div>
         )}
         <div ref={bottomRef} />

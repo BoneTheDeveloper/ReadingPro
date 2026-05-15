@@ -26,6 +26,18 @@ See `docs/system-architecture.md` for full details.
 - Styling: see `docs/styling-guide.md` — theme tokens, forbidden patterns, shadcn rules
 - Commands: see `package.json` scripts; `pnpm tsc --noEmit` for type check
 
+##  Library access
+Do not read node_modules by default.
+
+When library API/type information is needed, first inspect package.json and the lockfile to identify the installed package version.
+
+If local package source or .d.ts files are needed, request permission to read only the specific package path, for example:
+- node_modules/ai/**
+- node_modules/@ai-sdk/**
+- node_modules/react-resizable-panels/**
+
+Never request access to the entire node_modules directory unless explicitly justified.
+Prefer reading .d.ts files, package exports, and dist entrypoints only.
 ## Prisma Migrations
 
 ```

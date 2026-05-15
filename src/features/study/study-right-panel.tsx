@@ -135,7 +135,6 @@ export function StudyStudioPanel({
           <StudyChatPanel
             key={activePassage.id}
             passageId={activePassage.id}
-            passageContent={activePassage.content}
             passageTitle={activePassage.title}
           />
         </CardContent>
