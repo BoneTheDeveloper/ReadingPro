@@ -46,7 +46,8 @@ export function StudyChatPanel({
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
   const transport = useMemo(
-    () => new DefaultChatTransport({ api: "/api/study-chat", body: { passageId } }),
+    () =>
+      new DefaultChatTransport({ api: "/api/study-chat", body: { passageId } }),
     [passageId],
   );
   const { messages, sendMessage, status, error, stop } = useChat({ transport });
@@ -135,7 +136,7 @@ export function StudyChatPanel({
                     : "rounded-bl-md border border-border bg-muted text-foreground",
                 )}
               >
-                <p className="whitespace-pre-wrap break-words">{text}</p>
+                <p className="whitespace-pre-wrap wrap-break-word">{text}</p>
               </div>
             </div>
           );

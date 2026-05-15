@@ -32,7 +32,17 @@ const studyChatRequestSchema = z.object({
  */
 export async function POST(request: NextRequest) {
   try {
-    const parsed = studyChatRequestSchema.safeParse(await request.json());
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { error: "Invalid JSON payload." },
+        { status: 400 },
+      );
+    }
+
+    const parsed = studyChatRequestSchema.safeParse(body);
 
     if (!parsed.success) {
       return NextResponse.json(
