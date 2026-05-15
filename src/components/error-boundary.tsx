@@ -12,7 +12,10 @@ interface ErrorBoundaryState {
   hasError: boolean;
 }
 
-export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+export class ErrorBoundary extends Component<
+  ErrorBoundaryProps,
+  ErrorBoundaryState
+> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false };
@@ -37,10 +40,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       if (this.props.fallback) return this.props.fallback;
 
       return (
-        <div className="flex min-h-[200px] flex-col items-center justify-center gap-4 p-8 text-center">
-          <p className="text-sm text-muted-foreground">
-            Something went wrong.
-          </p>
+        <div className="flex min-h-50 flex-col items-center justify-center gap-4 p-8 text-center">
+          <p className="text-sm text-muted-foreground">Something went wrong.</p>
           {/* Raw button intentional — error boundary must work if shadcn fails to load */}
           <button
             type="button"

@@ -42,26 +42,45 @@ export function ReadingViewClient({ passage }: ReadingViewClientProps) {
   const currentLevel =
     viewMode === "simplified" ? passage.simplifiedLevel : passage.originalLevel;
 
-  const level = (currentLevel || passage.displayLevel) as Parameters<typeof getCEFRColor>[0];
-  const readingTime = calculateReadingTime(passage.wordCount, passage.displayLevel);
+  const level = (currentLevel || passage.displayLevel) as Parameters<
+    typeof getCEFRColor
+  >[0];
+  const readingTime = calculateReadingTime(
+    passage.wordCount,
+    passage.displayLevel,
+  );
 
   return (
     <div className="min-h-screen bg-muted">
       <header className="sticky top-0 z-50 bg-background border-b border-border">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => router.push("/")}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => router.push("/")}
+            >
               <ChevronLeft className="w-5 h-5" />
             </Button>
-            <h1 className="font-semibold text-foreground truncate max-w-[200px]">{passage.title}</h1>
+            <h1 className="font-semibold text-foreground truncate max-w-50">
+              {passage.title}
+            </h1>
           </div>
 
           <div className="flex items-center gap-3">
-            <span className={cn("px-3 py-1 rounded-full text-sm font-semibold", getCEFRColor(level))}>
+            <span
+              className={cn(
+                "px-3 py-1 rounded-full text-sm font-semibold",
+                getCEFRColor(level),
+              )}
+            >
               {getCEFRLabel(level)}
             </span>
             {passage.questionCount > 0 && (
-              <Button onClick={() => router.push(`/test/${passage.id}`)} size="sm">
+              <Button
+                onClick={() => router.push(`/test/${passage.id}`)}
+                size="sm"
+              >
                 <Play className="w-4 h-4" />
                 <span className="hidden sm:inline">Start Test</span>
               </Button>
@@ -73,7 +92,9 @@ export function ReadingViewClient({ passage }: ReadingViewClientProps) {
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
         <Card>
           <CardContent className="p-8">
-            <h2 className="text-2xl font-bold text-foreground mb-6">{passage.title}</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-6">
+              {passage.title}
+            </h2>
 
             <div className="flex flex-wrap gap-4 mb-6 pb-4 border-b border-border text-sm text-muted-foreground">
               <div className="flex items-center gap-1.5">
@@ -85,7 +106,12 @@ export function ReadingViewClient({ passage }: ReadingViewClientProps) {
                 <span>{passage.wordCount} words</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className={cn("px-2 py-0.5 rounded-full text-xs font-semibold", getCEFRColor(level))}>
+                <span
+                  className={cn(
+                    "px-2 py-0.5 rounded-full text-xs font-semibold",
+                    getCEFRColor(level),
+                  )}
+                >
                   Level {level}
                 </span>
               </div>
@@ -112,13 +138,16 @@ export function ReadingViewClient({ passage }: ReadingViewClientProps) {
 
             <div className="font-serif text-lg leading-loose text-foreground">
               {currentContent.split("\n\n").map((paragraph, i) => (
-                <p key={i} className="mb-5 last:mb-0">{paragraph}</p>
+                <p key={i} className="mb-5 last:mb-0">
+                  {paragraph}
+                </p>
               ))}
             </div>
 
             <div className="mt-8 pt-6 border-t border-border flex items-center justify-between">
               <div className="text-sm text-muted-foreground">
-                {passage.questionCount} comprehension question{passage.questionCount !== 1 ? "s" : ""} available
+                {passage.questionCount} comprehension question
+                {passage.questionCount !== 1 ? "s" : ""} available
               </div>
               {passage.questionCount > 0 && (
                 <Button onClick={() => router.push(`/test/${passage.id}`)}>
