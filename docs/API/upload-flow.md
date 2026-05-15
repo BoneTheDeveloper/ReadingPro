@@ -2,40 +2,47 @@
 
 ## Flow Diagram
 
-```
-User Input                    API Route                   Server Action                AI Pipeline
-─────────                    ─────────                   ─────────────                ────────────
-
-File Upload:
-  file.pdf/txt ──► POST /api/upload ──► validateFile()
-                                      ──► save to disk
-                                      ──► parsePDF() (if PDF)
-                                      ──► word count check (≥50)
-                                         │
-                                         ▼
-                                   analyzeContentAction()
-                                         │
-                                         ├─► CEFR Detection (AI → heuristic fallback)
-                                         ├─► Simplification (if level ≥ B1)
-                                         ├─► Question Generation (5 questions)
-                                         └─► DB: create passage + questions
-                                               │
-                                               ▼
-                                         { passageId, levels, questionCount }
-
-Text Input:
-  { text, title } ──► POST /api/upload/text ──► validateTextContent()
-                                                  ──► analyzeContentAction()
-                                                        │ (same pipeline)
-                                                        ▼
-
-Study Page:
-  { text, title } ──► studyAnalyzeAction() ──► (same AI pipeline)
-                                                ──► DB: create passage + questions
-                                                ──► return full data
-                                                      │
-                                                      ▼
-                                                { passage, questions[] }
+```mermaid
+flowchart TD
+    A[User Input] --> B[API Route]
+    A --> C[Server Action]
+    
+    B --> D[File Upload<br>POST /api/upload]
+    B --> E[Text Upload<br>POST /api/upload/text]
+    C --> F[Study Page<br>studyAnalyzeAction]
+    
+    D --> G[validateFile()]
+    D --> H[parsePDF() PDF?]
+    D --> I[word count check]
+    
+    E --> J[validateTextContent()]
+    
+    G --> K
+    H --> K
+    I --> K
+    J --> K
+    F --> K
+    
+    K --> L[AI Pipeline]
+    
+    L --> M[CEFR Detection<br>AI → heuristic fallback]
+    L --> N[Simplification<br>if level ≥ B1]
+    L --> O[Question Generation<br>5 questions]
+    
+    M --> P
+    N --> P
+    O --> P
+    
+    P --> Q[DB: create passage + questions]
+    
+    Q --> R[Output<br>{ passageId, levels, questionCount }]
+    Q --> S[Output<br>{ passage, questions[] }]
+    
+    style A fill:#e1f5fe
+    style L fill:#fff3e0
+    style Q fill:#e8f5e8
+    style R fill:#f3e5f5
+    style S fill:#f3e5f5
 ```
 
 ---

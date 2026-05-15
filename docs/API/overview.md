@@ -1,5 +1,36 @@
 # API Overview
 
+```mermaid
+flowchart TD
+    A[User Interface] --> B[API Endpoints]
+    A --> C[Server Actions]
+    
+    B --> D[Cards<br>POST /api/cards/review<br>GET /api/cards/due]
+    B --> E[Progress<br>GET /api/progress/stats]
+    B --> F[Study Session<br>POST /api/study-session<br>PATCH /api/study-session]
+    B --> G[Upload<br>POST /api/upload<br>POST /api/upload/text]
+    B --> H[Study Chat<br>POST /api/study-chat]
+    
+    C --> I[Analyze Content<br>analyzeContentAction]
+    C --> J[Study Analyze<br>studyAnalyzeAction]
+    
+    D --> K[Database Operations<br>CRUD for Card Reviews]
+    E --> L[Database Operations<br>User Progress Stats]
+    F --> M[Database Operations<br>Study Sessions]
+    G --> N[AI Pipeline<br>CEFR → Simplify → Questions]
+    H --> O[AI Pipeline<br>Grounded Chat]
+    I --> N
+    J --> N
+    
+    N --> P[Database<br>Passages + Questions]
+    O --> P
+    
+    P --> Q[AI Models<br>Gemini-1.5-flash<br>GPT-4o-mini]
+    
+    style A fill:#e1f5fe
+    style Q fill:#f3e5f5
+```
+
 All endpoints return `{ success: true, data: ... }` on success or `{ error: "..." }` on failure.
 
 **Auth:** Demo-only. All endpoints use hardcoded `demo@example.com` user. No auth headers required.
@@ -91,6 +122,7 @@ These have dedicated flow documentation:
 | `analyzeContentAction()` (server action) | [upload-flow.md](./upload-flow.md) |
 | `studyAnalyzeAction()` (server action) | [upload-flow.md](./upload-flow.md) |
 | Study session + card review lifecycle | [study-session-flow.md](./study-session-flow.md) |
+| POST `/api/study-chat` (streaming) | [study-chat-flow.md](./study-chat-flow.md) |
 
 ---
 
@@ -115,5 +147,6 @@ Server actions are React server-side functions, not HTTP endpoints. Called via `
 | `src/lib/ai/cefr-detector.ts` | AI CEFR level detection + heuristic fallback |
 | `src/lib/ai/content-simplifier.ts` | AI content simplification to target CEFR level |
 | `src/lib/ai/question-generator.ts` | AI comprehension question generation |
+| `src/lib/ai/prompt-utils.ts` | Prompt injection defense (`wrapUserText`) |
 | `src/lib/cefr-utils.ts` | CEFR level helpers (colors, labels) |
 | `src/lib/sm2-algorithm.ts` | SM-2 spaced repetition algorithm |

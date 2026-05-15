@@ -1,4 +1,9 @@
 import { openai } from "@ai-sdk/openai";
+import {
+  isAuthApiError,
+  isAuthError,
+  isAuthSessionMissingError,
+} from "@supabase/supabase-js";
 import { convertToModelMessages, streamText } from "ai";
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
@@ -22,11 +27,30 @@ const uiMessageSchema = z.object({
 });
 
 const MAX_PASSAGE_CHARS = 50_000;
+const AUTHENTICATION_REQUIRED_MESSAGE = "Authentication required";
+const UNAUTHENTICATED_AUTH_STATUSES = new Set([400, 401, 403]);
+const UNAUTHENTICATED_AUTH_ERROR_NAMES = new Set([
+  "AuthInvalidJwtError",
+  "AuthSessionMissingError",
+]);
 
 const studyChatRequestSchema = z.object({
   messages: z.array(uiMessageSchema).default([]),
   passageId: z.string().min(1),
 });
+
+function isUnauthenticatedError(error: unknown) {
+  if (!(error instanceof Error)) return false;
+  if (error.message === AUTHENTICATION_REQUIRED_MESSAGE) return true;
+  if (isAuthSessionMissingError(error)) return true;
+  if (isAuthApiError(error)) {
+    return UNAUTHENTICATED_AUTH_STATUSES.has(error.status);
+  }
+
+  return (
+    isAuthError(error) && UNAUTHENTICATED_AUTH_ERROR_NAMES.has(error.name)
+  );
+}
 
 /**
  * Handles study chat requests by loading the authenticated user's passage from
@@ -60,7 +84,7 @@ export async function POST(request: NextRequest) {
 
     const passage = await db.passage.findUnique({
       where: { id: passageId, userId: user.id, deletedAt: null },
-      select: { id: true, content: true, simplifiedContent: true, title: true },
+      select: { id: true, content: true, title: true },
     });
 
     if (!passage) {
@@ -70,10 +94,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const passageContent = (passage.simplifiedContent ?? passage.content).slice(
-      0,
-      MAX_PASSAGE_CHARS,
-    );
+    const passageContent = passage.content.slice(0, MAX_PASSAGE_CHARS);
     const modelMessages = await convertToModelMessages(messages);
 
     const passageContext = wrapUserText(`
@@ -111,7 +132,7 @@ export async function POST(request: NextRequest) {
 
     return result.toUIMessageStreamResponse();
   } catch (error) {
-    if (error instanceof Error && error.message === "Authentication required") {
+    if (isUnauthenticatedError(error)) {
       return NextResponse.json(
         { error: "Authentication required." },
         { status: 401 },
