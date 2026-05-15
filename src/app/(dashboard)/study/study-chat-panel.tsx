@@ -20,6 +20,10 @@ const promptSuggestions = [
   "Quiz me on this passage",
 ];
 
+/**
+ * Collects all text parts from a chat message into the display string used by
+ * the study chat bubbles.
+ */
 function getMessageText(message: {
   parts?: Array<{ type: string; text?: string }>;
 }) {
@@ -31,6 +35,10 @@ function getMessageText(message: {
   );
 }
 
+/**
+ * Renders a passage-scoped chat experience with streaming responses, prompt
+ * suggestions, and controls for sending or stopping a reply.
+ */
 export function StudyChatPanel({
   passageId,
   passageContent,
@@ -52,6 +60,10 @@ export function StudyChatPanel({
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages, status]);
 
+  /**
+   * Sends a trimmed learner prompt to the streaming chat hook when the chat is
+   * idle, then clears the input for the next prompt.
+   */
   const submitMessage = async (text: string) => {
     const trimmed = text.trim();
     if (!trimmed || isStreaming) return;
@@ -60,6 +72,10 @@ export function StudyChatPanel({
     await sendMessage({ text: trimmed }, { body: requestBody });
   };
 
+  /**
+   * Converts the chat form submission into a streaming message request without
+   * allowing the browser to navigate away from the page.
+   */
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     void submitMessage(input);

@@ -1,17 +1,32 @@
 import { openai } from "@ai-sdk/openai";
-import { convertToModelMessages, streamText, type UIMessage } from "ai";
+import { convertToModelMessages, streamText } from "ai";
 import { z } from "zod";
 import { createModuleLogger } from "@/lib/core/logger";
 import { wrapUserText } from "@/lib/ai/prompt-utils";
 
 const log = createModuleLogger("api:study-chat");
 
+const uiMessageTextPartSchema = z.object({
+  type: z.literal("text"),
+  text: z.string(),
+});
+
+const uiMessageSchema = z.object({
+  id: z.string().min(1),
+  role: z.enum(["user", "assistant"]),
+  parts: z.array(uiMessageTextPartSchema).min(1),
+});
+
 const studyChatRequestSchema = z.object({
-  messages: z.array(z.custom<UIMessage>()).default([]),
+  messages: z.array(uiMessageSchema).default([]),
   passageContent: z.string().min(1).max(50000),
   passageId: z.string().min(1),
 });
 
+/**
+ * Handles study chat requests by validating the selected passage context and
+ * returning a passage-grounded streaming tutor response.
+ */
 export async function POST(req: Request) {
   const parsed = studyChatRequestSchema.safeParse(await req.json());
 

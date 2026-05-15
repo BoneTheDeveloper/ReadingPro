@@ -23,6 +23,10 @@ type UseChatOptions = {
   body?: Record<string, unknown>;
 };
 
+/**
+ * Creates a text-only chat message in the UIMessage shape expected by the
+ * local useChat compatibility hook and the study chat API.
+ */
 function createMessage(role: UIMessage["role"], text: string): UIMessage {
   return {
     id: crypto.randomUUID(),
@@ -31,18 +35,29 @@ function createMessage(role: UIMessage["role"], text: string): UIMessage {
   };
 }
 
+/**
+ * Implements the subset of the AI SDK useChat API needed by the study chat UI,
+ * including streaming text updates, cancellation, status, and error state.
+ */
 export function useChat({ api = "/api/chat", body }: UseChatOptions = {}) {
   const [messages, setMessages] = useState<UIMessage[]>([]);
   const [status, setStatus] = useState<ChatStatus>("ready");
   const [error, setError] = useState<Error | undefined>();
   const abortControllerRef = useRef<AbortController | null>(null);
 
+  /**
+   * Aborts the active streaming request and returns the hook to the ready state.
+   */
   const stop = useCallback(() => {
     abortControllerRef.current?.abort();
     abortControllerRef.current = null;
     setStatus("ready");
   }, []);
 
+  /**
+   * Posts the current conversation to the configured chat endpoint and appends
+   * streamed response chunks to the pending assistant message.
+   */
   const sendMessage = useCallback(
     async (message: CreateMessage, options?: ChatRequestOptions) => {
       const userMessage = createMessage("user", message.text);

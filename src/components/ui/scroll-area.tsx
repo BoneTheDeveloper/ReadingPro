@@ -2,6 +2,10 @@ import * as React from "react";
 
 import { cn } from "@/lib/shared/utils";
 
+/**
+ * Provides a lightweight scrollable container that preserves the shared UI
+ * component API while applying the app's overflow styling.
+ */
 function ScrollArea({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
