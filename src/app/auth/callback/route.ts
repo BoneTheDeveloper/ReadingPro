@@ -1,11 +1,21 @@
 import { NextResponse } from 'next/server'
 import { createServerActionClient } from '@/lib/supabase/server'
 import { syncUser } from '@/lib/auth/sync-user'
+import { getSafeNextPath, normalizeOrigin } from '@/lib/auth/redirects'
+
+function getRedirectOrigin(requestOrigin: string) {
+  return (
+    normalizeOrigin(process.env.NEXT_PUBLIC_SITE_URL) ??
+    normalizeOrigin(process.env.VERCEL_URL) ??
+    requestOrigin
+  )
+}
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/study'
+  const next = getSafeNextPath(searchParams.get('next'))
+  const redirectOrigin = getRedirectOrigin(origin)
 
   if (code) {
     const supabase = await createServerActionClient()
@@ -18,9 +28,9 @@ export async function GET(request: Request) {
         user.user_metadata?.name as string || user.user_metadata?.full_name as string,
         user.user_metadata?.avatar_url as string,
       )
-      return NextResponse.redirect(`${origin}${next}`)
+      return NextResponse.redirect(`${redirectOrigin}${next}`)
     }
   }
 
-  return NextResponse.redirect(`${origin}/sign-in?error=auth_callback_failed`)
+  return NextResponse.redirect(`${redirectOrigin}/sign-in?error=auth_callback_failed`)
 }

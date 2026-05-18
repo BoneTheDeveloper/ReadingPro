@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   turbopack: {
-    root: "/home/luc/Project/english-reading-training-app",
+    root: process.cwd(),
   },
 };
 

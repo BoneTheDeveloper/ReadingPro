@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { getBrowserRedirectOrigin } from '@/lib/auth/redirects'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
@@ -49,7 +50,7 @@ export default function SignUpPage() {
 
   const handleGoogleSignUp = async () => {
     setError(null)
-    const origin = window.location.origin
+    const origin = getBrowserRedirectOrigin()
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: `${origin}/auth/callback` },

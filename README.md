@@ -28,6 +28,7 @@ cp .env.example .env.local
 Then update `.env.local` with your own values:
 
 - `OPENAI_API_KEY`
+- `NEXT_PUBLIC_SITE_URL`
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
@@ -35,6 +36,8 @@ Then update `.env.local` with your own values:
 - `DIRECT_URL`
 
 `DATABASE_URL` should use the Supabase pooled connection string. `DIRECT_URL` should use the direct database connection string for Prisma migrations.
+
+For production OAuth redirects, set `NEXT_PUBLIC_SITE_URL` to your deployed host, for example `https://your-app.vercel.app`.
 
 ## Set Up the Database
 

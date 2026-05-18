@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { getBrowserRedirectOrigin, getSafeNextPath } from '@/lib/auth/redirects'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
@@ -13,7 +14,7 @@ import { Loader2 } from 'lucide-react'
 function SignInForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const next = searchParams.get('next') || '/study'
+  const next = getSafeNextPath(searchParams.get('next'))
   const supabase = createClient()
 
   const [email, setEmail] = useState('')
@@ -43,7 +44,7 @@ function SignInForm() {
 
   const handleGoogleSignIn = async () => {
     setError(null)
-    const origin = window.location.origin
+    const origin = getBrowserRedirectOrigin()
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(next)}` },
