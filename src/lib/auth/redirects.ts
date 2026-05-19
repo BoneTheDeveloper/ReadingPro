@@ -12,10 +12,10 @@ export function normalizeOrigin(origin: string | undefined) {
 }
 
 export function getBrowserRedirectOrigin() {
-  return normalizeOrigin(process.env.NEXT_PUBLIC_SITE_URL) ?? window.location.origin;
+  return window.location.origin;
 }
 
-export function getSafeNextPath(next: string | null, fallback = "/study") {
+export function getSafeNextPath(next: string | null, fallback = "/") {
   if (!next || !next.startsWith("/") || next.startsWith("//")) {
     return fallback;
   }

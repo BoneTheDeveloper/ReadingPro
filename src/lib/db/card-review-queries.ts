@@ -105,17 +105,60 @@ export async function createCardReview(
 }
 
 export async function getUserProgress(userId: string) {
-  const [totalCards, matureCards, dueCards, todayReviews] = await Promise.all([
-    db.cardReview.count({ where: { userId } }),
-    db.cardReview.count({ where: { userId, intervalDays: { gte: 21 } } }),
-    db.cardReview.count({ where: { userId, nextReviewDate: { lte: new Date() } } }),
-    db.cardReview.count({
-      where: {
-        userId,
-        reviewedAt: { gte: new Date(new Date().setHours(0, 0, 0, 0)) },
-      },
-    }),
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+
+  const [rows, reviewDays] = await Promise.all([
+    db.$queryRaw<Array<{
+      totalCards: bigint;
+      matureCards: bigint;
+      dueCards: bigint;
+      todayReviews: bigint;
+    }>>`
+      SELECT
+        COUNT(*)::bigint AS "totalCards",
+        COUNT(*) FILTER (WHERE "intervalDays" >= 21)::bigint AS "matureCards",
+        COUNT(*) FILTER (WHERE "nextReviewDate" <= ${new Date()})::bigint AS "dueCards",
+        COUNT(*) FILTER (WHERE "reviewedAt" >= ${startOfToday})::bigint AS "todayReviews"
+      FROM "card_reviews"
+      WHERE "userId" = ${userId}
+    `,
+    db.$queryRaw<Array<{ day: Date | string }>>`
+      SELECT DISTINCT DATE("reviewedAt") AS day
+      FROM "card_reviews"
+      WHERE "userId" = ${userId}
+      ORDER BY day DESC
+      LIMIT 30
+    `,
   ]);
 
-  return { totalCards, matureCards, dueCards, todayReviews };
+  const row = rows[0];
+  const reviewDayKeys = new Set(reviewDays.map(({ day }) => toDateKey(day)));
+  const streakDays = getCurrentStreakDays(reviewDayKeys);
+
+  return {
+    totalCards: Number(row?.totalCards ?? 0),
+    matureCards: Number(row?.matureCards ?? 0),
+    dueCards: Number(row?.dueCards ?? 0),
+    todayReviews: Number(row?.todayReviews ?? 0),
+    streakDays,
+  };
+}
+
+function toDateKey(value: Date | string) {
+  const date = value instanceof Date ? value : new Date(`${value}T00:00:00`);
+  return date.toISOString().slice(0, 10);
+}
+
+function getCurrentStreakDays(reviewDayKeys: Set<string>) {
+  const cursor = new Date();
+  cursor.setHours(0, 0, 0, 0);
+
+  let streakDays = 0;
+  while (reviewDayKeys.has(cursor.toISOString().slice(0, 10))) {
+    streakDays += 1;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+
+  return streakDays;
 }

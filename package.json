@@ -4,7 +4,7 @@
   "private": true,
   "packageManager": "pnpm@11.1.2",
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbopack",
     "build": "prisma generate --generator client && next build",
     "start": "next start",
     "lint": "eslint",

@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   BookOpen,
-  BarChart3,
   Menu,
   GraduationCap,
   LayoutDashboard,
@@ -22,8 +21,8 @@ import { UserMenu } from "./user-menu";
 import { SignOutButton } from "./sign-out-button";
 
 const navItems = [
+  { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/study", label: "Study", icon: BookOpen },
-  { href: "/progress", label: "Progress", icon: BarChart3 },
 ];
 
 export function DashboardSidebar({ children }: { children: React.ReactNode }) {
@@ -34,6 +33,9 @@ export function DashboardSidebar({ children }: { children: React.ReactNode }) {
 
   const isActive = useCallback(
     (href: string) => {
+      if (href === "/") {
+        return pathname === "/" || pathname === "/progress";
+      }
       if (href === "/study") {
         return (
           pathname === "/study" ||
@@ -131,13 +133,6 @@ function SidebarContent({ isActive }: { isActive: (href: string) => boolean }) {
       </div>
 
       <nav className="flex-1 w-full px-3 space-y-2 flex flex-col items-center">
-        <Link
-          href="/"
-          className="w-full flex justify-center items-center p-3 rounded-lg text-muted-foreground hover:text-primary hover:bg-accent/60 transition-colors"
-          title="Dashboard"
-        >
-          <LayoutDashboard className="w-5 h-5" />
-        </Link>
         {navItems.map((item) => {
           const active = isActive(item.href);
           return (
@@ -217,14 +212,6 @@ function MobileSidebarContent({
       </div>
 
       <nav className="flex-1 px-3 py-4 space-y-1">
-        <Link
-          href="/"
-          onClick={onNavigate}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:bg-accent/60 hover:text-foreground transition-colors"
-        >
-          <LayoutDashboard className="w-4.5 h-4.5" />
-          Dashboard
-        </Link>
         {navItems.map((item) => {
           const active = isActive(item.href);
           return (

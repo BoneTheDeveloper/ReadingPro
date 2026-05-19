@@ -44,7 +44,7 @@ export default function SignUpPage() {
       return
     }
 
-    router.push('/study')
+    router.push('/')
     router.refresh()
   }
 

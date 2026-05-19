@@ -26,6 +26,37 @@ export async function getUserPassages(userId: string) {
   });
 }
 
+export async function getUserPassageOverview(userId: string) {
+  const where = { userId, deletedAt: null };
+
+  const [summary, recentPassages] = await Promise.all([
+    db.passage.aggregate({
+      where,
+      _count: { _all: true },
+      _sum: { wordCount: true },
+    }),
+    db.passage.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      take: 3,
+      select: {
+        id: true,
+        title: true,
+        content: true,
+        originalLevel: true,
+        wordCount: true,
+        createdAt: true,
+      },
+    }),
+  ]);
+
+  return {
+    recentPassages,
+    totalPassages: summary._count._all,
+    totalWords: summary._sum.wordCount ?? 0,
+  };
+}
+
 export async function getPassageWithQuestions(passageId: string, userId: string) {
   return db.passage.findUnique({
     where: { id: passageId, userId, deletedAt: null },

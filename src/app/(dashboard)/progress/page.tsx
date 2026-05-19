@@ -1,5 +1,5 @@
-import { ProgressDashboard } from '@/features/progress/progress-dashboard';
+import { redirect } from "next/navigation";
 
 export default function ProgressPage() {
-  return <ProgressDashboard />;
+  redirect("/");
 }

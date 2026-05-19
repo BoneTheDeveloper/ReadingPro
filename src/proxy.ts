@@ -45,12 +45,12 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith("/monitoring");
 
   if (isPublicRoute) {
-    // If user is logged in and visits sign-in/sign-up, redirect to study
+    // If user is logged in and visits sign-in/sign-up, redirect to dashboard
     if (
       user &&
       (pathname.startsWith("/sign-in") || pathname.startsWith("/sign-up"))
     ) {
-      return NextResponse.redirect(new URL("/study", request.url));
+      return NextResponse.redirect(new URL("/", request.url));
     }
     return supabaseResponse;
   }
