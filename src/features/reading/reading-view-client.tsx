@@ -7,7 +7,8 @@ import { cn } from "@/lib/shared/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { calculateReadingTime } from "@/lib/shared/reading-utils";
-import { getCEFRColor, getCEFRLabel } from "@/lib/shared/cefr-utils";
+import { getCEFRLabel } from "@/lib/domain/cefr";
+import { getCEFRColor } from "@/lib/ui/cefr-style";
 
 interface PassageData {
   id: string;

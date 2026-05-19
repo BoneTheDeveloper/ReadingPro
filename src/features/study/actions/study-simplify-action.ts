@@ -2,16 +2,11 @@
 
 import { headers } from 'next/headers';
 import * as Sentry from '@sentry/nextjs';
-import { db } from '@/lib/db/client';
 import { createModuleLogger } from '@/lib/core/logger';
-import { simplifyContent } from '@/lib/ai/content-simplifier';
 import { getAuthenticatedUser } from './study-shared';
+import { PassageStudyServiceError, simplifyPassageForUser } from '../services/passage-study-service';
 
 const log = createModuleLogger('actions:study-simplify');
-
-const TARGET_LEVEL_MAP: Record<string, string> = {
-  C2: 'C1', C1: 'B2', B2: 'B1', B1: 'A2',
-};
 
 export type SimplifyResult =
   | { simplifiedContent: string; simplifiedLevel: string }
@@ -27,50 +22,16 @@ export async function studySimplifyAction({ passageId }: { passageId: string }):
   }, async () => {
     const user = await getAuthenticatedUser();
 
-    const passage = await Sentry.startSpan({ name: 'db:passage-fetch', op: 'db' }, async () => {
-      return db.passage.findUnique({ where: { id: passageId, userId: user.id, deletedAt: null } });
-    });
-
-    if (!passage) {
-      return { error: 'Passage not found' };
-    }
-
-    const { originalLevel } = passage;
-    if (!originalLevel || originalLevel === 'A1' || originalLevel === 'A2') {
-      return { skipped: true as const, reason: `Text is already ${originalLevel || 'unknown'} level` };
-    }
-
-    const targetLevel = TARGET_LEVEL_MAP[originalLevel] || 'B1';
-
     try {
-      Sentry.addBreadcrumb({ category: 'ai', message: `Simplifying to ${targetLevel}`, level: 'info' });
-      const simplified = await Sentry.startSpan({ name: 'ai:content-simplify', op: 'ai' }, async () => {
-        return simplifyContent(passage.content.slice(0, 10000), targetLevel);
-      });
-
-      if (!simplified) {
-        return { error: 'Simplification failed — try again' };
-      }
-
-      await Sentry.startSpan({ name: 'db:passage-update', op: 'db' }, async () => {
-        return db.passage.update({
-          where: { id: passageId, userId: user.id },
-          data: {
-            simplifiedContent: simplified.simplifiedText,
-            simplifiedLevel: targetLevel as 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2',
-          },
-        });
-      });
-
-      log.info({ passageId, from: originalLevel, to: targetLevel, totalMs: Date.now() - start }, 'Simplify action complete');
-
-      return {
-        simplifiedContent: simplified.simplifiedText,
-        simplifiedLevel: targetLevel,
-      };
+      const result = await simplifyPassageForUser(user.id, passageId);
+      log.info({ passageId, totalMs: Date.now() - start }, 'Simplify action complete');
+      return result;
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error));
-      log.warn({ err, passageId, targetLevel, totalMs: Date.now() - start }, 'Simplification failed');
+      if (error instanceof PassageStudyServiceError) {
+        return { error: error.message };
+      }
+      log.warn({ err, passageId, totalMs: Date.now() - start }, 'Simplification failed');
       return { error: 'Simplification failed — try again' };
     }
   });

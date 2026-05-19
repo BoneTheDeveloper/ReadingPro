@@ -6,6 +6,14 @@
 
 ## [Unreleased]
 
+### Changed
+- Refactored upload API routes into `features/upload/upload-workflow.ts` and `content-analysis-service.ts`, keeping routes focused on request parsing and response mapping.
+- Extracted study simplification/question-generation orchestration into `features/study/services/passage-study-service.ts`.
+- Split `StudyPageClient` state, async actions, and panel layout mechanics into focused hooks.
+- Moved CEFR domain helpers to `lib/domain/cefr.ts` and CEFR presentation classes to `lib/ui/cefr-style.ts`.
+- Reused the canonical `lib/algorithms/sm2.ts` implementation from card review queries.
+- Updated study-session API route to delegate to `lib/db/study-session-queries.ts`.
+
 ### Planned
 - YouTube transcription (Whisper API)
 - Scanned PDF OCR support

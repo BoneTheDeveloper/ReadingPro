@@ -12,7 +12,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/shared/utils";
 import { calculateReadingTime } from "@/lib/shared/reading-utils";
-import { getCEFRColor, getCEFRLabel } from "@/lib/shared/cefr-utils";
+import { getCEFRLabel } from "@/lib/domain/cefr";
+import { getCEFRColor } from "@/lib/ui/cefr-style";
 import type { PassageData } from "./study-types";
 
 interface StudyContentPanelProps {

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { CEFRLevel } from '../shared/cefr-utils';
+import type { CEFRLevel } from '../domain/cefr';
 import { db } from './client';
 
 export const questionOptionSchema = z.object({

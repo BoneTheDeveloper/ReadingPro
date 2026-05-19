@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
 import { validateTextContent } from '@/lib/validation/upload';
-import { analyzeContentAction } from '@/features/upload/analyze-content-action';
+import { getAuthenticatedUser } from '@/lib/auth/auth-utils';
 import { createModuleLogger } from '@/lib/core/logger';
+import { analyzeAndPersistContent } from '@/features/upload/content-analysis-service';
 
 const log = createModuleLogger('api:upload:text');
 
@@ -22,15 +23,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
-    const formData = new FormData();
-    formData.set('text', body.text);
-    formData.set('title', body.title || 'Untitled');
-
-    const result = await analyzeContentAction(formData);
-
-    if ('error' in result && result.error) {
-      return NextResponse.json({ error: result.error }, { status: 400 });
-    }
+    const user = await getAuthenticatedUser();
+    const result = await analyzeAndPersistContent({
+      userId: user.id,
+      text: body.text,
+      title: body.title || 'Untitled',
+      sourceType: 'TEXT',
+    });
 
     return NextResponse.json({ success: true, data: result });
   } catch (error) {

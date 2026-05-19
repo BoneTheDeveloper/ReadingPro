@@ -2,8 +2,6 @@
 
 **English Reading Training App**
 
----
-
 ## Tech Stack
 
 | Layer | Technology |
@@ -73,26 +71,18 @@ src/
 │   └── error-boundary.tsx                # Global error boundary
 ├── features/
 │   ├── study/
-│   │   ├── study-page-client.tsx         # Resizable 3-panel study workspace
-│   │   ├── study-left-panel.tsx          # Sources panel
-│   │   ├── study-content-panel.tsx       # Center content panel
-│   │   ├── study-right-panel.tsx         # Studio panel
-│   │   ├── study-quiz-content.tsx        # Quiz rendering + feedback
-│   │   ├── study-quiz-results.tsx        # Quiz results UI
-│   │   ├── study-upload-modal.tsx        # Study upload modal
-│   │   ├── study-types.ts                # Study feature types
-│   │   └── actions/                      # Study-specific server actions
-│   │       ├── study-simplify-action.ts
-│   │       ├── study-generate-questions-action.ts
-│   │       ├── study-delete-passage-action.ts
-│   │       ├── study-upload-action.ts
-│   │       └── study-shared.ts
+│   │   ├── study-page-client.tsx         # Main 3-panel workspace composition
+│   │   ├── study-*.tsx                   # Study panels, quiz UI, upload modal
+│   │   ├── use-study-*.ts                # Workspace state, layout, and actions
+│   │   ├── actions/                      # Server action adapters
+│   │   ├── services/                     # Study business workflows
+│   │   └── study-types.ts                # Study feature types
 │   ├── upload/
-│   │   ├── upload-page-client.tsx        # File/text upload page UI
-│   │   ├── processing-page-client.tsx    # Processing animation UI
-│   │   ├── upload-zone.tsx               # Drag-and-drop upload
+│   │   ├── upload-*.tsx                  # Upload and processing UI
 │   │   ├── text-input-area.tsx           # Text paste input
-│   │   └── analyze-content-action.ts     # Upload analysis pipeline action
+│   │   ├── *workflow.ts                  # Upload orchestration
+│   │   ├── *service.ts                   # Content analysis business logic
+│   │   └── analyze-content-action.ts     # Server action adapter
 │   ├── reading/
 │   │   └── reading-view-client.tsx       # Reading view with original/simplified toggle
 │   ├── test/
@@ -121,8 +111,9 @@ src/
 │   │   └── supabase-storage.ts           # File upload/download/delete via Supabase Storage
 │   ├── shared/
 │   │   ├── utils.ts                      # cn() utility
-│   │   ├── cefr-utils.ts                 # CEFR color/label helpers
 │   │   └── reading-utils.ts              # Reading time, word highlighting
+│   ├── domain/                           # Cross-feature domain helpers
+│   ├── ui/                               # Cross-feature UI helpers
 │   ├── parsers/
 │   │   └── pdf.ts                        # PDF text extraction
 │   ├── validation/
@@ -194,4 +185,4 @@ src/
 ---
 
 **Status:** Active
-**Last Updated:** 2026-05-15
+**Last Updated:** 2026-05-19
