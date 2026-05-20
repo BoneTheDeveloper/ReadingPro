@@ -1,9 +1,28 @@
+import createMiddleware from "next-intl/middleware";
 import { type NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { routing } from "@/i18n/routing";
+
+const intlMiddleware = createMiddleware(routing);
 
 export async function proxy(request: NextRequest) {
-  const supabaseResponse = NextResponse.next({ request });
+  const { pathname } = request.nextUrl;
 
+  // Skip non-user-facing paths
+  if (
+    pathname.startsWith("/api/") ||
+    pathname.startsWith("/_next/") ||
+    pathname.startsWith("/favicon") ||
+    pathname.startsWith("/monitoring") ||
+    pathname.startsWith("/auth/callback")
+  ) {
+    return NextResponse.next({ request });
+  }
+
+  // Run next-intl locale negotiation first
+  const intlResponse = intlMiddleware(request);
+
+  // Set up Supabase client for auth on the intl response
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -17,16 +36,16 @@ export async function proxy(request: NextRequest) {
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => {
             request.cookies.set(name, value);
-            supabaseResponse.cookies.set(name, value, options);
+            intlResponse.cookies.set(name, value, options);
           });
         },
       },
     },
   );
 
-  // Fast path: getSession() decodes JWT locally (~0ms), checks exp claim
-  // Slow path: getUser() validates with Supabase + refreshes expired sessions
-  const { data: { session } } = await supabase.auth.getSession();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
   let user = session?.user ?? null;
 
   if (!user) {
@@ -34,38 +53,27 @@ export async function proxy(request: NextRequest) {
     user = data.user;
   }
 
-  const { pathname } = request.nextUrl;
+  // Extract locale from path for locale-aware redirects
+  const localeMatch = pathname.match(/^\/(en|vi)/);
+  const locale = localeMatch ? localeMatch[1] : routing.defaultLocale;
 
-  const isPublicRoute =
-    pathname.startsWith("/sign-in") ||
-    pathname.startsWith("/sign-up") ||
-    pathname.startsWith("/auth") ||
-    pathname.startsWith("/_next") ||
-    pathname.startsWith("/favicon") ||
-    pathname.startsWith("/monitoring");
+  const isAuthPage =
+    pathname.includes("/sign-in") || pathname.includes("/sign-up");
 
-  if (isPublicRoute) {
-    // If user is logged in and visits sign-in/sign-up, redirect to dashboard
-    if (
-      user &&
-      (pathname.startsWith("/sign-in") || pathname.startsWith("/sign-up"))
-    ) {
-      return NextResponse.redirect(new URL("/", request.url));
-    }
-    return supabaseResponse;
+  // Logged-in user visiting auth pages → redirect to locale dashboard
+  if (user && isAuthPage) {
+    const redirectUrl = new URL(`/${locale}`, request.url);
+    return NextResponse.redirect(redirectUrl);
   }
 
-  if (pathname.startsWith("/api/")) {
-    return supabaseResponse;
-  }
-
-  if (!user) {
-    const signInUrl = new URL("/sign-in", request.url);
+  // Unauthenticated user visiting protected route → redirect to locale sign-in
+  if (!user && !isAuthPage) {
+    const signInUrl = new URL(`/${locale}/sign-in`, request.url);
     signInUrl.searchParams.set("next", pathname);
     return NextResponse.redirect(signInUrl);
   }
 
-  return supabaseResponse;
+  return intlResponse;
 }
 
 export const config = {
