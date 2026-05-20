@@ -3,7 +3,6 @@
 import { useLocale } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
-import { Languages } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -31,11 +30,11 @@ export function LanguageSwitcher() {
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          size="icon"
-          className="text-muted-foreground hover:text-primary"
+          size="sm"
+          className="h-9 w-9 text-xs font-bold text-muted-foreground hover:text-primary uppercase"
           aria-label="Switch language"
         >
-          <Languages className="h-5 w-5" />
+          {locale}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
