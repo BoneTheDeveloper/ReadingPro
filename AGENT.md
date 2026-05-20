@@ -10,7 +10,7 @@ AI-powered English reading comprehension trainer for non-native speakers. Upload
 
 ## Codebase Navigation (GKG MCP) — MANDATORY
 
-Use GKG tools FIRST for ALL code navigation. Fallback to Read/Glob/Grep only if GKG fails (state why).
+Use GKG tools FIRST for ALL code navigation. Always re-index before using GKG. Fallback to Read/Glob/Grep only if GKG fails (state why).
 
 Re-index: `index_project` with `project_absolute_path: "/home/luc/Project/english-reading-training-app"`
 
@@ -19,7 +19,6 @@ Re-index: `index_project` with `project_absolute_path: "/home/luc/Project/englis
 - Startup: read `docs/codebase-summary.md` first every session before navigating or editing, then use GKG MCP for relation checks.
 - Architecture & data flow: see `docs/system-architecture.md` after `docs/codebase-summary.md` for full details.
 - Code standards: see `docs/code-standards.md` — TS rules, file naming, project structure, components, API responses, error handling, Prisma patterns
-- Styling: see `docs/styling-guide.md` — theme tokens, forbidden patterns, shadcn rules
 - Commands: see `package.json` scripts; `pnpm tsc --noEmit` for type check
 
 ##  Library access

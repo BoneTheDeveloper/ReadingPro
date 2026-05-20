@@ -1,16 +1,16 @@
-"use client";
+"use client"
 
-import { cn } from "@/lib/shared/utils";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/shared/utils"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
 
 interface TestPassagePanelProps {
-  title: string;
-  content: string;
-  showPassage: boolean;
-  showFeedback: boolean;
-  highlightedLine: number;
-  onTogglePassage: () => void;
+  title: string
+  content: string
+  showPassage: boolean
+  showFeedback: boolean
+  highlightedLine: number
+  onTogglePassage: () => void
 }
 
 export function TestPassagePanel({
@@ -21,7 +21,7 @@ export function TestPassagePanel({
   highlightedLine,
   onTogglePassage,
 }: TestPassagePanelProps) {
-  const passageLines = content.split("\n").filter((l) => l.trim().length > 0);
+  const passageLines = content.split("\n").filter((l) => l.trim().length > 0)
 
   return (
     <div className="mb-6 lg:mb-0">
@@ -44,7 +44,7 @@ export function TestPassagePanel({
               key={i}
               className={cn(
                 "relative pl-8 mb-3 text-foreground font-serif",
-                showFeedback && i + 1 === highlightedLine && "bg-primary/10 rounded px-2 -mx-2 pl-10",
+                showFeedback && i + 1 === highlightedLine && "bg-gold-soft rounded px-2 -mx-2 pl-10",
               )}
             >
               <span className="absolute left-0 top-0 text-xs text-muted-foreground font-sans w-5 text-right">
@@ -52,7 +52,7 @@ export function TestPassagePanel({
               </span>
               <span
                 className={cn(
-                  showFeedback && i + 1 === highlightedLine && "bg-linear-to-t from-primary/10 to-transparent",
+                  showFeedback && i + 1 === highlightedLine && "bg-linear-to-t from-gold/10 to-transparent",
                 )}
               >
                 {line}
@@ -62,5 +62,5 @@ export function TestPassagePanel({
         </div>
       </Card>
     </div>
-  );
+  )
 }

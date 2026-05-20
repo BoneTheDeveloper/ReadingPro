@@ -2,12 +2,12 @@ import type { CEFRLevel } from '@/lib/domain/cefr';
 
 export function getCEFRColor(level: CEFRLevel): string {
   const colors: Record<CEFRLevel, string> = {
-    A1: 'bg-green-100 text-green-700',
-    A2: 'bg-blue-100 text-blue-700',
-    B1: 'bg-yellow-100 text-yellow-700',
-    B2: 'bg-orange-100 text-orange-700',
-    C1: 'bg-red-100 text-red-700',
-    C2: 'bg-purple-100 text-purple-700',
+    A1: 'bg-cefr-a1/40 text-green-800',
+    A2: 'bg-cefr-a2/40 text-lime-800',
+    B1: 'bg-cefr-b1/40 text-yellow-800',
+    B2: 'bg-cefr-b2/40 text-amber-800',
+    C1: 'bg-cefr-c1/40 text-pink-800',
+    C2: 'bg-cefr-c2/40 text-purple-800',
   };
   return colors[level];
 }

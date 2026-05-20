@@ -1,7 +1,7 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import {
   BookOpen,
   Target,
@@ -9,56 +9,57 @@ import {
   Clock,
   ChevronLeft,
   Loader2,
-} from "lucide-react";
-import { cn } from "@/lib/shared/utils";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+  Flame,
+} from "lucide-react"
+import { cn } from "@/lib/shared/utils"
+import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 
 interface ProgressStats {
-  totalCards: number;
-  matureCards: number;
-  dueCards: number;
-  todayReviews: number;
+  totalCards: number
+  matureCards: number
+  dueCards: number
+  todayReviews: number
 }
 
 export function ProgressDashboard() {
-  const router = useRouter();
-  const [stats, setStats] = useState<ProgressStats | null>(null);
-  const [loading, setLoading] = useState(true);
+  const router = useRouter()
+  const [stats, setStats] = useState<ProgressStats | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function fetchStats() {
       try {
-        const response = await fetch("/api/progress/stats");
-        const result = await response.json();
-        if (result.success) setStats(result.data);
+        const response = await fetch("/api/progress/stats")
+        const result = await response.json()
+        if (result.success) setStats(result.data)
       } catch (error) {
-        console.error("Error fetching stats:", error);
+        console.error("Error fetching stats:", error)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
     }
-    fetchStats();
-  }, []);
+    fetchStats()
+  }, [])
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-muted flex items-center justify-center">
+      <div className="min-h-dvh bg-muted flex items-center justify-center">
         <Loader2 className="w-8 h-8 text-primary animate-spin" />
       </div>
-    );
+    )
   }
 
   const statCards = [
     { icon: <BookOpen className="w-5 h-5" />, label: "Total Cards", value: stats?.totalCards ?? 0, color: "bg-primary/10 text-primary" },
-    { icon: <Target className="w-5 h-5" />, label: "Due for Review", value: stats?.dueCards ?? 0, color: "bg-orange-50 text-orange-700", highlight: (stats?.dueCards ?? 0) > 0 },
-    { icon: <TrendingUp className="w-5 h-5" />, label: "Mature Cards", value: stats?.matureCards ?? 0, color: "bg-green-50 text-green-700" },
-    { icon: <Clock className="w-5 h-5" />, label: "Today's Reviews", value: stats?.todayReviews ?? 0, color: "bg-blue-50 text-blue-700" },
-  ];
+    { icon: <Target className="w-5 h-5" />, label: "Due for Review", value: stats?.dueCards ?? 0, color: "bg-gold-soft text-gold", highlight: (stats?.dueCards ?? 0) > 0 },
+    { icon: <TrendingUp className="w-5 h-5" />, label: "Mature Cards", value: stats?.matureCards ?? 0, color: "bg-success-soft text-success" },
+    { icon: <Clock className="w-5 h-5" />, label: "Today's Reviews", value: stats?.todayReviews ?? 0, color: "bg-primary/10 text-primary" },
+  ]
 
   return (
-    <div className="min-h-screen bg-muted">
-      <header className="bg-background border-b border-border">
+    <div className="min-h-dvh bg-muted">
+      <header className="bg-surface border-b border-border">
         <div className="flex items-center gap-3 px-6 py-4 max-w-4xl mx-auto">
           <Button variant="ghost" size="icon" onClick={() => router.push("/")}>
             <ChevronLeft className="w-5 h-5" />
@@ -73,7 +74,7 @@ export function ProgressDashboard() {
       <main className="max-w-4xl mx-auto px-6 py-8">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {statCards.map((card) => (
-            <Card key={card.label} className={cn(card.highlight && "border-2 border-orange-300")}>
+            <Card key={card.label} className={cn(card.highlight && "border-2 border-gold/40")}>
               <CardContent className="p-5">
                 <div className={cn("flex items-center gap-2 mb-3", card.color)}>
                   {card.icon}
@@ -86,11 +87,11 @@ export function ProgressDashboard() {
         </div>
 
         {(stats?.dueCards ?? 0) > 0 ? (
-          <Card className="border-2 border-orange-200 mb-6">
+          <Card className="border-2 border-gold/30 mb-6">
             <CardContent className="p-6 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
-                  <span className="text-2xl">🔥</span>
+                <div className="w-12 h-12 bg-gold-soft rounded-xl flex items-center justify-center">
+                  <Flame className="w-6 h-6 text-gold" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-foreground">{stats?.dueCards} cards due for review</h3>
@@ -101,10 +102,10 @@ export function ProgressDashboard() {
             </CardContent>
           </Card>
         ) : (
-          <Card className="border-2 border-green-200 mb-6">
+          <Card className="border-2 border-success/30 mb-6">
             <CardContent className="p-6 flex items-center gap-3">
-              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                <span className="text-2xl">🎉</span>
+              <div className="w-12 h-12 bg-success-soft rounded-xl flex items-center justify-center">
+                <TrendingUp className="w-6 h-6 text-success" />
               </div>
               <div>
                 <h3 className="font-semibold text-foreground">All caught up!</h3>
@@ -124,7 +125,7 @@ export function ProgressDashboard() {
           </Card>
           <Card className="hover:border-primary hover:shadow-md transition-all cursor-pointer" onClick={() => router.push("/")}>
             <CardContent className="p-8 flex flex-col items-center justify-center gap-3">
-              <TrendingUp className="w-8 h-8 text-green-600" />
+              <TrendingUp className="w-8 h-8 text-success" />
               <span className="font-semibold text-foreground">Back to Home</span>
               <span className="text-sm text-muted-foreground">View all passages</span>
             </CardContent>
@@ -132,5 +133,5 @@ export function ProgressDashboard() {
         </div>
       </main>
     </div>
-  );
+  )
 }

@@ -1,31 +1,31 @@
-"use client";
+"use client"
 
-import { useState, useCallback } from "react";
-import { Upload, Type, Globe, Search, FileText } from "lucide-react";
-import { useDropzone, type FileRejection } from "react-dropzone";
-import { validateFile, formatFileSize } from "@/lib/validation/upload";
-import { cn } from "@/lib/shared/utils";
-import { studyUploadAction } from "@/features/study/actions/study-upload-action";
+import { useState, useCallback } from "react"
+import { Upload, Type, Globe, Search, FileText } from "lucide-react"
+import { useDropzone, type FileRejection } from "react-dropzone"
+import { validateFile, formatFileSize } from "@/lib/validation/upload"
+import { cn } from "@/lib/shared/utils"
+import { studyUploadAction } from "@/features/study/actions/study-upload-action"
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import type { StudyUploadModalProps } from "./study-types";
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import type { StudyUploadModalProps } from "./study-types"
 
-type InputMode = "file" | "text" | null;
+type InputMode = "file" | "text" | null
 
 function SourceButton({ icon: Icon, label, desc, onClick, disabled }: {
-  icon: typeof Upload;
-  label: string;
-  desc: string;
-  onClick?: () => void;
-  disabled?: boolean;
+  icon: typeof Upload
+  label: string
+  desc: string
+  onClick?: () => void
+  disabled?: boolean
 }) {
   return (
     <Button
@@ -38,11 +38,11 @@ function SourceButton({ icon: Icon, label, desc, onClick, disabled }: {
         <Icon className={cn("w-4 h-4", disabled ? "text-muted-foreground" : "text-primary")} />
       </div>
       <div className="text-left">
-        <p className={cn("text-[13px] font-semibold", disabled ? "text-muted-foreground" : "text-foreground")}>{label}</p>
-        <p className="text-[11px] text-muted-foreground">{desc}</p>
+        <p className={cn("text-sm font-semibold", disabled ? "text-muted-foreground" : "text-foreground")}>{label}</p>
+        <p className="text-xs text-muted-foreground">{desc}</p>
       </div>
     </Button>
-  );
+  )
 }
 
 export function StudyUploadModal({
@@ -52,66 +52,66 @@ export function StudyUploadModal({
   onUploadComplete,
   onUploadError,
 }: StudyUploadModalProps) {
-  const [activeMode, setActiveMode] = useState<InputMode>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [pastedText, setPastedText] = useState("");
+  const [activeMode, setActiveMode] = useState<InputMode>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [pastedText, setPastedText] = useState("")
 
   const handleFileUpload = async (file: File) => {
-    const fileName = file.name.replace(/\.(txt|pdf)$/, "");
-    const fileType = file.name.endsWith(".pdf") ? "PDF" : "TEXT";
-    onUploadStart(fileName);
-    onClose();
-    setError(null);
+    const fileName = file.name.replace(/\.(txt|pdf)$/, "")
+    const fileType = file.name.endsWith(".pdf") ? "PDF" : "TEXT"
+    onUploadStart(fileName)
+    onClose()
+    setError(null)
     try {
-      const text = await file.text();
-      const result = await studyUploadAction({ text, title: fileName, sourceType: fileType });
-      if ("error" in result) { onUploadError(result.error); return; }
-      onUploadComplete(result.passage);
+      const text = await file.text()
+      const result = await studyUploadAction({ text, title: fileName, sourceType: fileType })
+      if ("error" in result) { onUploadError(result.error); return }
+      onUploadComplete(result.passage)
     } catch (err) {
-      onUploadError(err instanceof Error ? err.message : "Upload failed");
+      onUploadError(err instanceof Error ? err.message : "Upload failed")
     }
-  };
+  }
 
   const handleTextSubmit = async () => {
-    if (!pastedText.trim()) return;
-    onUploadStart("Pasted Text");
-    onClose();
-    setError(null);
+    if (!pastedText.trim()) return
+    onUploadStart("Pasted Text")
+    onClose()
+    setError(null)
     try {
-      const result = await studyUploadAction({ text: pastedText, title: "Pasted Text" });
-      if ("error" in result) { onUploadError(result.error); return; }
-      onUploadComplete(result.passage);
+      const result = await studyUploadAction({ text: pastedText, title: "Pasted Text" })
+      if ("error" in result) { onUploadError(result.error); return }
+      onUploadComplete(result.passage)
     } catch (err) {
-      onUploadError(err instanceof Error ? err.message : "Upload failed");
+      onUploadError(err instanceof Error ? err.message : "Upload failed")
     }
-  };
+  }
 
   const handleDrop = useCallback(
     (acceptedFiles: File[], rejectedFiles: FileRejection[]) => {
-      setError(null);
+      setError(null)
       if (rejectedFiles.length > 0) {
-        const code = rejectedFiles[0].errors[0]?.code;
-        if (code === "file-too-large") setError("File size exceeds 10MB limit");
-        else if (code === "file-invalid-type") setError("Only .txt and .pdf files are supported");
-        else setError("Invalid file. Please try again.");
-        return;
+        const code = rejectedFiles[0].errors[0]?.code
+        if (code === "file-too-large") setError("File size exceeds 10MB limit")
+        else if (code === "file-invalid-type") setError("Only .txt and .pdf files are supported")
+        else setError("Invalid file. Please try again.")
+        return
       }
       if (acceptedFiles.length > 0) {
-        const validation = validateFile(acceptedFiles[0]);
-        if (!validation.valid) { setError(validation.error ?? "Invalid file"); return; }
-        handleFileUpload(acceptedFiles[0]);
+        const validation = validateFile(acceptedFiles[0])
+        if (!validation.valid) { setError(validation.error ?? "Invalid file"); return }
+        handleFileUpload(acceptedFiles[0])
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
-  );
+  )
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop: handleDrop,
     accept: { "text/plain": [".txt"], "application/pdf": [".pdf"] },
     maxSize: 10 * 1024 * 1024,
     multiple: false,
-  });
+  })
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -176,7 +176,7 @@ export function StudyUploadModal({
                 <p className="text-base font-semibold mb-1 text-foreground">
                   {isDragActive ? "Drop your file here" : "Upload a file"}
                 </p>
-                <p className="text-[13px] text-muted-foreground">Drag and drop, or click to browse</p>
+                <p className="text-sm text-muted-foreground">Drag and drop, or click to browse</p>
                 <div className="flex items-center gap-3 mt-3 text-xs text-muted-foreground">
                   <span>.txt, .pdf</span>
                   <span className="text-border">|</span>
@@ -191,16 +191,16 @@ export function StudyUploadModal({
               <Button variant="ghost" size="sm" onClick={() => setActiveMode(null)} className="text-primary mb-3 -ml-2">
                 &larr; Back to sources
               </Button>
-              <div className="bg-background border border-border rounded-xl overflow-hidden">
+              <div className="bg-surface border border-border rounded-xl overflow-hidden">
                 <div className="flex items-center gap-2 px-4 py-3 border-b border-border bg-accent">
                   <Type className="w-4 h-4 text-primary" />
-                  <h3 className="text-[13px] font-semibold text-primary">Paste your text</h3>
+                  <h3 className="text-sm font-semibold text-primary">Paste your text</h3>
                 </div>
                 <Textarea
                   value={pastedText}
                   onChange={(e) => { setPastedText(e.target.value); setError(null); }}
                   placeholder="Paste your English text content here..."
-                  className="w-full p-5 min-h-45 resize-none border-0 focus-visible:ring-0 text-base leading-relaxed bg-background"
+                  className="w-full p-5 min-h-45 resize-none border-0 focus-visible:ring-0 text-base leading-relaxed bg-surface"
                 />
                 <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-accent">
                   <span className="text-xs text-muted-foreground">
@@ -215,7 +215,7 @@ export function StudyUploadModal({
           )}
 
           {error && (
-            <div className="mt-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive text-sm">
+            <div className="mt-4 p-3 bg-danger-soft border border-destructive/20 rounded-lg text-destructive text-sm">
               {error}
             </div>
           )}
@@ -226,5 +226,5 @@ export function StudyUploadModal({
         </div>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

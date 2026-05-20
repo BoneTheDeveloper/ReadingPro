@@ -1,11 +1,20 @@
 import type { Metadata } from "next";
-import { Be_Vietnam_Pro } from "next/font/google";
+import { Inter, Literata, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const beVietnamPro = Be_Vietnam_Pro({
-  variable: "--font-be-vietnam-pro",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin", "vietnamese"],
-  weight: ["400", "500", "600", "700"],
+});
+
+const literata = Literata({
+  variable: "--font-literata",
+  subsets: ["latin", "vietnamese"],
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
+  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
@@ -19,8 +28,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${beVietnamPro.variable} h-full antialiased`}>
-      <body className="h-full overflow-hidden flex flex-col font-sans">{children}</body>
+    <html
+      lang="en"
+      className={`${inter.variable} ${literata.variable} ${jetbrainsMono.variable} h-full antialiased`}
+    >
+      <body className="h-full overflow-hidden flex flex-col font-sans">
+        {children}
+      </body>
     </html>
   );
 }

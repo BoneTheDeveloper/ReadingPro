@@ -1,59 +1,59 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Clock, FileText, ChevronLeft, Play } from "lucide-react";
-import { cn } from "@/lib/shared/utils";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { calculateReadingTime } from "@/lib/shared/reading-utils";
-import { getCEFRLabel } from "@/lib/domain/cefr";
-import { getCEFRColor } from "@/lib/ui/cefr-style";
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { Clock, FileText, ChevronLeft, Play } from "lucide-react"
+import { cn } from "@/lib/shared/utils"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { calculateReadingTime } from "@/lib/shared/reading-utils"
+import { getCEFRLabel } from "@/lib/domain/cefr"
+import { getCEFRColor } from "@/lib/ui/cefr-style"
 
 interface PassageData {
-  id: string;
-  title: string;
-  content: string;
-  simplifiedContent: string | null;
-  originalLevel: string | null;
-  simplifiedLevel: string | null;
-  wordCount: number;
-  displayContent: string;
-  displayLevel: string;
-  questionCount: number;
+  id: string
+  title: string
+  content: string
+  simplifiedContent: string | null
+  originalLevel: string | null
+  simplifiedLevel: string | null
+  wordCount: number
+  displayContent: string
+  displayLevel: string
+  questionCount: number
 }
 
 interface ReadingViewClientProps {
-  passage: PassageData;
+  passage: PassageData
 }
 
-type ViewMode = "original" | "simplified";
+type ViewMode = "original" | "simplified"
 
 export function ReadingViewClient({ passage }: ReadingViewClientProps) {
-  const router = useRouter();
+  const router = useRouter()
   const [viewMode, setViewMode] = useState<ViewMode>(
     passage.simplifiedContent ? "simplified" : "original",
-  );
+  )
 
   const currentContent =
     viewMode === "simplified" && passage.simplifiedContent
       ? passage.simplifiedContent
-      : passage.content;
+      : passage.content
 
   const currentLevel =
-    viewMode === "simplified" ? passage.simplifiedLevel : passage.originalLevel;
+    viewMode === "simplified" ? passage.simplifiedLevel : passage.originalLevel
 
   const level = (currentLevel || passage.displayLevel) as Parameters<
     typeof getCEFRColor
-  >[0];
+  >[0]
   const readingTime = calculateReadingTime(
     passage.wordCount,
     passage.displayLevel,
-  );
+  )
 
   return (
-    <div className="min-h-screen bg-muted">
-      <header className="sticky top-0 z-50 bg-background border-b border-border">
+    <div className="min-h-dvh bg-muted">
+      <header className="sticky top-0 z-50 bg-surface border-b border-border">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
             <Button
@@ -137,7 +137,7 @@ export function ReadingViewClient({ passage }: ReadingViewClientProps) {
               </div>
             )}
 
-            <div className="font-serif text-lg leading-loose text-foreground">
+            <div className="reading-content text-foreground">
               {currentContent.split("\n\n").map((paragraph, i) => (
                 <p key={i} className="mb-5 last:mb-0">
                   {paragraph}
@@ -160,5 +160,5 @@ export function ReadingViewClient({ passage }: ReadingViewClientProps) {
         </Card>
       </main>
     </div>
-  );
+  )
 }

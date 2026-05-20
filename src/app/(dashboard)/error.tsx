@@ -1,18 +1,18 @@
-"use client";
+"use client"
 
-import * as Sentry from "@sentry/nextjs";
-import { useEffect } from "react";
+import * as Sentry from "@sentry/nextjs"
+import { useEffect } from "react"
 
 export default function DashboardError({
   error,
   reset,
 }: {
-  error: Error & { digest?: string };
-  reset: () => void;
+  error: Error & { digest?: string }
+  reset: () => void
 }) {
   useEffect(() => {
-    Sentry.captureException(error);
-  }, [error]);
+    Sentry.captureException(error)
+  }, [error])
 
   return (
     <div className="flex min-h-100 flex-col items-center justify-center gap-4 p-8 text-center">
@@ -20,6 +20,7 @@ export default function DashboardError({
       <p className="text-sm text-muted-foreground">
         An unexpected error occurred. Please try again.
       </p>
+      {/* Raw button intentional — error boundary must work if shadcn fails to load */}
       <button
         type="button"
         onClick={reset}
@@ -28,5 +29,5 @@ export default function DashboardError({
         Try again
       </button>
     </div>
-  );
+  )
 }

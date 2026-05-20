@@ -36,7 +36,7 @@ export function StudyPageClient({
   return (
     <>
       {/* Sticky reading progress bar */}
-      <div className="fixed top-0 left-0 w-full h-1 bg-surface-container z-50">
+      <div className="fixed top-0 left-0 w-full h-1 bg-muted z-50">
         <div
           className="h-full bg-primary rounded-full transition-all"
           style={{ width: "0%" }}

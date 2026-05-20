@@ -1,15 +1,15 @@
-"use client";
+"use client"
 
-import { useCallback, useState } from "react";
-import { useDropzone, type FileRejection } from "react-dropzone";
-import { Upload, FileText, AlertCircle, Loader2 } from "lucide-react";
-import { validateFile, formatFileSize } from "@/lib/validation/upload";
-import { cn } from "@/lib/shared/utils";
+import { useCallback, useState } from "react"
+import { useDropzone, type FileRejection } from "react-dropzone"
+import { Upload, FileText, AlertCircle, Loader2 } from "lucide-react"
+import { validateFile, formatFileSize } from "@/lib/validation/upload"
+import { cn } from "@/lib/shared/utils"
 
 interface UploadZoneProps {
-  onFileSelect: (file: File) => void;
-  isProcessing?: boolean;
-  disabled?: boolean;
+  onFileSelect: (file: File) => void
+  isProcessing?: boolean
+  disabled?: boolean
 }
 
 export function UploadZone({
@@ -17,35 +17,35 @@ export function UploadZone({
   isProcessing,
   disabled,
 }: UploadZoneProps) {
-  const [error, setError] = useState<string>();
+  const [error, setError] = useState<string>()
 
   const onDrop = useCallback(
     (acceptedFiles: File[], rejectedFiles: FileRejection[]) => {
-      setError(undefined);
+      setError(undefined)
 
       if (rejectedFiles.length > 0) {
-        const rejection = rejectedFiles[0];
+        const rejection = rejectedFiles[0]
         if (rejection.errors[0]?.code === "file-too-large") {
-          setError("File size exceeds 10MB limit");
+          setError("File size exceeds 10MB limit")
         } else if (rejection.errors[0]?.code === "file-invalid-type") {
-          setError("Only .txt and .pdf files are supported");
+          setError("Only .txt and .pdf files are supported")
         } else {
-          setError("Invalid file. Please try again.");
+          setError("Invalid file. Please try again.")
         }
-        return;
+        return
       }
 
       if (acceptedFiles.length > 0) {
-        const validation = validateFile(acceptedFiles[0]);
+        const validation = validateFile(acceptedFiles[0])
         if (!validation.valid) {
-          setError(validation.error);
-          return;
+          setError(validation.error)
+          return
         }
-        onFileSelect(acceptedFiles[0]);
+        onFileSelect(acceptedFiles[0])
       }
     },
     [onFileSelect],
-  );
+  )
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -56,7 +56,7 @@ export function UploadZone({
     maxSize: 10 * 1024 * 1024,
     multiple: false,
     disabled: disabled || isProcessing,
-  });
+  })
 
   return (
     <div className="w-full">
@@ -90,14 +90,14 @@ export function UploadZone({
           </div>
 
           <div>
-            <h3 className="text-[18px] font-semibold text-foreground mb-2">
+            <h3 className="text-lg font-semibold text-foreground mb-2">
               {isDragActive
                 ? "Drop your file here"
                 : isProcessing
                   ? "Processing..."
                   : "Upload your content"}
             </h3>
-            <p className="text-muted-foreground text-[14px]">
+            <p className="text-muted-foreground text-sm">
               {isProcessing
                 ? "Please wait while we process your file"
                 : "Drag and drop, or click to browse"}
@@ -105,7 +105,7 @@ export function UploadZone({
           </div>
 
           {!isProcessing && (
-            <div className="flex items-center gap-4 text-[14px] text-muted-foreground">
+            <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <span className="flex items-center gap-1.5">
                 <FileText className="w-4 h-4" />
                 .txt, .pdf
@@ -118,11 +118,11 @@ export function UploadZone({
       </div>
 
       {error && (
-        <div className="mt-4 p-3 bg-error-container border border-destructive/20 rounded-lg flex items-center gap-2 text-destructive text-[14px]">
+        <div className="mt-4 p-3 bg-danger-soft border border-destructive/20 rounded-lg flex items-center gap-2 text-destructive text-sm">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
           <span>{error}</span>
         </div>
       )}
     </div>
-  );
+  )
 }

@@ -1,14 +1,14 @@
-"use client";
+"use client"
 
-import { ChevronLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ChevronLeft, Flame } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 interface TestHeaderProps {
-  currentIndex: number;
-  totalQuestions: number;
-  progress: number;
-  streak: number;
-  onBack: () => void;
+  currentIndex: number
+  totalQuestions: number
+  progress: number
+  streak: number
+  onBack: () => void
 }
 
 export function TestHeader({
@@ -19,7 +19,7 @@ export function TestHeader({
   onBack,
 }: TestHeaderProps) {
   return (
-    <header className="sticky top-0 z-50 bg-background border-b border-border">
+    <header className="sticky top-0 z-50 bg-surface border-b border-border">
       <div className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={onBack}>
@@ -36,10 +36,10 @@ export function TestHeader({
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-lg">🔥</span>
+          <Flame className="w-5 h-5 text-gold" />
           <span className="font-semibold">{streak}</span>
         </div>
       </div>
     </header>
-  );
+  )
 }

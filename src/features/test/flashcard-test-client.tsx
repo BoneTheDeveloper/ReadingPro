@@ -1,85 +1,85 @@
-"use client";
+"use client"
 
-import { useState, useCallback, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { TestHeader } from "./test-header";
-import { TestPassagePanel } from "./test-passage-panel";
-import { TestQuestionCard } from "./test-question-card";
-import { TestResultsScreen } from "./test-results-screen";
-import type { TestQuestion, TestPassage } from "./test-types";
+import { useState, useCallback, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { TestHeader } from "./test-header"
+import { TestPassagePanel } from "./test-passage-panel"
+import { TestQuestionCard } from "./test-question-card"
+import { TestResultsScreen } from "./test-results-screen"
+import type { TestQuestion, TestPassage } from "./test-types"
 
 interface FlashcardTestClientProps {
-  passage: TestPassage;
-  questions: TestQuestion[];
+  passage: TestPassage
+  questions: TestQuestion[]
 }
 
 export function FlashcardTestClient({
   passage,
   questions,
 }: FlashcardTestClientProps) {
-  const router = useRouter();
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
-  const [showFeedback, setShowFeedback] = useState(false);
-  const [answers, setAnswers] = useState<Record<string, boolean>>({});
-  const [isComplete, setIsComplete] = useState(false);
-  const [streak, setStreak] = useState(0);
-  const [showPassage, setShowPassage] = useState(false);
+  const router = useRouter()
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
+  const [showFeedback, setShowFeedback] = useState(false)
+  const [answers, setAnswers] = useState<Record<string, boolean>>({})
+  const [isComplete, setIsComplete] = useState(false)
+  const [streak, setStreak] = useState(0)
+  const [showPassage, setShowPassage] = useState(false)
 
-  const currentQuestion = questions[currentIndex];
-  const progress = ((currentIndex + 1) / questions.length) * 100;
+  const currentQuestion = questions[currentIndex]
+  const progress = ((currentIndex + 1) / questions.length) * 100
 
   const handleSelectAnswer = useCallback(
     (optionId: string) => {
       if (!showFeedback) {
-        setSelectedAnswer(optionId);
+        setSelectedAnswer(optionId)
       }
     },
     [showFeedback],
-  );
+  )
 
   const handleCheckAnswer = useCallback(() => {
-    if (!selectedAnswer) return;
+    if (!selectedAnswer) return
 
-    const isCorrect = selectedAnswer === currentQuestion.correctAnswer;
-    setAnswers((prev) => ({ ...prev, [currentQuestion.id]: isCorrect }));
-    setShowFeedback(true);
+    const isCorrect = selectedAnswer === currentQuestion.correctAnswer
+    setAnswers((prev) => ({ ...prev, [currentQuestion.id]: isCorrect }))
+    setShowFeedback(true)
 
     if (isCorrect) {
-      setStreak((s) => s + 1);
+      setStreak((s) => s + 1)
     } else {
-      setStreak(0);
+      setStreak(0)
     }
-  }, [selectedAnswer, currentQuestion]);
+  }, [selectedAnswer, currentQuestion])
 
   const handleNext = useCallback(() => {
     if (currentIndex < questions.length - 1) {
-      setCurrentIndex((i) => i + 1);
-      setSelectedAnswer(null);
-      setShowFeedback(false);
+      setCurrentIndex((i) => i + 1)
+      setSelectedAnswer(null)
+      setShowFeedback(false)
     } else {
-      setIsComplete(true);
+      setIsComplete(true)
     }
-  }, [currentIndex, questions.length]);
+  }, [currentIndex, questions.length])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key >= "1" && e.key <= "4" && !showFeedback) {
-        const idx = parseInt(e.key) - 1;
+        const idx = parseInt(e.key) - 1
         if (currentQuestion.options[idx]) {
-          handleSelectAnswer(currentQuestion.options[idx].id);
+          handleSelectAnswer(currentQuestion.options[idx].id)
         }
       } else if (e.key === "Enter") {
         if (showFeedback) {
-          handleNext();
+          handleNext()
         } else if (selectedAnswer) {
-          handleCheckAnswer();
+          handleCheckAnswer()
         }
       }
-    };
+    }
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
   }, [
     showFeedback,
     selectedAnswer,
@@ -87,10 +87,10 @@ export function FlashcardTestClient({
     handleSelectAnswer,
     handleCheckAnswer,
     handleNext,
-  ]);
+  ])
 
   if (isComplete) {
-    const correctCount = Object.values(answers).filter(Boolean).length;
+    const correctCount = Object.values(answers).filter(Boolean).length
 
     return (
       <TestResultsScreen
@@ -99,11 +99,11 @@ export function FlashcardTestClient({
         onReviewReading={() => router.push(`/reading/${passage.id}`)}
         onNewPassage={() => router.push("/upload")}
       />
-    );
+    )
   }
 
   return (
-    <div className="min-h-screen bg-muted">
+    <div className="min-h-dvh bg-muted">
       <TestHeader
         currentIndex={currentIndex}
         totalQuestions={questions.length}
@@ -136,5 +136,5 @@ export function FlashcardTestClient({
         </div>
       </main>
     </div>
-  );
+  )
 }

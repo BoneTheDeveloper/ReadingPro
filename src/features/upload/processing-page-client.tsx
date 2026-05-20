@@ -1,17 +1,17 @@
-"use client";
+"use client"
 
-import { Suspense } from "react";
-import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { RefreshCw } from "lucide-react";
+import { Suspense } from "react"
+import { useEffect, useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { RefreshCw } from "lucide-react"
 
 function ProcessingPageContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [status, setStatus] = useState<"analyzing" | "generating" | "complete">("analyzing");
-  const [progress, setProgress] = useState(0);
-  const contentId = searchParams.get("contentId");
-  const filename = searchParams.get("filename");
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const [status, setStatus] = useState<"analyzing" | "generating" | "complete">("analyzing")
+  const [progress, setProgress] = useState(0)
+  const contentId = searchParams.get("contentId")
+  const filename = searchParams.get("filename")
 
   useEffect(() => {
     const stages = [
@@ -19,29 +19,29 @@ function ProcessingPageContent() {
       { status: "simplifying" as const, progress: 40 },
       { status: "generating" as const, progress: 70 },
       { status: "complete" as const, progress: 100 },
-    ];
+    ]
 
-    let currentStage = 0;
+    let currentStage = 0
 
     const interval = setInterval(() => {
-      currentStage++;
+      currentStage++
       if (currentStage < stages.length) {
-        setStatus(stages[currentStage].status === "simplifying" ? "analyzing" : "generating");
-        setProgress(stages[currentStage].progress);
+        setStatus(stages[currentStage].status === "simplifying" ? "analyzing" : "generating")
+        setProgress(stages[currentStage].progress)
       } else {
-        clearInterval(interval);
+        clearInterval(interval)
         setTimeout(() => {
-          const id = contentId || filename || "demo";
-          router.push(`/reading/${encodeURIComponent(id)}`);
-        }, 500);
+          const id = contentId || filename || "demo"
+          router.push(`/reading/${encodeURIComponent(id)}`)
+        }, 500)
       }
-    }, 1500);
+    }, 1500)
 
-    return () => clearInterval(interval);
-  }, [router, contentId, filename]);
+    return () => clearInterval(interval)
+  }, [router, contentId, filename])
 
   return (
-    <div className="min-h-screen bg-muted flex items-center justify-center p-6">
+    <div className="min-h-dvh bg-muted flex items-center justify-center p-6">
       <div className="text-center max-w-md">
         <div className="relative w-20 h-20 mx-auto mb-6">
           <RefreshCw className="w-full h-full text-primary animate-spin" />
@@ -62,14 +62,14 @@ function ProcessingPageContent() {
         <p className="text-sm text-muted-foreground">{progress}% complete</p>
       </div>
     </div>
-  );
+  )
 }
 
 export function ProcessingPageClient() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-muted flex items-center justify-center p-6">
+        <div className="min-h-dvh bg-muted flex items-center justify-center p-6">
           <div className="text-center">
             <RefreshCw className="w-10 h-10 text-primary animate-spin mx-auto mb-4" />
             <p className="text-muted-foreground">Loading...</p>
@@ -79,5 +79,5 @@ export function ProcessingPageClient() {
     >
       <ProcessingPageContent />
     </Suspense>
-  );
+  )
 }
