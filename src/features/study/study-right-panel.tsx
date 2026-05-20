@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   Sparkles,
   MessageCircle,
@@ -38,47 +39,47 @@ interface StudyStudioPanelProps {
 
 const studioCards: {
   id: StudioCardId;
-  label: string;
-  description: string;
+  labelKey: string;
+  descriptionKey: string;
   icon: typeof BookOpen;
   disabled?: boolean;
 }[] = [
   {
     id: "quiz",
-    label: "Quiz",
-    description: "Test comprehension",
+    labelKey: "quiz",
+    descriptionKey: "testComprehension",
     icon: HelpCircle,
   },
   {
     id: "flashcards",
-    label: "Flashcards",
-    description: "Key vocabulary",
+    labelKey: "flashcards",
+    descriptionKey: "keyVocabulary",
     icon: Layers,
     disabled: true,
   },
   {
     id: "summary",
-    label: "Summary",
-    description: "Simplified text",
+    labelKey: "summary",
+    descriptionKey: "simplifiedText",
     icon: FileText,
   },
   {
     id: "chat",
-    label: "Chat",
-    description: "Ask questions",
+    labelKey: "chat",
+    descriptionKey: "askQuestions",
     icon: MessageCircle,
   },
   {
     id: "mindmap",
-    label: "Mind Map",
-    description: "Visual overview",
+    labelKey: "mindMap",
+    descriptionKey: "visualOverview",
     icon: GitBranch,
     disabled: true,
   },
   {
     id: "translate",
-    label: "Translate",
-    description: "Vietnamese translation",
+    labelKey: "translate",
+    descriptionKey: "vietnameseTranslation",
     icon: Languages,
     disabled: true,
   },
@@ -86,20 +87,20 @@ const studioCards: {
 
 const resultMeta: Record<
   ResultItemType,
-  { icon: typeof HelpCircle; label: string }
+  { icon: typeof HelpCircle; labelKey: string }
 > = {
-  quiz: { icon: HelpCircle, label: "Quiz" },
-  summary: { icon: FileText, label: "Summary" },
+  quiz: { icon: HelpCircle, labelKey: "quiz" },
+  summary: { icon: FileText, labelKey: "summary" },
 };
 
-function formatRelativeTime(timestamp: number): string {
+function formatRelativeTime(timestamp: number, t: ReturnType<typeof useTranslations<"Study">>): string {
   const seconds = Math.floor((Date.now() - timestamp) / 1000);
-  if (seconds < 60) return "just now";
+  if (seconds < 60) return t("justNow");
   const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
+  if (minutes < 60) return t("minutesAgo", { count: minutes });
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return `${Math.floor(hours / 24)}d ago`;
+  if (hours < 24) return t("hoursAgo", { count: hours });
+  return t("daysAgo", { count: Math.floor(hours / 24) });
 }
 
 export function StudyStudioPanel({
@@ -111,6 +112,7 @@ export function StudyStudioPanel({
   collapsed = false,
   onToggleCollapse,
 }: StudyStudioPanelProps) {
+  const t = useTranslations("Study");
   const [viewingResult, setViewingResult] = useState<ResultItem | null>(null);
   const [viewingChat, setViewingChat] = useState(false);
 
@@ -129,7 +131,7 @@ export function StudyStudioPanel({
             </Button>
             <MessageCircle className="w-4 h-4 text-muted-foreground" />
             <h2 className="text-sm font-semibold text-foreground truncate">
-              Chat: {activePassage.title}
+              {t("chatAbout", { title: activePassage.title })}
             </h2>
           </div>
           <StudyChatPanel
@@ -145,9 +147,10 @@ export function StudyStudioPanel({
   if (viewingResult) {
     const meta = resultMeta[viewingResult.type] ?? {
       icon: HelpCircle,
-      label: viewingResult.type,
+      labelKey: viewingResult.type,
     };
     const Icon = meta.icon;
+    const label = t(meta.labelKey);
 
     return (
       <Card className="h-full flex flex-col overflow-hidden">
@@ -163,7 +166,7 @@ export function StudyStudioPanel({
             </Button>
             <Icon className="w-4 h-4 text-muted-foreground" />
             <h2 className="text-sm font-semibold text-foreground truncate">
-              {meta.label}: {viewingResult.passageTitle}
+              {t("resultTitle", { type: label, title: viewingResult.passageTitle })}
             </h2>
           </div>
           <div className="flex-1 overflow-y-auto panel-scroll p-4">
@@ -220,7 +223,7 @@ export function StudyStudioPanel({
                   else onActionClick(card.id);
                 }}
                 disabled={card.disabled || !hasActivePassage}
-                title={card.label}
+                title={t(card.labelKey)}
                 className={cn(
                   "w-11 h-11 rounded-lg flex items-center justify-center transition-colors cursor-pointer",
                   card.disabled
@@ -257,14 +260,15 @@ export function StudyStudioPanel({
                 .map((result) => {
                   const meta = resultMeta[result.type] ?? {
                     icon: HelpCircle,
-                    label: result.type,
+                    labelKey: result.type,
                   };
                   const Icon = meta.icon;
+                  const label = t(meta.labelKey);
                   return (
                     <button
                       key={result.id}
                       onClick={() => setViewingResult(result)}
-                      title={`${meta.label}: ${result.passageTitle}`}
+                      title={t("resultTitle", { type: label, title: result.passageTitle })}
                       className="w-11 h-11 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
                     >
                       <Icon className="w-5 h-5" />
@@ -295,7 +299,7 @@ export function StudyStudioPanel({
       <CardContent className="p-0 flex flex-col h-full">
         <div className="px-4 pt-4 pb-2 flex items-center justify-between">
           <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-            Studio
+            {t("studio")}
           </h2>
           <Button
             variant="ghost"
@@ -368,8 +372,8 @@ export function StudyStudioPanel({
                       : "text-foreground",
                   )}
                 >
-                  {card.label}
-                </p>
+                    {t(card.labelKey)}
+                  </p>
               </Button>
             );
           })}
@@ -384,9 +388,10 @@ export function StudyStudioPanel({
               {results.map((result) => {
                 const meta = resultMeta[result.type] ?? {
                   icon: HelpCircle,
-                  label: result.type,
+                  labelKey: result.type,
                 };
                 const Icon = meta.icon;
+                const label = t(meta.labelKey);
                 return (
                   <Button
                     key={result.id}
@@ -412,15 +417,16 @@ export function StudyStudioPanel({
                     )}
                     <div className="min-w-0 flex-1">
                       <p className="text-[13px] font-medium text-foreground truncate">
-                        {meta.label}: {result.passageTitle}
+                        {t("resultTitle", { type: label, title: result.passageTitle })}
                       </p>
                       <p className="text-[11px] text-muted-foreground">
                         {result.status === "running"
-                          ? "Generating..."
+                          ? t("generating")
                           : result.status === "error"
-                            ? "Failed"
+                            ? t("failed")
                             : formatRelativeTime(
                                 result.completedAt ?? result.startedAt,
+                                t,
                               )}
                       </p>
                     </div>
@@ -434,10 +440,10 @@ export function StudyStudioPanel({
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <Sparkles className="w-8 h-8 text-muted-foreground/30 mb-3" />
               <p className="text-[13px] text-muted-foreground/60">
-                No results yet
+                {t("noResultsYet")}
               </p>
               <p className="text-[11px] text-muted-foreground/40 mt-1">
-                Click a card above to generate
+                {t("clickCardToGenerate")}
               </p>
             </div>
           )}
@@ -446,10 +452,10 @@ export function StudyStudioPanel({
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <BookOpen className="w-8 h-8 text-muted-foreground/30 mb-3" />
               <p className="text-[13px] text-muted-foreground/60">
-                Select a passage
+                {t("selectPassage")}
               </p>
               <p className="text-[11px] text-muted-foreground/40 mt-1">
-                Upload or select from sources
+                {t("uploadOrSelectSources")}
               </p>
             </div>
           )}

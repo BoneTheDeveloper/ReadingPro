@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useCallback, useEffect } from "react"
+import { useTranslations } from "next-intl"
 import { BookOpen, CheckCircle, XCircle, ArrowRight } from "lucide-react"
 import { cn } from "@/lib/shared/utils"
 import { Button } from "@/components/ui/button"
@@ -14,6 +15,7 @@ interface QuizContentProps {
 }
 
 export function QuizContent({ questions, passageTitle, onReset }: QuizContentProps) {
+  const t = useTranslations("Study")
   const [currentIndex, setCurrentIndex] = useState(0)
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
   const [showFeedback, setShowFeedback] = useState(false)
@@ -74,8 +76,8 @@ export function QuizContent({ questions, passageTitle, onReset }: QuizContentPro
           <div className="w-14 h-14 bg-muted rounded-xl flex items-center justify-center mx-auto mb-4">
             <BookOpen className="w-7 h-7 text-muted-foreground" />
           </div>
-          <p className="text-foreground text-base font-medium">No test yet</p>
-          <p className="text-muted-foreground text-sm mt-1">Generate questions to start testing</p>
+          <p className="text-foreground text-base font-medium">{t("noTestYet")}</p>
+          <p className="text-muted-foreground text-sm mt-1">{t("generateQuestionsToStart")}</p>
         </div>
       </div>
     )
@@ -98,8 +100,10 @@ export function QuizContent({ questions, passageTitle, onReset }: QuizContentPro
     <div className="bg-surface rounded-xl shadow-sm border border-border p-6 flex flex-col relative overflow-hidden flex-1">
       <div className="w-full flex flex-col h-full">
         <div className="flex items-center justify-between mb-6">
-          <span className="text-xs font-semibold text-primary uppercase tracking-[0.02em]">Multiple Choice</span>
-          <span className="text-xs font-medium text-muted-foreground">Question {currentIndex + 1}/{questions.length}</span>
+          <span className="text-xs font-semibold text-primary uppercase tracking-[0.02em]">{t("multipleChoice")}</span>
+          <span className="text-xs font-medium text-muted-foreground">
+            {t("questionOf", { current: currentIndex + 1, total: questions.length })}
+          </span>
         </div>
 
         <div className="w-full h-1.5 bg-muted rounded-full mb-8">
@@ -149,7 +153,7 @@ export function QuizContent({ questions, passageTitle, onReset }: QuizContentPro
         <div className="mt-8 pt-6 border-t border-border flex gap-4">
           {!showFeedback ? (
             <Button onClick={handleCheckAnswer} disabled={!selectedAnswer} className={cn("flex-1", !selectedAnswer && "bg-muted text-muted-foreground")}>
-              Check Answer
+              {t("checkAnswer")}
             </Button>
           ) : (
             <div className="flex-1 space-y-3">
@@ -159,18 +163,20 @@ export function QuizContent({ questions, passageTitle, onReset }: QuizContentPro
               )}>
                 <div className={cn("flex items-center gap-1.5 mb-1 font-semibold", answers[currentQuestion.id] ? "text-success" : "text-danger")}>
                   {answers[currentQuestion.id] ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
-                  <span>{answers[currentQuestion.id] ? "Correct!" : "Not quite right"}</span>
+                  <span>{answers[currentQuestion.id] ? t("correctFeedback") : t("incorrectFeedback")}</span>
                 </div>
                 <p className="text-foreground/80">{currentQuestion.explanation}</p>
               </div>
               <div className="bg-muted border border-border rounded-lg p-3">
-                <p className="text-xs text-muted-foreground mb-0.5 font-medium">Source (Line {currentQuestion.sourceLine}):</p>
+                <p className="text-xs text-muted-foreground mb-0.5 font-medium">
+                  {t("sourceLine", { line: currentQuestion.sourceLine })}
+                </p>
                 <p className="text-sm text-muted-foreground italic">&ldquo;{currentQuestion.sourceText}&rdquo;</p>
               </div>
               <Button onClick={handleNext} className="w-full">
                 {currentIndex < questions.length - 1 ? (
-                  <>Next Question <ArrowRight className="w-4 h-4" /></>
-                ) : "View Results"}
+                  <>{t("nextQuestion")} <ArrowRight className="w-4 h-4" /></>
+                ) : t("viewResults")}
               </Button>
             </div>
           )}

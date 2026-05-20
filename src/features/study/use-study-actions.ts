@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import type { Dispatch, SetStateAction } from "react";
 import { studyGenerateQuestionsAction } from "@/features/study/actions/study-generate-questions-action";
 import { studySimplifyAction } from "@/features/study/actions/study-simplify-action";
@@ -12,6 +13,7 @@ interface UseStudyActionsInput {
 }
 
 export function useStudyActions({ state, setState }: UseStudyActionsInput) {
+  const t = useTranslations("Study");
   const [results, setResults] = useState<ResultItem[]>([]);
   const activePassageIdRef = useRef(state.activePassageId);
 
@@ -51,10 +53,10 @@ export function useStudyActions({ state, setState }: UseStudyActionsInput) {
       setState((prev) => ({
         ...prev,
         simplifying: false,
-        error: err instanceof Error ? err.message : "Simplification failed",
+        error: err instanceof Error ? err.message : t("simplificationFailed"),
       }));
     }
-  }, [setState]);
+  }, [setState, t]);
 
   const markResultError = useCallback((resultId: string) => {
     setResults((prev) => prev.map((result) => (result.id === resultId ? { ...result, status: "error" } : result)));
@@ -89,12 +91,12 @@ export function useStudyActions({ state, setState }: UseStudyActionsInput) {
       } catch (err) {
         setState((prev) => ({
           ...prev,
-          error: err instanceof Error ? err.message : "Generation failed",
+          error: err instanceof Error ? err.message : t("generationFailed"),
         }));
         markResultError(resultId);
       }
     },
-    [markResultError, setState],
+    [markResultError, setState, t],
   );
 
   const generateSummaryResult = useCallback(
@@ -158,12 +160,12 @@ export function useStudyActions({ state, setState }: UseStudyActionsInput) {
         setState((prev) => ({
           ...prev,
           simplifying: false,
-          error: err instanceof Error ? err.message : "Simplification failed",
+          error: err instanceof Error ? err.message : t("simplificationFailed"),
         }));
         markResultError(resultId);
       }
     },
-    [markResultError, setState],
+    [markResultError, setState, t],
   );
 
   const handleActionClick = useCallback(

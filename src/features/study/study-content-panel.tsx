@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   Loader2,
   FileText,
@@ -33,6 +34,7 @@ export function StudyContentPanel({
   simplifying,
   onSimplify,
 }: StudyContentPanelProps) {
+  const t = useTranslations("Study");
   const [viewMode, setViewMode] = useState<ViewMode>("simplified");
 
   if (!passage) {
@@ -43,10 +45,10 @@ export function StudyContentPanel({
             <FileSearch className="w-6 h-6 text-muted-foreground" />
           </div>
           <p className="text-base font-medium text-foreground">
-            Select a document from Sources
+            {t("selectDocumentFromSources")}
           </p>
           <p className="text-sm text-muted-foreground mt-1">
-            Choose from your recent documents or add a new one
+            {t("chooseRecentOrAdd")}
           </p>
         </div>
       </div>
@@ -61,10 +63,10 @@ export function StudyContentPanel({
             <Loader2 className="w-6 h-6 text-primary animate-spin" />
           </div>
           <p className="text-base font-medium text-foreground">
-            Simplifying content...
+            {t("simplifyingContent")}
           </p>
           <p className="text-sm text-muted-foreground mt-1">
-            This may take a moment
+            {t("thisMayTakeMoment")}
           </p>
         </div>
       </div>
@@ -102,7 +104,7 @@ export function StudyContentPanel({
                       : "text-muted-foreground",
                   )}
                 >
-                  Simplified ({passage.simplifiedLevel})
+                  {t("simplified")} ({passage.simplifiedLevel})
                 </button>
                 <button
                   onClick={() => setViewMode("original")}
@@ -113,7 +115,7 @@ export function StudyContentPanel({
                       : "text-muted-foreground",
                   )}
                 >
-                  Original ({passage.originalLevel})
+                  {t("original")} ({passage.originalLevel})
                 </button>
               </div>
             ) : canSimplify ? (
@@ -123,7 +125,7 @@ export function StudyContentPanel({
                 className="flex items-center gap-2 px-4 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-all shadow-sm disabled:opacity-50"
               >
                 <Languages className="w-3.5 h-3.5" />
-                Simplify
+                {t("simplify")}
               </button>
             ) : null}
           </div>
@@ -137,7 +139,7 @@ export function StudyContentPanel({
             </div>
             <div className="flex items-center gap-1 text-muted-foreground text-xs">
               <FileText className="w-3.5 h-3.5" />
-              {passage.wordCount} words
+              {t("wordCount", { count: passage.wordCount })}
             </div>
           </div>
         </div>
@@ -158,7 +160,7 @@ export function StudyContentPanel({
         <div className="mt-8 pt-6 border-t border-border flex justify-between items-center">
           <button className="flex items-center gap-2 text-primary text-sm font-semibold hover:underline">
             <Languages className="w-4 h-4" />
-            Translate passage
+            {t("translatePassage")}
           </button>
           <div className="flex gap-4">
             <button className="p-2 hover:bg-muted rounded-full transition-colors">

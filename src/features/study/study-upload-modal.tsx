@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useCallback } from "react"
+import { useTranslations } from "next-intl"
 import { Upload, Type, Globe, Search, FileText } from "lucide-react"
 import { useDropzone, type FileRejection } from "react-dropzone"
 import { validateFile, formatFileSize } from "@/lib/validation/upload"
@@ -52,6 +53,7 @@ export function StudyUploadModal({
   onUploadComplete,
   onUploadError,
 }: StudyUploadModalProps) {
+  const t = useTranslations("Study")
   const [activeMode, setActiveMode] = useState<InputMode>(null)
   const [error, setError] = useState<string | null>(null)
   const [pastedText, setPastedText] = useState("")
@@ -68,21 +70,21 @@ export function StudyUploadModal({
       if ("error" in result) { onUploadError(result.error); return }
       onUploadComplete(result.passage)
     } catch (err) {
-      onUploadError(err instanceof Error ? err.message : "Upload failed")
+      onUploadError(err instanceof Error ? err.message : t("uploadFailed"))
     }
   }
 
   const handleTextSubmit = async () => {
     if (!pastedText.trim()) return
-    onUploadStart("Pasted Text")
+    onUploadStart(t("pastedTextTitle"))
     onClose()
     setError(null)
     try {
-      const result = await studyUploadAction({ text: pastedText, title: "Pasted Text" })
+      const result = await studyUploadAction({ text: pastedText, title: t("pastedTextTitle") })
       if ("error" in result) { onUploadError(result.error); return }
       onUploadComplete(result.passage)
     } catch (err) {
-      onUploadError(err instanceof Error ? err.message : "Upload failed")
+      onUploadError(err instanceof Error ? err.message : t("uploadFailed"))
     }
   }
 
@@ -91,14 +93,14 @@ export function StudyUploadModal({
       setError(null)
       if (rejectedFiles.length > 0) {
         const code = rejectedFiles[0].errors[0]?.code
-        if (code === "file-too-large") setError("File size exceeds 10MB limit")
-        else if (code === "file-invalid-type") setError("Only .txt and .pdf files are supported")
-        else setError("Invalid file. Please try again.")
+        if (code === "file-too-large") setError(t("fileTooLarge"))
+        else if (code === "file-invalid-type") setError(t("unsupportedFileType"))
+        else setError(t("invalidFileTryAgain"))
         return
       }
       if (acceptedFiles.length > 0) {
         const validation = validateFile(acceptedFiles[0])
-        if (!validation.valid) { setError(validation.error ?? "Invalid file"); return }
+        if (!validation.valid) { setError(validation.error ?? t("invalidFile")); return }
         handleFileUpload(acceptedFiles[0])
       }
     },
@@ -117,14 +119,14 @@ export function StudyUploadModal({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-lg max-h-[90vh] flex flex-col p-0">
         <DialogHeader className="p-5 pb-4">
-          <DialogTitle>Add Source</DialogTitle>
-          <DialogDescription className="sr-only">Upload or paste content to study</DialogDescription>
+          <DialogTitle>{t("addSourceTitle")}</DialogTitle>
+          <DialogDescription className="sr-only">{t("uploadOrPasteContent")}</DialogDescription>
         </DialogHeader>
 
         <div className="px-5">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input placeholder="Search sources on the web..." className="pl-10 bg-accent" />
+            <Input placeholder={t("searchSourcesWeb")} className="pl-10 bg-accent" />
           </div>
         </div>
 
@@ -141,18 +143,18 @@ export function StudyUploadModal({
                 <input {...getInputProps()} />
                 <Upload className="w-7 h-7 mb-3 text-primary" />
                 <p className="text-sm font-medium text-primary">
-                  {isDragActive ? "Drop your file here" : "or drop your files here"}
+                  {isDragActive ? t("dropFileHere") : t("dropFilesHere")}
                 </p>
                 <p className="text-xs mt-1 text-muted-foreground">
-                  .txt, .pdf — max {formatFileSize(10 * 1024 * 1024)}
+                  {t("supportedFileTypes", { size: formatFileSize(10 * 1024 * 1024) })}
                 </p>
               </div>
 
               <div className="grid grid-cols-2 gap-3 mt-5">
-                <SourceButton icon={Upload} label="Upload File" desc="Browse from device" onClick={() => setActiveMode("file")} />
-                <SourceButton icon={Globe} label="Website" desc="Coming soon" disabled />
-                <SourceButton icon={FileText} label="Google Drive" desc="Coming soon" disabled />
-                <SourceButton icon={Type} label="Paste Text" desc="Copied text" onClick={() => setActiveMode("text")} />
+                <SourceButton icon={Upload} label={t("uploadFile")} desc={t("browseFromDevice")} onClick={() => setActiveMode("file")} />
+                <SourceButton icon={Globe} label={t("website")} desc={t("comingSoon")} disabled />
+                <SourceButton icon={FileText} label={t("googleDrive")} desc={t("comingSoon")} disabled />
+                <SourceButton icon={Type} label={t("pasteText")} desc={t("copiedText")} onClick={() => setActiveMode("text")} />
               </div>
             </>
           )}
@@ -160,7 +162,7 @@ export function StudyUploadModal({
           {activeMode === "file" && (
             <div>
               <Button variant="ghost" size="sm" onClick={() => setActiveMode(null)} className="text-primary mb-3 -ml-2">
-                &larr; Back to sources
+                &larr; {t("backToSources")}
               </Button>
               <div
                 {...getRootProps()}
@@ -174,13 +176,13 @@ export function StudyUploadModal({
                   <Upload className="w-7 h-7 text-primary" />
                 </div>
                 <p className="text-base font-semibold mb-1 text-foreground">
-                  {isDragActive ? "Drop your file here" : "Upload a file"}
+                  {isDragActive ? t("dropFileHere") : t("uploadAFile")}
                 </p>
-                <p className="text-sm text-muted-foreground">Drag and drop, or click to browse</p>
+                <p className="text-sm text-muted-foreground">{t("dragDropOrBrowse")}</p>
                 <div className="flex items-center gap-3 mt-3 text-xs text-muted-foreground">
                   <span>.txt, .pdf</span>
                   <span className="text-border">|</span>
-                  <span>Max {formatFileSize(10 * 1024 * 1024)}</span>
+                  <span>{t("maxFileSize", { size: formatFileSize(10 * 1024 * 1024) })}</span>
                 </div>
               </div>
             </div>
@@ -189,25 +191,25 @@ export function StudyUploadModal({
           {activeMode === "text" && (
             <div>
               <Button variant="ghost" size="sm" onClick={() => setActiveMode(null)} className="text-primary mb-3 -ml-2">
-                &larr; Back to sources
+                &larr; {t("backToSources")}
               </Button>
               <div className="bg-surface border border-border rounded-xl overflow-hidden">
                 <div className="flex items-center gap-2 px-4 py-3 border-b border-border bg-accent">
                   <Type className="w-4 h-4 text-primary" />
-                  <h3 className="text-sm font-semibold text-primary">Paste your text</h3>
+                  <h3 className="text-sm font-semibold text-primary">{t("pasteYourText")}</h3>
                 </div>
                 <Textarea
                   value={pastedText}
                   onChange={(e) => { setPastedText(e.target.value); setError(null); }}
-                  placeholder="Paste your English text content here..."
+                  placeholder={t("pasteEnglishText")}
                   className="w-full p-5 min-h-45 resize-none border-0 focus-visible:ring-0 text-base leading-relaxed bg-surface"
                 />
                 <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-accent">
                   <span className="text-xs text-muted-foreground">
-                    {pastedText.trim().split(/\s+/).filter(Boolean).length} words
+                    {t("wordCount", { count: pastedText.trim().split(/\s+/).filter(Boolean).length })}
                   </span>
                   <Button onClick={handleTextSubmit} disabled={pastedText.trim().length === 0} size="sm">
-                    Continue
+                    {t("continue")}
                   </Button>
                 </div>
               </div>
@@ -222,7 +224,7 @@ export function StudyUploadModal({
         </div>
 
         <div className="p-4 border-t border-border flex justify-end">
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button variant="outline" onClick={onClose}>{t("cancel")}</Button>
         </div>
       </DialogContent>
     </Dialog>

@@ -1,6 +1,7 @@
 "use client";
 
 import { Group, Panel, Separator } from "react-resizable-panels";
+import { useTranslations } from "next-intl";
 import type { PassageData } from "./study-types";
 import { StudySourcesPanel } from "./study-left-panel";
 import { StudyContentPanel } from "./study-content-panel";
@@ -15,6 +16,7 @@ export function StudyPageClient({
 }: {
   initialPassages: PassageData[];
 }) {
+  const t = useTranslations("Study");
   const {
     state,
     setState,
@@ -82,7 +84,7 @@ export function StudyPageClient({
             <div className="h-full bg-background flex flex-col overflow-hidden rounded-xl border border-border">
               <div className="p-4 border-b border-border">
                 <h2 className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  Content
+                  {t("content")}
                 </h2>
               </div>
               <StudyContentPanel

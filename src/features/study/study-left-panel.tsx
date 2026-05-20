@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import {
   Plus,
   FileText,
@@ -49,6 +50,7 @@ export function StudySourcesPanel({
   collapsed = false,
   onToggleCollapse,
 }: StudySourcesPanelProps) {
+  const t = useTranslations("Study");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
@@ -149,7 +151,7 @@ export function StudySourcesPanel({
         {/* Panel header */}
         <div className="p-4 flex items-center justify-between border-b border-border">
           <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-            Sources
+            {t("sources")}
           </h2>
           <Button
             variant="ghost"
@@ -168,7 +170,7 @@ export function StudySourcesPanel({
             <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search sources..."
+              placeholder={t("searchSources")}
               className="pl-9 h-9 bg-muted border-0 text-[13px]"
             />
           </div>
@@ -183,7 +185,7 @@ export function StudySourcesPanel({
             size="sm"
           >
             <Plus className="w-3.5 h-3.5" />
-            Add Source
+            {t("addSource")}
           </Button>
         </div>
 
@@ -201,7 +203,7 @@ export function StudySourcesPanel({
               ) : (
                 <Square className="w-4 h-4" />
               )}
-              Select all
+              {t("selectAll")}
             </Button>
           )}
 
@@ -220,10 +222,10 @@ export function StudySourcesPanel({
                 </div>
                 <div className="relative z-10 flex-1 overflow-hidden">
                   <h4 className="text-[13px] font-medium truncate leading-tight text-foreground">
-                    {uploadingFileName ?? "Processing..."}
+                    {uploadingFileName ?? t("processing")}
                   </h4>
                   <p className="text-[11px] truncate mt-0.5 text-muted-foreground">
-                    Analyzing content...
+                    {t("analyzingContent")}
                   </p>
                 </div>
               </div>
@@ -290,7 +292,7 @@ export function StudySourcesPanel({
                     >
                       <DropdownMenuItem disabled className="opacity-60">
                         <Pencil className="w-4 h-4 mr-2" />
-                        Rename source
+                        {t("renameSource")}
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
@@ -301,7 +303,7 @@ export function StudySourcesPanel({
                         className="text-destructive focus:text-destructive font-medium"
                       >
                         <Trash2 className="w-4 h-4 mr-2" />
-                        Delete source
+                        {t("deleteSource")}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -329,16 +331,16 @@ export function StudySourcesPanel({
               filteredDocs.length === 0 &&
               documents.length > 0 && (
                 <p className="text-xs text-muted-foreground text-center py-4">
-                  No matching sources
+                  {t("noMatchingSources")}
                 </p>
               )}
 
             {!isUploading && documents.length === 0 && (
               <div className="flex-1 flex items-center justify-center py-8">
                 <p className="text-[13px] text-muted-foreground text-center">
-                  No sources yet.
+                  {t("noSourcesYet")}
                   <br />
-                  Add a source to get started.
+                  {t("addSourceToStart")}
                 </p>
               </div>
             )}
