@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import {
   ArrowRight,
   BookOpen,
@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { DashboardSidebar } from "@/components/layout/dashboard-sidebar";
+import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/shared/utils";
 
 type UserProgress = {
@@ -94,13 +95,17 @@ function pluralize(count: number, noun: string) {
   return `${count.toLocaleString()} ${count === 1 ? noun : `${noun}s`}`;
 }
 
-function getNextAction(stats: UserProgress, passages: PassageOverview) {
+function getNextAction(
+  stats: UserProgress,
+  passages: PassageOverview,
+  t: Awaited<ReturnType<typeof getTranslations<"Dashboard">>>,
+) {
   if (stats.dueCards > 0) {
     return {
-      eyebrow: "Due now",
+      eyebrow: t("dueNow"),
       title: `Review ${pluralize(stats.dueCards, "card")}`,
       body: "Clear the queue before adding new material.",
-      href: "/study",
+      href: "/study" as const,
       cta: "Start review",
       urgency: "High priority",
       icon: Target,
@@ -111,11 +116,11 @@ function getNextAction(stats: UserProgress, passages: PassageOverview) {
 
   if (passages.totalPassages === 0) {
     return {
-      eyebrow: "Start here",
-      title: "Upload your first reading",
+      eyebrow: t("startHere"),
+      title: t("uploadFirstReading"),
       body: "One short passage is enough to begin.",
-      href: "/study",
-      cta: "Add content",
+      href: "/study" as const,
+      cta: t("addReading"),
       urgency: "Setup",
       icon: Upload,
       tone: "border-success/30 bg-success-soft text-success",
@@ -125,11 +130,11 @@ function getNextAction(stats: UserProgress, passages: PassageOverview) {
 
   if (stats.totalCards === 0) {
     return {
-      eyebrow: "Build deck",
-      title: "Generate questions",
+      eyebrow: t("buildDeck"),
+      title: t("generateQuestionsTitle"),
       body: "Turn a saved passage into review cards.",
-      href: "/study",
-      cta: "Open study room",
+      href: "/study" as const,
+      cta: t("addReading"),
       urgency: "Next step",
       icon: Sparkles,
       tone: "border-primary/20 bg-primary/5 text-primary",
@@ -139,12 +144,12 @@ function getNextAction(stats: UserProgress, passages: PassageOverview) {
 
   if (stats.todayReviews === 0) {
     return {
-      eyebrow: "Today",
-      title: "Keep the streak alive",
+      eyebrow: t("today"),
+      title: t("keepStreakAlive"),
       body: "A short review session keeps your rhythm warm.",
-      href: "/study",
+      href: "/study" as const,
       cta: "Do a quick session",
-      urgency: "Today",
+      urgency: t("today"),
       icon: Flame,
       tone: "border-gold/40 bg-gold-soft text-gold",
       iconTone: "bg-gold/20 text-gold",
@@ -152,11 +157,11 @@ function getNextAction(stats: UserProgress, passages: PassageOverview) {
   }
 
   return {
-    eyebrow: "Queue clear",
-    title: "Add one useful passage",
+    eyebrow: t("queueClear"),
+    title: t("addUsefulPassage"),
     body: "Your reviews are calm. Feed the next session.",
-    href: "/study",
-    cta: "Add content",
+    href: "/study" as const,
+    cta: t("addReading"),
     urgency: "Low pressure",
     icon: BookOpen,
     tone: "border-border bg-surface text-muted-foreground",
@@ -164,24 +169,24 @@ function getNextAction(stats: UserProgress, passages: PassageOverview) {
   };
 }
 
-function getProgressCards(stats: UserProgress, passages: PassageOverview) {
+function getProgressCards(stats: UserProgress, passages: PassageOverview, t: Awaited<ReturnType<typeof getTranslations<"Dashboard">>>) {
   const cards = [
     {
-      label: "Reviews due",
+      label: t("reviewsDue"),
       value: stats.dueCards > 0 ? stats.dueCards.toLocaleString() : "Clear",
       helper: stats.dueCards > 0 ? "Waiting now" : "No review debt",
       icon: Target,
       tone: stats.dueCards > 0 ? "text-gold bg-gold-soft" : "text-success bg-success-soft",
     },
     {
-      label: "Current streak",
+      label: t("currentStreak"),
       value: stats.streakDays > 0 ? `${stats.streakDays}d` : "Start",
       helper: stats.streakDays > 0 ? "active practice run" : "One review begins it",
       icon: Flame,
       tone: stats.streakDays > 0 ? "text-gold bg-gold-soft" : "text-muted-foreground bg-muted",
     },
     {
-      label: "Today",
+      label: t("today"),
       value: stats.todayReviews > 0 ? stats.todayReviews.toLocaleString() : "Ready",
       helper: stats.todayReviews > 0 ? "reviews logged" : "No session yet",
       icon: CalendarCheck,
@@ -191,7 +196,7 @@ function getProgressCards(stats: UserProgress, passages: PassageOverview) {
 
   if (passages.totalPassages > 0) {
     cards.push({
-      label: "Reading library",
+      label: t("readingLibrary"),
       value: passages.totalPassages.toLocaleString(),
       helper: `${passages.totalWords.toLocaleString()} words saved`,
       icon: BookOpen,
@@ -218,20 +223,21 @@ function getMomentumCopy(stats: UserProgress, passages: PassageOverview) {
   return "Your review queue is calm. One short session keeps momentum.";
 }
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const t = await getTranslations("Dashboard");
   const stats = mockStats;
   const passageOverview = mockPassageOverview;
   const { recentPassages } = passageOverview;
   const displayName = mockDashboardProfile.firstName;
-  const nextAction = getNextAction(stats, passageOverview);
-  const progressCards = getProgressCards(stats, passageOverview);
+  const nextAction = getNextAction(stats, passageOverview, t);
+  const progressCards = getProgressCards(stats, passageOverview, t);
   const maturePercent =
     stats.totalCards > 0 ? Math.round((stats.matureCards / stats.totalCards) * 100) : 0;
   const showMastery = stats.totalCards >= 10;
   const milestoneItems = [
-    { label: "Save a passage", done: passageOverview.totalPassages > 0 },
-    { label: "Create review cards", done: stats.totalCards > 0 },
-    { label: "Complete today's review", done: stats.todayReviews > 0 },
+    { label: t("savePassage"), done: passageOverview.totalPassages > 0 },
+    { label: t("createReviewCards"), done: stats.totalCards > 0 },
+    { label: t("completeTodaysReview"), done: stats.todayReviews > 0 },
   ];
 
   return (
@@ -245,10 +251,10 @@ export default function DashboardPage() {
               <div className="absolute bottom-0 right-24 h-32 w-32 translate-y-12 rounded-full bg-success/15 blur-2xl" />
               <div className="relative z-10 max-w-2xl">
                 <p className="mb-3 text-sm font-semibold uppercase tracking-[0.18em] text-gold">
-                  Study dashboard
+                  {t("studyDashboard")}
                 </p>
                 <h1 className="max-w-2xl text-3xl font-semibold leading-tight sm:text-4xl lg:text-5xl">
-                  Welcome back, {displayName}.
+                  {t("welcomeBack", { name: displayName })}
                 </h1>
                 <p className="mt-4 max-w-xl text-base leading-7 text-primary-foreground/72">
                   {getMomentumCopy(stats, passageOverview)}
@@ -272,7 +278,7 @@ export default function DashboardPage() {
                     )}
                   >
                     <BookOpen className="size-4" />
-                    Open study room
+                    {t("viewStudyRoom")}
                   </Link>
                 </div>
               </div>
@@ -282,7 +288,7 @@ export default function DashboardPage() {
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
                   <p className="text-sm font-semibold uppercase tracking-[0.16em]">
-                    Next action
+                    {t("nextAction")}
                   </p>
                   <h2 className="mt-2 text-2xl font-semibold leading-tight">{nextAction.title}</h2>
                 </div>
@@ -334,9 +340,9 @@ export default function DashboardPage() {
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-sm font-semibold uppercase tracking-[0.16em] text-gold">
-                    Recent reading
+                    {t("recentReading")}
                   </p>
-                  <h2 className="mt-2 text-2xl font-semibold">Pick up where you left off</h2>
+                  <h2 className="mt-2 text-2xl font-semibold">{t("pickUpWhereYouLeftOff")}</h2>
                 </div>
                 <Link
                   href="/study"
@@ -345,7 +351,7 @@ export default function DashboardPage() {
                     "h-10 self-start",
                   )}
                 >
-                  View study room
+                  {t("viewStudyRoom")}
                   <ArrowRight className="size-4" />
                 </Link>
               </div>
@@ -382,9 +388,9 @@ export default function DashboardPage() {
                 ) : (
                   <div className="flex flex-col items-start gap-4 py-8 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                      <h3 className="text-lg font-semibold">No saved passages yet</h3>
+                      <h3 className="text-lg font-semibold">{t("noSavedPassages")}</h3>
                       <p className="mt-1 max-w-xl text-sm leading-6 text-muted-foreground">
-                        Add a short article, exam passage, or PDF to start building questions and flashcards.
+                        {t("noSavedPassagesDescription")}
                       </p>
                     </div>
                     <Link
@@ -392,7 +398,7 @@ export default function DashboardPage() {
                       className={cn(buttonVariants(), "h-10")}
                     >
                       <Upload className="size-4" />
-                      Upload first text
+                      {t("uploadFirstText")}
                     </Link>
                   </div>
                 )}
@@ -407,7 +413,7 @@ export default function DashboardPage() {
                   </div>
                   <div>
                     <p className="text-sm font-semibold uppercase tracking-[0.16em] text-gold">
-                      Momentum
+                      {t("momentum")}
                     </p>
                     <h2 className="text-xl font-semibold">{nextAction.eyebrow}</h2>
                   </div>
@@ -425,16 +431,16 @@ export default function DashboardPage() {
                     </div>
                     <div>
                       <p className="text-sm font-semibold uppercase tracking-[0.16em] text-gold">
-                        Deck health
+                        {t("deckHealth")}
                       </p>
-                      <h2 className="text-xl font-semibold">{maturePercent}% mature</h2>
+                      <h2 className="text-xl font-semibold">{t("mature", { percent: maturePercent })}</h2>
                     </div>
                   </div>
                   <div className="mt-5 h-3 overflow-hidden rounded-full bg-muted">
                     <div className="h-full rounded-full bg-success" style={{ width: `${maturePercent}%` }} />
                   </div>
                   <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                    {pluralize(stats.totalCards, "card")} in rotation.
+                    {t("cardsInRotation", { count: pluralize(stats.totalCards, "card") })}
                   </p>
                 </div>
               ) : (
@@ -445,9 +451,9 @@ export default function DashboardPage() {
                     </div>
                     <div>
                       <p className="text-sm font-semibold uppercase tracking-[0.16em] text-gold">
-                        First milestone
+                        {t("firstMilestone")}
                       </p>
-                      <h2 className="text-xl font-semibold">Build the loop</h2>
+                      <h2 className="text-xl font-semibold">{t("buildTheLoop")}</h2>
                     </div>
                   </div>
                   <ul className="mt-4 space-y-3">
@@ -471,9 +477,9 @@ export default function DashboardPage() {
           {/* Quick actions */}
           <section className="grid gap-4 md:grid-cols-3">
             {[
-              { href: "/study", icon: Target, title: "Review queue", text: stats.dueCards > 0 ? `${pluralize(stats.dueCards, "card")} due now.` : "Queue is clear." },
-              { href: "/study", icon: FileText, title: "Add reading", text: "Bring in a passage worth practicing." },
-              { href: "/study", icon: Sparkles, title: "Generate questions", text: "Create cards from saved reading." },
+              { href: "/study" as const, icon: Target, title: t("reviewQueue"), text: stats.dueCards > 0 ? `${pluralize(stats.dueCards, "card")} due now.` : "Queue is clear." },
+              { href: "/study" as const, icon: FileText, title: t("addReading"), text: "Bring in a passage worth practicing." },
+              { href: "/study" as const, icon: Sparkles, title: t("generateQuestions"), text: "Create cards from saved reading." },
             ].map((action) => (
               <Link
                 key={action.title}

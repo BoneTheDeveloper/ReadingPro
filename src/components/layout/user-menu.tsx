@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useTranslations } from "next-intl"
 import { createClient } from "@/lib/supabase/client"
 import { LogOut } from "lucide-react"
 import { useSignOut } from "./use-sign-out"
@@ -13,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 export function UserMenu() {
+  const t = useTranslations()
   const [userName, setUserName] = useState<string | null>(null)
   const [userEmail, setUserEmail] = useState<string | null>(null)
   const signOut = useSignOut()
@@ -43,7 +45,7 @@ export function UserMenu() {
       <DropdownMenuTrigger className="flex items-center gap-3 cursor-pointer rounded-lg px-1 py-0.5 hover:bg-accent/60 transition-colors">
         <div className="text-right">
           <p className="text-sm font-semibold text-foreground leading-none">
-            {userName || "Loading..."}
+            {userName || t("Common.loading")}
           </p>
           <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold mt-0.5">
             {userEmail || ""}
@@ -64,7 +66,7 @@ export function UserMenu() {
           className="text-destructive focus:text-destructive"
         >
           <LogOut className="h-4 w-4" />
-          Sign out
+          {t("Auth.signOut")}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

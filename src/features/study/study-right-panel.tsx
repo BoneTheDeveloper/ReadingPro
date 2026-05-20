@@ -24,7 +24,7 @@ import type {
   StudioCardId,
 } from "./study-types";
 import { QuizContent } from "./study-quiz-content";
-import { StudyChatPanel } from "@/app/(dashboard)/study/study-chat-panel";
+import { StudyChatPanel } from "./study-chat-panel";
 
 interface StudyStudioPanelProps {
   results: ResultItem[];

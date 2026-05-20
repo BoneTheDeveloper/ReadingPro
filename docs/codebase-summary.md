@@ -6,8 +6,10 @@
 
 | Layer | Technology |
 |-------|-----------|
-| Framework | Next.js 16.2.6 (App Router, RSC) |
+| Framework | Next.js 16.2.6 (App Router, RSC, locale routing) |
 | UI | React 19.2.6, shadcn/ui, Tailwind CSS 4 |
+| i18n | next-intl (locale-prefixed routes: /en/*, /vi/*) |
+| Theming | next-themes (class-based dark mode) |
 | AI | Vercel AI SDK v6 + OpenAI/Google providers (`@ai-sdk/openai`, `@ai-sdk/google`) |
 | Auth | Supabase Auth (`@supabase/supabase-js` + `@supabase/ssr`) |
 | Database | PostgreSQL (Supabase) + Prisma ORM v7.8 (`@prisma/adapter-pg`) |
@@ -27,40 +29,55 @@
 
 The codebase now separates routing from feature implementation:
 
-- `src/app/` contains route entrypoints and API route handlers.
+- `src/app/` contains locale-prefixed route handlers ([locale] segment) and API routes.
 - `src/features/<name>/` contains feature-specific UI, types, server actions, and workflow logic.
 - `src/components/ui/` contains reusable UI primitives.
 - `src/components/layout/` contains dashboard shell and account controls.
 - `src/lib/` contains cross-feature infrastructure and reusable domain utilities.
+- `messages/` contains i18n JSON translations (en.json, vi.json).
 
 ```
 src/
 ├── app/
+│   ├── layout.tsx                        # Root layout (Geist fonts + ThemeProvider)
 │   ├── page.tsx                          # Landing page
-│   ├── layout.tsx                        # Root layout (Geist fonts)
-│   ├── globals.css                       # Tailwind + shadcn theme
-│   ├── api/
-│   │   ├── upload/route.ts               # POST: file upload + analyze
-│   │   ├── upload/text/route.ts          # POST: text content + analyze
-│   │   ├── cards/review/route.ts         # POST: submit SM-2 card review
-│   │   ├── cards/due/route.ts            # GET: fetch due cards
-│   │   ├── study-session/route.ts        # POST+PATCH: session CRUD
-│   │   ├── progress/stats/route.ts       # GET: user progress stats
-│   │   └── sentry-example-api/route.ts   # Sentry test endpoint
-│   ├── (auth)/
-│   │   ├── layout.tsx                    # Auth pages centered layout
-│   │   ├── sign-in/page.tsx              # Email/password + Google OAuth
-│   │   └── sign-up/page.tsx              # Email/password + Google OAuth
-│   ├── auth/callback/route.ts            # OAuth callback handler
-│   └── (dashboard)/
-│       ├── layout.tsx                    # Dashboard layout (sidebar)
-│       ├── error.tsx                     # Dashboard error boundary
-│       ├── upload/page.tsx               # Thin route: renders upload feature client
-│       ├── progress/page.tsx             # Thin route: renders progress feature
-│       ├── processing/page.tsx           # Thin route: renders processing feature client
-│       ├── reading/[id]/                 # Server route: loads passage, renders reading feature
-│       ├── test/[id]/                    # Server route: loads questions, renders test feature
-│       └── study/                        # Server route + error boundary for study workspace
+│   ├── globals.css                       # Tailwind + shadcn theme + dark mode variables
+│   ├── middleware.ts                     # Locale routing + Supabase auth protection
+│   ├── [locale]/
+│   │   ├── layout.tsx                    # Localized layout
+│   │   ├── page.tsx                      # Landing page
+│   │   ├── api/
+│   │   │   ├── upload/route.ts           # POST: file upload + analyze
+│   │   │   ├── upload/text/route.ts      # POST: text content + analyze
+│   │   │   ├── cards/review/route.ts     # POST: submit SM-2 card review
+│   │   │   ├── cards/due/route.ts        # GET: fetch due cards
+│   │   │   ├── study-session/route.ts    # POST+PATCH: session CRUD
+│   │   │   ├── progress/stats/route.ts   # GET: user progress stats
+│   │   │   └── sentry-example-api/route.ts # Sentry test endpoint
+│   │   ├── (auth)/
+│   │   │   ├── layout.tsx               # Auth pages centered layout
+│   │   │   ├── sign-in/page.tsx         # Email/password + Google OAuth
+│   │   │   └── sign-up/page.tsx         # Email/password + Google OAuth
+│   │   ├── auth/callback/route.ts       # OAuth callback handler
+│   │   └── (dashboard)/
+│   │       ├── layout.tsx               # Dashboard layout (sidebar)
+│   │       ├── error.tsx                # Dashboard error boundary
+│   │       ├── upload/page.tsx          # Thin route: renders upload feature client
+│   │       ├── progress/page.tsx        # Thin route: renders progress feature
+│   │       ├── processing/page.tsx      # Thin route: renders processing feature client
+│   │       ├── reading/[id]/            # Server route: loads passage, renders reading feature
+│   │       ├── test/[id]/               # Server route: loads questions, renders test feature
+│   │       └── study/                   # Server route + error boundary for study workspace
+├── components/
+│   ├── ui/                              # shadcn/ui primitives (don't modify)
+│   ├── layout/                          # Dashboard shell and account controls
+│   │   ├── dashboard-sidebar.tsx         # Dashboard navigation/sidebar/top bar
+│   │   ├── user-menu.tsx                 # User dropdown menu
+│   │   ├── sign-out-button.tsx          # Sign-out icon button
+│   │   ├── use-sign-out.ts               # Layout-owned sign-out hook
+│   │   ├── theme-toggle.tsx             # Dark mode toggle component
+│   │   └── language-switcher.tsx        # Language switcher component
+│   └── error-boundary.tsx                # Global error boundary
 ├── components/
 │   ├── ui/                               # shadcn/ui primitives (don't modify)
 │   ├── layout/                           # Dashboard shell and account controls
@@ -94,6 +111,9 @@ src/
 │   │   └── test-results-screen.tsx       # Results summary screen
 │   └── progress/
 │       └── progress-dashboard.tsx        # Progress stats display
+├── messages/
+│   ├── en.json                          # English UI translations
+│   └── vi.json                          # Vietnamese UI translations
 ├── lib/
 │   ├── supabase/
 │   │   ├── client.ts                     # Browser client
@@ -139,16 +159,17 @@ src/
 
 | Route | Purpose |
 |-------|---------|
-| `/` | Landing page |
-| `/sign-in` | Email/password + Google OAuth sign-in |
-| `/sign-up` | Email/password + Google OAuth sign-up |
-| `/auth/callback` | OAuth callback handler |
-| `/upload` | File upload or text paste |
-| `/processing` | Simulated processing animation |
-| `/reading/[id]` | Reading view with original/simplified toggle |
-| `/test/[id]` | Flashcard test with feedback and scoring |
-| `/study` | Three-panel resizable workspace |
-| `/progress` | Progress dashboard with stats |
+| `/` | Landing page (redirects to locale-prefixed version) |
+| `/[locale]/` | Locale-prefixed landing page |
+| `/[locale]/sign-in` | Email/password + Google OAuth sign-in |
+| `/[locale]/sign-up` | Email/password + Google OAuth sign-up |
+| `/[locale]/auth/callback` | OAuth callback handler |
+| `/[locale]/upload` | File upload or text paste |
+| `/[locale]/processing` | Simulated processing animation |
+| `/[locale]/reading/[id]` | Reading view with original/simplified toggle |
+| `/[locale]/test/[id]` | Flashcard test with feedback and scoring |
+| `/[locale]/study` | Three-panel resizable workspace |
+| `/[locale]/progress` | Progress dashboard with stats |
 
 ---
 
@@ -185,4 +206,4 @@ src/
 ---
 
 **Status:** Active
-**Last Updated:** 2026-05-19
+**Last Updated:** 2026-05-20

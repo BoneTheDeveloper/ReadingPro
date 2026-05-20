@@ -3,7 +3,8 @@
 import { Suspense } from 'react'
 import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import Link from 'next/link'
+import { useTranslations } from 'next-intl'
+import { Link } from '@/i18n/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { getBrowserRedirectOrigin, getSafeNextPath } from '@/lib/auth/redirects'
 import { Button } from '@/components/ui/button'
@@ -12,6 +13,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Loader2 } from 'lucide-react'
 
 function SignInForm() {
+  const t = useTranslations('Auth')
   const router = useRouter()
   const searchParams = useSearchParams()
   const next = getSafeNextPath(searchParams.get('next'))
@@ -58,9 +60,9 @@ function SignInForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-xl">Sign in</CardTitle>
+        <CardTitle className="text-xl">{t('signInTitle')}</CardTitle>
         <CardDescription>
-          Enter your email and password to access your account
+          {t('signInDescription')}
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleEmailSignIn}>
@@ -72,7 +74,7 @@ function SignInForm() {
           )}
           <div className="space-y-2">
             <label htmlFor="email" className="text-sm font-medium text-foreground">
-              Email
+              {t('email')}
             </label>
             <Input
               id="email"
@@ -87,7 +89,7 @@ function SignInForm() {
           </div>
           <div className="space-y-2">
             <label htmlFor="password" className="text-sm font-medium text-foreground">
-              Password
+              {t('password')}
             </label>
             <Input
               id="password"
@@ -105,7 +107,7 @@ function SignInForm() {
         <CardFooter className="flex flex-col gap-3">
           <Button type="submit" className="w-full" disabled={loading}>
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Sign in
+            {t('signIn')}
           </Button>
           <Button
             type="button"
@@ -132,12 +134,12 @@ function SignInForm() {
                 fill="#EA4335"
               />
             </svg>
-            Sign in with Google
+            {t('signInWithGoogle')}
           </Button>
           <p className="text-sm text-center text-muted-foreground">
-            Don&apos;t have an account?{' '}
+            {t('noAccount')}{' '}
             <Link href="/sign-up" className="text-primary hover:underline font-medium">
-              Sign up
+              {t('signUp')}
             </Link>
           </p>
         </CardFooter>

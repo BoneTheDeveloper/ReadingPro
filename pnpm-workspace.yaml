@@ -14,3 +14,5 @@ allowBuilds:
   msw: false
   puppeteer: false
   unrs-resolver: false
+  '@parcel/watcher': set this to true or false
+  '@swc/core': set this to true or false

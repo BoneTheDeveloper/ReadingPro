@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
+import { useTranslations } from 'next-intl'
+import { Link } from '@/i18n/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { getBrowserRedirectOrigin } from '@/lib/auth/redirects'
 import { Button } from '@/components/ui/button'
@@ -11,6 +12,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Loader2 } from 'lucide-react'
 
 export default function SignUpPage() {
+  const t = useTranslations('Auth')
   const router = useRouter()
   const supabase = createClient()
 
@@ -25,12 +27,12 @@ export default function SignUpPage() {
     setError(null)
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match')
+      setError(t('passwordsDoNotMatch'))
       return
     }
 
     if (password.length < 6) {
-      setError('Password must be at least 6 characters')
+      setError(t('passwordMinLength'))
       return
     }
 
@@ -64,9 +66,9 @@ export default function SignUpPage() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-xl">Create an account</CardTitle>
+        <CardTitle className="text-xl">{t('signUpTitle')}</CardTitle>
         <CardDescription>
-          Enter your email and password to get started
+          {t('signUpDescription')}
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleEmailSignUp}>
@@ -78,7 +80,7 @@ export default function SignUpPage() {
           )}
           <div className="space-y-2">
             <label htmlFor="email" className="text-sm font-medium text-foreground">
-              Email
+              {t('email')}
             </label>
             <Input
               id="email"
@@ -93,7 +95,7 @@ export default function SignUpPage() {
           </div>
           <div className="space-y-2">
             <label htmlFor="password" className="text-sm font-medium text-foreground">
-              Password
+              {t('password')}
             </label>
             <Input
               id="password"
@@ -109,7 +111,7 @@ export default function SignUpPage() {
           </div>
           <div className="space-y-2">
             <label htmlFor="confirm-password" className="text-sm font-medium text-foreground">
-              Confirm password
+              {t('confirmPassword')}
             </label>
             <Input
               id="confirm-password"
@@ -127,7 +129,7 @@ export default function SignUpPage() {
         <CardFooter className="flex flex-col gap-3">
           <Button type="submit" className="w-full" disabled={loading}>
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Sign up
+            {t('signUp')}
           </Button>
           <Button
             type="button"
@@ -154,12 +156,12 @@ export default function SignUpPage() {
                 fill="#EA4335"
               />
             </svg>
-            Sign up with Google
+            {t('signUpWithGoogle')}
           </Button>
           <p className="text-sm text-center text-muted-foreground">
-            Already have an account?{' '}
+            {t('hasAccount')}{' '}
             <Link href="/sign-in" className="text-primary hover:underline font-medium">
-              Sign in
+              {t('signIn')}
             </Link>
           </p>
         </CardFooter>

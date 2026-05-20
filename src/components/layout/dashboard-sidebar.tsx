@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Link, usePathname } from "@/i18n/navigation";
 import {
   BookOpen,
   Menu,
@@ -19,13 +18,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { UserMenu } from "./user-menu";
 import { SignOutButton } from "./sign-out-button";
+import { ThemeToggle } from "./theme-toggle";
+import { LanguageSwitcher } from "./language-switcher";
+import { useTranslations } from "next-intl";
 
 const navItems = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/study", label: "Study", icon: BookOpen },
+  { href: "/", labelKey: "Navigation.dashboard", icon: LayoutDashboard },
+  { href: "/study", labelKey: "Navigation.study", icon: BookOpen },
 ];
 
 export function DashboardSidebar({ children }: { children: React.ReactNode }) {
+  const t = useTranslations();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -52,7 +55,7 @@ export function DashboardSidebar({ children }: { children: React.ReactNode }) {
   return (
     <div className="h-dvh flex bg-background overflow-hidden">
       <aside className="hidden lg:flex lg:flex-col lg:w-20 lg:fixed lg:inset-y-0 bg-muted border-r border-border items-center py-8 z-40">
-        <SidebarContent isActive={isActive} />
+        <SidebarContent isActive={isActive} t={t} />
       </aside>
 
       {mobileOpen && (
@@ -68,7 +71,7 @@ export function DashboardSidebar({ children }: { children: React.ReactNode }) {
           mobileOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
-        <MobileSidebarContent isActive={isActive} onNavigate={closeMobile} />
+        <MobileSidebarContent isActive={isActive} onNavigate={closeMobile} t={t} />
       </aside>
 
       <div className="flex-1 lg:ml-20 flex flex-col h-dvh overflow-hidden">
@@ -95,6 +98,8 @@ function TopBar({ onMenuToggle }: { onMenuToggle: () => void }) {
           </div>
         </div>
         <div className="flex items-center gap-6">
+          <LanguageSwitcher />
+          <ThemeToggle />
           <Button
             variant="ghost"
             size="icon"
@@ -120,12 +125,16 @@ function TopBar({ onMenuToggle }: { onMenuToggle: () => void }) {
         <span className="font-semibold text-foreground text-sm">
           English Reading
         </span>
+        <div className="ml-auto flex items-center gap-1">
+          <LanguageSwitcher />
+          <ThemeToggle />
+        </div>
       </header>
     </>
   );
 }
 
-function SidebarContent({ isActive }: { isActive: (href: string) => boolean }) {
+function SidebarContent({ isActive, t }: { isActive: (href: string) => boolean; t: ReturnType<typeof useTranslations> }) {
   return (
     <div className="flex flex-col h-full w-full items-center">
       <div className="mb-10 text-primary">
@@ -145,7 +154,7 @@ function SidebarContent({ isActive }: { isActive: (href: string) => boolean }) {
                   ? "text-primary bg-accent/80 border-r-4 border-primary"
                   : "text-muted-foreground hover:text-primary hover:bg-accent/60",
               )}
-              title={item.label}
+              title={t(item.labelKey)}
             >
               <item.icon className="w-5 h-5" />
             </Link>
@@ -189,9 +198,11 @@ function SidebarContent({ isActive }: { isActive: (href: string) => boolean }) {
 function MobileSidebarContent({
   isActive,
   onNavigate,
+  t,
 }: {
   isActive: (href: string) => boolean;
   onNavigate: () => void;
+  t: ReturnType<typeof useTranslations>;
 }) {
   return (
     <div className="flex flex-col h-full">
@@ -232,7 +243,7 @@ function MobileSidebarContent({
                   active ? "text-primary" : "text-muted-foreground",
                 )}
               />
-              {item.label}
+              {t(item.labelKey)}
             </Link>
           );
         })}

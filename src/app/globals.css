@@ -148,6 +148,75 @@
     }
 }
 
+.dark {
+    /* Base surfaces */
+    --background: #11100E;
+    --foreground: #F7F2EA;
+    --surface: #1A1815;
+    --surface-elevated: #23201C;
+    --border: #343029;
+    --input: #23201C;
+
+    /* Primary - Navy, lifted for dark surfaces */
+    --primary: #8FB4E8;
+    --primary-foreground: #0E1726;
+    --ring: #A9C7EE;
+
+    /* Secondary */
+    --secondary: #2D3E55;
+    --secondary-foreground: #F7F2EA;
+
+    /* Muted */
+    --muted: #211F1B;
+    --muted-foreground: #B8AEA1;
+
+    /* Accent - Gold */
+    --accent: #2B241A;
+    --accent-foreground: #F1C78F;
+    --gold: #E0B57F;
+    --gold-soft: #332719;
+
+    /* Success */
+    --success: #8FBC8A;
+    --success-soft: #1E2A1E;
+
+    /* Danger */
+    --destructive: #E58A76;
+    --danger: #E58A76;
+    --danger-soft: #351F1A;
+
+    /* Card & Popover */
+    --card: #1A1815;
+    --card-foreground: #F7F2EA;
+    --popover: #23201C;
+    --popover-foreground: #F7F2EA;
+
+    /* Charts */
+    --chart-1: #8FB4E8;
+    --chart-2: #E0B57F;
+    --chart-3: #8FBC8A;
+    --chart-4: #C7A6F2;
+    --chart-5: #E58A76;
+
+    /* Sidebar */
+    --sidebar: #171512;
+    --sidebar-foreground: #F7F2EA;
+    --sidebar-primary: #8FB4E8;
+    --sidebar-primary-foreground: #0E1726;
+    --sidebar-accent: #2B241A;
+    --sidebar-accent-foreground: #F1C78F;
+    --sidebar-border: #343029;
+    --sidebar-ring: #A9C7EE;
+
+    /* CEFR levels - muted for dark backgrounds */
+    --cefr-a1: #7DDC9D;
+    --cefr-a2: #B7D96A;
+    --cefr-b1: #E7CF5D;
+    --cefr-b2: #E6A94D;
+    --cefr-c1: #E98BBE;
+    --cefr-c2: #B9A4F4;
+}
+
 @keyframes upload-fill {
     0% {
         width: 0%;
@@ -174,7 +243,7 @@
 /* Panel scrollbars */
 .panel-scroll {
     scrollbar-width: thin;
-    scrollbar-color: rgba(0, 0, 0, 0.12) transparent;
+    scrollbar-color: var(--border) transparent;
 }
 .panel-scroll::-webkit-scrollbar {
     width: 6px;
@@ -183,11 +252,11 @@
     background: transparent;
 }
 .panel-scroll::-webkit-scrollbar-thumb {
-    background-color: rgba(0, 0, 0, 0.12);
+    background-color: var(--border);
     border-radius: 20px;
 }
 .panel-scroll::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(0, 0, 0, 0.25);
+    background-color: var(--muted-foreground);
 }
 
 /* Reading content — editorial serif */
