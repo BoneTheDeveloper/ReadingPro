@@ -1,11 +1,19 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState, useSyncExternalStore } from "react";
 import { useDefaultLayout, type PanelImperativeHandle } from "react-resizable-panels";
 
 const noopStorage = { getItem: () => null, setItem: () => {} };
+const subscribe = () => () => {};
+const getClientSnapshot = () => true;
+const getServerSnapshot = () => false;
 
 export function useStudyPanelLayout() {
+  const mounted = useSyncExternalStore(
+    subscribe,
+    getClientSnapshot,
+    getServerSnapshot,
+  );
   const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(false);
   const [leftCollapsible, setLeftCollapsible] = useState(false);
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false);
@@ -16,7 +24,8 @@ export function useStudyPanelLayout() {
 
   const { defaultLayout, onLayoutChanged } = useDefaultLayout({
     id: "study-panels",
-    storage: typeof window === "undefined" ? noopStorage : sessionStorage,
+    panelIds: ["source", "content", "studio"],
+    storage: mounted ? sessionStorage : noopStorage,
   });
 
   const toggleLeft = useCallback(() => {
