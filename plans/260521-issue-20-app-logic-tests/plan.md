@@ -27,7 +27,7 @@ Issue #20 asks for tests across all non-UI application logic. The current branch
 - API route tests for cards, progress, study session, study chat, upload, and upload text routes.
 - Server action and service tests for study/upload workflows.
 - Sentry/logger tests for capture behavior, server action instrumentation, config filtering, environment behavior, and graceful degradation.
-- Coverage target: 80%+ line coverage on core modules included in this plan.
+- Coverage target: 80%+ line coverage enforced by `vitest.config.ts` for the app-logic include list covered by this plan.
 
 ## GKG Findings
 
@@ -74,9 +74,8 @@ GKG MCP was used to map `src/lib`, `src/features`, `src/app/api`, and `__tests__
 - Shared fixtures and mocks used throughout: all phases.
 - External dependencies mocked: all phases touching DB, AI, Supabase, Sentry, or Next runtime.
 - Happy paths, error cases, and edge cases covered: every phase file calls these out explicitly.
-- 80%+ line coverage on core modules: phase 5 verifies with `pnpm test:coverage`.
+- 80%+ line coverage on app-logic modules: `vitest.config.ts` enforces the Phase 1-5 include list with `coverage.thresholds.lines = 80`, and phase 5 verifies with `pnpm test:coverage`.
 
 ## Review Gate
 
 Plan created on 2026-05-21. Implementation must wait for plan review/approval per `ck:cook` hard gate.
-

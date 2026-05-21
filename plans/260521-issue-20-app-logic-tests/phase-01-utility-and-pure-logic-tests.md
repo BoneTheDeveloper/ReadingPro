@@ -31,6 +31,5 @@ Add focused unit tests for deterministic application logic before testing higher
 
 ## Verification
 
-- `pnpm test -- --runInBand` if available, otherwise `pnpm test`.
+- `pnpm test`
 - Utility/core module coverage improves without adding brittle implementation assertions.
-

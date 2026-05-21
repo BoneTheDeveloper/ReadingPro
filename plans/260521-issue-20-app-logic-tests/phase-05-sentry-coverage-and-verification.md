@@ -22,17 +22,15 @@ Close the issue by covering observability behavior and proving the app-logic cov
 3. Test logger mock usage where app logic reports errors or important events.
 4. Test Sentry example route throws the expected custom error and emits the expected logger call.
 5. Add focused tests for instrumentation modules only where they can be imported safely with mocked Sentry.
-6. Run coverage and identify core modules below the 80% line target.
-7. Add focused missing tests until the target is met or document any justified exclusions.
+6. Run coverage and identify app-logic modules below the enforced 80% line target from `vitest.config.ts`.
+7. Add focused missing tests until `pnpm test:coverage` passes the configured threshold.
 
 ## Verification
 
 - `pnpm test`
+- `pnpm test -- --run`
 - `pnpm test:coverage`
-- `pnpm lint`
-- `pnpm exec tsc --noEmit`
 
 ## Completion Gate
 
-All tests must pass and coverage output must show 80%+ line coverage for the core modules covered by issue #20 before final review.
-
+All tests must pass and `pnpm test:coverage` must pass the configured 80% line threshold for the app-logic modules covered by issue #20 before final review.
