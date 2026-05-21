@@ -12,7 +12,7 @@ import {
 describe("card-review queries", () => {
   beforeEach(() => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-05-21T12:00:00.000Z"));
+    vi.setSystemTime(new Date("2026-01-10T12:00:00.000Z"));
   });
 
   afterEach(() => {
@@ -35,7 +35,7 @@ describe("card-review queries", () => {
     expect(db.cardReview.findMany).toHaveBeenCalledWith({
       where: {
         userId: "user-1",
-        nextReviewDate: { lte: new Date("2026-05-21T12:00:00.000Z") },
+        nextReviewDate: { lte: new Date("2026-01-10T12:00:00.000Z") },
       },
       include: {
         question: { include: { passage: true } },
@@ -66,8 +66,8 @@ describe("card-review queries", () => {
         easeFactor: 2.6,
         intervalDays: 16,
         repetitions: 3,
-        nextReviewDate: new Date("2026-06-06T12:00:00.000Z"),
-        reviewedAt: new Date("2026-05-21T12:00:00.000Z"),
+        nextReviewDate: new Date("2026-01-26T12:00:00.000Z"),
+        reviewedAt: new Date("2026-01-10T12:00:00.000Z"),
       },
     });
   });
