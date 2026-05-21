@@ -1,7 +1,7 @@
 ---
 title: "Issue 19 Vitest Test Infrastructure"
 description: "Set up Vitest, React Testing Library, coverage, fixtures, mocks, and shared helpers for the English reading training app."
-status: planned
+status: completed
 priority: P1
 effort: 6h
 branch: "feature/19-vitest-test-infrastructure"
@@ -46,10 +46,10 @@ GKG MCP was used to map the codebase before planning. The infrastructure needs t
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 1 | [Dependencies and Vitest Config](./phase-01-dependencies-and-vitest-config.md) | Planned |
-| 2 | [Global Test Setup and Mocks](./phase-02-global-test-setup-and-mocks.md) | Planned |
-| 3 | [Fixtures and Helper APIs](./phase-03-fixtures-and-helper-apis.md) | Planned |
-| 4 | [Infrastructure Smoke Tests and Verification](./phase-04-smoke-tests-and-verification.md) | Planned |
+| 1 | [Dependencies and Vitest Config](./phase-01-dependencies-and-vitest-config.md) | Completed |
+| 2 | [Global Test Setup and Mocks](./phase-02-global-test-setup-and-mocks.md) | Completed |
+| 3 | [Fixtures and Helper APIs](./phase-03-fixtures-and-helper-apis.md) | Completed |
+| 4 | [Infrastructure Smoke Tests and Verification](./phase-04-smoke-tests-and-verification.md) | Completed |
 
 ## Dependencies
 
@@ -69,4 +69,20 @@ GKG MCP was used to map the codebase before planning. The infrastructure needs t
 
 ## Review Gate
 
-Plan created on 2026-05-21. Implementation should not begin until this plan is reviewed and approved.
+Plan created on 2026-05-21. Implementation completed on 2026-05-21 after `ck:cook` execution.
+
+## Completion Notes
+
+- Added Vitest, React Testing Library, jest-dom, jsdom, React plugin, and v8 coverage dependencies.
+- Added `test`, `test:watch`, and `test:coverage` package scripts.
+- Added `vitest.config.ts` with jsdom, setup files, React support, coverage, and `@/*` alias resolution.
+- Added shared setup, mocks, fixtures, helpers, and smoke tests under `__tests__`.
+- Added GitHub Actions CI workflow for install, lint, typecheck, tests, and coverage.
+- Added ESLint ignore for generated coverage output.
+
+## Verification
+
+- `pnpm test` passed: 1 file, 5 tests.
+- `pnpm test:coverage` passed and generated v8 coverage output.
+- `pnpm lint` passed.
+- `pnpm exec tsc --noEmit` passed.

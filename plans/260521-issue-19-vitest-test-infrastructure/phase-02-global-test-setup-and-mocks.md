@@ -1,5 +1,7 @@
 # Phase 2: Global Test Setup and Mocks
 
+Status: Completed on 2026-05-21.
+
 ## Goal
 
 Provide deterministic mock modules for the external and noisy boundaries found by GKG: logger, AI SDK/OpenAI, Prisma DB, Sentry, Supabase, Next navigation/headers, and next-intl.
@@ -29,6 +31,6 @@ Provide deterministic mock modules for the external and noisy boundaries found b
 
 ## Acceptance Checks
 
-- A smoke test can mock `@/lib/db/client` and call reset helpers.
-- A smoke test can import AI modules without hitting real model providers.
-- React component tests can render components that use router and i18n hooks.
+- Completed: DB mock and reset helpers are available through test setup and helper exports.
+- Completed: AI module smoke coverage runs against deterministic `generateObject` mocks.
+- Completed: jsdom and React Testing Library setup render React components with global Next/i18n mocks registered.

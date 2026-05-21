@@ -1,5 +1,7 @@
 # Phase 1: Dependencies and Vitest Config
 
+Status: Completed on 2026-05-21.
+
 ## Goal
 
 Install the requested testing dependencies and create the minimum Vitest configuration needed for this Next/React/TypeScript app.
@@ -28,6 +30,6 @@ Install the requested testing dependencies and create the minimum Vitest configu
 
 ## Acceptance Checks
 
-- `pnpm install` updates `pnpm-lock.yaml`.
-- `pnpm test -- --run` starts Vitest without config errors.
-- `@/*` imports resolve inside a smoke test.
+- Completed: `pnpm-lock.yaml` updated through `pnpm add -D`.
+- Completed: `pnpm test` starts Vitest without config errors.
+- Completed: `@/*` imports resolve inside the smoke test.

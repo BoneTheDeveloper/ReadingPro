@@ -1,5 +1,7 @@
 # Phase 3: Fixtures and Helper APIs
 
+Status: Completed on 2026-05-21.
+
 ## Goal
 
 Create reusable fixtures and helper APIs that match this application's domain instead of forcing each test to invent ad hoc data.
@@ -33,6 +35,6 @@ Create reusable fixtures and helper APIs that match this application's domain in
 
 ## Acceptance Checks
 
-- Test authors can import fixtures from `__tests__/fixtures/*`.
-- Test authors can import helper APIs from `__tests__/helpers/*`.
-- Helpers remain TypeScript-friendly and avoid any live DB, Supabase, or AI calls.
+- Completed: fixtures are available from `__tests__/fixtures/*` and `__tests__/fixtures/index.ts`.
+- Completed: helper APIs are available from `__tests__/helpers/*` and `__tests__/helpers/index.ts`.
+- Completed: `pnpm exec tsc --noEmit` passes with no live DB, Supabase, or AI calls in helpers.

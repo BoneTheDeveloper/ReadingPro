@@ -1,5 +1,7 @@
 # Phase 4: Infrastructure Smoke Tests and Verification
 
+Status: Completed on 2026-05-21.
+
 ## Goal
 
 Add a few tiny tests that prove the infrastructure works, then run the project verification commands.
@@ -21,7 +23,7 @@ Add a few tiny tests that prove the infrastructure works, then run the project v
 
 ## Acceptance Checks
 
-- `pnpm test` passes.
-- `pnpm test:coverage` produces coverage output.
-- Lint and typecheck remain green.
-- No real provider credentials or database connections are required for smoke tests.
+- Completed: `pnpm test` passes.
+- Completed: `pnpm test:coverage` produces v8 coverage output.
+- Completed: `pnpm lint` and `pnpm exec tsc --noEmit` pass.
+- Completed: smoke tests run with mocked provider, DB, Supabase, logger, Sentry, Next, and i18n boundaries.
