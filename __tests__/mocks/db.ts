@@ -5,6 +5,7 @@ function createModelMock() {
     aggregate: vi.fn(),
     count: vi.fn(),
     create: vi.fn(),
+    createMany: vi.fn(),
     delete: vi.fn(),
     deleteMany: vi.fn(),
     findFirst: vi.fn(),
