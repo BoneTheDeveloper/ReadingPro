@@ -40,9 +40,9 @@ describe("SM2 helpers", () => {
   it("classifies due and scheduled card statuses", () => {
     expect(isCardDue(new Date("2026-05-21T12:00:00.000Z"))).toBe(true);
     expect(isCardDue(new Date("2026-05-22T12:00:00.000Z"))).toBe(false);
-    expect(getCardStatus(new Date("2026-05-22"), 0)).toMatchObject({ status: "new" });
-    expect(getCardStatus(new Date("2026-05-22"), 6)).toMatchObject({ status: "learning" });
-    expect(getCardStatus(new Date("2026-05-20"), 21)).toMatchObject({ status: "review" });
-    expect(getCardStatus(new Date("2026-06-20"), 21)).toMatchObject({ status: "mature" });
+    expect(getCardStatus(new Date("2026-05-22T12:00:00.000Z"), 0)).toMatchObject({ status: "new" });
+    expect(getCardStatus(new Date("2026-05-22T12:00:00.000Z"), 6)).toMatchObject({ status: "learning" });
+    expect(getCardStatus(new Date("2026-05-20T12:00:00.000Z"), 21)).toMatchObject({ status: "review" });
+    expect(getCardStatus(new Date("2026-06-20T12:00:00.000Z"), 21)).toMatchObject({ status: "mature" });
   });
 });

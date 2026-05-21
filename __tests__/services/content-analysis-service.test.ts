@@ -85,7 +85,7 @@ describe("analyzeAndPersistContent", () => {
       changes: [],
       retainedKeyTerms: [],
     });
-    generateObject.mockRejectedValueOnce(new Error("model offline"));
+    generateObject.mockResolvedValueOnce({ object: null });
     db.passage.create.mockResolvedValueOnce({ id: "passage_no_questions" });
 
     await expect(

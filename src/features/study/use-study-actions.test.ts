@@ -236,7 +236,11 @@ describe("useStudyActions", () => {
       await actionPromise;
     });
 
-    expect(result.current.actions.results[0]).toMatchObject({ status: "error" });
+    expect(result.current.actions.results).toHaveLength(2);
+    expect(result.current.actions.results[0]).toMatchObject({
+      passageId: "passage-1",
+      status: "error",
+    });
     expect(result.current.state.questions).toEqual([]);
   });
 
