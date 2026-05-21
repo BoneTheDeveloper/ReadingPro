@@ -5,13 +5,14 @@ const originalEnv = { ...process.env };
 
 async function importActualSentryCore(dsn: string, nodeEnv = "production") {
   vi.resetModules();
-  process.env.NEXT_PUBLIC_SENTRY_DSN = dsn;
-  process.env.NODE_ENV = nodeEnv;
+  vi.stubEnv("NEXT_PUBLIC_SENTRY_DSN", dsn);
+  vi.stubEnv("NODE_ENV", nodeEnv);
   return import("@/lib/core/sentry");
 }
 
 describe("Sentry and logger configuration", () => {
   afterEach(() => {
+    vi.unstubAllEnvs();
     process.env = { ...originalEnv };
     vi.resetModules();
   });
@@ -32,7 +33,7 @@ describe("Sentry and logger configuration", () => {
   it("enables Sentry with a DSN and scrubs request headers, emails, and local stack paths", async () => {
     const { isSentryEnabled, getSentryConfig } = await importActualSentryCore("https://dsn.example/1", "development");
     const config = getSentryConfig();
-    const event = config.beforeSend({
+    const sentryEvent = {
       request: {
         headers: {
           authorization: "Bearer secret",
@@ -51,7 +52,8 @@ describe("Sentry and logger configuration", () => {
           },
         ],
       },
-    });
+    } as unknown as Parameters<NonNullable<typeof config.beforeSend>>[0];
+    const event = config.beforeSend(sentryEvent);
 
     expect(isSentryEnabled()).toBe(true);
     expect(config.tracesSampleRate).toBe(1);
@@ -74,8 +76,8 @@ describe("Sentry and logger configuration", () => {
   });
 
   it("registers the runtime-specific instrumentation module and exports request error capture", async () => {
-    process.env.NEXT_PUBLIC_SENTRY_DSN = "https://dsn.example/1";
-    process.env.NEXT_RUNTIME = "nodejs";
+    vi.stubEnv("NEXT_PUBLIC_SENTRY_DSN", "https://dsn.example/1");
+    vi.stubEnv("NEXT_RUNTIME", "nodejs");
     vi.resetModules();
 
     const instrumentation = await import("@/instrumentation");
@@ -86,7 +88,7 @@ describe("Sentry and logger configuration", () => {
   });
 
   it("initializes client instrumentation with replay and exports router transition capture", async () => {
-    process.env.NEXT_PUBLIC_SENTRY_DSN = "https://dsn.example/1";
+    vi.stubEnv("NEXT_PUBLIC_SENTRY_DSN", "https://dsn.example/1");
     vi.resetModules();
 
     const clientInstrumentation = await import("@/instrumentation-client");
@@ -103,8 +105,8 @@ describe("Sentry and logger configuration", () => {
   it("configures the real pino logger with module children in production", async () => {
     vi.resetModules();
     vi.doUnmock("@/lib/core/logger");
-    process.env.NODE_ENV = "production";
-    process.env.LOG_LEVEL = "warn";
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("LOG_LEVEL", "warn");
 
     const { logger, createModuleLogger } = await import("@/lib/core/logger");
     const child = createModuleLogger("observability:test");

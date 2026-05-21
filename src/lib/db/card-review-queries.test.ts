@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { cardReviewFixture } from "../../../__tests__/fixtures";
 import { db } from "./client";
 import {
   calculateSM2Interval,
@@ -27,9 +28,9 @@ describe("card-review queries", () => {
   });
 
   it("queries due cards for a user in review order", async () => {
-    vi.mocked(db.cardReview.findMany).mockResolvedValue([{ id: "review-1" }]);
+    vi.mocked(db.cardReview.findMany).mockResolvedValue([{ ...cardReviewFixture, id: "review-1" }]);
 
-    await expect(getDueCards("user-1")).resolves.toEqual([{ id: "review-1" }]);
+    await expect(getDueCards("user-1")).resolves.toEqual([{ ...cardReviewFixture, id: "review-1" }]);
 
     expect(db.cardReview.findMany).toHaveBeenCalledWith({
       where: {
@@ -46,6 +47,7 @@ describe("card-review queries", () => {
 
   it("updates a card review with new SM2 scheduling fields", async () => {
     vi.mocked(db.cardReview.findUniqueOrThrow).mockResolvedValue({
+      ...cardReviewFixture,
       id: "review-1",
       easeFactor: 2.5,
       intervalDays: 6,
@@ -89,10 +91,10 @@ describe("card-review queries", () => {
     vi.mocked(db.$queryRaw)
       .mockResolvedValueOnce([
         {
-          totalCards: 10n,
-          matureCards: 3n,
-          dueCards: 2n,
-          todayReviews: 4n,
+          totalCards: BigInt(10),
+          matureCards: BigInt(3),
+          dueCards: BigInt(2),
+          todayReviews: BigInt(4),
         },
       ])
       .mockResolvedValueOnce([

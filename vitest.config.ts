@@ -61,7 +61,6 @@ export default defineConfig({
       provider: "v8",
       reporter: ["text", "json", "html"],
       reportsDirectory: "coverage",
-      all: true,
       include: appLogicCoverageInclude,
       thresholds: {
         lines: 80,

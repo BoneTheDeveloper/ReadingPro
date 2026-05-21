@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ZodError } from "zod";
+import { passageFixture, studySessionFixture } from "../../../__tests__/fixtures";
 import { db } from "./client";
 import {
   computeSessionAccuracy,
@@ -36,6 +37,7 @@ describe("study-session queries", () => {
     await expect(computeSessionAccuracy("session-1", "user-1")).resolves.toBeNull();
 
     vi.mocked(db.studySession.findUnique).mockResolvedValueOnce({
+      ...studySessionFixture,
       id: "session-1",
       startedAt: new Date("2026-05-21T10:00:00.000Z"),
     });
@@ -46,6 +48,7 @@ describe("study-session queries", () => {
 
   it("computes rounded accuracy from completed reviews", async () => {
     vi.mocked(db.studySession.findUnique).mockResolvedValue({
+      ...studySessionFixture,
       id: "session-1",
       startedAt: new Date("2026-05-21T10:00:00.000Z"),
     });
@@ -70,7 +73,7 @@ describe("study-session queries", () => {
 
   it("creates sessions and verifies passage ownership when passageId is present", async () => {
     const passageId = "11111111-1111-4111-8111-111111111111";
-    vi.mocked(db.passage.findUnique).mockResolvedValue({ id: passageId });
+    vi.mocked(db.passage.findUnique).mockResolvedValue({ ...passageFixture, id: passageId });
 
     await createStudySession("user-1", passageId);
 
@@ -96,6 +99,7 @@ describe("study-session queries", () => {
 
   it("updates sessions and computes accuracy when completing", async () => {
     vi.mocked(db.studySession.findUnique).mockResolvedValue({
+      ...studySessionFixture,
       id: "session-1",
       startedAt: new Date("2026-05-21T10:00:00.000Z"),
     });
@@ -126,7 +130,11 @@ describe("study-session queries", () => {
       "Session not found or not owned by user"
     );
 
-    vi.mocked(db.studySession.findUnique).mockResolvedValueOnce({ id: "session-1", startedAt: null });
+    vi.mocked(db.studySession.findUnique).mockResolvedValueOnce({
+      ...studySessionFixture,
+      id: "session-1",
+      startedAt: null as unknown as Date,
+    });
     await expect(updateStudySession("user-1", "session-1", {})).rejects.toThrow(
       "Session has not started"
     );

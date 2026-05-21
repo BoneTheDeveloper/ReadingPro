@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { passageFixture } from "../../../__tests__/fixtures";
 import { db } from "./client";
 import {
   createPassage,
@@ -30,9 +31,9 @@ describe("passage queries", () => {
   });
 
   it("fetches active passages ordered newest first", async () => {
-    vi.mocked(db.passage.findMany).mockResolvedValue([{ id: "passage-1" }]);
+    vi.mocked(db.passage.findMany).mockResolvedValue([{ ...passageFixture, id: "passage-1" }]);
 
-    await expect(getUserPassages("user-1")).resolves.toEqual([{ id: "passage-1" }]);
+    await expect(getUserPassages("user-1")).resolves.toEqual([{ ...passageFixture, id: "passage-1" }]);
 
     expect(db.passage.findMany).toHaveBeenCalledWith({
       where: { userId: "user-1", deletedAt: null },
@@ -44,11 +45,14 @@ describe("passage queries", () => {
     vi.mocked(db.passage.aggregate).mockResolvedValue({
       _count: { _all: 2 },
       _sum: { wordCount: null },
+      _avg: undefined,
+      _min: undefined,
+      _max: undefined,
     });
-    vi.mocked(db.passage.findMany).mockResolvedValue([{ id: "recent-1" }]);
+    vi.mocked(db.passage.findMany).mockResolvedValue([{ ...passageFixture, id: "recent-1" }]);
 
     await expect(getUserPassageOverview("user-1")).resolves.toEqual({
-      recentPassages: [{ id: "recent-1" }],
+      recentPassages: [{ ...passageFixture, id: "recent-1" }],
       totalPassages: 2,
       totalWords: 0,
     });

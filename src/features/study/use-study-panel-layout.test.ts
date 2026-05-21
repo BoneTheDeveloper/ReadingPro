@@ -1,16 +1,16 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { useDefaultLayout } from "react-resizable-panels";
+import { useDefaultLayout, type Layout, type PanelImperativeHandle } from "react-resizable-panels";
 import { useStudyPanelLayout } from "./use-study-panel-layout";
 
 vi.mock("react-resizable-panels", () => ({
   useDefaultLayout: vi.fn(() => ({
-    defaultLayout: [25, 50, 25],
+    defaultLayout: [25, 50, 25] as unknown as Layout,
     onLayoutChanged: vi.fn(),
   })),
 }));
 
-function createPanel(collapsed = false) {
+function createPanel(collapsed = false): PanelImperativeHandle {
   return {
     isCollapsed: vi.fn(() => collapsed),
     collapse: vi.fn(() => {
@@ -19,7 +19,8 @@ function createPanel(collapsed = false) {
     expand: vi.fn(() => {
       collapsed = false;
     }),
-    getCollapsed: () => collapsed,
+    getSize: vi.fn(() => ({ asPercentage: 25, inPixels: 250 })),
+    resize: vi.fn(),
   };
 }
 
@@ -36,7 +37,8 @@ describe("useStudyPanelLayout", () => {
   it("wires default layout persistence to sessionStorage after mounting", () => {
     const onLayoutChanged = vi.fn();
     vi.mocked(useDefaultLayout).mockReturnValue({
-      defaultLayout: [20, 60, 20],
+      defaultLayout: [20, 60, 20] as unknown as Layout,
+      onLayoutChange: vi.fn(),
       onLayoutChanged,
     });
 

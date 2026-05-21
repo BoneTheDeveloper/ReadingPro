@@ -4,6 +4,19 @@ import { getBrowserRedirectOrigin, getSafeNextPath, normalizeOrigin } from "./re
 import { syncUser } from "./sync-user";
 import { db } from "../db/client";
 
+const profile = {
+  id: "user-1",
+  email: "reader@example.com",
+  name: "Reader",
+  avatarUrl: null,
+  bio: null,
+  targetLevel: "B2" as const,
+  tier: "FREE" as const,
+  stripeCustomerId: null,
+  createdAt: new Date("2026-05-21T00:00:00.000Z"),
+  updatedAt: new Date("2026-05-21T00:00:00.000Z"),
+};
+
 describe("auth redirect helpers", () => {
   it("normalizes origins and rejects blank values", () => {
     expect(normalizeOrigin(undefined)).toBeUndefined();
@@ -25,15 +38,6 @@ describe("auth redirect helpers", () => {
 });
 
 describe("auth-cache", () => {
-  const profile = {
-    id: "user-1",
-    email: "reader@example.com",
-    name: "Reader",
-    avatarUrl: null,
-    createdAt: new Date("2026-05-21T00:00:00.000Z"),
-    updatedAt: new Date("2026-05-21T00:00:00.000Z"),
-  };
-
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-05-21T00:00:00.000Z"));
@@ -56,7 +60,7 @@ describe("auth-cache", () => {
 
 describe("syncUser", () => {
   it("upserts an auth user profile with null fallbacks", async () => {
-    const synced = { id: "auth-user-1" };
+    const synced = { ...profile, id: "auth-user-1" };
     vi.mocked(db.userProfile.upsert).mockResolvedValue(synced);
 
     await expect(syncUser("auth-user-1")).resolves.toBe(synced);
