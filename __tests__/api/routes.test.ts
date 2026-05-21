@@ -1,0 +1,410 @@
+import { NextRequest } from "next/server";
+import * as Sentry from "@sentry/nextjs";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { POST as reviewCard } from "@/app/api/cards/review/route";
+import { GET as getDueCardsRoute } from "@/app/api/cards/due/route";
+import { GET as getProgressStats } from "@/app/api/progress/stats/route";
+import { POST as studyChat } from "@/app/api/study-chat/route";
+import {
+  PATCH as updateStudySessionRoute,
+  POST as createStudySessionRoute,
+} from "@/app/api/study-session/route";
+import { POST as uploadFileRoute } from "@/app/api/upload/route";
+import { POST as uploadTextRoute } from "@/app/api/upload/text/route";
+import { dueCardFixture, passageFixture, studySessionFixture, userProfileFixture } from "../fixtures";
+import { createFile, createJsonRequest, readJsonResponse } from "../helpers/api";
+import { expectApiErrorPayload, expectApiSuccessPayload } from "../helpers/assertions";
+import { db } from "../mocks/db";
+import { convertToModelMessages, streamText } from "../mocks/ai";
+
+const routeMocks = vi.hoisted(() => {
+  class UploadWorkflowError extends Error {
+    constructor(message: string, readonly status = 400) {
+      super(message);
+      this.name = "UploadWorkflowError";
+    }
+  }
+
+  return {
+    getAuthenticatedUser: vi.fn(),
+    getDueCards: vi.fn(),
+    updateCardReview: vi.fn(),
+    getUserProgress: vi.fn(),
+    createStudySession: vi.fn(),
+    updateStudySession: vi.fn(),
+    processFileUpload: vi.fn(),
+    analyzeAndPersistContent: vi.fn(),
+    UploadWorkflowError,
+  };
+});
+
+vi.mock("@/lib/auth/auth-utils", () => ({
+  getAuthenticatedUser: routeMocks.getAuthenticatedUser,
+}));
+
+vi.mock("@/lib/db/card-review-queries", () => ({
+  getDueCards: routeMocks.getDueCards,
+  updateCardReview: routeMocks.updateCardReview,
+  getUserProgress: routeMocks.getUserProgress,
+}));
+
+vi.mock("@/lib/db/study-session-queries", () => ({
+  createStudySession: routeMocks.createStudySession,
+  updateStudySession: routeMocks.updateStudySession,
+}));
+
+vi.mock("@/features/upload/upload-workflow", () => ({
+  processFileUpload: routeMocks.processFileUpload,
+  UploadWorkflowError: routeMocks.UploadWorkflowError,
+}));
+
+vi.mock("@/features/upload/content-analysis-service", () => ({
+  analyzeAndPersistContent: routeMocks.analyzeAndPersistContent,
+}));
+
+const apiError = (message = "boom") => new Error(message);
+const serializeForJson = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
+
+async function expectJsonError(response: Response, status: number, message: string) {
+  expect(response.status).toBe(status);
+  expectApiErrorPayload(await readJsonResponse(response), message);
+}
+
+function createUploadRequest(file: File | null) {
+  return {
+    formData: vi.fn(async () => ({
+      get: vi.fn(() => file),
+    })),
+  } as unknown as NextRequest;
+}
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  routeMocks.getAuthenticatedUser.mockResolvedValue(userProfileFixture);
+});
+
+describe("GET /api/cards/due", () => {
+  it("returns due cards for the authenticated user", async () => {
+    routeMocks.getDueCards.mockResolvedValue([dueCardFixture]);
+
+    const response = await getDueCardsRoute();
+    const payload = await readJsonResponse(response);
+
+    expect(response.status).toBe(200);
+    expectApiSuccessPayload(payload);
+    expect(payload).toMatchObject({ success: true, data: [serializeForJson(dueCardFixture)] });
+    expect(routeMocks.getDueCards).toHaveBeenCalledWith(userProfileFixture.id);
+  });
+
+  it("returns a stable error payload when auth fails", async () => {
+    routeMocks.getAuthenticatedUser.mockRejectedValue(apiError("Authentication required"));
+
+    await expectJsonError(await getDueCardsRoute(), 500, "Failed to fetch due cards");
+  });
+
+  it("returns a stable error payload when the card query fails", async () => {
+    routeMocks.getDueCards.mockRejectedValue(apiError("db down"));
+
+    await expectJsonError(await getDueCardsRoute(), 500, "Failed to fetch due cards");
+  });
+});
+
+describe("POST /api/cards/review", () => {
+  it("updates a review for the authenticated user", async () => {
+    const updatedReview = { ...dueCardFixture, qualityRating: 5 };
+    routeMocks.updateCardReview.mockResolvedValue(updatedReview);
+
+    const response = await reviewCard(createJsonRequest({ cardReviewId: dueCardFixture.id, qualityRating: 5 }));
+    const payload = await readJsonResponse(response);
+
+    expect(response.status).toBe(200);
+    expectApiSuccessPayload(payload);
+    expect(payload).toMatchObject({ success: true, data: serializeForJson(updatedReview) });
+    expect(routeMocks.updateCardReview).toHaveBeenCalledWith(userProfileFixture.id, dueCardFixture.id, 5);
+  });
+
+  it("rejects missing IDs and invalid ratings before updating", async () => {
+    await expectJsonError(
+      await reviewCard(createJsonRequest({ qualityRating: 3 })),
+      400,
+      "Invalid request",
+    );
+
+    await expectJsonError(
+      await reviewCard(createJsonRequest({ cardReviewId: dueCardFixture.id, qualityRating: 6 })),
+      400,
+      "Quality rating must be between 0 and 5",
+    );
+    expect(routeMocks.updateCardReview).not.toHaveBeenCalled();
+  });
+
+  it("captures unexpected failures", async () => {
+    const error = apiError("db down");
+    routeMocks.updateCardReview.mockRejectedValue(error);
+
+    await expectJsonError(
+      await reviewCard(createJsonRequest({ cardReviewId: dueCardFixture.id, qualityRating: 4 })),
+      500,
+      "Failed to submit review",
+    );
+    expect(Sentry.captureException).toHaveBeenCalledWith(error, {
+      tags: { route: "api:cards:review", method: "POST" },
+    });
+  });
+});
+
+describe("GET /api/progress/stats", () => {
+  it("returns progress stats for the authenticated user", async () => {
+    const stats = { totalCards: 12, dueToday: 3, reviewedToday: 4, averageEase: 2.4 };
+    routeMocks.getUserProgress.mockResolvedValue(stats);
+
+    const response = await getProgressStats();
+    const payload = await readJsonResponse(response);
+
+    expect(response.status).toBe(200);
+    expectApiSuccessPayload(payload);
+    expect(payload).toMatchObject({ success: true, data: stats });
+    expect(routeMocks.getUserProgress).toHaveBeenCalledWith(userProfileFixture.id);
+  });
+
+  it("returns a stable error payload when progress lookup fails", async () => {
+    routeMocks.getUserProgress.mockRejectedValue(apiError("db down"));
+
+    await expectJsonError(await getProgressStats(), 500, "Failed to fetch progress");
+  });
+});
+
+describe("POST/PATCH /api/study-session", () => {
+  it("creates and updates study sessions", async () => {
+    routeMocks.createStudySession.mockResolvedValue(studySessionFixture);
+    routeMocks.updateStudySession.mockResolvedValue({ ...studySessionFixture, cardsReviewed: 2 });
+
+    const createResponse = await createStudySessionRoute(createJsonRequest({ passageId: passageFixture.id }));
+    expect(await readJsonResponse(createResponse)).toMatchObject({
+      success: true,
+      data: serializeForJson(studySessionFixture),
+    });
+    expect(routeMocks.createStudySession).toHaveBeenCalledWith(userProfileFixture.id, passageFixture.id);
+
+    const updateResponse = await updateStudySessionRoute(
+      createJsonRequest({ sessionId: studySessionFixture.id, cardsReviewed: 2, correctCount: 1, incorrectCount: 1 }),
+    );
+    expect(await readJsonResponse(updateResponse)).toMatchObject({
+      success: true,
+      data: serializeForJson({ ...studySessionFixture, cardsReviewed: 2 }),
+    });
+    expect(routeMocks.updateStudySession).toHaveBeenCalledWith(userProfileFixture.id, studySessionFixture.id, {
+      completedAt: expect.any(Date),
+      cardsReviewed: 2,
+      correctCount: 1,
+      incorrectCount: 1,
+    });
+  });
+
+  it("rejects invalid update bodies", async () => {
+    const response = await updateStudySessionRoute(createJsonRequest({ cardsReviewed: -1 }));
+
+    expect(response.status).toBe(400);
+    expectApiErrorPayload(await readJsonResponse(response));
+    expect(routeMocks.updateStudySession).not.toHaveBeenCalled();
+  });
+
+  it("captures create and update dependency failures", async () => {
+    const createError = apiError("create failed");
+    const updateError = apiError("update failed");
+    routeMocks.createStudySession.mockRejectedValue(createError);
+    routeMocks.updateStudySession.mockRejectedValue(updateError);
+
+    await expectJsonError(
+      await createStudySessionRoute(createJsonRequest({ passageId: passageFixture.id })),
+      500,
+      "Failed to create session",
+    );
+    await expectJsonError(
+      await updateStudySessionRoute(createJsonRequest({ sessionId: studySessionFixture.id })),
+      500,
+      "Failed to update session",
+    );
+    expect(Sentry.captureException).toHaveBeenCalledWith(createError, {
+      tags: { route: "api:study-session", method: "POST" },
+    });
+    expect(Sentry.captureException).toHaveBeenCalledWith(updateError, {
+      tags: { route: "api:study-session", method: "PATCH" },
+    });
+  });
+});
+
+describe("POST /api/study-chat", () => {
+  it("streams a passage-grounded chat response", async () => {
+    db.passage.findUnique.mockResolvedValue(passageFixture);
+
+    const response = await studyChat(
+      createJsonRequest({
+        passageId: passageFixture.id,
+        messages: [{ id: "message-1", role: "user", parts: [{ type: "text", text: "What is the main idea?" }] }],
+      }),
+    );
+
+    expect(response).toBeInstanceOf(Response);
+    expect(response.status).toBe(200);
+    expect(db.passage.findUnique).toHaveBeenCalledWith({
+      where: { id: passageFixture.id, userId: userProfileFixture.id, deletedAt: null },
+      select: { id: true, content: true, title: true },
+    });
+    expect(convertToModelMessages).toHaveBeenCalledWith([
+      { id: "message-1", role: "user", parts: [{ type: "text", text: "What is the main idea?" }] },
+    ]);
+    expect(streamText).toHaveBeenCalledWith(
+      expect.objectContaining({
+        messages: expect.arrayContaining([
+          expect.objectContaining({
+            role: "user",
+            content: expect.stringContaining(passageFixture.content),
+          }),
+        ]),
+      }),
+    );
+  });
+
+  it("handles malformed chat bodies, unauthenticated users, missing passages, and stream failures", async () => {
+    await expectJsonError(
+      await studyChat(new NextRequest("https://english-reading.test/api/study-chat", { method: "POST", body: "{" })),
+      400,
+      "Invalid JSON payload.",
+    );
+    await expectJsonError(
+      await studyChat(createJsonRequest({ passageId: "", messages: [] })),
+      400,
+      "Invalid chat request. Select a passage and enter a message.",
+    );
+
+    routeMocks.getAuthenticatedUser.mockRejectedValueOnce(apiError("Authentication required"));
+    await expectJsonError(
+      await studyChat(createJsonRequest({ passageId: passageFixture.id, messages: [] })),
+      401,
+      "Authentication required.",
+    );
+
+    db.passage.findUnique.mockResolvedValueOnce(null);
+    await expectJsonError(
+      await studyChat(createJsonRequest({ passageId: passageFixture.id, messages: [] })),
+      404,
+      "Passage not found.",
+    );
+
+    const streamError = apiError("ai down");
+    db.passage.findUnique.mockResolvedValueOnce(passageFixture);
+    streamText.mockImplementationOnce(() => {
+      throw streamError;
+    });
+    await expectJsonError(
+      await studyChat(createJsonRequest({ passageId: passageFixture.id, messages: [] })),
+      500,
+      "Unable to start the study chat stream.",
+    );
+    expect(Sentry.captureException).toHaveBeenCalledWith(streamError, {
+      tags: { route: "api:study-chat", method: "POST" },
+    });
+  });
+});
+
+describe("POST /api/upload", () => {
+  it("processes an authenticated file upload", async () => {
+    const uploadResult = {
+      filename: "user_test_123/story.txt",
+      fileUrl: "https://example.test/story.txt",
+      passageId: passageFixture.id,
+      originalLevel: "B1",
+      simplifiedLevel: "A2",
+      questionCount: 3,
+    };
+    routeMocks.processFileUpload.mockResolvedValue(uploadResult);
+    const file = createFile("story.txt", "A useful story for reading practice.");
+
+    const response = await uploadFileRoute(createUploadRequest(file));
+    const payload = await readJsonResponse(response);
+
+    expect(response.status).toBe(200);
+    expectApiSuccessPayload(payload);
+    expect(payload).toMatchObject({ success: true, data: uploadResult });
+    expect(routeMocks.processFileUpload).toHaveBeenCalledWith(userProfileFixture.id, file);
+  });
+
+  it("rejects absent files and workflow validation errors", async () => {
+    await expectJsonError(await uploadFileRoute(createUploadRequest(null)), 400, "No file provided");
+
+    const file = createFile("bad.exe", "invalid", "application/octet-stream");
+    routeMocks.processFileUpload.mockRejectedValue(new routeMocks.UploadWorkflowError("Only .txt and .pdf files are supported", 400));
+
+    await expectJsonError(
+      await uploadFileRoute(createUploadRequest(file)),
+      400,
+      "Only .txt and .pdf files are supported",
+    );
+  });
+
+  it("captures unexpected upload failures", async () => {
+    const error = apiError("storage down");
+    routeMocks.processFileUpload.mockRejectedValue(error);
+    const file = createFile("story.txt", "A useful story for reading practice.");
+
+    await expectJsonError(await uploadFileRoute(createUploadRequest(file)), 500, "Failed to process file");
+    expect(Sentry.captureException).toHaveBeenCalledWith(error, {
+      tags: { route: "api:upload", method: "POST" },
+    });
+  });
+});
+
+describe("POST /api/upload/text", () => {
+  it("processes valid text uploads", async () => {
+    const result = { passageId: passageFixture.id, originalLevel: "B1", simplifiedLevel: "A2", questionCount: 3 };
+    routeMocks.analyzeAndPersistContent.mockResolvedValue(result);
+    const text = "This is a sufficiently long text passage for upload route testing with enough characters.";
+
+    const response = await uploadTextRoute(createJsonRequest({ text, title: "Practice Text" }));
+    const payload = await readJsonResponse(response);
+
+    expect(response.status).toBe(200);
+    expectApiSuccessPayload(payload);
+    expect(payload).toMatchObject({ success: true, data: result });
+    expect(routeMocks.analyzeAndPersistContent).toHaveBeenCalledWith({
+      userId: userProfileFixture.id,
+      text,
+      title: "Practice Text",
+      sourceType: "TEXT",
+    });
+  });
+
+  it("rejects missing, malformed, and invalid text payloads", async () => {
+    await expectJsonError(await uploadTextRoute(createJsonRequest({})), 400, "Text content is required");
+    await expectJsonError(await uploadTextRoute(createJsonRequest({ text: 123 })), 400, "Text content is required");
+    await expectJsonError(
+      await uploadTextRoute(createJsonRequest({ text: "too short" })),
+      400,
+      "Text is too short (minimum 50 characters)",
+    );
+  });
+
+  it("captures malformed JSON and analysis failures", async () => {
+    await expectJsonError(
+      await uploadTextRoute(new NextRequest("https://english-reading.test/api/upload/text", { method: "POST", body: "{" })),
+      500,
+      "Failed to process text",
+    );
+
+    const error = apiError("ai down");
+    routeMocks.analyzeAndPersistContent.mockRejectedValue(error);
+    await expectJsonError(
+      await uploadTextRoute(
+        createJsonRequest({
+          text: "This is a sufficiently long text passage for upload route testing with enough characters.",
+        }),
+      ),
+      500,
+      "Failed to process text",
+    );
+    expect(Sentry.captureException).toHaveBeenCalledWith(error, {
+      tags: { route: "api:upload:text", method: "POST" },
+    });
+  });
+});
