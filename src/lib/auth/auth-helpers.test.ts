@@ -34,6 +34,7 @@ describe("auth redirect helpers", () => {
     expect(getSafeNextPath(null, "/home")).toBe("/home");
     expect(getSafeNextPath("https://evil.test", "/home")).toBe("/home");
     expect(getSafeNextPath("//evil.test", "/home")).toBe("/home");
+    expect(getSafeNextPath("/\\evil.test", "/home")).toBe("/home");
   });
 });
 

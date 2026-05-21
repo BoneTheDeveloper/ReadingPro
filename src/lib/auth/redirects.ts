@@ -16,7 +16,7 @@ export function getBrowserRedirectOrigin() {
 }
 
 export function getSafeNextPath(next: string | null, fallback = "/") {
-  if (!next || !next.startsWith("/") || next.startsWith("//")) {
+  if (!next || !next.startsWith("/") || next.startsWith("//") || next.startsWith("/\\")) {
     return fallback;
   }
 
