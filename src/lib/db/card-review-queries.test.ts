@@ -88,6 +88,13 @@ describe("card-review queries", () => {
   });
 
   it("normalizes progress aggregate rows and calculates current streak", async () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const twoDaysAgo = new Date(today);
+    twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+
     vi.mocked(db.$queryRaw)
       .mockResolvedValueOnce([
         {
@@ -98,9 +105,9 @@ describe("card-review queries", () => {
         },
       ])
       .mockResolvedValueOnce([
-        { day: new Date("2026-05-20T12:00:00.000Z") },
-        { day: new Date("2026-05-19T12:00:00.000Z") },
-        { day: new Date("2026-05-18T12:00:00.000Z") },
+        { day: today },
+        { day: yesterday },
+        { day: twoDaysAgo },
       ]);
 
     await expect(getUserProgress("user-1")).resolves.toEqual({
