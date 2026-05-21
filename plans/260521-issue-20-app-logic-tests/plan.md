@@ -1,7 +1,7 @@
 ---
 title: "Issue 20 App Logic Tests"
 description: "Add Vitest coverage for non-UI application logic: utilities, hooks, API routes, server actions, services, and observability behavior."
-status: planned
+status: completed
 priority: P1
 effort: 10h
 branch: "feature/issue-20-app-logic-tests"
@@ -59,11 +59,11 @@ GKG MCP was used to map `src/lib`, `src/features`, `src/app/api`, and `__tests__
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 1 | [Utility and Pure Logic Tests](./phase-01-utility-and-pure-logic-tests.md) | Planned |
-| 2 | [Hook Tests](./phase-02-hook-tests.md) | Planned |
-| 3 | [Services and Server Actions Tests](./phase-03-services-and-server-actions-tests.md) | Planned |
-| 4 | [API Route Tests](./phase-04-api-route-tests.md) | Planned |
-| 5 | [Sentry, Coverage, and Verification](./phase-05-sentry-coverage-and-verification.md) | Planned |
+| 1 | [Utility and Pure Logic Tests](./phase-01-utility-and-pure-logic-tests.md) | Completed |
+| 2 | [Hook Tests](./phase-02-hook-tests.md) | Completed |
+| 3 | [Services and Server Actions Tests](./phase-03-services-and-server-actions-tests.md) | Completed |
+| 4 | [API Route Tests](./phase-04-api-route-tests.md) | Completed |
+| 5 | [Sentry, Coverage, and Verification](./phase-05-sentry-coverage-and-verification.md) | Completed |
 
 ## Acceptance Criteria Mapping
 
@@ -78,4 +78,16 @@ GKG MCP was used to map `src/lib`, `src/features`, `src/app/api`, and `__tests__
 
 ## Review Gate
 
-Plan created on 2026-05-21. Implementation must wait for plan review/approval per `ck:cook` hard gate.
+Plan created on 2026-05-21. Implementation completed on 2026-05-21 after plan approval.
+
+## Completion Notes
+
+- Added focused utility/core tests for reading helpers, CEFR helpers, SM2 scheduling, upload validation, auth redirects/cache/sync, AI prompt wrapping, DB query helpers, and CEFR styling.
+- Confirmed existing hook tests cover workspace state, study actions, panel layout, and sign-out behavior with `renderHook`/`act`.
+- Confirmed existing service/action/API/observability tests cover upload/study orchestration, route handlers, Sentry/logger behavior, and the configured app-logic coverage target.
+
+## Verification
+
+- `pnpm vitest run src/lib/shared/reading-utils.test.ts src/lib/domain/cefr.test.ts src/lib/algorithms/sm2.test.ts src/lib/validation/upload.test.ts src/lib/auth/auth-helpers.test.ts src/lib/ai/prompt-utils.test.ts src/lib/db/card-review-queries.test.ts src/lib/db/passage-queries.test.ts src/lib/db/study-session-queries.test.ts` passed: 9 files, 42 tests.
+- `pnpm test` passed: 20 files, 113 tests.
+- `pnpm test:coverage` passed with 89.65% line coverage, above the configured 80% threshold.
