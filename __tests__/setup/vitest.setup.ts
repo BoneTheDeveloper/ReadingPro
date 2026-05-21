@@ -3,6 +3,7 @@ import { cleanup } from "@testing-library/react";
 import { afterEach, vi } from "vitest";
 import { resetAiMocks } from "../mocks/ai";
 import { resetDbMock } from "../mocks/db";
+import { resetSentryMocks } from "../mocks/sentry";
 
 vi.mock("@/lib/core/logger", () => import("../mocks/logger"));
 vi.mock("@/lib/db/client", () => import("../mocks/db"));
@@ -21,17 +22,7 @@ vi.mock("ai", async (importActual) => {
 
 vi.mock("@ai-sdk/openai", () => import("../mocks/openai"));
 
-vi.mock("@sentry/nextjs", () => ({
-  captureException: vi.fn(),
-  logger: {
-    error: vi.fn(),
-    warn: vi.fn(),
-    info: vi.fn(),
-    debug: vi.fn(),
-  },
-  startSpan: vi.fn((_options, callback) => callback()),
-  withServerActionInstrumentation: vi.fn((_options, callback) => callback()),
-}));
+vi.mock("@sentry/nextjs", () => import("../mocks/sentry"));
 
 vi.mock("next/headers", () => ({
   cookies: vi.fn(async () => ({
@@ -89,4 +80,5 @@ afterEach(() => {
   cleanup();
   resetAiMocks();
   resetDbMock();
+  resetSentryMocks();
 });
