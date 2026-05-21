@@ -1,4 +1,5 @@
 import * as Sentry from '@sentry/nextjs';
+import { cache } from 'react';
 import { db } from '@/lib/db/client';
 import { createServerActionClient } from '@/lib/supabase/server';
 import { createModuleLogger } from '@/lib/core/logger';
@@ -14,7 +15,7 @@ export async function getAuthenticatedUser() {
   });
 }
 
-export async function getCurrentUser() {
+export const getCurrentUser = cache(async () => {
   try {
     const supabase = await createServerActionClient();
 
@@ -52,7 +53,7 @@ export async function getCurrentUser() {
     });
     throw err;
   }
-}
+});
 
 async function ensureProfile(supabaseUser: { id: string; email?: string | null; user_metadata?: Record<string, unknown> }) {
   return Sentry.startSpan({ name: 'db:ensure-profile', op: 'db' }, async () => {
