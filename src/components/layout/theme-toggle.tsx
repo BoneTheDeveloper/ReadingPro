@@ -25,7 +25,14 @@ export function ThemeToggle() {
 
   if (!mounted) {
     return (
-      <Button variant="ghost" size="icon" className="text-muted-foreground" aria-label="Toggle theme">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="text-muted-foreground"
+        aria-label="Toggle theme"
+        disabled
+        suppressHydrationWarning
+      >
         <Sun className="h-5 w-5" />
       </Button>
     );
