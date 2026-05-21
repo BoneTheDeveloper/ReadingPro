@@ -6,6 +6,11 @@
 
 ## [Unreleased]
 
+### Added
+- Vitest test infrastructure with React Testing Library, jest-dom, jsdom, v8 coverage, shared mocks, fixtures, helpers, and smoke tests.
+- GitHub Actions CI workflow for lint, TypeScript, tests, and coverage.
+- `docs/testing/vitest-infrastructure.md` documenting test commands and the shared test scaffold.
+
 ### Changed
 - Refactored upload API routes into `features/upload/upload-workflow.ts` and `content-analysis-service.ts`, keeping routes focused on request parsing and response mapping.
 - Extracted study simplification/question-generation orchestration into `features/study/services/passage-study-service.ts`.
