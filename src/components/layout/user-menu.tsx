@@ -1,8 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import { useTranslations } from "next-intl"
-import { createClient } from "@/lib/supabase/client"
 import { LogOut } from "lucide-react"
 import { useSignOut } from "./use-sign-out"
 import {
@@ -13,30 +11,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-export function UserMenu() {
-  const t = useTranslations()
-  const [userName, setUserName] = useState<string | null>(null)
-  const [userEmail, setUserEmail] = useState<string | null>(null)
-  const signOut = useSignOut()
-  const supabase = createClient()
+export type UserMenuUser = {
+  name: string | null
+  email: string | null
+}
 
-  useEffect(() => {
-    const getUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      if (user) {
-        setUserName(
-          user.user_metadata?.name ||
-            user.user_metadata?.full_name ||
-            user.email?.split("@")[0] ||
-            "User",
-        )
-        setUserEmail(user.email ?? null)
-      }
-    }
-    getUser()
-  }, [supabase])
+export function UserMenu({ user }: { user: UserMenuUser }) {
+  const t = useTranslations()
+  const signOut = useSignOut()
+  const userName = user.name || user.email?.split("@")[0] || "User"
+  const userEmail = user.email ?? null
 
   const initials = userName ? userName.charAt(0).toUpperCase() : "?"
 

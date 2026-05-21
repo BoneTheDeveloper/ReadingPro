@@ -15,6 +15,7 @@ import {
 import { buttonVariants } from "@/components/ui/button";
 import { DashboardSidebar } from "@/components/layout/dashboard-sidebar";
 import { Link } from "@/i18n/navigation";
+import { getCurrentUser } from "@/lib/auth/auth-utils";
 import { cn } from "@/lib/shared/utils";
 
 type UserProgress = {
@@ -225,6 +226,7 @@ function getMomentumCopy(stats: UserProgress, passages: PassageOverview) {
 
 export default async function DashboardPage() {
   const t = await getTranslations("Dashboard");
+  const user = await getCurrentUser();
   const stats = mockStats;
   const passageOverview = mockPassageOverview;
   const { recentPassages } = passageOverview;
@@ -241,7 +243,12 @@ export default async function DashboardPage() {
   ];
 
   return (
-    <DashboardSidebar>
+    <DashboardSidebar
+      user={{
+        name: user?.name ?? null,
+        email: user?.email ?? null,
+      }}
+    >
       <div className="h-full overflow-y-auto bg-background">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-6 sm:px-6 lg:px-8 lg:pb-12 lg:pt-24">
           {/* Hero + Next Action */}
