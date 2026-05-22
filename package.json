@@ -10,6 +10,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit",
     "lint": "eslint",
     "postinstall": "prisma generate --generator client",
     "db:generate": "prisma generate --generator client",

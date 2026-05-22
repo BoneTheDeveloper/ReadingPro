@@ -83,15 +83,18 @@ describe("StudyPageClient", () => {
   });
 
   it("uploads pasted text through the modal and selects the uploaded passage", async () => {
-    const uploaded = createStudyPassage({
-      id: "uploaded-passage",
-      title: "Uploaded Text",
-      content: "Uploaded text content.",
-      simplifiedContent: null,
-      originalLevel: "B1",
-      simplifiedLevel: null,
-      createdAt: Date.UTC(2026, 4, 22),
-    });
+    const uploaded = {
+      ...createStudyPassage({
+        id: "uploaded-passage",
+        title: "Uploaded Text",
+        content: "Uploaded text content.",
+        simplifiedContent: null,
+        originalLevel: "B1",
+        simplifiedLevel: null,
+        createdAt: Date.UTC(2026, 4, 22),
+      }),
+      sourceType: "TEXT" as const,
+    };
     vi.mocked(studyUploadAction).mockResolvedValue({ passage: uploaded });
     const { user } = renderWithUser(<StudyPageClient initialPassages={[]} />);
 
