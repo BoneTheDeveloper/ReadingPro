@@ -27,7 +27,7 @@ export function getSafeNextPath(next: string | null, fallback = "/") {
     if (normalized.startsWith("//") || normalized[1] === "\\") {
       return fallback;
     }
-  } catch (error) {
+  } catch {
     // decodeURIComponent throws URIError on malformed URI sequences
     return fallback;
   }
