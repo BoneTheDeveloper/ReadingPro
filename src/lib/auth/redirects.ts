@@ -22,8 +22,13 @@ export function getSafeNextPath(next: string | null, fallback = "/") {
 
   // Prevent protocol-relative URLs and various backslash bypasses
   // Next path must strictly start with "/" and not be followed by "/" or "\"
-  const normalized = decodeURIComponent(next);
-  if (normalized.startsWith("//") || normalized[1] === "\\" || normalized.startsWith("/\\")) {
+  try {
+    const normalized = decodeURIComponent(next);
+    if (normalized.startsWith("//") || normalized[1] === "\\") {
+      return fallback;
+    }
+  } catch (error) {
+    // decodeURIComponent throws URIError on malformed URI sequences
     return fallback;
   }
 
