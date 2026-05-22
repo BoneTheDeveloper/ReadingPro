@@ -131,7 +131,7 @@ describe("useStudyActions", () => {
 
     expect(result.current.state).toMatchObject({
       simplifying: false,
-      error: "simplificationFailed",
+      error: "Simplification failed",
     });
   });
 

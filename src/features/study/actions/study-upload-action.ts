@@ -5,25 +5,14 @@ import * as Sentry from '@sentry/nextjs';
 import { db } from '@/lib/db/client';
 import { createModuleLogger } from '@/lib/core/logger';
 import { getHeuristicCEFR, type CEFRLevel } from '@/lib/domain/cefr';
+import type { PassageData } from '../study-types';
 import { getAuthenticatedUser } from './study-shared';
 
 const log = createModuleLogger('actions:study-upload');
 
 export type UploadResult = { passage: PassageData } | { error: string };
 
-interface PassageData {
-  id: string;
-  title: string;
-  content: string;
-  simplifiedContent: string | null;
-  originalLevel: string | null;
-  simplifiedLevel: string | null;
-  wordCount: number;
-  createdAt: number;
-  sourceType: SourceType;
-}
-
-export type SourceType = 'TEXT' | 'PDF';
+export type SourceType = Extract<PassageData['sourceType'], 'TEXT' | 'PDF'>;
 
 export async function studyUploadAction({ text, title, sourceType = 'TEXT' }: { text: string; title: string; sourceType?: SourceType }): Promise<UploadResult> {
   const start = Date.now();
