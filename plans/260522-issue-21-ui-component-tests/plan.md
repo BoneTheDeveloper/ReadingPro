@@ -1,7 +1,7 @@
 ---
 title: "Issue 21 UI Component Tests"
 description: "Add integration-oriented React Testing Library coverage for major UI flows across upload, progress, reading, study, and test views."
-status: approved
+status: completed
 priority: P1
 effort: 8h
 branch: "feature/21-ui-component-tests"
@@ -73,11 +73,11 @@ GKG MCP was used to map `src/features/upload`, `src/features/progress`, `src/fea
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 1 | [UI Fixtures, User Event, and Test Helpers](./phase-01-ui-fixtures-and-test-helpers.md) | Planned |
-| 2 | [Upload, Progress, and Reading Integration Tests](./phase-02-upload-progress-reading-tests.md) | Planned |
-| 3 | [Study Workspace Integration Tests](./phase-03-study-workspace-tests.md) | Planned |
-| 4 | [Flashcard Test Flow Integration Tests](./phase-04-flashcard-test-flow-tests.md) | Planned |
-| 5 | [Coverage, Flake Cleanup, and Verification](./phase-05-coverage-and-verification.md) | Planned |
+| 1 | [UI Fixtures, User Event, and Test Helpers](./phase-01-ui-fixtures-and-test-helpers.md) | Completed |
+| 2 | [Upload, Progress, and Reading Integration Tests](./phase-02-upload-progress-reading-tests.md) | Completed |
+| 3 | [Study Workspace Integration Tests](./phase-03-study-workspace-tests.md) | Completed |
+| 4 | [Flashcard Test Flow Integration Tests](./phase-04-flashcard-test-flow-tests.md) | Completed |
+| 5 | [Coverage, Flake Cleanup, and Verification](./phase-05-coverage-and-verification.md) | Completed |
 
 ## Acceptance Criteria Mapping
 
@@ -109,3 +109,16 @@ Approved implementation decisions:
 - Place unit component, hook, and utility tests colocated beside source files only when they add useful coverage for complicated branches.
 - Cover `StudyUploadModal` through paste-text mode for now; defer direct file/dropzone coverage.
 - Write `ProgressDashboard` tests against one clear current stats property contract; if a component/API mismatch appears, fix it after the test exposes it clearly.
+
+## Completion Notes
+
+Completed on 2026-05-22.
+
+- Added UI fixture builders and a `renderWithUser` helper for React Testing Library plus `@testing-library/user-event`.
+- Added integration component tests for upload text input, progress dashboard, reading view, study workspace, and flashcard test flow.
+- Fixed progress dashboard review/add-content navigation to `/study` and added an accessible label for the reading view back button while tightening related assertions.
+- Study upload modal coverage intentionally uses paste-text mode; direct dropzone file upload remains deferred per the approved plan.
+- Verification passed:
+  - `pnpm vitest run __tests__/components/upload/text-input-area.integration.test.tsx __tests__/components/progress/progress-dashboard.integration.test.tsx __tests__/components/reading/reading-view-client.integration.test.tsx __tests__/components/study/study-page-client.integration.test.tsx __tests__/components/test/flashcard-test-client.integration.test.tsx`
+  - `pnpm test`
+  - `pnpm test:coverage`

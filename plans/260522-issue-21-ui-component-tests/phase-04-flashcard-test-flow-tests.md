@@ -1,6 +1,6 @@
 ---
 title: "Phase 04 - Flashcard Test Flow Integration Tests"
-status: planned
+status: completed
 ---
 
 # Phase 04 - Flashcard Test Flow Integration Tests
@@ -29,3 +29,7 @@ Test the flashcard/test view as an integration component flow, from initial ques
 
 - User answer interactions and state transitions are verified from initial question through final results with `userEvent`.
 - Source-highlight and feedback behavior are covered.
+
+## Completion Notes
+
+- Added `FlashcardTestClient` integration coverage for click answers, keyboard shortcuts, feedback, next/final state, passage toggle, result accuracy, and navigation.

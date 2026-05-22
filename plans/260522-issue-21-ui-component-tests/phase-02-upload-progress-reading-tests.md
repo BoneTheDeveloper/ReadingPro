@@ -1,6 +1,6 @@
 ---
 title: "Phase 02 - Upload, Progress, and Reading Integration Tests"
-status: planned
+status: completed
 ---
 
 # Phase 02 - Upload, Progress, and Reading Integration Tests
@@ -31,3 +31,8 @@ Add focused integration component tests for the issue's explicitly named upload/
 ## Acceptance Criteria
 
 - Default render, custom props, interactions, state changes, loading/error states, and applicable accessibility assertions are covered through user-facing flows.
+
+## Completion Notes
+
+- Added integration tests for `TextInputArea`, `ProgressDashboard`, and `ReadingViewClient`.
+- Covered validation, loading/failure fallback, due/caught-up states, view mode switching, and navigation.

@@ -1,6 +1,6 @@
 ---
 title: "Phase 01 - UI Fixtures, User Event, and Test Helpers"
-status: planned
+status: completed
 ---
 
 # Phase 01 - UI Fixtures, User Event, and Test Helpers
@@ -42,3 +42,9 @@ Prepare shared UI-facing fixtures and minimal test helpers so integration compon
 - Fixtures remain deterministic and do not require live DB, Supabase, AI, or network access.
 - User interactions are driven through `userEvent`, with `fireEvent` reserved only for low-level cases that user-event cannot express cleanly.
 - Test placement follows the repo rule: integration/API/smoke/infrastructure tests in `__tests__`; unit component/hook/util tests colocated with source.
+
+## Completion Notes
+
+- Added `__tests__/fixtures/ui.ts` and `__tests__/helpers/ui.tsx`.
+- Added `@testing-library/user-event`.
+- Verified through the focused component test suite.

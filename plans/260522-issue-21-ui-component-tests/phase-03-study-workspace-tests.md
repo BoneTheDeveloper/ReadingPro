@@ -1,6 +1,6 @@
 ---
 title: "Phase 03 - Study Workspace Integration Tests"
-status: planned
+status: completed
 ---
 
 # Phase 03 - Study Workspace Integration Tests
@@ -35,3 +35,8 @@ Cover the study workspace with integration component tests first, using child co
 - Study workspace behavior is covered primarily through feature-level integration tests using shared fixtures.
 - Child components have colocated narrow unit tests only for important branches not easily reached through the composed workspace.
 - Upload modal coverage uses paste-text mode for now; file/dropzone coverage is explicitly deferred.
+
+## Completion Notes
+
+- Added `StudyPageClient` integration coverage for empty state, source filtering/selection, paste-text upload, simplify flow, non-simplifiable A2 path, quiz result drill-in, and chat view.
+- Mocked `react-resizable-panels`, `react-dropzone`, and study server actions at the component boundary.
