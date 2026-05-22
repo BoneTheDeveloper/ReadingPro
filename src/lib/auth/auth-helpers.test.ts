@@ -30,11 +30,15 @@ describe("auth redirect helpers", () => {
   });
 
   it("allows relative next paths and falls back for unsafe redirects", () => {
+    expect(getSafeNextPath("/study")).toBe("/study");
     expect(getSafeNextPath("/study?tab=cards")).toBe("/study?tab=cards");
+    expect(getSafeNextPath("/en/study")).toBe("/en/study");
     expect(getSafeNextPath(null, "/home")).toBe("/home");
     expect(getSafeNextPath("https://evil.test", "/home")).toBe("/home");
     expect(getSafeNextPath("//evil.test", "/home")).toBe("/home");
     expect(getSafeNextPath("/\\evil.test", "/home")).toBe("/home");
+    expect(getSafeNextPath("/%5Cevil.test", "/home")).toBe("/home");
+    expect(getSafeNextPath("/%5cevil.test", "/home")).toBe("/home");
   });
 });
 
