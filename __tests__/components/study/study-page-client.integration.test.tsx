@@ -52,10 +52,18 @@ describe("StudyPageClient", () => {
   it("renders empty workspace guidance when no sources exist", () => {
     renderWithUser(<StudyPageClient initialPassages={[]} />);
 
-    expect(screen.getAllByText((_, element) => element?.textContent === "noSourcesYetaddSourceToStart").length).toBeGreaterThan(0);
-    expect(screen.getByText("selectDocumentFromSources")).toBeInTheDocument();
-    expect(screen.getByText("selectPassage")).toBeInTheDocument();
-    expect(screen.getAllByRole("button", { name: "quiz" })[0]).toBeDisabled();
+    expect(
+      screen.getByText(
+        (_, element) =>
+          element?.tagName === "P" &&
+          /No sources yet\..*Add a source to get started\./i.test(
+            element.textContent ?? "",
+          ),
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Select a document from Sources")).toBeInTheDocument();
+    expect(screen.getByText("Select a passage")).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "Quiz" })[0]).toBeDisabled();
   });
 
   it("filters sources, selects a document, and switches content modes", async () => {
@@ -71,14 +79,14 @@ describe("StudyPageClient", () => {
     });
     const { user } = renderWithUser(<StudyPageClient initialPassages={[first, second]} />);
 
-    await user.type(screen.getByPlaceholderText("searchSources"), "solar");
+    await user.type(screen.getByPlaceholderText("Search sources..."), "solar");
 
     expect(screen.queryByText(first.title)).not.toBeInTheDocument();
     await user.click(screen.getByText("Solar Reading"));
 
     expect(screen.getByText("Simple solar content.")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "original (C1)" }));
+    await user.click(screen.getByRole("button", { name: "Original (C1)" }));
     expect(screen.getByText("Original solar content.")).toBeInTheDocument();
   });
 
@@ -98,17 +106,17 @@ describe("StudyPageClient", () => {
     vi.mocked(studyUploadAction).mockResolvedValue({ passage: uploaded });
     const { user } = renderWithUser(<StudyPageClient initialPassages={[]} />);
 
-    await user.click(screen.getByRole("button", { name: "addSource" }));
+    await user.click(screen.getByRole("button", { name: "Add Source" }));
     expect(screen.getByRole("dialog")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: /pasteText copiedText/ }));
-    await user.type(screen.getByPlaceholderText("pasteEnglishText"), "A pasted source for the study workspace.");
-    await user.click(screen.getByRole("button", { name: "continue" }));
+    await user.click(screen.getByRole("button", { name: /Paste text Copied text/ }));
+    await user.type(screen.getByPlaceholderText("Paste your English text content here..."), "A pasted source for the study workspace.");
+    await user.click(screen.getByRole("button", { name: "Continue" }));
 
     await waitFor(() => {
       expect(studyUploadAction).toHaveBeenCalledWith({
         text: "A pasted source for the study workspace.",
-        title: "pastedTextTitle",
+        title: "Pasted Text",
       });
     });
     expect((await screen.findAllByText("Uploaded Text")).length).toBeGreaterThan(0);
@@ -128,7 +136,7 @@ describe("StudyPageClient", () => {
     const { user, unmount } = renderWithUser(<StudyPageClient initialPassages={[eligible]} />);
 
     await user.click(screen.getByText(eligible.title));
-    await user.click(screen.getByRole("button", { name: "simplify" }));
+    await user.click(screen.getByRole("button", { name: "Simplify" }));
 
     await waitFor(() => expect(studySimplifyAction).toHaveBeenCalledWith({ passageId: eligible.id }));
     expect(await screen.findByText("New simple version.")).toBeInTheDocument();
@@ -144,7 +152,7 @@ describe("StudyPageClient", () => {
     const secondRender = renderWithUser(<StudyPageClient initialPassages={[simple]} />);
     await secondRender.user.click(screen.getByText("Already Simple"));
 
-    expect(screen.queryByRole("button", { name: "simplify" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Simplify" })).not.toBeInTheDocument();
   });
 
   it("generates quiz results and opens result detail", async () => {
@@ -154,12 +162,12 @@ describe("StudyPageClient", () => {
     const { user } = renderWithUser(<StudyPageClient initialPassages={[passage]} />);
 
     await user.click(screen.getByText(passage.title));
-    await user.click(screen.getByRole("button", { name: "quiz" }));
+    await user.click(screen.getByRole("button", { name: "Quiz" }));
 
     await waitFor(() => expect(studyGenerateQuestionsAction).toHaveBeenCalledWith({ passageId: passage.id }));
     expect(await screen.findByText("Results")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: /resultTitle/ }));
+    await user.click(screen.getByRole("button", { name: /Quiz: The Test Passage/ }));
     expect(screen.getByText(question.questionText)).toBeInTheDocument();
   });
 
@@ -168,7 +176,7 @@ describe("StudyPageClient", () => {
     const { user } = renderWithUser(<StudyPageClient initialPassages={[passage]} />);
 
     await user.click(screen.getByText(passage.title));
-    await user.click(screen.getByRole("button", { name: "chat" }));
-    expect(screen.getByText("chatAboutPassage")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Chat" }));
+    expect(screen.getByText("Chat about: The Test Passage")).toBeInTheDocument();
   });
 });
