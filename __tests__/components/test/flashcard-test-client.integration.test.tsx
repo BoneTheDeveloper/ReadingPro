@@ -5,6 +5,10 @@ import { FlashcardTestClient } from "@/features/test/flashcard-test-client";
 import { createTestPassage, createTestQuestion } from "../../fixtures";
 import { renderWithUser } from "../../helpers";
 
+vi.mock("next/navigation", () => ({
+  useRouter: vi.fn(),
+}));
+
 const push = vi.fn();
 
 describe("FlashcardTestClient", () => {
