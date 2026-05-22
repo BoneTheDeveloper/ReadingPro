@@ -61,7 +61,7 @@ export function ProgressDashboard() {
     <div className="min-h-dvh bg-muted">
       <header className="bg-surface border-b border-border">
         <div className="flex items-center gap-3 px-6 py-4 max-w-4xl mx-auto">
-          <Button variant="ghost" size="icon" onClick={() => router.push("/")}>
+          <Button variant="ghost" size="icon" aria-label="Back to home" onClick={() => router.push("/")}>
             <ChevronLeft className="w-5 h-5" />
           </Button>
           <div>
@@ -98,7 +98,7 @@ export function ProgressDashboard() {
                   <p className="text-sm text-muted-foreground">Keep your streak alive!</p>
                 </div>
               </div>
-              <Button onClick={() => router.push("/upload")}>Start Review</Button>
+              <Button onClick={() => router.push("/study")}>Start Review</Button>
             </CardContent>
           </Card>
         ) : (
@@ -116,7 +116,7 @@ export function ProgressDashboard() {
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Card className="hover:border-primary hover:shadow-md transition-all cursor-pointer" onClick={() => router.push("/upload")}>
+          <Card className="hover:border-primary hover:shadow-md transition-all cursor-pointer" onClick={() => router.push("/study")}>
             <CardContent className="p-8 flex flex-col items-center justify-center gap-3">
               <BookOpen className="w-8 h-8 text-primary" />
               <span className="font-semibold text-foreground">Add New Content</span>

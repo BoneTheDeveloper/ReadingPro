@@ -59,6 +59,7 @@ export function ReadingViewClient({ passage }: ReadingViewClientProps) {
             <Button
               variant="ghost"
               size="icon"
+              aria-label="Back to passages"
               onClick={() => router.push("/")}
             >
               <ChevronLeft className="w-5 h-5" />
