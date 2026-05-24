@@ -10,7 +10,7 @@ AI-powered English reading comprehension trainer for non-native speakers. Upload
 
 ## Codebase Navigation (GKG MCP) — MANDATORY
 
-Use GKG tools FIRST for ALL code navigation. Fallback to Read/Glob/Grep only if GKG fails (state why).
+Use GKG MCP FIRST for ALL code navigation. Fallback to Read/Glob/Grep only if GKG fails (state why).
 
 Re-index: `index_project` with `project_absolute_path: "/home/luc/Project/english-reading-training-app"`
 
