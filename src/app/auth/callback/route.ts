@@ -4,18 +4,7 @@ import { syncUser } from '@/lib/auth/sync-user'
 import { setCachedProfile } from '@/lib/auth/auth-cache'
 import { getSafeNextPath } from '@/lib/auth/redirects'
 
-function getRedirectOrigin(request: Request, requestOrigin: string) {
-  if (process.env.NODE_ENV === 'development') {
-    return requestOrigin
-  }
-
-  const forwardedHost = request.headers.get('x-forwarded-host')
-  const forwardedProto = request.headers.get('x-forwarded-proto') ?? 'https'
-
-  if (forwardedHost) {
-    return `${forwardedProto}://${forwardedHost}`
-  }
-
+function getRedirectOrigin(requestOrigin: string) {
   return requestOrigin
 }
 
@@ -23,7 +12,7 @@ export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
   const next = getSafeNextPath(searchParams.get('next'))
-  const redirectOrigin = getRedirectOrigin(request, origin)
+  const redirectOrigin = getRedirectOrigin(origin)
 
   if (code) {
     const supabase = await createServerActionClient()
