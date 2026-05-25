@@ -23,7 +23,7 @@ export function StudyChatPanel({ passageId }: StudyChatPanelProps) {
     body: { passageId },
   });
 
-  const { messages, sendMessage, status, error, regenerate } = useChat({ transport });
+  const { messages, sendMessage, status, error, regenerate, setMessages } = useChat({ transport });
 
   const isStreaming = status === "submitted" || status === "streaming";
 
@@ -31,6 +31,33 @@ export function StudyChatPanel({ passageId }: StudyChatPanelProps) {
     const el = scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages, isStreaming]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function bootstrapMessages() {
+      try {
+        const response = await fetch(
+          `/api/study-chat?passageId=${encodeURIComponent(passageId)}`,
+        );
+        if (!response.ok) {
+          setMessages([]);
+          return;
+        }
+        const payload = (await response.json()) as { messages?: unknown };
+        if (isMounted && Array.isArray(payload.messages)) {
+          setMessages(payload.messages);
+        }
+      } catch {
+        if (isMounted) setMessages([]);
+      }
+    }
+
+    void bootstrapMessages();
+    return () => {
+      isMounted = false;
+    };
+  }, [passageId, setMessages]);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();

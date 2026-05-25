@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { POST as reviewCard } from "@/app/api/cards/review/route";
 import { GET as getDueCardsRoute } from "@/app/api/cards/due/route";
 import { GET as getProgressStats } from "@/app/api/progress/stats/route";
-import { POST as studyChat } from "@/app/api/study-chat/route";
+import { GET as getStudyChatHistory, POST as studyChat } from "@/app/api/study-chat/route";
 import {
   PATCH as updateStudySessionRoute,
   POST as createStudySessionRoute,
@@ -237,6 +237,7 @@ describe("POST/PATCH /api/study-session", () => {
 describe("POST /api/study-chat", () => {
   it("streams a passage-grounded chat response", async () => {
     db.passage.findUnique.mockResolvedValue(passageFixture);
+    db.studyChatMessage.findMany.mockResolvedValue([]);
 
     const response = await studyChat(
       createJsonRequest({
@@ -254,6 +255,9 @@ describe("POST /api/study-chat", () => {
     expect(convertToModelMessages).toHaveBeenCalledWith([
       { id: "message-1", role: "user", parts: [{ type: "text", text: "What is the main idea?" }] },
     ]);
+    expect(db.studyChatMessage.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ role: "user", content: "What is the main idea?" }),
+    });
     expect(streamText).toHaveBeenCalledWith(
       expect.objectContaining({
         messages: expect.arrayContaining([
@@ -263,6 +267,55 @@ describe("POST /api/study-chat", () => {
           }),
         ]),
       }),
+    );
+  });
+
+  it("persists continuity and fetches history by passage", async () => {
+    db.passage.findUnique.mockResolvedValue(passageFixture);
+    db.studyChatMessage.findMany.mockResolvedValueOnce([
+      { role: "user", content: "First question?" },
+      { role: "assistant", content: "First answer." },
+    ]);
+    streamText.mockImplementationOnce((input: any) => {
+      void input.onFinish?.({
+        response: {
+          messages: [{ role: "assistant", content: [{ type: "text", text: "Follow-up answer." }] }],
+        },
+      });
+      return { toUIMessageStreamResponse: () => new Response("stream") };
+    });
+
+    await studyChat(
+      createJsonRequest({
+        passageId: passageFixture.id,
+        messages: [{ id: "message-2", role: "user", parts: [{ type: "text", text: "Second question?" }] }],
+      }),
+    );
+
+    expect(convertToModelMessages).toHaveBeenCalledWith([
+      { id: "persisted-0", role: "user", parts: [{ type: "text", text: "First question?" }] },
+      { id: "persisted-1", role: "assistant", parts: [{ type: "text", text: "First answer." }] },
+      { id: "message-2", role: "user", parts: [{ type: "text", text: "Second question?" }] },
+    ]);
+    expect(db.studyChatMessage.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ role: "assistant", content: "Follow-up answer." }),
+    });
+
+    db.studyChatMessage.findMany.mockResolvedValueOnce([
+      { id: "chat-1", role: "user", content: "History A" },
+    ]);
+    const history = await getStudyChatHistory(
+      new NextRequest(`https://english-reading.test/api/study-chat?passageId=${passageFixture.id}`),
+    );
+    expect(await readJsonResponse(history)).toEqual({
+      messages: [{ id: "chat-1", role: "user", parts: [{ type: "text", text: "History A" }] }],
+    });
+
+    await getStudyChatHistory(
+      new NextRequest("https://english-reading.test/api/study-chat?passageId=another-passage"),
+    );
+    expect(db.studyChatMessage.findMany).toHaveBeenLastCalledWith(
+      expect.objectContaining({ where: { userId: userProfileFixture.id, passageId: "another-passage" } }),
     );
   });
 
