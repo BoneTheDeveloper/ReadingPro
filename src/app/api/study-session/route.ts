@@ -2,10 +2,8 @@ import { z } from 'zod';
 import { NextRequest, NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
 import { getAuthenticatedUser } from '@/lib/auth/auth-utils';
-import { createModuleLogger } from '@/lib/core/logger';
+import { createRequestLogContext, createRequestLogger } from '@/lib/core/logger';
 import { createStudySession, updateStudySession } from '@/lib/db/study-session-queries';
-
-const log = createModuleLogger('api:study-session');
 
 const studySessionPostSchema = z.object({
   passageId: z.string().optional(),
@@ -19,11 +17,10 @@ const studySessionPatchSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  const context = {
-    requestId: request.headers.get('x-request-id') ?? request.headers.get('x-vercel-id') ?? undefined,
-    path: request.nextUrl.pathname,
-    method: 'POST',
-  };
+  const requestLog = createRequestLogger(
+    'api:study-session',
+    createRequestLogContext(request, 'POST', '/api/study-session'),
+  );
 
   try {
     const body = await request.json();
@@ -44,7 +41,7 @@ export async function POST(request: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.issues[0]?.message ?? 'Invalid request' }, { status: 400 });
     }
-    log.error({ err: error, context }, 'Failed to create session');
+    requestLog.error({ err: error }, 'Failed to create session');
     Sentry.captureException(error, {
       tags: { route: 'api:study-session', method: 'POST' },
     });
@@ -56,11 +53,10 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  const context = {
-    requestId: request.headers.get('x-request-id') ?? request.headers.get('x-vercel-id') ?? undefined,
-    path: request.nextUrl.pathname,
-    method: 'PATCH',
-  };
+  const requestLog = createRequestLogger(
+    'api:study-session',
+    createRequestLogContext(request, 'PATCH', '/api/study-session'),
+  );
 
   try {
     const body = await request.json();
@@ -86,7 +82,7 @@ export async function PATCH(request: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.issues[0]?.message ?? 'Invalid request' }, { status: 400 });
     }
-    log.error({ err: error, context }, 'Failed to update session');
+    requestLog.error({ err: error }, 'Failed to update session');
     Sentry.captureException(error, {
       tags: { route: 'api:study-session', method: 'PATCH' },
     });

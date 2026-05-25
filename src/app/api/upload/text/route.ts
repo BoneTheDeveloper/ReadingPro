@@ -2,17 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
 import { validateTextContent } from '@/lib/validation/upload';
 import { getAuthenticatedUser } from '@/lib/auth/auth-utils';
-import { createModuleLogger } from '@/lib/core/logger';
+import { createRequestLogContext, createRequestLogger } from '@/lib/core/logger';
 import { analyzeAndPersistContent } from '@/features/upload/content-analysis-service';
 
-const log = createModuleLogger('api:upload:text');
-
 export async function POST(request: NextRequest) {
-  const context = {
-    requestId: request.headers.get('x-request-id') ?? request.headers.get('x-vercel-id') ?? undefined,
-    path: request.nextUrl.pathname,
-    method: 'POST',
-  };
+  const requestLog = createRequestLogger(
+    'api:upload:text',
+    createRequestLogContext(request, 'POST', '/api/upload/text'),
+  );
 
   try {
     const body = await request.json();
@@ -39,7 +36,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, data: result });
   } catch (error) {
-    log.error({ err: error, context }, 'Text processing failed');
+    requestLog.error({ err: error }, 'Text processing failed');
     Sentry.captureException(error, {
       tags: { route: 'api:upload:text', method: 'POST' },
     });

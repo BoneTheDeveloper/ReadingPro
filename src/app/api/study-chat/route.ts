@@ -10,11 +10,9 @@ import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 import { getAuthenticatedUser } from "@/lib/auth/auth-utils";
 import { db } from "@/lib/db/client";
-import { createModuleLogger } from "@/lib/core/logger";
+import { createRequestLogContext, createRequestLogger } from "@/lib/core/logger";
 import { wrapUserText } from "@/lib/ai/prompt-utils";
 import { getStudyChatModelId } from "@/lib/ai/model-config";
-
-const log = createModuleLogger("api:study-chat");
 
 const uiMessageTextPartSchema = z.object({
   type: z.literal("text"),
@@ -44,17 +42,6 @@ const studyChatRequestSchema = z.object({
 const studyChatQuerySchema = z.object({
   passageId: z.string().min(1),
 });
-
-function getRequestLogContext(request: NextRequest, method: "GET" | "POST") {
-  return {
-    requestId:
-      request.headers.get("x-request-id") ??
-      request.headers.get("x-vercel-id") ??
-      undefined,
-    path: request.nextUrl.pathname,
-    method,
-  };
-}
 
 function truncateToRecentTurns(messages: z.infer<typeof uiMessageSchema>[]) {
   if (messages.length <= MAX_HISTORY_MESSAGES) return messages;
@@ -112,7 +99,10 @@ function isUnauthenticatedError(error: unknown) {
  * the database and returning a passage-grounded streaming tutor response.
  */
 export async function POST(request: NextRequest) {
-  const requestContext = getRequestLogContext(request, "POST");
+  let requestLog = createRequestLogger(
+    "api:study-chat",
+    createRequestLogContext(request, "POST", "/api/study-chat"),
+  );
 
   try {
     let body: unknown;
@@ -129,10 +119,7 @@ export async function POST(request: NextRequest) {
         () => request.json(),
       );
     } catch {
-      log.warn(
-        { context: requestContext },
-        "Invalid JSON payload received for study chat",
-      );
+      requestLog.warn("Invalid JSON payload received for study chat");
       return NextResponse.json(
         { error: "Invalid JSON payload." },
         { status: 400 },
@@ -146,10 +133,9 @@ export async function POST(request: NextRequest) {
     );
 
     if (messageLimitsError) {
-      log.warn(
+      requestLog.warn(
         {
           context: {
-            ...requestContext,
             messageCount:
               typeof body === "object" && body !== null && "messages" in body && Array.isArray(body.messages)
                 ? body.messages.length
@@ -169,10 +155,9 @@ export async function POST(request: NextRequest) {
     const parsed = studyChatRequestSchema.safeParse(body);
 
     if (!parsed.success) {
-      log.warn(
+      requestLog.warn(
         {
           context: {
-            ...requestContext,
             issues: parsed.error.issues.map((issue) => issue.path.join(".")),
           },
         },
@@ -187,6 +172,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { messages, passageId } = parsed.data;
+    requestLog = requestLog.child({ passageId });
     const user = await Sentry.startSpan(
       {
         name: "api:study-chat-authenticate",
@@ -198,6 +184,7 @@ export async function POST(request: NextRequest) {
       },
       () => getAuthenticatedUser(),
     );
+    requestLog = requestLog.child({ userId: user.id });
 
     const passage = await Sentry.startSpan(
       {
@@ -218,10 +205,7 @@ export async function POST(request: NextRequest) {
     );
 
     if (!passage) {
-      log.warn(
-        { context: { ...requestContext, userId: user.id, passageId } },
-        "Study chat passage not found",
-      );
+      requestLog.warn("Study chat passage not found");
       return NextResponse.json(
         { error: "Passage not found." },
         { status: 404 },
@@ -301,12 +285,9 @@ export async function POST(request: NextRequest) {
     `);
     const modelId = getStudyChatModelId();
 
-    log.info(
+    requestLog.info(
       {
         context: {
-          ...requestContext,
-          userId: user.id,
-          passageId,
           modelId,
           messageCount: messages.length,
           persistedMessageCount: persistedMessages.length,
@@ -381,23 +362,17 @@ export async function POST(request: NextRequest) {
                       },
                     }),
                 );
-                log.info(
+                requestLog.info(
                   {
                     context: {
-                      ...requestContext,
-                      userId: user.id,
-                      passageId,
                       assistantMessageLength: assistantText.length,
                     },
                   },
                   "Persisted study chat assistant message",
                 );
               } catch (error) {
-                log.error(
-                  {
-                    err: error,
-                    context: { ...requestContext, userId: user.id, passageId },
-                  },
+                requestLog.error(
+                  { err: error },
                   "Failed to persist study chat assistant message",
                 );
                 Sentry.captureException(error, {
@@ -414,17 +389,14 @@ export async function POST(request: NextRequest) {
     return result.toUIMessageStreamResponse();
   } catch (error) {
     if (isUnauthenticatedError(error)) {
-      log.warn(
-        { context: requestContext },
-        "Unauthenticated study chat request rejected",
-      );
+      requestLog.warn("Unauthenticated study chat request rejected");
       return NextResponse.json(
         { error: "Authentication required." },
         { status: 401 },
       );
     }
 
-    log.error({ err: error, context: requestContext }, "Study chat streaming failed");
+    requestLog.error({ err: error }, "Study chat streaming failed");
     Sentry.captureException(error, {
       tags: { route: "api:study-chat", method: "POST" },
     });
@@ -436,7 +408,10 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  const requestContext = getRequestLogContext(request, "GET");
+  let requestLog = createRequestLogger(
+    "api:study-chat",
+    createRequestLogContext(request, "GET", "/api/study-chat"),
+  );
 
   try {
     const parsed = studyChatQuerySchema.safeParse({
@@ -444,12 +419,10 @@ export async function GET(request: NextRequest) {
     });
 
     if (!parsed.success) {
-      log.warn(
-        { context: requestContext },
-        "Study chat history request missing passageId",
-      );
+      requestLog.warn("Study chat history request missing passageId");
       return NextResponse.json({ error: "A passageId is required." }, { status: 400 });
     }
+    requestLog = requestLog.child({ passageId: parsed.data.passageId });
 
     const user = await Sentry.startSpan(
       {
@@ -461,6 +434,7 @@ export async function GET(request: NextRequest) {
       },
       () => getAuthenticatedUser(),
     );
+    requestLog = requestLog.child({ userId: user.id });
 
     const messages = await Sentry.startSpan(
       {
@@ -482,12 +456,9 @@ export async function GET(request: NextRequest) {
         }),
     );
 
-    log.debug(
+    requestLog.debug(
       {
         context: {
-          ...requestContext,
-          userId: user.id,
-          passageId: parsed.data.passageId,
           messageCount: messages.length,
         },
       },
@@ -503,20 +474,14 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     if (isUnauthenticatedError(error)) {
-      log.warn(
-        { context: requestContext },
-        "Unauthenticated study chat history request rejected",
-      );
+      requestLog.warn("Unauthenticated study chat history request rejected");
       return NextResponse.json(
         { error: "Authentication required." },
         { status: 401 },
       );
     }
 
-    log.error(
-      { err: error, context: requestContext },
-      "Study chat history fetch failed",
-    );
+    requestLog.error({ err: error }, "Study chat history fetch failed");
     Sentry.captureException(error, {
       tags: { route: "api:study-chat", method: "GET" },
     });
