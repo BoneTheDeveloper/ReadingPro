@@ -31,6 +31,7 @@ export const db = {
   passage: createModelMock(),
   question: createModelMock(),
   studySession: createModelMock(),
+  studyChatMessage: createModelMock(),
   userProfile: createModelMock(),
 };
 

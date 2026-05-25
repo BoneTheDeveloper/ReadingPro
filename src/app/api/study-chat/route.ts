@@ -40,6 +40,9 @@ const studyChatRequestSchema = z.object({
   messages: z.array(uiMessageSchema).max(MAX_HISTORY_MESSAGES).default([]),
   passageId: z.string().min(1),
 });
+const studyChatQuerySchema = z.object({
+  passageId: z.string().min(1),
+});
 
 function truncateToRecentTurns(messages: z.infer<typeof uiMessageSchema>[]) {
   if (messages.length <= MAX_HISTORY_MESSAGES) return messages;
@@ -62,6 +65,21 @@ function validateMessageSizeLimits(messages: z.infer<typeof uiMessageSchema>[]) 
   }
 
   return null;
+}
+
+function extractTextContent(content: unknown) {
+  if (typeof content === "string") return content.trim();
+  if (!Array.isArray(content)) return "";
+
+  return content
+    .filter((part): part is { type: "text"; text: string } => {
+      if (!part || typeof part !== "object") return false;
+      const candidate = part as { type?: unknown; text?: unknown };
+      return candidate.type === "text" && typeof candidate.text === "string";
+    })
+    .map((part) => part.text)
+    .join("\n")
+    .trim();
 }
 
 function isUnauthenticatedError(error: unknown) {
@@ -134,8 +152,41 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const persistedMessages = await db.studyChatMessage.findMany({
+      where: { userId: user.id, passageId },
+      orderBy: { createdAt: "asc" },
+      take: 20,
+      select: { role: true, content: true },
+    });
+    const recentPersistedUiMessages = persistedMessages.map((msg, index) => ({
+      id: `persisted-${index}`,
+      role: msg.role as "user" | "assistant",
+      parts: [{ type: "text" as const, text: msg.content }],
+    }));
+    const combinedMessages = [...recentPersistedUiMessages, ...messages];
+    const userMessage = messages.findLast((msg) => msg.role === "user");
+
+    if (userMessage) {
+      const userMessageText = userMessage.parts
+        .filter((part) => part.type === "text")
+        .map((part) => part.text)
+        .join("\n")
+        .trim();
+
+      if (userMessageText.length > 0) {
+        await db.studyChatMessage.create({
+          data: {
+            userId: user.id,
+            passageId,
+            role: "user",
+            content: userMessageText,
+          },
+        });
+      }
+    }
+
     const passageContent = passage.content.slice(0, MAX_PASSAGE_CHARS);
-    const recentMessages = truncateToRecentTurns(messages);
+    const recentMessages = truncateToRecentTurns(combinedMessages);
     const modelMessages = await convertToModelMessages(recentMessages);
 
     const passageContext = wrapUserText(`
@@ -168,6 +219,23 @@ export async function POST(request: NextRequest) {
             ...modelMessages,
           ],
           temperature: 0.4,
+          onFinish: async ({ response }) => {
+            const assistantMessage = response.messages.findLast(
+              (message) => message.role === "assistant",
+            );
+            const assistantText = extractTextContent(assistantMessage?.content);
+
+            if (assistantText) {
+              await db.studyChatMessage.create({
+                data: {
+                  userId: user.id,
+                  passageId,
+                  role: "assistant",
+                  content: assistantText,
+                },
+              });
+            }
+          },
         }),
     );
 
@@ -188,5 +256,43 @@ export async function POST(request: NextRequest) {
       { error: "Unable to start the study chat stream." },
       { status: 500 },
     );
+  }
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    const user = await getAuthenticatedUser();
+    const parsed = studyChatQuerySchema.safeParse({
+      passageId: request.nextUrl.searchParams.get("passageId"),
+    });
+
+    if (!parsed.success) {
+      return NextResponse.json({ error: "A passageId is required." }, { status: 400 });
+    }
+
+    const messages = await db.studyChatMessage.findMany({
+      where: { userId: user.id, passageId: parsed.data.passageId },
+      orderBy: { createdAt: "asc" },
+      take: 40,
+      select: { id: true, role: true, content: true },
+    });
+
+    return NextResponse.json({
+      messages: messages.map((message) => ({
+        id: message.id,
+        role: message.role,
+        parts: [{ type: "text", text: message.content }],
+      })),
+    });
+  } catch (error) {
+    if (isUnauthenticatedError(error)) {
+      return NextResponse.json(
+        { error: "Authentication required." },
+        { status: 401 },
+      );
+    }
+
+    log.error({ err: error }, "Study chat history fetch failed");
+    return NextResponse.json({ error: "Unable to load study chat history." }, { status: 500 });
   }
 }

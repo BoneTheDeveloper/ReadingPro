@@ -31,6 +31,7 @@ model UserProfile {
   passages      Passage[]
   studySessions StudySession[]
   cardReviews   CardReview[]
+  chatMessages  StudyChatMessage[]
 
   @@map("profiles")
 }
@@ -55,11 +56,27 @@ model Passage {
 
   user      UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
   questions Question[]
+  chatMessages StudyChatMessage[]
 
   @@index([userId])
   @@index([createdAt])
   @@index([userId, deletedAt])
   @@map("passages")
+}
+
+model StudyChatMessage {
+  id        String   @id @default(cuid())
+  userId    String
+  passageId String
+  role      String
+  content   String
+  createdAt DateTime @default(now())
+
+  user    UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  passage Passage     @relation(fields: [passageId], references: [id], onDelete: Cascade)
+
+  @@index([userId, passageId, createdAt])
+  @@map("study_chat_messages")
 }
 
 // ============================================
