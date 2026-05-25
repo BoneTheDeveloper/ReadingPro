@@ -285,8 +285,19 @@ describe("POST /api/study-chat", () => {
       { role: "user", content: "First question?" },
       { role: "assistant", content: "First answer." },
     ]);
-    streamText.mockImplementationOnce((input: any) => {
-      void input.onFinish?.({
+    streamText.mockImplementationOnce((input: unknown) => {
+      const streamInput = input as {
+        onFinish?: (event: {
+          response: {
+            messages: Array<{
+              role: "assistant";
+              content: Array<{ type: "text"; text: string }>;
+            }>;
+          };
+        }) => void | Promise<void>;
+      };
+
+      void streamInput.onFinish?.({
         response: {
           messages: [{ role: "assistant", content: [{ type: "text", text: "Follow-up answer." }] }],
         },
