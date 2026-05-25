@@ -26,7 +26,7 @@ export function StudyChatPanel({ passageId }: StudyChatPanelProps) {
     [passageId],
   );
 
-  const { messages, sendMessage, status, error } = useChat({ transport });
+  const { messages, sendMessage, status, error, stop } = useChat({ transport });
 
   const isStreaming = status === "submitted" || status === "streaming";
 
@@ -111,9 +111,21 @@ export function StudyChatPanel({ passageId }: StudyChatPanelProps) {
           aria-label={t("chatPlaceholder")}
           className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none disabled:opacity-50"
         />
+        {isStreaming && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => stop()}
+            className="h-8 shrink-0"
+          >
+            {t("chatStop")}
+          </Button>
+        )}
         <Button
           type="submit"
           size="icon"
+          aria-label={t("chatSend")}
           disabled={isStreaming || !input.trim()}
           className="h-8 w-8 shrink-0"
         >
