@@ -28,6 +28,7 @@ cp .env.example .env.local
 Then update `.env.local` with your own values:
 
 - `OPENAI_API_KEY`
+- `OPENAI_STUDY_CHAT_MODEL` (optional, defaults to `gpt-4o-mini` when missing/empty/invalid)
 - `NEXT_PUBLIC_SITE_URL`
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
