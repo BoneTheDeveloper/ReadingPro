@@ -12,6 +12,7 @@ import { getAuthenticatedUser } from "@/lib/auth/auth-utils";
 import { db } from "@/lib/db/client";
 import { createModuleLogger } from "@/lib/core/logger";
 import { wrapUserText } from "@/lib/ai/prompt-utils";
+import { getStudyChatModelId } from "@/lib/ai/model-config";
 
 const log = createModuleLogger("api:study-chat");
 
@@ -109,7 +110,7 @@ export async function POST(request: NextRequest) {
       { name: "ai:study-chat-stream", op: "ai" },
       () =>
         streamText({
-          model: openai("gpt-4o-mini"),
+          model: openai(getStudyChatModelId()),
           system: [
             "You are an encouraging English reading comprehension tutor.",
             "Answer only about the selected passage unless the learner asks for general study strategy.",

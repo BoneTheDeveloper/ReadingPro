@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { openai } from "@ai-sdk/openai";
 import { POST as reviewCard } from "@/app/api/cards/review/route";
 import { GET as getDueCardsRoute } from "@/app/api/cards/due/route";
 import { GET as getProgressStats } from "@/app/api/progress/stats/route";
@@ -34,6 +35,7 @@ const routeMocks = vi.hoisted(() => {
     updateStudySession: vi.fn(),
     processFileUpload: vi.fn(),
     analyzeAndPersistContent: vi.fn(),
+    getStudyChatModelId: vi.fn(() => "gpt-4o-mini"),
     UploadWorkflowError,
   };
 });
@@ -60,6 +62,10 @@ vi.mock("@/features/upload/upload-workflow", () => ({
 
 vi.mock("@/features/upload/content-analysis-service", () => ({
   analyzeAndPersistContent: routeMocks.analyzeAndPersistContent,
+}));
+
+vi.mock("@/lib/ai/model-config", () => ({
+  getStudyChatModelId: routeMocks.getStudyChatModelId,
 }));
 
 const apiError = (message = "boom") => new Error(message);
@@ -254,6 +260,8 @@ describe("POST /api/study-chat", () => {
     expect(convertToModelMessages).toHaveBeenCalledWith([
       { id: "message-1", role: "user", parts: [{ type: "text", text: "What is the main idea?" }] },
     ]);
+    expect(routeMocks.getStudyChatModelId).toHaveBeenCalledTimes(1);
+    expect(openai).toHaveBeenCalledWith("gpt-4o-mini");
     expect(streamText).toHaveBeenCalledWith(
       expect.objectContaining({
         messages: expect.arrayContaining([
