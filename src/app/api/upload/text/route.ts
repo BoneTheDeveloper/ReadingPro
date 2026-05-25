@@ -8,6 +8,12 @@ import { analyzeAndPersistContent } from '@/features/upload/content-analysis-ser
 const log = createModuleLogger('api:upload:text');
 
 export async function POST(request: NextRequest) {
+  const context = {
+    requestId: request.headers.get('x-request-id') ?? request.headers.get('x-vercel-id') ?? undefined,
+    path: request.nextUrl.pathname,
+    method: 'POST',
+  };
+
   try {
     const body = await request.json();
 
@@ -33,7 +39,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, data: result });
   } catch (error) {
-    log.error({ err: error }, 'Text processing failed');
+    log.error({ err: error, context }, 'Text processing failed');
     Sentry.captureException(error, {
       tags: { route: 'api:upload:text', method: 'POST' },
     });

@@ -30,7 +30,7 @@ export const getCurrentUser = cache(async () => {
     const { data: { user }, error } = await supabase.auth.getUser();
 
     if (error) {
-      log.error({ error }, 'Failed to get authenticated user');
+      log.error({ err: error, context: { operation: 'supabase.auth.getUser' } }, 'Failed to get authenticated user');
       throw error;
     }
 
@@ -47,7 +47,7 @@ export const getCurrentUser = cache(async () => {
     return profile;
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error));
-    log.error({ err }, 'Failed to get current user');
+    log.error({ err, context: { operation: 'auth:get-current-user' } }, 'Failed to get current user');
     Sentry.captureException(err, {
       tags: { operation: 'auth:get-current-user' }
     });

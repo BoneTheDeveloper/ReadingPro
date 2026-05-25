@@ -59,7 +59,10 @@ export async function analyzeAndPersistContent({
       }
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error));
-      log.warn({ err, targetLevel, originalLevel }, 'Content simplification failed; saving original text');
+      log.warn(
+        { err, context: { targetLevel, originalLevel } },
+        'Content simplification failed; saving original text',
+      );
     }
   }
 
@@ -103,7 +106,10 @@ async function generateQuestionsForContent(content: string) {
     return questionResult?.questions ?? [];
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error));
-    log.warn({ err, contentLength: content.length }, 'Question generation failed; passage saved without questions');
+    log.warn(
+      { err, context: { contentLength: content.length } },
+      'Question generation failed; passage saved without questions',
+    );
     return [];
   }
 }

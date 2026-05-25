@@ -181,7 +181,14 @@
     "tryAgain": "Try Again",
     "newPassage": "New Passage",
     "chatAboutPassage": "Chat about: {title}",
-    "aiChatComingSoon": "AI chat coming soon."
+    "aiChatComingSoon": "AI chat coming soon.",
+    "chatPlaceholder": "Ask about this passage...",
+    "chatSend": "Send",
+    "chatThinking": "Thinking...",
+    "chatError": "Something went wrong. Please try again.",
+    "chatRetry": "Retry",
+    "chatNoMessages": "Start a conversation about this passage",
+    "chatStop": "Stop"
   },
   "Reading": {
     "title": "Reading View",

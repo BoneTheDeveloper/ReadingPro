@@ -19,6 +19,12 @@ const studySessionPatchSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  const context = {
+    requestId: request.headers.get('x-request-id') ?? request.headers.get('x-vercel-id') ?? undefined,
+    path: request.nextUrl.pathname,
+    method: 'POST',
+  };
+
   try {
     const body = await request.json();
     const parsed = studySessionPostSchema.safeParse(body);
@@ -38,7 +44,7 @@ export async function POST(request: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.issues[0]?.message ?? 'Invalid request' }, { status: 400 });
     }
-    log.error({ err: error }, 'Failed to create session');
+    log.error({ err: error, context }, 'Failed to create session');
     Sentry.captureException(error, {
       tags: { route: 'api:study-session', method: 'POST' },
     });
@@ -50,6 +56,12 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
+  const context = {
+    requestId: request.headers.get('x-request-id') ?? request.headers.get('x-vercel-id') ?? undefined,
+    path: request.nextUrl.pathname,
+    method: 'PATCH',
+  };
+
   try {
     const body = await request.json();
     const parsed = studySessionPatchSchema.safeParse(body);
@@ -74,7 +86,7 @@ export async function PATCH(request: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.issues[0]?.message ?? 'Invalid request' }, { status: 400 });
     }
-    log.error({ err: error }, 'Failed to update session');
+    log.error({ err: error, context }, 'Failed to update session');
     Sentry.captureException(error, {
       tags: { route: 'api:study-session', method: 'PATCH' },
     });

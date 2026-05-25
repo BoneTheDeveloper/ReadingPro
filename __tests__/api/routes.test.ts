@@ -1,10 +1,11 @@
 import { NextRequest } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { openai } from "@ai-sdk/openai";
 import { POST as reviewCard } from "@/app/api/cards/review/route";
 import { GET as getDueCardsRoute } from "@/app/api/cards/due/route";
 import { GET as getProgressStats } from "@/app/api/progress/stats/route";
-import { POST as studyChat } from "@/app/api/study-chat/route";
+import { GET as getStudyChatHistory, POST as studyChat } from "@/app/api/study-chat/route";
 import {
   PATCH as updateStudySessionRoute,
   POST as createStudySessionRoute,
@@ -34,6 +35,7 @@ const routeMocks = vi.hoisted(() => {
     updateStudySession: vi.fn(),
     processFileUpload: vi.fn(),
     analyzeAndPersistContent: vi.fn(),
+    getStudyChatModelId: vi.fn(() => "gpt-4o-mini"),
     UploadWorkflowError,
   };
 });
@@ -62,6 +64,10 @@ vi.mock("@/features/upload/content-analysis-service", () => ({
   analyzeAndPersistContent: routeMocks.analyzeAndPersistContent,
 }));
 
+vi.mock("@/lib/ai/model-config", () => ({
+  getStudyChatModelId: routeMocks.getStudyChatModelId,
+}));
+
 const apiError = (message = "boom") => new Error(message);
 const serializeForJson = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 
@@ -81,6 +87,7 @@ function createUploadRequest(file: File | null) {
 beforeEach(() => {
   vi.clearAllMocks();
   routeMocks.getAuthenticatedUser.mockResolvedValue(userProfileFixture);
+  db.studyChatMessage.findMany.mockResolvedValue([]);
 });
 
 describe("GET /api/cards/due", () => {
@@ -237,6 +244,7 @@ describe("POST/PATCH /api/study-session", () => {
 describe("POST /api/study-chat", () => {
   it("streams a passage-grounded chat response", async () => {
     db.passage.findUnique.mockResolvedValue(passageFixture);
+    db.studyChatMessage.findMany.mockResolvedValue([]);
 
     const response = await studyChat(
       createJsonRequest({
@@ -254,6 +262,45 @@ describe("POST /api/study-chat", () => {
     expect(convertToModelMessages).toHaveBeenCalledWith([
       { id: "message-1", role: "user", parts: [{ type: "text", text: "What is the main idea?" }] },
     ]);
+    expect(db.studyChatMessage.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ role: "user", content: "What is the main idea?" }),
+    });
+    expect(routeMocks.getStudyChatModelId).toHaveBeenCalledTimes(1);
+    expect(openai).toHaveBeenCalledWith("gpt-4o-mini");
+    expect(Sentry.startSpan).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "db:study-chat-passage-fetch",
+        op: "db",
+        attributes: expect.objectContaining({
+          "db.model": "Passage",
+          "study.passage_id": passageFixture.id,
+        }),
+      }),
+      expect.any(Function),
+    );
+    expect(Sentry.startSpan).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "db:study-chat-user-message-create",
+        op: "db",
+        attributes: expect.objectContaining({
+          "db.model": "StudyChatMessage",
+          "study.message_length": 22,
+        }),
+      }),
+      expect.any(Function),
+    );
+    expect(Sentry.startSpan).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "ai:study-chat-stream",
+        op: "ai",
+        attributes: expect.objectContaining({
+          "ai.model_id": "gpt-4o-mini",
+          "study.passage_id": passageFixture.id,
+          "study.message_count": 1,
+        }),
+      }),
+      expect.any(Function),
+    );
     expect(streamText).toHaveBeenCalledWith(
       expect.objectContaining({
         messages: expect.arrayContaining([
@@ -263,6 +310,88 @@ describe("POST /api/study-chat", () => {
           }),
         ]),
       }),
+    );
+  });
+
+  it("persists continuity and fetches history by passage", async () => {
+    db.passage.findUnique.mockResolvedValue(passageFixture);
+    db.studyChatMessage.findMany.mockResolvedValueOnce([
+      { role: "user", content: "First question?" },
+      { role: "assistant", content: "First answer." },
+    ]);
+    streamText.mockImplementationOnce((input: unknown) => {
+      const streamInput = input as {
+        onFinish?: (event: {
+          response: {
+            messages: Array<{
+              role: "assistant";
+              content: Array<{ type: "text"; text: string }>;
+            }>;
+          };
+        }) => void | Promise<void>;
+      };
+
+      void streamInput.onFinish?.({
+        response: {
+          messages: [{ role: "assistant", content: [{ type: "text", text: "Follow-up answer." }] }],
+        },
+      });
+      return { toUIMessageStreamResponse: () => new Response("stream") };
+    });
+
+    await studyChat(
+      createJsonRequest({
+        passageId: passageFixture.id,
+        messages: [{ id: "message-2", role: "user", parts: [{ type: "text", text: "Second question?" }] }],
+      }),
+    );
+
+    expect(convertToModelMessages).toHaveBeenCalledWith([
+      { id: "persisted-0", role: "user", parts: [{ type: "text", text: "First question?" }] },
+      { id: "persisted-1", role: "assistant", parts: [{ type: "text", text: "First answer." }] },
+      { id: "message-2", role: "user", parts: [{ type: "text", text: "Second question?" }] },
+    ]);
+    expect(db.studyChatMessage.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ role: "assistant", content: "Follow-up answer." }),
+    });
+    expect(Sentry.startSpan).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "db:study-chat-assistant-message-create",
+        op: "db",
+        attributes: expect.objectContaining({
+          "db.model": "StudyChatMessage",
+          "study.message_length": 17,
+        }),
+      }),
+      expect.any(Function),
+    );
+
+    db.studyChatMessage.findMany.mockResolvedValueOnce([
+      { id: "chat-1", role: "user", content: "History A" },
+    ]);
+    const history = await getStudyChatHistory(
+      new NextRequest(`https://english-reading.test/api/study-chat?passageId=${passageFixture.id}`),
+    );
+    expect(await readJsonResponse(history)).toEqual({
+      messages: [{ id: "chat-1", role: "user", parts: [{ type: "text", text: "History A" }] }],
+    });
+    expect(Sentry.startSpan).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "db:study-chat-history-list",
+        op: "db",
+        attributes: expect.objectContaining({
+          "db.model": "StudyChatMessage",
+          "study.passage_id": passageFixture.id,
+        }),
+      }),
+      expect.any(Function),
+    );
+
+    await getStudyChatHistory(
+      new NextRequest("https://english-reading.test/api/study-chat?passageId=another-passage"),
+    );
+    expect(db.studyChatMessage.findMany).toHaveBeenLastCalledWith(
+      expect.objectContaining({ where: { userId: userProfileFixture.id, passageId: "another-passage" } }),
     );
   });
 
@@ -305,6 +434,37 @@ describe("POST /api/study-chat", () => {
     expect(Sentry.captureException).toHaveBeenCalledWith(streamError, {
       tags: { route: "api:study-chat", method: "POST" },
     });
+  });
+
+  it("rejects oversized chat history with learner-friendly guidance", async () => {
+    const oversizedMessages = Array.from({ length: 25 }, (_, index) => ({
+      id: `message-${index + 1}`,
+      role: index % 2 === 0 ? "user" : "assistant",
+      parts: [{ type: "text", text: `Message ${index + 1}` }],
+    }));
+
+    await expectJsonError(
+      await studyChat(createJsonRequest({ passageId: passageFixture.id, messages: oversizedMessages })),
+      400,
+      "Your chat history is too long for one request. Keep the most recent 24 messages and try again.",
+    );
+    expect(convertToModelMessages).not.toHaveBeenCalled();
+  });
+
+  it("rejects overlong user message content with learner-friendly guidance", async () => {
+    const longText = "a".repeat(2001);
+
+    await expectJsonError(
+      await studyChat(
+        createJsonRequest({
+          passageId: passageFixture.id,
+          messages: [{ id: "message-1", role: "user", parts: [{ type: "text", text: longText }] }],
+        }),
+      ),
+      400,
+      "One of your messages is too long. Please shorten each message to 2000 characters or less and resend.",
+    );
+    expect(convertToModelMessages).not.toHaveBeenCalled();
   });
 });
 

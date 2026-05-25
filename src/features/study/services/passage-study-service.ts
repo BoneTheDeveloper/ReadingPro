@@ -105,7 +105,10 @@ function isValidGeneratedQuestion(question: GeneratedQuestion) {
   });
 
   if (!result.success) {
-    log.warn({ issues: result.error.issues }, 'Generated question failed validation');
+    log.warn(
+      { context: { issues: result.error.issues } },
+      'Generated question failed validation',
+    );
   }
   return result.success;
 }

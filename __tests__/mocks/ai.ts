@@ -10,7 +10,9 @@ export const generateObject = vi.fn<() => Promise<{ object: unknown }>>(
   async () => ({ object: defaultGeneratedObject })
 );
 
-export const streamText = vi.fn<() => { toUIMessageStreamResponse: () => Response }>(() => ({
+export const streamText = vi.fn<
+  (input: unknown) => { toUIMessageStreamResponse: () => Response }
+>(() => ({
   toUIMessageStreamResponse: vi.fn(() => new Response("test stream")),
 }));
 

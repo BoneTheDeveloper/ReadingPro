@@ -181,7 +181,14 @@
     "tryAgain": "Làm lại",
     "newPassage": "Bài đọc mới",
     "chatAboutPassage": "Trò chuyện về: {title}",
-    "aiChatComingSoon": "Tính năng trò chuyện AI sắp ra mắt."
+    "aiChatComingSoon": "Tính năng trò chuyện AI sắp ra mắt.",
+    "chatPlaceholder": "Hỏi về bài đọc này...",
+    "chatSend": "Gửi",
+    "chatThinking": "Đang suy nghĩ...",
+    "chatError": "Đã có lỗi xảy ra. Vui lòng thử lại.",
+    "chatRetry": "Thử lại",
+    "chatNoMessages": "Bắt đầu trò chuyện về bài đọc này",
+    "chatStop": "Dừng"
   },
   "Reading": {
     "title": "Chế độ đọc",
