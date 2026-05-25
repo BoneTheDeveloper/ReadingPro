@@ -2,16 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
 import { updateCardReview } from '@/lib/db/card-review-queries';
 import { getAuthenticatedUser } from '@/lib/auth/auth-utils';
-import { createModuleLogger } from '@/lib/core/logger';
-
-const log = createModuleLogger('api:cards:review');
+import { createRequestLogContext, createRequestLogger } from '@/lib/core/logger';
 
 export async function POST(request: NextRequest) {
-  const context = {
-    requestId: request.headers.get('x-request-id') ?? request.headers.get('x-vercel-id') ?? undefined,
-    path: request.nextUrl.pathname,
-    method: 'POST',
-  };
+  const requestLog = createRequestLogger(
+    'api:cards:review',
+    createRequestLogContext(request, 'POST', '/api/cards/review'),
+  );
 
   try {
     const { cardReviewId, qualityRating } = await request.json();
@@ -37,7 +34,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, data: updatedReview });
   } catch (error) {
-    log.error({ err: error, context }, 'Failed to submit review');
+    requestLog.error({ err: error }, 'Failed to submit review');
     Sentry.captureException(error, {
       tags: { route: 'api:cards:review', method: 'POST' },
     });

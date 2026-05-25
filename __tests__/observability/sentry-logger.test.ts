@@ -123,6 +123,29 @@ describe("Sentry and logger configuration", () => {
     expect(child).toBeDefined();
   });
 
+  it("creates request loggers that merge request and event context", async () => {
+    vi.resetModules();
+    vi.doUnmock("@/lib/core/logger");
+    vi.stubEnv("NODE_ENV", "production");
+
+    const { createRequestLogger } = await import("@/lib/core/logger");
+    const requestLogger = createRequestLogger("observability:test", {
+      requestId: "req-1",
+      path: "/api/test",
+      method: "POST",
+    }).child({ userId: "user-1" });
+
+    expect(requestLogger.bindings()).toMatchObject({
+      module: "observability:test",
+      context: {
+        requestId: "req-1",
+        path: "/api/test",
+        method: "POST",
+        userId: "user-1",
+      },
+    });
+  });
+
   it("serializes Prisma errors with compact messages and safe status codes", async () => {
     const prismaMessage = [
       "",

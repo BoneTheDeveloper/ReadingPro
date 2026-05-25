@@ -2,6 +2,13 @@ import pino from "pino";
 
 const isDev = process.env.NODE_ENV !== "production";
 
+type LogContext = Record<string, unknown>;
+type LogFields = Record<string, unknown> & {
+  context?: LogContext;
+};
+type LogValue = LogFields | string;
+type LogLevel = "trace" | "debug" | "info" | "warn" | "error" | "fatal";
+
 type LoggableError = {
   message?: unknown;
   code?: unknown;
@@ -22,6 +29,10 @@ function removeUndefined<T extends Record<string, unknown>>(obj: T) {
   return Object.fromEntries(
     Object.entries(obj).filter(([, value]) => value !== undefined),
   );
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value && typeof value === "object" && !Array.isArray(value));
 }
 
 function compactErrorMessage(message: string) {
@@ -94,4 +105,82 @@ function createModuleLogger(module: string, context?: Record<string, unknown>) {
   return logger.child({ module, ...context });
 }
 
-export { logger, createModuleLogger };
+function mergeLogFields(baseContext: LogContext, fields?: LogFields) {
+  const { context, ...rest } = fields ?? {};
+  return removeUndefined({
+    ...rest,
+    context: removeUndefined({
+      ...baseContext,
+      ...(isRecord(context) ? context : {}),
+    }),
+  });
+}
+
+function createContextLogger(parent: pino.Logger, baseContext: LogContext) {
+  const cleanBaseContext = removeUndefined(baseContext);
+
+  function write(level: LogLevel, value: LogValue, message?: string, ...args: unknown[]) {
+    if (isRecord(value)) {
+      parent[level](mergeLogFields(cleanBaseContext, value), message, ...args);
+      return;
+    }
+
+    parent[level](mergeLogFields(cleanBaseContext), value, ...args);
+  }
+
+  return {
+    child(context?: LogContext) {
+      return createContextLogger(parent, {
+        ...cleanBaseContext,
+        ...(context ? removeUndefined(context) : {}),
+      });
+    },
+    bindings() {
+      return {
+        ...parent.bindings(),
+        context: cleanBaseContext,
+      };
+    },
+    trace: (value: LogValue, message?: string, ...args: unknown[]) => write("trace", value, message, ...args),
+    debug: (value: LogValue, message?: string, ...args: unknown[]) => write("debug", value, message, ...args),
+    info: (value: LogValue, message?: string, ...args: unknown[]) => write("info", value, message, ...args),
+    warn: (value: LogValue, message?: string, ...args: unknown[]) => write("warn", value, message, ...args),
+    error: (value: LogValue, message?: string, ...args: unknown[]) => write("error", value, message, ...args),
+    fatal: (value: LogValue, message?: string, ...args: unknown[]) => write("fatal", value, message, ...args),
+  };
+}
+
+type RequestLogSource = {
+  headers?: Headers;
+  nextUrl?: {
+    pathname?: string;
+  };
+};
+
+function createRequestLogContext(
+  request: RequestLogSource,
+  method: string,
+  fallbackPath: string,
+) {
+  return removeUndefined({
+    requestId:
+      request.headers?.get("x-request-id") ??
+      request.headers?.get("x-vercel-id") ??
+      undefined,
+    path: request.nextUrl?.pathname ?? fallbackPath,
+    method,
+  });
+}
+
+function createRequestLogger(
+  module: string,
+  requestContext: LogContext,
+  moduleContext?: LogContext,
+) {
+  return createContextLogger(
+    createModuleLogger(module, moduleContext),
+    requestContext,
+  );
+}
+
+export { logger, createModuleLogger, createRequestLogger, createRequestLogContext };
