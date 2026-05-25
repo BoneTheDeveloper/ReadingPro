@@ -267,6 +267,40 @@ describe("POST /api/study-chat", () => {
     });
     expect(routeMocks.getStudyChatModelId).toHaveBeenCalledTimes(1);
     expect(openai).toHaveBeenCalledWith("gpt-4o-mini");
+    expect(Sentry.startSpan).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "db:study-chat-passage-fetch",
+        op: "db",
+        attributes: expect.objectContaining({
+          "db.model": "Passage",
+          "study.passage_id": passageFixture.id,
+        }),
+      }),
+      expect.any(Function),
+    );
+    expect(Sentry.startSpan).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "db:study-chat-user-message-create",
+        op: "db",
+        attributes: expect.objectContaining({
+          "db.model": "StudyChatMessage",
+          "study.message_length": 22,
+        }),
+      }),
+      expect.any(Function),
+    );
+    expect(Sentry.startSpan).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "ai:study-chat-stream",
+        op: "ai",
+        attributes: expect.objectContaining({
+          "ai.model_id": "gpt-4o-mini",
+          "study.passage_id": passageFixture.id,
+          "study.message_count": 1,
+        }),
+      }),
+      expect.any(Function),
+    );
     expect(streamText).toHaveBeenCalledWith(
       expect.objectContaining({
         messages: expect.arrayContaining([
@@ -320,6 +354,17 @@ describe("POST /api/study-chat", () => {
     expect(db.studyChatMessage.create).toHaveBeenCalledWith({
       data: expect.objectContaining({ role: "assistant", content: "Follow-up answer." }),
     });
+    expect(Sentry.startSpan).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "db:study-chat-assistant-message-create",
+        op: "db",
+        attributes: expect.objectContaining({
+          "db.model": "StudyChatMessage",
+          "study.message_length": 17,
+        }),
+      }),
+      expect.any(Function),
+    );
 
     db.studyChatMessage.findMany.mockResolvedValueOnce([
       { id: "chat-1", role: "user", content: "History A" },
@@ -330,6 +375,17 @@ describe("POST /api/study-chat", () => {
     expect(await readJsonResponse(history)).toEqual({
       messages: [{ id: "chat-1", role: "user", parts: [{ type: "text", text: "History A" }] }],
     });
+    expect(Sentry.startSpan).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "db:study-chat-history-list",
+        op: "db",
+        attributes: expect.objectContaining({
+          "db.model": "StudyChatMessage",
+          "study.passage_id": passageFixture.id,
+        }),
+      }),
+      expect.any(Function),
+    );
 
     await getStudyChatHistory(
       new NextRequest("https://english-reading.test/api/study-chat?passageId=another-passage"),

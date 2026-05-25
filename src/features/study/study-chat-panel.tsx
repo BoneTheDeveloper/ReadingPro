@@ -4,6 +4,7 @@ import { useRef, useEffect, useMemo, useState, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
+import * as Sentry from "@sentry/nextjs";
 import { Send, Loader2, AlertCircle, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/shared/utils";
@@ -40,18 +41,52 @@ export function StudyChatPanel({ passageId }: StudyChatPanelProps) {
 
     async function bootstrapMessages() {
       try {
-        const response = await fetch(
-          `/api/study-chat?passageId=${encodeURIComponent(passageId)}`,
+        const response = await Sentry.startSpan(
+          {
+            name: "ui:study-chat-history-fetch",
+            op: "http.client",
+            attributes: {
+              "study.passage_id": passageId,
+              "http.request.method": "GET",
+              "url.path": "/api/study-chat",
+            },
+          },
+          () =>
+            fetch(
+              `/api/study-chat?passageId=${encodeURIComponent(passageId)}`,
+            ),
         );
         if (!response.ok) {
+          Sentry.addBreadcrumb({
+            category: "study-chat",
+            level: "warning",
+            message: "Study chat history fetch returned a non-OK response",
+            data: {
+              passageId,
+              status: response.status,
+            },
+          });
           setMessages([]);
           return;
         }
         const payload = (await response.json()) as { messages?: unknown };
         if (isMounted && Array.isArray(payload.messages)) {
+          Sentry.addBreadcrumb({
+            category: "study-chat",
+            level: "info",
+            message: "Study chat history loaded",
+            data: {
+              passageId,
+              messageCount: payload.messages.length,
+            },
+          });
           setMessages(payload.messages);
         }
-      } catch {
+      } catch (error) {
+        Sentry.captureException(error, {
+          tags: { component: "StudyChatPanel", operation: "history-fetch" },
+          extra: { passageId },
+        });
         if (isMounted) setMessages([]);
       }
     }
@@ -67,7 +102,70 @@ export function StudyChatPanel({ passageId }: StudyChatPanelProps) {
     const text = input.trim();
     if (!text || isStreaming) return;
     setInput("");
-    sendMessage({ text });
+    Sentry.addBreadcrumb({
+      category: "study-chat",
+      level: "info",
+      message: "Learner submitted a study chat message",
+      data: {
+        passageId,
+        messageLength: text.length,
+      },
+    });
+    Sentry.startSpan(
+      {
+        name: "ui:study-chat-send",
+        op: "ui.action",
+        attributes: {
+          "study.passage_id": passageId,
+          "study.message_length": text.length,
+        },
+      },
+      () => {
+        sendMessage({ text });
+      },
+    );
+  };
+
+  const handleRetry = () => {
+    Sentry.addBreadcrumb({
+      category: "study-chat",
+      level: "info",
+      message: "Learner retried study chat message",
+      data: { passageId },
+    });
+    Sentry.startSpan(
+      {
+        name: "ui:study-chat-retry",
+        op: "ui.action",
+        attributes: {
+          "study.passage_id": passageId,
+        },
+      },
+      () => {
+        sendMessage();
+      },
+    );
+  };
+
+  const handleStop = () => {
+    Sentry.addBreadcrumb({
+      category: "study-chat",
+      level: "info",
+      message: "Learner stopped study chat stream",
+      data: { passageId },
+    });
+    Sentry.startSpan(
+      {
+        name: "ui:study-chat-stop",
+        op: "ui.action",
+        attributes: {
+          "study.passage_id": passageId,
+        },
+      },
+      () => {
+        stop();
+      },
+    );
   };
 
   return (
@@ -119,7 +217,7 @@ export function StudyChatPanel({ passageId }: StudyChatPanelProps) {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => sendMessage()}
+            onClick={handleRetry}
             className="h-7 text-xs gap-1 text-destructive hover:text-destructive"
           >
             <RotateCw className="w-3 h-3" />
@@ -143,7 +241,7 @@ export function StudyChatPanel({ passageId }: StudyChatPanelProps) {
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => stop()}
+            onClick={handleStop}
             className="h-8 shrink-0"
           >
             {t("chatStop")}

@@ -104,8 +104,19 @@ export async function POST(request: NextRequest) {
   try {
     let body: unknown;
     try {
-      body = await request.json();
+      body = await Sentry.startSpan(
+        {
+          name: "api:study-chat-parse-body",
+          op: "http.server",
+          attributes: {
+            "http.request.method": "POST",
+            "url.path": "/api/study-chat",
+          },
+        },
+        () => request.json(),
+      );
     } catch {
+      log.warn("Invalid JSON payload received for study chat");
       return NextResponse.json(
         { error: "Invalid JSON payload." },
         { status: 400 },
@@ -119,6 +130,15 @@ export async function POST(request: NextRequest) {
     );
 
     if (messageLimitsError) {
+      log.warn(
+        {
+          messageCount:
+            typeof body === "object" && body !== null && "messages" in body && Array.isArray(body.messages)
+              ? body.messages.length
+              : 0,
+        },
+        "Study chat request exceeded message limits",
+      );
       return NextResponse.json(
         {
           error: messageLimitsError,
@@ -130,6 +150,10 @@ export async function POST(request: NextRequest) {
     const parsed = studyChatRequestSchema.safeParse(body);
 
     if (!parsed.success) {
+      log.warn(
+        { issues: parsed.error.issues.map((issue) => issue.path.join(".")) },
+        "Invalid study chat request rejected",
+      );
       return NextResponse.json(
         {
           error: "Invalid chat request. Select a passage and enter a message.",
@@ -138,27 +162,64 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const user = await getAuthenticatedUser();
     const { messages, passageId } = parsed.data;
+    const user = await Sentry.startSpan(
+      {
+        name: "api:study-chat-authenticate",
+        op: "auth",
+        attributes: {
+          "study.passage_id": passageId,
+          "study.message_count": messages.length,
+        },
+      },
+      () => getAuthenticatedUser(),
+    );
 
-    const passage = await db.passage.findUnique({
-      where: { id: passageId, userId: user.id, deletedAt: null },
-      select: { id: true, content: true, title: true },
-    });
+    const passage = await Sentry.startSpan(
+      {
+        name: "db:study-chat-passage-fetch",
+        op: "db",
+        attributes: {
+          "db.operation": "findUnique",
+          "db.model": "Passage",
+          "study.passage_id": passageId,
+          "user.id": user.id,
+        },
+      },
+      () =>
+        db.passage.findUnique({
+          where: { id: passageId, userId: user.id, deletedAt: null },
+          select: { id: true, content: true, title: true },
+        }),
+    );
 
     if (!passage) {
+      log.warn({ userId: user.id, passageId }, "Study chat passage not found");
       return NextResponse.json(
         { error: "Passage not found." },
         { status: 404 },
       );
     }
 
-    const persistedMessages = await db.studyChatMessage.findMany({
-      where: { userId: user.id, passageId },
-      orderBy: { createdAt: "asc" },
-      take: 20,
-      select: { role: true, content: true },
-    });
+    const persistedMessages = await Sentry.startSpan(
+      {
+        name: "db:study-chat-history-fetch",
+        op: "db",
+        attributes: {
+          "db.operation": "findMany",
+          "db.model": "StudyChatMessage",
+          "study.passage_id": passageId,
+          "user.id": user.id,
+        },
+      },
+      () =>
+        db.studyChatMessage.findMany({
+          where: { userId: user.id, passageId },
+          orderBy: { createdAt: "asc" },
+          take: 20,
+          select: { role: true, content: true },
+        }),
+    );
     const recentPersistedUiMessages = persistedMessages.map((msg, index) => ({
       id: `persisted-${index}`,
       role: msg.role as "user" | "assistant",
@@ -175,14 +236,28 @@ export async function POST(request: NextRequest) {
         .trim();
 
       if (userMessageText.length > 0) {
-        await db.studyChatMessage.create({
-          data: {
-            userId: user.id,
-            passageId,
-            role: "user",
-            content: userMessageText,
+        await Sentry.startSpan(
+          {
+            name: "db:study-chat-user-message-create",
+            op: "db",
+            attributes: {
+              "db.operation": "create",
+              "db.model": "StudyChatMessage",
+              "study.passage_id": passageId,
+              "study.message_length": userMessageText.length,
+              "user.id": user.id,
+            },
           },
-        });
+          () =>
+            db.studyChatMessage.create({
+              data: {
+                userId: user.id,
+                passageId,
+                role: "user",
+                content: userMessageText,
+              },
+            }),
+        );
       }
     }
 
@@ -197,12 +272,38 @@ export async function POST(request: NextRequest) {
     Passage content:
     ${passageContent}
     `);
+    const modelId = getStudyChatModelId();
+
+    log.info(
+      {
+        userId: user.id,
+        passageId,
+        modelId,
+        messageCount: messages.length,
+        persistedMessageCount: persistedMessages.length,
+        recentMessageCount: recentMessages.length,
+        passageContentLength: passageContent.length,
+      },
+      "Starting study chat stream",
+    );
 
     const result = Sentry.startSpan(
-      { name: "ai:study-chat-stream", op: "ai" },
+      {
+        name: "ai:study-chat-stream",
+        op: "ai",
+        attributes: {
+          "ai.model_id": modelId,
+          "study.passage_id": passageId,
+          "study.message_count": messages.length,
+          "study.persisted_message_count": persistedMessages.length,
+          "study.recent_message_count": recentMessages.length,
+          "study.passage_content_length": passageContent.length,
+          "user.id": user.id,
+        },
+      },
       () =>
         streamText({
-          model: openai(getStudyChatModelId()),
+          model: openai(modelId),
           system: [
             "You are an encouraging English reading comprehension tutor.",
             "Answer only about the selected passage unless the learner asks for general study strategy.",
@@ -227,14 +328,45 @@ export async function POST(request: NextRequest) {
             const assistantText = extractTextContent(assistantMessage?.content);
 
             if (assistantText) {
-              await db.studyChatMessage.create({
-                data: {
-                  userId: user.id,
-                  passageId,
-                  role: "assistant",
-                  content: assistantText,
-                },
-              });
+              try {
+                await Sentry.startSpan(
+                  {
+                    name: "db:study-chat-assistant-message-create",
+                    op: "db",
+                    attributes: {
+                      "db.operation": "create",
+                      "db.model": "StudyChatMessage",
+                      "study.passage_id": passageId,
+                      "study.message_length": assistantText.length,
+                      "user.id": user.id,
+                    },
+                  },
+                  () =>
+                    db.studyChatMessage.create({
+                      data: {
+                        userId: user.id,
+                        passageId,
+                        role: "assistant",
+                        content: assistantText,
+                      },
+                    }),
+                );
+                log.info(
+                  {
+                    userId: user.id,
+                    passageId,
+                    assistantMessageLength: assistantText.length,
+                  },
+                  "Persisted study chat assistant message",
+                );
+              } catch (error) {
+                log.error({ err: error, userId: user.id, passageId }, "Failed to persist study chat assistant message");
+                Sentry.captureException(error, {
+                  tags: { route: "api:study-chat", method: "POST", operation: "assistant-message-create" },
+                  extra: { userId: user.id, passageId },
+                });
+                throw error;
+              }
             }
           },
         }),
@@ -243,6 +375,7 @@ export async function POST(request: NextRequest) {
     return result.toUIMessageStreamResponse();
   } catch (error) {
     if (isUnauthenticatedError(error)) {
+      log.warn("Unauthenticated study chat request rejected");
       return NextResponse.json(
         { error: "Authentication required." },
         { status: 401 },
@@ -262,21 +395,54 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await getAuthenticatedUser();
     const parsed = studyChatQuerySchema.safeParse({
       passageId: request.nextUrl.searchParams.get("passageId"),
     });
 
     if (!parsed.success) {
+      log.warn("Study chat history request missing passageId");
       return NextResponse.json({ error: "A passageId is required." }, { status: 400 });
     }
 
-    const messages = await db.studyChatMessage.findMany({
-      where: { userId: user.id, passageId: parsed.data.passageId },
-      orderBy: { createdAt: "asc" },
-      take: 40,
-      select: { id: true, role: true, content: true },
-    });
+    const user = await Sentry.startSpan(
+      {
+        name: "api:study-chat-history-authenticate",
+        op: "auth",
+        attributes: {
+          "study.passage_id": parsed.data.passageId,
+        },
+      },
+      () => getAuthenticatedUser(),
+    );
+
+    const messages = await Sentry.startSpan(
+      {
+        name: "db:study-chat-history-list",
+        op: "db",
+        attributes: {
+          "db.operation": "findMany",
+          "db.model": "StudyChatMessage",
+          "study.passage_id": parsed.data.passageId,
+          "user.id": user.id,
+        },
+      },
+      () =>
+        db.studyChatMessage.findMany({
+          where: { userId: user.id, passageId: parsed.data.passageId },
+          orderBy: { createdAt: "asc" },
+          take: 40,
+          select: { id: true, role: true, content: true },
+        }),
+    );
+
+    log.debug(
+      {
+        userId: user.id,
+        passageId: parsed.data.passageId,
+        messageCount: messages.length,
+      },
+      "Loaded study chat history",
+    );
 
     return NextResponse.json({
       messages: messages.map((message) => ({
@@ -287,6 +453,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     if (isUnauthenticatedError(error)) {
+      log.warn("Unauthenticated study chat history request rejected");
       return NextResponse.json(
         { error: "Authentication required." },
         { status: 401 },
@@ -294,6 +461,9 @@ export async function GET(request: NextRequest) {
     }
 
     log.error({ err: error }, "Study chat history fetch failed");
+    Sentry.captureException(error, {
+      tags: { route: "api:study-chat", method: "GET" },
+    });
     return NextResponse.json({ error: "Unable to load study chat history." }, { status: 500 });
   }
 }

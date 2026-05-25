@@ -1,4 +1,5 @@
 import { screen, waitFor } from "@testing-library/react";
+import * as Sentry from "@sentry/nextjs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { StudyChatPanel } from "@/features/study/study-chat-panel";
 import { renderWithUser } from "../../helpers";
@@ -73,6 +74,10 @@ describe("StudyChatPanel", () => {
 
     await user.click(stopButton);
     expect(useChatState.stop).toHaveBeenCalledTimes(1);
+    expect(Sentry.startSpan).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "ui:study-chat-stop", op: "ui.action" }),
+      expect.any(Function),
+    );
   });
 
   it("hides stop button and allows sending when not streaming", async () => {
@@ -90,6 +95,24 @@ describe("StudyChatPanel", () => {
     expect(useChatState.sendMessage).toHaveBeenCalledWith({
       text: "What is this about?",
     });
+    expect(Sentry.addBreadcrumb).toHaveBeenCalledWith(
+      expect.objectContaining({
+        category: "study-chat",
+        message: "Learner submitted a study chat message",
+        data: expect.objectContaining({ messageLength: 19 }),
+      }),
+    );
+    expect(Sentry.startSpan).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "ui:study-chat-send",
+        op: "ui.action",
+        attributes: expect.objectContaining({
+          "study.passage_id": "passage-1",
+          "study.message_length": 19,
+        }),
+      }),
+      expect.any(Function),
+    );
   });
 
   it("bootstraps persisted messages for first selected passage", async () => {
@@ -104,6 +127,24 @@ describe("StudyChatPanel", () => {
           parts: [{ type: "text", text: "First message" }],
         },
       ]);
+      expect(Sentry.startSpan).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: "ui:study-chat-history-fetch",
+          op: "http.client",
+          attributes: expect.objectContaining({
+            "study.passage_id": "passage-one",
+            "url.path": "/api/study-chat",
+          }),
+        }),
+        expect.any(Function),
+      );
+      expect(Sentry.addBreadcrumb).toHaveBeenCalledWith(
+        expect.objectContaining({
+          category: "study-chat",
+          message: "Study chat history loaded",
+          data: expect.objectContaining({ passageId: "passage-one", messageCount: 1 }),
+        }),
+      );
     });
   });
 
