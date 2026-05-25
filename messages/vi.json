@@ -187,7 +187,8 @@
     "chatThinking": "Đang suy nghĩ...",
     "chatError": "Đã có lỗi xảy ra. Vui lòng thử lại.",
     "chatRetry": "Thử lại",
-    "chatNoMessages": "Bắt đầu trò chuyện về bài đọc này"
+    "chatNoMessages": "Bắt đầu trò chuyện về bài đọc này",
+    "chatStop": "Dừng"
   },
   "Reading": {
     "title": "Chế độ đọc",
