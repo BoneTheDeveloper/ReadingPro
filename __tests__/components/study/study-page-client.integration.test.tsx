@@ -174,6 +174,6 @@ describe("StudyPageClient", () => {
 
     await user.click(screen.getByText(passage.title));
     await user.click(screen.getByRole("button", { name: "Chat" }));
-    expect(screen.getByText("Chat about: The Test Passage")).toBeInTheDocument();
+    expect(screen.getByText("Chat: The Test Passage")).toBeInTheDocument();
   });
 });
