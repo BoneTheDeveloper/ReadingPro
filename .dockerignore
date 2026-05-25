@@ -1,0 +1,14 @@
+node_modules
+.next
+.git
+coverage
+test-results
+playwright-report
+.auth
+.env
+.env.*
+!.env.test
+*.log
+plans/
+docs/
+src/generated/

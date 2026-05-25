@@ -3,9 +3,15 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.playwright
+    env_file:
+      - .env.test
     environment:
       - E2E_BASE_URL=http://host.docker.internal:3000
-      - E2E_TEST_USER_EMAIL=${E2E_TEST_USER_EMAIL}
-      - E2E_TEST_USER_PASSWORD=${E2E_TEST_USER_PASSWORD}
+      - CI=true
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+    command: pnpm e2e

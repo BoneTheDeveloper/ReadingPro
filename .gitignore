@@ -13,7 +13,7 @@
 # testing
 /coverage
 /.auth/
-/test-results/
+/test-playground/
 /playwright-report/
 .env.test
 
