@@ -306,6 +306,37 @@ describe("POST /api/study-chat", () => {
       tags: { route: "api:study-chat", method: "POST" },
     });
   });
+
+  it("rejects oversized chat history with learner-friendly guidance", async () => {
+    const oversizedMessages = Array.from({ length: 25 }, (_, index) => ({
+      id: `message-${index + 1}`,
+      role: index % 2 === 0 ? "user" : "assistant",
+      parts: [{ type: "text", text: `Message ${index + 1}` }],
+    }));
+
+    await expectJsonError(
+      await studyChat(createJsonRequest({ passageId: passageFixture.id, messages: oversizedMessages })),
+      400,
+      "Your chat history is too long for one request. Keep the most recent 24 messages and try again.",
+    );
+    expect(convertToModelMessages).not.toHaveBeenCalled();
+  });
+
+  it("rejects overlong user message content with learner-friendly guidance", async () => {
+    const longText = "a".repeat(2001);
+
+    await expectJsonError(
+      await studyChat(
+        createJsonRequest({
+          passageId: passageFixture.id,
+          messages: [{ id: "message-1", role: "user", parts: [{ type: "text", text: longText }] }],
+        }),
+      ),
+      400,
+      "One of your messages is too long. Please shorten each message to 2000 characters or less and resend.",
+    );
+    expect(convertToModelMessages).not.toHaveBeenCalled();
+  });
 });
 
 describe("POST /api/upload", () => {

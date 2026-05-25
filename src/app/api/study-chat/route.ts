@@ -27,6 +27,8 @@ const uiMessageSchema = z.object({
 });
 
 const MAX_PASSAGE_CHARS = 50_000;
+const MAX_HISTORY_MESSAGES = 24;
+const MAX_USER_TEXT_PART_CHARS = 2_000;
 const AUTHENTICATION_REQUIRED_MESSAGE = "Authentication required";
 const UNAUTHENTICATED_AUTH_STATUSES = new Set([400, 401, 403]);
 const UNAUTHENTICATED_AUTH_ERROR_NAMES = new Set([
@@ -35,9 +37,32 @@ const UNAUTHENTICATED_AUTH_ERROR_NAMES = new Set([
 ]);
 
 const studyChatRequestSchema = z.object({
-  messages: z.array(uiMessageSchema).default([]),
+  messages: z.array(uiMessageSchema).max(MAX_HISTORY_MESSAGES).default([]),
   passageId: z.string().min(1),
 });
+
+function truncateToRecentTurns(messages: z.infer<typeof uiMessageSchema>[]) {
+  if (messages.length <= MAX_HISTORY_MESSAGES) return messages;
+  return messages.slice(-MAX_HISTORY_MESSAGES);
+}
+
+function validateMessageSizeLimits(messages: z.infer<typeof uiMessageSchema>[]) {
+  if (messages.length > MAX_HISTORY_MESSAGES) {
+    return `Your chat history is too long for one request. Keep the most recent ${MAX_HISTORY_MESSAGES} messages and try again.`;
+  }
+
+  for (const message of messages) {
+    if (message.role !== "user") continue;
+
+    for (const part of message.parts) {
+      if (part.text.length > MAX_USER_TEXT_PART_CHARS) {
+        return `One of your messages is too long. Please shorten each message to ${MAX_USER_TEXT_PART_CHARS} characters or less and resend.`;
+      }
+    }
+  }
+
+  return null;
+}
 
 function isUnauthenticatedError(error: unknown) {
   if (!(error instanceof Error)) return false;
@@ -64,6 +89,21 @@ export async function POST(request: NextRequest) {
     } catch {
       return NextResponse.json(
         { error: "Invalid JSON payload." },
+        { status: 400 },
+      );
+    }
+
+    const messageLimitsError = validateMessageSizeLimits(
+      typeof body === "object" && body !== null && "messages" in body && Array.isArray(body.messages)
+        ? (body.messages as z.infer<typeof uiMessageSchema>[])
+        : [],
+    );
+
+    if (messageLimitsError) {
+      return NextResponse.json(
+        {
+          error: messageLimitsError,
+        },
         { status: 400 },
       );
     }
@@ -95,7 +135,8 @@ export async function POST(request: NextRequest) {
     }
 
     const passageContent = passage.content.slice(0, MAX_PASSAGE_CHARS);
-    const modelMessages = await convertToModelMessages(messages);
+    const recentMessages = truncateToRecentTurns(messages);
+    const modelMessages = await convertToModelMessages(recentMessages);
 
     const passageContext = wrapUserText(`
     Passage title: ${passage.title}
