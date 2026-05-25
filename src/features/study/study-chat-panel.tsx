@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useState, type FormEvent } from "react";
+import { useRef, useEffect, useMemo, useState, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
@@ -10,7 +10,6 @@ import { cn } from "@/lib/shared/utils";
 
 interface StudyChatPanelProps {
   passageId: string;
-  passageTitle: string;
 }
 
 export function StudyChatPanel({ passageId }: StudyChatPanelProps) {
@@ -18,12 +17,16 @@ export function StudyChatPanel({ passageId }: StudyChatPanelProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [input, setInput] = useState("");
 
-  const transport = new DefaultChatTransport({
-    api: "/api/study-chat",
-    body: { passageId },
-  });
+  const transport = useMemo(
+    () =>
+      new DefaultChatTransport({
+        api: "/api/study-chat",
+        body: { passageId },
+      }),
+    [passageId],
+  );
 
-  const { messages, sendMessage, status, error, regenerate } = useChat({ transport });
+  const { messages, sendMessage, status, error } = useChat({ transport });
 
   const isStreaming = status === "submitted" || status === "streaming";
 
@@ -60,8 +63,8 @@ export function StudyChatPanel({ passageId }: StudyChatPanelProps) {
                 : "bg-muted text-foreground mr-auto",
             )}
           >
-            {msg.parts
-              ?.filter((part) => part.type === "text")
+            {(msg.parts ?? [])
+              .filter((part) => part.type === "text")
               .map((part, i) => (
                 <p key={i} className="whitespace-pre-wrap">
                   {part.text}
@@ -89,7 +92,7 @@ export function StudyChatPanel({ passageId }: StudyChatPanelProps) {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => regenerate()}
+            onClick={() => sendMessage()}
             className="h-7 text-xs gap-1 text-destructive hover:text-destructive"
           >
             <RotateCw className="w-3 h-3" />
@@ -105,6 +108,7 @@ export function StudyChatPanel({ passageId }: StudyChatPanelProps) {
           onChange={(e) => setInput(e.target.value)}
           placeholder={t("chatPlaceholder")}
           disabled={isStreaming}
+          aria-label={t("chatPlaceholder")}
           className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none disabled:opacity-50"
         />
         <Button
