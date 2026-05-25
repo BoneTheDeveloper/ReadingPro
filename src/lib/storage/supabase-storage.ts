@@ -55,7 +55,10 @@ async function withRetry<T>(
 
       if (isTransientError(result.error) && attempt < MAX_RETRIES) {
         const delay = BASE_DELAY_MS * Math.pow(2, attempt - 1);
-        log.warn({ err: result.error, attempt, retryIn: delay, label }, `${label} failed, retrying`);
+        log.warn(
+          { err: result.error, context: { attempt, retryIn: delay, label } },
+          `${label} failed, retrying`,
+        );
         await new Promise((resolve) => setTimeout(resolve, delay));
         invalidateClient();
         continue;
@@ -66,7 +69,10 @@ async function withRetry<T>(
       lastError = err;
       if (isTransientError(err) && attempt < MAX_RETRIES) {
         const delay = BASE_DELAY_MS * Math.pow(2, attempt - 1);
-        log.warn({ err, attempt, retryIn: delay, label }, `${label} threw, retrying`);
+        log.warn(
+          { err, context: { attempt, retryIn: delay, label } },
+          `${label} threw, retrying`,
+        );
         invalidateClient();
         await new Promise((resolve) => setTimeout(resolve, delay));
         continue;
@@ -89,7 +95,10 @@ export async function uploadFile(
   );
 
   if (error || !data) {
-    log.error({ err: error, filename }, 'Storage upload failed after retries');
+    log.error(
+      { err: error, context: { filename, bucket: BUCKET_NAME } },
+      'Storage upload failed after retries',
+    );
     return null;
   }
 
@@ -106,7 +115,10 @@ export async function getSignedUrl(path: string): Promise<string | null> {
   );
 
   if (error || !data) {
-    log.error({ err: error, path }, 'Signed URL generation failed after retries');
+    log.error(
+      { err: error, context: { path, bucket: BUCKET_NAME } },
+      'Signed URL generation failed after retries',
+    );
     return null;
   }
 
@@ -120,7 +132,10 @@ export async function deleteFile(path: string): Promise<boolean> {
   );
 
   if (error) {
-    log.error({ err: error, path }, 'Storage delete failed after retries');
+    log.error(
+      { err: error, context: { path, bucket: BUCKET_NAME } },
+      'Storage delete failed after retries',
+    );
     return false;
   }
 

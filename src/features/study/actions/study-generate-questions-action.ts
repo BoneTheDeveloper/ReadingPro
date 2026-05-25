@@ -32,7 +32,10 @@ export async function studyGenerateQuestionsAction({ passageId }: { passageId: s
       if (error instanceof PassageStudyServiceError) {
         return { error: error.message };
       }
-      log.warn({ err, passageId, totalMs: Date.now() - start }, 'Question generation failed');
+      log.warn(
+        { err, context: { passageId, totalMs: Date.now() - start } },
+        'Question generation failed',
+      );
       return { error: 'Question generation failed — try again' };
     }
   });

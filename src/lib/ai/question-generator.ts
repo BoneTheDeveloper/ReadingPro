@@ -55,8 +55,10 @@ ${wrapUserText(numberedPassage)}`,
 
     return object;
   } catch (error) {
-    log.error({ err: error }, 'Question generation failed');
+    log.error(
+      { err: error, context: { questionCount, passageLength: passage.length } },
+      'Question generation failed',
+    );
     return null;
   }
 }
-

@@ -31,7 +31,10 @@ export async function studySimplifyAction({ passageId }: { passageId: string }):
       if (error instanceof PassageStudyServiceError) {
         return { error: error.message };
       }
-      log.warn({ err, passageId, totalMs: Date.now() - start }, 'Simplification failed');
+      log.warn(
+        { err, context: { passageId, totalMs: Date.now() - start } },
+        'Simplification failed',
+      );
       return { error: 'Simplification failed — try again' };
     }
   });

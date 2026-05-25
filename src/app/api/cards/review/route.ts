@@ -7,6 +7,12 @@ import { createModuleLogger } from '@/lib/core/logger';
 const log = createModuleLogger('api:cards:review');
 
 export async function POST(request: NextRequest) {
+  const context = {
+    requestId: request.headers.get('x-request-id') ?? request.headers.get('x-vercel-id') ?? undefined,
+    path: request.nextUrl.pathname,
+    method: 'POST',
+  };
+
   try {
     const { cardReviewId, qualityRating } = await request.json();
     const user = await getAuthenticatedUser();
@@ -31,7 +37,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, data: updatedReview });
   } catch (error) {
-    log.error({ err: error }, 'Failed to submit review');
+    log.error({ err: error, context }, 'Failed to submit review');
     Sentry.captureException(error, {
       tags: { route: 'api:cards:review', method: 'POST' },
     });

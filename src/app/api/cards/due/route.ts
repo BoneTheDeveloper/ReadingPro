@@ -12,7 +12,10 @@ export async function GET() {
 
     return NextResponse.json({ success: true, data: dueCards });
   } catch (error) {
-    log.error({ err: error }, 'Failed to fetch due cards');
+    log.error(
+      { err: error, context: { path: '/api/cards/due', method: 'GET' } },
+      'Failed to fetch due cards',
+    );
     return NextResponse.json(
       { error: 'Failed to fetch due cards' },
       { status: 500 }

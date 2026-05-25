@@ -12,7 +12,10 @@ export async function GET() {
 
     return NextResponse.json({ success: true, data: stats });
   } catch (error) {
-    log.error({ err: error }, 'Failed to fetch progress stats');
+    log.error(
+      { err: error, context: { path: '/api/progress/stats', method: 'GET' } },
+      'Failed to fetch progress stats',
+    );
     return NextResponse.json(
       { error: 'Failed to fetch progress' },
       { status: 500 }

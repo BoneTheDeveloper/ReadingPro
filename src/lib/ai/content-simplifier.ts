@@ -38,7 +38,10 @@ ${wrapUserText(text)}`,
     });
     return object;
   } catch (error) {
-    log.error({ err: error }, 'Simplification failed');
+    log.error(
+      { err: error, context: { targetLevel, textLength: text.length } },
+      'Simplification failed',
+    );
     return null;
   }
 }

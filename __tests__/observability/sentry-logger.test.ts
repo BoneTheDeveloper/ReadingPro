@@ -109,10 +109,70 @@ describe("Sentry and logger configuration", () => {
     vi.stubEnv("LOG_LEVEL", "warn");
 
     const { logger, createModuleLogger } = await import("@/lib/core/logger");
-    const child = createModuleLogger("observability:test");
+    const child = createModuleLogger("observability:test", {
+      requestId: "req-1",
+      userId: "user-1",
+    });
 
     expect(logger.level).toBe("warn");
+    expect(child.bindings()).toMatchObject({
+      module: "observability:test",
+      requestId: "req-1",
+      userId: "user-1",
+    });
     expect(child).toBeDefined();
+  });
+
+  it("serializes Prisma errors with compact messages and safe status codes", async () => {
+    const prismaMessage = [
+      "",
+      "Invalid `db.studyChatMessage.findMany()` invocation in",
+      "/home/luc/Project/english-reading-training-app/.next/dev/server/chunks/example.js:1215:164",
+      "",
+      "The table `public.study_chat_messages` does not exist in the current database.",
+    ].join("\n");
+    const prismaError = Object.assign(new Error(prismaMessage), {
+      name: "PrismaClientKnownRequestError",
+      code: "P2021",
+      clientVersion: "7.8.0",
+      statusCode: { unexpected: true },
+    });
+
+    vi.resetModules();
+    vi.doUnmock("@/lib/core/logger");
+    vi.stubEnv("NODE_ENV", "production");
+    const productionLogger = await import("@/lib/core/logger");
+    const productionError = productionLogger.serializeErrorForLog(prismaError) as Record<string, unknown>;
+
+    expect(productionError.message).toBe(
+      "The table `public.study_chat_messages` does not exist in the current database.",
+    );
+    expect(productionError.statusCode).toBeUndefined();
+    expect(productionError.stack).toBeUndefined();
+    expect(productionError.code).toBe("P2021");
+
+    vi.resetModules();
+    vi.doUnmock("@/lib/core/logger");
+    vi.stubEnv("NODE_ENV", "development");
+    const developmentLogger = await import("@/lib/core/logger");
+    const developmentError = developmentLogger.serializeErrorForLog(prismaError) as Record<string, unknown>;
+
+    expect(developmentError.stack).toEqual(expect.any(String));
+  });
+
+  it("keeps non-Prisma error messages unchanged", async () => {
+    vi.resetModules();
+    vi.doUnmock("@/lib/core/logger");
+    vi.stubEnv("NODE_ENV", "production");
+
+    const { serializeErrorForLog } = await import("@/lib/core/logger");
+    const message = [
+      "Invalid `input` value",
+      "The table `not_a_prisma_hint` is part of user content",
+      "Keep the original message intact.",
+    ].join("\n");
+
+    expect(serializeErrorForLog(new Error(message)).message).toBe(message);
   });
 
   it("Sentry example route logs and throws its custom error", async () => {

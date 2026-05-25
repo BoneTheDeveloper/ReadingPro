@@ -7,6 +7,14 @@ import { processFileUpload, UploadWorkflowError } from "@/features/upload/upload
 const log = createModuleLogger("api:upload");
 
 export async function POST(request: NextRequest) {
+  const requestHeaders = request.headers as Headers | undefined;
+  const requestUrl = request.nextUrl as URL | undefined;
+  const context = {
+    requestId: requestHeaders?.get("x-request-id") ?? requestHeaders?.get("x-vercel-id") ?? undefined,
+    path: requestUrl?.pathname ?? "/api/upload",
+    method: "POST",
+  };
+
   try {
     const user = await getAuthenticatedUser();
     const formData = await request.formData();
@@ -33,7 +41,7 @@ export async function POST(request: NextRequest) {
     if (error instanceof UploadWorkflowError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
-    log.error({ err: error }, "Upload failed");
+    log.error({ err: error, context }, "Upload failed");
     Sentry.captureException(error, {
       tags: { route: "api:upload", method: "POST" },
     });
