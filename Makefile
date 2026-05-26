@@ -1,4 +1,4 @@
-.PHONY: dev build e2e e2e-setup e2e-ui e2e-debug e2e-docker e2e-clean db-generate db-migrate lint typecheck
+.PHONY: dev build e2e e2e-setup e2e-ui e2e-debug e2e-docker e2e-clean screenshot db-generate db-migrate lint typecheck
 
 # Development
 dev:
@@ -64,3 +64,12 @@ e2e-docker: ## Start dev server, run E2E in Docker, then stop dev server
 
 e2e-clean: ## Remove auth state and test results
 	rm -rf .auth/ test-results/ playwright-report/
+
+screenshot: ## Screenshot authenticated page via Docker. Usage: make screenshot PATH=/en/study NAME=study
+	@/usr/bin/mkdir -p test-playground; \
+	/usr/bin/docker compose -f docker-compose.e2e.yml run --rm \
+		-v $$(pwd)/test-playground:/app/test-playground \
+		-e SCREENSHOT_PATH="${PATH}" \
+		-e SCREENSHOT_NAME="${NAME}" \
+		-e SCREENSHOT_DIR=test-playground \
+		e2e npx playwright test --config=playwright.screenshot.config.ts
