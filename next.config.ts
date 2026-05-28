@@ -4,6 +4,21 @@ import createNextIntlPlugin from "next-intl/plugin";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
+const cspHeader = `
+    default-src 'self';
+    script-src 'self' 'unsafe-eval' 'unsafe-inline';
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    img-src 'self' blob: data: https://*.supabase.co https://*.supabase.in https://*.supabase.com;
+    font-src 'self' https://fonts.gstatic.com;
+    connect-src 'self' https://*.supabase.co https://*.supabase.in https://*.supabase.com wss://*.supabase.co wss://*.supabase.in wss://*.supabase.com https://*.sentry.io;
+    object-src 'none';
+    base-uri 'self';
+    form-action 'self';
+    frame-ancestors 'none';
+    frame-src 'self';
+    upgrade-insecure-requests;
+`.replace(/\n/g, '');
+
 const nextConfig: NextConfig = {
   allowedDevOrigins: ["host.docker.internal"],
   turbopack: {
@@ -14,6 +29,10 @@ const nextConfig: NextConfig = {
       {
         source: "/(.*)",
         headers: [
+          {
+            key: "Content-Security-Policy",
+            value: cspHeader,
+          },
           {
             key: "Strict-Transport-Security",
             value: "max-age=31536000; includeSubDomains",
