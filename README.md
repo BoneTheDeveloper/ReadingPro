@@ -68,6 +68,27 @@ Open the app at:
 http://localhost:3000
 ```
 
+## Run Browser Tests and Screenshots
+
+Playwright E2E uses a pre-created Supabase Auth test user. Add the user credentials to `.env.test`:
+
+```bash
+E2E_TEST_USER_EMAIL=reader@example.com
+E2E_TEST_USER_PASSWORD=secure-password
+```
+
+Then run:
+
+```bash
+pnpm e2e
+pnpm e2e:screenshot
+make screenshot PAGE=/en/study NAME=study
+```
+
+Screenshots are written to `generated/screenshot/`. See `docs/testing/playwright-e2e.md` for project split, CI secrets, and database readiness details.
+
+On host OS versions unsupported by Playwright browser downloads, use `pnpm e2e:docker` and `make screenshot PAGE=/en/study NAME=study`.
+
 ## Production Commands
 
 Build the project:

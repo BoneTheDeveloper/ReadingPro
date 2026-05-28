@@ -8,8 +8,10 @@
 
 ### Added
 - Vitest test infrastructure with React Testing Library, jest-dom, jsdom, v8 coverage, shared mocks, fixtures, helpers, and smoke tests.
-- GitHub Actions CI workflow for lint, TypeScript, tests, and coverage.
+- GitHub Actions CI workflow for lint, TypeScript, tests, coverage, and gated Playwright E2E.
 - `docs/testing/vitest-infrastructure.md` documenting test commands and the shared test scaffold.
+- Playwright authenticated setup with reusable `.auth/user.json`, public/authenticated project split, and generated screenshot output under `generated/screenshot/`.
+- `docs/testing/playwright-e2e.md` documenting local `.env.test`, pre-created test users, screenshot commands, and CI secrets.
 
 ### Changed
 - Refactored upload API routes into `features/upload/upload-workflow.ts` and `content-analysis-service.ts`, keeping routes focused on request parsing and response mapping.

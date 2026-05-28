@@ -21,7 +21,11 @@ Re-index: `index_project` with `project_absolute_path: "/home/luc/Project/englis
 - Code standards: see `docs/code-standards.md` — TS rules, file naming, project structure, components, API responses, error handling, Prisma patterns
 - Commands: see `package.json` scripts; `pnpm tsc --noEmit` for type check
 
-##  Library access
+## Test Rules
+
+- **Playwright test rule:** `docs/testing/playwright-test-rule.md` — project split, auth storage state, screenshot output, Docker fallback, and required verification notes.
+
+## Library access
 Do not read node_modules by default.
 
 When library API/type information is needed, first inspect package.json and the lockfile to identify the installed package version.
