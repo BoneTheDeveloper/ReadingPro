@@ -1,21 +1,23 @@
-import { test } from '@playwright/test'
+import { test, expect } from '@playwright/test'
+import { mkdir } from 'node:fs/promises'
+import { join } from 'node:path'
 
 const targetPath = process.env.SCREENSHOT_PATH ?? '/en/study'
-const screenshotName = process.env.SCREENSHOT_NAME ?? 'study'
-const outDir = process.env.SCREENSHOT_DIR ?? 'test-playground'
+const screenshotName = process.env.SCREENSHOT_NAME ?? 'study-screenshot'
+const outDir = process.env.SCREENSHOT_DIR ?? 'generated/screenshot'
 
 test(`screenshot ${targetPath}`, async ({ page }) => {
-  const email = process.env.E2E_TEST_USER_EMAIL!
-  const password = process.env.E2E_TEST_USER_PASSWORD!
-
-  await page.goto('/en/sign-in')
-  await page.locator('#email').fill(email)
-  await page.locator('#password').fill(password)
-  await page.getByRole('button', { name: 'Sign in', exact: true }).click()
-  await page.waitForURL((url) => !url.pathname.includes('sign-in'), { timeout: 15000 })
+  await mkdir(outDir, { recursive: true })
 
   await page.goto(targetPath)
-  await page.waitForLoadState('networkidle')
+  await expect(page).not.toHaveURL(/\/sign-in(?:\?|$)/)
+  await expect(page.locator('#study-panels')).toBeVisible()
+  await expect(page.getByRole('heading', { name: /sources/i })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /content/i })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /studio/i })).toBeVisible()
 
-  await page.screenshot({ path: `${outDir}/${screenshotName}.png`, fullPage: true })
+  await page.screenshot({
+    path: join(outDir, `${screenshotName}.png`),
+    fullPage: true,
+  })
 })

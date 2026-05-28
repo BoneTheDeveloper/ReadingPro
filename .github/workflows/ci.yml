@@ -13,7 +13,7 @@ permissions:
 jobs:
   test:
     name: Lint, typecheck, and test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout
@@ -57,3 +57,50 @@ jobs:
 
       - name: Coverage
         run: pnpm test:coverage
+
+      - name: Check E2E secrets
+        id: e2e-secrets
+        shell: bash
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+          E2E_TEST_USER_EMAIL: ${{ secrets.E2E_TEST_USER_EMAIL }}
+          E2E_TEST_USER_PASSWORD: ${{ secrets.E2E_TEST_USER_PASSWORD }}
+        run: |
+          missing=()
+          for name in NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_ANON_KEY DATABASE_URL DIRECT_URL E2E_TEST_USER_EMAIL E2E_TEST_USER_PASSWORD; do
+            if [ -z "${!name}" ]; then
+              missing+=("$name")
+            fi
+          done
+
+          if [ "${#missing[@]}" -eq 0 ]; then
+            echo "should_run_e2e=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_run_e2e=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Skipping Playwright E2E because required secrets are missing: ${missing[*]}"
+          fi
+
+      - name: Install Chromium
+        if: steps.e2e-secrets.outputs.should_run_e2e == 'true'
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Apply database migrations for E2E
+        if: steps.e2e-secrets.outputs.should_run_e2e == 'true'
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+        run: pnpm db:migrate:deploy
+
+      - name: Playwright E2E
+        if: steps.e2e-secrets.outputs.should_run_e2e == 'true'
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+          E2E_TEST_USER_EMAIL: ${{ secrets.E2E_TEST_USER_EMAIL }}
+          E2E_TEST_USER_PASSWORD: ${{ secrets.E2E_TEST_USER_PASSWORD }}
+        run: pnpm e2e

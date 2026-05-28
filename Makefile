@@ -1,5 +1,8 @@
 .PHONY: dev build e2e e2e-setup e2e-ui e2e-debug e2e-docker e2e-clean screenshot db-generate db-migrate lint typecheck
 
+PAGE ?= /en/study
+NAME ?= study-screenshot
+
 # Development
 dev:
 	pnpm dev
@@ -21,7 +24,7 @@ db-migrate:
 	pnpm db:migrate:dev
 
 # E2E Testing
-e2e-setup: ## Create test user for E2E (run once)
+e2e-setup: ## Manually create the pre-provisioned E2E test user
 	pnpm e2e:create-user
 
 e2e: ## Run E2E tests (auto-starts dev server)
@@ -65,11 +68,11 @@ e2e-docker: ## Start dev server, run E2E in Docker, then stop dev server
 e2e-clean: ## Remove auth state and test results
 	rm -rf .auth/ test-results/ playwright-report/
 
-screenshot: ## Screenshot authenticated page via Docker. Usage: make screenshot PATH=/en/study NAME=study
-	@/usr/bin/mkdir -p test-playground; \
+screenshot: ## Screenshot authenticated page via Docker. Usage: make screenshot PAGE=/en/study NAME=study
+	@/usr/bin/mkdir -p generated/screenshot; \
 	/usr/bin/docker compose -f docker-compose.e2e.yml run --rm \
-		-v $$(pwd)/test-playground:/app/test-playground \
-		-e SCREENSHOT_PATH="${PATH}" \
-		-e SCREENSHOT_NAME="${NAME}" \
-		-e SCREENSHOT_DIR=test-playground \
+		-v $$(pwd)/generated/screenshot:/app/generated/screenshot \
+		-e SCREENSHOT_PATH="$(PAGE)" \
+		-e SCREENSHOT_NAME="$(NAME)" \
+		-e SCREENSHOT_DIR=generated/screenshot \
 		e2e npx playwright test --config=playwright.screenshot.config.ts

@@ -4,6 +4,8 @@ node_modules
 coverage
 generated
 .auth
+playwright-report
+test-results
 .env
 .env.*
 !.env.test

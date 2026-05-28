@@ -5,6 +5,7 @@ import createNextIntlPlugin from "next-intl/plugin";
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const nextConfig: NextConfig = {
+  allowedDevOrigins: ["host.docker.internal"],
   turbopack: {
     root: process.cwd(),
   },

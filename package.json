@@ -18,6 +18,7 @@
     "e2e:ui": "playwright test --ui",
     "e2e:debug": "playwright test --debug",
     "e2e:docker": "make e2e-docker",
+    "e2e:screenshot": "playwright test --config=playwright.screenshot.config.ts",
     "test:e2e": "playwright test",
     "test:e2e:docker": "make e2e-docker",
     "e2e:create-user": "tsx e2e/helpers/create-test-user.ts",
