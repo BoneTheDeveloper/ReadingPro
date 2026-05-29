@@ -1,11 +1,14 @@
 "use client";
 
+import { useCallback, useState } from "react";
 import { Group, Panel, Separator } from "react-resizable-panels";
 import { useTranslations } from "next-intl";
-import type { PassageData } from "./study-types";
+import * as Sentry from "@sentry/nextjs";
+import type { PassageData, TranslationSelection, QuickTranslationData } from "./study-types";
 import { StudySourcesPanel } from "./study-left-panel";
 import { StudyContentPanel } from "./study-content-panel";
 import { StudyStudioPanel } from "./study-right-panel";
+import { StudyTranslationPopup } from "./study-translation-popup";
 import { StudyUploadModal } from "./study-upload-modal";
 import { useStudyActions } from "./use-study-actions";
 import { useStudyPanelLayout } from "./use-study-panel-layout";
@@ -34,6 +37,129 @@ export function StudyPageClient({
   } = useStudyWorkspaceState(initialPassages);
   const { results, handleSimplify, handleActionClick } = useStudyActions({ state, setState });
   const layout = useStudyPanelLayout();
+
+  // Translation state (lifted from StudyContentPanel)
+  const [contentViewMode, setContentViewMode] = useState<"original" | "simplified">("simplified");
+  const [selection, setSelection] = useState<TranslationSelection | null>(null);
+  const [quickTranslation, setQuickTranslation] = useState<QuickTranslationData | null>(null);
+  const [translationLoading, setTranslationLoading] = useState(false);
+  const [savedVocabularyIds, setSavedVocabularyIds] = useState<Set<string>>(new Set());
+  const [viewingTranslate, setViewingTranslate] = useState(false);
+
+  // Clear stale selection on passage/mode change (adjust during rendering, not in effect)
+  const [prevPassageId, setPrevPassageId] = useState(state.activePassageId);
+  const [prevViewMode, setPrevViewMode] = useState(contentViewMode);
+  if (state.activePassageId !== prevPassageId || contentViewMode !== prevViewMode) {
+    setPrevPassageId(state.activePassageId);
+    setPrevViewMode(contentViewMode);
+    setSelection(null);
+    setQuickTranslation(null);
+  }
+
+  const handleSelectionChange = useCallback((sel: TranslationSelection | null) => {
+    setSelection(sel);
+    setQuickTranslation(null);
+
+    if (!sel) return;
+
+    Sentry.addBreadcrumb({
+      category: "study-translation",
+      level: "info",
+      message: "study-translation-selection-captured",
+      data: { sourceId: sel.sourceId, selectedTextLength: sel.selectedText.length },
+    });
+
+    setTranslationLoading(true);
+    Sentry.addBreadcrumb({
+      category: "study-translation",
+      level: "info",
+      message: "study-translation-quick-request",
+      data: { sourceId: sel.sourceId, selectedTextLength: sel.selectedText.length },
+    });
+
+    fetch("/api/translate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text: sel.selectedText,
+        context: sel.contextSentence,
+        sourceId: sel.sourceId,
+        sourceLanguage: "en",
+        targetLanguage: "vi",
+        mode: "quick",
+      }),
+    })
+      .then((r) => r.json())
+      .then((json) => {
+        if (json.success) {
+          setQuickTranslation(json.data);
+          Sentry.addBreadcrumb({
+            category: "study-translation",
+            level: "info",
+            message: "study-translation-quick-success",
+            data: { provider: json.data.provider },
+          });
+        }
+      })
+      .catch(() => {
+        Sentry.addBreadcrumb({
+          category: "study-translation",
+          level: "error",
+          message: "study-translation-quick-error",
+        });
+      })
+      .finally(() => setTranslationLoading(false));
+  }, []);
+
+  const handleSaveVocabulary = useCallback(async () => {
+    if (!selection || !quickTranslation) return;
+
+    Sentry.addBreadcrumb({
+      category: "study-vocabulary",
+      level: "info",
+      message: "study-vocabulary-save-click",
+      data: { sourceId: selection.sourceId, selectedTextLength: selection.selectedText.length },
+    });
+
+    try {
+      const res = await fetch("/api/vocabulary", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sourceId: selection.sourceId,
+          selectedText: selection.selectedText,
+          translation: quickTranslation.translation,
+          contextSentence: selection.contextSentence,
+          sourceLanguage: "en",
+          targetLanguage: "vi",
+          type: quickTranslation.type,
+        }),
+      });
+      const json = await res.json();
+      if (json.success && json.data?.id) {
+        setSavedVocabularyIds((prev) => new Set(prev).add(json.data.id));
+        Sentry.addBreadcrumb({
+          category: "study-vocabulary",
+          level: "info",
+          message: "study-vocabulary-save-success",
+          data: { vocabularyItemId: json.data.id },
+        });
+      }
+    } catch {
+      Sentry.addBreadcrumb({
+        category: "study-vocabulary",
+        level: "error",
+        message: "study-vocabulary-save-error",
+      });
+    }
+  }, [selection, quickTranslation]);
+
+  const vocabularySaveKey = selection
+    ? `${selection.sourceId}:${selection.selectedText}`
+    : null;
+  const isVocabularySaved = vocabularySaveKey
+    ? savedVocabularyIds.has(vocabularySaveKey)
+    : false;
 
   return (
     <>
@@ -92,7 +218,30 @@ export function StudyPageClient({
                 error={state.error}
                 simplifying={state.simplifying}
                 onSimplify={handleSimplify}
+                viewMode={contentViewMode}
+                onViewModeChange={setContentViewMode}
+                onSelectionChange={handleSelectionChange}
               />
+              {selection && activePassage && (
+                <StudyTranslationPopup
+                  selection={selection}
+                  translation={quickTranslation}
+                  loading={translationLoading}
+                  error={null}
+                  saved={isVocabularySaved}
+                  onOpenDetails={() => {
+                    setViewingTranslate(true);
+                    Sentry.addBreadcrumb({
+                      category: "study-translation",
+                      level: "info",
+                      message: "study-translation-details-opened",
+                      data: { sourceId: selection.sourceId },
+                    });
+                  }}
+                  onSave={handleSaveVocabulary}
+                  onDismiss={() => setSelection(null)}
+                />
+              )}
             </div>
           </Panel>
 
@@ -117,6 +266,12 @@ export function StudyPageClient({
               onActionClick={handleActionClick}
               collapsed={layout.rightPanelCollapsed}
               onToggleCollapse={layout.toggleRight}
+              translationSelection={selection}
+              quickTranslation={quickTranslation}
+              viewingTranslate={viewingTranslate}
+              onSetViewingTranslate={setViewingTranslate}
+              onSaveVocabulary={handleSaveVocabulary}
+              vocabularySaved={isVocabularySaved}
             />
           </Panel>
         </Group>
