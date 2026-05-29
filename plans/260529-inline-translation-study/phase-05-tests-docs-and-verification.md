@@ -1,10 +1,16 @@
 ---
 phase: 5
-title: "Tests Docs and Verification"
-status: pending
+title: Tests Docs and Verification
+status: completed
 priority: P1
-effort: "4h"
-dependencies: [1, 2, 3, 4]
+effort: 4h
+dependencies:
+  - 1
+  - 2
+  - 3
+  - 4
+  - 6
+  - 7
 ---
 
 # Phase 5: Tests Docs and Verification
@@ -16,7 +22,7 @@ Add focused tests for API contracts, persistence behavior, and Study UI translat
 ## Requirements
 
 - Functional: Cover success and failure paths for translation and vocabulary APIs.
-- Functional: Cover seeded dictionary hits, contextual dictionary behavior, dictionary misses, AI fallback, and exact cache hits.
+- Functional: Cover seeded dictionary hits, contextual dictionary behavior, ranked candidate selection, deterministic quick fallback generation, detailed AI fallback, and exact cache hits.
 - Functional: Cover quick popup, detail panel, save, and stale-selection clearing behavior.
 - Functional: Cover v1 boundaries: no right-click menu, no history viewer, no automatic Ask AI send.
 - Functional: Cover required Sentry/Pino instrumentation for new server and client flows.
@@ -50,7 +56,7 @@ Required dictionary/API scenarios:
 | `algorithm` | second sentence | dictionary hit | `thuật toán`, no AI call |
 | `bias` | first sentence | contextual dictionary hit | `thiên lệch thuật toán`, no AI call |
 | `data` | second sentence | dictionary hit | `dữ liệu`, no AI call |
-| `quorvex drift` | fourth sentence | dictionary miss -> AI fallback | mocked AI result, then cache write |
+| `quorvex drift` | fourth sentence | quick deterministic fallback | fallback result, no AI call, then cache write |
 | repeat `quorvex drift` | same fourth sentence | exact cache hit | cached result, no dictionary/AI call |
 
 ## Related Code Files
@@ -62,8 +68,8 @@ Required dictionary/API scenarios:
 
 ## Implementation Steps
 
-1. Add API tests for `/api/translate`: invalid JSON, invalid body, auth failure, missing source, cache hit, cache miss, and AI failure.
-2. Add API tests using the deterministic passage above for dictionary hit, contextual dictionary hit, dictionary miss -> AI fallback, and exact cache hit.
+1. Add API tests for `/api/translate`: invalid JSON, invalid body, auth failure, missing source, cache hit, quick cache miss fallback, and detailed AI failure.
+2. Add API tests using the deterministic passage above for dictionary hit, contextual dictionary hit, ranked lookup, quick deterministic fallback, detailed AI fallback, and exact cache hit.
 3. Add API tests for `/api/vocabulary`: invalid body, missing source, successful save, duplicate save/upsert.
 4. Add API observability tests or assertions for request logger creation, Sentry spans, warning logs on invalid input, and exception capture on unexpected failures.
 5. Add component tests for selection popup and Translate panel using mocked fetch responses.
@@ -78,15 +84,15 @@ Required dictionary/API scenarios:
 
 ## Success Criteria
 
-- [ ] All new acceptance criteria from `plan.md` are covered by tests or an explicit manual verification note.
-- [ ] Seeded dictionary tests prove known terms avoid AI calls and unknown terms fall back to AI.
-- [ ] Cache tests prove repeating the same unknown selection returns cached output without dictionary/AI calls.
-- [ ] Existing API, Study, Chat, Quiz, Summary, and upload tests still pass.
-- [ ] Typecheck and lint pass.
-- [ ] Documentation reflects any new API endpoints and database tables.
-- [ ] Docs clearly list incoming tasks after v1 rather than implementing them.
-- [ ] Tests verify the new flows use Sentry/Pino without logging raw selected text or context.
-- [ ] No unrelated files, plans, or generated artifacts are modified.
+- [x] All new acceptance criteria from `plan.md` are covered by tests or an explicit manual verification note.
+- [x] Seeded dictionary tests prove all quick-mode paths avoid AI calls, including unknown-term fallback generation.
+- [x] Cache tests prove repeating the same unknown selection returns cached output without dictionary/AI calls.
+- [x] Existing API, Study, Chat, Quiz, Summary, and upload tests still pass.
+- [x] Typecheck and lint pass.
+- [x] Documentation reflects any new API endpoints and database tables.
+- [x] Docs clearly list incoming tasks after v1 rather than implementing them.
+- [x] Tests verify the new flows use Sentry/Pino without logging raw selected text or context.
+- [x] No unrelated files, plans, or generated artifacts are modified.
 
 ## Risk Assessment
 

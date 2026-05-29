@@ -14,6 +14,8 @@ dependencies:
 
 Implement authenticated translation and vocabulary APIs using existing Next.js route, Zod validation, Sentry, logger, AI SDK, Prisma patterns, and a dictionary-first lookup strategy.
 
+Superseded note: Phase 7 changes quick mode so it no longer calls AI. References in this completed phase to quick AI fallback describe the original implementation and must not be treated as the current target behavior.
+
 ## Requirements
 
 - Functional: Add `POST /api/translate` with `quick` and `detailed` modes.

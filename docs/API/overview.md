@@ -10,6 +10,7 @@ flowchart TD
     B --> F[Study Session<br>POST /api/study-session<br>PATCH /api/study-session]
     B --> G[Upload<br>POST /api/upload<br>POST /api/upload/text]
     B --> H[Study Chat<br>POST /api/study-chat]
+    B --> R[Translation<br>POST /api/translate<br>POST /api/vocabulary<br>GET /api/dictionary]
     
     C --> I[Analyze Content<br>analyzeContentAction]
     C --> J[Study Analyze<br>studyAnalyzeAction]
@@ -19,11 +20,13 @@ flowchart TD
     F --> M[Database Operations<br>Study Sessions]
     G --> N[AI Pipeline<br>CEFR → Simplify → Questions]
     H --> O[AI Pipeline<br>Grounded Chat]
+    R --> S[Dictionary + Translation Cache<br>Quick lookup, Detailed AI, Vocabulary]
     I --> N
     J --> N
     
     N --> P[Database<br>Passages + Questions]
     O --> P
+    S --> P
     
     P --> Q[AI Models<br>Gemini-1.5-flash<br>GPT-4o-mini]
     
@@ -123,6 +126,7 @@ These have dedicated flow documentation:
 | `studyAnalyzeAction()` (server action) | [upload-flow.md](./upload-flow.md) |
 | Study session + card review lifecycle | [study-session-flow.md](./study-session-flow.md) |
 | POST `/api/study-chat` (streaming) | [study-chat-flow.md](./study-chat-flow.md) |
+| POST `/api/translate`, POST `/api/vocabulary`, GET `/api/dictionary` | [translation-flow.md](./translation-flow.md) |
 
 ---
 
@@ -147,6 +151,9 @@ Server actions are React server-side functions, not HTTP endpoints. Called via `
 | `src/lib/ai/cefr-detector.ts` | AI CEFR level detection + heuristic fallback |
 | `src/lib/ai/content-simplifier.ts` | AI content simplification to target CEFR level |
 | `src/lib/ai/question-generator.ts` | AI comprehension question generation |
+| `src/lib/ai/translator.ts` | Detailed translation generation for `/api/translate` detailed mode |
+| `src/lib/dictionary/resolve-quick-dictionary-translation.ts` | Quick dictionary ranking and deterministic fallback with no AI calls |
+| `src/lib/db/translation-queries.ts` | Translation cache, history, dictionary, and vocabulary persistence |
 | `src/lib/ai/prompt-utils.ts` | Prompt injection defense (`wrapUserText`) |
 | `src/lib/cefr-utils.ts` | CEFR level helpers (colors, labels) |
 | `src/lib/sm2-algorithm.ts` | SM-2 spaced repetition algorithm |

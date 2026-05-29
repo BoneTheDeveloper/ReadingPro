@@ -52,6 +52,10 @@ src/
 │   │   │   ├── cards/review/route.ts     # POST: submit SM-2 card review
 │   │   │   ├── cards/due/route.ts        # GET: fetch due cards
 │   │   │   ├── study-session/route.ts    # POST+PATCH: session CRUD
+│   │   │   ├── translate/route.ts        # POST: quick/detailed inline translation
+│   │   │   ├── vocabulary/route.ts       # POST: save/upsert vocabulary
+│   │   │   ├── dictionary/route.ts       # GET: dictionary exact lookup
+│   │   │   ├── dictionary/suggest/route.ts # GET: dictionary suggest search
 │   │   │   ├── progress/stats/route.ts   # GET: user progress stats
 │   │   │   └── sentry-example-api/route.ts # Sentry test endpoint
 │   │   ├── (auth)/
@@ -65,6 +69,7 @@ src/
 │   │       ├── upload/page.tsx          # Thin route: renders upload feature client
 │   │       ├── progress/page.tsx        # Thin route: renders progress feature
 │   │       ├── processing/page.tsx      # Thin route: renders processing feature client
+│   │       ├── dictionary/page.tsx      # Thin route: renders dictionary feature
 │   │       ├── reading/[id]/            # Server route: loads passage, renders reading feature
 │   │       ├── test/[id]/               # Server route: loads questions, renders test feature
 │   │       └── study/                   # Server route + error boundary for study workspace
@@ -89,7 +94,7 @@ src/
 ├── features/
 │   ├── study/
 │   │   ├── study-page-client.tsx         # Main 3-panel workspace composition
-│   │   ├── study-*.tsx                   # Study panels, quiz UI, upload modal
+│   │   ├── study-*.tsx                   # Study panels, quiz UI, inline translation, upload modal
 │   │   ├── use-study-*.ts                # Workspace state, layout, and actions
 │   │   ├── actions/                      # Server action adapters
 │   │   ├── services/                     # Study business workflows
@@ -102,6 +107,10 @@ src/
 │   │   └── analyze-content-action.ts     # Server action adapter
 │   ├── reading/
 │   │   └── reading-view-client.tsx       # Reading view with original/simplified toggle
+│   ├── dictionary/
+│   │   ├── dictionary-page-client.tsx     # Dictionary lookup and suggest search UI
+│   │   ├── dictionary-entry-card.tsx      # Dictionary result rendering
+│   │   └── dictionary-suggest-dropdown.tsx # Suggest result dropdown
 │   ├── test/
 │   │   ├── flashcard-test-client.tsx     # Flashcard test state and flow
 │   │   ├── test-types.ts                 # Test data types
@@ -126,7 +135,11 @@ src/
 │   │   ├── client.ts                     # Prisma singleton + PrismaPg + security extension
 │   │   ├── passage-queries.ts            # Passage CRUD + question creation
 │   │   ├── card-review-queries.ts        # SM-2 logic, due cards, progress stats
-│   │   └── study-session-queries.ts      # Session CRUD + accuracy computation
+│   │   ├── study-session-queries.ts      # Session CRUD + accuracy computation
+│   │   ├── dictionary-queries.ts         # Dictionary lookup/list/suggest helpers
+│   │   └── translation-queries.ts        # Translation cache/history/vocabulary helpers
+│   ├── dictionary/
+│   │   └── resolve-quick-dictionary-translation.ts # Quick translate ranking/fallback
 │   ├── storage/
 │   │   └── supabase-storage.ts           # File upload/download/delete via Supabase Storage
 │   ├── shared/
@@ -146,6 +159,7 @@ src/
 │   └── ai/
 │       ├── content-simplifier.ts         # AI text simplification
 │       ├── question-generator.ts         # AI question generation
+│       ├── translator.ts                 # Detailed contextual translation generation
 │       └── prompt-utils.ts               # Text wrapping helpers for AI prompts
 ├── generated/prisma/                     # Generated Prisma client
 ├── instrumentation.ts                    # Sentry server instrumentation
@@ -169,6 +183,7 @@ src/
 | `/[locale]/reading/[id]` | Reading view with original/simplified toggle |
 | `/[locale]/test/[id]` | Flashcard test with feedback and scoring |
 | `/[locale]/study` | Three-panel resizable workspace |
+| `/[locale]/dictionary` | Dictionary lookup and suggest search |
 | `/[locale]/progress` | Progress dashboard with stats |
 
 ---
@@ -180,6 +195,7 @@ src/
 | `DATABASE_URL` | PostgreSQL connection string (Supabase pooled) |
 | `DIRECT_URL` | PostgreSQL direct connection (Prisma migrations) |
 | `OPENAI_API_KEY` | OpenAI API key (required) |
+| `OPENAI_TRANSLATION_MODEL` | Optional model override for detailed translation |
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anonymous public key |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase admin access |
@@ -193,7 +209,7 @@ src/
 
 - Processing page is simulated (fake progress, auto-redirects after ~6s)
 - No real-time updates (no WebSockets/SSE)
-- No caching on AI calls or DB queries
+- Translation requests are cached, but other AI flows still have limited caching
 - Unused deps pending audit: `react-hook-form`, `@hookform/resolvers`, `date-fns`, `@base-ui/react`
 
 ---
@@ -206,4 +222,4 @@ src/
 ---
 
 **Status:** Active
-**Last Updated:** 2026-05-20
+**Last Updated:** 2026-05-29

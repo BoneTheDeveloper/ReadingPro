@@ -57,7 +57,7 @@
 | createdAt | DateTime | Default: now() | Record creation time |
 | updatedAt | DateTime | @updatedAt | Last modification time |
 
-**Relations:** has many Passage, StudySession, CardReview
+**Relations:** has many Passage, StudySession, CardReview, StudyChatMessage, TranslationCache, TranslationHistory, VocabularyItem
 
 ---
 
@@ -78,7 +78,7 @@
 | createdAt | DateTime | Default: now() | Record creation time |
 | updatedAt | DateTime | @updatedAt | Last modification time |
 
-**Relations:** belongs to UserProfile, has many Question
+**Relations:** belongs to UserProfile, has many Question, StudyChatMessage, TranslationCache, TranslationHistory, VocabularyItem
 
 **Index:** `[userId, createdAt]`
 
@@ -147,6 +147,100 @@
 
 ---
 
+### DictionaryEntry
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| id | String | PK, default: cuid() | Unique identifier |
+| normalizedKey | String | Unique | Hash key for language pair + normalized term |
+| normalizedTerm | String | indexed | Lowercase normalized dictionary term |
+| sourceLanguage | String | indexed | Source language code, currently `en` |
+| targetLanguage | String | indexed | Target language code, currently `vi` |
+| translation | String | — | Vietnamese translation |
+| type | String? | nullable | Part of speech or phrase type |
+| pronunciation | String? | nullable | Optional pronunciation text |
+| meanings | Json? | nullable | Optional richer meanings |
+| examples | Json? | nullable | Optional example sentences |
+| relatedWords | Json? | nullable | Optional related terms |
+| source | String | Default: local | Dictionary provider/source marker |
+| confidence | Float | Default: 0.8 | Ranking confidence |
+| createdAt | DateTime | Default: now() | Record creation time |
+| updatedAt | DateTime | @updatedAt | Last modification time |
+
+**Index:** `[sourceLanguage, targetLanguage, normalizedTerm]`
+
+---
+
+### TranslationCache
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| id | String | PK, default: cuid() | Unique identifier |
+| cacheKey | String | Unique | Hash of user, source, selected text, context, target language, and mode |
+| userId | String | FK → UserProfile.id | Cache owner |
+| sourceId | String | FK → Passage.id | Passage used for context |
+| selectedText | String | — | Selected text, stored for product analytics |
+| contextSentence | String | — | Context sentence or paragraph |
+| sourceLanguage | String | — | Source language code, currently `en` |
+| targetLanguage | String | — | Target language code, currently `vi` |
+| mode | String | — | `quick` or `detailed` |
+| provider | String | — | `dictionary`, `fallback`, `ai`, or `cache` at response time |
+| response | Json | — | Full translation response payload |
+| createdAt | DateTime | Default: now() | Record creation time |
+| updatedAt | DateTime | @updatedAt | Last modification time |
+
+**Relations:** belongs to UserProfile, belongs to Passage
+
+**Indexes:** `[userId, sourceId, targetLanguage]`, `[userId, createdAt]`
+
+---
+
+### TranslationHistory
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| id | String | PK, default: cuid() | Unique identifier |
+| userId | String | FK → UserProfile.id | History owner |
+| sourceId | String | FK → Passage.id | Passage used for context |
+| selectedText | String | — | Selected text |
+| contextSentence | String | — | Context sentence or paragraph |
+| sourceLanguage | String | — | Source language code |
+| targetLanguage | String | — | Target language code |
+| mode | String | — | `quick` or `detailed` |
+| provider | String | — | Provider used for the returned translation |
+| translation | String | — | Primary translated text |
+| response | Json | — | Full translation response payload |
+| createdAt | DateTime | Default: now() | Record creation time |
+
+**Relations:** belongs to UserProfile, belongs to Passage
+
+**Index:** `[userId, sourceId, createdAt]`
+
+---
+
+### VocabularyItem
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| id | String | PK, default: cuid() | Unique identifier |
+| normalizedKey | String | Unique | Hash of user, source, selected text, context, and target language |
+| userId | String | FK → UserProfile.id | Vocabulary owner |
+| sourceId | String | FK → Passage.id | Passage where item was saved |
+| selectedText | String | — | Saved word or phrase |
+| translation | String | — | Saved Vietnamese translation |
+| contextSentence | String | — | Context used when saved |
+| sourceLanguage | String | — | Source language code |
+| targetLanguage | String | — | Target language code |
+| type | String? | nullable | Optional part of speech or phrase type |
+| createdAt | DateTime | Default: now() | Record creation time |
+| updatedAt | DateTime | @updatedAt | Last modification time |
+
+**Relations:** belongs to UserProfile, belongs to Passage
+
+**Index:** `[userId, sourceId, createdAt]`
+
+---
+
 ## Cascade Rules
 
 | Parent | Child | On Delete |
@@ -154,9 +248,15 @@
 | UserProfile | Passage | Cascade |
 | UserProfile | StudySession | Cascade |
 | UserProfile | CardReview | Cascade |
+| UserProfile | TranslationCache | Cascade |
+| UserProfile | TranslationHistory | Cascade |
+| UserProfile | VocabularyItem | Cascade |
 | Passage | Question | Cascade |
+| Passage | TranslationCache | Cascade |
+| Passage | TranslationHistory | Cascade |
+| Passage | VocabularyItem | Cascade |
 | Question | CardReview | Cascade |
 
 ---
 
-**Last Updated:** 2026-05-09
+**Last Updated:** 2026-05-29

@@ -21,6 +21,7 @@ const INPUT = {
 function entry(term: string, translation: string, type = "word", confidence = 0.95) {
   return {
     normalizedTerm: term,
+    normalizedKey: `key-${term}`,
     translation,
     type,
     confidence,

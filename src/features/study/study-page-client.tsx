@@ -14,6 +14,15 @@ import { useStudyActions } from "./use-study-actions";
 import { useStudyPanelLayout } from "./use-study-panel-layout";
 import { useStudyWorkspaceState } from "./use-study-workspace-state";
 
+let quickTranslationRequestCounter = 0;
+
+interface QuickTranslationState {
+  requestId: number;
+  data: QuickTranslationData | null;
+  loading: boolean;
+  error: boolean;
+}
+
 export function StudyPageClient({
   initialPassages,
 }: {
@@ -41,8 +50,12 @@ export function StudyPageClient({
   // Translation state (lifted from StudyContentPanel)
   const [contentViewMode, setContentViewMode] = useState<"original" | "simplified">("simplified");
   const [selection, setSelection] = useState<TranslationSelection | null>(null);
-  const [quickTranslation, setQuickTranslation] = useState<QuickTranslationData | null>(null);
-  const [translationLoading, setTranslationLoading] = useState(false);
+  const [quickTranslationState, setQuickTranslationState] = useState<QuickTranslationState>({
+    requestId: 0,
+    data: null,
+    loading: false,
+    error: false,
+  });
   const [savedVocabularyIds, setSavedVocabularyIds] = useState<Set<string>>(new Set());
   const [viewingTranslate, setViewingTranslate] = useState(false);
 
@@ -53,14 +66,24 @@ export function StudyPageClient({
     setPrevPassageId(state.activePassageId);
     setPrevViewMode(contentViewMode);
     setSelection(null);
-    setQuickTranslation(null);
+    setQuickTranslationState((prev) => ({
+      requestId: prev.requestId + 1,
+      data: null,
+      loading: false,
+      error: false,
+    }));
   }
 
   const handleSelectionChange = useCallback((sel: TranslationSelection | null) => {
+    const requestId = ++quickTranslationRequestCounter;
     setSelection(sel);
-    setQuickTranslation(null);
 
-    if (!sel) return;
+    if (!sel) {
+      setQuickTranslationState({ requestId, data: null, loading: false, error: false });
+      return;
+    }
+
+    setQuickTranslationState({ requestId, data: null, loading: true, error: false });
 
     Sentry.addBreadcrumb({
       category: "study-translation",
@@ -69,7 +92,6 @@ export function StudyPageClient({
       data: { sourceId: sel.sourceId, selectedTextLength: sel.selectedText.length },
     });
 
-    setTranslationLoading(true);
     Sentry.addBreadcrumb({
       category: "study-translation",
       level: "info",
@@ -89,29 +111,43 @@ export function StudyPageClient({
         mode: "quick",
       }),
     })
-      .then((r) => r.json())
+      .then(async (r) => {
+        const json = await r.json();
+        if (!r.ok || !json.success) throw new Error("Quick translation failed");
+        return json;
+      })
       .then((json) => {
-        if (json.success) {
-          setQuickTranslation(json.data);
+        setQuickTranslationState((prev) => {
+          if (prev.requestId !== requestId) return prev;
           Sentry.addBreadcrumb({
             category: "study-translation",
             level: "info",
             message: "study-translation-quick-success",
             data: { provider: json.data.provider },
           });
-        }
-      })
-      .catch(() => {
-        Sentry.addBreadcrumb({
-          category: "study-translation",
-          level: "error",
-          message: "study-translation-quick-error",
+          return { requestId, data: json.data, loading: false, error: false };
         });
       })
-      .finally(() => setTranslationLoading(false));
+      .catch(() => {
+        setQuickTranslationState((prev) => {
+          if (prev.requestId !== requestId) return prev;
+          Sentry.addBreadcrumb({
+            category: "study-translation",
+            level: "error",
+            message: "study-translation-quick-error",
+          });
+          return { requestId, data: null, loading: false, error: true };
+        });
+      })
+      .finally(() => {
+        setQuickTranslationState((prev) =>
+          prev.requestId === requestId ? { ...prev, loading: false } : prev,
+        );
+      });
   }, []);
 
   const handleSaveVocabulary = useCallback(async () => {
+    const quickTranslation = quickTranslationState.data;
     if (!selection || !quickTranslation) return;
 
     Sentry.addBreadcrumb({
@@ -136,8 +172,11 @@ export function StudyPageClient({
         }),
       });
       const json = await res.json();
+      if (!res.ok || !json.success) throw new Error("Vocabulary save failed");
       if (json.success && json.data?.id) {
-        setSavedVocabularyIds((prev) => new Set(prev).add(json.data.id));
+        setSavedVocabularyIds((prev) =>
+          new Set(prev).add(buildTranslationSelectionKey(selection)),
+        );
         Sentry.addBreadcrumb({
           category: "study-vocabulary",
           level: "info",
@@ -152,11 +191,9 @@ export function StudyPageClient({
         message: "study-vocabulary-save-error",
       });
     }
-  }, [selection, quickTranslation]);
+  }, [selection, quickTranslationState.data]);
 
-  const vocabularySaveKey = selection
-    ? `${selection.sourceId}:${selection.selectedText}`
-    : null;
+  const vocabularySaveKey = selection ? buildTranslationSelectionKey(selection) : null;
   const isVocabularySaved = vocabularySaveKey
     ? savedVocabularyIds.has(vocabularySaveKey)
     : false;
@@ -225,9 +262,9 @@ export function StudyPageClient({
               {selection && activePassage && (
                 <StudyTranslationPopup
                   selection={selection}
-                  translation={quickTranslation}
-                  loading={translationLoading}
-                  error={null}
+                  translation={quickTranslationState.data}
+                  loading={quickTranslationState.loading}
+                  error={quickTranslationState.error ? "quick-translation-error" : null}
                   saved={isVocabularySaved}
                   onOpenDetails={() => {
                     setViewingTranslate(true);
@@ -267,7 +304,7 @@ export function StudyPageClient({
               collapsed={layout.rightPanelCollapsed}
               onToggleCollapse={layout.toggleRight}
               translationSelection={selection}
-              quickTranslation={quickTranslation}
+              quickTranslation={quickTranslationState.data}
               viewingTranslate={viewingTranslate}
               onSetViewingTranslate={setViewingTranslate}
               onSaveVocabulary={handleSaveVocabulary}
@@ -287,4 +324,13 @@ export function StudyPageClient({
       />
     </>
   );
+}
+
+function buildTranslationSelectionKey(selection: TranslationSelection) {
+  return JSON.stringify({
+    sourceId: selection.sourceId,
+    selectedText: selection.selectedText,
+    contextSentence: selection.contextSentence,
+    targetLanguage: selection.targetLanguage,
+  });
 }

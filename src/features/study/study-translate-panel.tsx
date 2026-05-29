@@ -50,7 +50,7 @@ export function StudyTranslatePanel({
   const abortRef = useRef<AbortController | null>(null);
 
   // Reset to loading when selection changes (adjust during rendering, not in effect)
-  const selectionKey = `${selection.sourceId}:${selection.selectedText}`;
+  const selectionKey = buildTranslationSelectionKey(selection);
   if (selectionKey !== fetchState.key) {
     setFetchState({ loading: true, detailed: null, key: selectionKey });
   }
@@ -83,20 +83,20 @@ export function StudyTranslatePanel({
       }),
       signal: controller.signal,
     })
-      .then((r) => r.json())
+      .then(async (r) => {
+        const json = await r.json();
+        if (!r.ok || !json.success) throw new Error("Detailed translation failed");
+        return json;
+      })
       .then((json) => {
         if (controller.signal.aborted) return;
-        if (json.success) {
-          setFetchState((prev) => ({ ...prev, loading: false, detailed: json.data }));
-          Sentry.addBreadcrumb({
-            category: "study-translation",
-            level: "info",
-            message: "study-translation-detailed-success",
-            data: { provider: json.data.provider },
-          });
-        } else {
-          setFetchState((prev) => ({ ...prev, loading: false }));
-        }
+        setFetchState((prev) => ({ ...prev, loading: false, detailed: json.data }));
+        Sentry.addBreadcrumb({
+          category: "study-translation",
+          level: "info",
+          message: "study-translation-detailed-success",
+          data: { provider: json.data.provider },
+        });
       })
       .catch(() => {
         if (controller.signal.aborted) return;
@@ -275,4 +275,13 @@ export function StudyTranslatePanel({
       </div>
     </div>
   );
+}
+
+function buildTranslationSelectionKey(selection: TranslationSelection) {
+  return JSON.stringify({
+    sourceId: selection.sourceId,
+    selectedText: selection.selectedText,
+    contextSentence: selection.contextSentence,
+    targetLanguage: selection.targetLanguage,
+  });
 }

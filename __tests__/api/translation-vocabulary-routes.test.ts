@@ -1,0 +1,366 @@
+import { NextRequest } from "next/server";
+import * as Sentry from "@sentry/nextjs";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { POST as translateRoute } from "@/app/api/translate/route";
+import { POST as vocabularyRoute } from "@/app/api/vocabulary/route";
+import { createJsonRequest, readJsonResponse } from "../helpers/api";
+import { expectApiErrorPayload, expectApiSuccessPayload } from "../helpers/assertions";
+import { passageFixture, userProfileFixture } from "../fixtures";
+import { db } from "../mocks/db";
+import { generateObject } from "../mocks/ai";
+import { createRequestLogger } from "../mocks/logger";
+
+const routeMocks = vi.hoisted(() => ({
+  getAuthenticatedUser: vi.fn(),
+}));
+
+vi.mock("@/lib/auth/auth-utils", () => ({
+  getAuthenticatedUser: routeMocks.getAuthenticatedUser,
+}));
+
+const TEST_CONTEXT = [
+  "Key concerns include algorithmic bias in automated hiring systems.",
+  "The algorithm can amplify bias when training data is incomplete.",
+  "Researchers use evidence to audit the model.",
+  "The passage also mentions quorvex drift, a term outside the seed dictionary.",
+];
+
+const dictionaryEntries = [
+  entry("algorithmic bias", "thiên lệch thuật toán", "noun phrase", 0.98),
+  entry("algorithm", "thuật toán", "noun", 0.96),
+  entry("bias", "thiên lệch", "noun", 0.72),
+  entry("data", "dữ liệu", "noun", 0.95),
+  entry("drift", "sự trôi", "noun", 0.88),
+];
+
+function entry(normalizedTerm: string, translation: string, type: string, confidence: number) {
+  return {
+    id: `dict-${normalizedTerm.replaceAll(" ", "-")}`,
+    normalizedTerm,
+    translation,
+    type,
+    confidence,
+    sourceLanguage: "en",
+    targetLanguage: "vi",
+  };
+}
+
+function translationBody(overrides: Partial<Record<string, unknown>> = {}) {
+  return {
+    text: "algorithmic bias",
+    context: TEST_CONTEXT[0],
+    sourceId: passageFixture.id,
+    sourceLanguage: "en",
+    targetLanguage: "vi",
+    mode: "quick",
+    ...overrides,
+  };
+}
+
+function vocabularyBody(overrides: Partial<Record<string, unknown>> = {}) {
+  return {
+    sourceId: passageFixture.id,
+    selectedText: "algorithmic bias",
+    translation: "thiên lệch thuật toán",
+    contextSentence: TEST_CONTEXT[0],
+    sourceLanguage: "en",
+    targetLanguage: "vi",
+    type: "noun phrase",
+    ...overrides,
+  };
+}
+
+async function expectJsonError(response: Response, status: number, message: string) {
+  expect(response.status).toBe(status);
+  expectApiErrorPayload(await readJsonResponse(response), message);
+}
+
+function mockOwnedSource() {
+  db.passage.findUnique.mockResolvedValue({ id: passageFixture.id, title: passageFixture.title });
+}
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  routeMocks.getAuthenticatedUser.mockResolvedValue(userProfileFixture);
+  mockOwnedSource();
+  db.translationCache.findUnique.mockResolvedValue(null);
+  db.translationCache.upsert.mockResolvedValue({ id: "translation-cache-1" });
+  db.translationHistory.create.mockResolvedValue({ id: "translation-history-1" });
+  db.vocabularyItem.upsert.mockResolvedValue({
+    id: "vocabulary-item-1",
+    selectedText: "algorithmic bias",
+    translation: "thiên lệch thuật toán",
+    type: "noun phrase",
+    createdAt: new Date("2026-05-29T00:00:00.000Z"),
+    updatedAt: new Date("2026-05-29T00:00:00.000Z"),
+  });
+  db.dictionaryEntry.findMany.mockImplementation(async (query: { where?: { normalizedTerm?: { in?: string[] } } }) => {
+    const terms = query.where?.normalizedTerm?.in ?? [];
+    return dictionaryEntries.filter((item) => terms.includes(item.normalizedTerm));
+  });
+});
+
+describe("POST /api/translate", () => {
+  it("rejects invalid JSON, invalid bodies, unauthenticated users, and missing sources", async () => {
+    await expectJsonError(
+      await translateRoute(new NextRequest("https://english-reading.test/api/translate", { method: "POST", body: "{" })),
+      400,
+      "Invalid JSON payload.",
+    );
+
+    await expectJsonError(
+      await translateRoute(createJsonRequest(translationBody({ text: "" }))),
+      400,
+      "Invalid translation request.",
+    );
+
+    routeMocks.getAuthenticatedUser.mockRejectedValueOnce(new Error("Authentication required"));
+    await expectJsonError(
+      await translateRoute(createJsonRequest(translationBody())),
+      401,
+      "Authentication required.",
+    );
+
+    db.passage.findUnique.mockResolvedValueOnce(null);
+    await expectJsonError(
+      await translateRoute(createJsonRequest(translationBody())),
+      404,
+      "Source not found.",
+    );
+
+    expect(createRequestLogger).toHaveBeenCalledWith(
+      "api:translate",
+      expect.objectContaining({ method: "POST", path: "/api/translate" }),
+    );
+  });
+
+  it.each([
+    ["algorithmic bias", TEST_CONTEXT[0], "thiên lệch thuật toán", "noun phrase"],
+    ["algorithm", TEST_CONTEXT[1], "thuật toán", "noun"],
+    ["bias", TEST_CONTEXT[0], "thiên lệch thuật toán", "noun phrase"],
+    ["data", TEST_CONTEXT[1], "dữ liệu", "noun"],
+  ])(
+    "resolves quick dictionary translation for %s without AI",
+    async (text, context, expectedTranslation, expectedType) => {
+      const response = await translateRoute(createJsonRequest(translationBody({ text, context })));
+      const payload = await readJsonResponse(response);
+
+      expect(response.status).toBe(200);
+      expectApiSuccessPayload(payload);
+      expect(payload).toMatchObject({
+        success: true,
+        data: {
+          translation: expectedTranslation,
+          type: expectedType,
+          provider: "dictionary",
+        },
+      });
+      expect(generateObject).not.toHaveBeenCalled();
+      expect(db.translationCache.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          create: expect.objectContaining({
+            provider: "dictionary",
+            selectedText: text,
+            contextSentence: context,
+            mode: "quick",
+          }),
+          update: expect.objectContaining({
+            provider: "dictionary",
+          }),
+        }),
+      );
+      expect(db.translationHistory.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          provider: "dictionary",
+          selectedText: text,
+          translation: expectedTranslation,
+        }),
+      });
+    },
+  );
+
+  it("returns deterministic quick fallback without AI and reuses the exact cache on repeat", async () => {
+    const fallback = {
+      translation: "sự trôi",
+      type: null,
+      provider: "fallback",
+    };
+    db.translationCache.findUnique
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({ provider: "fallback", response: fallback });
+
+    const first = await translateRoute(
+      createJsonRequest(translationBody({ text: "quorvex drift", context: TEST_CONTEXT[3] })),
+    );
+    expect(await readJsonResponse(first)).toMatchObject({ success: true, data: fallback });
+    expect(generateObject).not.toHaveBeenCalled();
+    expect(db.translationCache.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        create: expect.objectContaining({ provider: "fallback", selectedText: "quorvex drift" }),
+        update: expect.objectContaining({ provider: "fallback" }),
+      }),
+    );
+
+    db.dictionaryEntry.findMany.mockClear();
+    db.translationCache.upsert.mockClear();
+    const repeat = await translateRoute(
+      createJsonRequest(translationBody({ text: "quorvex drift", context: TEST_CONTEXT[3] })),
+    );
+    expect(await readJsonResponse(repeat)).toMatchObject({
+      success: true,
+      data: { ...fallback, provider: "cache" },
+    });
+    expect(db.dictionaryEntry.findMany).not.toHaveBeenCalled();
+    expect(db.translationCache.upsert).not.toHaveBeenCalled();
+    expect(generateObject).not.toHaveBeenCalled();
+  });
+
+  it("uses AI only for detailed cache misses and captures detailed AI failures", async () => {
+    generateObject.mockResolvedValueOnce({
+      object: {
+        translation: "thiên lệch thuật toán",
+        explanation: "A systematic unfair pattern in an automated process.",
+        meaningInSentence: "The phrase names a hiring-system risk.",
+        sentenceTranslation: "Các mối quan tâm chính bao gồm thiên lệch thuật toán trong hệ thống tuyển dụng tự động.",
+        examples: ["Teams audit algorithmic bias before release."],
+        relatedWords: ["fairness"],
+        pronunciation: null,
+        type: "noun phrase",
+      },
+    });
+
+    const response = await translateRoute(
+      createJsonRequest(translationBody({ mode: "detailed", text: "algorithmic bias", context: TEST_CONTEXT[0] })),
+    );
+    const payload = await readJsonResponse(response);
+
+    expect(response.status).toBe(200);
+    expect(payload).toMatchObject({
+      success: true,
+      data: {
+        translation: "thiên lệch thuật toán",
+        provider: "ai",
+      },
+    });
+    expect(generateObject).toHaveBeenCalledTimes(1);
+    expect(db.translationCache.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        create: expect.objectContaining({ provider: "ai", mode: "detailed" }),
+        update: expect.objectContaining({ provider: "ai" }),
+      }),
+    );
+
+    const error = new Error("model unavailable");
+    generateObject.mockRejectedValueOnce(error);
+    await expectJsonError(
+      await translateRoute(createJsonRequest(translationBody({ mode: "detailed" }))),
+      500,
+      "Unable to translate the selection.",
+    );
+    expect(Sentry.captureException).toHaveBeenCalledWith(error, {
+      tags: { route: "api:translate", method: "POST" },
+    });
+  });
+
+  it("records privacy-safe spans and logs without raw selected text or context", async () => {
+    await translateRoute(createJsonRequest(translationBody({ text: "algorithmic bias", context: TEST_CONTEXT[0] })));
+
+    const spanMetadata = vi.mocked(Sentry.startSpan).mock.calls.map(([metadata]) => metadata);
+    expect(spanMetadata).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: "api:translate-authenticate", op: "auth" }),
+        expect.objectContaining({ name: "db:translate-cache-fetch", op: "db" }),
+        expect.objectContaining({ name: "dictionary:quick-resolve", op: "function" }),
+        expect.objectContaining({ name: "db:translate-cache-upsert", op: "db" }),
+        expect.objectContaining({ name: "db:translate-history-create", op: "db" }),
+      ]),
+    );
+    const serializedSpanMetadata = JSON.stringify(spanMetadata);
+    expect(serializedSpanMetadata).not.toContain("algorithmic bias");
+    expect(serializedSpanMetadata).not.toContain(TEST_CONTEXT[0]);
+  });
+});
+
+describe("POST /api/vocabulary", () => {
+  it("rejects invalid payloads, unauthenticated users, and missing sources", async () => {
+    await expectJsonError(
+      await vocabularyRoute(createJsonRequest(vocabularyBody({ selectedText: "" }))),
+      400,
+      "Invalid vocabulary request.",
+    );
+
+    routeMocks.getAuthenticatedUser.mockRejectedValueOnce(new Error("Authentication required"));
+    await expectJsonError(
+      await vocabularyRoute(createJsonRequest(vocabularyBody())),
+      401,
+      "Authentication required.",
+    );
+
+    db.passage.findUnique.mockResolvedValueOnce(null);
+    await expectJsonError(
+      await vocabularyRoute(createJsonRequest(vocabularyBody())),
+      404,
+      "Source not found.",
+    );
+  });
+
+  it("saves vocabulary through an upsert and reuses duplicates", async () => {
+    const requestInit = { url: "https://english-reading.test/api/vocabulary" };
+    const first = await vocabularyRoute(createJsonRequest(vocabularyBody(), requestInit));
+    const duplicate = await vocabularyRoute(createJsonRequest(vocabularyBody(), requestInit));
+
+    expect(await readJsonResponse(first)).toMatchObject({
+      success: true,
+      data: {
+        id: "vocabulary-item-1",
+        selectedText: "algorithmic bias",
+        translation: "thiên lệch thuật toán",
+      },
+    });
+    expect(await readJsonResponse(duplicate)).toMatchObject({
+      success: true,
+      data: { id: "vocabulary-item-1" },
+    });
+    expect(db.vocabularyItem.upsert).toHaveBeenCalledTimes(2);
+    expect(db.vocabularyItem.upsert).toHaveBeenCalledWith({
+      where: { normalizedKey: expect.any(String) },
+      update: expect.objectContaining({
+        translation: "thiên lệch thuật toán",
+        type: "noun phrase",
+      }),
+      create: expect.objectContaining({
+        userId: userProfileFixture.id,
+        sourceId: passageFixture.id,
+        selectedText: "algorithmic bias",
+        targetLanguage: "vi",
+      }),
+      select: expect.objectContaining({
+        id: true,
+        selectedText: true,
+        translation: true,
+      }),
+    });
+    expect(Sentry.startSpan).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "db:vocabulary-upsert", op: "db" }),
+      expect.any(Function),
+    );
+    expect(createRequestLogger).toHaveBeenCalledWith(
+      "api:vocabulary",
+      expect.objectContaining({ method: "POST", path: "/api/vocabulary" }),
+    );
+  });
+
+  it("captures unexpected vocabulary failures with route tags", async () => {
+    const error = new Error("vocabulary write failed");
+    db.vocabularyItem.upsert.mockRejectedValueOnce(error);
+
+    await expectJsonError(
+      await vocabularyRoute(createJsonRequest(vocabularyBody())),
+      500,
+      "Unable to save vocabulary.",
+    );
+    expect(Sentry.captureException).toHaveBeenCalledWith(error, {
+      tags: { route: "api:vocabulary", method: "POST" },
+    });
+  });
+});

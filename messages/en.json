@@ -13,6 +13,7 @@
   "Navigation": {
     "dashboard": "Dashboard",
     "study": "Study",
+    "dictionary": "Dictionary",
     "settings": "Settings",
     "help": "Help",
     "newReading": "New Reading"
@@ -241,5 +242,13 @@
     "notFoundDescription": "The page you are looking for does not exist.",
     "goHome": "Go home",
     "authCallbackFailed": "Authentication failed. Please try again."
+  },
+  "Dictionary": {
+    "title": "Dictionary",
+    "searchPlaceholder": "Search for a word...",
+    "noResult": "No entry found for",
+    "loading": "Searching...",
+    "error": "Search failed. Please try again.",
+    "idleHint": "Type an English word to look up its Vietnamese translation"
   }
 }
