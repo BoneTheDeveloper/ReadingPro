@@ -16,4 +16,8 @@ export function getStudyChatModelId(): string {
   return normalizeModelId(process.env.OPENAI_STUDY_CHAT_MODEL) ?? DEFAULT_STUDY_CHAT_MODEL;
 }
 
+export function getTranslationModelId(): string {
+  return normalizeModelId(process.env.OPENAI_TRANSLATION_MODEL) ?? DEFAULT_STUDY_CHAT_MODEL;
+}
+
 export { DEFAULT_STUDY_CHAT_MODEL };

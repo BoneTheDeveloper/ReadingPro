@@ -26,6 +26,9 @@ model UserProfile {
   studySessions StudySession[]
   cardReviews   CardReview[]
   chatMessages  StudyChatMessage[]
+  translationCaches    TranslationCache[]
+  translationHistories TranslationHistory[]
+  vocabularyItems      VocabularyItem[]
 
   @@map("profiles")
 }
@@ -51,6 +54,9 @@ model Passage {
   user      UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
   questions Question[]
   chatMessages StudyChatMessage[]
+  translationCaches TranslationCache[]
+  translationHistories TranslationHistory[]
+  vocabularyItems VocabularyItem[]
 
   @@index([userId])
   @@index([createdAt])
@@ -71,6 +77,92 @@ model StudyChatMessage {
 
   @@index([userId, passageId, createdAt])
   @@map("study_chat_messages")
+}
+
+model DictionaryEntry {
+  id              String   @id @default(cuid())
+  normalizedKey   String   @unique
+  normalizedTerm  String
+  sourceLanguage  String
+  targetLanguage  String
+  translation     String
+  type            String?
+  pronunciation   String?
+  meanings        Json?
+  examples        Json?
+  relatedWords    Json?
+  source          String   @default("local")
+  confidence      Float    @default(0.8)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([sourceLanguage, targetLanguage, normalizedTerm])
+  @@map("dictionary_entries")
+}
+
+model TranslationCache {
+  id              String   @id @default(cuid())
+  cacheKey        String   @unique
+  userId          String
+  sourceId        String
+  selectedText    String
+  contextSentence String
+  sourceLanguage  String
+  targetLanguage  String
+  mode            String
+  provider        String
+  response        Json
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user    UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  passage Passage     @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  @@index([userId, sourceId, targetLanguage])
+  @@index([userId, createdAt])
+  @@map("translation_caches")
+}
+
+model TranslationHistory {
+  id              String   @id @default(cuid())
+  userId          String
+  sourceId        String
+  selectedText    String
+  contextSentence String
+  sourceLanguage  String
+  targetLanguage  String
+  mode            String
+  provider        String
+  translation     String
+  response        Json
+  createdAt       DateTime @default(now())
+
+  user    UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  passage Passage     @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  @@index([userId, sourceId, createdAt])
+  @@map("translation_histories")
+}
+
+model VocabularyItem {
+  id              String   @id @default(cuid())
+  normalizedKey   String   @unique
+  userId          String
+  sourceId        String
+  selectedText    String
+  translation     String
+  contextSentence String
+  sourceLanguage  String
+  targetLanguage  String
+  type            String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user    UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  passage Passage     @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  @@index([userId, sourceId, createdAt])
+  @@map("vocabulary_items")
 }
 
 // ============================================

@@ -100,3 +100,36 @@ export interface ResultItem {
   completedAt?: number;
   data?: ResultItemData;
 }
+
+export type TranslationProvider = "cache" | "dictionary" | "ai";
+
+export interface TranslationSelection {
+  selectedText: string;
+  selectionRect: {
+    top: number;
+    left: number;
+    width: number;
+    height: number;
+  };
+  contextSentence: string;
+  sourceId: string;
+  targetLanguage: "vi";
+}
+
+export interface QuickTranslationData {
+  translation: string;
+  type?: string;
+  provider: TranslationProvider;
+}
+
+export interface DetailedTranslationData {
+  translation: string;
+  explanation: string;
+  meaningInSentence?: string;
+  sentenceTranslation: string;
+  examples: string[];
+  relatedWords: string[];
+  pronunciation?: string;
+  type?: string;
+  provider: TranslationProvider;
+}
