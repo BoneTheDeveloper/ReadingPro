@@ -11,12 +11,13 @@ import { cn } from "@/lib/shared/utils";
 
 interface StudyChatPanelProps {
   passageId: string;
+  prefilledQuestion?: string | null;
 }
 
-export function StudyChatPanel({ passageId }: StudyChatPanelProps) {
+export function StudyChatPanel({ passageId, prefilledQuestion }: StudyChatPanelProps) {
   const t = useTranslations("Study");
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState(prefilledQuestion ?? "");
 
   const transport = useMemo(
     () =>
