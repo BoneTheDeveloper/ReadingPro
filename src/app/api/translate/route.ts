@@ -6,13 +6,12 @@ import { getAuthenticatedUser } from "@/lib/auth/auth-utils";
 import {
   detailedTranslationSchema,
   generateDetailedAiTranslation,
-  generateQuickAiTranslation,
   quickTranslationSchema,
   type DetailedTranslation,
   type QuickTranslation,
 } from "@/lib/ai/translator";
 import { createRequestLogContext, createRequestLogger } from "@/lib/core/logger";
-import { lookupDictionaryTranslation } from "@/lib/dictionary/translation-dictionary";
+import { resolveQuickDictionaryTranslation } from "@/lib/dictionary/resolve-quick-dictionary-translation";
 import {
   buildTranslationCacheKey,
   createTranslationHistory,
@@ -20,8 +19,6 @@ import {
   getTranslationCache,
   upsertTranslationCache,
 } from "@/lib/db/translation-queries";
-
-const DICTIONARY_CONFIDENCE_THRESHOLD = 0.8;
 
 const translateRequestSchema = z.object({
   text: z.string().trim().min(1).max(500),
@@ -235,9 +232,9 @@ async function resolveQuickTranslation(
   userId: string,
   requestLog: ReturnType<typeof createRequestLogger>,
 ): Promise<QuickTranslation> {
-  const dictionaryResult = await Sentry.startSpan(
+  const result = await Sentry.startSpan(
     {
-      name: "dictionary:translate-lookup",
+      name: "dictionary:quick-resolve",
       op: "function",
       attributes: {
         "translation.source_id": input.sourceId,
@@ -247,52 +244,26 @@ async function resolveQuickTranslation(
         "user.id": userId,
       },
     },
-    () => lookupDictionaryTranslation(input),
+    () =>
+      resolveQuickDictionaryTranslation({
+        text: input.text,
+        context: input.context,
+        sourceLanguage: input.sourceLanguage,
+        targetLanguage: input.targetLanguage,
+      }),
   );
-
-  if (dictionaryResult && dictionaryResult.confidence >= DICTIONARY_CONFIDENCE_THRESHOLD) {
-    requestLog.info(
-      {
-        context: {
-          dictionaryHit: true,
-          dictionaryConfidence: dictionaryResult.confidence,
-          provider: "dictionary",
-        },
-      },
-      "Dictionary translation selected",
-    );
-    return {
-      translation: dictionaryResult.translation,
-      type: dictionaryResult.type ?? null,
-      provider: "dictionary",
-    };
-  }
 
   requestLog.info(
     {
       context: {
-        dictionaryHit: Boolean(dictionaryResult),
-        dictionaryConfidence: dictionaryResult?.confidence,
-        provider: "ai",
+        provider: result.provider,
+        selectedTextLength: input.text.length,
       },
     },
-    "Dictionary translation missed or low confidence; falling back to AI",
+    "Quick dictionary translation resolved",
   );
 
-  return Sentry.startSpan(
-    {
-      name: "ai:translate-generate",
-      op: "ai",
-      attributes: {
-        "translation.mode": input.mode,
-        "translation.source_id": input.sourceId,
-        "translation.text_length": input.text.length,
-        "translation.context_length": input.context.length,
-        "user.id": userId,
-      },
-    },
-    () => generateQuickAiTranslation(input),
-  );
+  return result;
 }
 
 async function persistTranslationResult(
