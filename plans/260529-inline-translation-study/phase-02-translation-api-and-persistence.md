@@ -1,10 +1,11 @@
 ---
 phase: 2
-title: "Translation API and Persistence"
-status: pending
+title: Translation API and Persistence
+status: completed
 priority: P1
-effort: "5h"
-dependencies: [1]
+effort: 5h
+dependencies:
+  - 1
 ---
 
 # Phase 2: Translation API and Persistence

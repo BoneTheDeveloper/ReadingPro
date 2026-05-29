@@ -1,9 +1,9 @@
 ---
 phase: 1
-title: "Contracts and Data Model"
-status: pending
+title: Contracts and Data Model
+status: completed
 priority: P1
-effort: "3h"
+effort: 3h
 dependencies: []
 ---
 

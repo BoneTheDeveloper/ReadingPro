@@ -9,18 +9,18 @@ const log = createModuleLogger("ai:translator");
 
 const quickAiTranslationSchema = z.object({
   translation: z.string().min(1).max(500),
-  type: z.string().min(1).max(80).optional(),
+  type: z.string().max(80).nullable().default(null),
 });
 
 const detailedAiTranslationSchema = z.object({
   translation: z.string().min(1).max(500),
   explanation: z.string().min(1).max(2000),
-  meaningInSentence: z.string().min(1).max(1000).optional(),
+  meaningInSentence: z.string().max(1000).nullable().default(null),
   sentenceTranslation: z.string().min(1).max(2000),
   examples: z.array(z.string().min(1).max(300)).max(5).default([]),
   relatedWords: z.array(z.string().min(1).max(80)).max(8).default([]),
-  pronunciation: z.string().min(1).max(120).optional(),
-  type: z.string().min(1).max(80).optional(),
+  pronunciation: z.string().max(120).nullable().default(null),
+  type: z.string().max(80).nullable().default(null),
 });
 
 export const quickTranslationSchema = quickAiTranslationSchema.extend({

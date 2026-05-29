@@ -263,7 +263,7 @@ async function resolveQuickTranslation(
     );
     return {
       translation: dictionaryResult.translation,
-      type: dictionaryResult.type,
+      type: dictionaryResult.type ?? null,
       provider: "dictionary",
     };
   }

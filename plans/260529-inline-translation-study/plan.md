@@ -1,14 +1,18 @@
 ---
-title: "Inline Translation for Study Page"
-description: ""
+title: Inline Translation for Study Page
+description: ''
 status: pending
 priority: P2
-branch: "main"
-tags: [study, translation, vocabulary, ai]
+branch: main
+tags:
+  - study
+  - translation
+  - vocabulary
+  - ai
 blockedBy: []
 blocks: []
-created: "2026-05-29T02:08:41.549Z"
-createdBy: "ck:plan"
+created: '2026-05-29T02:08:41.549Z'
+createdBy: 'ck:plan'
 source: skill
 ---
 
@@ -83,10 +87,10 @@ Add inline English-to-Vietnamese translation to `/study` so learners can select 
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 1 | [Contracts and Data Model](./phase-01-contracts-and-data-model.md) | Pending |
-| 2 | [Translation API and Persistence](./phase-02-translation-api-and-persistence.md) | Pending |
-| 3 | [Study Page Selection UI](./phase-03-study-page-selection-ui.md) | Pending |
-| 4 | [Translate Studio Panel](./phase-04-translate-studio-panel.md) | Pending |
+| 1 | [Contracts and Data Model](./phase-01-contracts-and-data-model.md) | Completed |
+| 2 | [Translation API and Persistence](./phase-02-translation-api-and-persistence.md) | Completed |
+| 3 | [Study Page Selection UI](./phase-03-study-page-selection-ui.md) | Completed |
+| 4 | [Translate Studio Panel](./phase-04-translate-studio-panel.md) | Completed |
 | 5 | [Tests Docs and Verification](./phase-05-tests-docs-and-verification.md) | Pending |
 
 ## Dependencies
