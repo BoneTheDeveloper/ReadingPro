@@ -5,7 +5,7 @@ import { setCachedProfile } from '@/lib/auth/auth-cache'
 import { getSafeNextPath } from '@/lib/auth/redirects'
 
 function getRedirectOrigin(requestOrigin: string) {
-  return requestOrigin
+  return process.env.NEXT_PUBLIC_SITE_URL || requestOrigin
 }
 
 export async function GET(request: Request) {
