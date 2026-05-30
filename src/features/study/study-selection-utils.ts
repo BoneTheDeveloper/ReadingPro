@@ -1,9 +1,15 @@
 import type { TranslationSelection } from "./study-types";
 
+type SelectionRect = TranslationSelection["selectionRect"];
+type SelectionPoint = { x: number; y: number };
+
+const CURSOR_SELECTION_ANCHOR_TOLERANCE = 48;
+
 interface ExtractSelectionInput {
   contentRef: React.RefObject<HTMLDivElement | null>;
   sourceId: string;
   targetLanguage?: "vi";
+  cursorPoint?: SelectionPoint;
 }
 
 /**
@@ -14,6 +20,7 @@ export function extractSelectionInfo({
   contentRef,
   sourceId,
   targetLanguage = "vi",
+  cursorPoint,
 }: ExtractSelectionInput): TranslationSelection | null {
   const container = contentRef.current;
   if (!container) return null;
@@ -33,8 +40,10 @@ export function extractSelectionInfo({
   // Find closest <p> ancestor for context sentence
   const contextSentence = extractContextParagraph(range);
 
-  // Get selection bounding rect for popup positioning
-  const rect = range.getBoundingClientRect();
+  // Get selection geometry for popup positioning.
+  const clientRects = getVisibleSelectionRects(range);
+  const rect = getSelectionBoundingRect(range, clientRects);
+  if (!isVisibleSelectionRect(rect)) return null;
 
   return {
     selectedText,
@@ -44,10 +53,68 @@ export function extractSelectionInfo({
       width: rect.width,
       height: rect.height,
     },
+    actionRect: calculateSelectionActionRect({
+      selectionRect: rect,
+      clientRects,
+      isBackward: isSelectionBackward(selection),
+      cursorPoint,
+    }),
     contextSentence,
     sourceId,
     targetLanguage,
   };
+}
+
+export function calculateCursorActionRect(cursorPoint: SelectionPoint): SelectionRect {
+  return {
+    top: cursorPoint.y,
+    left: cursorPoint.x,
+    width: 0,
+    height: 0,
+  };
+}
+
+export function calculateSelectionActionRect(input: {
+  selectionRect: SelectionRect;
+  clientRects: SelectionRect[];
+  isBackward: boolean;
+  cursorPoint?: SelectionPoint;
+}): SelectionRect {
+  const visibleRects = input.clientRects.filter(isVisibleSelectionRect);
+
+  if (
+    input.cursorPoint &&
+    isCursorPointNearSelection(input.cursorPoint, visibleRects, input.selectionRect)
+  ) {
+    return calculateCursorActionRect(input.cursorPoint);
+  }
+
+  const edgeRect = input.isBackward ? visibleRects[0] : visibleRects.at(-1);
+
+  if (!edgeRect) return input.selectionRect;
+
+  return {
+    top: edgeRect.top,
+    left: input.isBackward ? edgeRect.left : edgeRect.left + edgeRect.width,
+    width: 0,
+    height: edgeRect.height || input.selectionRect.height,
+  };
+}
+
+function isCursorPointNearSelection(
+  point: SelectionPoint,
+  clientRects: SelectionRect[],
+  selectionRect: SelectionRect,
+) {
+  const rects = clientRects.length > 0 ? clientRects : [selectionRect];
+
+  return rects.some(
+    (rect) =>
+      point.x >= rect.left - CURSOR_SELECTION_ANCHOR_TOLERANCE &&
+      point.x <= rect.left + rect.width + CURSOR_SELECTION_ANCHOR_TOLERANCE &&
+      point.y >= rect.top - CURSOR_SELECTION_ANCHOR_TOLERANCE &&
+      point.y <= rect.top + rect.height + CURSOR_SELECTION_ANCHOR_TOLERANCE,
+  );
 }
 
 function extractContextParagraph(range: Range): string {
@@ -72,4 +139,52 @@ function extractContextParagraph(range: Range): string {
   }
 
   return "";
+}
+
+function getVisibleSelectionRects(range: Range): SelectionRect[] {
+  return Array.from(range.getClientRects())
+    .map(rectFromDOMRect)
+    .filter(isVisibleSelectionRect);
+}
+
+function getSelectionBoundingRect(range: Range, clientRects: SelectionRect[]): SelectionRect {
+  const rect = rectFromDOMRect(range.getBoundingClientRect());
+  if (isVisibleSelectionRect(rect)) return rect;
+
+  if (clientRects.length === 0) return rect;
+
+  const left = Math.min(...clientRects.map((clientRect) => clientRect.left));
+  const top = Math.min(...clientRects.map((clientRect) => clientRect.top));
+  const right = Math.max(...clientRects.map((clientRect) => clientRect.left + clientRect.width));
+  const bottom = Math.max(...clientRects.map((clientRect) => clientRect.top + clientRect.height));
+
+  return {
+    top,
+    left,
+    width: right - left,
+    height: bottom - top,
+  };
+}
+
+function rectFromDOMRect(rect: DOMRect): SelectionRect {
+  return {
+    top: rect.top,
+    left: rect.left,
+    width: rect.width,
+    height: rect.height,
+  };
+}
+
+function isVisibleSelectionRect(rect: SelectionRect) {
+  return rect.width > 0 || rect.height > 0;
+}
+
+function isSelectionBackward(selection: Selection) {
+  if (!selection.anchorNode || !selection.focusNode) return false;
+
+  const directionRange = document.createRange();
+  directionRange.setStart(selection.anchorNode, selection.anchorOffset);
+  directionRange.setEnd(selection.focusNode, selection.focusOffset);
+
+  return directionRange.collapsed;
 }

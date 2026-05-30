@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 import { Group, Panel, Separator } from "react-resizable-panels";
 import { useTranslations } from "next-intl";
 import * as Sentry from "@sentry/nextjs";
-import { clampTranslationContext, MAX_TRANSLATE_TEXT_LENGTH } from "@/lib/translation/translation-limits";
+import { clampTranslationContext, isTranslateTextWithinLimit } from "@/lib/translation/translation-limits";
 import type { PassageData, TranslationSelection, QuickTranslationData } from "./study-types";
 import { StudySourcesPanel } from "./study-left-panel";
 import { StudyContentPanel } from "./study-content-panel";
@@ -17,7 +17,7 @@ import { useStudyWorkspaceState } from "./use-study-workspace-state";
 
 let quickTranslationRequestCounter = 0;
 
-type QuickTranslationStatus = "idle" | "ready" | "selection-too-long" | "loading" | "success" | "error";
+type QuickTranslationStatus = "idle" | "ready" | "loading" | "success" | "error";
 
 interface QuickTranslationState {
   requestId: number;
@@ -86,13 +86,26 @@ export function StudyPageClient({
       return;
     }
 
-    const nextStatus: QuickTranslationStatus =
-      sel.selectedText.length > MAX_TRANSLATE_TEXT_LENGTH ? "selection-too-long" : "ready";
+    if (!isTranslateTextWithinLimit(sel.selectedText)) {
+      setSelection(null);
+      setQuickTranslationState((prev) => ({
+        requestId: prev.requestId + 1,
+        data: null,
+        status: "idle",
+      }));
+      Sentry.addBreadcrumb({
+        category: "study-translation",
+        level: "info",
+        message: "study-translation-selection-too-long",
+        data: { sourceId: sel.sourceId, selectedTextLength: sel.selectedText.length },
+      });
+      return;
+    }
 
     setQuickTranslationState((prev) => ({
       requestId: prev.requestId + 1,
       data: null,
-      status: nextStatus,
+      status: "ready",
     }));
 
     Sentry.addBreadcrumb({
@@ -107,7 +120,7 @@ export function StudyPageClient({
     if (
       !selection ||
       quickTranslationState.status === "loading" ||
-      quickTranslationState.status === "selection-too-long"
+      !isTranslateTextWithinLimit(selection.selectedText)
     ) {
       return;
     }

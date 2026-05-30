@@ -1,6 +1,13 @@
 export const MAX_TRANSLATE_TEXT_LENGTH = 500;
 export const MAX_TRANSLATE_CONTEXT_LENGTH = 4000;
 
+export function isTranslateTextWithinLimit(
+  text: string,
+  maxLength = MAX_TRANSLATE_TEXT_LENGTH,
+) {
+  return text.length <= maxLength;
+}
+
 export function clampTranslationContext(
   context: string,
   selectedText: string,

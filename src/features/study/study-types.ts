@@ -111,6 +111,12 @@ export interface TranslationSelection {
     width: number;
     height: number;
   };
+  actionRect?: {
+    top: number;
+    left: number;
+    width: number;
+    height: number;
+  };
   contextSentence: string;
   sourceId: string;
   targetLanguage: "vi";

@@ -339,7 +339,7 @@ describe("StudyPageClient", () => {
     );
   });
 
-  it("shows a local warning for oversized selections without calling translate", async () => {
+  it("does not show a quick-translation popup for oversized selections", async () => {
     const longSelection = "a".repeat(501);
     const passage = createStudyPassage({
       content: longSelection,
@@ -359,8 +359,16 @@ describe("StudyPageClient", () => {
     await user.click(screen.getByText(passage.title));
     fireEvent.mouseUp(screen.getByText(longSelection));
 
-    expect(await screen.findByText("Selection too long")).toBeInTheDocument();
-    expect(screen.getByText("501 / 500")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(Sentry.addBreadcrumb).toHaveBeenCalledWith(
+        expect.objectContaining({
+          category: "study-translation",
+          message: "study-translation-selection-too-long",
+          data: expect.objectContaining({ selectedTextLength: 501 }),
+        }),
+      );
+    });
+    expect(screen.queryByText("Selection too long")).not.toBeInTheDocument();
     expect(
       screen.queryAllByRole("button", { name: /^Translate$/ }).find((button) =>
         button.className.includes("fixed"),

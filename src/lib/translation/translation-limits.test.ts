@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { clampTranslationContext, MAX_TRANSLATE_CONTEXT_LENGTH } from "./translation-limits";
+import {
+  clampTranslationContext,
+  isTranslateTextWithinLimit,
+  MAX_TRANSLATE_CONTEXT_LENGTH,
+  MAX_TRANSLATE_TEXT_LENGTH,
+} from "./translation-limits";
 
 describe("clampTranslationContext", () => {
   it("keeps short context unchanged", () => {
@@ -21,5 +26,15 @@ describe("clampTranslationContext", () => {
     expect(clampTranslationContext(context, "missing")).toBe(
       context.slice(0, MAX_TRANSLATE_CONTEXT_LENGTH),
     );
+  });
+});
+
+describe("isTranslateTextWithinLimit", () => {
+  it("allows text at the configured quick-translation limit", () => {
+    expect(isTranslateTextWithinLimit("a".repeat(MAX_TRANSLATE_TEXT_LENGTH))).toBe(true);
+  });
+
+  it("rejects text over the configured quick-translation limit", () => {
+    expect(isTranslateTextWithinLimit("a".repeat(MAX_TRANSLATE_TEXT_LENGTH + 1))).toBe(false);
   });
 });

@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import {
   Loader2,
@@ -43,15 +43,40 @@ export function StudyContentPanel({
 }: StudyContentPanelProps) {
   const t = useTranslations("Study");
   const contentRef = useRef<HTMLDivElement>(null);
+  const selectionStartedInContentRef = useRef(false);
 
-  const handleSelectionEvent = useCallback(() => {
+  const updateSelectionFromMouseEvent = useCallback((event: MouseEvent) => {
     if (!passage) return;
     const info = extractSelectionInfo({
       contentRef,
       sourceId: passage.id,
+      cursorPoint: {
+        x: event.clientX,
+        y: event.clientY,
+      },
     });
     onSelectionChange(info);
   }, [passage, onSelectionChange]);
+
+  useEffect(() => {
+    function handleDocumentMouseUp(event: MouseEvent) {
+      if (!selectionStartedInContentRef.current) return;
+      selectionStartedInContentRef.current = false;
+      updateSelectionFromMouseEvent(event);
+    }
+
+    document.addEventListener("mouseup", handleDocumentMouseUp);
+    return () => document.removeEventListener("mouseup", handleDocumentMouseUp);
+  }, [updateSelectionFromMouseEvent]);
+
+  const handleContentMouseUp = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+    if (selectionStartedInContentRef.current) return;
+    updateSelectionFromMouseEvent(event.nativeEvent);
+  }, [updateSelectionFromMouseEvent]);
+
+  const handleContentMouseDown = useCallback(() => {
+    selectionStartedInContentRef.current = true;
+  }, []);
 
   if (!passage) {
     return (
@@ -167,7 +192,8 @@ export function StudyContentPanel({
           <div
             ref={contentRef}
             className="reading-content text-foreground"
-            onMouseUp={handleSelectionEvent}
+            onMouseDown={handleContentMouseDown}
+            onMouseUp={handleContentMouseUp}
           >
             {currentContent.split("\n\n").map((paragraph, i) => (
               <p key={i} className="mb-6 last:mb-0">

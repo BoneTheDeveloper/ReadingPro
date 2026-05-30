@@ -4,12 +4,11 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Loader2, Languages, ExternalLink, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { MAX_TRANSLATE_TEXT_LENGTH } from "@/lib/translation/translation-limits";
 import { cn } from "@/lib/shared/utils";
 import type { TranslationSelection } from "./study-types";
 import type { QuickTranslationData } from "./study-types";
 
-type QuickTranslationStatus = "idle" | "ready" | "selection-too-long" | "loading" | "success" | "error";
+type QuickTranslationStatus = "idle" | "ready" | "loading" | "success" | "error";
 
 interface StudyTranslationPopupProps {
   selection: TranslationSelection;
@@ -24,6 +23,8 @@ const POPUP_WIDTH = 280;
 const POPUP_OFFSET_Y = 8;
 const POPUP_ESTIMATED_HEIGHT = 120;
 const VIEWPORT_MARGIN = 8;
+const ICON_VIEWPORT_PADDING = 40;
+const CURSOR_ICON_OFFSET = 6;
 
 export function calculateStudyTranslationPopupPosition(input: {
   selectionRect: TranslationSelection["selectionRect"];
@@ -59,6 +60,27 @@ export function calculateStudyTranslationPopupPosition(input: {
       ),
     ),
     showAbove,
+  };
+}
+
+export function calculateStudyTranslationIconPosition(input: {
+  selectionRect: TranslationSelection["selectionRect"];
+  actionRect?: TranslationSelection["actionRect"];
+  viewportWidth: number;
+}) {
+  const rect = input.actionRect ?? input.selectionRect;
+  const isCursorPoint = rect.width === 0 && rect.height === 0;
+  const iconTop = isCursorPoint
+    ? rect.top + CURSOR_ICON_OFFSET
+    : rect.top + rect.height + 2;
+  const iconLeft = Math.min(
+    rect.left + rect.width + (isCursorPoint ? CURSOR_ICON_OFFSET : -8),
+    input.viewportWidth - ICON_VIEWPORT_PADDING,
+  );
+
+  return {
+    top: iconTop,
+    left: Math.max(VIEWPORT_MARGIN, iconLeft),
   };
 }
 
@@ -115,13 +137,13 @@ export function StudyTranslationPopup({
     }
   }, [panelHeight, selection.selectedText, status, translation?.translation, translation?.type]);
 
-  // Compact icon mode: positioned at bottom-right of selection to avoid GT extension overlap
+  // Compact icon mode: positioned near the user's selection release point.
   if (status === "ready") {
-    const iconTop = rect.top + rect.height + 2;
-    const iconLeft = Math.min(
-      rect.left + rect.width - 8,
-      viewportWidth - 40,
-    );
+    const iconPosition = calculateStudyTranslationIconPosition({
+      selectionRect: rect,
+      actionRect: selection.actionRect,
+      viewportWidth,
+    });
 
     return (
       <button
@@ -136,7 +158,7 @@ export function StudyTranslationPopup({
           "hover:bg-primary/90 active:scale-95",
           "transition-all duration-150",
         )}
-        style={{ top: iconTop, left: Math.max(8, iconLeft) }}
+        style={iconPosition}
       >
         <Languages className="w-4 h-4" />
       </button>
@@ -186,15 +208,6 @@ export function StudyTranslationPopup({
             <span className="text-sm text-muted-foreground">
               {t("translationLoading")}
             </span>
-          </div>
-        )}
-
-        {status === "selection-too-long" && (
-          <div className="space-y-1">
-            <p className="text-sm font-medium text-destructive">{t("selectionTooLong")}</p>
-            <p className="text-xs text-muted-foreground">
-              {selection.selectedText.length} / {MAX_TRANSLATE_TEXT_LENGTH}
-            </p>
           </div>
         )}
 
