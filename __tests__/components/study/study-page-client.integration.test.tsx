@@ -339,6 +339,36 @@ describe("StudyPageClient", () => {
     );
   });
 
+  it("shows a local warning for oversized selections without calling translate", async () => {
+    const longSelection = "a".repeat(501);
+    const passage = createStudyPassage({
+      content: longSelection,
+      simplifiedContent: null,
+      originalLevel: "B2",
+      wordCount: 1,
+    });
+    vi.mocked(extractSelectionInfo).mockReturnValue({
+      selectedText: longSelection,
+      selectionRect: { top: 120, left: 160, width: 120, height: 20 },
+      contextSentence: longSelection,
+      sourceId: passage.id,
+      targetLanguage: "vi",
+    });
+    const { user } = renderWithUser(<StudyPageClient initialPassages={[passage]} />);
+
+    await user.click(screen.getByText(passage.title));
+    fireEvent.mouseUp(screen.getByText(longSelection));
+
+    expect(await screen.findByText("Selection too long")).toBeInTheDocument();
+    expect(screen.getByText("501 / 500")).toBeInTheDocument();
+    expect(
+      screen.queryAllByRole("button", { name: /^Translate$/ }).find((button) =>
+        button.className.includes("fixed"),
+      ),
+    ).toBeUndefined();
+    expect(fetch).not.toHaveBeenCalledWith("/api/translate", expect.anything());
+  });
+
   it("shows quick translation without Save vocabulary and opens details on demand", async () => {
     const passage = createStudyPassage({
       content: "Key concerns include algorithmic bias in automated hiring systems.",

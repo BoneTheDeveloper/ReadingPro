@@ -124,6 +124,7 @@
     "listenSource": "Nghe gốc",
     "listenTranslation": "Nghe bản dịch",
     "translateSelection": "Dịch",
+    "selectionTooLong": "Vùng chọn quá dài",
     "translationPopupTitle": "Bản dịch",
     "translationLoading": "Đang dịch...",
     "translationError": "Dịch thất bại",

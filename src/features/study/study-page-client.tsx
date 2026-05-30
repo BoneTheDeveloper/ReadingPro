@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import { Group, Panel, Separator } from "react-resizable-panels";
 import { useTranslations } from "next-intl";
 import * as Sentry from "@sentry/nextjs";
+import { clampTranslationContext, MAX_TRANSLATE_TEXT_LENGTH } from "@/lib/translation/translation-limits";
 import type { PassageData, TranslationSelection, QuickTranslationData } from "./study-types";
 import { StudySourcesPanel } from "./study-left-panel";
 import { StudyContentPanel } from "./study-content-panel";
@@ -16,7 +17,7 @@ import { useStudyWorkspaceState } from "./use-study-workspace-state";
 
 let quickTranslationRequestCounter = 0;
 
-type QuickTranslationStatus = "idle" | "ready" | "loading" | "success" | "error";
+type QuickTranslationStatus = "idle" | "ready" | "selection-too-long" | "loading" | "success" | "error";
 
 interface QuickTranslationState {
   requestId: number;
@@ -85,10 +86,13 @@ export function StudyPageClient({
       return;
     }
 
+    const nextStatus: QuickTranslationStatus =
+      sel.selectedText.length > MAX_TRANSLATE_TEXT_LENGTH ? "selection-too-long" : "ready";
+
     setQuickTranslationState((prev) => ({
       requestId: prev.requestId + 1,
       data: null,
-      status: "ready",
+      status: nextStatus,
     }));
 
     Sentry.addBreadcrumb({
@@ -100,7 +104,13 @@ export function StudyPageClient({
   }, []);
 
   const handleQuickTranslate = useCallback(() => {
-    if (!selection || quickTranslationState.status === "loading") return;
+    if (
+      !selection ||
+      quickTranslationState.status === "loading" ||
+      quickTranslationState.status === "selection-too-long"
+    ) {
+      return;
+    }
 
     const requestId = ++quickTranslationRequestCounter;
     setQuickTranslationState((prev) => ({ ...prev, requestId, status: "loading" }));
@@ -117,7 +127,7 @@ export function StudyPageClient({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         text: selection.selectedText,
-        context: selection.contextSentence,
+        context: clampTranslationContext(selection.contextSentence, selection.selectedText),
         sourceId: selection.sourceId,
         sourceLanguage: "en",
         targetLanguage: "vi",

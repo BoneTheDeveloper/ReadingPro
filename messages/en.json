@@ -124,6 +124,7 @@
     "listenSource": "Listen to source",
     "listenTranslation": "Listen to translation",
     "translateSelection": "Translate",
+    "selectionTooLong": "Selection too long",
     "translationPopupTitle": "Translation",
     "translationLoading": "Translating...",
     "translationError": "Translation failed",

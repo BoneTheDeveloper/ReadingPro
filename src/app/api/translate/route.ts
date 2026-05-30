@@ -14,6 +14,7 @@ import { createRequestLogContext, createRequestLogger } from "@/lib/core/logger"
 import { resolveQuickDictionaryTranslation } from "@/lib/dictionary/resolve-quick-dictionary-translation";
 import { getQuickSelectionScope } from "@/lib/translation/quick-selection-scope";
 import { translateWithNonAiProvider } from "@/lib/translation/non-ai-machine-translation-provider";
+import { MAX_TRANSLATE_CONTEXT_LENGTH, MAX_TRANSLATE_TEXT_LENGTH } from "@/lib/translation/translation-limits";
 import {
   buildTranslationCacheKey,
   createTranslationHistory,
@@ -23,8 +24,8 @@ import {
 } from "@/lib/db/translation-queries";
 
 const translateRequestSchema = z.object({
-  text: z.string().trim().min(1).max(500),
-  context: z.string().trim().min(1).max(4000),
+  text: z.string().trim().min(1).max(MAX_TRANSLATE_TEXT_LENGTH),
+  context: z.string().trim().min(1).max(MAX_TRANSLATE_CONTEXT_LENGTH),
   sourceId: z.string().min(1),
   sourceLanguage: z.literal("en"),
   targetLanguage: z.literal("vi"),

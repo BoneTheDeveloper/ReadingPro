@@ -4,11 +4,12 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Loader2, Languages, ExternalLink, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { MAX_TRANSLATE_TEXT_LENGTH } from "@/lib/translation/translation-limits";
 import { cn } from "@/lib/shared/utils";
 import type { TranslationSelection } from "./study-types";
 import type { QuickTranslationData } from "./study-types";
 
-type QuickTranslationStatus = "idle" | "ready" | "loading" | "success" | "error";
+type QuickTranslationStatus = "idle" | "ready" | "selection-too-long" | "loading" | "success" | "error";
 
 interface StudyTranslationPopupProps {
   selection: TranslationSelection;
@@ -185,6 +186,15 @@ export function StudyTranslationPopup({
             <span className="text-sm text-muted-foreground">
               {t("translationLoading")}
             </span>
+          </div>
+        )}
+
+        {status === "selection-too-long" && (
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-destructive">{t("selectionTooLong")}</p>
+            <p className="text-xs text-muted-foreground">
+              {selection.selectedText.length} / {MAX_TRANSLATE_TEXT_LENGTH}
+            </p>
           </div>
         )}
 
