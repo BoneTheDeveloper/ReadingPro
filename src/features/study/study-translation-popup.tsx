@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Loader2, Languages, ExternalLink, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,44 @@ interface StudyTranslationPopupProps {
 const POPUP_WIDTH = 280;
 const POPUP_OFFSET_Y = 8;
 const POPUP_ESTIMATED_HEIGHT = 120;
+const VIEWPORT_MARGIN = 8;
+
+export function calculateStudyTranslationPopupPosition(input: {
+  selectionRect: TranslationSelection["selectionRect"];
+  viewportWidth: number;
+  viewportHeight: number;
+  popupWidth?: number;
+  popupHeight: number;
+  offsetY?: number;
+}) {
+  const {
+    selectionRect,
+    viewportWidth,
+    viewportHeight,
+    popupWidth = POPUP_WIDTH,
+    popupHeight,
+    offsetY = POPUP_OFFSET_Y,
+  } = input;
+
+  const spaceBelow = viewportHeight - selectionRect.top - selectionRect.height;
+  const showAbove = spaceBelow < popupHeight + offsetY;
+  const unclampedTop = showAbove
+    ? selectionRect.top - popupHeight - offsetY
+    : selectionRect.top + selectionRect.height + offsetY;
+  const maxTop = Math.max(VIEWPORT_MARGIN, viewportHeight - popupHeight - VIEWPORT_MARGIN);
+
+  return {
+    top: Math.max(VIEWPORT_MARGIN, Math.min(unclampedTop, maxTop)),
+    left: Math.max(
+      VIEWPORT_MARGIN,
+      Math.min(
+        selectionRect.left + selectionRect.width / 2 - popupWidth / 2,
+        viewportWidth - popupWidth - VIEWPORT_MARGIN,
+      ),
+    ),
+    showAbove,
+  };
+}
 
 export function StudyTranslationPopup({
   selection,
@@ -34,6 +72,7 @@ export function StudyTranslationPopup({
   const t = useTranslations("Study");
   const iconRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const [panelHeight, setPanelHeight] = useState(POPUP_ESTIMATED_HEIGHT);
 
   // Dismiss on Escape
   useEffect(() => {
@@ -66,6 +105,15 @@ export function StudyTranslationPopup({
   const viewportHeight = window.innerHeight;
   const viewportWidth = document.documentElement.clientWidth;
 
+  useLayoutEffect(() => {
+    if (status === "ready") return;
+
+    const nextHeight = panelRef.current?.getBoundingClientRect().height;
+    if (nextHeight && Math.abs(nextHeight - panelHeight) > 1) {
+      setPanelHeight(nextHeight);
+    }
+  }, [panelHeight, selection.selectedText, status, translation?.translation, translation?.type]);
+
   // Compact icon mode: positioned at bottom-right of selection to avoid GT extension overlap
   if (status === "ready") {
     const iconTop = rect.top + rect.height + 2;
@@ -95,19 +143,12 @@ export function StudyTranslationPopup({
   }
 
   // Full popup panel: loading / success / error
-  const spaceBelow = viewportHeight - rect.top - rect.height;
-  const showAbove = spaceBelow < POPUP_ESTIMATED_HEIGHT + POPUP_OFFSET_Y;
-  const top = showAbove
-    ? Math.max(8, rect.top - POPUP_ESTIMATED_HEIGHT - POPUP_OFFSET_Y)
-    : rect.top + rect.height + POPUP_OFFSET_Y;
-
-  const left = Math.max(
-    8,
-    Math.min(
-      rect.left + rect.width / 2 - POPUP_WIDTH / 2,
-      viewportWidth - POPUP_WIDTH - 8,
-    ),
-  );
+  const { top, left } = calculateStudyTranslationPopupPosition({
+    selectionRect: rect,
+    viewportWidth,
+    viewportHeight,
+    popupHeight: panelHeight,
+  });
 
   return (
     <div

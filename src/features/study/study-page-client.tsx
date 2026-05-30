@@ -166,18 +166,30 @@ export function StudyPageClient({
     });
 
     try {
+      const vocabularyPayload: {
+        sourceId: string;
+        selectedText: string;
+        translation: string;
+        contextSentence: string;
+        sourceLanguage: "en";
+        targetLanguage: "vi";
+        type?: string;
+      } = {
+        sourceId: selection.sourceId,
+        selectedText: selection.selectedText,
+        translation: quickTranslation.translation,
+        contextSentence: selection.contextSentence,
+        sourceLanguage: "en",
+        targetLanguage: "vi",
+      };
+      if (quickTranslation.type) {
+        vocabularyPayload.type = quickTranslation.type;
+      }
+
       const res = await fetch("/api/vocabulary", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sourceId: selection.sourceId,
-          selectedText: selection.selectedText,
-          translation: quickTranslation.translation,
-          contextSentence: selection.contextSentence,
-          sourceLanguage: "en",
-          targetLanguage: "vi",
-          type: quickTranslation.type,
-        }),
+        body: JSON.stringify(vocabularyPayload),
       });
       const json = await res.json();
       if (!res.ok || !json.success) throw new Error("Vocabulary save failed");

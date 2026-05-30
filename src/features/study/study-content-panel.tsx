@@ -43,8 +43,6 @@ export function StudyContentPanel({
 }: StudyContentPanelProps) {
   const t = useTranslations("Study");
   const contentRef = useRef<HTMLDivElement>(null);
-  const lastSelectionKey = useRef<string | null>(null);
-  const lastSelectionTime = useRef(0);
 
   const handleSelectionEvent = useCallback(() => {
     if (!passage) return;
@@ -52,14 +50,6 @@ export function StudyContentPanel({
       contentRef,
       sourceId: passage.id,
     });
-    if (info) {
-      const key = `${info.selectedText}::${info.sourceId}`;
-      const now = Date.now();
-      // Dedupe: skip if same selection within 300ms (double-click fires mouseup then dblclick)
-      if (key === lastSelectionKey.current && now - lastSelectionTime.current < 300) return;
-      lastSelectionKey.current = key;
-      lastSelectionTime.current = now;
-    }
     onSelectionChange(info);
   }, [passage, onSelectionChange]);
 
@@ -178,7 +168,6 @@ export function StudyContentPanel({
             ref={contentRef}
             className="reading-content text-foreground"
             onMouseUp={handleSelectionEvent}
-            onDoubleClick={handleSelectionEvent}
           >
             {currentContent.split("\n\n").map((paragraph, i) => (
               <p key={i} className="mb-6 last:mb-0">

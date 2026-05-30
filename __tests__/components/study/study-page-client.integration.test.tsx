@@ -376,6 +376,88 @@ describe("StudyPageClient", () => {
     );
   });
 
+  it("omits null quick translation type when saving vocabulary from details", async () => {
+    const passage = createStudyPassage({
+      content: "Quorvex drift appears here.",
+      simplifiedContent: null,
+      originalLevel: "B2",
+    });
+    let vocabularyBody: Record<string, unknown> | null = null;
+    vi.mocked(fetch).mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      const body = init?.body ? JSON.parse(String(init.body)) : null;
+
+      if (url === "/api/translate" && body?.mode === "quick") {
+        return new Response(
+          JSON.stringify({
+            success: true,
+            data: {
+              translation: "quorvex sự trôi",
+              type: null,
+              provider: "fallback",
+            },
+          }),
+          { status: 200 },
+        );
+      }
+
+      if (url === "/api/translate" && body?.mode === "detailed") {
+        return new Response(
+          JSON.stringify({
+            success: true,
+            data: {
+              translation: "quorvex sự trôi",
+              explanation: "A fallback phrase used for testing.",
+              meaningInSentence: null,
+              sentenceTranslation: "Quorvex drift xuất hiện ở đây.",
+              examples: [],
+              relatedWords: [],
+              pronunciation: null,
+              type: null,
+              provider: "ai",
+            },
+          }),
+          { status: 200 },
+        );
+      }
+
+      if (url === "/api/vocabulary") {
+        vocabularyBody = body;
+        return new Response(JSON.stringify({ success: true, data: { id: "vocab-fallback" } }), {
+          status: 200,
+        });
+      }
+
+      return new Response(JSON.stringify({ messages: [] }), { status: 200 });
+    });
+    vi.mocked(extractSelectionInfo).mockReturnValue({
+      selectedText: "quorvex drift",
+      selectionRect: { top: 120, left: 160, width: 90, height: 20 },
+      contextSentence: "Quorvex drift appears here.",
+      sourceId: passage.id,
+      targetLanguage: "vi",
+    });
+
+    const { user } = renderWithUser(<StudyPageClient initialPassages={[passage]} />);
+    await user.click(screen.getByText(passage.title));
+    fireEvent.mouseUp(screen.getByText(/Quorvex drift appears here/));
+    await user.click(getPopupTranslateButton());
+    expect(await screen.findByText("quorvex sự trôi")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /Open details/ }));
+    await user.click(await screen.findByRole("button", { name: /Save/ }));
+
+    await waitFor(() => {
+      expect(vocabularyBody).toEqual(
+        expect.objectContaining({
+          selectedText: "quorvex drift",
+          translation: "quorvex sự trôi",
+        }),
+      );
+    });
+    expect(vocabularyBody).not.toHaveProperty("type");
+  });
+
   it("clears stale translation selection on mode change and does not open a custom context menu", async () => {
     const passage = createStudyPassage({
       content: "Original text contains algorithmic bias.",
