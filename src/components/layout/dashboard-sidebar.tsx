@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { Link, usePathname } from "@/i18n/navigation";
 import {
   BookOpen,
+  BookMarked,
   Menu,
   GraduationCap,
   LayoutDashboard,
@@ -25,6 +26,7 @@ import { useTranslations } from "next-intl";
 const navItems = [
   { href: "/", labelKey: "Navigation.dashboard", icon: LayoutDashboard },
   { href: "/study", labelKey: "Navigation.study", icon: BookOpen },
+  { href: "/dictionary", labelKey: "Navigation.dictionary", icon: BookMarked },
 ];
 
 export function DashboardSidebar({
@@ -52,6 +54,9 @@ export function DashboardSidebar({
           pathname.startsWith("/reading/") ||
           pathname.startsWith("/test/")
         );
+      }
+      if (href === "/dictionary") {
+        return pathname === "/dictionary";
       }
       return pathname.startsWith(href);
     },

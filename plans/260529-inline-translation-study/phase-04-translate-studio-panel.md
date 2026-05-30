@@ -1,7 +1,7 @@
 ---
 phase: 4
 title: "Translate Studio Panel"
-status: pending
+status: completed
 priority: P2
 effort: "4h"
 dependencies: [2, 3]

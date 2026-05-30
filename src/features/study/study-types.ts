@@ -101,11 +101,17 @@ export interface ResultItem {
   data?: ResultItemData;
 }
 
-export type TranslationProvider = "cache" | "dictionary" | "ai";
+export type TranslationProvider = "cache" | "dictionary" | "fallback" | "google_translate" | "ai";
 
 export interface TranslationSelection {
   selectedText: string;
   selectionRect: {
+    top: number;
+    left: number;
+    width: number;
+    height: number;
+  };
+  actionRect?: {
     top: number;
     left: number;
     width: number;
@@ -118,7 +124,7 @@ export interface TranslationSelection {
 
 export interface QuickTranslationData {
   translation: string;
-  type?: string;
+  type?: string | null;
   provider: TranslationProvider;
 }
 
@@ -129,7 +135,7 @@ export interface DetailedTranslationData {
   sentenceTranslation: string;
   examples: string[];
   relatedWords: string[];
-  pronunciation?: string;
-  type?: string;
+  pronunciation?: string | null;
+  type?: string | null;
   provider: TranslationProvider;
 }

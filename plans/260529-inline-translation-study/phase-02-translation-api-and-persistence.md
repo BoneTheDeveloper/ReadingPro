@@ -1,10 +1,11 @@
 ---
 phase: 2
-title: "Translation API and Persistence"
-status: pending
+title: Translation API and Persistence
+status: completed
 priority: P1
-effort: "5h"
-dependencies: [1]
+effort: 5h
+dependencies:
+  - 1
 ---
 
 # Phase 2: Translation API and Persistence
@@ -12,6 +13,8 @@ dependencies: [1]
 ## Overview
 
 Implement authenticated translation and vocabulary APIs using existing Next.js route, Zod validation, Sentry, logger, AI SDK, Prisma patterns, and a dictionary-first lookup strategy.
+
+Superseded note: Phase 7 changes quick mode so it no longer calls AI. References in this completed phase to quick AI fallback describe the original implementation and must not be treated as the current target behavior.
 
 ## Requirements
 

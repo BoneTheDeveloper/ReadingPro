@@ -20,12 +20,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import type {
   PassageData,
+  QuickTranslationData,
   ResultItem,
   ResultItemType,
   StudioCardId,
+  TranslationSelection,
 } from "./study-types";
 import { QuizContent } from "./study-quiz-content";
 import { StudyChatPanel } from "./study-chat-panel";
+import { StudyTranslatePanel } from "./study-translate-panel";
 
 interface StudyStudioPanelProps {
   results: ResultItem[];
@@ -35,6 +38,12 @@ interface StudyStudioPanelProps {
   onActionClick: (cardId: StudioCardId) => void;
   collapsed?: boolean;
   onToggleCollapse: () => void;
+  translationSelection: TranslationSelection | null;
+  quickTranslation: QuickTranslationData | null;
+  viewingTranslate: boolean;
+  onSetViewingTranslate: (viewing: boolean) => void;
+  onSaveVocabulary: () => void;
+  vocabularySaved: boolean;
 }
 
 const studioCards: {
@@ -81,7 +90,6 @@ const studioCards: {
     labelKey: "translate",
     descriptionKey: "vietnameseTranslation",
     icon: Languages,
-    disabled: true,
   },
 ];
 
@@ -111,10 +119,17 @@ export function StudyStudioPanel({
   onActionClick,
   collapsed = false,
   onToggleCollapse,
+  translationSelection,
+  quickTranslation,
+  viewingTranslate,
+  onSetViewingTranslate,
+  onSaveVocabulary,
+  vocabularySaved,
 }: StudyStudioPanelProps) {
   const t = useTranslations("Study");
   const [viewingResult, setViewingResult] = useState<ResultItem | null>(null);
   const [viewingChat, setViewingChat] = useState(false);
+  const [chatPrefill, setChatPrefill] = useState<string | null>(null);
 
   if (viewingChat && activePassage) {
     return (
@@ -125,7 +140,10 @@ export function StudyStudioPanel({
               variant="ghost"
               size="icon"
               className="shrink-0"
-              onClick={() => setViewingChat(false)}
+              onClick={() => {
+                setViewingChat(false);
+                setChatPrefill(null);
+              }}
             >
               <ArrowLeft className="w-4 h-4 text-muted-foreground" />
             </Button>
@@ -135,8 +153,42 @@ export function StudyStudioPanel({
             </h2>
           </div>
           <StudyChatPanel
-            key={activePassage.id}
+            key={`${activePassage.id}-${chatPrefill ?? "default"}`}
             passageId={activePassage.id}
+            prefilledQuestion={chatPrefill}
+          />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (viewingTranslate && translationSelection && activePassage) {
+    return (
+      <Card className="h-full flex flex-col overflow-hidden">
+        <CardContent className="p-0 flex flex-col h-full">
+          <div className="p-4 flex items-center gap-3 border-b border-border">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="shrink-0"
+              onClick={() => onSetViewingTranslate(false)}
+            >
+              <ArrowLeft className="w-4 h-4 text-muted-foreground" />
+            </Button>
+            <Languages className="w-4 h-4 text-muted-foreground" />
+            <h2 className="text-sm font-semibold text-foreground truncate">
+              {t("translate")}: {translationSelection.selectedText}
+            </h2>
+          </div>
+          <StudyTranslatePanel
+            selection={translationSelection}
+            quickTranslation={quickTranslation}
+            saved={vocabularySaved}
+            onSave={onSaveVocabulary}
+            onAskAi={(question) => {
+              setChatPrefill(question);
+              setViewingChat(true);
+            }}
           />
         </CardContent>
       </Card>
@@ -219,6 +271,7 @@ export function StudyStudioPanel({
                 onClick={() => {
                   if (card.disabled || !hasActivePassage) return;
                   if (card.id === "chat") setViewingChat(true);
+                  else if (card.id === "translate") onSetViewingTranslate(true);
                   else onActionClick(card.id);
                 }}
                 disabled={card.disabled || !hasActivePassage}
@@ -327,6 +380,7 @@ export function StudyStudioPanel({
                 onClick={() => {
                   if (disabled) return;
                   if (card.id === "chat") setViewingChat(true);
+                  else if (card.id === "translate") onSetViewingTranslate(true);
                   else onActionClick(card.id);
                 }}
                 disabled={disabled}
@@ -338,6 +392,7 @@ export function StudyStudioPanel({
                     "opacity-50 cursor-not-allowed",
                   !card.disabled &&
                     card.id !== "chat" &&
+                    card.id !== "translate" &&
                     hasActivePassage &&
                     runningCount >= maxConcurrent &&
                     !locked &&

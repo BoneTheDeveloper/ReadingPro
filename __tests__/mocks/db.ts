@@ -32,6 +32,10 @@ export const db = {
   question: createModelMock(),
   studySession: createModelMock(),
   studyChatMessage: createModelMock(),
+  dictionaryEntry: createModelMock(),
+  translationCache: createModelMock(),
+  translationHistory: createModelMock(),
+  vocabularyItem: createModelMock(),
   userProfile: createModelMock(),
 };
 

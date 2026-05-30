@@ -13,6 +13,7 @@
   "Navigation": {
     "dashboard": "Dashboard",
     "study": "Study",
+    "dictionary": "Dictionary",
     "settings": "Settings",
     "help": "Help",
     "newReading": "New Reading"
@@ -120,6 +121,16 @@
     "simplify": "Simplify",
     "wordCount": "{count} words",
     "translatePassage": "Translate passage",
+    "listenSource": "Listen to source",
+    "listenTranslation": "Listen to translation",
+    "translateSelection": "Translate",
+    "selectionTooLong": "Selection too long",
+    "translationPopupTitle": "Translation",
+    "translationLoading": "Translating...",
+    "translationError": "Translation failed",
+    "openDetails": "Open details",
+    "saveVocabulary": "Save",
+    "vocabularySaved": "Saved",
     "testComprehension": "Test comprehension",
     "keyVocabulary": "Key vocabulary",
     "simplifiedText": "Simplified text",
@@ -235,5 +246,13 @@
     "notFoundDescription": "The page you are looking for does not exist.",
     "goHome": "Go home",
     "authCallbackFailed": "Authentication failed. Please try again."
+  },
+  "Dictionary": {
+    "title": "Dictionary",
+    "searchPlaceholder": "Search for a word...",
+    "noResult": "No entry found for",
+    "loading": "Searching...",
+    "error": "Search failed. Please try again.",
+    "idleHint": "Type an English word to look up its Vietnamese translation"
   }
 }

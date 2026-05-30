@@ -75,12 +75,82 @@ erDiagram
         float accuracyRate "nullable"
     }
 
+    DictionaryEntry {
+        string id PK "cuid()"
+        string normalizedKey UK
+        string normalizedTerm
+        string sourceLanguage
+        string targetLanguage
+        string translation
+        string type "nullable"
+        string pronunciation "nullable"
+        json meanings "nullable"
+        json examples "nullable"
+        json relatedWords "nullable"
+        string source "default local"
+        float confidence "default 0.8"
+        datetime createdAt "now()"
+        datetime updatedAt "auto"
+    }
+
+    TranslationCache {
+        string id PK "cuid()"
+        string cacheKey UK
+        string userId FK "→ UserProfile.id"
+        string sourceId FK "→ Passage.id"
+        string selectedText
+        string contextSentence
+        string sourceLanguage
+        string targetLanguage
+        string mode
+        string provider
+        json response
+        datetime createdAt "now()"
+        datetime updatedAt "auto"
+    }
+
+    TranslationHistory {
+        string id PK "cuid()"
+        string userId FK "→ UserProfile.id"
+        string sourceId FK "→ Passage.id"
+        string selectedText
+        string contextSentence
+        string sourceLanguage
+        string targetLanguage
+        string mode
+        string provider
+        string translation
+        json response
+        datetime createdAt "now()"
+    }
+
+    VocabularyItem {
+        string id PK "cuid()"
+        string normalizedKey UK
+        string userId FK "→ UserProfile.id"
+        string sourceId FK "→ Passage.id"
+        string selectedText
+        string translation
+        string contextSentence
+        string sourceLanguage
+        string targetLanguage
+        string type "nullable"
+        datetime createdAt "now()"
+        datetime updatedAt "auto"
+    }
+
     UserProfile ||--o{ Passage : "uploads"
     UserProfile ||--o{ StudySession : "creates"
     UserProfile ||--o{ CardReview : "reviews"
+    UserProfile ||--o{ TranslationCache : "caches"
+    UserProfile ||--o{ TranslationHistory : "records"
+    UserProfile ||--o{ VocabularyItem : "saves"
     Passage ||--o{ Question : "contains"
     Question ||--o{ CardReview : "tracked by"
     Passage ||--o{ StudySession : "studied in"
+    Passage ||--o{ TranslationCache : "translated in"
+    Passage ||--o{ TranslationHistory : "translated in"
+    Passage ||--o{ VocabularyItem : "saved from"
 ```
 
 ---
@@ -95,6 +165,12 @@ erDiagram
 | Passage → Question | One-to-Many | Yes |
 | Question → CardReview | One-to-Many | Yes |
 | Passage → StudySession | One-to-Many (nullable) | No |
+| UserProfile → TranslationCache | One-to-Many | Yes |
+| UserProfile → TranslationHistory | One-to-Many | Yes |
+| UserProfile → VocabularyItem | One-to-Many | Yes |
+| Passage → TranslationCache | One-to-Many | Yes |
+| Passage → TranslationHistory | One-to-Many | Yes |
+| Passage → VocabularyItem | One-to-Many | Yes |
 
 ---
 
@@ -106,6 +182,12 @@ erDiagram
 | CardReview | `[userId, nextReviewDate]` | Fetch due cards for review |
 | StudySession | `[userId, startedAt]` | Query user's sessions sorted by date |
 | CardReview | `[questionId, userId]` UNIQUE | Prevent duplicate reviews per card |
+| DictionaryEntry | `[sourceLanguage, targetLanguage, normalizedTerm]` | Dictionary lookup and suggest search |
+| TranslationCache | `cacheKey` UNIQUE | Reuse exact translation requests |
+| TranslationCache | `[userId, sourceId, targetLanguage]` | User/source-scoped cache queries |
+| TranslationHistory | `[userId, sourceId, createdAt]` | Translation analytics |
+| VocabularyItem | `normalizedKey` UNIQUE | Upsert duplicate saved vocabulary |
+| VocabularyItem | `[userId, sourceId, createdAt]` | Saved vocabulary listing |
 
 ---
 
@@ -144,4 +226,4 @@ classDiagram
 
 ---
 
-**Last Updated:** 2026-05-09
+**Last Updated:** 2026-05-29

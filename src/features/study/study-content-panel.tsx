@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import {
   Loader2,
@@ -15,16 +15,20 @@ import { cn } from "@/lib/shared/utils";
 import { calculateReadingTime } from "@/lib/shared/reading-utils";
 import { getCEFRLabel } from "@/lib/domain/cefr";
 import { getCEFRColor } from "@/lib/ui/cefr-style";
-import type { PassageData } from "./study-types";
+import type { PassageData, TranslationSelection } from "./study-types";
+import { extractSelectionInfo } from "./study-selection-utils";
+
+type ViewMode = "original" | "simplified";
 
 interface StudyContentPanelProps {
   passage: PassageData | null;
   error: string | null;
   simplifying: boolean;
   onSimplify: () => void;
+  viewMode: ViewMode;
+  onViewModeChange: (mode: ViewMode) => void;
+  onSelectionChange: (selection: TranslationSelection | null) => void;
 }
-
-type ViewMode = "original" | "simplified";
 
 const SKIP_SIMPLIFY_LEVELS = new Set(["A1", "A2"]);
 
@@ -33,9 +37,46 @@ export function StudyContentPanel({
   error,
   simplifying,
   onSimplify,
+  viewMode,
+  onViewModeChange,
+  onSelectionChange,
 }: StudyContentPanelProps) {
   const t = useTranslations("Study");
-  const [viewMode, setViewMode] = useState<ViewMode>("simplified");
+  const contentRef = useRef<HTMLDivElement>(null);
+  const selectionStartedInContentRef = useRef(false);
+
+  const updateSelectionFromMouseEvent = useCallback((event: MouseEvent) => {
+    if (!passage) return;
+    const info = extractSelectionInfo({
+      contentRef,
+      sourceId: passage.id,
+      cursorPoint: {
+        x: event.clientX,
+        y: event.clientY,
+      },
+    });
+    onSelectionChange(info);
+  }, [passage, onSelectionChange]);
+
+  useEffect(() => {
+    function handleDocumentMouseUp(event: MouseEvent) {
+      if (!selectionStartedInContentRef.current) return;
+      selectionStartedInContentRef.current = false;
+      updateSelectionFromMouseEvent(event);
+    }
+
+    document.addEventListener("mouseup", handleDocumentMouseUp);
+    return () => document.removeEventListener("mouseup", handleDocumentMouseUp);
+  }, [updateSelectionFromMouseEvent]);
+
+  const handleContentMouseUp = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+    if (selectionStartedInContentRef.current) return;
+    updateSelectionFromMouseEvent(event.nativeEvent);
+  }, [updateSelectionFromMouseEvent]);
+
+  const handleContentMouseDown = useCallback(() => {
+    selectionStartedInContentRef.current = true;
+  }, []);
 
   if (!passage) {
     return (
@@ -96,7 +137,7 @@ export function StudyContentPanel({
             {passage.simplifiedContent ? (
               <div className="flex bg-muted p-1 rounded-lg">
                 <button
-                  onClick={() => setViewMode("simplified")}
+                  onClick={() => onViewModeChange("simplified")}
                   className={cn(
                     "px-4 py-1.5 text-xs font-medium rounded-md transition-all",
                     viewMode === "simplified"
@@ -107,7 +148,7 @@ export function StudyContentPanel({
                   {t("simplified")} ({passage.simplifiedLevel})
                 </button>
                 <button
-                  onClick={() => setViewMode("original")}
+                  onClick={() => onViewModeChange("original")}
                   className={cn(
                     "px-4 py-1.5 text-xs font-medium rounded-md transition-all",
                     viewMode === "original"
@@ -148,7 +189,12 @@ export function StudyContentPanel({
           <h3 className="text-2xl font-bold text-foreground mb-4">
             {passage.title}
           </h3>
-          <div className="reading-content text-foreground">
+          <div
+            ref={contentRef}
+            className="reading-content text-foreground"
+            onMouseDown={handleContentMouseDown}
+            onMouseUp={handleContentMouseUp}
+          >
             {currentContent.split("\n\n").map((paragraph, i) => (
               <p key={i} className="mb-6 last:mb-0">
                 {paragraph}
