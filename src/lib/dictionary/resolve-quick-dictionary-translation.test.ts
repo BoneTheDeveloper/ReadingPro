@@ -187,4 +187,44 @@ describe("resolveQuickDictionaryTranslation", () => {
       provider: "dictionary",
     });
   });
+
+  it("matches contextual phrase when punctuation is attached to the selected word", async () => {
+    mockFetch.mockResolvedValue([
+      entry("algorithmic bias", "thiên lệch thuật toán", "noun phrase", 0.95),
+      entry("bias", "thiên lệch", "noun", 0.95),
+    ]);
+
+    const result = await resolveQuickDictionaryTranslation({
+      text: "bias",
+      context: "Key concerns include algorithmic bias.",
+      ...INPUT,
+    });
+
+    // "bias." is stripped to "bias" during context token normalization,
+    // so "algorithmic bias" n-gram still matches the dictionary entry
+    expect(result).toEqual({
+      translation: "thiên lệch thuật toán",
+      type: "noun phrase",
+      provider: "dictionary",
+    });
+  });
+
+  it("matches contextual phrase with comma-adjacent words", async () => {
+    mockFetch.mockResolvedValue([
+      entry("machine learning", "học máy", "noun phrase", 0.95),
+      entry("learning", "học", "noun", 0.95),
+    ]);
+
+    const result = await resolveQuickDictionaryTranslation({
+      text: "learning",
+      context: "We use machine learning, neural networks, and deep learning.",
+      ...INPUT,
+    });
+
+    expect(result).toEqual({
+      translation: "học máy",
+      type: "noun phrase",
+      provider: "dictionary",
+    });
+  });
 });

@@ -12,6 +12,8 @@ import {
 } from "@/lib/ai/translator";
 import { createRequestLogContext, createRequestLogger } from "@/lib/core/logger";
 import { resolveQuickDictionaryTranslation } from "@/lib/dictionary/resolve-quick-dictionary-translation";
+import { getQuickSelectionScope } from "@/lib/translation/quick-selection-scope";
+import { translateWithNonAiProvider } from "@/lib/translation/non-ai-machine-translation-provider";
 import {
   buildTranslationCacheKey,
   createTranslationHistory,
@@ -232,22 +234,59 @@ async function resolveQuickTranslation(
   userId: string,
   requestLog: ReturnType<typeof createRequestLogger>,
 ): Promise<QuickTranslation> {
-  const result = await Sentry.startSpan(
+  const scope = getQuickSelectionScope(input.text);
+
+  if (scope === "dictionary") {
+    const result = await Sentry.startSpan(
+      {
+        name: "dictionary:quick-resolve",
+        op: "function",
+        attributes: {
+          "translation.source_id": input.sourceId,
+          "translation.text_length": input.text.length,
+          "translation.context_length": input.context.length,
+          "translation.target_language": input.targetLanguage,
+          "user.id": userId,
+        },
+      },
+      () =>
+        resolveQuickDictionaryTranslation({
+          text: input.text,
+          context: input.context,
+          sourceLanguage: input.sourceLanguage,
+          targetLanguage: input.targetLanguage,
+        }),
+    );
+
+    requestLog.info(
+      {
+        context: {
+          scope,
+          provider: result.provider,
+          selectedTextLength: input.text.length,
+        },
+      },
+      "Quick dictionary translation resolved",
+    );
+
+    return result;
+  }
+
+  // Machine scope: non-AI provider for sentence/paragraph
+  const providerResult = await Sentry.startSpan(
     {
-      name: "dictionary:quick-resolve",
+      name: "translation:non-ai-provider",
       op: "function",
       attributes: {
         "translation.source_id": input.sourceId,
         "translation.text_length": input.text.length,
-        "translation.context_length": input.context.length,
         "translation.target_language": input.targetLanguage,
         "user.id": userId,
       },
     },
     () =>
-      resolveQuickDictionaryTranslation({
+      translateWithNonAiProvider({
         text: input.text,
-        context: input.context,
         sourceLanguage: input.sourceLanguage,
         targetLanguage: input.targetLanguage,
       }),
@@ -256,14 +295,19 @@ async function resolveQuickTranslation(
   requestLog.info(
     {
       context: {
-        provider: result.provider,
+        scope,
+        provider: providerResult.provider,
         selectedTextLength: input.text.length,
       },
     },
-    "Quick dictionary translation resolved",
+    "Quick machine translation resolved",
   );
 
-  return result;
+  return {
+    translation: providerResult.translation,
+    type: null,
+    provider: providerResult.provider,
+  };
 }
 
 async function persistTranslationResult(

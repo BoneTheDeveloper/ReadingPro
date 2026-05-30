@@ -89,6 +89,12 @@ vi.mock("@/features/study/study-selection-utils", () => ({
   extractSelectionInfo: vi.fn(),
 }));
 
+function getPopupTranslateButton() {
+  return screen.getAllByRole("button", { name: /Translate/ }).find(
+    (btn) => btn.closest(".fixed"),
+  )!;
+}
+
 describe("StudyPageClient", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -286,7 +292,7 @@ describe("StudyPageClient", () => {
     expect(screen.getByText("Chat: The Test Passage")).toBeInTheDocument();
   });
 
-  it("shows quick translation on selection, opens details only on demand, saves vocabulary, and prefills Ask AI", async () => {
+  it("does not auto-translate on selection; requires translate icon click", async () => {
     const passage = createStudyPassage({
       content: "Key concerns include algorithmic bias in automated hiring systems.",
       simplifiedContent: null,
@@ -305,14 +311,13 @@ describe("StudyPageClient", () => {
     await user.click(screen.getByText(passage.title));
     fireEvent.mouseUp(screen.getByText(/Key concerns include algorithmic bias/));
 
-    expect(await screen.findByText("thiên lệch thuật toán")).toBeInTheDocument();
-    expect(screen.queryByText("Translate: algorithmic bias")).not.toBeInTheDocument();
-    expect(fetch).toHaveBeenCalledWith(
+    // Selection captured — translate icon appears, no fetch yet
+    const allTranslateBtns = await screen.findAllByRole("button", { name: /Translate/ });
+    const popupTranslateBtn = allTranslateBtns.find((btn) => btn.closest(".fixed"));
+    expect(popupTranslateBtn).toBeTruthy();
+    expect(fetch).not.toHaveBeenCalledWith(
       "/api/translate",
-      expect.objectContaining({
-        method: "POST",
-        body: expect.stringContaining('"mode":"quick"'),
-      }),
+      expect.anything(),
     );
     expect(Sentry.addBreadcrumb).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -322,24 +327,43 @@ describe("StudyPageClient", () => {
       }),
     );
 
-    await user.click(screen.getByRole("button", { name: /Save/ }));
-    await waitFor(() =>
-      expect(fetch).toHaveBeenCalledWith(
-        "/api/vocabulary",
-        expect.objectContaining({
-          method: "POST",
-          body: expect.stringContaining('"selectedText":"algorithmic bias"'),
-        }),
-      ),
-    );
-    expect(await screen.findByRole("button", { name: /Saved/ })).toBeDisabled();
-    expect(Sentry.addBreadcrumb).toHaveBeenCalledWith(
+    // Click translate icon to trigger quick translation
+    await user.click(popupTranslateBtn!);
+    expect(await screen.findByText("thiên lệch thuật toán")).toBeInTheDocument();
+    expect(fetch).toHaveBeenCalledWith(
+      "/api/translate",
       expect.objectContaining({
-        category: "study-vocabulary",
-        message: "study-vocabulary-save-success",
+        method: "POST",
+        body: expect.stringContaining('"mode":"quick"'),
       }),
     );
+  });
 
+  it("shows quick translation without Save vocabulary and opens details on demand", async () => {
+    const passage = createStudyPassage({
+      content: "Key concerns include algorithmic bias in automated hiring systems.",
+      simplifiedContent: null,
+      originalLevel: "B2",
+      wordCount: 8,
+    });
+    vi.mocked(extractSelectionInfo).mockReturnValue({
+      selectedText: "algorithmic bias",
+      selectionRect: { top: 120, left: 160, width: 80, height: 20 },
+      contextSentence: "Key concerns include algorithmic bias in automated hiring systems.",
+      sourceId: passage.id,
+      targetLanguage: "vi",
+    });
+    const { user } = renderWithUser(<StudyPageClient initialPassages={[passage]} />);
+
+    await user.click(screen.getByText(passage.title));
+    fireEvent.mouseUp(screen.getByText(/Key concerns include algorithmic bias/));
+    await user.click(getPopupTranslateButton());
+
+    // Quick popup shows translation but no Save vocabulary action
+    expect(await screen.findByText("thiên lệch thuật toán")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Save/ })).not.toBeInTheDocument();
+
+    // Open details triggers detailed translation
     await user.click(screen.getByRole("button", { name: /Open details/ }));
     expect(await screen.findByText("Translate: algorithmic bias")).toBeInTheDocument();
     expect(await screen.findByText("A systematic unfair pattern in automated decisions.")).toBeInTheDocument();
@@ -348,21 +372,6 @@ describe("StudyPageClient", () => {
       expect.objectContaining({
         method: "POST",
         body: expect.stringContaining('"mode":"detailed"'),
-      }),
-    );
-
-    await user.click(screen.getByRole("button", { name: "Ask AI" }));
-    expect(
-      await screen.findByDisplayValue(/Explain "algorithmic bias" in this context/, undefined, { timeout: 5000 }),
-    ).toBeInTheDocument();
-    expect(
-      await screen.findByText("Chat: The Test Passage", undefined, { timeout: 5000 }),
-    ).toBeInTheDocument();
-    expect(useChatState.sendMessage).not.toHaveBeenCalled();
-    expect(Sentry.addBreadcrumb).toHaveBeenCalledWith(
-      expect.objectContaining({
-        category: "study-translation",
-        message: "study-translation-ask-ai-opened",
       }),
     );
   });
@@ -385,6 +394,7 @@ describe("StudyPageClient", () => {
 
     await user.click(screen.getByText(passage.title));
     fireEvent.mouseUp(screen.getByText(/Simple text contains algorithmic bias/));
+    await user.click(getPopupTranslateButton());
     expect(await screen.findByText("thiên lệch thuật toán")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Original (B2)" }));
@@ -428,8 +438,14 @@ describe("StudyPageClient", () => {
 
     const { user } = renderWithUser(<StudyPageClient initialPassages={[passage]} />);
     await user.click(screen.getByText(passage.title));
+
+    // Select first term, click translate
     fireEvent.mouseUp(screen.getByText(/First term appears here/));
+    await user.click(getPopupTranslateButton());
+
+    // Select second term (supersedes first selection)
     fireEvent.mouseUp(screen.getByText(/Second term appears here/));
+    await user.click(getPopupTranslateButton());
 
     expect(await screen.findByText("ban dich thu hai")).toBeInTheDocument();
     first.resolve(translationResponse("ban dich thu nhat"));
@@ -438,42 +454,6 @@ describe("StudyPageClient", () => {
       expect(screen.queryByText("ban dich thu nhat")).not.toBeInTheDocument();
       expect(screen.getByText("ban dich thu hai")).toBeInTheDocument();
     });
-  });
-
-  it("keeps saved vocabulary state scoped by selection context", async () => {
-    const passage = createStudyPassage({
-      content: "Original bias context.",
-      simplifiedContent: "Simple bias context.",
-      originalLevel: "B2",
-      simplifiedLevel: "A2",
-    });
-    vi.mocked(extractSelectionInfo)
-      .mockReturnValueOnce({
-        selectedText: "bias",
-        selectionRect: { top: 120, left: 160, width: 40, height: 20 },
-        contextSentence: "Simple bias context.",
-        sourceId: passage.id,
-        targetLanguage: "vi",
-      })
-      .mockReturnValueOnce({
-        selectedText: "bias",
-        selectionRect: { top: 120, left: 160, width: 40, height: 20 },
-        contextSentence: "Original bias context.",
-        sourceId: passage.id,
-        targetLanguage: "vi",
-      });
-
-    const { user } = renderWithUser(<StudyPageClient initialPassages={[passage]} />);
-    await user.click(screen.getByText(passage.title));
-    fireEvent.mouseUp(screen.getByText(/Simple bias context/));
-    expect(await screen.findByText("thiên lệch thuật toán")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: /Save/ }));
-    expect(await screen.findByRole("button", { name: /Saved/ })).toBeDisabled();
-
-    await user.click(screen.getByRole("button", { name: "Original (B2)" }));
-    fireEvent.mouseUp(screen.getByText(/Original bias context/));
-
-    expect(await screen.findByRole("button", { name: /Save/ })).toBeEnabled();
   });
 
   it("shows a quick translation error and breadcrumb for API failures", async () => {
@@ -499,6 +479,7 @@ describe("StudyPageClient", () => {
     const { user } = renderWithUser(<StudyPageClient initialPassages={[passage]} />);
     await user.click(screen.getByText(passage.title));
     fireEvent.mouseUp(screen.getByText(/Unknown phrase appears here/));
+    await user.click(getPopupTranslateButton());
 
     expect(await screen.findByText("Translation failed")).toBeInTheDocument();
     expect(Sentry.addBreadcrumb).toHaveBeenCalledWith(
@@ -508,5 +489,47 @@ describe("StudyPageClient", () => {
         message: "study-translation-quick-error",
       }),
     );
+  });
+
+  it("does not send duplicate requests for rapid translate icon clicks", async () => {
+    const passage = createStudyPassage({
+      content: "Rapid click test content.",
+      simplifiedContent: null,
+      originalLevel: "B2",
+    });
+    const deferred = deferredResponse();
+    let quickRequestCount = 0;
+    vi.mocked(fetch).mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      const body = init?.body ? JSON.parse(String(init.body)) : null;
+      if (url === "/api/translate" && body?.mode === "quick") {
+        quickRequestCount++;
+        return deferred.promise;
+      }
+      return new Response(JSON.stringify({ messages: [] }), { status: 200 });
+    });
+    vi.mocked(extractSelectionInfo).mockReturnValue({
+      selectedText: "Rapid click",
+      selectionRect: { top: 120, left: 160, width: 80, height: 20 },
+      contextSentence: "Rapid click test content.",
+      sourceId: passage.id,
+      targetLanguage: "vi",
+    });
+
+    const { user } = renderWithUser(<StudyPageClient initialPassages={[passage]} />);
+    await user.click(screen.getByText(passage.title));
+    fireEvent.mouseUp(screen.getByText(/Rapid click test content/));
+
+    // Click translate button multiple times rapidly
+    const translateBtn = getPopupTranslateButton();
+    await user.click(translateBtn);
+    await user.click(translateBtn);
+    await user.click(translateBtn);
+
+    // Only one quick request should have been sent (loading guard)
+    expect(quickRequestCount).toBe(1);
+
+    deferred.resolve(translationResponse("click nhanh"));
+    expect(await screen.findByText("click nhanh")).toBeInTheDocument();
   });
 });

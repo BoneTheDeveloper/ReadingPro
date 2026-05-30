@@ -24,7 +24,7 @@ const detailedAiTranslationSchema = z.object({
 });
 
 export const quickTranslationSchema = quickTranslationDataSchema.extend({
-  provider: z.enum(["cache", "dictionary", "fallback"]),
+  provider: z.enum(["cache", "dictionary", "fallback", "google_translate"]),
 });
 
 export const detailedTranslationSchema = detailedAiTranslationSchema.extend({

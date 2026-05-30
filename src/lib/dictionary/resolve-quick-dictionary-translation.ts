@@ -84,6 +84,10 @@ export async function resolveQuickDictionaryTranslation(
   return deterministicFallback(normalizedText, entries);
 }
 
+function stripPunctuation(word: string): string {
+  return word.replace(/^[^\w']+|[^\w']+$/g, "");
+}
+
 function buildCandidateTerms(normalizedText: string, normalizedContext: string): string[] {
   const terms = new Set<string>();
   const textTokens = normalizedText.split(" ");
@@ -92,9 +96,12 @@ function buildCandidateTerms(normalizedText: string, normalizedContext: string):
   terms.add(normalizedText);
 
   // 2. Contextual n-grams that include the selected text or its tokens
-  const contextWords = normalizedContext.split(/\s+/);
+  // Strip surrounding punctuation from context words so "bias." matches "bias"
+  const rawContextWords = normalizedContext.split(/\s+/);
+  const contextWords = rawContextWords.map(stripPunctuation);
+  const strippedTextTokens = textTokens.map(stripPunctuation);
 
-  for (const token of textTokens) {
+  for (const token of strippedTextTokens) {
     addNgramsContainingWord(contextWords, token, terms);
   }
 

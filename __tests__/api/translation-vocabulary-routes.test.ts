@@ -12,10 +12,15 @@ import { createRequestLogger } from "../mocks/logger";
 
 const routeMocks = vi.hoisted(() => ({
   getAuthenticatedUser: vi.fn(),
+  translateWithNonAiProvider: vi.fn(),
 }));
 
 vi.mock("@/lib/auth/auth-utils", () => ({
   getAuthenticatedUser: routeMocks.getAuthenticatedUser,
+}));
+
+vi.mock("@/lib/translation/non-ai-machine-translation-provider", () => ({
+  translateWithNonAiProvider: routeMocks.translateWithNonAiProvider,
 }));
 
 const TEST_CONTEXT = [
@@ -278,6 +283,94 @@ describe("POST /api/translate", () => {
     const serializedSpanMetadata = JSON.stringify(spanMetadata);
     expect(serializedSpanMetadata).not.toContain("algorithmic bias");
     expect(serializedSpanMetadata).not.toContain(TEST_CONTEXT[0]);
+  });
+
+  it("routes sentence-length quick translation to non-AI provider without calling AI", async () => {
+    const sentenceText = "Key concerns include algorithmic bias in automated hiring systems.";
+    routeMocks.translateWithNonAiProvider.mockResolvedValueOnce({
+      translation: "Các mối quan tâm chính bao gồm thiên lệch thuật toán trong hệ thống tuyển dụng tự động.",
+      provider: "google_translate",
+    });
+
+    const response = await translateRoute(
+      createJsonRequest(translationBody({ text: sentenceText, context: TEST_CONTEXT[0] })),
+    );
+    const payload = await readJsonResponse(response);
+
+    expect(response.status).toBe(200);
+    expect(payload).toMatchObject({
+      success: true,
+      data: {
+        translation: "Các mối quan tâm chính bao gồm thiên lệch thuật toán trong hệ thống tuyển dụng tự động.",
+        type: null,
+        provider: "google_translate",
+      },
+    });
+    expect(generateObject).not.toHaveBeenCalled();
+    expect(routeMocks.translateWithNonAiProvider).toHaveBeenCalledWith({
+      text: sentenceText,
+      sourceLanguage: "en",
+      targetLanguage: "vi",
+    });
+    expect(db.translationCache.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        create: expect.objectContaining({ provider: "google_translate", selectedText: sentenceText }),
+        update: expect.objectContaining({ provider: "google_translate" }),
+      }),
+    );
+  });
+
+  it("returns cached machine translation on repeat without re-calling non-AI provider", async () => {
+    const sentenceText = "Key concerns include algorithmic bias in automated hiring systems.";
+    const cachedResponse = {
+      translation: "Các mối quan tâm chính bao gồm thiên lệch thuật toán trong hệ thống tuyển dụng tự động.",
+      type: null,
+      provider: "google_translate",
+    };
+    db.translationCache.findUnique
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({ provider: "google_translate", response: cachedResponse });
+
+    routeMocks.translateWithNonAiProvider.mockResolvedValueOnce({
+      translation: cachedResponse.translation,
+      provider: "google_translate",
+    });
+
+    const first = await translateRoute(
+      createJsonRequest(translationBody({ text: sentenceText, context: TEST_CONTEXT[0] })),
+    );
+    expect(await readJsonResponse(first)).toMatchObject({
+      success: true,
+      data: cachedResponse,
+    });
+    expect(routeMocks.translateWithNonAiProvider).toHaveBeenCalledTimes(1);
+
+    routeMocks.translateWithNonAiProvider.mockClear();
+    db.translationCache.upsert.mockClear();
+    const repeat = await translateRoute(
+      createJsonRequest(translationBody({ text: sentenceText, context: TEST_CONTEXT[0] })),
+    );
+    expect(await readJsonResponse(repeat)).toMatchObject({
+      success: true,
+      data: { ...cachedResponse, provider: "cache" },
+    });
+    expect(routeMocks.translateWithNonAiProvider).not.toHaveBeenCalled();
+    expect(db.translationCache.upsert).not.toHaveBeenCalled();
+    expect(generateObject).not.toHaveBeenCalled();
+  });
+
+  it("returns 500 when non-AI provider fails without falling back to AI", async () => {
+    const sentenceText = "Key concerns include algorithmic bias in automated hiring systems.";
+    routeMocks.translateWithNonAiProvider.mockRejectedValueOnce(new Error("provider unavailable"));
+
+    await expectJsonError(
+      await translateRoute(
+        createJsonRequest(translationBody({ text: sentenceText, context: TEST_CONTEXT[0] })),
+      ),
+      500,
+      "Unable to translate the selection.",
+    );
+    expect(generateObject).not.toHaveBeenCalled();
   });
 });
 

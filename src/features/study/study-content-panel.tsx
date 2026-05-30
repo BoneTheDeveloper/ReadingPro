@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef } from "react";
+import { useCallback, useRef } from "react";
 import { useTranslations } from "next-intl";
 import {
   Loader2,
@@ -43,6 +43,25 @@ export function StudyContentPanel({
 }: StudyContentPanelProps) {
   const t = useTranslations("Study");
   const contentRef = useRef<HTMLDivElement>(null);
+  const lastSelectionKey = useRef<string | null>(null);
+  const lastSelectionTime = useRef(0);
+
+  const handleSelectionEvent = useCallback(() => {
+    if (!passage) return;
+    const info = extractSelectionInfo({
+      contentRef,
+      sourceId: passage.id,
+    });
+    if (info) {
+      const key = `${info.selectedText}::${info.sourceId}`;
+      const now = Date.now();
+      // Dedupe: skip if same selection within 300ms (double-click fires mouseup then dblclick)
+      if (key === lastSelectionKey.current && now - lastSelectionTime.current < 300) return;
+      lastSelectionKey.current = key;
+      lastSelectionTime.current = now;
+    }
+    onSelectionChange(info);
+  }, [passage, onSelectionChange]);
 
   if (!passage) {
     return (
@@ -94,15 +113,6 @@ export function StudyContentPanel({
     !passage.simplifiedContent &&
     passage.originalLevel &&
     !SKIP_SIMPLIFY_LEVELS.has(passage.originalLevel);
-
-  function handleSelectionEvent() {
-    if (!passage) return;
-    const info = extractSelectionInfo({
-      contentRef,
-      sourceId: passage.id,
-    });
-    onSelectionChange(info);
-  }
 
   return (
     <div className="p-8 overflow-y-auto panel-scroll flex-1">

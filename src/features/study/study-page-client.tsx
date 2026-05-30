@@ -16,11 +16,12 @@ import { useStudyWorkspaceState } from "./use-study-workspace-state";
 
 let quickTranslationRequestCounter = 0;
 
+type QuickTranslationStatus = "idle" | "ready" | "loading" | "success" | "error";
+
 interface QuickTranslationState {
   requestId: number;
   data: QuickTranslationData | null;
-  loading: boolean;
-  error: boolean;
+  status: QuickTranslationStatus;
 }
 
 export function StudyPageClient({
@@ -53,8 +54,7 @@ export function StudyPageClient({
   const [quickTranslationState, setQuickTranslationState] = useState<QuickTranslationState>({
     requestId: 0,
     data: null,
-    loading: false,
-    error: false,
+    status: "idle",
   });
   const [savedVocabularyIds, setSavedVocabularyIds] = useState<Set<string>>(new Set());
   const [viewingTranslate, setViewingTranslate] = useState(false);
@@ -69,21 +69,27 @@ export function StudyPageClient({
     setQuickTranslationState((prev) => ({
       requestId: prev.requestId + 1,
       data: null,
-      loading: false,
-      error: false,
+      status: "idle",
     }));
   }
 
   const handleSelectionChange = useCallback((sel: TranslationSelection | null) => {
-    const requestId = ++quickTranslationRequestCounter;
     setSelection(sel);
 
     if (!sel) {
-      setQuickTranslationState({ requestId, data: null, loading: false, error: false });
+      setQuickTranslationState((prev) => ({
+        requestId: prev.requestId + 1,
+        data: null,
+        status: "idle",
+      }));
       return;
     }
 
-    setQuickTranslationState({ requestId, data: null, loading: true, error: false });
+    setQuickTranslationState((prev) => ({
+      requestId: prev.requestId + 1,
+      data: null,
+      status: "ready",
+    }));
 
     Sentry.addBreadcrumb({
       category: "study-translation",
@@ -91,21 +97,28 @@ export function StudyPageClient({
       message: "study-translation-selection-captured",
       data: { sourceId: sel.sourceId, selectedTextLength: sel.selectedText.length },
     });
+  }, []);
+
+  const handleQuickTranslate = useCallback(() => {
+    if (!selection || quickTranslationState.status === "loading") return;
+
+    const requestId = ++quickTranslationRequestCounter;
+    setQuickTranslationState((prev) => ({ ...prev, requestId, status: "loading" }));
 
     Sentry.addBreadcrumb({
       category: "study-translation",
       level: "info",
       message: "study-translation-quick-request",
-      data: { sourceId: sel.sourceId, selectedTextLength: sel.selectedText.length },
+      data: { sourceId: selection.sourceId, selectedTextLength: selection.selectedText.length },
     });
 
     fetch("/api/translate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        text: sel.selectedText,
-        context: sel.contextSentence,
-        sourceId: sel.sourceId,
+        text: selection.selectedText,
+        context: selection.contextSentence,
+        sourceId: selection.sourceId,
         sourceLanguage: "en",
         targetLanguage: "vi",
         mode: "quick",
@@ -125,7 +138,7 @@ export function StudyPageClient({
             message: "study-translation-quick-success",
             data: { provider: json.data.provider },
           });
-          return { requestId, data: json.data, loading: false, error: false };
+          return { requestId, data: json.data, status: "success" };
         });
       })
       .catch(() => {
@@ -136,15 +149,10 @@ export function StudyPageClient({
             level: "error",
             message: "study-translation-quick-error",
           });
-          return { requestId, data: null, loading: false, error: true };
+          return { requestId, data: null, status: "error" };
         });
-      })
-      .finally(() => {
-        setQuickTranslationState((prev) =>
-          prev.requestId === requestId ? { ...prev, loading: false } : prev,
-        );
       });
-  }, []);
+  }, [selection, quickTranslationState.status]);
 
   const handleSaveVocabulary = useCallback(async () => {
     const quickTranslation = quickTranslationState.data;
@@ -263,9 +271,8 @@ export function StudyPageClient({
                 <StudyTranslationPopup
                   selection={selection}
                   translation={quickTranslationState.data}
-                  loading={quickTranslationState.loading}
-                  error={quickTranslationState.error ? "quick-translation-error" : null}
-                  saved={isVocabularySaved}
+                  status={quickTranslationState.status}
+                  onTranslate={handleQuickTranslate}
                   onOpenDetails={() => {
                     setViewingTranslate(true);
                     Sentry.addBreadcrumb({
@@ -275,7 +282,6 @@ export function StudyPageClient({
                       data: { sourceId: selection.sourceId },
                     });
                   }}
-                  onSave={handleSaveVocabulary}
                   onDismiss={() => setSelection(null)}
                 />
               )}

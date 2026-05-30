@@ -101,7 +101,7 @@ export interface ResultItem {
   data?: ResultItemData;
 }
 
-export type TranslationProvider = "cache" | "dictionary" | "fallback" | "ai";
+export type TranslationProvider = "cache" | "dictionary" | "fallback" | "google_translate" | "ai";
 
 export interface TranslationSelection {
   selectedText: string;
