@@ -1,12 +1,28 @@
 /**
- * Validates the dictionary seed fixture file before seeding.
+ * Validates a dictionary seed fixture file before seeding.
  * Uses only Node.js built-ins (no external deps).
  *
- * Usage: pnpm db:validate:dictionary
+ * Usage:
+ *   pnpm db:validate:dictionary                # default: common-1000
+ *   pnpm db:validate:dictionary small-test     # validate small-test.json
+ *   pnpm db:validate:dictionary common-1000    # validate common-1000.json
+ *   pnpm db:validate:dictionary generated-50000 # validate generated-50000.json
  */
 
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+
+// --- Dataset resolution ---
+
+const VALID_DATASETS = new Set(["small-test", "common-1000", "generated-50000", "entries"]);
+
+function resolveDatasetArg(): string {
+  const arg = process.argv[2];
+  if (!arg) return "common-1000";
+  if (VALID_DATASETS.has(arg)) return arg;
+  console.error(`Unknown dataset "${arg}". Valid: ${[...VALID_DATASETS].join(", ")}`);
+  process.exit(1);
+}
 
 // --- Types (mirror fixture shape, not Prisma models) ---
 
@@ -161,7 +177,8 @@ function validateEntries(entries: SeedEntry[]): Err[] {
 // --- Main ---
 
 function main() {
-  const fixturePath = join(process.cwd(), "prisma/data/dictionary/en-vi/entries.json");
+  const dataset = resolveDatasetArg();
+  const fixturePath = join(process.cwd(), `prisma/data/dictionary/en-vi/${dataset}.json`);
 
   console.log(`Validating: ${fixturePath}`);
 

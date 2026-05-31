@@ -68,6 +68,7 @@ next-env.d.ts
 # dictionary seed drafts (keep only reviewed fixtures)
 prisma/data/dictionary/en-vi/draft/
 prisma/data/dictionary/en-vi/*.csv
+prisma/data/dictionary/en-vi/generated-*.json
 
 # Repomix
 repomix-output.xml
