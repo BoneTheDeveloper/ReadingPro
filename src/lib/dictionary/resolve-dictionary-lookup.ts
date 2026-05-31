@@ -83,8 +83,11 @@ async function findEntryByHeadword(normalizedHeadword: string, sourceLanguage: s
 }
 
 async function findEntryByAlias(normalizedAlias: string, sourceLanguage: string) {
-  const alias = await db.dictionaryAlias.findUnique({
-    where: { normalizedAlias_entryId: { normalizedAlias, entryId: "" } },
+  const alias = await db.dictionaryAlias.findFirst({
+    where: {
+      normalizedAlias,
+      entry: { sourceLanguage },
+    },
     include: {
       entry: {
         include: {
@@ -102,30 +105,7 @@ async function findEntryByAlias(normalizedAlias: string, sourceLanguage: string)
     },
   });
 
-  if (!alias) {
-    const aliasByTerm = await db.dictionaryAlias.findFirst({
-      where: { normalizedAlias },
-      include: {
-        entry: {
-          where: { sourceLanguage },
-          include: {
-            senses: {
-              orderBy: { usageRank: "asc" },
-              include: {
-                translations: {
-                  where: { targetLanguage: "vi" },
-                  orderBy: [{ rank: "asc" }],
-                },
-              },
-            },
-          },
-        },
-      },
-    });
-    return aliasByTerm?.entry ?? null;
-  }
-
-  return alias.entry;
+  return alias?.entry ?? null;
 }
 
 function buildEntryDto(
