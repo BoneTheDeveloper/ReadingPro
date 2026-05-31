@@ -19,6 +19,7 @@ Establish the local dictionary foundation required by issue #57: shared normaliz
 - Functional: Replace the current thin dictionary row with a richer flat learner entry: `displayTerm`, `primaryTranslation`, `translations`, `shortDefinition`, `type`, `frequencyRank`, `source`, `confidence`, and `reviewed`.
 - Functional: Add `DictionaryAlias` for indexed variant lookup by `normalizedAlias`.
 - Functional: Alias reasons support `plural`, `past_tense`, `common_variant`, `manual`, and `phrase_variant`.
+- Functional: Safe candidate rules are secondary to aliases and only propose extremely safe variants; they must not act like a morphology engine.
 - Functional: Generate deterministic `normalizedKey` values from normalized term, source language, and target language.
 - Non-functional: Keep the model intentionally flat; do not build `Lexeme`, `Sense`, or `Example` tables for MVP.
 - Non-functional: Do not add raw large text indexes; use normalized fields and hashed keys.
@@ -43,8 +44,8 @@ Move dictionary normalization out of `src/lib/db/translation-queries.ts` into a 
 2. Update existing imports so DB helpers, resolver, routes, and seed script use the same normalization.
 3. Migrate `DictionaryEntry.translation` into `primaryTranslation` and add `displayTerm`, `translations`, `shortDefinition`, `frequencyRank`, and `reviewed`.
 4. Add `DictionaryAlias` with `normalizedAlias`, `entryId`, `sourceLanguage`, `targetLanguage`, `reason`, timestamps, unique normalized alias key, and indexes for lookup.
-5. Update dictionary query helpers so lookup order is exact entry -> exact alias -> safe tiny rules -> fallback.
-6. Keep tiny rules conservative and deterministic: plural `s/es`, `ies -> y`, regular `ed -> base`; never run broad stemming.
+5. Update dictionary query helpers so lookup order is exact entry -> exact alias -> safe tiny candidate rules -> fallback.
+6. Keep tiny rules conservative and deterministic: normalization first, then only obvious variants such as regular plural candidates. Do not run broad stemming, and do not trust generated rules more than curated aliases.
 7. Update generated Prisma client after migration in implementation phase.
 8. Update database docs for model fields, alias behavior, and dictionary index purpose.
 
@@ -53,9 +54,9 @@ Move dictionary normalization out of `src/lib/db/translation-queries.ts` into a 
 - [ ] `DictionaryEntry` supports primary translation, alternatives, short definition, frequency rank, confidence, reviewed flag, and source metadata.
 - [ ] `DictionaryAlias` supports indexed exact alias lookup.
 - [ ] Normalization behavior is shared across seed, lookup, suggest, and quick translate.
-- [ ] Lookup order is exact entry -> alias -> safe tiny rules -> fallback.
+- [ ] Lookup order is exact entry -> alias -> safe tiny candidate rules -> fallback.
 - [ ] Dictionary index strategy is documented and verified.
 
 ## Risk Assessment
 
-Main risk is overbuilding a real dictionary schema too early. Mitigate by keeping one flat learner entry plus one alias table only. Second risk is bad normalization or bad safe-rule matching creating wrong translations; mitigate with shared helper tests, alias-first lookup, and a very small approved rule list.
+Main risk is overbuilding a real dictionary schema too early. Mitigate by keeping one flat learner entry plus one alias table only. Second risk is bad normalization or bad safe-rule matching creating wrong translations; mitigate with shared helper tests, alias-first lookup, and rules that only create candidates, never confident meanings.

@@ -39,7 +39,7 @@ In scope:
 - Richer flat `DictionaryEntry` fields for learner UX: `displayTerm`, `primaryTranslation`, `translations`, `shortDefinition`, optional `type`, optional `frequencyRank`, `source`, `confidence`, and `reviewed`.
 - Indexed `DictionaryAlias` table for lookup behavior instead of JSON aliases. Aliases map common variants such as plural, past tense, manual variant, or phrase variant back to a canonical entry.
 - Seed 3k learner words initially, with room to grow toward 10k, using deterministic `normalizedKey` values.
-- Versioned in-repo seed fixtures generated offline from public frequency wordlists plus provider/manual enrichment, with strict licensing notes and review metadata.
+- Versioned in-repo seed fixtures generated offline from `wordfreq` / exported `wordfreq-en-25000` plus provider/manual enrichment, with strict licensing notes and review metadata.
 - Cache-first quick translate behavior, with privacy-safe hashed translation cache keys.
 - Local-only deterministic suggest endpoint with bounded fields, stable ordering, and DB-index-backed lookup.
 - Client debounce, stale-response guard, clear-input guard, and small in-memory cache for repeated normalized suggest queries.
@@ -61,13 +61,14 @@ Out of scope:
 
 - Local seed contains at least 3k common English learner words/phrases, including frequent short phrases, and can scale to 10k without schema change.
 - Seed fixtures include source/license notes, normalized terms, primary translations, alternatives, optional definitions, optional frequency rank, confidence, and reviewed flags.
-- Dictionary lookup order is exact `DictionaryEntry.normalizedTerm` -> exact `DictionaryAlias.normalizedAlias` -> safe tiny rules -> deterministic fallback.
+- Dictionary lookup order is exact `DictionaryEntry.normalizedTerm` -> exact `DictionaryAlias.normalizedAlias` -> safe tiny candidate rules -> deterministic fallback.
 - Quick translate reads cache/local dictionary first and returns deterministic fallback without AI for misses.
 - Translation cache keys are hashed; logs avoid raw selected text, raw context, and raw large query payloads.
 - Suggest endpoint uses local DB only, returns 8-10 small DTOs, and has deterministic exact-first/alias/prefix/frequency/confidence ranking.
 - Suggest query path uses normalized term indexes or an equivalent performant DB strategy.
 - Dictionary search UI debounces requests, ignores stale responses, clears safely, and reuses identical-query suggestions during the session.
 - Tests cover seed hit, alias hit, safe-rule fallback, deterministic fallback, cache hit, suggest ranking, empty/short query, stale-response guard, duplicate-query cache reuse, and seed fixture validation.
+- Dictionary page miss copy is explicit: "No local dictionary result yet". Do not present deterministic fallback text as a confident meaning.
 
 ## Phases
 
@@ -84,14 +85,17 @@ Out of scope:
 - Depends on existing inline translation schema from `prisma/migrations/20260529120000_add_inline_translation/migration.sql`.
 - No cross-plan blocker detected in active project plans. Older related inline-translation plans are already moved under `plans/finished_plan/`.
 
-## Open Clarifications
+## Approved MVP Decisions
 
-- Which public frequency source is the approved first input corpus? Candidate must have safe redistribution terms before committing derived fixtures.
-- Which offline enrichment provider or provider mix is acceptable for draft translations and definitions? Runtime dependency is out of MVP, but offline source still needs licensing review.
-- Initial reviewed threshold: review top 500, top 1000, or all 3k before considering MVP acceptable?
-- Seed fixture format: JSON is easiest for nested `translations[]`; CSV is easier for manual review. Pick one primary format and optionally generate the other.
-- Safe tiny rules list needs final approval. Proposed MVP rules: exact plural `s/es`, `ies -> y`, regular `ed -> base`, and no aggressive stemming unless an alias confirms it.
-- Dictionary page fallback behavior still needs final UX copy: show "not found", show deterministic fallback, or show "not in local dictionary yet".
+| Decision | MVP Choice |
+|----------|------------|
+| Public frequency wordlist | Use `wordfreq` / exported `wordfreq-en-25000` as the first input corpus, after license verification before committing derived fixtures. |
+| Draft translations | Generate offline through provider/manual workflow only. No runtime provider calls. Do not store provider output when source terms are unclear. |
+| Draft definitions | Do not import Wiktionary directly into seed MVP. Write very short `shortDefinition` values for top reviewed words or leave optional. |
+| Review threshold | Top 500 reviewed required; top 1000 reviewed preferred; all 3k not required before MVP. |
+| Seed format | JSON is source of truth; generate CSV for manual review. |
+| Variant rules | Use normalization plus `DictionaryAlias`; add only a few extremely safe candidate rules. |
+| Fallback UX copy | Show "No local dictionary result yet"; do not pretend fallback text is a certain meaning. |
 
 ## Issue Source
 

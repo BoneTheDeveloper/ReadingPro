@@ -20,7 +20,7 @@ Add focused regression coverage for issue #57 and update docs so future changes 
 ## Requirements
 
 - Functional: Tests cover seed hit, alias hit, safe-rule fallback, deterministic fallback, translation cache hit, suggest ranking, empty/short query, stale response guard, duplicate-query cache reuse, and seed validation.
-- Functional: Docs describe offline provider/enrichment boundaries, cache strategy, alias strategy, suggest strategy, and seed operation.
+- Functional: Docs describe offline provider/enrichment boundaries, `wordfreq-en-25000` source decision, cache strategy, alias strategy, suggest strategy, fallback UX copy, and seed operation.
 - Non-functional: Verification uses existing Vitest, typecheck, lint, and seed-script patterns.
 
 ## Architecture
@@ -47,7 +47,7 @@ Use existing route tests in `__tests__/api/translation-vocabulary-routes.test.ts
 3. Add seed validation tests for duplicate normalized terms, duplicate aliases, missing translations, missing source/license metadata, invalid confidence, and alias loops.
 4. Add quick translate tests for seed hit, alias hit, deterministic fallback, and cache hit.
 5. Add suggest tests for exact-first ranking, alias ranking, prefix results, empty/short query behavior, bounded DTO fields, stable ordering, stale-response guard, and duplicate-query cache reuse.
-6. Update API/database/manual testing docs with MVP behavior and known out-of-scope growth items.
+6. Update API/database/manual testing docs with MVP behavior, "No local dictionary result yet" fallback copy, and known out-of-scope growth items.
 7. Run verification commands and record failures if environment dependencies block them.
 
 ## Success Criteria
@@ -59,6 +59,7 @@ Use existing route tests in `__tests__/api/translation-vocabulary-routes.test.ts
 - [ ] `pnpm run typecheck` passes.
 - [ ] `pnpm run lint` passes.
 - [ ] Docs reflect issue #57 MVP boundaries.
+- [ ] Dictionary miss state does not present deterministic fallback as a certain meaning.
 
 ## Risk Assessment
 
