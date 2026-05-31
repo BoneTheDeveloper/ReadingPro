@@ -1,10 +1,12 @@
 ---
-title: "Dictionary Page Suggest Stale Response Fix"
-description: ""
+title: "Translation MVP Dictionary Foundation"
+description: "Implement issue #57: useful local EN-VI learner dictionary with richer flat entries, alias lookup, offline seed enrichment, cache-first quick translate, and stable local suggest search."
 status: pending
-priority: P2
-branch: "feat/inline-translation-study-ui"
-tags: []
+priority: P1
+effort: 14h
+issue: 57
+branch: main
+tags: [feature, backend, frontend, database, api]
 blockedBy: []
 blocks: []
 created: "2026-05-30T07:42:29.213Z"
@@ -12,45 +14,85 @@ createdBy: "ck:plan"
 source: skill
 ---
 
-# Dictionary Page Suggest Stale Response Fix
+# Translation MVP Dictionary Foundation
 
 ## Overview
 
-Fix the PR #55 Dictionary page suggest-search race condition separately from the Study quick-mode translation work. This plan is intentionally scoped to `/dictionary`: older suggest responses must not overwrite newer input results or repopulate suggestions after the input has been cleared.
+Refactor this dictionary plan into the issue #57 MVP foundation. The implementation should make the dictionary useful for common learner lookups and the reading flow without pretending to build a full lexical dictionary. Use a richer flat `DictionaryEntry`, a small indexed `DictionaryAlias` table, versioned in-repo seed fixtures generated offline from safe public frequency data plus provider/manual enrichment, cache-first quick translate, and local deterministic suggest search.
+
+## Current Baseline
+
+- `DictionaryEntry`, `TranslationCache`, `TranslationHistory`, and `VocabularyItem` already exist in Prisma.
+- `DictionaryEntry` is currently too thin for a useful dictionary page: one `translation` string, optional `type`, optional JSON metadata, no display term, no translation alternatives, no frequency rank, no review marker, and no indexed alias lookup.
+- `prisma/seed-dictionary.ts` seeds a small test-file-derived dictionary, not the agreed 3k+ learner words/phrases.
+- `/api/dictionary` does exact local lookup only; it does not resolve aliases or use reviewed local seed coverage beyond exact terms.
+- `/api/dictionary/suggest` uses DB prefix search but lacks minimum query handling, exact-first ranking, and duplicate-query client cache.
+- `/api/translate` already checks translation cache before quick/detailed resolution and has deterministic quick dictionary fallback coverage.
+- `DictionaryPageClient` debounces suggest requests but can still apply stale responses and does not reuse identical-query suggestions.
 
 ## Scope
 
 In scope:
 
-- Guard `DictionaryPageClient` suggest fetches against stale responses.
-- Clear suggestions and hide the dropdown when the search query is cleared.
-- Add focused tests for out-of-order responses and cleared-input behavior.
+- Dev-time schema migration that can overwrite the current dev dictionary shape.
+- Shared dictionary query normalization: lowercase, trim, collapse whitespace, strip noisy surrounding punctuation.
+- Richer flat `DictionaryEntry` fields for learner UX: `displayTerm`, `primaryTranslation`, `translations`, `shortDefinition`, optional `type`, optional `frequencyRank`, `source`, `confidence`, and `reviewed`.
+- Indexed `DictionaryAlias` table for lookup behavior instead of JSON aliases. Aliases map common variants such as plural, past tense, manual variant, or phrase variant back to a canonical entry.
+- Seed 3k learner words initially, with room to grow toward 10k, using deterministic `normalizedKey` values.
+- Versioned in-repo seed fixtures generated offline from public frequency wordlists plus provider/manual enrichment, with strict licensing notes and review metadata.
+- Cache-first quick translate behavior, with privacy-safe hashed translation cache keys.
+- Local-only deterministic suggest endpoint with bounded fields, stable ordering, and DB-index-backed lookup.
+- Client debounce, stale-response guard, clear-input guard, and small in-memory cache for repeated normalized suggest queries.
+- Focused API, resolver, DB-query, seed-validation, and component tests.
 
 Out of scope:
 
-- No Study quick translation UX changes.
-- No translation cache or dictionary resolver changes.
-- No dictionary schema redesign.
-- No seed dictionary changes.
+- Production lexical-quality ranking beyond exact/alias/prefix/phrase/frequency/confidence ordering.
+- Full lemmatization or morphology engine.
+- Broad plural/past-tense handling. MVP uses exact lookup, alias lookup, a few safe rules only, then fallback.
+- Full `Lexeme`/`Sense`/`Example` relational dictionary model. MVP uses flat `translations[]` plus `shortDefinition`.
+- Standards-grade CEFR tagging. MVP stores `frequencyRank` when available, not official CEFR.
+- Runtime provider ingestion pipeline. Provider enrichment happens offline through scripts and reviewed fixtures.
+- AI fallback for quick translate misses.
+- Large external bilingual dictionary import unless license is unquestionably safe.
+- Admin dictionary management UI. MVP edits seed JSON/CSV through PR review.
 
 ## Acceptance Criteria
 
-- A slower response for an older query cannot overwrite suggestions for the current query.
-- Clearing the dictionary search input keeps suggestions empty and dropdown hidden even if an in-flight request resolves later.
-- Loading state is cleared correctly for aborted or stale requests.
-- Existing exact dictionary lookup and suggestion UI behavior remain unchanged for normal ordered requests.
+- Local seed contains at least 3k common English learner words/phrases, including frequent short phrases, and can scale to 10k without schema change.
+- Seed fixtures include source/license notes, normalized terms, primary translations, alternatives, optional definitions, optional frequency rank, confidence, and reviewed flags.
+- Dictionary lookup order is exact `DictionaryEntry.normalizedTerm` -> exact `DictionaryAlias.normalizedAlias` -> safe tiny rules -> deterministic fallback.
+- Quick translate reads cache/local dictionary first and returns deterministic fallback without AI for misses.
+- Translation cache keys are hashed; logs avoid raw selected text, raw context, and raw large query payloads.
+- Suggest endpoint uses local DB only, returns 8-10 small DTOs, and has deterministic exact-first/alias/prefix/frequency/confidence ranking.
+- Suggest query path uses normalized term indexes or an equivalent performant DB strategy.
+- Dictionary search UI debounces requests, ignores stale responses, clears safely, and reuses identical-query suggestions during the session.
+- Tests cover seed hit, alias hit, safe-rule fallback, deterministic fallback, cache hit, suggest ranking, empty/short query, stale-response guard, duplicate-query cache reuse, and seed fixture validation.
 
 ## Phases
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 1 | [Stale Suggest Guard](./phase-01-stale-suggest-guard.md) | Pending |
-| 2 | [Regression Tests and Verification](./phase-02-regression-tests-and-verification.md) | Pending |
+| 1 | [Data Model, Normalization, and Alias Lookup](./phase-01-data-model-normalization-and-seed-corpus.md) | Pending |
+| 2 | [Offline Seed Generation and Review Fixtures](./phase-02-provider-enrichment-and-lookup-cache.md) | Pending |
+| 3 | [Cache-First Quick Translate](./phase-03-cache-first-quick-translate.md) | Pending |
+| 4 | [Stable Suggest API and Client Cache](./phase-04-stable-suggest-api-and-client-cache.md) | Pending |
+| 5 | [Regression Tests Docs and Verification](./phase-05-regression-tests-docs-and-verification.md) | Pending |
 
 ## Dependencies
 
-This plan is split out from `plans/260530-pr55-inline-translation-review-fixes` because it affects the Dictionary page, not the Study quick-mode flow. It can be implemented after or independently from the quick-mode plan, but should not be mixed into that implementation batch.
+- Depends on existing inline translation schema from `prisma/migrations/20260529120000_add_inline_translation/migration.sql`.
+- No cross-plan blocker detected in active project plans. Older related inline-translation plans are already moved under `plans/finished_plan/`.
 
-## Review Source
+## Open Clarifications
 
-- PR #55 Codex review thread: `src/features/dictionary/dictionary-page-client.tsx` stale dictionary suggestions.
+- Which public frequency source is the approved first input corpus? Candidate must have safe redistribution terms before committing derived fixtures.
+- Which offline enrichment provider or provider mix is acceptable for draft translations and definitions? Runtime dependency is out of MVP, but offline source still needs licensing review.
+- Initial reviewed threshold: review top 500, top 1000, or all 3k before considering MVP acceptable?
+- Seed fixture format: JSON is easiest for nested `translations[]`; CSV is easier for manual review. Pick one primary format and optionally generate the other.
+- Safe tiny rules list needs final approval. Proposed MVP rules: exact plural `s/es`, `ies -> y`, regular `ed -> base`, and no aggressive stemming unless an alias confirms it.
+- Dictionary page fallback behavior still needs final UX copy: show "not found", show deterministic fallback, or show "not in local dictionary yet".
+
+## Issue Source
+
+- GitHub issue #57: "Translation MVP: seeded dictionary, provider fallback, and cache". This plan intentionally narrows provider fallback to offline seed enrichment for MVP.
