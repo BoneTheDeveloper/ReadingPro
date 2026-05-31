@@ -250,9 +250,10 @@
   "Dictionary": {
     "title": "Dictionary",
     "searchPlaceholder": "Search for a word...",
-    "noResult": "No entry found for",
+    "noResult": "No entry found for this word",
     "loading": "Searching...",
     "error": "Search failed. Please try again.",
-    "idleHint": "Type an English word to look up its Vietnamese translation"
+    "idleHint": "Type an English word to look up its Vietnamese translation",
+    "source": "Source"
   }
 }

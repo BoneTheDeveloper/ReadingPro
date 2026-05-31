@@ -3,7 +3,11 @@ import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 import { getAuthenticatedUser } from "@/lib/auth/auth-utils";
 import { createRequestLogContext, createRequestLogger } from "@/lib/core/logger";
-import { searchDictionaryExact } from "@/lib/db/dictionary-queries";
+import { resolveDictionaryLookup } from "@/lib/dictionary/resolve-dictionary-lookup";
+import type {
+  DictionaryEntryDto,
+  DictionaryMissDto,
+} from "@/lib/dictionary/dictionary-dtos";
 
 const dictionaryQuerySchema = z.object({
   q: z.string().trim().min(1).max(200),
@@ -43,36 +47,33 @@ export async function GET(request: NextRequest) {
       () => getAuthenticatedUser(),
     );
 
-    const entry = await Sentry.startSpan(
+    const result = await Sentry.startSpan(
       {
-        name: "db:dictionary-exact-search",
+        name: "db:dictionary-lookup",
         op: "db",
         attributes: {
-          "db.operation": "findFirst",
-          "db.model": "DictionaryEntry",
           "dictionary.query_length": parsed.data.q.length,
           "user.id": user.id,
         },
       },
-      () => searchDictionaryExact({
-        term: parsed.data.q,
-        sourceLanguage: parsed.data.sourceLanguage,
-        targetLanguage: parsed.data.targetLanguage,
-      }),
-    );
+      () =>
+        resolveDictionaryLookup(parsed.data.q, {
+          sourceLanguage: parsed.data.sourceLanguage,
+          targetLanguage: parsed.data.targetLanguage,
+        }),
+    ) as DictionaryEntryDto | DictionaryMissDto;
 
     requestLog.info(
       {
         context: {
           queryLength: parsed.data.q.length,
-          found: entry !== null,
-          entryId: entry?.id,
+          found: "found" in result && result.found === false ? false : true,
         },
       },
-      "Dictionary search completed",
+      "Dictionary lookup completed",
     );
 
-    return NextResponse.json({ success: true, data: entry });
+    return NextResponse.json({ success: true, data: result });
   } catch (error) {
     if (isAuthenticationError(error)) {
       return NextResponse.json({ error: "Authentication required." }, { status: 401 });

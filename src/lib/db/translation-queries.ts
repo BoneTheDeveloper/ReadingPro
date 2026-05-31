@@ -21,21 +21,6 @@ interface TranslationHistoryInput extends TranslationCacheInput {
   translation: string;
 }
 
-interface DictionaryEntryInput {
-  normalizedKey: string;
-  normalizedTerm: string;
-  sourceLanguage: string;
-  targetLanguage: string;
-  translation: string;
-  type?: string;
-  pronunciation?: string;
-  meanings?: Prisma.InputJsonValue;
-  examples?: Prisma.InputJsonValue;
-  relatedWords?: Prisma.InputJsonValue;
-  source: string;
-  confidence: number;
-}
-
 interface VocabularyInput {
   userId: string;
   sourceId: string;
@@ -55,14 +40,6 @@ function stableHash(value: unknown) {
 
 export function normalizeDictionaryTerm(value: string) {
   return value.toLowerCase().replace(/\s+/g, " ").trim();
-}
-
-export function buildDictionaryKey(input: {
-  normalizedTerm: string;
-  sourceLanguage: string;
-  targetLanguage: string;
-}) {
-  return stableHash(input);
 }
 
 export function buildTranslationCacheKey(input: TranslationKeyInput) {
@@ -138,29 +115,6 @@ export async function createTranslationHistory(input: TranslationHistoryInput) {
       translation: input.translation,
       response: input.response,
     },
-  });
-}
-
-export async function getDictionaryEntry(normalizedKey: string) {
-  return db.dictionaryEntry.findUnique({
-    where: { normalizedKey },
-  });
-}
-
-export async function upsertDictionaryEntry(input: DictionaryEntryInput) {
-  return db.dictionaryEntry.upsert({
-    where: { normalizedKey: input.normalizedKey },
-    update: {
-      translation: input.translation,
-      type: input.type,
-      pronunciation: input.pronunciation,
-      meanings: input.meanings,
-      examples: input.examples,
-      relatedWords: input.relatedWords,
-      source: input.source,
-      confidence: input.confidence,
-    },
-    create: input,
   });
 }
 

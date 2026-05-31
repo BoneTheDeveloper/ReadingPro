@@ -31,22 +31,50 @@ const TEST_CONTEXT = [
 ];
 
 const dictionaryEntries = [
-  entry("algorithmic bias", "thiên lệch thuật toán", "noun phrase", 0.98),
-  entry("algorithm", "thuật toán", "noun", 0.96),
-  entry("bias", "thiên lệch", "noun", 0.72),
-  entry("data", "dữ liệu", "noun", 0.95),
-  entry("drift", "sự trôi", "noun", 0.88),
+  makeEntry("algorithmic bias", [{ pos: "noun phrase", translation: "thiên lệch thuật toán", confidence: 0.98, rank: 1 }]),
+  makeEntry("algorithm", [{ pos: "noun", translation: "thuật toán", confidence: 0.96, rank: 1 }]),
+  makeEntry("bias", [{ pos: "noun", translation: "thiên lệch", confidence: 0.72, rank: 1 }]),
+  makeEntry("data", [{ pos: "noun", translation: "dữ liệu", confidence: 0.95, rank: 1 }]),
+  makeEntry("drift", [{ pos: "noun", translation: "sự trôi", confidence: 0.88, rank: 1 }]),
 ];
 
-function entry(normalizedTerm: string, translation: string, type: string, confidence: number) {
+function makeEntry(headword: string, senses: { pos: string; translation: string; confidence: number; rank: number }[]) {
+  const normalizedHeadword = headword.toLowerCase().replace(/\s+/g, " ").trim();
   return {
-    id: `dict-${normalizedTerm.replaceAll(" ", "-")}`,
-    normalizedTerm,
-    translation,
-    type,
-    confidence,
+    id: `dict-${normalizedHeadword.replaceAll(" ", "-")}`,
+    headword,
+    normalizedHeadword,
     sourceLanguage: "en",
-    targetLanguage: "vi",
+    frequencyRank: 0,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    senses: senses.map((s, i) => ({
+      id: `sense-${normalizedHeadword.replaceAll(" ", "-")}-${i}`,
+      entryId: `dict-${normalizedHeadword.replaceAll(" ", "-")}`,
+      partOfSpeech: s.pos,
+      definition: null,
+      example: null,
+      tags: [],
+      usageRank: i,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      translations: [{
+        id: `tr-${normalizedHeadword.replaceAll(" ", "-")}-${i}`,
+        senseId: `sense-${normalizedHeadword.replaceAll(" ", "-")}-${i}`,
+        targetLanguage: "vi",
+        translation: s.translation,
+        isPrimary: true,
+        rank: s.rank,
+        confidence: s.confidence,
+        status: "reviewed",
+        sourceType: "seed",
+        sourceName: "reviewed",
+        reviewedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }],
+    })),
+    aliases: [],
   };
 }
 
@@ -99,10 +127,12 @@ beforeEach(() => {
     createdAt: new Date("2026-05-29T00:00:00.000Z"),
     updatedAt: new Date("2026-05-29T00:00:00.000Z"),
   });
-  db.dictionaryEntry.findMany.mockImplementation(async (query: { where?: { normalizedTerm?: { in?: string[] } } }) => {
-    const terms = query.where?.normalizedTerm?.in ?? [];
-    return dictionaryEntries.filter((item) => terms.includes(item.normalizedTerm));
+  db.dictionaryEntry.findUnique.mockImplementation(async (query: { where?: { normalizedHeadword_sourceLanguage?: { normalizedHeadword?: string } } }) => {
+    const term = query.where?.normalizedHeadword_sourceLanguage?.normalizedHeadword;
+    if (!term) return null;
+    return dictionaryEntries.find((item) => item.normalizedHeadword === term) ?? null;
   });
+  db.dictionaryAlias.findFirst.mockResolvedValue(null);
 });
 
 describe("POST /api/translate", () => {
@@ -140,13 +170,13 @@ describe("POST /api/translate", () => {
   });
 
   it.each([
-    ["algorithmic bias", TEST_CONTEXT[0], "thiên lệch thuật toán", "noun phrase"],
-    ["algorithm", TEST_CONTEXT[1], "thuật toán", "noun"],
-    ["bias", TEST_CONTEXT[0], "thiên lệch thuật toán", "noun phrase"],
-    ["data", TEST_CONTEXT[1], "dữ liệu", "noun"],
+    ["algorithmic bias", TEST_CONTEXT[0], "thiên lệch thuật toán"],
+    ["algorithm", TEST_CONTEXT[1], "thuật toán"],
+    ["bias", TEST_CONTEXT[0], "thiên lệch"],
+    ["data", TEST_CONTEXT[1], "dữ liệu"],
   ])(
     "resolves quick dictionary translation for %s without AI",
-    async (text, context, expectedTranslation, expectedType) => {
+    async (text, context, expectedTranslation) => {
       const response = await translateRoute(createJsonRequest(translationBody({ text, context })));
       const payload = await readJsonResponse(response);
 
@@ -156,7 +186,7 @@ describe("POST /api/translate", () => {
         success: true,
         data: {
           translation: expectedTranslation,
-          type: expectedType,
+          type: null,
           provider: "dictionary",
         },
       });
@@ -186,7 +216,7 @@ describe("POST /api/translate", () => {
 
   it("returns deterministic quick fallback without AI and reuses the exact cache on repeat", async () => {
     const fallback = {
-      translation: "sự trôi",
+      translation: "quorvex drift",
       type: null,
       provider: "fallback",
     };
@@ -206,7 +236,8 @@ describe("POST /api/translate", () => {
       }),
     );
 
-    db.dictionaryEntry.findMany.mockClear();
+    db.dictionaryEntry.findUnique.mockClear();
+    db.dictionaryAlias.findFirst.mockClear();
     db.translationCache.upsert.mockClear();
     const repeat = await translateRoute(
       createJsonRequest(translationBody({ text: "quorvex drift", context: TEST_CONTEXT[3] })),
@@ -215,7 +246,8 @@ describe("POST /api/translate", () => {
       success: true,
       data: { ...fallback, provider: "cache" },
     });
-    expect(db.dictionaryEntry.findMany).not.toHaveBeenCalled();
+    expect(db.dictionaryEntry.findUnique).not.toHaveBeenCalled();
+    expect(db.dictionaryAlias.findFirst).not.toHaveBeenCalled();
     expect(db.translationCache.upsert).not.toHaveBeenCalled();
     expect(generateObject).not.toHaveBeenCalled();
   });

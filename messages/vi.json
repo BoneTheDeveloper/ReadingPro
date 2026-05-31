@@ -250,9 +250,10 @@
   "Dictionary": {
     "title": "Từ điển",
     "searchPlaceholder": "Tìm từ...",
-    "noResult": "Không tìm thấy",
+    "noResult": "Không tìm thấy kết quả cho từ này",
     "loading": "Đang tìm...",
     "error": "Tìm kiếm thất bại. Vui lòng thử lại.",
-    "idleHint": "Nhập từ tiếng Anh để tra nghĩa tiếng Việt"
+    "idleHint": "Nhập từ tiếng Anh để tra nghĩa tiếng Việt",
+    "source": "Nguồn"
   }
 }

@@ -31,7 +31,8 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
-    "db:seed:dictionary": "tsx prisma/seed-dictionary.ts"
+    "db:seed:dictionary": "tsx prisma/seed-dictionary.ts",
+    "db:validate:dictionary": "tsx scripts/dictionary/validate-seed.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.72",

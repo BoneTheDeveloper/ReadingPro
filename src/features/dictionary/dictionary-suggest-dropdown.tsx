@@ -1,18 +1,13 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
-import type { DictionaryEntry } from "@/generated/prisma/client";
-
-type SuggestionItem = Pick<
-  DictionaryEntry,
-  "id" | "normalizedTerm" | "translation" | "type"
->;
+import type { DictionarySuggestItemDto } from "@/lib/dictionary/dictionary-dtos";
 
 interface DictionarySuggestDropdownProps {
-  suggestions: SuggestionItem[];
+  suggestions: DictionarySuggestItemDto[];
   loading: boolean;
   visible: boolean;
-  onSelect: (item: SuggestionItem) => void;
+  onSelect: (item: DictionarySuggestItemDto) => void;
 }
 
 export function DictionarySuggestDropdown({
@@ -47,15 +42,15 @@ export function DictionarySuggestDropdown({
             onClick={() => onSelect(item)}
           >
             <span className="font-medium text-foreground">
-              {item.normalizedTerm}
+              {item.headword}
             </span>
-            {item.type && (
+            {item.matchType === "alias" && item.matchedAlias && (
               <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                {item.type}
+                {item.matchedAlias}
               </span>
             )}
             <span className="text-muted-foreground ml-auto">
-              {item.translation}
+              {item.primaryTranslation}
             </span>
           </button>
         ))}

@@ -65,5 +65,9 @@ next-env.d.ts
 # Sentry Config File
 .env.sentry-build-plugin
 
+# dictionary seed drafts (keep only reviewed fixtures)
+prisma/data/dictionary/en-vi/draft/
+prisma/data/dictionary/en-vi/*.csv
+
 # Repomix
 repomix-output.xml
