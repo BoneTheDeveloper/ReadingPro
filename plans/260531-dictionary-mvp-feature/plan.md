@@ -26,7 +26,7 @@ The MVP is an engineering feature with a representative reviewed fixture set. La
 
 | Decision | MVP Choice |
 |----------|------------|
-| Data model | `DictionaryEntry` -> `DictionarySense` -> `DictionaryTranslation`, plus `DictionaryAlias` and optional audit metadata. |
+| Data model | `DictionaryEntry` -> `DictionarySense` -> `DictionaryTranslation`, plus `DictionaryAlias` and `DictionarySourceAudit`. |
 | Migration | Destructively replace the current thin `dictionary_entries` shape; no backfill of test-derived rows. |
 | Seed scope | Representative reviewed fixtures covering exact lookup, aliases, phrases, multiple senses, status filtering, and ranking. |
 | Runtime status | Return only `reviewed` or `approved` entries/translations by default. |
@@ -63,7 +63,7 @@ model DictionaryTranslation {
 }
 ```
 
-Valid translation statuses are `draft`, `reviewed`, `approved`, and `deprecated`. Valid `sourceType` values are `seed`, `manual`, `provider`, `llm`, and `mixed`. Seed validation must reject invalid values, duplicate aliases, missing senses, and zero or multiple primary translations for the same `senseId + targetLanguage`. Add a database constraint or partial unique index for the primary-translation rule where practical.
+Valid translation statuses are `draft`, `reviewed`, `approved`, and `deprecated`. Valid `sourceType` values are `seed`, `manual`, `provider`, `llm`, and `mixed`. For each `senseId + targetLanguage`, exactly one translation row must have `isPrimary = true`. Seed validation enforces both "at least one" and "at most one"; the database migration should add a unique partial index for the "at most one primary" side.
 
 ## API Contract
 
@@ -92,7 +92,7 @@ Suggest results include `matchType`, `matchedAlias`, `primaryTranslation`, and `
 
 ## Acceptance Criteria
 
-- Prisma schema and migration support entries, senses, translations with provenance, aliases, and audit metadata.
+- Prisma schema and migration support entries, senses, translations with provenance, aliases, and `DictionarySourceAudit`.
 - Seed import loads representative reviewed fixtures and validates the primary-translation/provenance rules.
 - `/api/dictionary` returns bounded multi-sense DTOs for exact, alias, and phrase hits, and stable miss DTOs for unknown terms.
 - `/api/dictionary/suggest` returns empty success data for normalized queries shorter than 2 characters.

@@ -15,18 +15,18 @@ Replace the current flat dictionary table with a sense-based local dictionary mo
 
 ## Requirements
 
-- Functional: Replace thin `DictionaryEntry` rows with entries, senses, translations, aliases, and audit metadata.
+- Functional: Replace thin `DictionaryEntry` rows with entries, senses, translations, aliases, and `DictionarySourceAudit`.
 - Functional: Store target-language text and provenance on `DictionaryTranslation`.
-- Functional: Enforce exactly one primary translation per `senseId + targetLanguage`.
+- Functional: Enforce exactly one primary translation row per `senseId + targetLanguage`.
 - Functional: Add aliases for inflections, phrases, typos, and variants.
 - Functional: Share normalization across seed import, API routes, DB helpers, and quick translate.
 - Non-functional: Keep the MVP learner-focused and avoid a full lexical graph.
 
 ## Architecture
 
-`DictionaryEntry` owns the canonical English headword/lemma. `DictionarySense` owns POS, English definition/example, tags, and usage ordering. `DictionaryTranslation` owns Vietnamese text, rank, confidence, status, provenance, review timestamp, and primary selection. `DictionaryAlias` points normalized variants to canonical entries.
+`DictionaryEntry` owns the canonical English headword/lemma. `DictionarySense` owns POS, English definition/example, tags, and usage ordering. `DictionaryTranslation` owns Vietnamese text, rank, confidence, status, provenance, review timestamp, and primary selection. `DictionaryAlias` points normalized variants to canonical entries. `DictionarySourceAudit` stores batch/entity provenance notes for later inspection.
 
-The migration may destructively replace the old dictionary table. Add validation and, where practical, a DB constraint or partial unique index so each `senseId + targetLanguage` has one and only one `isPrimary = true` translation.
+The migration may destructively replace the old dictionary table. For each `senseId + targetLanguage`, exactly one translation row must have `isPrimary = true`. Seed validation enforces both sides of the rule: reject zero primary rows and reject multiple primary rows. The database migration should add a unique partial index to prevent multiple primary rows; validation remains responsible for catching the missing-primary case before import.
 
 `DictionaryTranslation` must include:
 
@@ -57,7 +57,7 @@ The migration may destructively replace the old dictionary table. Add validation
 
 ## Implementation Steps
 
-1. Add the new Prisma models and destructive migration.
+1. Add the new Prisma models and destructive migration, including the partial unique index for primary translations.
 2. Add dictionary-owned normalization and deterministic key helpers.
 3. Add DB helpers for exact headword, alias, candidate lookup, status-filtered sense loading, and usage-ranked DTO loading.
 4. Add source-label mapping in the backend from `sourceType/sourceName` to display-ready labels.
@@ -65,8 +65,9 @@ The migration may destructively replace the old dictionary table. Add validation
 
 ## Success Criteria
 
-- [ ] Schema supports entries, senses, translations with provenance, aliases, and audit metadata.
-- [ ] Runtime-available translations validate exactly one primary row per `senseId + targetLanguage`.
+- [ ] Schema supports entries, senses, translations with provenance, aliases, and `DictionarySourceAudit`.
+- [ ] Seed validation rejects zero or multiple primary rows per `senseId + targetLanguage`.
+- [ ] Migration prevents multiple primary rows per `senseId + targetLanguage`.
 - [ ] Headword and alias lookup paths are indexed.
 - [ ] Draft/deprecated rows can be excluded by default.
 - [ ] Backend can produce a stable `sourceLabel` from translation provenance.
