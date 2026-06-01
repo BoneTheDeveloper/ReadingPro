@@ -1,5 +1,6 @@
 import { Prisma } from "@/generated/prisma/client";
 import { db } from "@/lib/db/client";
+import { runWithPrismaQueryStep } from "@/lib/observability/prisma-query-metrics";
 import { normalizeDictionaryTerm } from "./normalize-dictionary-term";
 import {
   type DictionaryEntryDto,
@@ -14,6 +15,7 @@ export interface LookupOptions {
   sourceLanguage: string;
   targetLanguage: string;
   includeDraft?: boolean;
+  performanceStepPrefix?: string;
 }
 
 export async function resolveDictionaryLookup(
@@ -25,17 +27,34 @@ export async function resolveDictionaryLookup(
     ? [...RUNTIME_STATUSES, "draft"]
     : [...RUNTIME_STATUSES];
 
-  const entry = await findEntryByHeadword(normalized, options.sourceLanguage);
+  const entry = await runLookupQueryStep(
+    options.performanceStepPrefix,
+    "headword",
+    () => findEntryByHeadword(normalized, options.sourceLanguage),
+  );
   if (entry) {
     return buildEntryDto(entry, options.targetLanguage, statuses);
   }
 
-  const aliasEntry = await findEntryByAlias(normalized, options.sourceLanguage);
+  const aliasEntry = await runLookupQueryStep(
+    options.performanceStepPrefix,
+    "alias",
+    () => findEntryByAlias(normalized, options.sourceLanguage),
+  );
   if (aliasEntry) {
     return buildEntryDto(aliasEntry, options.targetLanguage, statuses);
   }
 
   return { headword: normalized, found: false };
+}
+
+function runLookupQueryStep<T>(
+  prefix: string | undefined,
+  step: string,
+  callback: () => Promise<T>,
+) {
+  if (!prefix) return callback();
+  return runWithPrismaQueryStep(`${prefix}.${step}`, callback);
 }
 
 const QUICK_LOOKUP_STATUSES = Prisma.join(RUNTIME_STATUSES);

@@ -36,4 +36,4 @@ Reports:
 - `test-results/performance/translate-flow.json`
 - `test-results/performance/dictionary-flow.json`
 
-Each report includes aggregate Prisma metrics and per-step Prisma query metrics under `performance.prisma.steps`.
+Each report includes aggregate Prisma metrics and per-step Prisma query metrics under `performance.prisma.steps`. Dictionary reports split resolve work into finer query groups such as `suggestResolve.headwordPrefix`, `suggestResolve.aliasPrefix`, `lookupResolve.headword`, and `lookupResolve.alias`.

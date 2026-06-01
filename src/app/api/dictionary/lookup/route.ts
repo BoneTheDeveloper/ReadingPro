@@ -97,6 +97,7 @@ async function handleDictionaryLookupGet(request: NextRequest, includePerformanc
           resolveDictionaryLookup(parsed.data.q, {
             sourceLanguage: parsed.data.sourceLanguage,
             targetLanguage: parsed.data.targetLanguage,
+            performanceStepPrefix: includePerformance ? "lookupResolve" : undefined,
           }),
       ),
     ) as DictionaryEntryDto | DictionaryMissDto;

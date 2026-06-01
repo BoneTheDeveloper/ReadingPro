@@ -170,24 +170,35 @@ async function handleSuggestGet(request: NextRequest, includePerformance: boolea
       ),
     );
 
-    const [headwordResults, aliasResults] = await measureDictionaryStep(
-      performanceTracker,
-      "suggestResolve",
-      () => Sentry.startSpan(
-        {
-          name: "db:dictionary-suggest",
-          op: "db",
-          attributes: {
-            "dictionary.query_length": normalizedQuery.length,
-            "user.id": user.id,
-          },
+    const [headwordResults, aliasResults] = await Sentry.startSpan(
+      {
+        name: "db:dictionary-suggest",
+        op: "db",
+        attributes: {
+          "dictionary.query_length": normalizedQuery.length,
+          "user.id": user.id,
         },
-        () =>
-          Promise.all([
+      },
+      async () => {
+        if (!performanceTracker) {
+          return Promise.all([
             findEntriesByHeadwordPrefix(parsed.data.q, parsed.data.sourceLanguage),
             findEntriesByAliasPrefix(parsed.data.q, parsed.data.sourceLanguage),
-          ]),
-      ),
+          ]);
+        }
+
+        const headwordEntries = await measureDictionaryStep(
+          performanceTracker,
+          "suggestResolve.headwordPrefix",
+          () => findEntriesByHeadwordPrefix(parsed.data.q, parsed.data.sourceLanguage),
+        );
+        const aliasEntries = await measureDictionaryStep(
+          performanceTracker,
+          "suggestResolve.aliasPrefix",
+          () => findEntriesByAliasPrefix(parsed.data.q, parsed.data.sourceLanguage),
+        );
+        return [headwordEntries, aliasEntries] as const;
+      },
     );
 
     // Build items from both result sets
