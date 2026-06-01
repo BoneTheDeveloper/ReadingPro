@@ -3,16 +3,22 @@ import {
   assertNumber,
   assertObject,
   assertResponse,
+  addScenarioSample,
+  aggregateScenarioSampleGroups,
   type BenchmarkContext,
+  type BenchmarkRunOptions,
   type BenchmarkScenarioReport,
   deleteJson,
   getJson,
+  type LatencyBudget,
   parseJson,
   postJson,
   reportBudgetFailures,
+  reportLatencyBudgetFailures,
   roundMetric,
   type ScenarioBudget,
   validateBudgets,
+  validateLatencyBudgets,
   writePerformanceReport,
 } from "./benchmark-utils";
 
@@ -76,13 +82,14 @@ type FixturePayload = {
 
 type PerformanceScenarioReport = BenchmarkScenarioReport & {
   performance: DictionaryPerformancePayload<unknown>["performance"];
-  budget?: ScenarioBudget;
+  queryBudget?: ScenarioBudget;
+  latencyBudget?: LatencyBudget;
 };
 
 const reportPath = "test-results/performance/dictionary-flow.json";
 const performanceHeader = { "x-dictionary-perf-metrics": "1" };
 
-const BUDGETS: Record<string, ScenarioBudget> = {
+const QUERY_BUDGETS: Record<string, ScenarioBudget> = {
   "suggest-short-query": { maxQueries: 0, gate: "hard" },
   "suggest-headword-prefix": { maxQueries: 12, gate: "hard" },
   "suggest-alias-prefix": { maxQueries: 12, gate: "hard" },
@@ -92,26 +99,49 @@ const BUDGETS: Record<string, ScenarioBudget> = {
   "lookup-miss": { maxQueries: 6, gate: "hard" },
 };
 
-export async function runDictionaryFlowBenchmark(context: BenchmarkContext) {
-  let fixture: FixturePayload["data"] | null = null;
+const LATENCY_BUDGETS: Record<string, LatencyBudget> = {
+  "suggest-short-query": { medianRoundTripMs: 150, p95RoundTripMs: 300, gate: "soft" },
+  "suggest-headword-prefix": { medianRoundTripMs: 1_000, p95RoundTripMs: 2_000, gate: "soft" },
+  "suggest-alias-prefix": { medianRoundTripMs: 1_000, p95RoundTripMs: 2_000, gate: "soft" },
+  "search-exact-headword": { medianRoundTripMs: 1_000, p95RoundTripMs: 2_000, gate: "soft" },
+  "lookup-exact-headword": { medianRoundTripMs: 1_000, p95RoundTripMs: 2_000, gate: "soft" },
+  "lookup-exact-alias": { medianRoundTripMs: 1_000, p95RoundTripMs: 2_000, gate: "soft" },
+  "lookup-miss": { medianRoundTripMs: 1_000, p95RoundTripMs: 2_000, gate: "soft" },
+};
 
-  try {
-    fixture = await createFixture(context);
+export async function runDictionaryFlowBenchmark(
+  context: BenchmarkContext,
+  options: BenchmarkRunOptions,
+) {
+  const samplesByScenario = new Map<string, PerformanceScenarioReport[]>();
 
-    console.log("Running dictionary warm-up request (discarded)...");
-    await getJson(`${context.baseUrl}/api/dictionary/suggest?q=${encodeURIComponent(fixture.headwordPrefix)}&sourceLanguage=en&targetLanguage=vi`, context.cookie);
+  for (let sampleIndex = 0; sampleIndex < options.samples; sampleIndex += 1) {
+    let fixture: FixturePayload["data"] | null = null;
 
-    const reports = await runScenarios(context, fixture);
-    await writePerformanceReport(reportPath, reports);
-    console.log(`Wrote dictionary performance report to ${reportPath}`);
-    reportBudgetFailures("dictionary-flow", validateBudgets(reports));
-  } finally {
-    if (fixture) {
-      await cleanupFixture(context, fixture.cleanup).catch((error: unknown) => {
-        console.warn(`Dictionary fixture cleanup failed: ${error instanceof Error ? error.message : String(error)}`);
-      });
+    try {
+      fixture = await createFixture(context);
+
+      console.log(`Running dictionary warm-up request for sample ${sampleIndex + 1}/${options.samples} (discarded)...`);
+      await getJson(`${context.baseUrl}/api/dictionary/suggest?q=${encodeURIComponent(fixture.headwordPrefix)}&sourceLanguage=en&targetLanguage=vi`, context.cookie);
+
+      const reports = await runScenarios(context, fixture);
+      for (const report of reports) {
+        addScenarioSample(samplesByScenario, report);
+      }
+    } finally {
+      if (fixture) {
+        await cleanupFixture(context, fixture.cleanup).catch((error: unknown) => {
+          console.warn(`Dictionary fixture cleanup failed: ${error instanceof Error ? error.message : String(error)}`);
+        });
+      }
     }
   }
+
+  const reports = aggregateScenarioSampleGroups(samplesByScenario);
+  await writePerformanceReport(reportPath, reports);
+  console.log(`Wrote dictionary performance report to ${reportPath}`);
+  reportBudgetFailures("dictionary-flow", validateBudgets(reports));
+  reportLatencyBudgetFailures("dictionary-flow", validateLatencyBudgets(reports));
 }
 
 async function runScenarios(
@@ -276,14 +306,19 @@ function buildReport(
   roundTripMs: number,
   performance: DictionaryPerformancePayload<unknown>["performance"],
 ): PerformanceScenarioReport {
-  const budget = BUDGETS[scenario];
+  const queryBudget = QUERY_BUDGETS[scenario];
+  const latencyBudget = LATENCY_BUDGETS[scenario];
   const actualQueries = performance.prisma.queryCount;
+  const queryPassed = queryBudget ? actualQueries <= queryBudget.maxQueries : true;
 
   return {
     scenario,
     roundTripMs,
     performance,
-    budget: budget ?? undefined,
-    passed: budget ? actualQueries <= budget.maxQueries : true,
+    queryBudget: queryBudget ?? undefined,
+    budget: queryBudget ?? undefined,
+    queryPassed,
+    passed: queryPassed,
+    latencyBudget: latencyBudget ?? undefined,
   };
 }

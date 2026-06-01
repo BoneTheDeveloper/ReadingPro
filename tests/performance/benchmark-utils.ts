@@ -12,16 +12,64 @@ export interface ScenarioBudget {
   gate: BudgetGate;
 }
 
+export interface LatencyBudget {
+  medianRoundTripMs?: number;
+  p95RoundTripMs?: number;
+  gate: BudgetGate;
+}
+
+export interface BenchmarkRunOptions {
+  samples: number;
+}
+
+export interface RoundTripStats {
+  samples: number[];
+  min: number;
+  median: number;
+  p95: number;
+  max: number;
+}
+
+export interface BenchmarkScenarioSample {
+  roundTripMs: number;
+  performance: unknown;
+  passed?: boolean;
+  queryPassed?: boolean;
+}
+
 export interface BenchmarkScenarioReport {
   scenario: string;
   roundTripMs: number;
+  roundTripStats?: RoundTripStats;
+  samples?: number;
+  sampleReports?: BenchmarkScenarioSample[];
   performance: {
     prisma: {
       queryCount: number;
     };
   };
+  queryBudget?: ScenarioBudget;
+  queryPassed?: boolean;
   budget?: ScenarioBudget;
+  latencyBudget?: LatencyBudget;
+  latencyPassed?: boolean;
+  latencyFailures?: LatencyBudgetFailure[];
   passed?: boolean;
+}
+
+export interface QueryBudgetFailure {
+  scenario: string;
+  gate: BudgetGate;
+  actual: number;
+  max: number;
+}
+
+export interface LatencyBudgetFailure {
+  scenario: string;
+  metric: "medianRoundTripMs" | "p95RoundTripMs";
+  gate: BudgetGate;
+  actual: number;
+  max: number;
 }
 
 export interface BenchmarkContext {
@@ -78,22 +126,132 @@ export async function writePerformanceReport(path: string, reports: unknown[]) {
 }
 
 export function validateBudgets<T extends BenchmarkScenarioReport>(reports: T[]) {
-  const failures: Array<{ scenario: string; gate: BudgetGate; actual: number; max: number }> = [];
+  const failures: QueryBudgetFailure[] = [];
 
   for (const report of reports) {
-    if (!report.budget || report.passed) continue;
+    const budget = report.queryBudget ?? report.budget;
+    const passed = report.queryPassed ?? report.passed;
+    if (!budget || passed) continue;
     failures.push({
       scenario: report.scenario,
-      gate: report.budget.gate,
+      gate: budget.gate,
       actual: report.performance.prisma.queryCount,
-      max: report.budget.maxQueries,
+      max: budget.maxQueries,
     });
   }
 
   return failures;
 }
 
-export function reportBudgetFailures(label: string, failures: ReturnType<typeof validateBudgets>) {
+export function validateLatencyBudgets<T extends BenchmarkScenarioReport>(reports: T[]) {
+  return reports.flatMap((report) => report.latencyFailures ?? []);
+}
+
+export function addScenarioSample<T extends BenchmarkScenarioReport>(
+  groups: Map<string, T[]>,
+  report: T,
+) {
+  const reports = groups.get(report.scenario) ?? [];
+  reports.push(report);
+  groups.set(report.scenario, reports);
+}
+
+export function aggregateScenarioSampleGroups<T extends BenchmarkScenarioReport>(
+  groups: Map<string, T[]>,
+) {
+  return Array.from(groups.values(), aggregateScenarioSamples);
+}
+
+export function aggregateScenarioSamples<T extends BenchmarkScenarioReport>(
+  reports: T[],
+): T {
+  if (reports.length === 0) {
+    throw new Error("Cannot aggregate an empty benchmark scenario sample set.");
+  }
+
+  const latest = reports[reports.length - 1];
+  const roundTripStats = calculateRoundTripStats(reports.map((report) => report.roundTripMs));
+  const maxQueryCount = Math.max(...reports.map((report) => report.performance.prisma.queryCount));
+  const queryBudget = latest.queryBudget ?? latest.budget;
+  const queryPassed = queryBudget ? maxQueryCount <= queryBudget.maxQueries : latest.queryPassed ?? latest.passed;
+  const latencyFailures = evaluateLatencyBudget(latest.scenario, roundTripStats, latest.latencyBudget);
+  const latencyPassed = latencyFailures.length === 0;
+
+  return {
+    ...latest,
+    roundTripMs: roundTripStats.median,
+    roundTripStats,
+    samples: reports.length,
+    performance: {
+      ...latest.performance,
+      prisma: {
+        ...latest.performance.prisma,
+        queryCount: maxQueryCount,
+      },
+    },
+    queryBudget,
+    queryPassed,
+    budget: queryBudget,
+    passed: queryPassed,
+    latencyPassed,
+    latencyFailures,
+    sampleReports: reports.map((report) => ({
+      roundTripMs: report.roundTripMs,
+      performance: report.performance,
+      passed: report.passed,
+      queryPassed: report.queryPassed,
+    })),
+  };
+}
+
+export function calculateRoundTripStats(samples: number[]): RoundTripStats {
+  if (samples.length === 0) {
+    throw new Error("Cannot calculate benchmark stats without samples.");
+  }
+
+  const sorted = [...samples].sort((a, b) => a - b);
+
+  return {
+    samples,
+    min: sorted[0],
+    median: percentile(sorted, 50),
+    p95: percentile(sorted, 95),
+    max: sorted[sorted.length - 1],
+  };
+}
+
+export function evaluateLatencyBudget(
+  scenario: string,
+  stats: RoundTripStats,
+  budget?: LatencyBudget,
+) {
+  const failures: LatencyBudgetFailure[] = [];
+  if (!budget) return failures;
+
+  if (budget.medianRoundTripMs !== undefined && stats.median > budget.medianRoundTripMs) {
+    failures.push({
+      scenario,
+      metric: "medianRoundTripMs",
+      gate: budget.gate,
+      actual: stats.median,
+      max: budget.medianRoundTripMs,
+    });
+  }
+
+  if (budget.p95RoundTripMs !== undefined && stats.p95 > budget.p95RoundTripMs) {
+    failures.push({
+      scenario,
+      metric: "p95RoundTripMs",
+      gate: budget.gate,
+      actual: stats.p95,
+      max: budget.p95RoundTripMs,
+    });
+  }
+
+  return failures;
+}
+
+export function reportBudgetFailures(label: string, failures: QueryBudgetFailure[]) {
   if (failures.length === 0) {
     console.log(`\n${label}: all budget checks passed.`);
     return;
@@ -106,6 +264,22 @@ export function reportBudgetFailures(label: string, failures: ReturnType<typeof 
 
   if (failures.some((f) => f.gate === "hard")) {
     throw new Error(`${label} hard budget failure`);
+  }
+}
+
+export function reportLatencyBudgetFailures(label: string, failures: LatencyBudgetFailure[]) {
+  if (failures.length === 0) {
+    console.log(`\n${label}: all latency budget checks passed.`);
+    return;
+  }
+
+  console.warn(`\n${label} latency budget warnings:`);
+  for (const f of failures) {
+    console.warn(`  [${f.gate.toUpperCase()}] ${f.scenario}: ${f.metric} ${f.actual}ms (budget: <=${f.max}ms)`);
+  }
+
+  if (failures.some((f) => f.gate === "hard")) {
+    throw new Error(`${label} hard latency budget failure`);
   }
 }
 
@@ -210,6 +384,11 @@ function normalizeBaseUrl(value: string) {
   return value.replace(/\/+$/, "");
 }
 
+function percentile(sortedSamples: number[], percentileValue: number) {
+  const index = Math.ceil((percentileValue / 100) * sortedSamples.length) - 1;
+  return sortedSamples[Math.max(0, Math.min(index, sortedSamples.length - 1))];
+}
+
 async function startOwnedBenchmarkServer() {
   const port = await getPort();
   const baseUrl = `http://127.0.0.1:${port}`;
@@ -218,6 +397,7 @@ async function startOwnedBenchmarkServer() {
     "pnpm",
     ["exec", "next", "dev", "--turbopack", "-H", "127.0.0.1", "-p", String(port)],
     {
+      detached: process.platform !== "win32",
       env: {
         ...process.env,
         NEXT_DIST_DIR: ownedServerDistDir,
@@ -253,11 +433,28 @@ function captureServerOutput(server: ChildProcess, output: string[]) {
 async function stopServer(server: ChildProcess) {
   if (server.exitCode !== null || server.signalCode !== null) return;
 
-  server.kill("SIGTERM");
+  killServer(server, "SIGTERM");
   const stopped = await waitForServerExit(server, 5_000);
   if (!stopped) {
-    server.kill("SIGKILL");
+    killServer(server, "SIGKILL");
     await waitForServerExit(server, 2_000);
+  }
+}
+
+function killServer(server: ChildProcess, signal: NodeJS.Signals) {
+  if (!server.pid) return;
+
+  try {
+    if (process.platform === "win32") {
+      server.kill(signal);
+      return;
+    }
+
+    process.kill(-server.pid, signal);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ESRCH") {
+      throw error;
+    }
   }
 }
 

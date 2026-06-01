@@ -3,16 +3,22 @@ import {
   assertNumber,
   assertObject,
   assertResponse,
+  addScenarioSample,
+  aggregateScenarioSampleGroups,
   type BenchmarkContext,
+  type BenchmarkRunOptions,
   type BenchmarkScenarioReport,
   countWords,
   deleteJson,
+  type LatencyBudget,
   parseJson,
   postJson,
   reportBudgetFailures,
+  reportLatencyBudgetFailures,
   roundMetric,
   type ScenarioBudget,
   validateBudgets,
+  validateLatencyBudgets,
   writePerformanceReport,
 } from "./benchmark-utils";
 
@@ -59,45 +65,66 @@ type FixturePayload = {
 
 type PerformanceScenarioReport = BenchmarkScenarioReport & {
   performance: TranslatePerformancePayload["performance"];
-  budget?: ScenarioBudget;
+  queryBudget?: ScenarioBudget;
+  latencyBudget?: LatencyBudget;
 };
 
 const reportPath = "test-results/performance/translate-flow.json";
 
-const BUDGETS: Record<string, ScenarioBudget> = {
+const QUERY_BUDGETS: Record<string, ScenarioBudget> = {
   "single-word-dictionary": { maxQueries: 4, gate: "hard" },
   "phrase-dictionary": { maxQueries: 4, gate: "soft" },
   fallback: { maxQueries: 5, gate: "soft" },
   "cache-repeat": { maxQueries: 2, gate: "soft" },
 };
 
-export async function runTranslateFlowBenchmark(context: BenchmarkContext) {
-  let fixture: FixturePayload["data"] | null = null;
+const LATENCY_BUDGETS: Record<string, LatencyBudget> = {
+  "single-word-dictionary": { medianRoundTripMs: 1_500, p95RoundTripMs: 3_000, gate: "soft" },
+  "phrase-dictionary": { medianRoundTripMs: 1_500, p95RoundTripMs: 3_000, gate: "soft" },
+  fallback: { medianRoundTripMs: 3_000, p95RoundTripMs: 6_000, gate: "soft" },
+  "cache-repeat": { medianRoundTripMs: 750, p95RoundTripMs: 1_500, gate: "soft" },
+};
 
-  try {
-    fixture = await createFixture(context);
+export async function runTranslateFlowBenchmark(
+  context: BenchmarkContext,
+  options: BenchmarkRunOptions,
+) {
+  const samplesByScenario = new Map<string, PerformanceScenarioReport[]>();
 
-    console.log("Running translate warm-up request (discarded)...");
-    await postJson(`${context.baseUrl}/api/translate`, context.cookie, {
-      text: fixture.singleWord,
-      context: fixture.context,
-      sourceId: fixture.passageId,
-      sourceLanguage: "en",
-      targetLanguage: "vi",
-      mode: "quick",
-    });
+  for (let sampleIndex = 0; sampleIndex < options.samples; sampleIndex += 1) {
+    let fixture: FixturePayload["data"] | null = null;
 
-    const reports = await runScenarios(context, fixture);
-    await writePerformanceReport(reportPath, reports);
-    console.log(`Wrote translate performance report to ${reportPath}`);
-    reportBudgetFailures("translate-flow", validateBudgets(reports));
-  } finally {
-    if (fixture) {
-      await cleanupFixture(context, fixture.cleanup).catch((error: unknown) => {
-        console.warn(`Translate fixture cleanup failed: ${error instanceof Error ? error.message : String(error)}`);
+    try {
+      fixture = await createFixture(context);
+
+      console.log(`Running translate warm-up request for sample ${sampleIndex + 1}/${options.samples} (discarded)...`);
+      await postJson(`${context.baseUrl}/api/translate`, context.cookie, {
+        text: fixture.singleWord,
+        context: fixture.context,
+        sourceId: fixture.passageId,
+        sourceLanguage: "en",
+        targetLanguage: "vi",
+        mode: "quick",
       });
+
+      const reports = await runScenarios(context, fixture);
+      for (const report of reports) {
+        addScenarioSample(samplesByScenario, report);
+      }
+    } finally {
+      if (fixture) {
+        await cleanupFixture(context, fixture.cleanup).catch((error: unknown) => {
+          console.warn(`Translate fixture cleanup failed: ${error instanceof Error ? error.message : String(error)}`);
+        });
+      }
     }
   }
+
+  const reports = aggregateScenarioSampleGroups(samplesByScenario);
+  await writePerformanceReport(reportPath, reports);
+  console.log(`Wrote translate performance report to ${reportPath}`);
+  reportBudgetFailures("translate-flow", validateBudgets(reports));
+  reportLatencyBudgetFailures("translate-flow", validateLatencyBudgets(reports));
 }
 
 async function runScenarios(
@@ -206,14 +233,19 @@ async function translateScenario(
     assertNumber(metrics.ms, `${input.scenario} ${step} Prisma duration`);
   }
 
-  const budget = BUDGETS[input.scenario];
+  const queryBudget = QUERY_BUDGETS[input.scenario];
+  const latencyBudget = LATENCY_BUDGETS[input.scenario];
   const actualQueries = payload.performance.prisma.queryCount;
+  const queryPassed = queryBudget ? actualQueries <= queryBudget.maxQueries : true;
 
   return {
     scenario: input.scenario,
     roundTripMs,
     performance: payload.performance,
-    budget: budget ?? undefined,
-    passed: budget ? actualQueries <= budget.maxQueries : true,
+    queryBudget: queryBudget ?? undefined,
+    budget: queryBudget ?? undefined,
+    queryPassed,
+    passed: queryPassed,
+    latencyBudget: latencyBudget ?? undefined,
   };
 }
