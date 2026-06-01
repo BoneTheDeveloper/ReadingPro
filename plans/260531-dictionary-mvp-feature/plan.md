@@ -8,7 +8,7 @@ issue: 57
 branch: "main"
 tags: [feature, dictionary, translation, database, api, frontend]
 blockedBy: []
-blocks: []
+blocks: [260601-1013-translate-flow-performance]
 created: "2026-05-31T10:58:03.380Z"
 createdBy: "ck:plan"
 source: skill
