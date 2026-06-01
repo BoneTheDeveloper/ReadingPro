@@ -120,6 +120,9 @@ export interface TranslationSelection {
   contextSentence: string;
   sourceId: string;
   targetLanguage: "vi";
+  clientMetrics?: {
+    wordsBeforeSelected: number;
+  };
 }
 
 export interface QuickTranslationData {

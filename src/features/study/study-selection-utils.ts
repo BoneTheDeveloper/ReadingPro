@@ -1,4 +1,5 @@
 import type { TranslationSelection } from "./study-types";
+import { countWords } from "@/lib/translation/translate-performance";
 
 type SelectionRect = TranslationSelection["selectionRect"];
 type SelectionPoint = { x: number; y: number };
@@ -62,6 +63,9 @@ export function extractSelectionInfo({
     contextSentence,
     sourceId,
     targetLanguage,
+    clientMetrics: {
+      wordsBeforeSelected: countWordsBeforeSelection(container, range),
+    },
   };
 }
 
@@ -139,6 +143,17 @@ function extractContextParagraph(range: Range): string {
   }
 
   return "";
+}
+
+function countWordsBeforeSelection(container: HTMLElement, range: Range) {
+  const beforeSelectionRange = document.createRange();
+  beforeSelectionRange.setStart(container, 0);
+  beforeSelectionRange.setEnd(range.startContainer, range.startOffset);
+
+  const wordsBeforeSelection = countWords(beforeSelectionRange.toString());
+  beforeSelectionRange.detach();
+
+  return wordsBeforeSelection;
 }
 
 function getVisibleSelectionRects(range: Range): SelectionRect[] {

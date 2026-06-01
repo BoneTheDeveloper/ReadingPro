@@ -51,10 +51,11 @@ export default defineConfig({
   },
   test: {
     environment: "jsdom",
+    fileParallelism: false,
     globals: true,
-    setupFiles: ["./__tests__/setup/vitest.setup.ts"],
+    setupFiles: ["./tests/vitest/setup/vitest.setup.ts"],
     include: [
-      "__tests__/**/*.{test,spec}.{ts,tsx}",
+      "tests/vitest/**/*.{test,spec}.{ts,tsx}",
       "src/**/*.{test,spec}.{ts,tsx}",
     ],
     coverage: {

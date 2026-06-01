@@ -1,5 +1,5 @@
 import { defineConfig, devices } from '@playwright/test'
-import { loadE2EEnv } from './e2e/helpers/load-e2e-env'
+import { loadE2EEnv } from './tests/e2e/helpers/load-e2e-env'
 
 loadE2EEnv()
 
@@ -7,7 +7,7 @@ const externalBaseURL = process.env.E2E_BASE_URL
 const baseURL = externalBaseURL ?? 'http://127.0.0.1:3000'
 
 export default defineConfig({
-  testDir: './e2e',
+  testDir: './tests/e2e',
   use: {
     baseURL,
     trace: 'on-first-retry',

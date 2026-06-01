@@ -80,24 +80,86 @@ model StudyChatMessage {
 }
 
 model DictionaryEntry {
-  id              String   @id @default(cuid())
-  normalizedKey   String   @unique
-  normalizedTerm  String
-  sourceLanguage  String
-  targetLanguage  String
-  translation     String
-  type            String?
-  pronunciation   String?
-  meanings        Json?
-  examples        Json?
-  relatedWords    Json?
-  source          String   @default("local")
-  confidence      Float    @default(0.8)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id             String   @id @default(cuid())
+  headword       String
+  normalizedHeadword String
+  sourceLanguage String   @default("en")
+  frequencyRank  Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  @@index([sourceLanguage, targetLanguage, normalizedTerm])
+  senses  DictionarySense[]
+  aliases DictionaryAlias[]
+
+  @@unique([normalizedHeadword, sourceLanguage])
+  @@index([sourceLanguage, frequencyRank])
   @@map("dictionary_entries")
+}
+
+model DictionarySense {
+  id          String   @id @default(cuid())
+  entryId     String
+  partOfSpeech String?
+  definition  String?
+  example     String?
+  tags        String[]
+  usageRank   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  entry        DictionaryEntry        @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  translations DictionaryTranslation[]
+
+  @@index([entryId, usageRank])
+  @@map("dictionary_senses")
+}
+
+model DictionaryTranslation {
+  id             String    @id @default(cuid())
+  senseId        String
+  targetLanguage String    @default("vi")
+  translation    String
+  isPrimary      Boolean   @default(false)
+  rank           Int
+  confidence     Float?
+  status         String    @default("draft")
+  sourceType     String
+  sourceName     String?
+  reviewedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  sense DictionarySense @relation(fields: [senseId], references: [id], onDelete: Cascade)
+
+  @@index([senseId, targetLanguage, status, isPrimary])
+  @@index([targetLanguage, status, rank])
+  @@map("dictionary_translations")
+}
+
+model DictionaryAlias {
+  id               String @id @default(cuid())
+  entryId          String
+  normalizedAlias  String
+  aliasType        String @default("variant")
+
+  entry DictionaryEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+
+  @@unique([normalizedAlias, entryId])
+  @@index([normalizedAlias])
+  @@map("dictionary_aliases")
+}
+
+model DictionarySourceAudit {
+  id         String   @id @default(cuid())
+  batchName  String
+  entityType String
+  entityId   String
+  note       String?
+  createdAt  DateTime @default(now())
+
+  @@index([batchName])
+  @@index([entityType, entityId])
+  @@map("dictionary_source_audits")
 }
 
 model TranslationCache {

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ZodError } from "zod";
-import { passageFixture, studySessionFixture } from "../../../__tests__/fixtures";
+import { passageFixture, studySessionFixture } from "../../../tests/vitest/fixtures";
 import { db } from "./client";
 import {
   computeSessionAccuracy,

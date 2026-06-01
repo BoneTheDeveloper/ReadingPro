@@ -85,7 +85,7 @@ pnpm e2e:screenshot
 make screenshot PAGE=/en/study NAME=study
 ```
 
-Screenshots are written to `generated/screenshot/`. See `docs/testing/playwright-e2e.md` for project split, CI secrets, and database readiness details.
+Screenshots are written to `generated/screenshot/`. See `tests/e2e/README.md` for project split, CI secrets, and database readiness details.
 
 On host OS versions unsupported by Playwright browser downloads, use `pnpm e2e:docker` and `make screenshot PAGE=/en/study NAME=study`.
 

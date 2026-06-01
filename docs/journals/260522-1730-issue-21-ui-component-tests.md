@@ -26,7 +26,7 @@ Implemented the approved Issue 21 plan to add integration-oriented React Testing
 
 ## Verification
 
-- `pnpm vitest run __tests__/components/upload/text-input-area.integration.test.tsx __tests__/components/progress/progress-dashboard.integration.test.tsx __tests__/components/reading/reading-view-client.integration.test.tsx __tests__/components/study/study-page-client.integration.test.tsx __tests__/components/test/flashcard-test-client.integration.test.tsx`
+- `pnpm vitest run tests/vitest/integration/components/upload/text-input-area.integration.test.tsx tests/vitest/integration/components/progress/progress-dashboard.integration.test.tsx tests/vitest/integration/components/reading/reading-view-client.integration.test.tsx tests/vitest/integration/components/study/study-page-client.integration.test.tsx tests/vitest/integration/components/test/flashcard-test-client.integration.test.tsx`
 - `pnpm test`
 - `pnpm test:coverage`
 - `pnpm lint`

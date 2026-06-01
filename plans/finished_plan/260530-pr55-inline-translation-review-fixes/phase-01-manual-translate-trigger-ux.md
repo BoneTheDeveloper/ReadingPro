@@ -49,8 +49,8 @@ type QuickTranslationStatus = "idle" | "ready" | "loading" | "success" | "error"
 
 - Modify: `src/features/study/study-page-client.tsx`
 - Modify: `src/features/study/study-translation-popup.tsx`
-- Modify: `messages/en.json`
-- Modify: `messages/vi.json`
+- Modify: `localization/messages/en.json`
+- Modify: `localization/messages/vi.json`
 - Modify: `__tests__/components/study/study-page-client.integration.test.tsx`
 
 ## Implementation Steps

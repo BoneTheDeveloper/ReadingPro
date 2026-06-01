@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { passageFixture } from "../../../__tests__/fixtures";
+import { passageFixture } from "../../../tests/vitest/fixtures";
 import { db } from "./client";
 import {
   createPassage,

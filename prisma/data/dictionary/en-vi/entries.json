@@ -1,0 +1,616 @@
+[
+  {
+    "headword": "hello",
+    "sourceLanguage": "en",
+    "frequencyRank": 1,
+    "aliases": [],
+    "senses": [
+      {
+        "partOfSpeech": "interjection",
+        "definition": "Used as a greeting or to begin a conversation",
+        "example": "Hello, how are you today?",
+        "tags": ["greeting", "common"],
+        "usageRank": 1,
+        "translations": [
+          {
+            "targetLanguage": "vi",
+            "translation": "xin chao",
+            "isPrimary": true,
+            "rank": 1,
+            "confidence": 0.99,
+            "status": "reviewed",
+            "sourceType": "seed",
+            "sourceName": "reviewed"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "headword": "world",
+    "sourceLanguage": "en",
+    "frequencyRank": 10,
+    "aliases": [],
+    "senses": [
+      {
+        "partOfSpeech": "noun",
+        "definition": "The earth, together with all of its countries and peoples",
+        "example": "She traveled around the world.",
+        "tags": ["common"],
+        "usageRank": 1,
+        "translations": [
+          {
+            "targetLanguage": "vi",
+            "translation": "the gioi",
+            "isPrimary": true,
+            "rank": 1,
+            "confidence": 0.99,
+            "status": "reviewed",
+            "sourceType": "seed",
+            "sourceName": "reviewed"
+          }
+        ]
+      },
+      {
+        "partOfSpeech": "noun",
+        "definition": "A particular area of human activity or experience",
+        "example": "The world of finance is changing rapidly.",
+        "tags": ["figurative"],
+        "usageRank": 2,
+        "translations": [
+          {
+            "targetLanguage": "vi",
+            "translation": "linh vuc",
+            "isPrimary": true,
+            "rank": 1,
+            "confidence": 0.85,
+            "status": "reviewed",
+            "sourceType": "seed",
+            "sourceName": "seed-mvp"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "headword": "book",
+    "sourceLanguage": "en",
+    "frequencyRank": 50,
+    "aliases": [
+      { "alias": "books", "type": "inflection" }
+    ],
+    "senses": [
+      {
+        "partOfSpeech": "noun",
+        "definition": "A written or printed work consisting of pages glued or sewn together",
+        "example": "I am reading a book about history.",
+        "tags": ["common", "education"],
+        "usageRank": 1,
+        "translations": [
+          {
+            "targetLanguage": "vi",
+            "translation": "sach",
+            "isPrimary": true,
+            "rank": 1,
+            "confidence": 0.99,
+            "status": "reviewed",
+            "sourceType": "seed",
+            "sourceName": "reviewed"
+          }
+        ]
+      },
+      {
+        "partOfSpeech": "verb",
+        "definition": "To reserve something such as a seat, room, or ticket in advance",
+        "example": "Can you book a table for two?",
+        "tags": ["travel", "reservation"],
+        "usageRank": 2,
+        "translations": [
+          {
+            "targetLanguage": "vi",
+            "translation": "dat truoc",
+            "isPrimary": true,
+            "rank": 1,
+            "confidence": 0.95,
+            "status": "reviewed",
+            "sourceType": "seed",
+            "sourceName": "reviewed"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "headword": "read",
+    "sourceLanguage": "en",
+    "frequencyRank": 20,
+    "aliases": [
+      { "alias": "reads", "type": "inflection" },
+      { "alias": "reading", "type": "inflection" },
+      { "alias": "read", "type": "inflection" }
+    ],
+    "senses": [
+      {
+        "partOfSpeech": "verb",
+        "definition": "To look at and comprehend the meaning of written or printed words",
+        "example": "She reads a chapter every night before bed.",
+        "tags": ["common", "education"],
+        "usageRank": 1,
+        "translations": [
+          {
+            "targetLanguage": "vi",
+            "translation": "doc",
+            "isPrimary": true,
+            "rank": 1,
+            "confidence": 0.99,
+            "status": "reviewed",
+            "sourceType": "seed",
+            "sourceName": "reviewed"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "headword": "learn",
+    "sourceLanguage": "en",
+    "frequencyRank": 30,
+    "aliases": [
+      { "alias": "learns", "type": "inflection" },
+      { "alias": "learning", "type": "inflection" },
+      { "alias": "learned", "type": "inflection" },
+      { "alias": "learnt", "type": "inflection" }
+    ],
+    "senses": [
+      {
+        "partOfSpeech": "verb",
+        "definition": "To gain or acquire knowledge of or skill in something by study, experience, or being taught",
+        "example": "She is learning to play the piano.",
+        "tags": ["common", "education"],
+        "usageRank": 1,
+        "translations": [
+          {
+            "targetLanguage": "vi",
+            "translation": "hoc",
+            "isPrimary": true,
+            "rank": 1,
+            "confidence": 0.99,
+            "status": "reviewed",
+            "sourceType": "seed",
+            "sourceName": "reviewed"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "headword": "bank",
+    "sourceLanguage": "en",
+    "frequencyRank": 100,
+    "aliases": [],
+    "senses": [
+      {
+        "partOfSpeech": "noun",
+        "definition": "A financial institution that accepts deposits and makes loans",
+        "example": "She deposited money at the bank.",
+        "tags": ["finance"],
+        "usageRank": 1,
+        "translations": [
+          {
+            "targetLanguage": "vi",
+            "translation": "ngan hang",
+            "isPrimary": true,
+            "rank": 1,
+            "confidence": 0.95,
+            "status": "reviewed",
+            "sourceType": "seed",
+            "sourceName": "reviewed"
+          }
+        ]
+      },
+      {
+        "partOfSpeech": "noun",
+        "definition": "The land alongside or sloping down to a river or lake",
+        "example": "They sat on the river bank watching the sunset.",
+        "tags": ["nature", "geography"],
+        "usageRank": 2,
+        "translations": [
+          {
+            "targetLanguage": "vi",
+            "translation": "bo song",
+            "isPrimary": true,
+            "rank": 1,
+            "confidence": 0.9,
+            "status": "reviewed",
+            "sourceType": "seed",
+            "sourceName": "seed-mvp"
+          }
+        ]
+      },
+      {
+        "partOfSpeech": "verb",
+        "definition": "To store something such as money or data for future use",
+        "example": "She banks her savings in a high-yield account.",
+        "tags": ["finance"],
+        "usageRank": 3,
+        "translations": [
+          {
+            "targetLanguage": "vi",
+            "translation": "gui vao ngan hang",
+            "isPrimary": true,
+            "rank": 1,
+            "confidence": 0.85,
+            "status": "reviewed",
+            "sourceType": "seed",
+            "sourceName": "seed-mvp"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "headword": "run",
+    "sourceLanguage": "en",
+    "frequencyRank": 25,
+    "aliases": [
+      { "alias": "runs", "type": "inflection" },
+      { "alias": "running", "type": "inflection" },
+      { "alias": "ran", "type": "inflection" }
+    ],
+    "senses": [
+      {
+        "partOfSpeech": "verb",
+        "definition": "To move at a speed faster than walking, with both feet leaving the ground at each stride",
+        "example": "He runs five miles every morning.",
+        "tags": ["common", "sports"],
+        "usageRank": 1,
+        "translations": [
+          {
+            "targetLanguage": "vi",
+            "translation": "chay",
+            "isPrimary": true,
+            "rank": 1,
+            "confidence": 0.99,
+            "status": "reviewed",
+            "sourceType": "seed",
+            "sourceName": "reviewed"
+          }
+        ]
+      },
+      {
+        "partOfSpeech": "verb",
+        "definition": "To manage or operate a business, system, or organization",
+        "example": "She runs a small bakery downtown.",
+        "tags": ["business"],
+        "usageRank": 2,
+        "translations": [
+          {
+            "targetLanguage": "vi",
+            "translation": "quan ly",
+            "isPrimary": true,
+            "rank": 1,
+            "confidence": 0.9,
+            "status": "reviewed",
+            "sourceType": "seed",
+            "sourceName": "reviewed"
+          }
+        ]
+      },
+      {
+        "partOfSpeech": "noun",
+        "definition": "An act or spell of running",
+        "example": "I go for a run in the park every evening.",
+        "tags": ["sports", "exercise"],
+        "usageRank": 3,
+        "translations": [
+          {
+            "targetLanguage": "vi",
+            "translation": "viec chay",
+            "isPrimary": true,
+            "rank": 1,
+            "confidence": 0.85,
+            "status": "reviewed",
+            "sourceType": "seed",
+            "sourceName": "seed-mvp"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "headword": "artificial intelligence",
+    "sourceLanguage": "en",
+    "frequencyRank": 200,
+    "aliases": [
+      { "alias": "ai", "type": "variant" }
+    ],
+    "senses": [
+      {
+        "partOfSpeech": "phrase",
+        "definition": "The theory and development of computer systems able to perform tasks normally requiring human intelligence",
+        "example": "Artificial intelligence is transforming many industries.",
+        "tags": ["technology", "computing"],
+        "usageRank": 1,
+        "translations": [
+          {
+            "targetLanguage": "vi",
+            "translation": "tri tue nhan tao",
+            "isPrimary": true,
+            "rank": 1,
+            "confidence": 0.95,
+            "status": "reviewed",
+            "sourceType": "seed",
+            "sourceName": "reviewed"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "headword": "machine learning",
+    "sourceLanguage": "en",
+    "frequencyRank": 250,
+    "aliases": [
+      { "alias": "ml", "type": "variant" }
+    ],
+    "senses": [
+      {
+        "partOfSpeech": "phrase",
+        "definition": "A branch of artificial intelligence concerned with the development of algorithms that can learn from and make predictions on data",
+        "example": "Machine learning models improve with more data.",
+        "tags": ["technology", "computing"],
+        "usageRank": 1,
+        "translations": [
+          {
+            "targetLanguage": "vi",
+            "translation": "hoc may",
+            "isPrimary": true,
+            "rank": 1,
+            "confidence": 0.9,
+            "status": "reviewed",
+            "sourceType": "seed",
+            "sourceName": "reviewed"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "headword": "look up",
+    "sourceLanguage": "en",
+    "frequencyRank": 150,
+    "aliases": [
+      { "alias": "looked up", "type": "inflection" },
+      { "alias": "looking up", "type": "inflection" },
+      { "alias": "looks up", "type": "inflection" }
+    ],
+    "senses": [
+      {
+        "partOfSpeech": "phrase",
+        "definition": "To search for information, especially in a reference work or database",
+        "example": "You can look up the word in the dictionary.",
+        "tags": ["common", "reference"],
+        "usageRank": 1,
+        "translations": [
+          {
+            "targetLanguage": "vi",
+            "translation": "tra cuu",
+            "isPrimary": true,
+            "rank": 1,
+            "confidence": 0.95,
+            "status": "reviewed",
+            "sourceType": "seed",
+            "sourceName": "reviewed"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "headword": "set up",
+    "sourceLanguage": "en",
+    "frequencyRank": 180,
+    "aliases": [
+      { "alias": "set up", "type": "inflection" },
+      { "alias": "setting up", "type": "inflection" },
+      { "alias": "sets up", "type": "inflection" }
+    ],
+    "senses": [
+      {
+        "partOfSpeech": "phrase",
+        "definition": "To establish or arrange something such as a business, system, or procedure",
+        "example": "They set up a new company last year.",
+        "tags": ["business", "common"],
+        "usageRank": 1,
+        "translations": [
+          {
+            "targetLanguage": "vi",
+            "translation": "thiet lap",
+            "isPrimary": true,
+            "rank": 1,
+            "confidence": 0.9,
+            "status": "reviewed",
+            "sourceType": "seed",
+            "sourceName": "seed-mvp"
+          }
+        ]
+      },
+      {
+        "partOfSpeech": "phrase",
+        "definition": "To trick or deceive someone, especially to make them appear guilty of something",
+        "example": "He claims he was set up by the police.",
+        "tags": ["informal"],
+        "usageRank": 2,
+        "translations": [
+          {
+            "targetLanguage": "vi",
+            "translation": "lam cho ai co ve toi",
+            "isPrimary": true,
+            "rank": 1,
+            "confidence": 0.8,
+            "status": "reviewed",
+            "sourceType": "seed",
+            "sourceName": "seed-mvp"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "headword": "study",
+    "sourceLanguage": "en",
+    "frequencyRank": 35,
+    "aliases": [
+      { "alias": "studies", "type": "inflection" },
+      { "alias": "studying", "type": "inflection" },
+      { "alias": "studied", "type": "inflection" }
+    ],
+    "senses": [
+      {
+        "partOfSpeech": "verb",
+        "definition": "To devote time and attention to gaining knowledge of an academic subject",
+        "example": "She studies English every day.",
+        "tags": ["education", "common"],
+        "usageRank": 1,
+        "translations": [
+          {
+            "targetLanguage": "vi",
+            "translation": "hoc tap",
+            "isPrimary": true,
+            "rank": 1,
+            "confidence": 0.99,
+            "status": "reviewed",
+            "sourceType": "seed",
+            "sourceName": "reviewed"
+          }
+        ]
+      },
+      {
+        "partOfSpeech": "noun",
+        "definition": "A detailed investigation and analysis of a subject or situation",
+        "example": "The study found that sleep improves memory.",
+        "tags": ["academic"],
+        "usageRank": 2,
+        "translations": [
+          {
+            "targetLanguage": "vi",
+            "translation": "nghien cuu",
+            "isPrimary": true,
+            "rank": 1,
+            "confidence": 0.9,
+            "status": "reviewed",
+            "sourceType": "seed",
+            "sourceName": "seed-mvp"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "headword": "language",
+    "sourceLanguage": "en",
+    "frequencyRank": 40,
+    "aliases": [
+      { "alias": "languages", "type": "inflection" }
+    ],
+    "senses": [
+      {
+        "partOfSpeech": "noun",
+        "definition": "The principal method of human communication, consisting of words used in a structured and conventional way",
+        "example": "She speaks three languages fluently.",
+        "tags": ["common", "communication"],
+        "usageRank": 1,
+        "translations": [
+          {
+            "targetLanguage": "vi",
+            "translation": "ngon ngu",
+            "isPrimary": true,
+            "rank": 1,
+            "confidence": 0.99,
+            "status": "reviewed",
+            "sourceType": "seed",
+            "sourceName": "reviewed"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "headword": "practice",
+    "sourceLanguage": "en",
+    "frequencyRank": 60,
+    "aliases": [
+      { "alias": "practices", "type": "inflection" },
+      { "alias": "practicing", "type": "inflection" },
+      { "alias": "practising", "type": "inflection" },
+      { "alias": "practised", "type": "inflection" }
+    ],
+    "senses": [
+      {
+        "partOfSpeech": "verb",
+        "definition": "To perform an activity or exercise repeatedly to improve proficiency",
+        "example": "She practices the piano for two hours daily.",
+        "tags": ["education", "common"],
+        "usageRank": 1,
+        "translations": [
+          {
+            "targetLanguage": "vi",
+            "translation": "luyen tap",
+            "isPrimary": true,
+            "rank": 1,
+            "confidence": 0.95,
+            "status": "reviewed",
+            "sourceType": "seed",
+            "sourceName": "reviewed"
+          }
+        ]
+      },
+      {
+        "partOfSpeech": "noun",
+        "definition": "The actual application or use of an idea, belief, or method, as opposed to theories about it",
+        "example": "In practice, the system works differently than in theory.",
+        "tags": ["academic"],
+        "usageRank": 2,
+        "translations": [
+          {
+            "targetLanguage": "vi",
+            "translation": "thuc hanh",
+            "isPrimary": true,
+            "rank": 1,
+            "confidence": 0.9,
+            "status": "reviewed",
+            "sourceType": "seed",
+            "sourceName": "seed-mvp"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "headword": "important",
+    "sourceLanguage": "en",
+    "frequencyRank": 15,
+    "aliases": [],
+    "senses": [
+      {
+        "partOfSpeech": "adj",
+        "definition": "Of great significance or value; likely to have a profound effect on success or survival",
+        "example": "It is important to eat a balanced diet.",
+        "tags": ["common"],
+        "usageRank": 1,
+        "translations": [
+          {
+            "targetLanguage": "vi",
+            "translation": "quan trong",
+            "isPrimary": true,
+            "rank": 1,
+            "confidence": 0.99,
+            "status": "reviewed",
+            "sourceType": "seed",
+            "sourceName": "reviewed"
+          }
+        ]
+      }
+    ]
+  }
+]

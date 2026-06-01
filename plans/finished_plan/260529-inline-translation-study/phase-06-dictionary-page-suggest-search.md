@@ -58,7 +58,7 @@ User types → debounce 250ms → GET /api/dictionary/suggest?q=...
 - Create: `src/features/dictionary/dictionary-suggest-dropdown.tsx`
 - Create: `src/app/[locale]/(dashboard)/dictionary/page.tsx`
 - Modify: `src/components/layout/dashboard-sidebar.tsx` (added nav item)
-- Modify: `messages/en.json`, `messages/vi.json` (Dictionary section)
+- Modify: `localization/messages/en.json`, `localization/messages/vi.json` (Dictionary section)
 
 ## Success Criteria
 

@@ -37,8 +37,8 @@ Use the current Next.js 16 `proxy.ts` convention:
 - Create: `src/i18n/routing.ts`
 - Create: `src/i18n/navigation.ts`
 - Create: `src/i18n/request.ts`
-- Create: `messages/en.json`
-- Create: `messages/vi.json`
+- Create: `localization/messages/en.json`
+- Create: `localization/messages/vi.json`
 - Modify: `next.config.ts`
 - Modify: `src/proxy.ts`
 - Move/modify: `src/app/page.tsx`, `src/app/(auth)/*`, `src/app/(dashboard)/*`

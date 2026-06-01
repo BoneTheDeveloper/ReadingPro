@@ -9,12 +9,17 @@
 ### Added
 - Vitest test infrastructure with React Testing Library, jest-dom, jsdom, v8 coverage, shared mocks, fixtures, helpers, and smoke tests.
 - GitHub Actions CI workflow for lint, TypeScript, tests, coverage, and gated Playwright E2E.
-- `docs/testing/vitest-infrastructure.md` documenting test commands and the shared test scaffold.
+- `docs/quality-assurance/vitest.md` documenting test commands and the shared test scaffold.
 - Playwright authenticated setup with reusable `.auth/user.json`, public/authenticated project split, and generated screenshot output under `generated/screenshot/`.
-- `docs/testing/playwright-e2e.md` documenting local `.env.test`, pre-created test users, screenshot commands, and CI secrets.
+- `tests/e2e/README.md` documenting local `.env.test`, pre-created test users, screenshot commands, and CI secrets.
 
 ### Changed
-- Refactored upload API routes into `features/upload/upload-workflow.ts` and `content-analysis-service.ts`, keeping routes focused on request parsing and response mapping.
+- Optimized `/api/translate` quick dictionary path from 7 Prisma queries to ≤4 blocking queries.
+- Replaced 3-query sequential dictionary lookup (`findEntryByHeadword` + `findEntryByAlias`) with single `$queryRaw` using LEFT JOINs on entries, aliases, senses, and translations.
+- Reordered translate route to cache-first: `cacheRead` before `sourceFetch`, skipping source ownership check on cache hit.
+- Made `historyCreate` non-blocking (fire-and-forget with Sentry error logging).
+- Moved performance benchmarks under `tests/performance` and added dictionary-flow benchmark coverage for suggest/search/lookup phases.
+- Updated `docs/API/translation-flow.md` with new flow order, non-blocking history, and performance budget table.
 - Extracted study simplification/question-generation orchestration into `features/study/services/passage-study-service.ts`.
 - Split `StudyPageClient` state, async actions, and panel layout mechanics into focused hooks.
 - Moved CEFR domain helpers to `lib/domain/cefr.ts` and CEFR presentation classes to `lib/ui/cefr-style.ts`.

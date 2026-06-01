@@ -23,16 +23,16 @@ Move visible UI copy into English and Vietnamese message files, starting with na
 
 Use namespace-based message files:
 
-- `messages/en.json`
-- `messages/vi.json`
+- `localization/messages/en.json`
+- `localization/messages/vi.json`
 - Suggested namespaces: `Common`, `Navigation`, `Auth`, `Dashboard`, `Study`, `Upload`, `Reading`, `Test`, `Progress`, `Errors`.
 
 Server Components should use `getTranslations` or `useTranslations` depending on component type. Client Components should use `useTranslations` from `next-intl`.
 
 ## Related Code Files
 
-- Modify: `messages/en.json`
-- Modify: `messages/vi.json`
+- Modify: `localization/messages/en.json`
+- Modify: `localization/messages/vi.json`
 - Modify: `src/components/layout/dashboard-sidebar.tsx`
 - Modify: `src/components/layout/user-menu.tsx`
 - Modify: `src/app/[locale]/page.tsx`

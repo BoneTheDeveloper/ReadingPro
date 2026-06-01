@@ -1,17 +1,22 @@
-import { PrismaPg } from '@prisma/adapter-pg';
-import { PrismaClient } from '@/generated/prisma/client';
+import { createPrismaClient, type AppPrismaClient, type QueryMetricsPrismaClient } from './create-prisma-client';
+import { recordPrismaQueryDuration } from '@/lib/observability/prisma-query-metrics';
 
 const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
+  prisma: AppPrismaClient | QueryMetricsPrismaClient | undefined;
 };
 
-function createPrismaClient() {
-  const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
-  return new PrismaClient({ adapter });
-}
+const queryMetricsEnabled = process.env.PRISMA_QUERY_METRICS === '1';
 
-export const db = globalForPrisma.prisma ?? createPrismaClient();
+export const db = globalForPrisma.prisma ?? createPrismaClient({
+  queryMetrics: queryMetricsEnabled,
+});
 
 if (process.env.NODE_ENV !== 'production') {
   globalForPrisma.prisma = db;
+}
+
+if (queryMetricsEnabled) {
+  (db as QueryMetricsPrismaClient).$on('query', (event) => {
+    recordPrismaQueryDuration(event.duration);
+  });
 }

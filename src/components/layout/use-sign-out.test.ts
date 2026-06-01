@@ -1,7 +1,7 @@
 import { act, renderHook } from "@testing-library/react";
 import { useRouter } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createClient, supabaseClientMock } from "../../../__tests__/mocks/supabase";
+import { createClient, supabaseClientMock } from "../../../tests/vitest/mocks/supabase";
 import { useSignOut } from "./use-sign-out";
 
 describe("useSignOut", () => {

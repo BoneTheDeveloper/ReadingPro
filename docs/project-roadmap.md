@@ -17,7 +17,7 @@
 | Phase 7: Supabase Auth | Email/password + Google OAuth, middleware, user sync | 100% ✅ |
 | Phase 8: Production Infra | PostgreSQL migration, Supabase Storage, Vercel deploy | 60% 🔧 |
 | Phase 9: Study Chat | AI chat assistant in Studio panel with passage context | 0% 🔲 |
-| Phase 10: Translation | Word-by-word dictionary + paragraph translation via chat | 0% 🔲 |
+| Phase 10: Translation | Word-by-word dictionary + paragraph translation via chat | 20% 🔧 |
 
 ---
 
@@ -75,6 +75,9 @@ Supabase Auth (email/password + Google OAuth), middleware route protection, sign
 
 ## Recent Changes (since 2026-05-09)
 
+- Translate flow performance: 7→≤4 blocking Prisma queries (single `$queryRaw` dictionary lookup, cache-first ordering, non-blocking history)
+- Dictionary seed system with multi-source dataset generator and benchmark dataset
+- Benchmark gate with per-scenario query budgets and warm-up handling
 - Prisma client security extension for auto userId injection from Supabase session
 - Zod schema validation for study sessions and question options
 - Simplified Prisma database client setup (removed legacy extensions)
@@ -105,15 +108,20 @@ Supabase Auth (email/password + Google OAuth), middleware route protection, sign
 
 **Depends on:** `@ai-sdk/react` package (needs install)
 
-### Phase 10: Translation (Planned)
+### Phase 10: Translation (In Progress — 20%)
 
 **Goal:** Word-by-word dictionary lookup + paragraph translation using the chat function.
 
-**Scope:**
-- Word-by-word: Click/tap any word in `StudyContentPanel` → popover with dictionary definition (Free Dictionary API) + Vietnamese translation (via AI chat)
-- Paragraph translation: "Translate passage" button sends paragraph to chat endpoint with translation system prompt
-- New `StudioCardId: 'translate'` card in Studio panel — enables/disabled
-- Word selection hook (`use-word-selection`) for detecting clicked words
+**Done:**
+- Dictionary seed system with multi-source dataset generator (`prisma/seed-dictionary.ts`)
+- Quick translate flow: single-query dictionary lookup, cache-first ordering, non-blocking history
+- Benchmark gate enforcing ≤4 Prisma queries for single-word dictionary hit
+- `/api/translate` and `/api/vocabulary` endpoints with Zod validation
+
+**Planned:**
+- Word-by-word: Click/tap any word in `StudyContentPanel` → popover with dictionary definition
+- Paragraph translation: "Translate passage" button sends paragraph to chat endpoint
+- Translate Studio panel integration
 - Dictionary popover component
 
 **Depends on:** Phase 9 (uses chat endpoint for AI-powered translation)
@@ -123,4 +131,4 @@ Supabase Auth (email/password + Google OAuth), middleware route protection, sign
 ---
 
 **Status:** Active
-**Last Updated:** 2026-05-11
+**Last Updated:** 2026-06-01

@@ -1,91 +1,154 @@
 import { db } from "./client";
-import { normalizeDictionaryTerm } from "./translation-queries";
+import { normalizeDictionaryTerm } from "@/lib/dictionary/normalize-dictionary-term";
+import { RUNTIME_STATUSES } from "@/lib/dictionary/dictionary-dtos";
 
-interface DictionarySearchParams {
-  term: string;
-  sourceLanguage: string;
-  targetLanguage: string;
-}
-
-interface DictionaryListParams {
-  sourceLanguage: string;
-  targetLanguage: string;
-  limit?: number;
-  offset?: number;
-}
-
-export async function searchDictionaryExact(input: DictionarySearchParams) {
-  const normalizedTerm = normalizeDictionaryTerm(input.term);
-
-  return db.dictionaryEntry.findFirst({
+export async function findEntryByHeadword(
+  normalizedHeadword: string,
+  sourceLanguage: string,
+) {
+  return db.dictionaryEntry.findUnique({
     where: {
-      normalizedTerm,
-      sourceLanguage: input.sourceLanguage,
-      targetLanguage: input.targetLanguage,
+      normalizedHeadword_sourceLanguage: { normalizedHeadword, sourceLanguage },
+    },
+    include: {
+      senses: {
+        orderBy: { usageRank: "asc" },
+        include: {
+          translations: {
+            where: {
+              targetLanguage: "vi",
+              status: { in: [...RUNTIME_STATUSES] },
+            },
+            orderBy: [{ rank: "asc" }],
+          },
+        },
+      },
+      aliases: true,
     },
   });
 }
 
-export async function suggestDictionaryEntries(input: {
-  term: string;
-  sourceLanguage: string;
-  targetLanguage: string;
-  limit?: number;
-}) {
-  const { sourceLanguage, targetLanguage, limit = 8 } = input;
-  const normalizedTerm = normalizeDictionaryTerm(input.term);
+export async function findEntryByAliasTerm(
+  normalizedAlias: string,
+  sourceLanguage: string,
+) {
+  const alias = await db.dictionaryAlias.findFirst({
+    where: { normalizedAlias },
+    include: {
+      entry: {
+        where: { sourceLanguage },
+        include: {
+          senses: {
+            orderBy: { usageRank: "asc" },
+            include: {
+              translations: {
+                where: {
+                  targetLanguage: "vi",
+                  status: { in: [...RUNTIME_STATUSES] },
+                },
+                orderBy: [{ rank: "asc" }],
+              },
+            },
+          },
+          aliases: true,
+        },
+      },
+    },
+  });
+
+  return alias?.entry ?? null;
+}
+
+export async function findEntriesByHeadwordPrefix(
+  prefix: string,
+  sourceLanguage: string,
+  limit = 8,
+) {
+  const normalized = normalizeDictionaryTerm(prefix);
+  if (normalized.length < 2) return [];
 
   return db.dictionaryEntry.findMany({
     where: {
-      normalizedTerm: { startsWith: normalizedTerm },
+      normalizedHeadword: { startsWith: normalized },
       sourceLanguage,
-      targetLanguage,
+      senses: {
+        some: {
+          translations: {
+            some: {
+              targetLanguage: "vi",
+              status: { in: [...RUNTIME_STATUSES] },
+              isPrimary: true,
+            },
+          },
+        },
+      },
     },
-    orderBy: [{ normalizedTerm: "asc" }],
+    orderBy: [{ frequencyRank: "asc" }, { normalizedHeadword: "asc" }],
     take: limit,
-    select: {
-      id: true,
-      normalizedTerm: true,
-      translation: true,
-      type: true,
-      confidence: true,
+    include: {
+      senses: {
+        orderBy: { usageRank: "asc" },
+        take: 1,
+        include: {
+          translations: {
+            where: {
+              targetLanguage: "vi",
+              status: { in: [...RUNTIME_STATUSES] },
+              isPrimary: true,
+            },
+            orderBy: [{ rank: "asc" }],
+            take: 1,
+          },
+        },
+      },
+      aliases: {
+        where: { normalizedAlias: { startsWith: normalized } },
+        take: 1,
+      },
     },
   });
 }
 
-export async function fetchDictionaryEntriesByTerms(input: {
-  terms: string[];
-  sourceLanguage: string;
-  targetLanguage: string;
-}) {
-  const normalizedTerms = input.terms.map(normalizeDictionaryTerm);
-  const uniqueTerms = [...new Set(normalizedTerms)];
+export async function findEntriesByAliasPrefix(
+  prefix: string,
+  sourceLanguage: string,
+  limit = 8,
+) {
+  const normalized = normalizeDictionaryTerm(prefix);
+  if (normalized.length < 2) return [];
 
-  if (uniqueTerms.length === 0) return [];
-
-  return db.dictionaryEntry.findMany({
+  const aliases = await db.dictionaryAlias.findMany({
     where: {
-      normalizedTerm: { in: uniqueTerms },
-      sourceLanguage: input.sourceLanguage,
-      targetLanguage: input.targetLanguage,
+      normalizedAlias: { startsWith: normalized },
+      entry: { sourceLanguage },
+    },
+    take: limit,
+    include: {
+      entry: {
+        include: {
+          senses: {
+            orderBy: { usageRank: "asc" },
+            take: 1,
+            include: {
+              translations: {
+                where: {
+                  targetLanguage: "vi",
+                  status: { in: [...RUNTIME_STATUSES] },
+                  isPrimary: true,
+                },
+                orderBy: [{ rank: "asc" }],
+                take: 1,
+              },
+            },
+          },
+        },
+      },
     },
   });
-}
 
-export async function listDictionaryEntries(input: DictionaryListParams) {
-  const { sourceLanguage, targetLanguage, limit = 50, offset = 0 } = input;
-
-  const [entries, total] = await Promise.all([
-    db.dictionaryEntry.findMany({
-      where: { sourceLanguage, targetLanguage },
-      orderBy: { normalizedTerm: "asc" },
-      take: limit,
-      skip: offset,
-    }),
-    db.dictionaryEntry.count({
-      where: { sourceLanguage, targetLanguage },
-    }),
-  ]);
-
-  return { entries, total, limit, offset };
+  return aliases.map((a) => ({
+    ...a.entry,
+    matchedAlias: a.normalizedAlias,
+    aliasType: a.aliasType,
+  }));
 }

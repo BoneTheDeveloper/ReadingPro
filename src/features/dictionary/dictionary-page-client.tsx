@@ -4,29 +4,32 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { BookMarked, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useTranslations } from "next-intl";
-import type { DictionaryEntry } from "@/generated/prisma/client";
+import type {
+  DictionaryEntryDto,
+  DictionarySuggestItemDto,
+} from "@/lib/dictionary/dictionary-dtos";
+import { normalizeDictionaryTerm } from "@/lib/dictionary/normalize-dictionary-term";
 import { DictionaryEntryCard } from "./dictionary-entry-card";
 import { DictionarySuggestDropdown } from "./dictionary-suggest-dropdown";
-
-type SuggestionItem = Pick<
-  DictionaryEntry,
-  "id" | "normalizedTerm" | "translation" | "type"
->;
 
 type DetailStatus = "idle" | "loading" | "found" | "not-found" | "error";
 
 const DEBOUNCE_MS = 250;
+const MIN_SUGGEST_LENGTH = 2;
 
 export function DictionaryPageClient() {
   const t = useTranslations();
   const [query, setQuery] = useState("");
-  const [suggestions, setSuggestions] = useState<SuggestionItem[]>([]);
+  const [suggestions, setSuggestions] = useState<DictionarySuggestItemDto[]>([]);
   const [suggestLoading, setSuggestLoading] = useState(false);
   const [dropdownVisible, setDropdownVisible] = useState(false);
-  const [selectedEntry, setSelectedEntry] = useState<DictionaryEntry | null>(null);
+  const [selectedEntry, setSelectedEntry] = useState<DictionaryEntryDto | null>(null);
   const [detailStatus, setDetailStatus] = useState<DetailStatus>("idle");
+
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const requestIdRef = useRef(0);
+  const suggestCacheRef = useRef<Map<string, DictionarySuggestItemDto[]>>(new Map());
 
   const handleQueryChange = useCallback((value: string) => {
     setQuery(value);
@@ -34,21 +37,35 @@ export function DictionaryPageClient() {
       setSuggestions([]);
       setDropdownVisible(false);
       setSuggestLoading(false);
-      return;
+    } else {
+      setSuggestLoading(true);
     }
-    setSuggestLoading(true);
   }, []);
 
-  // Debounced suggest
   useEffect(() => {
     const trimmed = query.trim();
-
-    if (!trimmed) {
-      return;
-    }
+    if (!trimmed) return;
 
     if (debounceRef.current) clearTimeout(debounceRef.current);
+
     debounceRef.current = setTimeout(async () => {
+      const normalized = normalizeDictionaryTerm(trimmed);
+      if (normalized.length < MIN_SUGGEST_LENGTH) {
+        setSuggestions([]);
+        setDropdownVisible(false);
+        setSuggestLoading(false);
+        return;
+      }
+
+      const cached = suggestCacheRef.current.get(normalized);
+      if (cached) {
+        setSuggestions(cached);
+        setDropdownVisible(true);
+        setSuggestLoading(false);
+        return;
+      }
+
+      const thisRequestId = ++requestIdRef.current;
       try {
         const params = new URLSearchParams({
           q: trimmed,
@@ -57,14 +74,20 @@ export function DictionaryPageClient() {
         });
         const res = await fetch(`/api/dictionary/suggest?${params}`);
         const json = await res.json();
-        if (json.success) {
+
+        if (json.success && requestIdRef.current === thisRequestId) {
           setSuggestions(json.data);
           setDropdownVisible(true);
+          suggestCacheRef.current.set(normalized, json.data);
         }
       } catch {
-        setSuggestions([]);
+        if (requestIdRef.current === thisRequestId) {
+          setSuggestions([]);
+        }
       } finally {
-        setSuggestLoading(false);
+        if (requestIdRef.current === thisRequestId) {
+          setSuggestLoading(false);
+        }
       }
     }, DEBOUNCE_MS);
 
@@ -73,7 +96,6 @@ export function DictionaryPageClient() {
     };
   }, [query]);
 
-  // Close dropdown on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
@@ -84,23 +106,22 @@ export function DictionaryPageClient() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  // Select a suggestion → fetch full entry
-  const handleSelect = useCallback(async (item: SuggestionItem) => {
+  const handleSelect = useCallback(async (item: DictionarySuggestItemDto) => {
     setDropdownVisible(false);
     setDetailStatus("loading");
     setSelectedEntry(null);
 
     try {
       const params = new URLSearchParams({
-        q: item.normalizedTerm,
+        q: item.headword,
         sourceLanguage: "en",
         targetLanguage: "vi",
       });
-      const res = await fetch(`/api/dictionary?${params}`);
+      const res = await fetch(`/api/dictionary/search?${params}`);
       const json = await res.json();
 
-      if (json.success && json.data) {
-        setSelectedEntry(json.data);
+      if (json.success && json.data && !("found" in json.data)) {
+        setSelectedEntry(json.data as DictionaryEntryDto);
         setDetailStatus("found");
       } else {
         setDetailStatus("not-found");

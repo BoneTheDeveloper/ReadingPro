@@ -1,125 +1,55 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { resolveQuickDictionaryTranslation } from "./resolve-quick-dictionary-translation";
 
-vi.mock("@/lib/db/dictionary-queries", () => ({
-  fetchDictionaryEntriesByTerms: vi.fn(),
+vi.mock("./resolve-dictionary-lookup", () => ({
+  resolveQuickDictionaryLookupSql: vi.fn(),
 }));
 
-vi.mock("@/lib/db/translation-queries", () => ({
-  normalizeDictionaryTerm: (v: string) => v.toLowerCase().replace(/\s+/g, " ").trim(),
-}));
+import { resolveQuickDictionaryLookupSql } from "./resolve-dictionary-lookup";
 
-import { fetchDictionaryEntriesByTerms } from "@/lib/db/dictionary-queries";
-
-const mockFetch = vi.mocked(fetchDictionaryEntriesByTerms);
+const mockLookup = vi.mocked(resolveQuickDictionaryLookupSql);
 
 const INPUT = {
   sourceLanguage: "en",
   targetLanguage: "vi",
 } as const;
 
-function entry(term: string, translation: string, type = "word", confidence = 0.95) {
-  return {
-    normalizedTerm: term,
-    normalizedKey: `key-${term}`,
-    translation,
-    type,
-    confidence,
-    id: `id-${term}`,
-    sourceLanguage: "en",
-    targetLanguage: "vi",
-    pronunciation: null,
-    meanings: null,
-    examples: null,
-    relatedWords: null,
-    source: "seed:test",
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
-}
-
 beforeEach(() => {
-  mockFetch.mockReset();
+  mockLookup.mockReset();
 });
 
 describe("resolveQuickDictionaryTranslation", () => {
-  it("returns exact phrase match for 'algorithmic bias'", async () => {
-    mockFetch.mockResolvedValue([
-      entry("algorithmic bias", "thiên lệch thuật toán", "noun phrase", 0.95),
-      entry("bias", "thiên lệch", "noun", 0.95),
-    ]);
+  it("returns dictionary result when lookup finds a translation", async () => {
+    mockLookup.mockResolvedValue({
+      id: "t1",
+      senseId: "s1",
+      targetLanguage: "vi",
+      translation: "thiên lệch thuật toán",
+      isPrimary: true,
+      rank: 1,
+      confidence: 0.95,
+      status: "reviewed",
+      sourceType: "seed",
+      sourceName: "reviewed",
+      reviewedAt: null,
+      sourceLabel: "Dictionary",
+    });
 
     const result = await resolveQuickDictionaryTranslation({
       text: "algorithmic bias",
-      context: "Algorithmic bias is a major concern in AI systems.",
+      context: "Algorithmic bias is a concern.",
       ...INPUT,
     });
 
     expect(result).toEqual({
       translation: "thiên lệch thuật toán",
-      type: "noun phrase",
-      provider: "dictionary",
-    });
-  });
-
-  it("returns contextual phrase when selection is a subterm inside a phrase in context", async () => {
-    mockFetch.mockResolvedValue([
-      entry("algorithmic bias", "thiên lệch thuật toán", "noun phrase", 0.95),
-      entry("bias", "thiên lệch", "noun", 0.95),
-    ]);
-
-    const result = await resolveQuickDictionaryTranslation({
-      text: "bias",
-      context: "Algorithmic bias is a major concern in AI systems.",
-      ...INPUT,
-    });
-
-    expect(result).toEqual({
-      translation: "thiên lệch thuật toán",
-      type: "noun phrase",
-      provider: "dictionary",
-    });
-  });
-
-  it("returns exact single-word match for standalone word", async () => {
-    mockFetch.mockResolvedValue([
-      entry("algorithm", "thuật toán", "noun", 0.95),
-    ]);
-
-    const result = await resolveQuickDictionaryTranslation({
-      text: "algorithm",
-      context: "The algorithm processes natural language input.",
-      ...INPUT,
-    });
-
-    expect(result).toEqual({
-      translation: "thuật toán",
-      type: "noun",
-      provider: "dictionary",
-    });
-  });
-
-  it("returns deterministic fallback joining token translations for unknown phrase", async () => {
-    mockFetch.mockResolvedValue([
-      entry("quorvex", "quorvex", "word", 0.6),
-      entry("drift", "sự trôi", "noun", 0.95),
-    ]);
-
-    const result = await resolveQuickDictionaryTranslation({
-      text: "quorvex drift",
-      context: "The quorvex drift was measured.",
-      ...INPUT,
-    });
-
-    expect(result).toEqual({
-      translation: "quorvex sự trôi",
       type: null,
-      provider: "fallback",
+      provider: "dictionary",
     });
   });
 
-  it("returns normalized text as fallback when no token entries exist", async () => {
-    mockFetch.mockResolvedValue([]);
+  it("returns fallback when lookup finds nothing", async () => {
+    mockLookup.mockResolvedValue(null);
 
     const result = await resolveQuickDictionaryTranslation({
       text: "xyzzy plugh",
@@ -134,97 +64,44 @@ describe("resolveQuickDictionaryTranslation", () => {
     });
   });
 
-  it("does not false-positive match 'as' inside 'was found' (substring bug)", async () => {
-    mockFetch.mockResolvedValue([
-      entry("was found", "được tìm thấy", "verb phrase", 0.9),
-      entry("as", "như", "conjunction", 0.8),
-    ]);
+  it("normalizes the input text before lookup", async () => {
+    mockLookup.mockResolvedValue({
+      id: "t1",
+      senseId: "s1",
+      targetLanguage: "vi",
+      translation: "thuật toán",
+      isPrimary: true,
+      rank: 1,
+      confidence: 0.95,
+      status: "reviewed",
+      sourceType: "seed",
+      sourceName: "reviewed",
+      reviewedAt: null,
+      sourceLabel: "Dictionary",
+    });
 
-    const result = await resolveQuickDictionaryTranslation({
-      text: "as",
-      context: "It was found as expected.",
+    await resolveQuickDictionaryTranslation({
+      text: "  Algorithm  ",
+      context: "The algorithm works.",
       ...INPUT,
     });
 
-    // Should get the exact match "as" → "như", not the phrase "was found"
-    expect(result.translation).toBe("như");
-    expect(result.provider).toBe("dictionary");
+    expect(mockLookup).toHaveBeenCalledWith("algorithm", expect.any(Object));
   });
 
-  it("prefers contextual phrase over generic single-word match", async () => {
-    mockFetch.mockResolvedValue([
-      entry("natural language processing", "xử lý ngôn ngữ tự nhiên", "noun phrase", 0.95),
-      entry("language", "ngôn ngữ", "noun", 0.95),
-    ]);
+  it("returns fallback with normalized text for unknown word", async () => {
+    mockLookup.mockResolvedValue(null);
 
     const result = await resolveQuickDictionaryTranslation({
-      text: "language",
-      context: "Natural language processing has advanced rapidly.",
+      text: "  Unknown  ",
+      context: "The unknown word.",
       ...INPUT,
     });
 
     expect(result).toEqual({
-      translation: "xử lý ngôn ngữ tự nhiên",
-      type: "noun phrase",
-      provider: "dictionary",
-    });
-  });
-
-  it("returns single-word match when no contextual phrase exists", async () => {
-    mockFetch.mockResolvedValue([
-      entry("bias", "thiên lệch", "noun", 0.95),
-    ]);
-
-    const result = await resolveQuickDictionaryTranslation({
-      text: "bias",
-      context: "The statistical bias was corrected.",
-      ...INPUT,
-    });
-
-    expect(result).toEqual({
-      translation: "thiên lệch",
-      type: "noun",
-      provider: "dictionary",
-    });
-  });
-
-  it("matches contextual phrase when punctuation is attached to the selected word", async () => {
-    mockFetch.mockResolvedValue([
-      entry("algorithmic bias", "thiên lệch thuật toán", "noun phrase", 0.95),
-      entry("bias", "thiên lệch", "noun", 0.95),
-    ]);
-
-    const result = await resolveQuickDictionaryTranslation({
-      text: "bias",
-      context: "Key concerns include algorithmic bias.",
-      ...INPUT,
-    });
-
-    // "bias." is stripped to "bias" during context token normalization,
-    // so "algorithmic bias" n-gram still matches the dictionary entry
-    expect(result).toEqual({
-      translation: "thiên lệch thuật toán",
-      type: "noun phrase",
-      provider: "dictionary",
-    });
-  });
-
-  it("matches contextual phrase with comma-adjacent words", async () => {
-    mockFetch.mockResolvedValue([
-      entry("machine learning", "học máy", "noun phrase", 0.95),
-      entry("learning", "học", "noun", 0.95),
-    ]);
-
-    const result = await resolveQuickDictionaryTranslation({
-      text: "learning",
-      context: "We use machine learning, neural networks, and deep learning.",
-      ...INPUT,
-    });
-
-    expect(result).toEqual({
-      translation: "học máy",
-      type: "noun phrase",
-      provider: "dictionary",
+      translation: "unknown",
+      type: null,
+      provider: "fallback",
     });
   });
 });

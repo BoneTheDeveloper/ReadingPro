@@ -117,7 +117,7 @@ The function assumes `text` is a non-empty string. If called with `""`, `text.tr
 
 ### M3. `tryAgain` i18n key placement ambiguity
 
-**File:** `src/features/study/study-translation-popup.tsx:139` and `messages/en.json`
+**File:** `src/features/study/study-translation-popup.tsx:139` and `localization/messages/en.json`
 
 There are two `tryAgain` keys in `en.json`: one at the top level (line 5, "Try again") and one nested under `Study` (line 189, "Try Again"). The popup uses `t("tryAgain")` where `t` is `useTranslations("Study")`, so it resolves to the `Study.tryAgain` key ("Try Again"). This works correctly but could be confusing during maintenance.
 
