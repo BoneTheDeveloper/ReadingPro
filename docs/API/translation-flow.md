@@ -1,6 +1,72 @@
 # Translation Flow
 
-Inline translation on `/study` supports English selections with Vietnamese output. Learners select visible reader text, see a floating translate icon, click it to get a quick popup, optionally open the Translate Studio panel, and can save the selection to vocabulary from the detailed view.
+Inline translation on `/study` is a fast, manual English-to-Vietnamese action. The learner highlights visible reader text, clicks the floating translate button, sees a quick translation popup, and can save the result to vocabulary.
+
+Dictionary search and suggestion behavior is intentionally separate. See [dictionary-flow.md](./dictionary-flow.md).
+
+This document describes the target fast-only contract for the next implementation pass. Legacy detailed translation mode may still exist in code until the implementation plan is completed.
+
+## Scope
+
+In scope:
+
+- Highlight word, phrase, sentence, or paragraph text in the study reader.
+- Show a floating translate button after valid selection.
+- Translate only after the learner clicks the button.
+- Use a client memory cache for repeated selections in the current browser tab/session.
+- Call `POST /api/translate` only on client cache miss.
+- Save successful translations to vocabulary.
+
+Out of scope:
+
+- Dictionary search and autocomplete UX.
+- Detailed AI translation.
+- Translation history viewer.
+- Persisting client cache to `localStorage` or IndexedDB.
+- Target-language selection beyond Vietnamese.
+- Custom right-click menu.
+- Pronunciation audio.
+
+## User Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant StudyUI
+    participant ClientCache
+    participant TranslateAPI as POST /api/translate
+    participant ServerCache as TranslationCache
+    participant Dictionary as Dictionary Tables
+    participant Machine as Non-AI Provider
+
+    User->>StudyUI: Highlight reader text
+    StudyUI->>StudyUI: Capture selection
+    StudyUI-->>User: Show floating translate button
+    User->>StudyUI: Click translate button
+    StudyUI->>ClientCache: Lookup selection cache key
+    alt Client cache hit
+        ClientCache-->>StudyUI: Translation result
+    else Client cache miss
+        StudyUI->>TranslateAPI: Request fast translation
+        TranslateAPI->>ServerCache: Lookup server cache
+        alt Server cache hit
+            ServerCache-->>TranslateAPI: Cached result
+        else Server cache miss
+            TranslateAPI->>TranslateAPI: Verify source ownership
+            alt Dictionary-scope selection
+                TranslateAPI->>Dictionary: Exact/alias primary translation lookup
+                Dictionary-->>TranslateAPI: Dictionary or fallback result
+            else Machine-scope selection
+                TranslateAPI->>Machine: Translate sentence/paragraph
+                Machine-->>TranslateAPI: Machine result
+            end
+            TranslateAPI-->>ServerCache: Async cache/history write
+        end
+        TranslateAPI-->>StudyUI: Translation result
+        StudyUI->>ClientCache: Store result for current tab/session
+    end
+    StudyUI-->>User: Show translation popup
+```
 
 ## Endpoints
 
@@ -15,17 +81,16 @@ Request:
   sourceId: string;          // owned Passage id
   sourceLanguage: "en";
   targetLanguage: "vi";
-  mode: "quick" | "detailed";
 }
 ```
 
 Success response:
 
 ```ts
-{ success: true, data: QuickTranslation | DetailedTranslation }
+{ success: true, data: TranslationResult }
 ```
 
-Quick mode returns:
+Translation result:
 
 ```ts
 {
@@ -35,23 +100,14 @@ Quick mode returns:
 }
 ```
 
-Detailed mode returns:
+Failure responses use `{ error: string }` with:
 
-```ts
-{
-  translation: string;
-  explanation: string;
-  meaningInSentence: string | null;
-  sentenceTranslation: string;
-  examples: string[];
-  relatedWords: string[];
-  pronunciation: string | null;
-  type: string | null;
-  provider: "cache" | "ai";
-}
-```
-
-Failure responses use `{ error: string }` with `400` for invalid JSON/body, `401` for missing auth, `404` for inaccessible sources, and `500` for unexpected failures.
+| Status | Meaning |
+|--------|---------|
+| `400` | Invalid JSON/body |
+| `401` | Missing auth |
+| `404` | Inaccessible source |
+| `500` | Unexpected failure or non-AI provider failure |
 
 ### POST `/api/vocabulary`
 
@@ -71,70 +127,127 @@ Request:
 
 The route upserts a `VocabularyItem` using a hash of `userId`, `sourceId`, selected text, context sentence, and target language. Re-saving the same selection reuses the same row.
 
-### Dictionary Lookup
-
-`GET /api/dictionary` and `GET /api/dictionary/suggest` expose the local dictionary for exact lookup and suggest search. These endpoints are separate from Study quick translate, which uses the same dictionary table internally.
-
-## Quick Mode Contract
-
-Quick mode must not call AI. It resolves in this order:
-
-1. **Cache-first**: check translation cache before source ownership. Cache hit (keyed by userId+sourceId) proves ownership → return `provider: "cache"` without a redundant source fetch. On cache miss, verify source ownership before proceeding.
-2. Cache miss → classify selection scope:
-   - **Dictionary scope** (single word or short phrase, ≤4 tokens, no sentence-ending punctuation): single-query dictionary lookup via `$queryRaw` with LEFT JOINs on entries, aliases, senses, and translations. Prefers exact headword over alias, ordered by usageRank then rank. Returns `provider: "dictionary"` or `"fallback"`.
-   - **Machine scope** (sentence, paragraph, or longer phrase): non-AI machine translation provider (Google Translate-compatible endpoint). Returns `provider: "google_translate"`.
-3. Results are persisted in cache synchronously and in history **asynchronously** (fire-and-forget with error logging via Sentry).
-
-Punctuation normalization strips surrounding punctuation from context tokens so that a selection like `bias` in context `algorithmic bias.` still matches the dictionary phrase `algorithmic bias`.
-
-Seeded test coverage includes `algorithmic bias`, contextual `bias`, `algorithm`, `data`, and unknown `quorvex drift`.
-
-## Detailed Mode Contract
-
-Detailed mode checks the same cache first. On cache miss, it calls the translation AI model and stores the detailed response in cache and history. Ask AI from the Translate panel only prefills chat; it does not send the chat message automatically.
-
-## Manual Translate Trigger
+## Client Logic
 
 Study reader selection capture and translation execution are separated:
 
-- Highlighting text captures the selection and renders a floating translate icon.
-- Clicking the translate icon triggers the quick `/api/translate` request.
-- Double-click selection is deduplicated (same selection within 300ms is ignored).
-- The quick popup does not include a Save vocabulary action. Vocabulary save is available from the detailed Translate Studio panel.
+1. Highlighting text captures the selection and renders a floating translate button.
+2. Clicking the translate button checks the client memory cache.
+3. On client cache hit, the UI renders the cached translation without calling the API.
+4. On client cache miss, the UI calls `POST /api/translate`.
+5. Successful API responses are stored in the client memory cache for the current tab/session.
+6. The popup can expose Save vocabulary after a successful translation.
+
+Double-click selection is deduplicated. Same selection within 300ms is ignored.
+
+## Client Memory Cache
+
+The client cache is a browser-tab/session memory `Map`. It is cleared on full refresh, tab close, or app reload.
+
+Do not persist this cache to `localStorage`, IndexedDB, cookies, or server state in MVP.
+
+Recommended key fields:
+
+```ts
+{
+  sourceId: string;
+  selectedText: string;      // normalized whitespace/case policy must be explicit
+  contextSentence: string;   // clamped same as request context
+  sourceLanguage: "en";
+  targetLanguage: "vi";
+}
+```
+
+Recommended value:
+
+```ts
+TranslationResult
+```
+
+The cache stores successful translations only. Failed responses should not be cached in MVP.
+
+## Server Logic
+
+Translation must not call AI. It resolves in this order:
+
+1. Authenticate user.
+2. Build server translation cache key.
+3. Check `TranslationCache`.
+4. If cache hit, return `provider: "cache"` without redundant source fetch. Cache hit is keyed by `userId + sourceId`, so it proves ownership for this result.
+5. If cache miss, verify the source passage is owned by the user.
+6. Classify selection scope:
+   - **Dictionary scope:** single word or short phrase, `<=4` tokens, no sentence-ending punctuation.
+   - **Machine scope:** sentence, paragraph, or longer phrase.
+7. Dictionary scope uses the global dictionary tables for exact/alias primary translation lookup.
+8. Machine scope uses the non-AI machine translation provider.
+9. Return the resolved translation as soon as available.
+10. Persist server cache and history asynchronously with error logging.
+
+If async cache persistence fails, the current request still succeeds. The only user-visible cost is that a later identical request may miss server cache and recompute the translation.
+
+## Internal Dictionary Use
+
+Quick translation may use the dictionary tables internally for word and short phrase selections, but it must not become a dictionary search flow.
+
+Allowed:
+
+- Exact headword lookup.
+- Exact alias lookup.
+- Primary translation selection.
+- Deterministic fallback for dictionary misses.
+
+Not allowed in this flow:
+
+- Prefix suggest search.
+- Search results lists.
+- Multi-sense dictionary detail rendering.
+- Autocomplete behavior.
+
+Those belong to [dictionary-flow.md](./dictionary-flow.md).
 
 ## Non-AI Translation Provider
 
-Quick sentence/paragraph translation uses a Google Translate-compatible public endpoint. No API key is required. If the provider fails, the route returns the standard `500` error without falling back to AI.
-
-## Dictionary Seed
-
-The dictionary seed script is at `prisma/seed-dictionary.ts`. Run it explicitly after migrations:
-
-```sh
-pnpm db:seed:dictionary
-```
-
-This script is idempotent (uses upsert). It requires `DIRECT_URL` or `DATABASE_URL` to be configured. Do not run it automatically during `next build`.
+Fast sentence/paragraph translation uses a Google Translate-compatible public endpoint. No API key is required. If the provider fails, the route returns the standard `500` error without falling back to AI.
 
 ## Observability
 
-Routes use `createRequestLogger()` and `createRequestLogContext()`. Spans cover auth, cache lookup, source lookup (on cache miss only), dictionary lookup, non-AI provider call, AI generation, and cache write. Translation history creation is fire-and-forget and not instrumented with spans. UI breadcrumbs cover selection capture, quick/detailed translation requests, details opened, vocabulary save, and Ask AI opened.
+Routes use `createRequestLogger()` and `createRequestLogContext()`.
 
-Logs and Sentry metadata must avoid raw selected text and raw context. Record lengths, source id, target language, mode, provider, cache hit state, and result status instead.
+Spans should cover:
+
+- Auth.
+- Client cache miss API request.
+- Server cache lookup.
+- Source lookup on server cache miss.
+- Dictionary lookup for dictionary-scope selections.
+- Non-AI provider call for machine-scope selections.
+- Async cache/history writes.
+
+Logs and Sentry metadata must avoid raw selected text and raw context. Record lengths, source id, target language, provider, cache hit state, and result status instead.
+
+UI breadcrumbs cover:
+
+- Selection capture.
+- Translate button click.
+- Client cache hit/miss.
+- Fast translation request/result.
+- Vocabulary save.
 
 ## Performance Budgets
 
-The benchmark script (`scripts/performance/translate-flow-benchmark.ts`) enforces query count budgets:
+The benchmark script (`tests/performance/translate-flow-benchmark.ts`) enforces query count budgets:
 
 | Scenario | Budget | Gate |
 |----------|--------|------|
-| single-word dictionary hit | ≤4 queries | hard fail |
-| phrase dictionary hit | ≤4 queries | soft warn |
-| fallback miss | ≤5 queries | soft warn |
-| cache repeat | ≤2 queries | soft warn |
+| single-word dictionary hit | `<=4` queries | hard fail |
+| phrase dictionary hit | `<=4` queries | soft warn |
+| fallback miss | `<=5` queries | soft warn |
+| server cache repeat | `<=2` queries | soft warn |
 
 A warm-up request runs before measured scenarios. Results are written to `test-results/performance/translate-flow.json` with `budget`, `actual`, and `passed` fields per scenario.
 
+Client memory cache hits should not call `POST /api/translate`; they are a UI-level optimization and are not counted by the server benchmark.
+
 ## V1 Boundaries
 
-V1 intentionally excludes a custom right-click menu, a translation history viewer, flashcard generation from vocabulary, pronunciation audio, and target-language selection beyond Vietnamese.
+V1 intentionally excludes detailed AI translation, dictionary autocomplete, dictionary detail rendering inside quick translate, a custom right-click menu, a translation history viewer, flashcard generation from vocabulary, pronunciation audio, and target-language selection beyond Vietnamese.

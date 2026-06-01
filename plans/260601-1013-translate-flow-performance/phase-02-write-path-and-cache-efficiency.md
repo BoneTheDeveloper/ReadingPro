@@ -60,7 +60,7 @@ Optimizations:
 - Modify: `src/app/api/translate/route.ts` — reorder sourceFetch/cacheRead, defer historyCreate (lines 138-178, 249, 373-398)
 - Read only: `src/lib/db/translation-queries.ts`
 - Read only: `src/app/api/vocabulary/route.ts`
-- Verify: `__tests__/api/translation-vocabulary-routes.test.ts`
+- Verify: `tests/vitest/integration/api/translation-vocabulary-routes.test.ts`
 
 ## Implementation Steps
 

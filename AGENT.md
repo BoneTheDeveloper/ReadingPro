@@ -23,7 +23,7 @@ Re-index: `index_project` with `project_absolute_path: "/home/luc/Project/englis
 
 ## Test Rules
 
-- **Playwright test rule:** `docs/testing/playwright-test-rule.md` — project split, auth storage state, screenshot output, Docker fallback, and required verification notes.
+- **Playwright test rule:** `tests/e2e/playwright-test-rule.md` — project split, auth storage state, screenshot output, Docker fallback, and required verification notes.
 
 ## Library access
 Do not read node_modules by default.

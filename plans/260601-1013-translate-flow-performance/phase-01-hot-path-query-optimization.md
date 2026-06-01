@@ -63,7 +63,7 @@ Preferred: one SQL query for quick translate. App already depends on PostgreSQL.
 - Modify: `src/lib/dictionary/resolve-quick-dictionary-translation.ts` — wire new helper
 - Read only: `src/lib/db/dictionary-queries.ts`
 - Modify tests: `src/lib/dictionary/resolve-quick-dictionary-translation.test.ts`
-- Verify: `__tests__/api/translation-vocabulary-routes.test.ts`
+- Verify: `tests/vitest/integration/api/translation-vocabulary-routes.test.ts`
 
 ## Implementation Steps
 

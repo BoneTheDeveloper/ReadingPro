@@ -45,7 +45,7 @@ Client observability:
 - Modify: `src/features/study/study-right-panel.tsx`
 - Create: `src/features/study/study-translate-panel.tsx`
 - Optionally modify: `src/features/study/study-chat-panel.tsx` only if prefilled Ask AI needs a clean prop
-- Modify: `messages/en.json`, `messages/vi.json`
+- Modify: `localization/messages/en.json`, `localization/messages/vi.json`
 
 ## Implementation Steps
 

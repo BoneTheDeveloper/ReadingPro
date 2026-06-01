@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cardReviewFixture } from "../../../__tests__/fixtures";
+import { cardReviewFixture } from "../../../tests/vitest/fixtures";
 import { db } from "./client";
 import {
   calculateSM2Interval,

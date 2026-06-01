@@ -117,7 +117,7 @@ export function DictionaryPageClient() {
         sourceLanguage: "en",
         targetLanguage: "vi",
       });
-      const res = await fetch(`/api/dictionary?${params}`);
+      const res = await fetch(`/api/dictionary/search?${params}`);
       const json = await res.json();
 
       if (json.success && json.data && !("found" in json.data)) {

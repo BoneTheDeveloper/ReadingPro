@@ -13,13 +13,33 @@ function isEnabled() {
   return process.env.TRANSLATE_PERFORMANCE_FIXTURES === "1" && process.env.NODE_ENV !== "production";
 }
 
+function disabledResponse() {
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json({ error: "Not found." }, { status: 404 });
+  }
+
+  return NextResponse.json(
+    {
+      error: "Translate performance fixtures disabled.",
+      requiredEnv: {
+        TRANSLATE_PERFORMANCE_FIXTURES: "1",
+      },
+      currentEnv: {
+        TRANSLATE_PERFORMANCE_FIXTURES: process.env.TRANSLATE_PERFORMANCE_FIXTURES ?? null,
+        NODE_ENV: process.env.NODE_ENV ?? null,
+      },
+    },
+    { status: 412 },
+  );
+}
+
 function normalizeTerm(value: string) {
   return value.toLowerCase().replace(/\s+/g, " ").trim();
 }
 
 export async function POST() {
   if (!isEnabled()) {
-    return NextResponse.json({ error: "Not found." }, { status: 404 });
+    return disabledResponse();
   }
 
   const user = await getAuthenticatedUser();
@@ -65,7 +85,7 @@ export async function POST() {
 
 export async function DELETE(request: NextRequest) {
   if (!isEnabled()) {
-    return NextResponse.json({ error: "Not found." }, { status: 404 });
+    return disabledResponse();
   }
 
   await getAuthenticatedUser();

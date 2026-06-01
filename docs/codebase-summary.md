@@ -34,7 +34,7 @@ The codebase now separates routing from feature implementation:
 - `src/components/ui/` contains reusable UI primitives.
 - `src/components/layout/` contains dashboard shell and account controls.
 - `src/lib/` contains cross-feature infrastructure and reusable domain utilities.
-- `messages/` contains i18n JSON translations (en.json, vi.json).
+- `localization/` contains i18n message catalogs and localization docs.
 
 ```
 src/
@@ -120,9 +120,6 @@ src/
 │   │   └── test-results-screen.tsx       # Results summary screen
 │   └── progress/
 │       └── progress-dashboard.tsx        # Progress stats display
-├── messages/
-│   ├── en.json                          # English UI translations
-│   └── vi.json                          # Vietnamese UI translations
 ├── lib/
 │   ├── supabase/
 │   │   ├── client.ts                     # Browser client

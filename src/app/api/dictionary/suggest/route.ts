@@ -3,6 +3,15 @@ import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 import { getAuthenticatedUser } from "@/lib/auth/auth-utils";
 import { createRequestLogContext, createRequestLogger } from "@/lib/core/logger";
+import {
+  getPrismaQueryMetrics,
+  runWithPrismaQueryMetrics,
+  runWithPrismaQueryStep,
+} from "@/lib/observability/prisma-query-metrics";
+import {
+  createDictionaryPerformanceTracker,
+  shouldIncludeDictionaryPerformanceMetrics,
+} from "@/lib/dictionary/dictionary-performance";
 import { normalizeDictionaryTerm } from "@/lib/dictionary/normalize-dictionary-term";
 import {
   getSourceLabel,
@@ -105,6 +114,16 @@ function rankScore(item: DictionarySuggestItemDto): number {
 }
 
 export async function GET(request: NextRequest) {
+  const includePerformance = shouldIncludeDictionaryPerformanceMetrics(request.headers);
+  if (includePerformance) {
+    return runWithPrismaQueryMetrics(() => handleSuggestGet(request, true));
+  }
+
+  return handleSuggestGet(request, false);
+}
+
+async function handleSuggestGet(request: NextRequest, includePerformance: boolean) {
+  const routeStartedAt = performance.now();
   const requestLog = createRequestLogger(
     "api:dictionary-suggest",
     createRequestLogContext(request, "GET", "/api/dictionary/suggest"),
@@ -126,29 +145,49 @@ export async function GET(request: NextRequest) {
 
     // Short-circuit: too short to produce meaningful prefix results
     const normalizedQuery = normalizeDictionaryTerm(parsed.data.q);
+    const performanceTracker = includePerformance
+      ? createDictionaryPerformanceTracker({
+          query: parsed.data.q,
+          normalizedQuery,
+          phase: "suggest",
+          startedAt: routeStartedAt,
+        })
+      : null;
+
     if (normalizedQuery.length < 2) {
-      return NextResponse.json({ success: true, data: [] });
+      return createSuggestSuccessResponse({
+        data: [],
+        performanceTracker,
+      });
     }
 
-    const user = await Sentry.startSpan(
-      { name: "api:dictionary-suggest-auth", op: "auth" },
-      () => getAuthenticatedUser(),
+    const user = await measureDictionaryStep(
+      performanceTracker,
+      "auth",
+      () => Sentry.startSpan(
+        { name: "api:dictionary-suggest-auth", op: "auth" },
+        () => getAuthenticatedUser(),
+      ),
     );
 
-    const [headwordResults, aliasResults] = await Sentry.startSpan(
-      {
-        name: "db:dictionary-suggest",
-        op: "db",
-        attributes: {
-          "dictionary.query_length": normalizedQuery.length,
-          "user.id": user.id,
+    const [headwordResults, aliasResults] = await measureDictionaryStep(
+      performanceTracker,
+      "suggestResolve",
+      () => Sentry.startSpan(
+        {
+          name: "db:dictionary-suggest",
+          op: "db",
+          attributes: {
+            "dictionary.query_length": normalizedQuery.length,
+            "user.id": user.id,
+          },
         },
-      },
-      () =>
-        Promise.all([
-          findEntriesByHeadwordPrefix(parsed.data.q, parsed.data.sourceLanguage),
-          findEntriesByAliasPrefix(parsed.data.q, parsed.data.sourceLanguage),
-        ]),
+        () =>
+          Promise.all([
+            findEntriesByHeadwordPrefix(parsed.data.q, parsed.data.sourceLanguage),
+            findEntriesByAliasPrefix(parsed.data.q, parsed.data.sourceLanguage),
+          ]),
+      ),
     );
 
     // Build items from both result sets
@@ -185,7 +224,10 @@ export async function GET(request: NextRequest) {
       "Dictionary suggest completed",
     );
 
-    return NextResponse.json({ success: true, data: merged });
+    return createSuggestSuccessResponse({
+      data: merged,
+      performanceTracker,
+    });
   } catch (error) {
     if (isAuthenticationError(error)) {
       return NextResponse.json({ error: "Authentication required." }, { status: 401 });
@@ -197,4 +239,30 @@ export async function GET(request: NextRequest) {
     });
     return NextResponse.json({ error: "Suggest failed." }, { status: 500 });
   }
+}
+
+function createSuggestSuccessResponse(input: {
+  data: DictionarySuggestItemDto[];
+  performanceTracker: ReturnType<typeof createDictionaryPerformanceTracker> | null;
+}) {
+  if (!input.performanceTracker) {
+    return NextResponse.json({ success: true, data: input.data });
+  }
+
+  return NextResponse.json({
+    success: true,
+    data: input.data,
+    performance: input.performanceTracker.snapshot(
+      getPrismaQueryMetrics() ?? { queryCount: 0, totalDurationMs: 0, steps: {} },
+    ),
+  });
+}
+
+function measureDictionaryStep<T>(
+  performanceTracker: ReturnType<typeof createDictionaryPerformanceTracker> | null,
+  step: string,
+  callback: () => Promise<T>,
+) {
+  if (!performanceTracker) return callback();
+  return performanceTracker.measure(step, () => runWithPrismaQueryStep(step, callback));
 }

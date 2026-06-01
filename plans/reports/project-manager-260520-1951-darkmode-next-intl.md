@@ -30,7 +30,7 @@ Successfully implemented manual/system dark mode and English/Vietnamese locale s
   - Controls keyboard reachable and screen-reader named
 
 - **Phase 4: Copy Migration** - Complete ✅
-  - Created messages/en.json and messages/vi.json
+  - Created localization/messages/en.json and localization/messages/vi.json
   - Migrated dashboard, auth pages, sidebar, user menu, sign-out button
   - Vietnamese strings fit mobile controls without overflow
   - Error/empty/loading states have localized titles and CTAs
@@ -49,7 +49,7 @@ Successfully implemented manual/system dark mode and English/Vietnamese locale s
 - `src/components/theme-provider.tsx`
 - `src/components/layout/theme-toggle.tsx`
 - `src/components/layout/language-switcher.tsx`
-- `messages/en.json`, `messages/vi.json`
+- `localization/messages/en.json`, `localization/messages/vi.json`
 - `src/features/study/study-chat-panel.tsx` (stub for missing component)
 
 ### Modified Files

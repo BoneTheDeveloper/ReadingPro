@@ -38,7 +38,7 @@ Budget constants — single-word hit is **hard gate**, others are soft warnings:
 - Modify: `scripts/performance/translate-flow-benchmark.ts`
 - Modify: `tests/performance/README.md`
 - Create: `src/lib/dictionary/resolve-dictionary-lookup.test.ts` (if not created in Phase 1)
-- Verify: `__tests__/api/translation-vocabulary-routes.test.ts`
+- Verify: `tests/vitest/integration/api/translation-vocabulary-routes.test.ts`
 
 ## Implementation Steps
 

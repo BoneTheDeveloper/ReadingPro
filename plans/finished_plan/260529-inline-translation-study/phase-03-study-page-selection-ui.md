@@ -74,14 +74,14 @@ Use fixed positioning relative to the selection rect. Position below the selecti
 - Modify: `src/features/study/study-content-panel.tsx` (183 lines) — add contentRef, selection handlers
 - Modify: `src/features/study/study-page-client.tsx` (135 lines) — add translation state, fetch, popup rendering
 - Create: `src/features/study/study-translation-popup.tsx` — new component
-- Modify: `messages/en.json` — add translation popup keys
-- Modify: `messages/vi.json` — add translation popup keys
+- Modify: `localization/messages/en.json` — add translation popup keys
+- Modify: `localization/messages/vi.json` — add translation popup keys
 
 ## Implementation Steps
 
 ### Step 1: Add i18n strings
 
-Add to `messages/en.json` Study section:
+Add to `localization/messages/en.json` Study section:
 ```json
 "translationPopupTitle": "Translation",
 "translationLoading": "Translating...",
@@ -91,7 +91,7 @@ Add to `messages/en.json` Study section:
 "vocabularySaved": "Saved"
 ```
 
-Add Vietnamese equivalents to `messages/vi.json`:
+Add Vietnamese equivalents to `localization/messages/vi.json`:
 ```json
 "translationPopupTitle": "Bản dịch",
 "translationLoading": "Đang dịch...",
