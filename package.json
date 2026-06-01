@@ -8,7 +8,7 @@
   "packageManager": "pnpm@11.3.0",
     "scripts": {
     "dev": "next dev --turbopack",
-    "dev:performance": "PRISMA_QUERY_METRICS=1 TRANSLATE_PERFORMANCE_FIXTURES=1 DICTIONARY_PERFORMANCE_FIXTURES=1 next dev --turbopack",
+    "dev:performance": "NEXT_DIST_DIR=.next-performance PRISMA_QUERY_METRICS=1 TRANSLATE_PERFORMANCE_FIXTURES=1 DICTIONARY_PERFORMANCE_FIXTURES=1 next dev --turbopack",
     "dev:e2e": "next dev --turbopack -H 0.0.0.0",
     "build": "prisma generate --generator client && next build",
     "start": "next start",

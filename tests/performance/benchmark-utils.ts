@@ -1,6 +1,8 @@
+import { spawn, type ChildProcess } from "node:child_process";
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { config as loadEnvFile } from "dotenv";
+import getPort from "get-port";
 import { getE2EAuthCookieHeader } from "../e2e/helpers/auth-state";
 
 export type BudgetGate = "hard" | "soft";
@@ -27,20 +29,44 @@ export interface BenchmarkContext {
   cookie: string;
 }
 
+export interface BenchmarkContextOptions {
+  baseUrl?: string;
+  reuseServer?: boolean;
+}
+
 const defaultBenchmarkBaseUrl = "http://localhost:3000";
+const ownedServerDistDir = ".next-performance";
 
 loadEnvFile({ path: resolve(process.cwd(), ".env.local"), quiet: true });
 loadEnvFile({ path: resolve(process.cwd(), ".env.test"), quiet: true });
 
-export async function withBenchmarkContext(callback: (context: BenchmarkContext) => Promise<void>) {
+export async function withBenchmarkContext(
+  options: BenchmarkContextOptions,
+  callback: (context: BenchmarkContext) => Promise<void>,
+) {
+  const server = options.reuseServer ? null : await startOwnedBenchmarkServer();
   const baseUrl = normalizeBaseUrl(
-    process.env.PERFORMANCE_BASE_URL ?? process.env.E2E_BASE_URL ?? defaultBenchmarkBaseUrl,
+    server?.baseUrl
+      ?? options.baseUrl
+      ?? process.env.PERFORMANCE_BASE_URL
+      ?? process.env.E2E_BASE_URL
+      ?? defaultBenchmarkBaseUrl,
   );
 
-  console.log(`Using performance base URL: ${baseUrl}`);
-  await assertBenchmarkServerReady(baseUrl);
-  const cookie = await getCookieHeader();
-  await callback({ baseUrl, cookie });
+  try {
+    console.log(`Using performance base URL: ${baseUrl}`);
+    await assertBenchmarkServerReady(baseUrl, options.reuseServer);
+    const cookie = await getCookieHeader();
+    await callback({ baseUrl, cookie });
+  } catch (error) {
+    if (server?.output.length) {
+      console.error("\nOwned performance server output:");
+      console.error(server.output.join("").trim());
+    }
+    throw error;
+  } finally {
+    await server?.stop();
+  }
 }
 
 export async function writePerformanceReport(path: string, reports: unknown[]) {
@@ -184,24 +210,111 @@ function normalizeBaseUrl(value: string) {
   return value.replace(/\/+$/, "");
 }
 
-async function assertBenchmarkServerReady(baseUrl: string) {
-  const healthUrl = `${baseUrl}/en/sign-in`;
+async function startOwnedBenchmarkServer() {
+  const port = await getPort();
+  const baseUrl = `http://127.0.0.1:${port}`;
+  const output: string[] = [];
+  const server = spawn(
+    "pnpm",
+    ["exec", "next", "dev", "--turbopack", "-H", "127.0.0.1", "-p", String(port)],
+    {
+      env: {
+        ...process.env,
+        NEXT_DIST_DIR: ownedServerDistDir,
+        PRISMA_QUERY_METRICS: "1",
+        TRANSLATE_PERFORMANCE_FIXTURES: "1",
+        DICTIONARY_PERFORMANCE_FIXTURES: "1",
+      },
+      stdio: ["ignore", "pipe", "pipe"],
+    },
+  );
 
-  try {
-    const response = await fetch(healthUrl, {
-      method: "GET",
-      signal: AbortSignal.timeout(5_000),
-    });
+  captureServerOutput(server, output);
+  console.log(`Started owned performance server on ${baseUrl} with NEXT_DIST_DIR=${ownedServerDistDir}`);
 
-    if (!response.ok) {
-      throw new Error(`health check returned ${response.status}`);
-    }
-  } catch (error) {
-    const reason = error instanceof Error ? error.message : String(error);
-    throw new Error(
-      `Performance benchmark requires a running dev server at ${baseUrl}. ` +
-      `Start it first with: PRISMA_QUERY_METRICS=1 TRANSLATE_PERFORMANCE_FIXTURES=1 DICTIONARY_PERFORMANCE_FIXTURES=1 pnpm dev. ` +
-      `Health check failed: ${reason}`,
-    );
+  return {
+    baseUrl,
+    stop: async () => {
+      await stopServer(server);
+    },
+    output,
+  };
+}
+
+function captureServerOutput(server: ChildProcess, output: string[]) {
+  const capture = (chunk: Buffer | string) => {
+    output.push(String(chunk));
+    if (output.length > 40) output.shift();
+  };
+  server.stdout?.on("data", capture);
+  server.stderr?.on("data", capture);
+}
+
+async function stopServer(server: ChildProcess) {
+  if (server.exitCode !== null || server.signalCode !== null) return;
+
+  server.kill("SIGTERM");
+  const stopped = await waitForServerExit(server, 5_000);
+  if (!stopped) {
+    server.kill("SIGKILL");
+    await waitForServerExit(server, 2_000);
   }
+}
+
+function waitForServerExit(
+  server: ChildProcess,
+  timeoutMs: number,
+) {
+  return new Promise<boolean>((resolveExit) => {
+    const timeout = setTimeout(() => {
+      cleanup();
+      resolveExit(false);
+    }, timeoutMs);
+
+    const onExit = () => {
+      cleanup();
+      resolveExit(true);
+    };
+
+    const cleanup = () => {
+      clearTimeout(timeout);
+      server.off("exit", onExit);
+    };
+
+    server.once("exit", onExit);
+  });
+}
+
+async function assertBenchmarkServerReady(baseUrl: string, reuseServer = false) {
+  const healthUrl = `${baseUrl}/en/sign-in`;
+  const timeoutMs = reuseServer ? 5_000 : 120_000;
+  const startedAt = Date.now();
+  let lastReason = "not checked";
+
+  while (Date.now() - startedAt < timeoutMs) {
+    try {
+      const response = await fetch(healthUrl, {
+        method: "GET",
+        signal: AbortSignal.timeout(5_000),
+      });
+
+      if (response.ok) {
+        return;
+      }
+      lastReason = `health check returned ${response.status}`;
+    } catch (error) {
+      lastReason = error instanceof Error ? error.message : String(error);
+    }
+
+    await new Promise((resolveWait) => setTimeout(resolveWait, 500));
+  }
+
+  const reuseHint = reuseServer
+    ? "Start it first with: PRISMA_QUERY_METRICS=1 TRANSLATE_PERFORMANCE_FIXTURES=1 DICTIONARY_PERFORMANCE_FIXTURES=1 pnpm dev."
+    : `The owned server did not become ready. It uses NEXT_DIST_DIR=${ownedServerDistDir} to avoid the normal .next dev lock.`;
+
+  throw new Error(
+    `Performance benchmark requires a running dev server at ${baseUrl}. ` +
+    `${reuseHint} Health check failed: ${lastReason}`,
+  );
 }

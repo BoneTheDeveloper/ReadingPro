@@ -20,6 +20,7 @@ const cspHeader = `
 `.replace(/\n/g, '');
 
 const nextConfig: NextConfig = {
+  distDir: process.env.NEXT_DIST_DIR ?? ".next",
   allowedDevOrigins: ["host.docker.internal"],
   turbopack: {
     root: process.cwd(),
