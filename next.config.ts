@@ -10,7 +10,7 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const csp = {
   defaultSrc: "default-src 'self'",
-  scriptSrc: "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
+  scriptSrc: "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel-scripts.com",
   styleSrc: "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   imgSrc: "img-src 'self' blob: data: https://*.supabase.co https://*.supabase.in https://*.supabase.com",
   fontSrc: "font-src 'self' https://fonts.gstatic.com",
