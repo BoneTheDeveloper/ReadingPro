@@ -1,3 +1,4 @@
+import { Prisma } from "@/generated/prisma/client";
 import { db } from "@/lib/db/client";
 import { normalizeDictionaryTerm } from "./normalize-dictionary-term";
 import {
@@ -37,32 +38,73 @@ export async function resolveDictionaryLookup(
   return { headword: normalized, found: false };
 }
 
-export async function resolveQuickDictionaryLookup(
+const QUICK_LOOKUP_STATUSES = Prisma.join(RUNTIME_STATUSES);
+
+export async function resolveQuickDictionaryLookupSql(
   term: string,
   options: LookupOptions,
 ): Promise<DictionaryTranslationDto | null> {
   const normalized = normalizeDictionaryTerm(term);
-  const statuses = options.includeDraft
-    ? [...RUNTIME_STATUSES, "draft"]
-    : [...RUNTIME_STATUSES];
 
-  const entry = await findEntryByHeadword(normalized, options.sourceLanguage)
-    ?? await findEntryByAlias(normalized, options.sourceLanguage);
+  const rows: Array<{
+    id: string;
+    senseId: string;
+    targetLanguage: string;
+    translation: string;
+    isPrimary: boolean;
+    rank: number;
+    confidence: number | null;
+    status: string;
+    sourceType: string;
+    sourceName: string | null;
+    reviewedAt: Date | null;
+    matchType: number;
+  }> = await db.$queryRaw`
+    SELECT
+      t.id,
+      t."senseId",
+      t."targetLanguage",
+      t.translation,
+      t."isPrimary",
+      t.rank,
+      t.confidence,
+      t.status,
+      t."sourceType",
+      t."sourceName",
+      t."reviewedAt",
+      CASE WHEN e."normalizedHeadword" = ${normalized} THEN 0 ELSE 1 END AS "matchType"
+    FROM dictionary_entries e
+    LEFT JOIN dictionary_aliases a
+      ON a."entryId" = e.id AND a."normalizedAlias" = ${normalized}
+    JOIN dictionary_senses s ON s."entryId" = e.id
+    JOIN dictionary_translations t
+      ON t."senseId" = s.id
+      AND t."targetLanguage" = ${options.targetLanguage}
+      AND t.status IN (${QUICK_LOOKUP_STATUSES})
+      AND t."isPrimary" = true
+    WHERE e."sourceLanguage" = ${options.sourceLanguage}
+      AND (e."normalizedHeadword" = ${normalized} OR a.id IS NOT NULL)
+    ORDER BY "matchType" ASC, s."usageRank" ASC, t.rank ASC
+    LIMIT 1
+  `;
 
-  if (!entry) return null;
+  const row = rows[0];
+  if (!row) return null;
 
-  const firstSense = entry.senses
-    .slice()
-    .sort((a, b) => a.usageRank - b.usageRank)[0];
-  if (!firstSense) return null;
-
-  const primary = firstSense.translations
-    .filter((t) => statuses.includes(t.status as typeof statuses[number]) && t.isPrimary)
-    .sort((a, b) => a.rank - b.rank)[0];
-
-  if (!primary) return null;
-
-  return toTranslationDto(primary);
+  return {
+    id: row.id,
+    senseId: row.senseId,
+    targetLanguage: row.targetLanguage as "vi",
+    translation: row.translation,
+    isPrimary: row.isPrimary,
+    rank: row.rank,
+    confidence: row.confidence,
+    status: row.status as DictionaryTranslationDto["status"],
+    sourceType: row.sourceType as DictionaryTranslationDto["sourceType"],
+    sourceName: row.sourceName,
+    reviewedAt: row.reviewedAt?.toISOString() ?? null,
+    sourceLabel: getSourceLabel(row.sourceType, row.sourceName),
+  };
 }
 
 async function findEntryByHeadword(normalizedHeadword: string, sourceLanguage: string) {

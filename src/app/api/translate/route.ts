@@ -135,25 +135,6 @@ async function handleTranslatePost(request: NextRequest, includePerformance: boo
     ));
     requestLog = requestLog.child({ userId: user.id });
 
-    const source = await measureTranslateStep(performanceTracker, "sourceFetch", () => Sentry.startSpan(
-      {
-        name: "db:translate-source-fetch",
-        op: "db",
-        attributes: {
-          "db.operation": "findUnique",
-          "db.model": "Passage",
-          "translation.source_id": input.sourceId,
-          "user.id": user.id,
-        },
-      },
-      () => getOwnedTranslationSource(user.id, input.sourceId),
-    ));
-
-    if (!source) {
-      requestLog.warn("Translation source not found");
-      return NextResponse.json({ error: "Source not found." }, { status: 404 });
-    }
-
     const cacheKey = buildTranslationCacheKey({
       userId: user.id,
       sourceId: input.sourceId,
@@ -194,13 +175,32 @@ async function handleTranslatePost(request: NextRequest, includePerformance: boo
           "Translation cache hit",
         );
 
-        await persistTranslationResult(user.id, input, result, performanceTracker);
+        void persistTranslationResult(user.id, input, result, requestLog);
         return createTranslateSuccessResponse({
           data: result,
           performanceTracker,
           resolutionSource: "cache",
         });
       }
+    }
+
+    const source = await measureTranslateStep(performanceTracker, "sourceFetch", () => Sentry.startSpan(
+      {
+        name: "db:translate-source-fetch",
+        op: "db",
+        attributes: {
+          "db.operation": "findUnique",
+          "db.model": "Passage",
+          "translation.source_id": input.sourceId,
+          "user.id": user.id,
+        },
+      },
+      () => getOwnedTranslationSource(user.id, input.sourceId),
+    ));
+
+    if (!source) {
+      requestLog.warn("Translation source not found");
+      return NextResponse.json({ error: "Source not found." }, { status: 404 });
     }
 
     const result =
@@ -246,7 +246,7 @@ async function handleTranslatePost(request: NextRequest, includePerformance: boo
           response: toJsonValue(result),
         }),
     ));
-    await persistTranslationResult(user.id, input, result, performanceTracker);
+    void persistTranslationResult(user.id, input, result, requestLog);
 
     requestLog.info(
       {
@@ -368,34 +368,28 @@ async function persistTranslationResult(
   userId: string,
   input: TranslateRequestInput,
   result: QuickTranslation | DetailedTranslation,
-  performanceTracker: ReturnType<typeof createTranslatePerformanceTracker> | null,
+  requestLog: ReturnType<typeof createRequestLogger>,
 ) {
-  await measureTranslateStep(performanceTracker, "historyCreate", () => Sentry.startSpan(
-    {
-      name: "db:translate-history-create",
-      op: "db",
-      attributes: {
-        "db.operation": "create",
-        "db.model": "TranslationHistory",
-        "translation.provider": result.provider,
-        "translation.source_id": input.sourceId,
-        "user.id": userId,
-      },
-    },
-    () =>
-      createTranslationHistory({
-        userId,
-        sourceId: input.sourceId,
-        selectedText: input.text,
-        contextSentence: input.context,
-        sourceLanguage: input.sourceLanguage,
-        targetLanguage: input.targetLanguage,
-        mode: input.mode,
-        provider: result.provider,
-        translation: result.translation,
-        response: toJsonValue(result),
-      }),
-  ));
+  try {
+    await createTranslationHistory({
+      userId,
+      sourceId: input.sourceId,
+      selectedText: input.text,
+      contextSentence: input.context,
+      sourceLanguage: input.sourceLanguage,
+      targetLanguage: input.targetLanguage,
+      mode: input.mode,
+      provider: result.provider,
+      translation: result.translation,
+      response: toJsonValue(result),
+    });
+  } catch (error) {
+    requestLog.warn({ err: error }, "Failed to persist translation history");
+    Sentry.captureException(error, {
+      tags: { route: "api:translate", component: "historyCreate" },
+      level: "warning",
+    });
+  }
 }
 
 function createTranslateSuccessResponse(input: {

@@ -1,6 +1,6 @@
 import { createModuleLogger } from "@/lib/core/logger";
 import { normalizeDictionaryTerm } from "./normalize-dictionary-term";
-import { resolveQuickDictionaryLookup } from "./resolve-dictionary-lookup";
+import { resolveQuickDictionaryLookupSql } from "./resolve-dictionary-lookup";
 
 const log = createModuleLogger("dictionary:quick-resolver");
 
@@ -22,7 +22,7 @@ export async function resolveQuickDictionaryTranslation(
 ): Promise<QuickDictionaryResult> {
   const normalizedText = normalizeDictionaryTerm(input.text);
 
-  const dto = await resolveQuickDictionaryLookup(normalizedText, {
+  const dto = await resolveQuickDictionaryLookupSql(normalizedText, {
     sourceLanguage: input.sourceLanguage,
     targetLanguage: input.targetLanguage,
   });

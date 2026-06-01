@@ -79,11 +79,11 @@ The route upserts a `VocabularyItem` using a hash of `userId`, `sourceId`, selec
 
 Quick mode must not call AI. It resolves in this order:
 
-1. Exact translation cache hit → return `provider: "cache"`.
+1. **Cache-first**: check translation cache before source ownership. Cache hit (keyed by userId+sourceId) proves ownership → return `provider: "cache"` without a redundant source fetch. On cache miss, verify source ownership before proceeding.
 2. Cache miss → classify selection scope:
-   - **Dictionary scope** (single word or short phrase, ≤4 tokens, no sentence-ending punctuation): contextual dictionary lookup, including phrases containing the selected word, ranked by phrase/context/confidence, with deterministic fallback from token translations or normalized selected text. Returns `provider: "dictionary"` or `"fallback"`.
+   - **Dictionary scope** (single word or short phrase, ≤4 tokens, no sentence-ending punctuation): single-query dictionary lookup via `$queryRaw` with LEFT JOINs on entries, aliases, senses, and translations. Prefers exact headword over alias, ordered by usageRank then rank. Returns `provider: "dictionary"` or `"fallback"`.
    - **Machine scope** (sentence, paragraph, or longer phrase): non-AI machine translation provider (Google Translate-compatible endpoint). Returns `provider: "google_translate"`.
-3. All results are persisted in cache and history.
+3. Results are persisted in cache synchronously and in history **asynchronously** (fire-and-forget with error logging via Sentry).
 
 Punctuation normalization strips surrounding punctuation from context tokens so that a selection like `bias` in context `algorithmic bias.` still matches the dictionary phrase `algorithmic bias`.
 
@@ -118,9 +118,22 @@ This script is idempotent (uses upsert). It requires `DIRECT_URL` or `DATABASE_U
 
 ## Observability
 
-Routes use `createRequestLogger()` and `createRequestLogContext()`. Spans cover auth, source lookup, cache lookup, dictionary lookup, non-AI provider call, AI generation, cache write, history append, and vocabulary upsert. UI breadcrumbs cover selection capture, quick/detailed translation requests, details opened, vocabulary save, and Ask AI opened.
+Routes use `createRequestLogger()` and `createRequestLogContext()`. Spans cover auth, cache lookup, source lookup (on cache miss only), dictionary lookup, non-AI provider call, AI generation, and cache write. Translation history creation is fire-and-forget and not instrumented with spans. UI breadcrumbs cover selection capture, quick/detailed translation requests, details opened, vocabulary save, and Ask AI opened.
 
 Logs and Sentry metadata must avoid raw selected text and raw context. Record lengths, source id, target language, mode, provider, cache hit state, and result status instead.
+
+## Performance Budgets
+
+The benchmark script (`scripts/performance/translate-flow-benchmark.ts`) enforces query count budgets:
+
+| Scenario | Budget | Gate |
+|----------|--------|------|
+| single-word dictionary hit | ≤4 queries | hard fail |
+| phrase dictionary hit | ≤4 queries | soft warn |
+| fallback miss | ≤5 queries | soft warn |
+| cache repeat | ≤2 queries | soft warn |
+
+A warm-up request runs before measured scenarios. Results are written to `test-results/performance/translate-flow.json` with `budget`, `actual`, and `passed` fields per scenario.
 
 ## V1 Boundaries
 

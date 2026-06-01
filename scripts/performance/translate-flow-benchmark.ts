@@ -49,12 +49,28 @@ type PerformanceScenarioReport = {
   scenario: string;
   roundTripMs: number;
   performance: TranslatePerformancePayload["performance"];
+  budget?: ScenarioBudget;
+  passed?: boolean;
 };
 
 const reportPath = "test-results/performance/translate-flow.json";
 const benchmarkHost = "127.0.0.1";
 const preferredPortStart = 3010;
 const preferredPortEnd = 3999;
+
+type BudgetGate = "hard" | "soft";
+
+interface ScenarioBudget {
+  maxQueries: number;
+  gate: BudgetGate;
+}
+
+const BUDGETS: Record<string, ScenarioBudget> = {
+  "single-word-dictionary": { maxQueries: 4, gate: "hard" },
+  "phrase-dictionary": { maxQueries: 4, gate: "soft" },
+  fallback: { maxQueries: 5, gate: "soft" },
+  "cache-repeat": { maxQueries: 2, gate: "soft" },
+};
 
 type ExecaMethod = typeof import("execa").execa;
 type BenchmarkServer = ReturnType<ExecaMethod>;
@@ -78,6 +94,17 @@ async function main() {
 
   try {
     fixture = await createFixture(baseUrl, cookie);
+
+    console.log("Running warm-up request (discarded)...");
+    await postJson(`${baseUrl}/api/translate`, cookie, {
+      text: fixture.singleWord,
+      context: fixture.context,
+      sourceId: fixture.passageId,
+      sourceLanguage: "en",
+      targetLanguage: "vi",
+      mode: "quick",
+    });
+
     const reports = await runScenarios(baseUrl, cookie, fixture);
 
     await mkdir(dirname(reportPath), { recursive: true });
@@ -87,6 +114,21 @@ async function main() {
     );
 
     console.log(`Wrote translate performance report to ${reportPath}`);
+
+    const budgetFailures = validateBudgets(reports);
+    if (budgetFailures.length > 0) {
+      console.error(`\nBudget failures:`);
+      for (const f of budgetFailures) {
+        console.error(`  [${f.gate.toUpperCase()}] ${f.scenario}: ${f.actual} queries (budget: ≤${f.max})`);
+      }
+      const hasHardFail = budgetFailures.some((f) => f.gate === "hard");
+      if (hasHardFail) {
+        console.error("\nHard budget failure — exiting with code 1");
+        process.exit(1);
+      }
+    }
+
+    console.log("\nAll budget checks passed.");
   } finally {
     if (fixture) {
       await cleanupFixture(baseUrl, cookie, fixture.cleanup).catch((error: unknown) => {
@@ -215,11 +257,33 @@ async function translateScenario(
     assertNumber(metrics.ms, `${input.scenario} ${step} Prisma duration`);
   }
 
+  const budget = BUDGETS[input.scenario];
+  const actualQueries = payload.performance.prisma.queryCount;
+  const passed = budget ? actualQueries <= budget.maxQueries : true;
+
   return {
     scenario: input.scenario,
     roundTripMs,
     performance: payload.performance,
+    budget: budget ?? undefined,
+    passed,
   };
+}
+
+function validateBudgets(reports: PerformanceScenarioReport[]) {
+  const failures: Array<{ scenario: string; gate: BudgetGate; actual: number; max: number }> = [];
+
+  for (const report of reports) {
+    if (!report.budget || report.passed) continue;
+    failures.push({
+      scenario: report.scenario,
+      gate: report.budget.gate,
+      actual: report.performance.prisma.queryCount,
+      max: report.budget.maxQueries,
+    });
+  }
+
+  return failures;
 }
 
 async function postJson(

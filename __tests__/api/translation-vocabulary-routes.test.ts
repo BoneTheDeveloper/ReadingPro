@@ -133,6 +133,40 @@ beforeEach(() => {
     return dictionaryEntries.find((item) => item.normalizedHeadword === term) ?? null;
   });
   db.dictionaryAlias.findFirst.mockResolvedValue(null);
+  db.$queryRaw.mockImplementation(async (...args: unknown[]) => {
+    const values = args.slice(1);
+    const allStrings: string[] = [];
+    for (const v of values) {
+      if (typeof v === "string") {
+        allStrings.push(v);
+      } else if (v && typeof v === "object" && "values" in v) {
+        const sql = v as { values: unknown[] };
+        for (const sv of sql.values) {
+          if (typeof sv === "string") allStrings.push(sv);
+        }
+      }
+    }
+    const normalizedTerm = allStrings.find((v) => !["en", "vi", "true"].includes(v));
+    if (!normalizedTerm) return [];
+    const entry = dictionaryEntries.find((e) => e.normalizedHeadword === normalizedTerm);
+    if (!entry || !entry.senses.length) return [];
+    const sense = entry.senses[0];
+    const tr = sense.translations[0];
+    return [{
+      id: tr.id,
+      senseId: sense.id,
+      targetLanguage: tr.targetLanguage,
+      translation: tr.translation,
+      isPrimary: tr.isPrimary,
+      rank: tr.rank,
+      confidence: tr.confidence,
+      status: tr.status,
+      sourceType: tr.sourceType,
+      sourceName: tr.sourceName,
+      reviewedAt: tr.reviewedAt,
+      matchType: 0,
+    }];
+  });
 });
 
 describe("POST /api/translate", () => {
@@ -318,7 +352,6 @@ describe("POST /api/translate", () => {
         expect.objectContaining({ name: "db:translate-cache-fetch", op: "db" }),
         expect.objectContaining({ name: "dictionary:quick-resolve", op: "function" }),
         expect.objectContaining({ name: "db:translate-cache-upsert", op: "db" }),
-        expect.objectContaining({ name: "db:translate-history-create", op: "db" }),
       ]),
     );
     const serializedSpanMetadata = JSON.stringify(spanMetadata);
@@ -366,11 +399,10 @@ describe("POST /api/translate", () => {
         parseBody: expect.any(Number),
         validateRequest: expect.any(Number),
         auth: expect.any(Number),
-        sourceFetch: expect.any(Number),
         cacheRead: expect.any(Number),
+        sourceFetch: expect.any(Number),
         dictionaryResolve: expect.any(Number),
         cacheWrite: expect.any(Number),
-        historyCreate: expect.any(Number),
       }),
     );
 
