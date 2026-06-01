@@ -98,6 +98,16 @@ into finer query groups such as `suggestResolve.headwordPrefix`,
 `suggestResolve.aliasPrefix`, `lookupResolve.headword`, and
 `lookupResolve.alias`.
 
+## Field Web Vitals
+
+Real-user Core Web Vitals (LCP, CLS, INP, FCP, TTFB) are collected via
+`@vercel/speed-insights` and viewable in the Vercel dashboard under
+**Speed Insights**. This is independent from the API benchmarks above and
+complements Sentry's automatic performance tracing.
+
+Enable Speed Insights in the Vercel dashboard, then deploy. Metrics appear
+after real-user traffic hits the deployed site.
+
 ## Follow-up Performance Scope
 
 The next performance layer should stay separate from this API benchmark. Start
