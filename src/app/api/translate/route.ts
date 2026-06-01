@@ -14,6 +14,7 @@ import { createRequestLogContext, createRequestLogger } from "@/lib/core/logger"
 import {
   getPrismaQueryMetrics,
   runWithPrismaQueryMetrics,
+  runWithPrismaQueryStep,
 } from "@/lib/observability/prisma-query-metrics";
 import { resolveQuickDictionaryTranslation } from "@/lib/dictionary/resolve-quick-dictionary-translation";
 import { getQuickSelectionScope } from "@/lib/translation/quick-selection-scope";
@@ -124,7 +125,7 @@ async function handleTranslatePost(request: NextRequest, includePerformance: boo
       targetLanguage: input.targetLanguage,
     });
 
-    const user = await measureTranslateStep(performanceTracker, "authenticate", () => Sentry.startSpan(
+    const user = await measureTranslateStep(performanceTracker, "auth", () => Sentry.startSpan(
       {
         name: "api:translate-authenticate",
         op: "auth",
@@ -162,7 +163,7 @@ async function handleTranslatePost(request: NextRequest, includePerformance: boo
       mode: input.mode,
     });
 
-    const cached = await measureTranslateStep(performanceTracker, "cacheFetch", () => Sentry.startSpan(
+    const cached = await measureTranslateStep(performanceTracker, "cacheRead", () => Sentry.startSpan(
       {
         name: "db:translate-cache-fetch",
         op: "db",
@@ -220,7 +221,7 @@ async function handleTranslatePost(request: NextRequest, includePerformance: boo
             () => generateDetailedAiTranslation(input),
           ));
 
-    await measureTranslateStep(performanceTracker, "cacheUpsert", () => Sentry.startSpan(
+    await measureTranslateStep(performanceTracker, "cacheWrite", () => Sentry.startSpan(
       {
         name: "db:translate-cache-upsert",
         op: "db",
@@ -411,7 +412,7 @@ function createTranslateSuccessResponse(input: {
     data: input.data,
     performance: input.performanceTracker.snapshot({
       resolutionSource: input.resolutionSource,
-      prisma: getPrismaQueryMetrics() ?? { queryCount: 0, totalDurationMs: 0 },
+      prisma: getPrismaQueryMetrics() ?? { queryCount: 0, totalDurationMs: 0, steps: {} },
     }),
   });
 }
@@ -422,7 +423,7 @@ function measureTranslateStep<T>(
   callback: () => Promise<T>,
 ) {
   if (!performanceTracker) return callback();
-  return performanceTracker.measure(step, callback);
+  return performanceTracker.measure(step, () => runWithPrismaQueryStep(step, callback));
 }
 
 function roundMetric(value: number) {

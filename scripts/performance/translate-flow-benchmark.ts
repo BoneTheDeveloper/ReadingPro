@@ -1,7 +1,7 @@
-import { spawn, type ChildProcess } from "node:child_process";
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { config as loadEnvFile } from "dotenv";
+import getPort, { portNumbers } from "get-port";
 import { getE2EAuthCookieHeader } from "../../tests/e2e/helpers/auth-state";
 
 type TranslatePerformancePayload = {
@@ -22,6 +22,10 @@ type TranslatePerformancePayload = {
     prisma: {
       queryCount: number;
       totalDurationMs: number;
+      steps: Record<string, {
+        queries: number;
+        ms: number;
+      }>;
     };
   };
 };
@@ -48,16 +52,28 @@ type PerformanceScenarioReport = {
 };
 
 const reportPath = "test-results/performance/translate-flow.json";
-const defaultBaseUrl = "http://127.0.0.1:3010";
+const benchmarkHost = "127.0.0.1";
+const preferredPortStart = 3010;
+const preferredPortEnd = 3999;
+
+type ExecaMethod = typeof import("execa").execa;
+type BenchmarkServer = ReturnType<ExecaMethod>;
+
+let execaMethod: ExecaMethod | null = null;
 
 loadEnvFile({ path: resolve(process.cwd(), ".env.local"), quiet: true });
 loadEnvFile({ path: resolve(process.cwd(), ".env.test"), quiet: true });
 
 async function main() {
   const externalBaseUrl = process.env.E2E_BASE_URL ?? process.env.PERFORMANCE_BASE_URL;
-  const baseUrl = externalBaseUrl ?? defaultBaseUrl;
+  const localServer = externalBaseUrl ? null : await startBenchmarkServer();
+  const baseUrl = externalBaseUrl ?? localServer?.baseUrl;
+
+  if (!baseUrl) {
+    throw new Error("Unable to resolve benchmark base URL");
+  }
+
   const cookie = await getCookieHeader();
-  const server = externalBaseUrl ? null : await startBenchmarkServer(baseUrl);
   let fixture: FixturePayload["data"] | null = null;
 
   try {
@@ -77,8 +93,8 @@ async function main() {
         console.warn(`Fixture cleanup failed: ${formatError(error)}`);
       });
     }
-    if (server) {
-      await stopBenchmarkServer(server);
+    if (localServer) {
+      await stopBenchmarkServer(localServer.server);
     }
   }
 }
@@ -188,9 +204,15 @@ async function translateScenario(
   assertNumber(payload.performance.timings.totalMs, `${input.scenario} total route ms`);
   assertNumber(payload.performance.prisma.queryCount, `${input.scenario} Prisma query count`);
   assertNumber(payload.performance.prisma.totalDurationMs, `${input.scenario} Prisma duration`);
+  assertObject(payload.performance.prisma.steps, `${input.scenario} Prisma steps`);
 
-  for (const step of ["authenticate", "sourceFetch", "cacheFetch", "historyCreate"]) {
+  for (const step of ["auth", "sourceFetch", "cacheRead", "historyCreate"]) {
     assertNumber(payload.performance.timings.steps[step], `${input.scenario} ${step} timing`);
+  }
+
+  for (const [step, metrics] of Object.entries(payload.performance.prisma.steps)) {
+    assertNumber(metrics.queries, `${input.scenario} ${step} Prisma query count`);
+    assertNumber(metrics.ms, `${input.scenario} ${step} Prisma duration`);
   }
 
   return {
@@ -239,42 +261,78 @@ function assertNumber(value: unknown, label: string) {
   }
 }
 
+function assertObject(value: unknown, label: string) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(`${label}: expected object, received ${String(value)}`);
+  }
+}
+
 async function getCookieHeader() {
   return getE2EAuthCookieHeader({
     envCookieNames: ["E2E_AUTH_COOKIE", "BENCHMARK_COOKIE"],
   });
 }
 
-async function startBenchmarkServer(baseUrl: string) {
-  const child = spawn(getNextCliPath(), ["dev", "--turbopack", "-p", getServerPort(baseUrl)], {
+async function startBenchmarkServer() {
+  const port = await getPort({
+    host: benchmarkHost,
+    port: portNumbers(preferredPortStart, preferredPortEnd),
+    reserve: true,
+  });
+  const baseUrl = `http://${benchmarkHost}:${port}`;
+  const execa = await getExeca();
+  const server = execa(getNextCliPath(), ["dev", "--turbopack", "-H", benchmarkHost, "-p", String(port)], {
     env: {
       ...process.env,
       PRISMA_QUERY_METRICS: "1",
       TRANSLATE_PERFORMANCE_FIXTURES: "1",
     },
-    stdio: "inherit",
+    stdin: "ignore",
+    stdout: "inherit",
+    stderr: "inherit",
+    reject: false,
   });
+  const serverExit = server.then((result) => {
+    throw new Error(`dev server exited early with code ${result.exitCode}`);
+  });
+  serverExit.catch(() => undefined);
 
-  await waitForServer(baseUrl, child);
-  return child;
+  console.log(`Starting benchmark server pid=${server.pid ?? "unknown"} url=${baseUrl}`);
+
+  try {
+    await Promise.race([
+      waitForServer(port),
+      serverExit,
+    ]);
+    await delay(1_000);
+    if (server.exitCode !== null) {
+      throw new Error(`dev server exited early with code ${server.exitCode}`);
+    }
+  } catch (error) {
+    await stopBenchmarkServer(server);
+    throw error;
+  }
+
+  return { baseUrl, server };
 }
 
-async function stopBenchmarkServer(child: ChildProcess) {
-  if (child.exitCode !== null) return;
+async function stopBenchmarkServer(server: BenchmarkServer) {
+  if (server.exitCode !== null) return;
 
-  await new Promise<void>((resolveStop) => {
-    const timeout = setTimeout(() => {
-      child.kill("SIGKILL");
-      resolveStop();
-    }, 5_000);
+  const pid = server.pid ?? "unknown";
+  console.log(`Stopping benchmark server pid=${pid}`);
+  server.kill("SIGTERM");
 
-    child.once("exit", () => {
-      clearTimeout(timeout);
-      resolveStop();
-    });
+  const stopped = await Promise.race([
+    server.then(() => true),
+    delay(5_000).then(() => false),
+  ]);
 
-    child.kill("SIGTERM");
-  });
+  if (!stopped && server.exitCode === null) {
+    console.warn(`Benchmark server pid=${pid} did not stop after SIGTERM; sending SIGKILL`);
+    server.kill("SIGKILL");
+    await server;
+  }
 }
 
 function getNextCliPath() {
@@ -286,28 +344,38 @@ function getNextCliPath() {
   );
 }
 
-function getServerPort(baseUrl: string) {
-  const parsed = new URL(baseUrl);
-  return parsed.port || (parsed.protocol === "https:" ? "443" : "80");
+function getWaitOnCliPath() {
+  return resolve(
+    process.cwd(),
+    "node_modules",
+    ".bin",
+    process.platform === "win32" ? "wait-on.cmd" : "wait-on",
+  );
 }
 
-async function waitForServer(baseUrl: string, child: ChildProcess) {
-  const deadline = Date.now() + 120_000;
+async function waitForServer(port: number) {
+  const execa = await getExeca();
+  await execa(
+    getWaitOnCliPath(),
+    [
+      "--timeout",
+      "120000",
+      "--interval",
+      "500",
+      `http-get://${benchmarkHost}:${port}/en/sign-in`,
+    ],
+    { stdio: "inherit" },
+  );
+}
 
-  while (Date.now() < deadline) {
-    if (child.exitCode !== null) {
-      throw new Error(`dev server exited early with code ${child.exitCode}`);
-    }
+async function getExeca() {
+  if (execaMethod) return execaMethod;
 
-    try {
-      const response = await fetch(baseUrl);
-      if (response.status < 500) return;
-    } catch {
-      await delay(500);
-    }
-  }
-
-  throw new Error(`Timed out waiting for ${baseUrl}`);
+  const loadExeca = new Function("specifier", "return import(specifier)") as (
+    specifier: string,
+  ) => Promise<typeof import("execa")>;
+  execaMethod = (await loadExeca("execa")).execa;
+  return execaMethod;
 }
 
 function countWords(value: string) {

@@ -272,6 +272,11 @@ describe("POST /api/translate", () => {
     const payload = await readJsonResponse<{
       performance: {
         timings: { totalMs: number; steps: Record<string, number> };
+        prisma: {
+          queryCount: number;
+          totalDurationMs: number;
+          steps: Record<string, { queries: number; ms: number }>;
+        };
       };
     } & Record<string, unknown>>(response);
 
@@ -351,6 +356,7 @@ describe("POST /api/translate", () => {
         prisma: {
           queryCount: expect.any(Number),
           totalDurationMs: expect.any(Number),
+          steps: expect.any(Object),
         },
       },
     });
@@ -359,11 +365,11 @@ describe("POST /api/translate", () => {
       expect.objectContaining({
         parseBody: expect.any(Number),
         validateRequest: expect.any(Number),
-        authenticate: expect.any(Number),
+        auth: expect.any(Number),
         sourceFetch: expect.any(Number),
-        cacheFetch: expect.any(Number),
+        cacheRead: expect.any(Number),
         dictionaryResolve: expect.any(Number),
-        cacheUpsert: expect.any(Number),
+        cacheWrite: expect.any(Number),
         historyCreate: expect.any(Number),
       }),
     );
