@@ -30,8 +30,18 @@ export async function processFileUpload(userId: string, file: File): Promise<Fil
   try {
     Sentry.addBreadcrumb({ category: 'upload', message: 'Uploading file to Supabase Storage', level: 'info' });
     const buffer = Buffer.from(await file.arrayBuffer());
+
+    // Derive safe MIME type from the validated and sanitized extension instead of trusting user's file.type
+    const extension = nameResult.sanitized?.split('.').pop()?.toLowerCase();
+    let safeType = 'application/octet-stream';
+    if (extension === 'pdf') {
+      safeType = 'application/pdf';
+    } else if (extension === 'txt') {
+      safeType = 'text/plain';
+    }
+
     const storageResult = await Sentry.startSpan({ name: 'storage-upload', op: 'function' }, async () => {
-      return uploadFile(filename, buffer, file.type);
+      return uploadFile(filename, buffer, safeType);
     });
 
     if (!storageResult) {
