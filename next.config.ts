@@ -4,20 +4,46 @@ import createNextIntlPlugin from "next-intl/plugin";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
-const cspHeader = `
-    default-src 'self';
-    script-src 'self' 'unsafe-eval' 'unsafe-inline';
-    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-    img-src 'self' blob: data: https://*.supabase.co https://*.supabase.in https://*.supabase.com;
-    font-src 'self' https://fonts.gstatic.com;
-    connect-src 'self' https://*.supabase.co https://*.supabase.in https://*.supabase.com wss://*.supabase.co wss://*.supabase.in wss://*.supabase.com https://*.sentry.io;
-    object-src 'none';
-    base-uri 'self';
-    form-action 'self';
-    frame-ancestors 'none';
-    frame-src 'self';
-    upgrade-insecure-requests;
-`.replace(/\n/g, '');
+// --- CSP Directives ---
+// Each directive on its own line for readability.
+// Joined with spaces (no newlines) for the final header value.
+
+const csp = {
+  defaultSrc: "default-src 'self'",
+  scriptSrc: "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
+  styleSrc: "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  imgSrc: "img-src 'self' blob: data: https://*.supabase.co https://*.supabase.in https://*.supabase.com",
+  fontSrc: "font-src 'self' https://fonts.gstatic.com",
+  connectSrc: [
+    "connect-src 'self'",
+    "https://*.supabase.co https://*.supabase.in https://*.supabase.com",
+    "wss://*.supabase.co wss://*.supabase.in wss://*.supabase.com",
+    "https://*.sentry.io",
+    "https://vitals.vercel-insights.com",
+  ].join(" "),
+  objectSrc: "object-src 'none'",
+  baseUri: "base-uri 'self'",
+  formAction: "form-action 'self'",
+  frameAncestors: "frame-ancestors 'none'",
+  frameSrc: "frame-src 'self'",
+  upgradeInsecure: "upgrade-insecure-requests",
+};
+
+const cspHeader = Object.values(csp).join("; ");
+
+// --- Security Headers ---
+
+const securityHeaders = [
+  { key: "Content-Security-Policy", value: cspHeader },
+  { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" },
+  { key: "X-Frame-Options", value: "SAMEORIGIN" },
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+  { key: "X-DNS-Prefetch-Control", value: "off" },
+];
+
+// --- Next.js Config ---
 
 const nextConfig: NextConfig = {
   distDir: process.env.NEXT_DIST_DIR ?? ".next",
@@ -29,54 +55,21 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/(.*)",
-        headers: [
-          {
-            key: "Content-Security-Policy",
-            value: cspHeader,
-          },
-          {
-            key: "Strict-Transport-Security",
-            value: "max-age=31536000; includeSubDomains",
-          },
-          {
-            key: "X-Frame-Options",
-            value: "SAMEORIGIN",
-          },
-          {
-            key: "X-Content-Type-Options",
-            value: "nosniff",
-          },
-          {
-            key: "Referrer-Policy",
-            value: "strict-origin-when-cross-origin",
-          },
-          {
-            key: "Permissions-Policy",
-            value: "camera=(), microphone=(), geolocation=()",
-          },
-          {
-            key: "X-DNS-Prefetch-Control",
-            value: "off",
-          },
-        ],
+        headers: securityHeaders,
       },
     ];
   },
 };
 
+// --- Sentry Wrapper ---
+
 export default withSentryConfig(withNextIntl(nextConfig), {
   org: process.env.SENTRY_ORG || "pham-dac-luc",
-
   project: process.env.SENTRY_PROJECT || "javascript-nextjs",
-
   authToken: process.env.SENTRY_AUTH_TOKEN,
-
   silent: !process.env.CI,
-
   widenClientFileUpload: true,
-
   tunnelRoute: "/monitoring",
-
   webpack: {
     automaticVercelMonitors: true,
     treeshake: {
