@@ -6,7 +6,7 @@ Use this rule whenever adding, changing, or running Playwright tests.
 
 - Keep public tests independent of authentication. Public specs must run under the `public` project and must not require `.auth/user.json`, `.env.test`, or E2E credentials.
 - Put authenticated browser coverage in `authenticated-*.spec.ts`. Authenticated specs must run under the `authenticated` project and reuse `.auth/user.json` from the `setup` project.
-- Keep UI sign-in steps only in `e2e/auth.setup.ts`. Do not duplicate sign-in form automation in feature specs or screenshot specs.
+- Keep UI sign-in steps only in `tests/e2e/auth.setup.ts`. Do not duplicate sign-in form automation in feature specs or screenshot specs.
 - Use stable user-visible locators for readiness, such as headings, buttons, landmarks, and route-specific content. Avoid relying only on `networkidle`.
 - Generated screenshots must use `playwright.screenshot.config.ts`, authenticated storage state, and output under `generated/screenshot/`.
 - Prefer `PAGE=` and `NAME=` for screenshot command inputs. Do not use `PATH=` because it conflicts with shell path semantics.

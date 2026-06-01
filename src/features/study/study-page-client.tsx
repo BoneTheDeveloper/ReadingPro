@@ -145,6 +145,7 @@ export function StudyPageClient({
         sourceLanguage: "en",
         targetLanguage: "vi",
         mode: "quick",
+        clientMetrics: selection.clientMetrics,
       }),
     })
       .then(async (r) => {

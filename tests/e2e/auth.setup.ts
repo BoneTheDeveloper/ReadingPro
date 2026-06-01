@@ -1,8 +1,7 @@
 import { test as setup } from '@playwright/test'
 import { mkdir } from 'node:fs/promises'
 import { dirname } from 'node:path'
-
-const authFile = '.auth/user.json'
+import { E2E_AUTH_FILE } from './helpers/auth-state'
 
 setup('authenticate', async ({ page }) => {
   const email = process.env.E2E_TEST_USER_EMAIL
@@ -14,7 +13,7 @@ setup('authenticate', async ({ page }) => {
     )
   }
 
-  await mkdir(dirname(authFile), { recursive: true })
+  await mkdir(dirname(E2E_AUTH_FILE), { recursive: true })
 
   await page.goto('/en/sign-in')
 
@@ -25,5 +24,5 @@ setup('authenticate', async ({ page }) => {
   // Wait for redirect away from sign-in page
   await page.waitForURL((url) => !url.pathname.includes('sign-in'), { timeout: 15000 })
 
-  await page.context().storageState({ path: authFile })
+  await page.context().storageState({ path: E2E_AUTH_FILE })
 })

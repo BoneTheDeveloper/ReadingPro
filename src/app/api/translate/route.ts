@@ -11,10 +11,20 @@ import {
   type QuickTranslation,
 } from "@/lib/ai/translator";
 import { createRequestLogContext, createRequestLogger } from "@/lib/core/logger";
+import {
+  getPrismaQueryMetrics,
+  runWithPrismaQueryMetrics,
+} from "@/lib/observability/prisma-query-metrics";
 import { resolveQuickDictionaryTranslation } from "@/lib/dictionary/resolve-quick-dictionary-translation";
 import { getQuickSelectionScope } from "@/lib/translation/quick-selection-scope";
 import { translateWithNonAiProvider } from "@/lib/translation/non-ai-machine-translation-provider";
 import { MAX_TRANSLATE_CONTEXT_LENGTH, MAX_TRANSLATE_TEXT_LENGTH } from "@/lib/translation/translation-limits";
+import {
+  createTranslatePerformanceTracker,
+  getTranslateResolutionSource,
+  shouldIncludeTranslatePerformanceMetrics,
+  type TranslatePerformanceSnapshot,
+} from "@/lib/translation/translate-performance";
 import {
   buildTranslationCacheKey,
   createTranslationHistory,
@@ -30,7 +40,12 @@ const translateRequestSchema = z.object({
   sourceLanguage: z.literal("en"),
   targetLanguage: z.literal("vi"),
   mode: z.enum(["quick", "detailed"]),
+  clientMetrics: z.object({
+    wordsBeforeSelected: z.number().int().nonnegative().optional(),
+  }).optional(),
 });
+
+type TranslateRequestInput = z.infer<typeof translateRequestSchema>;
 
 function toJsonValue(value: unknown): Prisma.InputJsonValue {
   return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
@@ -51,24 +66,40 @@ function asCacheProvider<T extends QuickTranslation | DetailedTranslation>(value
 }
 
 export async function POST(request: NextRequest) {
+  const includePerformance = shouldIncludeTranslatePerformanceMetrics(request.headers);
+
+  if (includePerformance) {
+    return runWithPrismaQueryMetrics(() => handleTranslatePost(request, true));
+  }
+
+  return handleTranslatePost(request, false);
+}
+
+async function handleTranslatePost(request: NextRequest, includePerformance: boolean) {
+  const routeStartedAt = performance.now();
   let requestLog = createRequestLogger(
     "api:translate",
     createRequestLogContext(request, "POST", "/api/translate"),
   );
+  const initialSteps: Record<string, number> = {};
 
   try {
     let body: unknown;
     try {
+      const parseBodyStartedAt = performance.now();
       body = await Sentry.startSpan(
         { name: "api:translate-parse-body", op: "http.server" },
         () => request.json(),
       );
+      initialSteps.parseBody = roundMetric(performance.now() - parseBodyStartedAt);
     } catch {
       requestLog.warn("Invalid JSON payload received for translation");
       return NextResponse.json({ error: "Invalid JSON payload." }, { status: 400 });
     }
 
+    const validateStartedAt = performance.now();
     const parsed = translateRequestSchema.safeParse(body);
+    initialSteps.validateRequest = roundMetric(performance.now() - validateStartedAt);
     if (!parsed.success) {
       requestLog.warn(
         { context: { issues: parsed.error.issues.map((issue) => issue.path.join(".")) } },
@@ -78,23 +109,32 @@ export async function POST(request: NextRequest) {
     }
 
     const input = parsed.data;
+    const performanceTracker = includePerformance
+      ? createTranslatePerformanceTracker({
+          selectedText: input.text,
+          context: input.context,
+          clientMetrics: input.clientMetrics,
+          startedAt: routeStartedAt,
+          initialSteps,
+        })
+      : null;
     requestLog = requestLog.child({
       sourceId: input.sourceId,
       mode: input.mode,
       targetLanguage: input.targetLanguage,
     });
 
-    const user = await Sentry.startSpan(
+    const user = await measureTranslateStep(performanceTracker, "authenticate", () => Sentry.startSpan(
       {
         name: "api:translate-authenticate",
         op: "auth",
         attributes: { "translation.source_id": input.sourceId },
       },
       () => getAuthenticatedUser(),
-    );
+    ));
     requestLog = requestLog.child({ userId: user.id });
 
-    const source = await Sentry.startSpan(
+    const source = await measureTranslateStep(performanceTracker, "sourceFetch", () => Sentry.startSpan(
       {
         name: "db:translate-source-fetch",
         op: "db",
@@ -106,7 +146,7 @@ export async function POST(request: NextRequest) {
         },
       },
       () => getOwnedTranslationSource(user.id, input.sourceId),
-    );
+    ));
 
     if (!source) {
       requestLog.warn("Translation source not found");
@@ -122,7 +162,7 @@ export async function POST(request: NextRequest) {
       mode: input.mode,
     });
 
-    const cached = await Sentry.startSpan(
+    const cached = await measureTranslateStep(performanceTracker, "cacheFetch", () => Sentry.startSpan(
       {
         name: "db:translate-cache-fetch",
         op: "db",
@@ -135,7 +175,7 @@ export async function POST(request: NextRequest) {
         },
       },
       () => getTranslationCache(cacheKey),
-    );
+    ));
 
     if (cached) {
       const cachedResult = parseCachedTranslation(input.mode, cached.response);
@@ -153,15 +193,19 @@ export async function POST(request: NextRequest) {
           "Translation cache hit",
         );
 
-        await persistTranslationResult(user.id, input, result);
-        return NextResponse.json({ success: true, data: result });
+        await persistTranslationResult(user.id, input, result, performanceTracker);
+        return createTranslateSuccessResponse({
+          data: result,
+          performanceTracker,
+          resolutionSource: "cache",
+        });
       }
     }
 
     const result =
       input.mode === "quick"
-        ? await resolveQuickTranslation(input, user.id, requestLog)
-        : await Sentry.startSpan(
+        ? await resolveQuickTranslation(input, user.id, requestLog, performanceTracker)
+        : await measureTranslateStep(performanceTracker, "aiGenerate", () => Sentry.startSpan(
             {
               name: "ai:translate-generate",
               op: "ai",
@@ -174,9 +218,9 @@ export async function POST(request: NextRequest) {
               },
             },
             () => generateDetailedAiTranslation(input),
-          );
+          ));
 
-    await Sentry.startSpan(
+    await measureTranslateStep(performanceTracker, "cacheUpsert", () => Sentry.startSpan(
       {
         name: "db:translate-cache-upsert",
         op: "db",
@@ -200,8 +244,8 @@ export async function POST(request: NextRequest) {
           provider: result.provider,
           response: toJsonValue(result),
         }),
-    );
-    await persistTranslationResult(user.id, input, result);
+    ));
+    await persistTranslationResult(user.id, input, result, performanceTracker);
 
     requestLog.info(
       {
@@ -215,7 +259,14 @@ export async function POST(request: NextRequest) {
       "Translation request completed",
     );
 
-    return NextResponse.json({ success: true, data: result });
+    return createTranslateSuccessResponse({
+      data: result,
+      performanceTracker,
+      resolutionSource: getTranslateResolutionSource({
+        provider: result.provider,
+        selectedText: input.text,
+      }),
+    });
   } catch (error) {
     if (isAuthenticationError(error)) {
       requestLog.warn("Unauthenticated translation request rejected");
@@ -231,14 +282,15 @@ export async function POST(request: NextRequest) {
 }
 
 async function resolveQuickTranslation(
-  input: z.infer<typeof translateRequestSchema>,
+  input: TranslateRequestInput,
   userId: string,
   requestLog: ReturnType<typeof createRequestLogger>,
+  performanceTracker: ReturnType<typeof createTranslatePerformanceTracker> | null,
 ): Promise<QuickTranslation> {
   const scope = getQuickSelectionScope(input.text);
 
   if (scope === "dictionary") {
-    const result = await Sentry.startSpan(
+    const result = await measureTranslateStep(performanceTracker, "dictionaryResolve", () => Sentry.startSpan(
       {
         name: "dictionary:quick-resolve",
         op: "function",
@@ -257,7 +309,7 @@ async function resolveQuickTranslation(
           sourceLanguage: input.sourceLanguage,
           targetLanguage: input.targetLanguage,
         }),
-    );
+    ));
 
     requestLog.info(
       {
@@ -274,7 +326,7 @@ async function resolveQuickTranslation(
   }
 
   // Machine scope: non-AI provider for sentence/paragraph
-  const providerResult = await Sentry.startSpan(
+  const providerResult = await measureTranslateStep(performanceTracker, "nonAiProvider", () => Sentry.startSpan(
     {
       name: "translation:non-ai-provider",
       op: "function",
@@ -291,7 +343,7 @@ async function resolveQuickTranslation(
         sourceLanguage: input.sourceLanguage,
         targetLanguage: input.targetLanguage,
       }),
-  );
+  ));
 
   requestLog.info(
     {
@@ -313,10 +365,11 @@ async function resolveQuickTranslation(
 
 async function persistTranslationResult(
   userId: string,
-  input: z.infer<typeof translateRequestSchema>,
+  input: TranslateRequestInput,
   result: QuickTranslation | DetailedTranslation,
+  performanceTracker: ReturnType<typeof createTranslatePerformanceTracker> | null,
 ) {
-  await Sentry.startSpan(
+  await measureTranslateStep(performanceTracker, "historyCreate", () => Sentry.startSpan(
     {
       name: "db:translate-history-create",
       op: "db",
@@ -341,5 +394,37 @@ async function persistTranslationResult(
         translation: result.translation,
         response: toJsonValue(result),
       }),
-  );
+  ));
+}
+
+function createTranslateSuccessResponse(input: {
+  data: QuickTranslation | DetailedTranslation;
+  performanceTracker: ReturnType<typeof createTranslatePerformanceTracker> | null;
+  resolutionSource: TranslatePerformanceSnapshot["resolutionSource"];
+}) {
+  if (!input.performanceTracker) {
+    return NextResponse.json({ success: true, data: input.data });
+  }
+
+  return NextResponse.json({
+    success: true,
+    data: input.data,
+    performance: input.performanceTracker.snapshot({
+      resolutionSource: input.resolutionSource,
+      prisma: getPrismaQueryMetrics() ?? { queryCount: 0, totalDurationMs: 0 },
+    }),
+  });
+}
+
+function measureTranslateStep<T>(
+  performanceTracker: ReturnType<typeof createTranslatePerformanceTracker> | null,
+  step: string,
+  callback: () => Promise<T>,
+) {
+  if (!performanceTracker) return callback();
+  return performanceTracker.measure(step, callback);
+}
+
+function roundMetric(value: number) {
+  return Math.round(value * 100) / 100;
 }

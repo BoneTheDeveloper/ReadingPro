@@ -269,7 +269,11 @@ describe("POST /api/translate", () => {
     const response = await translateRoute(
       createJsonRequest(translationBody({ mode: "detailed", text: "algorithmic bias", context: TEST_CONTEXT[0] })),
     );
-    const payload = await readJsonResponse(response);
+    const payload = await readJsonResponse<{
+      performance: {
+        timings: { totalMs: number; steps: Record<string, number> };
+      };
+    } & Record<string, unknown>>(response);
 
     expect(response.status).toBe(200);
     expect(payload).toMatchObject({
@@ -315,6 +319,58 @@ describe("POST /api/translate", () => {
     const serializedSpanMetadata = JSON.stringify(spanMetadata);
     expect(serializedSpanMetadata).not.toContain("algorithmic bias");
     expect(serializedSpanMetadata).not.toContain(TEST_CONTEXT[0]);
+  });
+
+  it("returns test-only performance metrics when the translate metrics header is present", async () => {
+    const response = await translateRoute(createJsonRequest(
+      translationBody({
+        text: "algorithmic bias",
+        context: TEST_CONTEXT[0],
+        clientMetrics: { wordsBeforeSelected: 3 },
+      }),
+      { headers: { "x-translate-perf-metrics": "1" } },
+    ));
+    const payload = await readJsonResponse<{
+      performance: {
+        timings: { totalMs: number; steps: Record<string, number> };
+      };
+    } & Record<string, unknown>>(response);
+
+    expect(response.status).toBe(200);
+    expect(payload).toMatchObject({
+      success: true,
+      data: {
+        translation: "thiên lệch thuật toán",
+        provider: "dictionary",
+      },
+      performance: {
+        selectedTextWordCount: 2,
+        contextWordCount: 9,
+        wordsBeforeSelected: 3,
+        resolutionSource: "phrase",
+        prisma: {
+          queryCount: expect.any(Number),
+          totalDurationMs: expect.any(Number),
+        },
+      },
+    });
+    expect(payload.performance.timings.totalMs).toEqual(expect.any(Number));
+    expect(payload.performance.timings.steps).toEqual(
+      expect.objectContaining({
+        parseBody: expect.any(Number),
+        validateRequest: expect.any(Number),
+        authenticate: expect.any(Number),
+        sourceFetch: expect.any(Number),
+        cacheFetch: expect.any(Number),
+        dictionaryResolve: expect.any(Number),
+        cacheUpsert: expect.any(Number),
+        historyCreate: expect.any(Number),
+      }),
+    );
+
+    const serializedPayload = JSON.stringify(payload.performance);
+    expect(serializedPayload).not.toContain("algorithmic bias");
+    expect(serializedPayload).not.toContain(TEST_CONTEXT[0]);
   });
 
   it("routes sentence-length quick translation to non-AI provider without calling AI", async () => {

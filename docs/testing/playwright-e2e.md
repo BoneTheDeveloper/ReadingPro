@@ -2,6 +2,8 @@
 
 Playwright uses one pre-created Supabase Auth user for authenticated browser tests. The test run signs in through the UI once, saves `.auth/user.json`, and reuses that storage state for protected routes and generated screenshots.
 
+E2E specs and helpers live under `tests/e2e/`. Performance test scenarios should live under `tests/performance/`.
+
 ## Local Environment
 
 The app reads Supabase and database settings from `.env.local`. Playwright additionally loads `.env.test` for the E2E user credentials:
