@@ -33,10 +33,12 @@ export async function findEntryByAliasTerm(
   sourceLanguage: string,
 ) {
   const alias = await db.dictionaryAlias.findFirst({
-    where: { normalizedAlias },
+    where: {
+      normalizedAlias,
+      entry: { sourceLanguage },
+    },
     include: {
       entry: {
-        where: { sourceLanguage },
         include: {
           senses: {
             orderBy: { usageRank: "asc" },

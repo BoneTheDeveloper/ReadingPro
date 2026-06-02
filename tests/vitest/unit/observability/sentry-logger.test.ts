@@ -183,19 +183,60 @@ describe("Sentry and logger configuration", () => {
     expect(developmentError.stack).toEqual(expect.any(String));
   });
 
+  it("compacts Prisma validation errors without a request code", async () => {
+    class PrismaClientValidationError extends Error {}
+
+    const prismaMessage = [
+      "",
+      "Invalid `db.dictionaryAlias.findFirst()` invocation in",
+      "/home/luc/Project/english-reading-training-app/.next-performance/dev/server/chunks/example.js:1272:172",
+      "",
+      "  1269     });",
+      "  1270 }",
+      "  1271 async function findEntryByAliasTerm(normalizedAlias, sourceLanguage) {",
+      "-> 1272     const alias = await db.dictionaryAlias.findFirst({",
+      "             where: {",
+      "               normalizedAlias: \"perfsuggest mpw4guyu\"",
+      "             },",
+      "             include: {",
+      "               entry: {",
+      "                 where: {",
+      "                 ~~~~~",
+      "                   sourceLanguage: \"en\"",
+      "                 },",
+      "Unknown argument `where`. Available options are marked with ?.",
+    ].join("\n");
+    const prismaError = Object.assign(new PrismaClientValidationError(prismaMessage), {
+      clientVersion: "7.8.0",
+    });
+
+    vi.resetModules();
+    vi.doUnmock("@/lib/core/logger");
+    vi.stubEnv("NODE_ENV", "production");
+
+    const { compactError, serializeError, serializeErrorForLog } = await import("@/lib/core/logger");
+    const compacted = compactError(prismaError) as Record<string, unknown>;
+
+    expect(compacted.type).toBe("PrismaClientValidationError");
+    expect(compacted.message).toBe("Unknown argument `where`. Available options are marked with ?.");
+    expect(compacted.stack).toBeUndefined();
+    expect(serializeError(prismaError)).toEqual(compacted);
+    expect(serializeErrorForLog(prismaError)).toEqual(compacted);
+  });
+
   it("keeps non-Prisma error messages unchanged", async () => {
     vi.resetModules();
     vi.doUnmock("@/lib/core/logger");
     vi.stubEnv("NODE_ENV", "production");
 
-    const { serializeErrorForLog } = await import("@/lib/core/logger");
+    const { serializeError } = await import("@/lib/core/logger");
     const message = [
       "Invalid `input` value",
       "The table `not_a_prisma_hint` is part of user content",
       "Keep the original message intact.",
     ].join("\n");
 
-    expect(serializeErrorForLog(new Error(message)).message).toBe(message);
+    expect(serializeError(new Error(message)).message).toBe(message);
   });
 
   it("Sentry example route logs and throws its custom error", async () => {

@@ -118,24 +118,32 @@ export async function runDictionaryFlowBenchmark(
 ) {
   const samplesByScenario = new Map<string, PerformanceScenarioReport[]>();
 
+  console.log(`Running dictionary performance suite with ${options.samples} sample(s) per scenario...`);
+
   for (let sampleIndex = 0; sampleIndex < options.samples; sampleIndex += 1) {
     let fixture: FixturePayload["data"] | null = null;
+    const sampleLabel = `sample ${sampleIndex + 1}/${options.samples}`;
 
     try {
+      console.log(`Dictionary ${sampleLabel}: creating fixture...`);
       fixture = await createFixture(context);
+      console.log(`Dictionary ${sampleLabel}: fixture ready (${fixture.headword}, alias ${fixture.alias})`);
 
-      console.log(`Running dictionary warm-up request for sample ${sampleIndex + 1}/${options.samples} (discarded)...`);
+      console.log(`Dictionary ${sampleLabel}: running warm-up request (discarded)...`);
       await getJson(`${context.baseUrl}/api/dictionary/suggest?q=${encodeURIComponent(fixture.headwordPrefix)}&sourceLanguage=en&targetLanguage=vi`, context.cookie);
+      console.log(`Dictionary ${sampleLabel}: warm-up complete`);
 
-      const reports = await runScenarios(context, fixture);
+      const reports = await runScenarios(context, fixture, sampleLabel);
       for (const report of reports) {
         addScenarioSample(samplesByScenario, report);
       }
     } finally {
       if (fixture) {
+        console.log(`Dictionary ${sampleLabel}: cleaning fixture...`);
         await cleanupFixture(context, fixture.cleanup).catch((error: unknown) => {
           console.warn(`Dictionary fixture cleanup failed: ${error instanceof Error ? error.message : String(error)}`);
         });
+        console.log(`Dictionary ${sampleLabel}: cleanup complete`);
       }
     }
   }
@@ -150,57 +158,87 @@ export async function runDictionaryFlowBenchmark(
 async function runScenarios(
   context: BenchmarkContext,
   fixture: FixturePayload["data"],
+  sampleLabel: string,
 ) {
   const reports: PerformanceScenarioReport[] = [];
 
-  reports.push(await suggestScenario(context, {
-    scenario: "suggest-short-query",
-    query: "p",
-    expectedHeadword: null,
-  }));
-  reports.push(await suggestScenario(context, {
-    scenario: "suggest-headword-prefix",
-    query: fixture.headwordPrefix,
-    expectedHeadword: fixture.headword,
-  }));
-  reports.push(await suggestScenario(context, {
-    scenario: "suggest-alias-prefix",
-    query: fixture.aliasPrefix,
-    expectedHeadword: fixture.aliasHeadword,
-  }));
-  reports.push(await searchScenario(context, {
-    scenario: "search-exact-headword",
-    query: fixture.headword,
-    expectedHeadword: fixture.headword,
-  }));
-  reports.push(await detailScenario(context, {
-    scenario: "lookup-exact-headword",
-    phase: "lookup",
-    path: "/api/dictionary/lookup",
-    query: fixture.headword,
-    expectedHeadword: fixture.headword,
-  }));
-  reports.push(await detailScenario(context, {
-    scenario: "lookup-exact-alias",
-    phase: "lookup",
-    path: "/api/dictionary/lookup",
-    query: fixture.alias,
-    expectedHeadword: fixture.aliasHeadword,
-  }));
-  reports.push(await detailScenario(context, {
-    scenario: "lookup-miss",
-    phase: "lookup",
-    path: "/api/dictionary/lookup",
-    query: fixture.miss,
-    expectedHeadword: null,
-  }));
-  reports.push(await entryDetailScenario(context, {
-    scenario: "entry-detail-by-id",
-    entryId: fixture.headwordEntryId,
-    expectedHeadword: fixture.headword,
-  }));
+  reports.push(await runDictionaryScenario(sampleLabel, "suggest-short-query", () =>
+    suggestScenario(context, {
+      scenario: "suggest-short-query",
+      query: "p",
+      expectedHeadword: null,
+    }),
+  ));
+  reports.push(await runDictionaryScenario(sampleLabel, "suggest-headword-prefix", () =>
+    suggestScenario(context, {
+      scenario: "suggest-headword-prefix",
+      query: fixture.headwordPrefix,
+      expectedHeadword: fixture.headword,
+    }),
+  ));
+  reports.push(await runDictionaryScenario(sampleLabel, "suggest-alias-prefix", () =>
+    suggestScenario(context, {
+      scenario: "suggest-alias-prefix",
+      query: fixture.aliasPrefix,
+      expectedHeadword: fixture.aliasHeadword,
+    }),
+  ));
+  reports.push(await runDictionaryScenario(sampleLabel, "search-exact-headword", () =>
+    searchScenario(context, {
+      scenario: "search-exact-headword",
+      query: fixture.headword,
+      expectedHeadword: fixture.headword,
+    }),
+  ));
+  reports.push(await runDictionaryScenario(sampleLabel, "lookup-exact-headword", () =>
+    detailScenario(context, {
+      scenario: "lookup-exact-headword",
+      phase: "lookup",
+      path: "/api/dictionary/lookup",
+      query: fixture.headword,
+      expectedHeadword: fixture.headword,
+    }),
+  ));
+  reports.push(await runDictionaryScenario(sampleLabel, "lookup-exact-alias", () =>
+    detailScenario(context, {
+      scenario: "lookup-exact-alias",
+      phase: "lookup",
+      path: "/api/dictionary/lookup",
+      query: fixture.alias,
+      expectedHeadword: fixture.aliasHeadword,
+    }),
+  ));
+  reports.push(await runDictionaryScenario(sampleLabel, "lookup-miss", () =>
+    detailScenario(context, {
+      scenario: "lookup-miss",
+      phase: "lookup",
+      path: "/api/dictionary/lookup",
+      query: fixture.miss,
+      expectedHeadword: null,
+    }),
+  ));
+  reports.push(await runDictionaryScenario(sampleLabel, "entry-detail-by-id", () =>
+    entryDetailScenario(context, {
+      scenario: "entry-detail-by-id",
+      entryId: fixture.headwordEntryId,
+      expectedHeadword: fixture.headword,
+    }),
+  ));
 
   return reports;
+}
+
+async function runDictionaryScenario(
+  sampleLabel: string,
+  scenario: string,
+  callback: () => Promise<PerformanceScenarioReport>,
+) {
+  console.log(`Dictionary ${sampleLabel}: ${scenario} started...`);
+  const report = await callback();
+  console.log(
+    `Dictionary ${sampleLabel}: ${scenario} passed (${report.roundTripMs}ms, ${report.performance.prisma.queryCount} Prisma queries)`,
+  );
+  return report;
 }
 
 async function createFixture(context: BenchmarkContext) {

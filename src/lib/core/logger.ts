@@ -11,6 +11,8 @@ type LogLevel = "trace" | "debug" | "info" | "warn" | "error" | "fatal";
 
 type LoggableError = {
   message?: unknown;
+  name?: unknown;
+  type?: unknown;
   code?: unknown;
   statusCode?: unknown;
   stack?: unknown;
@@ -43,25 +45,36 @@ function compactErrorMessage(message: string) {
 
   return (
     lines.find((line) => line.startsWith("The table `")) ??
+    lines.find((line) => line.startsWith("Unknown argument `")) ??
+    lines.find((line) => line.startsWith("Unknown field `")) ??
+    lines.find((line) => line.startsWith("Missing required argument")) ??
+    lines.find((line) => line.startsWith("Argument `")) ??
+    lines.find((line) => line.startsWith("Invalid value")) ??
     lines.find((line) => line.startsWith("Invalid `")) ??
     lines.at(-1) ??
     message
   );
 }
 
-function isPrismaError(error: LoggableError) {
+function isPrismaError(error: LoggableError, serialized: LoggableError) {
   const code = toStringValue(error.code);
-  return Boolean(code?.startsWith("P") && error.clientVersion);
+  const name = toStringValue(error.name);
+  const type = toStringValue(serialized.type);
+  return Boolean(
+    (code?.startsWith("P") && error.clientVersion) ||
+      name?.startsWith("PrismaClient") ||
+      type?.startsWith("PrismaClient"),
+  );
 }
 
-export function serializeErrorForLog(error: unknown) {
+export function compactError(error: unknown) {
   const serialized = pino.stdSerializers.err(error as Error);
   const loggable = error as LoggableError;
   const rawMessage =
     toStringValue(serialized.message) ??
     toStringValue(loggable?.message) ??
     String(error);
-  const prismaError = isPrismaError(loggable);
+  const prismaError = isPrismaError(loggable, serialized);
 
   return removeUndefined({
     ...serialized,
@@ -73,12 +86,18 @@ export function serializeErrorForLog(error: unknown) {
   });
 }
 
+export function serializeError(error: unknown) {
+  return compactError(error);
+}
+
+export const serializeErrorForLog = serializeError;
+
 const logger = pino({
   base: undefined,
   level: process.env.LOG_LEVEL ?? (isDev ? "debug" : "info"),
   serializers: {
-    err: serializeErrorForLog,
-    error: serializeErrorForLog,
+    err: serializeError,
+    error: serializeError,
   },
   ...(isDev
     ? {

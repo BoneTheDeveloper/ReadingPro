@@ -82,6 +82,18 @@ export interface BenchmarkContextOptions {
   reuseServer?: boolean;
 }
 
+interface BenchmarkServerReadinessOptions {
+  reuseServer?: boolean;
+  isOwnedServerRunning?: () => boolean;
+}
+
+interface OwnedBenchmarkServer {
+  baseUrl: string;
+  isRunning: () => boolean;
+  stop: () => Promise<void>;
+  output: string[];
+}
+
 const defaultBenchmarkBaseUrl = "http://localhost:3000";
 const ownedServerDistDir = ".next-performance";
 
@@ -93,6 +105,7 @@ export async function withBenchmarkContext(
   callback: (context: BenchmarkContext) => Promise<void>,
 ) {
   const server = options.reuseServer ? null : await startOwnedBenchmarkServer();
+  const removeSignalCleanup = installOwnedServerSignalCleanup(server);
   const baseUrl = normalizeBaseUrl(
     server?.baseUrl
       ?? options.baseUrl
@@ -103,8 +116,15 @@ export async function withBenchmarkContext(
 
   try {
     console.log(`Using performance base URL: ${baseUrl}`);
-    await assertBenchmarkServerReady(baseUrl, options.reuseServer);
+    console.log(`Waiting for performance server readiness at ${baseUrl}...`);
+    await assertBenchmarkServerReady(baseUrl, {
+      reuseServer: options.reuseServer,
+      isOwnedServerRunning: server?.isRunning,
+    });
+    console.log("Performance server is ready.");
+    console.log("Resolving benchmark auth cookie...");
     const cookie = await getCookieHeader();
+    console.log("Benchmark auth cookie ready.");
     await callback({ baseUrl, cookie });
   } catch (error) {
     if (server?.output.length) {
@@ -113,6 +133,7 @@ export async function withBenchmarkContext(
     }
     throw error;
   } finally {
+    removeSignalCleanup();
     await server?.stop();
   }
 }
@@ -414,10 +435,44 @@ async function startOwnedBenchmarkServer() {
 
   return {
     baseUrl,
+    isRunning: () => server.exitCode === null && server.signalCode === null,
     stop: async () => {
       await stopServer(server);
     },
     output,
+  };
+}
+
+function installOwnedServerSignalCleanup(server: OwnedBenchmarkServer | null) {
+  if (!server) {
+    return () => {};
+  }
+
+  let stopping = false;
+
+  const stopAndExit = (signal: NodeJS.Signals) => {
+    if (stopping) return;
+    stopping = true;
+
+    console.log(`\nReceived ${signal}; stopping owned performance server...`);
+    server.stop()
+      .catch((error: unknown) => {
+        console.error(`Failed to stop owned performance server: ${formatError(error)}`);
+      })
+      .finally(() => {
+        process.exit(signal === "SIGINT" ? 130 : 143);
+      });
+  };
+
+  const onSigint = () => stopAndExit("SIGINT");
+  const onSigterm = () => stopAndExit("SIGTERM");
+
+  process.once("SIGINT", onSigint);
+  process.once("SIGTERM", onSigterm);
+
+  return () => {
+    process.off("SIGINT", onSigint);
+    process.off("SIGTERM", onSigterm);
   };
 }
 
@@ -482,13 +537,21 @@ function waitForServerExit(
   });
 }
 
-async function assertBenchmarkServerReady(baseUrl: string, reuseServer = false) {
+async function assertBenchmarkServerReady(
+  baseUrl: string,
+  options: BenchmarkServerReadinessOptions = {},
+) {
   const healthUrl = `${baseUrl}/en/sign-in`;
-  const timeoutMs = reuseServer ? 5_000 : 120_000;
+  const timeoutMs = options.reuseServer ? 5_000 : 120_000;
   const startedAt = Date.now();
+  let nextProgressAt = startedAt + 5_000;
   let lastReason = "not checked";
 
   while (Date.now() - startedAt < timeoutMs) {
+    if (options.isOwnedServerRunning && !options.isOwnedServerRunning()) {
+      throw new Error(`Owned performance server exited before readiness. Last health check: ${lastReason}`);
+    }
+
     try {
       const response = await fetch(healthUrl, {
         method: "GET",
@@ -503,10 +566,17 @@ async function assertBenchmarkServerReady(baseUrl: string, reuseServer = false) 
       lastReason = error instanceof Error ? error.message : String(error);
     }
 
+    const now = Date.now();
+    if (now >= nextProgressAt) {
+      const elapsedSeconds = Math.round((now - startedAt) / 1_000);
+      console.log(`Still waiting for performance server after ${elapsedSeconds}s (${lastReason})...`);
+      nextProgressAt = now + 5_000;
+    }
+
     await new Promise((resolveWait) => setTimeout(resolveWait, 500));
   }
 
-  const reuseHint = reuseServer
+  const reuseHint = options.reuseServer
     ? "Start it first with: PRISMA_QUERY_METRICS=1 TRANSLATE_PERFORMANCE_FIXTURES=1 DICTIONARY_PERFORMANCE_FIXTURES=1 pnpm dev."
     : `The owned server did not become ready. It uses NEXT_DIST_DIR=${ownedServerDistDir} to avoid the normal .next dev lock.`;
 

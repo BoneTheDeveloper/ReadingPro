@@ -46,13 +46,20 @@ export async function resolveDictionarySearch(
   const normalized = normalizeDictionaryTerm(query);
   if (normalized.length < 2) return [];
 
-  const [exactHeadword, exactAlias, prefixHeadword, prefixAlias, containsResults] = await Promise.all([
+  const [exactHeadword, exactAlias, prefixHeadword, prefixAlias] = await Promise.all([
     findEntryByHeadword(normalized, options.sourceLanguage),
     findEntryByAliasTerm(normalized, options.sourceLanguage),
     findEntriesByHeadwordPrefix(query, options.sourceLanguage),
     findEntriesByAliasPrefix(query, options.sourceLanguage),
-    resolveContains(normalized, options.sourceLanguage),
   ]);
+
+  const knownIds = new Set<string>();
+  if (exactHeadword) knownIds.add(exactHeadword.id);
+  if (exactAlias) knownIds.add(exactAlias.id);
+  for (const e of prefixHeadword) knownIds.add(e.id);
+  for (const e of prefixAlias) knownIds.add(e.id);
+
+  const containsResults = await findEntriesContaining(normalized, options.sourceLanguage, 8, [...knownIds]);
 
   const candidates = new Map<string, { entry: CandidateEntry; matchType: string; matchedText: string | null }>();
 
@@ -98,11 +105,6 @@ export async function resolveDictionarySearch(
 
   results.sort((a, b) => (MATCH_RANK[a.matchType] ?? 4) - (MATCH_RANK[b.matchType] ?? 4));
   return results;
-}
-
-async function resolveContains(normalized: string, sourceLanguage: string) {
-  const excludeIds: string[] = [];
-  return findEntriesContaining(normalized, sourceLanguage, 8, excludeIds);
 }
 
 function extractSearchResultFields(entry: CandidateEntry) {

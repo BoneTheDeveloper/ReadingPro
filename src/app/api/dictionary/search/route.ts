@@ -76,7 +76,7 @@ async function handleDictionarySearchGet(request: NextRequest, includePerformanc
       });
     }
 
-    await measureDictionaryStep(
+    const user = await measureDictionaryStep(
       performanceTracker,
       "auth",
       () => Sentry.startSpan(
@@ -94,6 +94,7 @@ async function handleDictionarySearchGet(request: NextRequest, includePerformanc
           op: "db",
           attributes: {
             "dictionary.query_length": normalizedQuery.length,
+            "user.id": user.id,
           },
         },
         () => resolveDictionarySearch(parsed.data.q, {

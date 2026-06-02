@@ -79,7 +79,7 @@ async function handleEntryDetailGet(
         })
       : null;
 
-    await measureDictionaryStep(
+    const user = await measureDictionaryStep(
       performanceTracker,
       "auth",
       () => Sentry.startSpan(
@@ -95,7 +95,7 @@ async function handleEntryDetailGet(
         {
           name: "db:dictionary-entry-detail",
           op: "db",
-          attributes: { "dictionary.entry_id": entryId },
+          attributes: { "dictionary.entry_id": entryId, "user.id": user.id },
         },
         () => findEntryById(entryId, parsed.data.sourceLanguage, parsed.data.targetLanguage),
       ),
