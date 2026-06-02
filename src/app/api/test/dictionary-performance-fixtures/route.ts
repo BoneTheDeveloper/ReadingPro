@@ -63,6 +63,7 @@ export async function POST() {
     success: true,
     data: {
       headword,
+      headwordEntryId: headwordEntry.id,
       headwordPrefix: headword.slice(0, 8),
       aliasHeadword,
       alias,

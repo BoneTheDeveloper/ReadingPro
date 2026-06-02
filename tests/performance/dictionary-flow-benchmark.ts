@@ -28,7 +28,7 @@ type DictionaryPerformancePayload<TData> = {
   performance: {
     queryLength: number;
     normalizedQueryLength: number;
-    phase: "suggest" | "search" | "lookup";
+    phase: "suggest" | "search" | "lookup" | "entry-detail";
     timings: {
       totalMs: number;
       steps: Record<string, number>;
@@ -69,6 +69,7 @@ type FixturePayload = {
   success: true;
   data: {
     headword: string;
+    headwordEntryId: string;
     headwordPrefix: string;
     aliasHeadword: string;
     alias: string;
@@ -97,6 +98,7 @@ const QUERY_BUDGETS: Record<string, ScenarioBudget> = {
   "lookup-exact-headword": { maxQueries: 6, gate: "hard" },
   "lookup-exact-alias": { maxQueries: 8, gate: "hard" },
   "lookup-miss": { maxQueries: 6, gate: "hard" },
+  "entry-detail-by-id": { maxQueries: 4, gate: "hard" },
 };
 
 const LATENCY_BUDGETS: Record<string, LatencyBudget> = {
@@ -107,6 +109,7 @@ const LATENCY_BUDGETS: Record<string, LatencyBudget> = {
   "lookup-exact-headword": { medianRoundTripMs: 1_000, p95RoundTripMs: 2_000, gate: "soft" },
   "lookup-exact-alias": { medianRoundTripMs: 1_000, p95RoundTripMs: 2_000, gate: "soft" },
   "lookup-miss": { medianRoundTripMs: 1_000, p95RoundTripMs: 2_000, gate: "soft" },
+  "entry-detail-by-id": { medianRoundTripMs: 1_000, p95RoundTripMs: 2_000, gate: "soft" },
 };
 
 export async function runDictionaryFlowBenchmark(
@@ -165,10 +168,8 @@ async function runScenarios(
     query: fixture.aliasPrefix,
     expectedHeadword: fixture.aliasHeadword,
   }));
-  reports.push(await detailScenario(context, {
+  reports.push(await searchScenario(context, {
     scenario: "search-exact-headword",
-    phase: "search",
-    path: "/api/dictionary/search",
     query: fixture.headword,
     expectedHeadword: fixture.headword,
   }));
@@ -192,6 +193,11 @@ async function runScenarios(
     path: "/api/dictionary/lookup",
     query: fixture.miss,
     expectedHeadword: null,
+  }));
+  reports.push(await entryDetailScenario(context, {
+    scenario: "entry-detail-by-id",
+    entryId: fixture.headwordEntryId,
+    expectedHeadword: fixture.headword,
   }));
 
   return reports;
@@ -248,12 +254,54 @@ async function suggestScenario(
   return buildReport(input.scenario, roundTripMs, payload.performance);
 }
 
+type SearchResult = {
+  id: string;
+  headword: string;
+  matchType: string;
+  matchedText: string | null;
+  primaryTranslation: string | null;
+  partOfSpeech: string | null;
+  sourceLabel: string | null;
+};
+
+async function searchScenario(
+  context: BenchmarkContext,
+  input: {
+    scenario: string;
+    query: string;
+    expectedHeadword: string | null;
+  },
+): Promise<PerformanceScenarioReport> {
+  const startedAt = performance.now();
+  const response = await getJson(
+    `${context.baseUrl}/api/dictionary/search?q=${encodeURIComponent(input.query)}&sourceLanguage=en&targetLanguage=vi`,
+    context.cookie,
+    performanceHeader,
+  );
+  const roundTripMs = roundMetric(performance.now() - startedAt);
+  const payload = await parseJson<DictionaryPerformancePayload<SearchResult[]>>(response);
+
+  assertResponse(response, payload, input.scenario);
+  assertEqual(payload.performance.phase, "search", `${input.scenario} phase`);
+  assertDictionaryPerformance(payload, input.scenario);
+
+  if (input.expectedHeadword) {
+    if (!payload.data.some((item) => item.headword === input.expectedHeadword)) {
+      throw new Error(`${input.scenario}: expected search result for ${input.expectedHeadword}`);
+    }
+  } else {
+    assertEqual(payload.data.length, 0, `${input.scenario} result count`);
+  }
+
+  return buildReport(input.scenario, roundTripMs, payload.performance);
+}
+
 async function detailScenario(
   context: BenchmarkContext,
   input: {
     scenario: string;
-    phase: "search" | "lookup";
-    path: "/api/dictionary/search" | "/api/dictionary/lookup";
+    phase: "lookup";
+    path: "/api/dictionary/lookup";
     query: string;
     expectedHeadword: string | null;
   },
@@ -279,6 +327,31 @@ async function detailScenario(
   } else {
     assertEqual("found" in payload.data ? payload.data.found : true, false, `${input.scenario} miss`);
   }
+
+  return buildReport(input.scenario, roundTripMs, payload.performance);
+}
+
+async function entryDetailScenario(
+  context: BenchmarkContext,
+  input: {
+    scenario: string;
+    entryId: string;
+    expectedHeadword: string;
+  },
+): Promise<PerformanceScenarioReport> {
+  const startedAt = performance.now();
+  const response = await getJson(
+    `${context.baseUrl}/api/dictionary/entries/${encodeURIComponent(input.entryId)}?sourceLanguage=en&targetLanguage=vi`,
+    context.cookie,
+    performanceHeader,
+  );
+  const roundTripMs = roundMetric(performance.now() - startedAt);
+  const payload = await parseJson<DictionaryPerformancePayload<DictionaryEntry>>(response);
+
+  assertResponse(response, payload, input.scenario);
+  assertEqual(payload.performance.phase, "entry-detail", `${input.scenario} phase`);
+  assertDictionaryPerformance(payload, input.scenario);
+  assertEqual(payload.data.headword, input.expectedHeadword, `${input.scenario} headword`);
 
   return buildReport(input.scenario, roundTripMs, payload.performance);
 }

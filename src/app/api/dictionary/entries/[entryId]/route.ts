@@ -12,12 +12,11 @@ import {
   createDictionaryPerformanceTracker,
   shouldIncludeDictionaryPerformanceMetrics,
 } from "@/lib/dictionary/dictionary-performance";
-import { normalizeDictionaryTerm } from "@/lib/dictionary/normalize-dictionary-term";
-import { resolveDictionarySearch } from "@/lib/dictionary/dictionary-search-resolver";
-import type { DictionarySearchResultDto } from "@/lib/dictionary/dictionary-dtos";
+import { findEntryById } from "@/lib/db/dictionary-queries";
+import { buildEntryDto } from "@/lib/dictionary/resolve-dictionary-lookup";
+import { RUNTIME_STATUSES } from "@/lib/dictionary/dictionary-dtos";
 
-const dictionarySearchQuerySchema = z.object({
-  q: z.string().trim().min(1).max(200),
+const entryDetailQuerySchema = z.object({
   sourceLanguage: z.literal("en"),
   targetLanguage: z.literal("vi"),
 });
@@ -26,95 +25,99 @@ function isAuthenticationError(error: unknown) {
   return error instanceof Error && error.message === "Authentication required";
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ entryId: string }> },
+) {
   const includePerformance = shouldIncludeDictionaryPerformanceMetrics(request.headers);
   if (includePerformance) {
-    return runWithPrismaQueryMetrics(() => handleDictionarySearchGet(request, true));
+    return runWithPrismaQueryMetrics(() => handleEntryDetailGet(request, params, true));
   }
 
-  return handleDictionarySearchGet(request, false);
+  return handleEntryDetailGet(request, params, false);
 }
 
-async function handleDictionarySearchGet(request: NextRequest, includePerformance: boolean) {
+async function handleEntryDetailGet(
+  request: NextRequest,
+  params: Promise<{ entryId: string }>,
+  includePerformance: boolean,
+) {
   const routeStartedAt = performance.now();
   const requestLog = createRequestLogger(
-    "api:dictionary-search",
-    createRequestLogContext(request, "GET", "/api/dictionary/search"),
+    "api:dictionary-entry-detail",
+    createRequestLogContext(request, "GET", "/api/dictionary/entries/:entryId"),
   );
 
   try {
+    const { entryId } = await params;
+
+    if (!entryId || entryId.trim().length === 0) {
+      return NextResponse.json({ error: "Invalid entry id." }, { status: 400 });
+    }
+
     const { searchParams } = new URL(request.url);
     const raw = {
-      q: searchParams.get("q") ?? "",
       sourceLanguage: searchParams.get("sourceLanguage") ?? "en",
       targetLanguage: searchParams.get("targetLanguage") ?? "vi",
     };
 
-    const parsed = dictionarySearchQuerySchema.safeParse(raw);
+    const parsed = entryDetailQuerySchema.safeParse(raw);
     if (!parsed.success) {
       requestLog.warn(
         { context: { issues: parsed.error.issues.map((i) => i.path.join(".")) } },
-        "Invalid dictionary search query rejected",
+        "Invalid entry detail query rejected",
       );
       return NextResponse.json({ error: "Invalid query parameters." }, { status: 400 });
     }
 
-    const normalizedQuery = normalizeDictionaryTerm(parsed.data.q);
     const performanceTracker = includePerformance
       ? createDictionaryPerformanceTracker({
-          query: parsed.data.q,
-          normalizedQuery,
-          phase: "search",
+          query: entryId,
+          normalizedQuery: entryId,
+          phase: "entry-detail",
           startedAt: routeStartedAt,
         })
       : null;
-
-    if (normalizedQuery.length < 2) {
-      return createSearchSuccessResponse({
-        data: [],
-        performanceTracker,
-      });
-    }
 
     await measureDictionaryStep(
       performanceTracker,
       "auth",
       () => Sentry.startSpan(
-        { name: "api:dictionary-search-authenticate", op: "auth" },
+        { name: "api:dictionary-entry-detail-authenticate", op: "auth" },
         () => getAuthenticatedUser(),
       ),
     );
 
-    const results = await measureDictionaryStep(
+    const entry = await measureDictionaryStep(
       performanceTracker,
-      "searchResolve",
+      "entryDetailResolve",
       () => Sentry.startSpan(
         {
-          name: "db:dictionary-search",
+          name: "db:dictionary-entry-detail",
           op: "db",
-          attributes: {
-            "dictionary.query_length": normalizedQuery.length,
-          },
+          attributes: { "dictionary.entry_id": entryId },
         },
-        () => resolveDictionarySearch(parsed.data.q, {
-          sourceLanguage: parsed.data.sourceLanguage,
-          targetLanguage: parsed.data.targetLanguage,
-        }),
+        () => findEntryById(entryId, parsed.data.sourceLanguage, parsed.data.targetLanguage),
       ),
-    ) as DictionarySearchResultDto[];
-
-    requestLog.info(
-      {
-        context: {
-          queryLength: normalizedQuery.length,
-          resultCount: results.length,
-        },
-      },
-      "Dictionary search completed",
     );
 
-    return createSearchSuccessResponse({
-      data: results,
+    if (!entry) {
+      requestLog.info(
+        { context: { entryId } },
+        "Dictionary entry not found",
+      );
+      return NextResponse.json({ error: "Entry not found." }, { status: 404 });
+    }
+
+    const dto = buildEntryDto(entry, parsed.data.targetLanguage, RUNTIME_STATUSES);
+
+    requestLog.info(
+      { context: { entryId, found: true } },
+      "Dictionary entry detail completed",
+    );
+
+    return createEntryDetailSuccessResponse({
+      data: dto,
       performanceTracker,
     });
   } catch (error) {
@@ -122,16 +125,16 @@ async function handleDictionarySearchGet(request: NextRequest, includePerformanc
       return NextResponse.json({ error: "Authentication required." }, { status: 401 });
     }
 
-    requestLog.error({ err: error }, "Dictionary search failed");
+    requestLog.error({ err: error }, "Dictionary entry detail failed");
     Sentry.captureException(error, {
-      tags: { route: "api:dictionary-search", method: "GET" },
+      tags: { route: "api:dictionary-entry-detail", method: "GET" },
     });
-    return NextResponse.json({ error: "Dictionary search failed." }, { status: 500 });
+    return NextResponse.json({ error: "Entry detail failed." }, { status: 500 });
   }
 }
 
-function createSearchSuccessResponse(input: {
-  data: DictionarySearchResultDto[];
+function createEntryDetailSuccessResponse(input: {
+  data: ReturnType<typeof buildEntryDto>;
   performanceTracker: ReturnType<typeof createDictionaryPerformanceTracker> | null;
 }) {
   if (!input.performanceTracker) {

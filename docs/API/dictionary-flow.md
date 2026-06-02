@@ -1,6 +1,6 @@
 # Dictionary Flow
 
-Dictionary search is independent from quick translation. It owns search input, autocomplete suggestions, ranked search results, exact lookup, miss states, and dictionary detail rendering.
+Dictionary search is independent from quick translation. It owns autocomplete suggestions, ranked search results, exact text lookup, entry detail rendering, miss states, and search input.
 
 Quick translation can share the same database tables internally for exact word or short phrase lookup, but quick translation must not own dictionary search/suggest behavior. See [translation-flow.md](./translation-flow.md).
 
@@ -8,13 +8,14 @@ Quick translation can share the same database tables internally for exact word o
 
 In scope:
 
-- Search dictionary entries from the dictionary page or dictionary detail surfaces.
 - Show autocomplete suggestions while typing.
+- Search dictionary entries from the dictionary page or dictionary detail surfaces.
 - Return ranked search results for submitted/free-text queries.
-- Resolve exact headword, alias, or entry id lookup.
+- Resolve exact typed headword or alias lookup.
+- Resolve selected suggestion/search result detail by entry id.
 - Render dictionary entry detail with senses and translations.
 - Use the existing dictionary database tables as the global lookup source.
-- Cache suggest, search, and lookup results in browser-tab/session memory only.
+- Cache suggest, search, lookup, and entry-detail results in browser-tab/session memory only.
 
 Out of scope:
 
@@ -37,6 +38,7 @@ sequenceDiagram
     participant SuggestAPI as GET /api/dictionary/suggest
     participant SearchAPI as GET /api/dictionary/search
     participant LookupAPI as GET /api/dictionary/lookup
+    participant EntryAPI as GET /api/dictionary/entries/:entryId
     participant DB as Global Dictionary Tables
 
     User->>DictionaryUI: Type query
@@ -52,7 +54,7 @@ sequenceDiagram
         DictionaryUI->>ClientCache: Store suggest results
     end
 
-    alt User submits search
+    alt User submits search query
         User->>DictionaryUI: Submit query
         DictionaryUI->>ClientCache: Lookup search result cache
         alt Search cache hit
@@ -65,17 +67,30 @@ sequenceDiagram
             DictionaryUI->>ClientCache: Store search results
         end
         DictionaryUI-->>User: Render search results or no-result state
-    else User selects suggestion/result
-        User->>DictionaryUI: Select suggestion or search result
-        DictionaryUI->>ClientCache: Lookup exact result cache
+    else User submits exact lookup query
+        User->>DictionaryUI: Submit exact query
+        DictionaryUI->>ClientCache: Lookup exact query cache
         alt Lookup cache hit
             ClientCache-->>DictionaryUI: Entry or miss
         else Lookup cache miss
-            DictionaryUI->>LookupAPI: q or entryId, sourceLanguage, targetLanguage
-            LookupAPI->>DB: Exact headword, exact alias, or entry id lookup
+            DictionaryUI->>LookupAPI: q, sourceLanguage, targetLanguage
+            LookupAPI->>DB: Exact headword or exact alias lookup
             DB-->>LookupAPI: Entry or miss
             LookupAPI-->>DictionaryUI: Entry or miss
             DictionaryUI->>ClientCache: Store lookup result
+        end
+        DictionaryUI-->>User: Render entry detail or no-result state
+    else User selects suggestion/result
+        User->>DictionaryUI: Select suggestion or search result
+        DictionaryUI->>ClientCache: Lookup entry detail cache
+        alt Entry cache hit
+            ClientCache-->>DictionaryUI: Entry
+        else Entry cache miss
+            DictionaryUI->>EntryAPI: entryId, sourceLanguage, targetLanguage
+            EntryAPI->>DB: Resolve dictionary entry by id
+            DB-->>EntryAPI: Entry or not found
+            EntryAPI-->>DictionaryUI: Entry or not found
+            DictionaryUI->>ClientCache: Store entry detail result
         end
         DictionaryUI-->>User: Render entry detail or no-result state
     end
@@ -101,7 +116,7 @@ Query params:
 
 ```ts
 {
-  q: string;                 // 1-200 chars
+  q: string;                 // typed prefix text, 1-200 chars
   sourceLanguage: "en";
   targetLanguage: "vi";
 }
@@ -120,7 +135,7 @@ Query params:
 
 ```ts
 {
-  id: string;
+  id: string;                // entry id; use with GET /api/dictionary/entries/:entryId after selection
   headword: string;
   matchType: "exact" | "alias" | "prefix" | "phrase";
   matchedAlias: string | null;
@@ -143,11 +158,13 @@ Query params:
 
 #### 6. Notes about cache / performance / auth
 
-- Normalized query length `<2` returns `{ success: true, data: [] }`.
+- `q` is the learner's typed prefix text.
+- Empty or invalid `q` returns `400`.
+- Non-empty `q` is normalized before lookup.
 - Results are ranked exact headword, exact alias, then prefix matches.
 - Headword matches take priority over alias duplicates.
 - Response data is bounded. Default limit is `8` per query path before merge/dedupe.
-- Suggest does not return full entry detail. Use `/api/dictionary/lookup` for detail.
+- Suggest does not return full entry detail. Use `/api/dictionary/entries/:entryId` after selecting a suggestion.
 - Client may cache successful suggest results in browser-tab/session memory by normalized query plus language pair.
 - Runtime data comes only from the global dictionary tables.
 - Route requires authenticated user.
@@ -170,7 +187,7 @@ Query params:
 
 ```ts
 {
-  q: string;                 // 1-200 chars
+  q: string;                 // typed search text, 1-200 chars
   sourceLanguage: "en";
   targetLanguage: "vi";
   limit?: number;            // default bounded server-side
@@ -190,7 +207,7 @@ Query params:
 
 ```ts
 {
-  id: string;
+  id: string;                // entry id; use with GET /api/dictionary/entries/:entryId after selection
   headword: string;
   matchType: "exact" | "alias" | "phrase" | "prefix" | "contains";
   matchedText: string | null;
@@ -214,10 +231,11 @@ Query params:
 
 #### 6. Notes about cache / performance / auth
 
+- `q` is the learner's submitted search text.
 - Normalized query length `<2` returns `{ success: true, data: [] }`.
 - Ranking is deterministic: exact headword, exact alias, phrase match, prefix match, contains match.
 - Results are deduped by entry id.
-- Search returns compact result rows only. Use `/api/dictionary/lookup` for full multi-sense detail.
+- Search returns compact result rows only. Use `/api/dictionary/entries/:entryId` after selecting a result.
 - Search does not translate arbitrary sentences. It searches dictionary records.
 - Client may cache successful search results in browser-tab/session memory by normalized query plus language pair.
 - Response size must remain bounded by server-side limit handling.
@@ -228,7 +246,7 @@ Query params:
 
 #### 1. Purpose / What it is used for
 
-Exact dictionary lookup and entry detail. This route returns the full dictionary entry detail payload after a learner selects a suggestion/search result or submits an exact lookup query.
+Exact typed dictionary lookup. This route returns full dictionary entry detail for a typed exact headword or alias query, or a stable miss when the typed query does not resolve.
 
 #### 2. Method + path
 
@@ -242,14 +260,11 @@ Query params:
 
 ```ts
 {
-  q?: string;                // 1-200 chars
-  entryId?: string;          // preferred after selecting search/suggest result
+  q: string;                 // exact typed lookup text, 1-200 chars
   sourceLanguage: "en";
   targetLanguage: "vi";
 }
 ```
-
-At least one of `q` or `entryId` is required.
 
 #### 4. Success response
 
@@ -277,19 +292,82 @@ At least one of `q` or `entryId` is required.
 
 | Status | Meaning |
 |--------|---------|
-| `400` | Invalid query parameters, or neither `q` nor `entryId` provided |
+| `400` | Invalid query parameters |
 | `401` | Missing auth |
 | `500` | Unexpected lookup failure |
 
 #### 6. Notes about cache / performance / auth
 
-- If `entryId` is provided, resolve that entry directly.
-- If `q` is provided, normalize query.
-- Lookup then checks exact `DictionaryEntry.normalizedHeadword`.
+- `q` is typed lookup text, not an entry id.
+- Normalized query length `<2` returns `{ success: true, data: [] }`.
+- Lookup checks exact `DictionaryEntry.normalizedHeadword`.
 - If headword lookup misses, lookup checks exact `DictionaryAlias.normalizedAlias`.
 - Stable misses return `DictionaryMiss`.
-- Client may cache successful lookup hits and stable misses in browser-tab/session memory by normalized query or entry id plus language pair.
+- Client may cache successful lookup hits and stable misses in browser-tab/session memory by normalized query plus language pair.
 - Lookup does not call providers or AI at runtime.
+- Use `/api/dictionary/entries/:entryId` instead of lookup after selecting a known suggestion/search result.
+- Runtime data comes only from the global dictionary tables.
+- Route requires authenticated user.
+
+### Entry Detail API
+
+#### 1. Purpose / What it is used for
+
+Entry detail by stable dictionary entry id. This route returns full dictionary entry detail after the learner clicks a suggestion or search result.
+
+#### 2. Method + path
+
+```http
+GET /api/dictionary/entries/:entryId
+```
+
+#### 3. Request input
+
+Path params:
+
+```ts
+{
+  entryId: string;           // DictionaryEntry.id from suggest/search result
+}
+```
+
+Query params:
+
+```ts
+{
+  sourceLanguage: "en";
+  targetLanguage: "vi";
+}
+```
+
+#### 4. Success response
+
+```ts
+{
+  success: true;
+  data: DictionaryEntry;
+}
+```
+
+#### 5. Error response
+
+```ts
+{ error: string }
+```
+
+| Status | Meaning |
+|--------|---------|
+| `400` | Invalid entry id or query parameters |
+| `401` | Missing auth |
+| `404` | Entry id not found or not available for runtime dictionary display |
+| `500` | Unexpected entry detail failure |
+
+#### 6. Notes about cache / performance / auth
+
+- `entryId` comes from `DictionarySuggestItem.id` or `DictionarySearchResult.id`.
+- Do not normalize `entryId`; it is a database id, not learner text.
+- Use this route for clicks because it avoids ambiguous text lookup.
+- Client may cache successful entry detail results in browser-tab/session memory by entry id plus language pair.
 - Runtime data comes only from the global dictionary tables.
 - Route requires authenticated user.
 
@@ -315,11 +393,12 @@ The dictionary UI may use browser-tab/session memory caches:
 
 - Suggest cache by normalized query plus language pair.
 - Search cache by normalized query plus language pair.
-- Lookup cache by normalized query or entry id plus language pair.
+- Lookup cache by normalized query plus language pair.
+- Entry detail cache by entry id plus language pair.
 
 Do not persist dictionary cache to `localStorage`, IndexedDB, cookies, or server state in MVP.
 
-Recommended suggest/search cache key:
+Recommended suggest/search/lookup cache key:
 
 ```ts
 {
@@ -329,12 +408,11 @@ Recommended suggest/search cache key:
 }
 ```
 
-Recommended lookup cache key:
+Recommended entry detail cache key:
 
 ```ts
 {
-  q?: string;                // normalized
-  entryId?: string;
+  entryId: string;
   sourceLanguage: "en";
   targetLanguage: "vi";
 }
@@ -370,11 +448,18 @@ Lookup:
 
 1. Authenticate user.
 2. Validate query params.
-3. Resolve by `entryId` when provided.
-4. Otherwise normalize `q`.
-5. Resolve exact headword.
-6. If missing, resolve exact alias.
-7. Return bounded `DictionaryEntryDto` or stable `DictionaryMissDto`.
+3. Normalize query.
+4. Resolve exact headword.
+5. If missing, resolve exact alias.
+6. Return bounded `DictionaryEntryDto` or stable `DictionaryMissDto`.
+
+Entry detail:
+
+1. Authenticate user.
+2. Validate path and query params.
+3. Resolve `DictionaryEntry` by `entryId`.
+4. Filter runtime translations by reviewed/approved status and requested target language.
+5. Return bounded `DictionaryEntryDto` or `404`.
 
 ## Relationship To Quick Translation
 
@@ -387,9 +472,9 @@ Shared:
 Separate:
 
 - Quick translation is manual highlight-to-button-to-popup.
-- Dictionary search is query input, suggest dropdown, search result list, exact lookup, and detail rendering.
+- Dictionary search is query input, suggest dropdown, search result list, exact lookup, entry-id detail, and detail rendering.
 - `/api/translate` must not expose suggest/search behavior.
-- `/api/dictionary/suggest`, `/api/dictionary/search`, and `/api/dictionary/lookup` must not translate arbitrary sentences.
+- `/api/dictionary/suggest`, `/api/dictionary/search`, `/api/dictionary/lookup`, and `/api/dictionary/entries/:entryId` must not translate arbitrary sentences.
 
 The only UI bridge allowed in MVP is navigation/opening dictionary search with selected text. Once opened, dictionary flow owns the behavior.
 
@@ -408,10 +493,12 @@ UI breadcrumbs cover:
 - Search result selected.
 - Lookup cache hit/miss.
 - Lookup result found/not-found/error.
+- Entry detail cache hit/miss.
+- Entry detail result found/not-found/error.
 
 ## Performance Budgets
 
-The benchmark suite (`tests/performance/run-benchmarks.ts`) includes dictionary-flow coverage for suggest, search, and lookup phases. Run it with:
+The benchmark suite (`tests/performance/run-benchmarks.ts`) includes dictionary-flow coverage for suggest, search, lookup, and entry detail phases. Run it with:
 
 ```bash
 pnpm test:performance
@@ -428,6 +515,7 @@ Dictionary results are written to `test-results/performance/dictionary-flow.json
 | exact headword lookup | `GET /api/dictionary/lookup` | `<=6` queries | hard fail |
 | exact alias lookup | `GET /api/dictionary/lookup` | `<=8` queries | hard fail |
 | lookup miss | `GET /api/dictionary/lookup` | `<=6` queries | hard fail |
+| entry detail by id | `GET /api/dictionary/entries/:entryId` | `<=4` queries | hard fail |
 
 ## V1 Boundaries
 

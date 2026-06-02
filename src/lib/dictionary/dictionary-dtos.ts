@@ -47,6 +47,16 @@ export interface DictionarySuggestItemDto {
   sourceLabel: string | null;
 }
 
+export interface DictionarySearchResultDto {
+  id: string;
+  headword: string;
+  matchType: "exact" | "alias" | "phrase" | "prefix" | "contains";
+  matchedText: string | null;
+  primaryTranslation: string | null;
+  partOfSpeech: string | null;
+  sourceLabel: string | null;
+}
+
 const SOURCE_LABELS: Record<string, Record<string, string>> = {
   seed: {
     "seed:reviewed": "Dictionary",

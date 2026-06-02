@@ -169,7 +169,7 @@ async function findEntryByAlias(normalizedAlias: string, sourceLanguage: string)
   return alias?.entry ?? null;
 }
 
-function buildEntryDto(
+export function buildEntryDto(
   entry: Awaited<ReturnType<typeof findEntryByHeadword>> & {},
   targetLanguage: string,
   statuses: readonly string[],
@@ -201,7 +201,7 @@ function buildEntryDto(
   };
 }
 
-function toTranslationDto(t: { id: string; senseId: string; targetLanguage: string; translation: string; isPrimary: boolean; rank: number; confidence: number | null; status: string; sourceType: string; sourceName: string | null; reviewedAt: Date | null }): DictionaryTranslationDto {
+export function toTranslationDto(t: { id: string; senseId: string; targetLanguage: string; translation: string; isPrimary: boolean; rank: number; confidence: number | null; status: string; sourceType: string; sourceName: string | null; reviewedAt: Date | null }): DictionaryTranslationDto {
   return {
     id: t.id,
     senseId: t.senseId,

@@ -5,7 +5,7 @@ export const DICTIONARY_PERFORMANCE_HEADER = "x-dictionary-perf-metrics";
 export interface DictionaryPerformanceSnapshot {
   queryLength: number;
   normalizedQueryLength: number;
-  phase: "suggest" | "search" | "lookup";
+  phase: "suggest" | "search" | "lookup" | "entry-detail";
   timings: {
     totalMs: number;
     steps: Record<string, number>;
