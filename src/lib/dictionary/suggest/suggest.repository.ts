@@ -1,7 +1,7 @@
 import * as Sentry from "@sentry/nextjs";
 import { Prisma } from "@/generated/prisma/client";
 import { db } from "@/lib/db/client";
-import { normalizeDictionaryTerm } from "../shared/normalize-dictionary-term";
+import { escapeLikeWildcards, normalizeDictionaryTerm } from "../shared/normalize-dictionary-term";
 import { RUNTIME_STATUSES } from "../shared/dictionary-dtos";
 
 export interface SuggestCandidateRow {
@@ -25,7 +25,7 @@ export async function findSuggestCandidates(
   const normalized = normalizeDictionaryTerm(prefix);
   if (normalized.length < 2) return [];
 
-  const likePrefix = normalized + "%";
+  const likePrefix = escapeLikeWildcards(normalized) + "%";
 
   return Sentry.startSpan(
     {

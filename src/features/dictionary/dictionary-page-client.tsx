@@ -113,14 +113,13 @@ export function DictionaryPageClient() {
 
     try {
       const params = new URLSearchParams({
-        q: item.headword,
         sourceLanguage: "en",
         targetLanguage: "vi",
       });
-      const res = await fetch(`/api/dictionary/search?${params}`);
-      const json = await res.json();
+      const res = await fetch(`/api/dictionary/entries/${item.id}?${params}`);
 
-      if (json.success && json.data && !("found" in json.data)) {
+      if (res.ok) {
+        const json = await res.json();
         setSelectedEntry(json.data as DictionaryEntryDto);
         setDetailStatus("found");
       } else {

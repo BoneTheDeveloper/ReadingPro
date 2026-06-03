@@ -6,6 +6,13 @@ export function normalizeDictionaryTerm(value: string): string {
     .trim();
 }
 
+export function escapeLikeWildcards(value: string): string {
+  return value
+    .replace(/\\/g, "\\\\")
+    .replace(/%/g, "\\%")
+    .replace(/_/g, "\\_");
+}
+
 export function buildDictionaryKey(input: {
   normalizedTerm: string;
   sourceLanguage: string;

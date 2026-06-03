@@ -58,7 +58,7 @@ export async function findDictionaryLookupEntry(
         best_entry AS (
           SELECT DISTINCT ON (id) id
           FROM matching_entry
-          ORDER BY id, match_priority
+          ORDER BY match_priority, id
           LIMIT 1
         )
         SELECT

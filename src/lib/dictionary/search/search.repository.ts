@@ -2,6 +2,7 @@ import * as Sentry from "@sentry/nextjs";
 import { Prisma } from "@/generated/prisma/client";
 import { db } from "@/lib/db/client";
 import { RUNTIME_STATUSES } from "../shared/dictionary-dtos";
+import { escapeLikeWildcards } from "../shared/normalize-dictionary-term";
 
 export interface DictionarySearchCandidateRow {
   id: string;
@@ -46,11 +47,12 @@ async function searchDictionaryCandidatesSql({
   targetLanguage,
   limit,
 }: DictionarySearchCandidateInput): Promise<DictionarySearchCandidateRow[]> {
-  const prefixQuery = `${normalizedQuery}%`;
-  const containsQuery = `%${normalizedQuery}%`;
-  const phraseMiddleQuery = `% ${normalizedQuery} %`;
-  const phraseStartQuery = `${normalizedQuery} %`;
-  const phraseEndQuery = `% ${normalizedQuery}`;
+  const escaped = escapeLikeWildcards(normalizedQuery);
+  const prefixQuery = `${escaped}%`;
+  const containsQuery = `%${escaped}%`;
+  const phraseMiddleQuery = `% ${escaped} %`;
+  const phraseStartQuery = `${escaped} %`;
+  const phraseEndQuery = `% ${escaped}`;
 
   const rows = await db.$queryRaw<Array<{
     id: string;

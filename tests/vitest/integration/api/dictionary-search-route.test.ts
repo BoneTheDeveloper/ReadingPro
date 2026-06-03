@@ -53,6 +53,7 @@ describe("GET /api/dictionary/search", () => {
     expect(routeMocks.searchDictionary).toHaveBeenCalledWith("algorithm", {
       sourceLanguage: "en",
       targetLanguage: "vi",
+      limit: 8,
     });
   });
 
@@ -71,6 +72,7 @@ describe("GET /api/dictionary/search", () => {
     expect(routeMocks.searchDictionary).toHaveBeenCalledWith("a", {
       sourceLanguage: "en",
       targetLanguage: "vi",
+      limit: 8,
     });
   });
 

@@ -20,6 +20,7 @@ const dictionarySearchQuerySchema = z.object({
   q: z.string().trim().min(1).max(200),
   sourceLanguage: z.literal("en"),
   targetLanguage: z.literal("vi"),
+  limit: z.coerce.number().int().min(1).max(50).default(8).optional(),
 });
 
 function isAuthenticationError(error: unknown) {
@@ -93,6 +94,7 @@ async function handleDictionarySearchGet(request: NextRequest, includePerformanc
         () => searchDictionary(parsed.data.q, {
           sourceLanguage: parsed.data.sourceLanguage,
           targetLanguage: parsed.data.targetLanguage,
+          limit: parsed.data.limit,
         }),
       ),
     ) as DictionarySearchResultDto[];
