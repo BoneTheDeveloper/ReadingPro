@@ -70,7 +70,7 @@ This phase must not touch vocabulary persistence.
 - Create: `src/lib/translation/quick-selection-scope.test.ts`
 - Modify: `__tests__/api/translation-vocabulary-routes.test.ts`
 - Modify: `__tests__/components/study/study-page-client.integration.test.tsx`
-- Modify: `docs/API/translation-flow.md`
+- Modify: `docs/API/Routes/translation-feature.md`
 - Modify: `.env.example` if provider configuration uses environment variables
 
 ## Implementation Steps

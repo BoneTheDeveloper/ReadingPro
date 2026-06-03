@@ -6,18 +6,18 @@ import { createRequestLogContext, createRequestLogger } from "@/lib/core/logger"
 import {
   getPrismaQueryMetrics,
   runWithPrismaQueryMetrics,
-  runWithPrismaQueryStep,
 } from "@/lib/observability/prisma-query-metrics";
 import {
   createDictionaryPerformanceTracker,
+  measureDictionaryStep,
   shouldIncludeDictionaryPerformanceMetrics,
-} from "@/lib/dictionary/dictionary-performance";
-import { normalizeDictionaryTerm } from "@/lib/dictionary/normalize-dictionary-term";
-import { resolveDictionaryLookup } from "@/lib/dictionary/resolve-dictionary-lookup";
+} from "@/lib/dictionary/shared/dictionary-performance";
+import { normalizeDictionaryTerm } from "@/lib/dictionary/shared/normalize-dictionary-term";
+import { resolveDictionaryLookup } from "@/lib/dictionary/lookup/lookup.service";
 import type {
   DictionaryEntryDto,
   DictionaryMissDto,
-} from "@/lib/dictionary/dictionary-dtos";
+} from "@/lib/dictionary/shared/dictionary-dtos";
 
 const dictionaryLookupQuerySchema = z.object({
   q: z.string().trim().min(1).max(200),
@@ -144,13 +144,4 @@ function createDictionaryLookupSuccessResponse(input: {
       getPrismaQueryMetrics() ?? { queryCount: 0, totalDurationMs: 0, steps: {} },
     ),
   });
-}
-
-function measureDictionaryStep<T>(
-  performanceTracker: ReturnType<typeof createDictionaryPerformanceTracker> | null,
-  step: string,
-  callback: () => Promise<T>,
-) {
-  if (!performanceTracker) return callback();
-  return performanceTracker.measure(step, () => runWithPrismaQueryStep(step, callback));
 }

@@ -62,7 +62,7 @@ Required dictionary/API scenarios:
 ## Related Code Files
 
 - Modify/Create: tests under `__tests__/api`, `__tests__/components/study`, and/or `src/lib/db/*.test.ts`
-- Modify: `docs/API/overview.md` or create `docs/API/translation-flow.md`
+- Modify: `docs/API/overview.md` or create `docs/API/Routes/translation-feature.md`
 - Modify: `docs/database/data-dictionary.md` and `docs/database/erd.md` if schema changes are implemented
 - Modify: `docs/codebase-summary.md` if new modules are added
 

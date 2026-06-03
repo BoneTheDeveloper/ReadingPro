@@ -36,7 +36,7 @@ Keep seed validation tests DB-free. Keep API tests focused on response envelopes
 - Create: `/home/luc/Project/english-reading-training-app/scripts/dictionary/validate-seed.test.ts`
 - Create: `/home/luc/Project/english-reading-training-app/__tests__/components/dictionary/dictionary-page-client.integration.test.tsx`
 - Modify: `/home/luc/Project/english-reading-training-app/docs/database/data-dictionary.md`
-- Modify: `/home/luc/Project/english-reading-training-app/docs/API/translation-flow.md`
+- Modify: `/home/luc/Project/english-reading-training-app/docs/API/Routes/translation-feature.md`
 
 ## Implementation Steps
 

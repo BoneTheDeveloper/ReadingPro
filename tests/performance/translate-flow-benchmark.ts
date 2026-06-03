@@ -91,21 +91,13 @@ export async function runTranslateFlowBenchmark(
 ) {
   const samplesByScenario = new Map<string, PerformanceScenarioReport[]>();
 
+  await warmUpTranslateFlow(context);
+
   for (let sampleIndex = 0; sampleIndex < options.samples; sampleIndex += 1) {
     let fixture: FixturePayload["data"] | null = null;
 
     try {
       fixture = await createFixture(context);
-
-      console.log(`Running translate warm-up request for sample ${sampleIndex + 1}/${options.samples} (discarded)...`);
-      await postJson(`${context.baseUrl}/api/translate`, context.cookie, {
-        text: fixture.singleWord,
-        context: fixture.context,
-        sourceId: fixture.passageId,
-        sourceLanguage: "en",
-        targetLanguage: "vi",
-        mode: "quick",
-      });
 
       const reports = await runScenarios(context, fixture);
       for (const report of reports) {
@@ -121,10 +113,41 @@ export async function runTranslateFlowBenchmark(
   }
 
   const reports = aggregateScenarioSampleGroups(samplesByScenario);
-  await writePerformanceReport(reportPath, reports);
-  console.log(`Wrote translate performance report to ${reportPath}`);
+  const reportArtifacts = await writePerformanceReport(reportPath, reports);
+  console.log(`Wrote translate performance report to ${reportArtifacts.jsonPath}`);
+  console.log(`Wrote translate Markdown report to ${reportArtifacts.markdownPath}`);
   reportBudgetFailures("translate-flow", validateBudgets(reports));
   reportLatencyBudgetFailures("translate-flow", validateLatencyBudgets(reports));
+}
+
+async function warmUpTranslateFlow(context: BenchmarkContext) {
+  console.log("Warming up translate flow (all code paths)...");
+  let warmupFixture: FixturePayload["data"] | null = null;
+
+  try {
+    warmupFixture = await createFixture(context);
+
+    const translateBody = (text: string) => ({
+      text,
+      context: warmupFixture!.context,
+      sourceId: warmupFixture!.passageId,
+      sourceLanguage: "en",
+      targetLanguage: "vi",
+      mode: "quick",
+    });
+
+    await postJson(`${context.baseUrl}/api/translate`, context.cookie, translateBody(warmupFixture.singleWord));
+    await postJson(`${context.baseUrl}/api/translate`, context.cookie, translateBody(warmupFixture.phrase));
+    await postJson(`${context.baseUrl}/api/translate`, context.cookie, translateBody(warmupFixture.fallbackText));
+
+    console.log("Translate flow warm-up complete.");
+  } finally {
+    if (warmupFixture) {
+      await cleanupFixture(context, warmupFixture.cleanup).catch((error: unknown) => {
+        console.warn(`Translate warm-up cleanup failed: ${error instanceof Error ? error.message : String(error)}`);
+      });
+    }
+  }
 }
 
 async function runScenarios(
@@ -224,7 +247,7 @@ async function translateScenario(
   assertNumber(payload.performance.prisma.totalDurationMs, `${input.scenario} Prisma duration`);
   assertObject(payload.performance.prisma.steps, `${input.scenario} Prisma steps`);
 
-  for (const step of ["auth", "sourceFetch", "cacheRead", "historyCreate"]) {
+  for (const step of ["cacheAndSourceRead"]) {
     assertNumber(payload.performance.timings.steps[step], `${input.scenario} ${step} timing`);
   }
 

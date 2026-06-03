@@ -37,7 +37,7 @@ Provider configuration should live in environment variables only if needed. If t
 
 - Modify: `package.json`
 - Modify: `.env.example`
-- Modify: `docs/API/translation-flow.md`
+- Modify: `docs/API/Routes/translation-feature.md`
 - Modify: `docs/database/data-dictionary.md` if seed behavior is documented there
 - Read: `prisma/seed-dictionary.ts`
 

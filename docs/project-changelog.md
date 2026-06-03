@@ -19,7 +19,7 @@
 - Reordered translate route to cache-first: `cacheRead` before `sourceFetch`, skipping source ownership check on cache hit.
 - Made `historyCreate` non-blocking (fire-and-forget with Sentry error logging).
 - Moved performance benchmarks under `tests/performance` and added dictionary-flow benchmark coverage for suggest/search/lookup phases.
-- Updated `docs/API/translation-flow.md` with new flow order, non-blocking history, and performance budget table.
+- Updated `docs/API/Routes/translation-feature.md` with new flow order, non-blocking history, and performance budget table.
 - Extracted study simplification/question-generation orchestration into `features/study/services/passage-study-service.ts`.
 - Split `StudyPageClient` state, async actions, and panel layout mechanics into focused hooks.
 - Moved CEFR domain helpers to `lib/domain/cefr.ts` and CEFR presentation classes to `lib/ui/cefr-style.ts`.

@@ -12,15 +12,15 @@ import { createRequestLogger } from "../../mocks/logger";
 
 const routeMocks = vi.hoisted(() => ({
   getAuthenticatedUser: vi.fn(),
-  translateWithNonAiProvider: vi.fn(),
+  translateWithProvider: vi.fn(),
 }));
 
 vi.mock("@/lib/auth/auth-utils", () => ({
   getAuthenticatedUser: routeMocks.getAuthenticatedUser,
 }));
 
-vi.mock("@/lib/translation/non-ai-machine-translation-provider", () => ({
-  translateWithNonAiProvider: routeMocks.translateWithNonAiProvider,
+vi.mock("@/lib/translation/translation-provider", () => ({
+  translateWithProvider: routeMocks.translateWithProvider,
 }));
 
 const TEST_CONTEXT = [
@@ -146,7 +146,15 @@ beforeEach(() => {
         }
       }
     }
-    const normalizedTerm = allStrings.find((v) => !["en", "vi", "true"].includes(v));
+
+    // Combined cache + source query: contains cacheKey (hex hash), userId, sourceId
+    const sourceId = allStrings.find((v) => passageFixture.id === v);
+    if (sourceId) {
+      return [{ cacheProvider: null, cacheResponse: null, sourceId, sourceTitle: passageFixture.title }];
+    }
+
+    // Dictionary lookup query: contains normalizedTerm
+    const normalizedTerm = allStrings.find((v) => !["en", "vi", "true"].includes(v) && v !== passageFixture.id);
     if (!normalizedTerm) return [];
     const entry = dictionaryEntries.find((e) => e.normalizedHeadword === normalizedTerm);
     if (!entry || !entry.senses.length) return [];
@@ -190,7 +198,7 @@ describe("POST /api/translate", () => {
       "Authentication required.",
     );
 
-    db.passage.findUnique.mockResolvedValueOnce(null);
+    db.$queryRaw.mockResolvedValueOnce([]);
     await expectJsonError(
       await translateRoute(createJsonRequest(translationBody())),
       404,
@@ -254,21 +262,17 @@ describe("POST /api/translate", () => {
       type: null,
       provider: "fallback",
     };
-    db.translationCache.findUnique
-      .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce({ provider: "fallback", response: fallback });
+    // First request: cache+source miss, then dictionary lookup (no match), then cache+source hit on repeat
+    db.$queryRaw
+      .mockResolvedValueOnce([{ cacheProvider: null, cacheResponse: null, sourceId: passageFixture.id, sourceTitle: passageFixture.title }])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([{ cacheProvider: "fallback", cacheResponse: fallback, sourceId: passageFixture.id, sourceTitle: passageFixture.title }]);
 
     const first = await translateRoute(
       createJsonRequest(translationBody({ text: "quorvex drift", context: TEST_CONTEXT[3] })),
     );
     expect(await readJsonResponse(first)).toMatchObject({ success: true, data: fallback });
     expect(generateObject).not.toHaveBeenCalled();
-    expect(db.translationCache.upsert).toHaveBeenCalledWith(
-      expect.objectContaining({
-        create: expect.objectContaining({ provider: "fallback", selectedText: "quorvex drift" }),
-        update: expect.objectContaining({ provider: "fallback" }),
-      }),
-    );
 
     db.dictionaryEntry.findUnique.mockClear();
     db.dictionaryAlias.findFirst.mockClear();
@@ -286,60 +290,22 @@ describe("POST /api/translate", () => {
     expect(generateObject).not.toHaveBeenCalled();
   });
 
-  it("uses AI only for detailed cache misses and captures detailed AI failures", async () => {
-    generateObject.mockResolvedValueOnce({
-      object: {
-        translation: "thiên lệch thuật toán",
-        explanation: "A systematic unfair pattern in an automated process.",
-        meaningInSentence: "The phrase names a hiring-system risk.",
-        sentenceTranslation: "Các mối quan tâm chính bao gồm thiên lệch thuật toán trong hệ thống tuyển dụng tự động.",
-        examples: ["Teams audit algorithmic bias before release."],
-        relatedWords: ["fairness"],
-        pronunciation: null,
-        type: "noun phrase",
-      },
-    });
-
+  it("ignores mode field and resolves through word translate path", async () => {
+    // mode is ignored — the route auto-detects input shape
     const response = await translateRoute(
       createJsonRequest(translationBody({ mode: "detailed", text: "algorithmic bias", context: TEST_CONTEXT[0] })),
     );
-    const payload = await readJsonResponse<{
-      performance: {
-        timings: { totalMs: number; steps: Record<string, number> };
-        prisma: {
-          queryCount: number;
-          totalDurationMs: number;
-          steps: Record<string, { queries: number; ms: number }>;
-        };
-      };
-    } & Record<string, unknown>>(response);
+    const payload = await readJsonResponse(response);
 
     expect(response.status).toBe(200);
     expect(payload).toMatchObject({
       success: true,
       data: {
         translation: "thiên lệch thuật toán",
-        provider: "ai",
+        provider: "dictionary",
       },
     });
-    expect(generateObject).toHaveBeenCalledTimes(1);
-    expect(db.translationCache.upsert).toHaveBeenCalledWith(
-      expect.objectContaining({
-        create: expect.objectContaining({ provider: "ai", mode: "detailed" }),
-        update: expect.objectContaining({ provider: "ai" }),
-      }),
-    );
-
-    const error = new Error("model unavailable");
-    generateObject.mockRejectedValueOnce(error);
-    await expectJsonError(
-      await translateRoute(createJsonRequest(translationBody({ mode: "detailed" }))),
-      500,
-      "Unable to translate the selection.",
-    );
-    expect(Sentry.captureException).toHaveBeenCalledWith(error, {
-      tags: { route: "api:translate", method: "POST" },
-    });
+    expect(generateObject).not.toHaveBeenCalled();
   });
 
   it("records privacy-safe spans and logs without raw selected text or context", async () => {
@@ -349,9 +315,8 @@ describe("POST /api/translate", () => {
     expect(spanMetadata).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ name: "api:translate-authenticate", op: "auth" }),
-        expect.objectContaining({ name: "db:translate-cache-fetch", op: "db" }),
-        expect.objectContaining({ name: "dictionary:quick-resolve", op: "function" }),
-        expect.objectContaining({ name: "db:translate-cache-upsert", op: "db" }),
+        expect.objectContaining({ name: "db:translate-cache-and-source-fetch", op: "db" }),
+        expect.objectContaining({ name: "word-translate:resolve", op: "function" }),
       ]),
     );
     const serializedSpanMetadata = JSON.stringify(spanMetadata);
@@ -398,11 +363,8 @@ describe("POST /api/translate", () => {
       expect.objectContaining({
         parseBody: expect.any(Number),
         validateRequest: expect.any(Number),
-        auth: expect.any(Number),
-        cacheRead: expect.any(Number),
-        sourceFetch: expect.any(Number),
+        cacheAndSourceRead: expect.any(Number),
         dictionaryResolve: expect.any(Number),
-        cacheWrite: expect.any(Number),
       }),
     );
 
@@ -413,7 +375,7 @@ describe("POST /api/translate", () => {
 
   it("routes sentence-length quick translation to non-AI provider without calling AI", async () => {
     const sentenceText = "Key concerns include algorithmic bias in automated hiring systems.";
-    routeMocks.translateWithNonAiProvider.mockResolvedValueOnce({
+    routeMocks.translateWithProvider.mockResolvedValueOnce({
       translation: "Các mối quan tâm chính bao gồm thiên lệch thuật toán trong hệ thống tuyển dụng tự động.",
       provider: "google_translate",
     });
@@ -433,7 +395,7 @@ describe("POST /api/translate", () => {
       },
     });
     expect(generateObject).not.toHaveBeenCalled();
-    expect(routeMocks.translateWithNonAiProvider).toHaveBeenCalledWith({
+    expect(routeMocks.translateWithProvider).toHaveBeenCalledWith({
       text: sentenceText,
       sourceLanguage: "en",
       targetLanguage: "vi",
@@ -453,11 +415,12 @@ describe("POST /api/translate", () => {
       type: null,
       provider: "google_translate",
     };
-    db.translationCache.findUnique
-      .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce({ provider: "google_translate", response: cachedResponse });
+    // First call: cache miss, second call: cache hit
+    db.$queryRaw
+      .mockResolvedValueOnce([{ cacheProvider: null, cacheResponse: null, sourceId: passageFixture.id, sourceTitle: passageFixture.title }])
+      .mockResolvedValueOnce([{ cacheProvider: "google_translate", cacheResponse: cachedResponse, sourceId: passageFixture.id, sourceTitle: passageFixture.title }]);
 
-    routeMocks.translateWithNonAiProvider.mockResolvedValueOnce({
+    routeMocks.translateWithProvider.mockResolvedValueOnce({
       translation: cachedResponse.translation,
       provider: "google_translate",
     });
@@ -469,9 +432,9 @@ describe("POST /api/translate", () => {
       success: true,
       data: cachedResponse,
     });
-    expect(routeMocks.translateWithNonAiProvider).toHaveBeenCalledTimes(1);
+    expect(routeMocks.translateWithProvider).toHaveBeenCalledTimes(1);
 
-    routeMocks.translateWithNonAiProvider.mockClear();
+    routeMocks.translateWithProvider.mockClear();
     db.translationCache.upsert.mockClear();
     const repeat = await translateRoute(
       createJsonRequest(translationBody({ text: sentenceText, context: TEST_CONTEXT[0] })),
@@ -480,14 +443,14 @@ describe("POST /api/translate", () => {
       success: true,
       data: { ...cachedResponse, provider: "cache" },
     });
-    expect(routeMocks.translateWithNonAiProvider).not.toHaveBeenCalled();
+    expect(routeMocks.translateWithProvider).not.toHaveBeenCalled();
     expect(db.translationCache.upsert).not.toHaveBeenCalled();
     expect(generateObject).not.toHaveBeenCalled();
   });
 
   it("returns 500 when non-AI provider fails without falling back to AI", async () => {
     const sentenceText = "Key concerns include algorithmic bias in automated hiring systems.";
-    routeMocks.translateWithNonAiProvider.mockRejectedValueOnce(new Error("provider unavailable"));
+    routeMocks.translateWithProvider.mockRejectedValueOnce(new Error("provider unavailable"));
 
     await expectJsonError(
       await translateRoute(

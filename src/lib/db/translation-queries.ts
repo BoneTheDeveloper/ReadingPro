@@ -8,7 +8,6 @@ interface TranslationKeyInput {
   selectedText: string;
   contextSentence: string;
   targetLanguage: string;
-  mode: string;
 }
 
 interface TranslationCacheInput extends TranslationKeyInput {
@@ -49,7 +48,6 @@ export function buildTranslationCacheKey(input: TranslationKeyInput) {
     selectedText: input.selectedText,
     contextSentence: input.contextSentence,
     targetLanguage: input.targetLanguage,
-    mode: input.mode,
   });
 }
 
@@ -94,7 +92,7 @@ export async function upsertTranslationCache(input: TranslationCacheInput) {
       contextSentence: input.contextSentence,
       sourceLanguage: input.sourceLanguage,
       targetLanguage: input.targetLanguage,
-      mode: input.mode,
+      mode: "quick",
       provider: input.provider,
       response: input.response,
     },
@@ -110,7 +108,7 @@ export async function createTranslationHistory(input: TranslationHistoryInput) {
       contextSentence: input.contextSentence,
       sourceLanguage: input.sourceLanguage,
       targetLanguage: input.targetLanguage,
-      mode: input.mode,
+      mode: "quick",
       provider: input.provider,
       translation: input.translation,
       response: input.response,

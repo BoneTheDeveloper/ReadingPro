@@ -11,7 +11,7 @@ interface CliOptions {
   suite: BenchmarkSuite;
 }
 
-const defaultSamples = 5;
+const defaultSamples = 10;
 const maxSamples = 50;
 
 const options = parseCliOptions(process.argv.slice(2));
@@ -120,5 +120,9 @@ Options:
   --samples=<count>                  Samples per scenario. Default: ${defaultSamples}. Max: ${maxSamples}.
   --reuse-server                    Reuse an existing fixture-enabled server.
   --base-url=<url>                  Existing server URL. Requires --reuse-server.
+
+Reports:
+  Each run writes JSON and Markdown reports under test-results/performance/.
+  Regenerate Markdown from existing JSON with pnpm test:performance:report.
 `);
 }

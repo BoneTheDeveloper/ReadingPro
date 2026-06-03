@@ -9,7 +9,6 @@
 
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { randomBytes, createHash } from "node:crypto";
 
 // --- Types ---
 
@@ -120,11 +119,7 @@ function generateViSyllable(rng: () => number): string {
   return pick(VI_ONSETS, rng) + pick(VI_VOWELS, rng) + pick(VI_CODAS, rng);
 }
 
-function capitalize(s: string): string {
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
-
-function generateHeadword(rng: () => number, index: number): string {
+function generateHeadword(rng: () => number): string {
   // Mix index into the generation for uniqueness
   const syllableCount = Math.floor(rng() * 3) + 1;
   const syllables: string[] = [];
@@ -144,7 +139,7 @@ function generateVietnamese(rng: () => number): string {
 }
 
 function generateEntry(rng: () => number, index: number): FixtureEntry {
-  const headword = generateHeadword(rng, index);
+  const headword = generateHeadword(rng);
   const pos = pick(POS_OPTIONS, rng);
   const vi = generateVietnamese(rng);
   const status = pick(STATUS_OPTIONS, rng);

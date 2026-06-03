@@ -72,7 +72,7 @@ Fallback generation should be deliberately simple for v1:
 - Modify: `src/lib/db/translation-queries.ts`
 - Modify: `src/lib/ai/translator.ts`
 - Modify/Create: tests under `__tests__/api` and dictionary resolver tests beside the resolver
-- Modify: `docs/API/overview.md` or create `docs/API/translation-flow.md`
+- Modify: `docs/API/overview.md` or create `docs/API/Routes/translation-feature.md`
 
 ## Implementation Steps
 

@@ -55,7 +55,7 @@ interface DictionaryTranslationDto {
 - Modify: `/home/luc/Project/english-reading-training-app/src/lib/dictionary/resolve-quick-dictionary-translation.ts`
 - Modify: `/home/luc/Project/english-reading-training-app/src/lib/dictionary/resolve-dictionary-lookup.ts`
 - Modify: `/home/luc/Project/english-reading-training-app/src/lib/db/dictionary-queries.ts`
-- Modify: `/home/luc/Project/english-reading-training-app/docs/API/translation-flow.md`
+- Modify: `/home/luc/Project/english-reading-training-app/docs/API/Routes/translation-feature.md`
 
 ## Implementation Steps
 

@@ -6,23 +6,21 @@ import { createRequestLogContext, createRequestLogger } from "@/lib/core/logger"
 import {
   getPrismaQueryMetrics,
   runWithPrismaQueryMetrics,
-  runWithPrismaQueryStep,
 } from "@/lib/observability/prisma-query-metrics";
 import {
   createDictionaryPerformanceTracker,
+  measureDictionaryStep,
   shouldIncludeDictionaryPerformanceMetrics,
-} from "@/lib/dictionary/dictionary-performance";
-import { normalizeDictionaryTerm } from "@/lib/dictionary/normalize-dictionary-term";
-import { resolveDictionaryLookup } from "@/lib/dictionary/resolve-dictionary-lookup";
-import type {
-  DictionaryEntryDto,
-  DictionaryMissDto,
-} from "@/lib/dictionary/dictionary-dtos";
+} from "@/lib/dictionary/shared/dictionary-performance";
+import { normalizeDictionaryTerm } from "@/lib/dictionary/shared/normalize-dictionary-term";
+import { searchDictionary } from "@/lib/dictionary/search/search.service";
+import type { DictionarySearchResultDto } from "@/lib/dictionary/shared/dictionary-dtos";
 
 const dictionarySearchQuerySchema = z.object({
   q: z.string().trim().min(1).max(200),
   sourceLanguage: z.literal("en"),
   targetLanguage: z.literal("vi"),
+  limit: z.coerce.number().int().min(1).max(50).default(8).optional(),
 });
 
 function isAuthenticationError(error: unknown) {
@@ -81,7 +79,7 @@ async function handleDictionarySearchGet(request: NextRequest, includePerformanc
       ),
     );
 
-    const result = await measureDictionaryStep(
+    const results = await measureDictionaryStep(
       performanceTracker,
       "searchResolve",
       () => Sentry.startSpan(
@@ -89,31 +87,30 @@ async function handleDictionarySearchGet(request: NextRequest, includePerformanc
           name: "db:dictionary-search",
           op: "db",
           attributes: {
-            "dictionary.query_length": parsed.data.q.length,
+            "dictionary.query_length": normalizedQuery.length,
             "user.id": user.id,
           },
         },
-        () =>
-          resolveDictionaryLookup(parsed.data.q, {
-            sourceLanguage: parsed.data.sourceLanguage,
-            targetLanguage: parsed.data.targetLanguage,
-            performanceStepPrefix: includePerformance ? "searchResolve" : undefined,
-          }),
+        () => searchDictionary(parsed.data.q, {
+          sourceLanguage: parsed.data.sourceLanguage,
+          targetLanguage: parsed.data.targetLanguage,
+          limit: parsed.data.limit,
+        }),
       ),
-    ) as DictionaryEntryDto | DictionaryMissDto;
+    ) as DictionarySearchResultDto[];
 
     requestLog.info(
       {
         context: {
-          queryLength: parsed.data.q.length,
-          found: "found" in result && result.found === false ? false : true,
+          queryLength: normalizedQuery.length,
+          resultCount: results.length,
         },
       },
       "Dictionary search completed",
     );
 
-    return createDictionarySearchSuccessResponse({
-      data: result,
+    return createSearchSuccessResponse({
+      data: results,
       performanceTracker,
     });
   } catch (error) {
@@ -129,8 +126,8 @@ async function handleDictionarySearchGet(request: NextRequest, includePerformanc
   }
 }
 
-function createDictionarySearchSuccessResponse(input: {
-  data: DictionaryEntryDto | DictionaryMissDto;
+function createSearchSuccessResponse(input: {
+  data: DictionarySearchResultDto[];
   performanceTracker: ReturnType<typeof createDictionaryPerformanceTracker> | null;
 }) {
   if (!input.performanceTracker) {
@@ -146,11 +143,3 @@ function createDictionarySearchSuccessResponse(input: {
   });
 }
 
-function measureDictionaryStep<T>(
-  performanceTracker: ReturnType<typeof createDictionaryPerformanceTracker> | null,
-  step: string,
-  callback: () => Promise<T>,
-) {
-  if (!performanceTracker) return callback();
-  return performanceTracker.measure(step, () => runWithPrismaQueryStep(step, callback));
-}
