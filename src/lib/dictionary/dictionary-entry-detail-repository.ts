@@ -1,44 +1,53 @@
 import * as Sentry from "@sentry/nextjs";
 import { db } from "@/lib/db/client";
-import { RUNTIME_STATUSES } from "./dictionary-dtos";
+import type { LookupRawRow } from "./dictionary-lookup-repository";
 
-export type EntryDetailRow = Awaited<ReturnType<typeof findEntryById>>;
-
-export async function findEntryById(
+export async function findEntryByIdRaw(
   entryId: string,
   sourceLanguage: string,
   targetLanguage: string = "vi",
-) {
+): Promise<LookupRawRow[]> {
   return Sentry.startSpan(
     {
       name: "db:dictionary-entry-detail",
       op: "db",
       attributes: {
-        "db.operation": "findUnique",
+        "db.operation": "queryRaw",
         "dictionary.entry_id": entryId,
       },
     },
-    async () => {
-      const entry = await db.dictionaryEntry.findUnique({
-        where: { id: entryId },
-        include: {
-          senses: {
-            orderBy: { usageRank: "asc" },
-            include: {
-              translations: {
-                where: {
-                  targetLanguage,
-                  status: { in: [...RUNTIME_STATUSES] },
-                },
-                orderBy: [{ rank: "asc" }],
-              },
-            },
-          },
-        },
-      });
-
-      if (!entry || entry.sourceLanguage !== sourceLanguage) return null;
-      return entry;
-    },
+    () =>
+      db.$queryRaw<LookupRawRow[]>`
+        SELECT
+          e.id AS "entryId",
+          e.headword,
+          e."sourceLanguage",
+          e."frequencyRank",
+          s.id AS "senseId",
+          s."partOfSpeech",
+          s.definition,
+          s.example,
+          s.tags,
+          s."usageRank",
+          t.id AS "translationId",
+          t."senseId" AS "translationSenseId",
+          t."targetLanguage",
+          t.translation,
+          t."isPrimary",
+          t.rank,
+          t.confidence,
+          t.status,
+          t."sourceType",
+          t."sourceName",
+          t."reviewedAt"
+        FROM dictionary_entries e
+        JOIN dictionary_senses s ON s."entryId" = e.id
+        LEFT JOIN dictionary_translations t ON t."senseId" = s.id
+          AND t."targetLanguage" = ${targetLanguage}
+          AND t.status IN ('reviewed', 'approved')
+        WHERE e.id = ${entryId}
+          AND e."sourceLanguage" = ${sourceLanguage}
+        ORDER BY s."usageRank" ASC, t.rank ASC
+      `,
   );
 }

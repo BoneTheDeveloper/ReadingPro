@@ -1,7 +1,7 @@
 ---
 title: "Dictionary Raw SQL Query Grouping"
 description: "Group dictionary runtime reads into raw SQL queries while preserving current API contracts."
-status: pending
+status: complete
 priority: P2
 effort: 11h
 branch: "dictionary_search_flow_impliment"
@@ -32,11 +32,11 @@ Source brainstorm:
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 1 | [Regression Contracts](./phase-01-regression-contracts.md) | Pending |
-| 2 | [Suggest Query Grouping](./phase-02-suggest-query-grouping.md) | Pending |
-| 3 | [Lookup Query Grouping](./phase-03-lookup-query-grouping.md) | Pending |
-| 4 | [Entry Detail Query Grouping](./phase-04-entry-detail-query-grouping.md) | Pending |
-| 5 | [Benchmark Docs Verification](./phase-05-benchmark-docs-verification.md) | Pending |
+| 1 | [Regression Contracts](./phase-01-regression-contracts.md) | Done |
+| 2 | [Suggest Query Grouping](./phase-02-suggest-query-grouping.md) | Done |
+| 3 | [Lookup Query Grouping](./phase-03-lookup-query-grouping.md) | Done |
+| 4 | [Entry Detail Query Grouping](./phase-04-entry-detail-query-grouping.md) | Done |
+| 5 | [Benchmark Docs Verification](./phase-05-benchmark-docs-verification.md) | Done |
 
 ## Dependencies
 

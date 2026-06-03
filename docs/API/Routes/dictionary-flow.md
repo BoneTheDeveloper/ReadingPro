@@ -428,10 +428,8 @@ Suggest:
 2. Validate query params.
 3. Normalize query.
 4. Return empty success result for normalized query length `<2`.
-5. Query headword prefix matches.
-6. Query alias prefix matches.
-7. Build DTOs with primary translation and backend-generated `sourceLabel`.
-8. Merge, dedupe by entry id, rank, and return.
+5. Single raw SQL query finds headword and alias prefix candidates, deduplicates by entry id (headword wins), and fetches primary translations via LATERAL join.
+6. Build DTOs with primary translation and backend-generated `sourceLabel`.
 
 Search:
 
@@ -449,17 +447,15 @@ Lookup:
 1. Authenticate user.
 2. Validate query params.
 3. Normalize query.
-4. Resolve exact headword.
-5. If missing, resolve exact alias.
-6. Return bounded `DictionaryEntryDto` or stable `DictionaryMissDto`.
+4. Single raw SQL query resolves headword (priority) or alias match and fetches senses with translations.
+5. Return bounded `DictionaryEntryDto` or stable `DictionaryMissDto`.
 
 Entry detail:
 
 1. Authenticate user.
 2. Validate path and query params.
-3. Resolve `DictionaryEntry` by `entryId`.
-4. Filter runtime translations by reviewed/approved status and requested target language.
-5. Return bounded `DictionaryEntryDto` or `404`.
+3. Single raw SQL query resolves entry by id and source language, fetching senses with runtime-status translations.
+4. Return bounded `DictionaryEntryDto` or `404`.
 
 ## Relationship To Quick Translation
 
@@ -512,13 +508,19 @@ existing JSON artifact with `pnpm test:performance:report -- test-results/perfor
 | Scenario | Endpoint | Budget | Gate |
 |----------|----------|--------|------|
 | short suggest query | `GET /api/dictionary/suggest` | `0` queries | hard fail |
-| headword prefix suggest | `GET /api/dictionary/suggest` | `<=12` queries | hard fail |
-| alias prefix suggest | `GET /api/dictionary/suggest` | `<=12` queries | hard fail |
+| headword prefix suggest | `GET /api/dictionary/suggest` | `1` query | hard fail |
+| alias prefix suggest | `GET /api/dictionary/suggest` | `1` query | hard fail |
 | exact headword search | `GET /api/dictionary/search` | `<=6` queries | hard fail |
-| exact headword lookup | `GET /api/dictionary/lookup` | `<=6` queries | hard fail |
-| exact alias lookup | `GET /api/dictionary/lookup` | `<=8` queries | hard fail |
-| lookup miss | `GET /api/dictionary/lookup` | `<=6` queries | hard fail |
-| entry detail by id | `GET /api/dictionary/entries/:entryId` | `<=4` queries | hard fail |
+| exact headword lookup | `GET /api/dictionary/lookup` | `1` query | hard fail |
+| exact alias lookup | `GET /api/dictionary/lookup` | `1` query | hard fail |
+| lookup miss | `GET /api/dictionary/lookup` | `1` query | hard fail |
+| entry detail by id | `GET /api/dictionary/entries/:entryId` | `1` query | hard fail |
+
+Suggest, lookup, and entry-detail use grouped raw SQL queries that combine multiple
+Prisma reads into a single database round-trip. Search remains on the previous
+multi-query approach; its budget will be tightened in a future optimization pass.
+DB index tuning (`pg_trgm`, full-text search, materialized views) is also deferred
+to a separate plan.
 
 ## V1 Boundaries
 

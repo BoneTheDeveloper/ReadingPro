@@ -3,74 +3,93 @@ import { Prisma } from "@/generated/prisma/client";
 import { db } from "@/lib/db/client";
 import { RUNTIME_STATUSES } from "./dictionary-dtos";
 
-export type LookupEntryRow = Awaited<ReturnType<typeof findEntryByHeadword>>;
+export interface LookupRawRow {
+  entryId: string;
+  headword: string;
+  sourceLanguage: string;
+  frequencyRank: number;
+  senseId: string;
+  partOfSpeech: string | null;
+  definition: string | null;
+  example: string | null;
+  tags: string[] | null;
+  usageRank: number;
+  translationId: string | null;
+  translationSenseId: string | null;
+  targetLanguage: string | null;
+  translation: string | null;
+  isPrimary: boolean | null;
+  rank: number | null;
+  confidence: number | null;
+  status: string | null;
+  sourceType: string | null;
+  sourceName: string | null;
+  reviewedAt: Date | null;
+}
 
-export async function findEntryByHeadword(
-  normalizedHeadword: string,
+export async function findDictionaryLookupEntry(
+  normalizedTerm: string,
   sourceLanguage: string,
-) {
+  targetLanguage: string = "vi",
+): Promise<LookupRawRow[]> {
   return Sentry.startSpan(
     {
-      name: "db:dictionary-lookup-by-headword",
+      name: "db:dictionary-lookup",
       op: "db",
       attributes: {
-        "db.operation": "findUnique",
-        "dictionary.normalized_headword": normalizedHeadword,
+        "db.operation": "queryRaw",
+        "dictionary.normalized_term_length": normalizedTerm.length,
       },
     },
     () =>
-      db.dictionaryEntry.findUnique({
-        where: { normalizedHeadword_sourceLanguage: { normalizedHeadword, sourceLanguage } },
-        include: {
-          senses: {
-            orderBy: { usageRank: "asc" },
-            include: {
-              translations: {
-                where: { targetLanguage: "vi" },
-                orderBy: [{ rank: "asc" }],
-              },
-            },
-          },
-        },
-      }),
-  );
-}
-
-export async function findEntryByAlias(
-  normalizedAlias: string,
-  sourceLanguage: string,
-) {
-  return Sentry.startSpan(
-    {
-      name: "db:dictionary-lookup-by-alias",
-      op: "db",
-      attributes: {
-        "db.operation": "findFirst",
-        "dictionary.normalized_alias": normalizedAlias,
-      },
-    },
-    async () => {
-      const alias = await db.dictionaryAlias.findFirst({
-        where: { normalizedAlias, entry: { sourceLanguage } },
-        include: {
-          entry: {
-            include: {
-              senses: {
-                orderBy: { usageRank: "asc" },
-                include: {
-                  translations: {
-                    where: { targetLanguage: "vi" },
-                    orderBy: [{ rank: "asc" }],
-                  },
-                },
-              },
-            },
-          },
-        },
-      });
-
-      return alias?.entry ?? null;
-    },
+      db.$queryRaw<LookupRawRow[]>`
+        WITH matching_entry AS (
+          SELECT e.id, 0 AS match_priority
+          FROM dictionary_entries e
+          WHERE e."normalizedHeadword" = ${normalizedTerm}
+            AND e."sourceLanguage" = ${sourceLanguage}
+          UNION ALL
+          SELECT e.id, 1 AS match_priority
+          FROM dictionary_aliases a
+          JOIN dictionary_entries e ON e.id = a."entryId"
+          WHERE a."normalizedAlias" = ${normalizedTerm}
+            AND e."sourceLanguage" = ${sourceLanguage}
+        ),
+        best_entry AS (
+          SELECT DISTINCT ON (id) id
+          FROM matching_entry
+          ORDER BY id, match_priority
+          LIMIT 1
+        )
+        SELECT
+          be.id AS "entryId",
+          e.headword,
+          e."sourceLanguage",
+          e."frequencyRank",
+          s.id AS "senseId",
+          s."partOfSpeech",
+          s.definition,
+          s.example,
+          s.tags,
+          s."usageRank",
+          t.id AS "translationId",
+          t."senseId" AS "translationSenseId",
+          t."targetLanguage",
+          t.translation,
+          t."isPrimary",
+          t.rank,
+          t.confidence,
+          t.status,
+          t."sourceType",
+          t."sourceName",
+          t."reviewedAt"
+        FROM best_entry be
+        JOIN dictionary_entries e ON e.id = be.id
+        JOIN dictionary_senses s ON s."entryId" = be.id
+        LEFT JOIN dictionary_translations t ON t."senseId" = s.id
+          AND t."targetLanguage" = ${targetLanguage}
+        ORDER BY s."usageRank" ASC, t.rank ASC
+      `,
   );
 }
 

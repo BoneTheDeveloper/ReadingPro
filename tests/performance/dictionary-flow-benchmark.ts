@@ -92,13 +92,13 @@ const performanceHeader = { "x-dictionary-perf-metrics": "1" };
 
 const QUERY_BUDGETS: Record<string, ScenarioBudget> = {
   "suggest-short-query": { maxQueries: 0, gate: "hard" },
-  "suggest-headword-prefix": { maxQueries: 12, gate: "hard" },
-  "suggest-alias-prefix": { maxQueries: 12, gate: "hard" },
+  "suggest-headword-prefix": { maxQueries: 1, gate: "hard" },
+  "suggest-alias-prefix": { maxQueries: 1, gate: "hard" },
   "search-exact-headword": { maxQueries: 6, gate: "hard" },
-  "lookup-exact-headword": { maxQueries: 6, gate: "hard" },
-  "lookup-exact-alias": { maxQueries: 8, gate: "hard" },
-  "lookup-miss": { maxQueries: 6, gate: "hard" },
-  "entry-detail-by-id": { maxQueries: 4, gate: "hard" },
+  "lookup-exact-headword": { maxQueries: 1, gate: "hard" },
+  "lookup-exact-alias": { maxQueries: 1, gate: "hard" },
+  "lookup-miss": { maxQueries: 1, gate: "hard" },
+  "entry-detail-by-id": { maxQueries: 1, gate: "hard" },
 };
 
 const LATENCY_BUDGETS: Record<string, LatencyBudget> = {

@@ -9,9 +9,9 @@ import {
 } from "./dictionary-dtos";
 import { buildEntryDto } from "./dictionary-entry-dto-builder";
 import {
-  findEntryByHeadword,
-  findEntryByAlias,
+  findDictionaryLookupEntry,
   findQuickLookupTranslation,
+  type LookupRawRow,
 } from "./dictionary-lookup-repository";
 
 export interface LookupOptions {
@@ -30,25 +30,18 @@ export async function resolveDictionaryLookup(
     ? [...RUNTIME_STATUSES, "draft"]
     : [...RUNTIME_STATUSES];
 
-  const entry = await runLookupQueryStep(
+  const rows = await runLookupQueryStep(
     options.performanceStepPrefix,
-    "headword",
-    () => findEntryByHeadword(normalized, options.sourceLanguage),
+    "lookup",
+    () => findDictionaryLookupEntry(normalized, options.sourceLanguage, options.targetLanguage),
   );
-  if (entry) {
-    return buildEntryDto(entry, options.targetLanguage, statuses);
+
+  if (rows.length === 0) {
+    return { headword: normalized, found: false };
   }
 
-  const aliasEntry = await runLookupQueryStep(
-    options.performanceStepPrefix,
-    "alias",
-    () => findEntryByAlias(normalized, options.sourceLanguage),
-  );
-  if (aliasEntry) {
-    return buildEntryDto(aliasEntry, options.targetLanguage, statuses);
-  }
-
-  return { headword: normalized, found: false };
+  const entry = groupLookupRows(rows);
+  return buildEntryDto(entry, options.targetLanguage, statuses);
 }
 
 export async function resolveQuickDictionaryLookupSql(
@@ -88,4 +81,69 @@ function runLookupQueryStep<T>(
 ) {
   if (!prefix) return callback();
   return runWithPrismaQueryStep(`${prefix}.${step}`, callback);
+}
+
+export function groupLookupRows(rows: LookupRawRow[]) {
+  const first = rows[0];
+  const senseMap = new Map<string, {
+    id: string;
+    partOfSpeech: string | null;
+    definition: string | null;
+    example: string | null;
+    tags: string[] | null;
+    usageRank: number;
+    translations: Array<{
+      id: string;
+      senseId: string;
+      targetLanguage: string;
+      translation: string;
+      isPrimary: boolean;
+      rank: number;
+      confidence: number | null;
+      status: string;
+      sourceType: string;
+      sourceName: string | null;
+      reviewedAt: Date | null;
+    }>;
+  }>();
+
+  for (const row of rows) {
+    let sense = senseMap.get(row.senseId);
+    if (!sense) {
+      sense = {
+        id: row.senseId,
+        partOfSpeech: row.partOfSpeech,
+        definition: row.definition,
+        example: row.example,
+        tags: row.tags,
+        usageRank: row.usageRank,
+        translations: [],
+      };
+      senseMap.set(row.senseId, sense);
+    }
+
+    if (row.translationId) {
+      sense.translations.push({
+        id: row.translationId,
+        senseId: row.translationSenseId!,
+        targetLanguage: row.targetLanguage!,
+        translation: row.translation!,
+        isPrimary: row.isPrimary!,
+        rank: row.rank!,
+        confidence: row.confidence,
+        status: row.status!,
+        sourceType: row.sourceType!,
+        sourceName: row.sourceName,
+        reviewedAt: row.reviewedAt,
+      });
+    }
+  }
+
+  return {
+    id: first.entryId,
+    headword: first.headword,
+    sourceLanguage: first.sourceLanguage,
+    frequencyRank: first.frequencyRank,
+    senses: Array.from(senseMap.values()),
+  };
 }
