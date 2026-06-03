@@ -602,8 +602,16 @@ function normalizeBaseUrl(value: string) {
 }
 
 function percentile(sortedSamples: number[], percentileValue: number) {
-  const index = Math.ceil((percentileValue / 100) * sortedSamples.length) - 1;
-  return sortedSamples[Math.max(0, Math.min(index, sortedSamples.length - 1))];
+  const n = sortedSamples.length;
+  if (n === 1) return sortedSamples[0];
+
+  const rank = (percentileValue / 100) * (n - 1);
+  const lower = Math.floor(rank);
+  const upper = Math.ceil(rank);
+  const fraction = rank - lower;
+
+  if (lower === upper) return sortedSamples[lower];
+  return sortedSamples[lower] + fraction * (sortedSamples[upper] - sortedSamples[lower]);
 }
 
 async function startOwnedBenchmarkServer() {

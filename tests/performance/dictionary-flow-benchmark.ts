@@ -120,6 +120,8 @@ export async function runDictionaryFlowBenchmark(
 
   console.log(`Running dictionary performance suite with ${options.samples} sample(s) per scenario...`);
 
+  await warmUpDictionaryFlow(context);
+
   for (let sampleIndex = 0; sampleIndex < options.samples; sampleIndex += 1) {
     let fixture: FixturePayload["data"] | null = null;
     const sampleLabel = `sample ${sampleIndex + 1}/${options.samples}`;
@@ -129,9 +131,8 @@ export async function runDictionaryFlowBenchmark(
       fixture = await createFixture(context);
       console.log(`Dictionary ${sampleLabel}: fixture ready (${fixture.headword}, alias ${fixture.alias})`);
 
-      console.log(`Dictionary ${sampleLabel}: running warm-up request (discarded)...`);
+      console.log(`Dictionary ${sampleLabel}: priming caches...`);
       await getJson(`${context.baseUrl}/api/dictionary/suggest?q=${encodeURIComponent(fixture.headwordPrefix)}&sourceLanguage=en&targetLanguage=vi`, context.cookie);
-      console.log(`Dictionary ${sampleLabel}: warm-up complete`);
 
       const reports = await runScenarios(context, fixture, sampleLabel);
       for (const report of reports) {
@@ -154,6 +155,29 @@ export async function runDictionaryFlowBenchmark(
   console.log(`Wrote dictionary Markdown report to ${reportArtifacts.markdownPath}`);
   reportBudgetFailures("dictionary-flow", validateBudgets(reports));
   reportLatencyBudgetFailures("dictionary-flow", validateLatencyBudgets(reports));
+}
+
+async function warmUpDictionaryFlow(context: BenchmarkContext) {
+  console.log("Warming up dictionary flow (suggest, search, lookup, entry-detail)...");
+  let warmupFixture: FixturePayload["data"] | null = null;
+
+  try {
+    warmupFixture = await createFixture(context);
+    const params = "sourceLanguage=en&targetLanguage=vi";
+
+    await getJson(`${context.baseUrl}/api/dictionary/suggest?q=${encodeURIComponent(warmupFixture.headwordPrefix)}&${params}`, context.cookie);
+    await getJson(`${context.baseUrl}/api/dictionary/search?q=${encodeURIComponent(warmupFixture.headword)}&${params}`, context.cookie);
+    await getJson(`${context.baseUrl}/api/dictionary/lookup?q=${encodeURIComponent(warmupFixture.headword)}&${params}`, context.cookie);
+    await getJson(`${context.baseUrl}/api/dictionary/entries/${encodeURIComponent(warmupFixture.headwordEntryId)}?${params}`, context.cookie);
+
+    console.log("Dictionary flow warm-up complete.");
+  } finally {
+    if (warmupFixture) {
+      await cleanupFixture(context, warmupFixture.cleanup).catch((error: unknown) => {
+        console.warn(`Dictionary warm-up cleanup failed: ${error instanceof Error ? error.message : String(error)}`);
+      });
+    }
+  }
 }
 
 async function runScenarios(

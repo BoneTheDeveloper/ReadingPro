@@ -11,7 +11,7 @@ interface CliOptions {
   suite: BenchmarkSuite;
 }
 
-const defaultSamples = 5;
+const defaultSamples = 10;
 const maxSamples = 50;
 
 const options = parseCliOptions(process.argv.slice(2));
