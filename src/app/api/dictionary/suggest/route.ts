@@ -11,10 +11,10 @@ import {
   createDictionaryPerformanceTracker,
   measureDictionaryStep,
   shouldIncludeDictionaryPerformanceMetrics,
-} from "@/lib/dictionary/dictionary-performance";
-import { normalizeDictionaryTerm } from "@/lib/dictionary/normalize-dictionary-term";
-import { suggestDictionaryTerms } from "@/lib/dictionary/dictionary-suggest-service";
-import type { DictionarySuggestItemDto } from "@/lib/dictionary/dictionary-dtos";
+} from "@/lib/dictionary/shared/dictionary-performance";
+import { normalizeDictionaryTerm } from "@/lib/dictionary/shared/normalize-dictionary-term";
+import { suggestDictionaryTerms } from "@/lib/dictionary/suggest/suggest.service";
+import type { DictionarySuggestItemDto } from "@/lib/dictionary/shared/dictionary-dtos";
 
 const suggestQuerySchema = z.object({
   q: z.string().trim().min(1).max(200),

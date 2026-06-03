@@ -1,7 +1,7 @@
 import * as Sentry from "@sentry/nextjs";
 import { Prisma } from "@/generated/prisma/client";
 import { db } from "@/lib/db/client";
-import { RUNTIME_STATUSES } from "./dictionary-dtos";
+import { RUNTIME_STATUSES } from "../shared/dictionary-dtos";
 
 export interface LookupRawRow {
   entryId: string;

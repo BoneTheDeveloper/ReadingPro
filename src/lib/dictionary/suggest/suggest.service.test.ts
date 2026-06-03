@@ -1,15 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { SuggestCandidateRow } from "./dictionary-suggest-repository";
+import type { SuggestCandidateRow } from "./suggest.repository";
 
 const mocks = vi.hoisted(() => ({
   findSuggestCandidates: vi.fn<() => Promise<SuggestCandidateRow[]>>(),
 }));
 
-vi.mock("./dictionary-suggest-repository", () => ({
+vi.mock("./suggest.repository", () => ({
   findSuggestCandidates: mocks.findSuggestCandidates,
 }));
 
-import { suggestDictionaryTerms } from "./dictionary-suggest-service";
+import { suggestDictionaryTerms } from "./suggest.service";
 
 const OPTIONS = { sourceLanguage: "en", targetLanguage: "vi" } as const;
 

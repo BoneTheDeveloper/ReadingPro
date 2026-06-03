@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET as dictionaryLookup } from "@/app/api/dictionary/lookup/route";
-import type { DictionaryEntryDto, DictionaryMissDto } from "@/lib/dictionary/dictionary-dtos";
+import type { DictionaryEntryDto, DictionaryMissDto } from "@/lib/dictionary/shared/dictionary-dtos";
 import { userProfileFixture } from "../../fixtures";
 import { readJsonResponse } from "../../helpers/api";
 import { expectApiErrorPayload, expectApiSuccessPayload } from "../../helpers/assertions";
@@ -15,7 +15,7 @@ vi.mock("@/lib/auth/auth-utils", () => ({
   getAuthenticatedUser: routeMocks.getAuthenticatedUser,
 }));
 
-vi.mock("@/lib/dictionary/dictionary-lookup-service", () => ({
+vi.mock("@/lib/dictionary/lookup/lookup.service", () => ({
   resolveDictionaryLookup: routeMocks.resolveDictionaryLookup,
 }));
 

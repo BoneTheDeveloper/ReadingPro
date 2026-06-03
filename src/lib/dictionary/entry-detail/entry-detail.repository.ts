@@ -1,6 +1,6 @@
 import * as Sentry from "@sentry/nextjs";
 import { db } from "@/lib/db/client";
-import type { LookupRawRow } from "./dictionary-lookup-repository";
+import type { LookupRawRow } from "../lookup/lookup.repository";
 
 export async function findEntryByIdRaw(
   entryId: string,

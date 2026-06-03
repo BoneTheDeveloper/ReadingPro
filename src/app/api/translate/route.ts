@@ -16,7 +16,7 @@ import {
   runWithPrismaQueryMetrics,
   runWithPrismaQueryStep,
 } from "@/lib/observability/prisma-query-metrics";
-import { resolveQuickDictionaryTranslation } from "@/lib/dictionary/resolve-quick-dictionary-translation";
+import { resolveQuickDictionaryTranslation } from "@/lib/dictionary/lookup/lookup-quick.service";
 import { getQuickSelectionScope } from "@/lib/translation/quick-selection-scope";
 import { translateWithNonAiProvider } from "@/lib/translation/non-ai-machine-translation-provider";
 import { MAX_TRANSLATE_CONTEXT_LENGTH, MAX_TRANSLATE_TEXT_LENGTH } from "@/lib/translation/translation-limits";

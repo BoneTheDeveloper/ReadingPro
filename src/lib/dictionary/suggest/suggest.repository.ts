@@ -1,8 +1,8 @@
 import * as Sentry from "@sentry/nextjs";
 import { Prisma } from "@/generated/prisma/client";
 import { db } from "@/lib/db/client";
-import { normalizeDictionaryTerm } from "./normalize-dictionary-term";
-import { RUNTIME_STATUSES } from "./dictionary-dtos";
+import { normalizeDictionaryTerm } from "../shared/normalize-dictionary-term";
+import { RUNTIME_STATUSES } from "../shared/dictionary-dtos";
 
 export interface SuggestCandidateRow {
   id: string;

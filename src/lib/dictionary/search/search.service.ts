@@ -1,12 +1,12 @@
 import {
   getSourceLabel,
   type DictionarySearchResultDto,
-} from "./dictionary-dtos";
-import { normalizeDictionaryTerm } from "./normalize-dictionary-term";
+} from "../shared/dictionary-dtos";
+import { normalizeDictionaryTerm } from "../shared/normalize-dictionary-term";
 import {
   searchDictionaryCandidates,
   type DictionarySearchCandidateRow,
-} from "./dictionary-search-repository";
+} from "./search.repository";
 
 export interface DictionarySearchOptions {
   sourceLanguage: string;

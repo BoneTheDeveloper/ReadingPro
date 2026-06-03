@@ -7,8 +7,8 @@ import { useTranslations } from "next-intl";
 import type {
   DictionaryEntryDto,
   DictionarySuggestItemDto,
-} from "@/lib/dictionary/dictionary-dtos";
-import { normalizeDictionaryTerm } from "@/lib/dictionary/normalize-dictionary-term";
+} from "@/lib/dictionary/shared/dictionary-dtos";
+import { normalizeDictionaryTerm } from "@/lib/dictionary/shared/normalize-dictionary-term";
 import { DictionaryEntryCard } from "./dictionary-entry-card";
 import { DictionarySuggestDropdown } from "./dictionary-suggest-dropdown";
 

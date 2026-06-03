@@ -11,8 +11,8 @@ import {
   createDictionaryPerformanceTracker,
   measureDictionaryStep,
   shouldIncludeDictionaryPerformanceMetrics,
-} from "@/lib/dictionary/dictionary-performance";
-import { getDictionaryEntryDetail } from "@/lib/dictionary/dictionary-entry-detail-service";
+} from "@/lib/dictionary/shared/dictionary-performance";
+import { getDictionaryEntryDetail } from "@/lib/dictionary/entry-detail/entry-detail.service";
 
 const entryDetailQuerySchema = z.object({
   sourceLanguage: z.literal("en"),

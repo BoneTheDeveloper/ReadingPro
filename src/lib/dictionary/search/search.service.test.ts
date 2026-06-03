@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { searchDictionary } from "./dictionary-search-service";
+import { searchDictionary } from "./search.service";
 
 const mocks = vi.hoisted(() => ({
   searchDictionaryCandidates: vi.fn(),
 }));
 
-vi.mock("./dictionary-search-repository", () => ({
+vi.mock("./search.repository", () => ({
   searchDictionaryCandidates: mocks.searchDictionaryCandidates,
 }));
 

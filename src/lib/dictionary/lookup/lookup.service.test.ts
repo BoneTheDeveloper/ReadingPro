@@ -1,16 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { LookupRawRow } from "./dictionary-lookup-repository";
+import type { LookupRawRow } from "./lookup.repository";
 
 const mocks = vi.hoisted(() => ({
   findDictionaryLookupEntry: vi.fn<() => Promise<LookupRawRow[]>>(),
 }));
 
-vi.mock("./dictionary-lookup-repository", () => ({
+vi.mock("./lookup.repository", () => ({
   findDictionaryLookupEntry: mocks.findDictionaryLookupEntry,
   findQuickLookupTranslation: vi.fn(),
 }));
 
-import { resolveDictionaryLookup } from "./dictionary-lookup-service";
+import { resolveDictionaryLookup } from "./lookup.service";
 
 const OPTIONS = {
   sourceLanguage: "en",

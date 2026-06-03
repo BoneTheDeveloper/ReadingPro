@@ -11,10 +11,10 @@ import {
   createDictionaryPerformanceTracker,
   measureDictionaryStep,
   shouldIncludeDictionaryPerformanceMetrics,
-} from "@/lib/dictionary/dictionary-performance";
-import { normalizeDictionaryTerm } from "@/lib/dictionary/normalize-dictionary-term";
-import { searchDictionary } from "@/lib/dictionary/dictionary-search-service";
-import type { DictionarySearchResultDto } from "@/lib/dictionary/dictionary-dtos";
+} from "@/lib/dictionary/shared/dictionary-performance";
+import { normalizeDictionaryTerm } from "@/lib/dictionary/shared/normalize-dictionary-term";
+import { searchDictionary } from "@/lib/dictionary/search/search.service";
+import type { DictionarySearchResultDto } from "@/lib/dictionary/shared/dictionary-dtos";
 
 const dictionarySearchQuerySchema = z.object({
   q: z.string().trim().min(1).max(200),

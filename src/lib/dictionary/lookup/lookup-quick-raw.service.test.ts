@@ -8,7 +8,7 @@ vi.mock("@/lib/db/client", () => {
 });
 
 import { db } from "@/lib/db/client";
-import { resolveQuickDictionaryLookupSql } from "./dictionary-lookup-service";
+import { resolveQuickDictionaryLookupSql } from "./lookup.service";
 
 const mockQueryRaw = vi.mocked(db.$queryRaw);
 

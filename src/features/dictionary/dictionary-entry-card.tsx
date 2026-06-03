@@ -3,7 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import type { DictionaryEntryDto, DictionarySenseDto } from "@/lib/dictionary/dictionary-dtos";
+import type { DictionaryEntryDto, DictionarySenseDto } from "@/lib/dictionary/shared/dictionary-dtos";
 import { useTranslations } from "next-intl";
 
 interface DictionaryEntryCardProps {

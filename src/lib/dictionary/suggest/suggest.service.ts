@@ -1,6 +1,6 @@
-import { normalizeDictionaryTerm } from "./normalize-dictionary-term";
-import { getSourceLabel, type DictionarySuggestItemDto } from "./dictionary-dtos";
-import { findSuggestCandidates, type SuggestCandidateRow } from "./dictionary-suggest-repository";
+import { normalizeDictionaryTerm } from "../shared/normalize-dictionary-term";
+import { getSourceLabel, type DictionarySuggestItemDto } from "../shared/dictionary-dtos";
+import { findSuggestCandidates, type SuggestCandidateRow } from "./suggest.repository";
 
 export interface SuggestOptions {
   sourceLanguage: string;

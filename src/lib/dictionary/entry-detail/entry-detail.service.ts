@@ -1,7 +1,7 @@
-import { findEntryByIdRaw } from "./dictionary-entry-detail-repository";
-import { buildEntryDto } from "./dictionary-entry-dto-builder";
-import { RUNTIME_STATUSES } from "./dictionary-dtos";
-import { groupLookupRows } from "./dictionary-lookup-service";
+import { findEntryByIdRaw } from "./entry-detail.repository";
+import { buildEntryDto } from "../shared/dictionary-dto-builders";
+import { RUNTIME_STATUSES } from "../shared/dictionary-dtos";
+import { groupLookupRows } from "../lookup/lookup.service";
 
 export interface EntryDetailOptions {
   sourceLanguage: string;

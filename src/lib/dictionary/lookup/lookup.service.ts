@@ -1,18 +1,18 @@
 import { runWithPrismaQueryStep } from "@/lib/observability/prisma-query-metrics";
-import { normalizeDictionaryTerm } from "./normalize-dictionary-term";
+import { normalizeDictionaryTerm } from "../shared/normalize-dictionary-term";
 import {
   type DictionaryEntryDto,
   type DictionaryMissDto,
   type DictionaryTranslationDto,
   RUNTIME_STATUSES,
   getSourceLabel,
-} from "./dictionary-dtos";
-import { buildEntryDto } from "./dictionary-entry-dto-builder";
+} from "../shared/dictionary-dtos";
+import { buildEntryDto } from "../shared/dictionary-dto-builders";
 import {
   findDictionaryLookupEntry,
   findQuickLookupTranslation,
   type LookupRawRow,
-} from "./dictionary-lookup-repository";
+} from "./lookup.repository";
 
 export interface LookupOptions {
   sourceLanguage: string;

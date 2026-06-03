@@ -11,13 +11,13 @@ import {
   createDictionaryPerformanceTracker,
   measureDictionaryStep,
   shouldIncludeDictionaryPerformanceMetrics,
-} from "@/lib/dictionary/dictionary-performance";
-import { normalizeDictionaryTerm } from "@/lib/dictionary/normalize-dictionary-term";
-import { resolveDictionaryLookup } from "@/lib/dictionary/dictionary-lookup-service";
+} from "@/lib/dictionary/shared/dictionary-performance";
+import { normalizeDictionaryTerm } from "@/lib/dictionary/shared/normalize-dictionary-term";
+import { resolveDictionaryLookup } from "@/lib/dictionary/lookup/lookup.service";
 import type {
   DictionaryEntryDto,
   DictionaryMissDto,
-} from "@/lib/dictionary/dictionary-dtos";
+} from "@/lib/dictionary/shared/dictionary-dtos";
 
 const dictionaryLookupQuerySchema = z.object({
   q: z.string().trim().min(1).max(200),
