@@ -1,22 +1,21 @@
 import { createModuleLogger } from "@/lib/core/logger";
 
-const log = createModuleLogger("translation:non-ai-provider");
+const log = createModuleLogger("translation:provider");
 
-interface NonAiTranslationResult {
+interface TranslationProviderResult {
   translation: string;
   provider: "google_translate";
 }
 
 /**
- * Translate text using a non-AI machine translation provider.
- * Uses the free Google Translate endpoint — no API key required.
+ * Translate text using a Google Translate-compatible provider.
  * Provider failures throw so the route can return the standard 500 shape.
  */
-export async function translateWithNonAiProvider(input: {
+export async function translateWithProvider(input: {
   text: string;
   sourceLanguage: string;
   targetLanguage: string;
-}): Promise<NonAiTranslationResult> {
+}): Promise<TranslationProviderResult> {
   const provider = "google_translate";
 
   try {
@@ -29,32 +28,31 @@ export async function translateWithNonAiProvider(input: {
     if (!response.ok) {
       log.error(
         { context: { status: response.status, provider } },
-        "Non-AI translation provider returned non-OK status",
+        "Translation provider returned non-OK status",
       );
-      throw new Error(`Non-AI provider returned status ${response.status}`);
+      throw new Error(`Translation provider returned status ${response.status}`);
     }
 
     const data = await response.json();
 
-    // Google Translate response: array of [translation, original, ...]
     const translation = Array.isArray(data?.[0])
       ? (data[0] as string[][]).map((segment) => segment[0]).join("")
       : String(data?.[0] ?? "");
 
     if (!translation) {
-      throw new Error("Non-AI provider returned empty translation");
+      throw new Error("Translation provider returned empty translation");
     }
 
     log.debug(
       { context: { provider, textLength: input.text.length, translationLength: translation.length } },
-      "Non-AI machine translation completed",
+      "Translation completed",
     );
 
     return { translation, provider };
   } catch (error) {
     log.error(
       { err: error, context: { provider, textLength: input.text.length } },
-      "Non-AI machine translation failed",
+      "Translation failed",
     );
     throw error;
   }

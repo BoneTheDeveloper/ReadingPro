@@ -1,14 +1,18 @@
-# Translation API Feature
+# Inline Translation API Feature
 
-Translation APIs provide fast English-to-Vietnamese translation for selected
-reader text and let the user save successful translations as vocabulary.
+Inline translation APIs provide fast English-to-Vietnamese translation for
+selected reader text and let the user save successful translations as
+vocabulary.
 
-The API feature has two runtime paths:
+`POST /api/translate` is one public route. The backend automatically detects
+which runtime path to use from the selected text. Clients do not send a
+translation `mode`.
 
-1. **Word lookup translation** resolves a word or short phrase against the
-   lexicon tables through a translate-owned adapter.
-2. **Sentence / paragraph translation** uses Google Translate-compatible machine
-   translation for fast result.
+The route has two runtime paths, named by input type:
+
+1. **Word translate path** resolves a word or short phrase (≤4 tokens, ≤40
+   chars, no newline, no sentence-ending punctuation).
+2. **Sentence translate path** resolves a sentence or paragraph.
 
 Dictionary search, suggestions, and entry detail behavior are separate. See
 [dictionary-feature.md](./dictionary-feature.md).
@@ -18,15 +22,16 @@ Dictionary search, suggestions, and entry detail behavior are separate. See
 In scope:
 
 - Accept word, short phrase, sentence, or paragraph text selected from a passage.
-- Resolve word / short phrase selections through the word lookup path.
-- Resolve sentence / paragraph selections through Google Translate-compatible
-  machine translation.
+- Auto-detect the selected text shape on the backend.
+- Resolve word / short phrase selections through the word translate path.
+- Resolve sentence / paragraph selections through the sentence translate path.
 - Save successful translations through `POST /api/vocabulary`.
 
 Out of scope:
 
 - Dictionary search and autocomplete UX.
-- AI translation.
+- Detailed translation mode.
+- Client-selected translation mode.
 - Translation history viewer.
 - Persisting client cache to `localStorage` or IndexedDB.
 - Target-language selection beyond Vietnamese.
@@ -35,13 +40,14 @@ Out of scope:
 
 ## Endpoints
 
-### Translate API
+### Inline Translation API
 
 #### 1. Purpose
 
 Fast inline English-to-Vietnamese translation for selected study reader text.
-This route owns both word lookup and machine translation paths. It does not
-expose dictionary search, autocomplete, entry detail, or AI translation.
+The backend chooses the path automatically by classifying the input text. It
+does not expose dictionary search, autocomplete, entry detail, or detailed
+translation mode.
 
 #### 2. Method + path
 
@@ -62,6 +68,9 @@ Request body:
   targetLanguage: "vi";
 }
 ```
+
+No `mode` field is accepted by this API contract. The backend classifies the
+selection and routes it to the correct internal runtime path.
 
 #### 4. Success response
 
@@ -93,7 +102,7 @@ Request body:
 | `400` | Invalid JSON/body |
 | `401` | Missing auth |
 | `404` | Inaccessible source |
-| `500` | Unexpected failure or Google Translate provider failure |
+| `500` | Unexpected failure or provider failure |
 
 #### 6. Notes about cache / auth / boundaries
 
@@ -101,8 +110,9 @@ Request body:
 - Client should call this route only on client memory cache miss.
 - Server checks `TranslationCache` before source lookup.
 - Cache hits return `provider: "cache"` and skip redundant source fetch.
-- Word / short phrase selections use the word lookup path.
-- Sentence / paragraph selections use the Google Translate-compatible provider.
+- Word / short phrase selections use the word translate path.
+- Sentence / paragraph selections use the sentence translate path.
+- Clients do not choose the runtime path.
 - Successful results are cached and history is persisted asynchronously.
 - Logs and Sentry metadata must not include raw selected text or raw context.
 
@@ -183,94 +193,38 @@ Request body:
 
 ## Server Logic
 
-Translation must not call AI. `POST /api/translate` resolves in this order:
+`POST /api/translate` resolves in this order:
 
 1. Authenticate user.
 2. Build server translation cache key.
 3. Check `TranslationCache`.
-4. If cache hit, return `provider: "cache"` without redundant source fetch. Cache hit is keyed by `userId + sourceId`, so it proves ownership for this result.
+4. If cache hit, return `provider: "cache"` without redundant source fetch.
 5. If cache miss, verify the source passage is owned by the user.
-6. Classify selection into one of two paths:
-   - **Word / short phrase:** `<=4` tokens, `<=40` chars, no newline, no sentence-ending punctuation.
-   - **Sentence / paragraph:** newline, sentence-ending punctuation, `>4` tokens, or `>40` chars.
-7. Word / short phrase path uses word lookup for exact headword or exact alias primary translation.
-8. Sentence / paragraph path uses the Google Translate-compatible provider.
-9. Return the resolved translation as soon as available.
-10. Persist server cache and history asynchronously with error logging.
+6. Classify the selected text by input shape:
+   - **Word / short phrase:** `<=4` tokens, `<=40` chars, no newline, no sentence-ending punctuation → word translate path.
+   - **Sentence / paragraph:** newline, sentence-ending punctuation, `>4` tokens, or `>40` chars → sentence translate path.
+7. Resolve the translation.
+8. Return the resolved translation as soon as available.
+9. Persist server cache and history asynchronously with error logging.
 
 If async cache persistence fails, the current request still succeeds. The only user-visible cost is that a later identical request may miss server cache and recompute the translation.
 
 ## Naming Convention
 
-Use translation API feature names for translation code and docs:
+Use input-focused names for translation code and docs:
 
-| Concept | Preferred name | Avoid in translation API feature |
+| Concept | Preferred name | Avoid |
 | --- | --- | --- |
-| Word or short phrase branch | `word lookup path` | `dictionary route`, `dictionary API` |
-| Translate-owned adapter for word lookup | `wordLookup` / `word-lookup` | `dictionaryLookupRoute` |
-| Full public dictionary feature | `dictionary feature` or `/api/dictionary/*` | `translate word lookup` |
-| Sentence or paragraph branch | `machine translation path` | `AI translation` |
+| Public translation route | `Inline Translation API` or `POST /api/translate` | `dictionary route`, `translate mode route` |
+| Word or short phrase input path | `word translate path` | `dictionary route`, `dictionary API`, `word lookup path` |
+| Sentence or paragraph input path | `sentence translate path` | `machine translation path`, `sentence route` |
+| Route selection | backend auto-detection | client-selected `mode` |
 
-The word lookup path may read from lexicon tables and may reuse lower-level
-lexicon data-access code, but translation docs should not call it the
-dictionary route. `/api/dictionary/*` means the public dictionary API feature:
-suggest, search, exact lookup, and entry detail.
+The `provider` response field indicates the data source (`"cache"`, `"dictionary"`, `"fallback"`, `"google_translate"`). It does not imply a call to `GET /api/dictionary/*`.
 
-The API result provider may still be `"dictionary"` for backward-compatible
-source labeling. That provider value does not mean `POST /api/translate` called
-`GET /api/dictionary/lookup`.
+## Boundary with Dictionary Feature
 
-## Internal Word Lookup Use
-
-Quick translation may use the lexicon tables internally for word and short
-phrase selections, but it must not become a dictionary search feature.
-
-Allowed:
-
-- Exact headword lookup.
-- Exact alias lookup.
-- Primary translation selection.
-- Deterministic fallback for word lookup misses.
-- Reuse of lower-level lexicon table read code through the translate-owned
-  word lookup adapter.
-
-Not allowed in this API feature:
-
-- Calling `GET /api/dictionary/lookup` from inside `POST /api/translate`.
-- Prefix suggest search.
-- Search results lists.
-- Multi-sense dictionary detail rendering.
-- Autocomplete behavior.
-
-Those belong to [dictionary-feature.md](./dictionary-feature.md).
-
-The important boundary: `/api/translate` may reuse lexicon table read code,
-but it should not make an internal HTTP request to `/api/dictionary/lookup`.
-Internal HTTP would add avoidable latency, duplicate auth/error handling, and
-blur the route boundary.
-
-## Google Translate Provider
-
-Fast sentence/paragraph translation uses a Google Translate-compatible endpoint.
-If the provider fails, the route returns the standard `500` error without
-falling back to AI.
-
-## Observability
-
-Routes use `createRequestLogger()` and `createRequestLogContext()`.
-
-Spans should cover:
-
-- Auth.
-- Client cache miss API request.
-- Server cache lookup.
-- Source lookup on server cache miss.
-- Word lookup for word / short phrase selections.
-- Google Translate provider call for sentence / paragraph selections.
-- Async cache/history writes.
-
-Logs and Sentry metadata must avoid raw selected text and raw context. Record lengths, source id, target language, provider, cache hit state, and result status instead.
-
-## V1 Boundaries
-
-V1 intentionally excludes AI translation, dictionary autocomplete, dictionary detail rendering inside quick translate, a custom right-click menu, a translation history viewer, flashcard generation from vocabulary, pronunciation audio, and target-language selection beyond Vietnamese.
+`/api/translate` may reuse lexicon table read code for word selections, but it
+must not make an internal HTTP request to `/api/dictionary/*`. Dictionary search,
+suggest, autocomplete, and entry detail are separate features. See
+[dictionary-feature.md](./dictionary-feature.md).

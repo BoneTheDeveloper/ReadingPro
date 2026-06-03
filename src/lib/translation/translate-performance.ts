@@ -7,8 +7,7 @@ export type TranslateResolutionSource =
   | "dictionary"
   | "phrase"
   | "fallback"
-  | "google_translate"
-  | "ai";
+  | "google_translate";
 
 export interface TranslateClientMetrics {
   wordsBeforeSelected?: number;

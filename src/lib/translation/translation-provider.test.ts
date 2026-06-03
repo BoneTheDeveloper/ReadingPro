@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { translateWithNonAiProvider } from "./non-ai-machine-translation-provider";
+import { translateWithProvider } from "./translation-provider";
 
-describe("translateWithNonAiProvider", () => {
+describe("translateWithProvider", () => {
   beforeEach(() => {
     vi.stubGlobal(
       "fetch",
@@ -23,7 +23,7 @@ describe("translateWithNonAiProvider", () => {
   });
 
   it("returns translation with google_translate provider on success", async () => {
-    const result = await translateWithNonAiProvider({
+    const result = await translateWithProvider({
       text: "Hello",
       sourceLanguage: "en",
       targetLanguage: "vi",
@@ -43,19 +43,19 @@ describe("translateWithNonAiProvider", () => {
     vi.mocked(fetch).mockResolvedValueOnce(new Response("Bad Gateway", { status: 502 }));
 
     await expect(
-      translateWithNonAiProvider({
+      translateWithProvider({
         text: "Hello",
         sourceLanguage: "en",
         targetLanguage: "vi",
       }),
-    ).rejects.toThrow("Non-AI provider returned status 502");
+    ).rejects.toThrow("Translation provider returned status 502");
   });
 
   it("throws on network failure", async () => {
     vi.mocked(fetch).mockRejectedValueOnce(new TypeError("fetch failed"));
 
     await expect(
-      translateWithNonAiProvider({
+      translateWithProvider({
         text: "Hello",
         sourceLanguage: "en",
         targetLanguage: "vi",
@@ -69,11 +69,11 @@ describe("translateWithNonAiProvider", () => {
     );
 
     await expect(
-      translateWithNonAiProvider({
+      translateWithProvider({
         text: "Hello",
         sourceLanguage: "en",
         targetLanguage: "vi",
       }),
-    ).rejects.toThrow("Non-AI provider returned empty translation");
+    ).rejects.toThrow("Translation provider returned empty translation");
   });
 });
