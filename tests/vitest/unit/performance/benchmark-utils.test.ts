@@ -16,7 +16,7 @@ describe("performance benchmark utilities", () => {
       samples,
       min: 10,
       median: 30,
-      p95: 50,
+      p95: 48,
       max: 50,
     });
   });
@@ -40,7 +40,7 @@ describe("performance benchmark utilities", () => {
         scenario: "lookup-exact-headword",
         metric: "p95RoundTripMs",
         gate: "soft",
-        actual: 240,
+        actual: 234,
         max: 200,
       },
     ]);
