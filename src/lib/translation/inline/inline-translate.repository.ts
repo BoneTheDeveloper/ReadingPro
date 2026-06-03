@@ -1,26 +1,46 @@
 import type { Prisma } from "@/generated/prisma/client";
 import * as Sentry from "@sentry/nextjs";
+import { db } from "@/lib/db/client";
 import {
   buildTranslationCacheKey,
   createTranslationHistory,
-  getOwnedTranslationSource,
-  getTranslationCache,
   upsertTranslationCache,
 } from "@/lib/db/translation-queries";
 
 export { buildTranslationCacheKey };
 
-export async function fetchTranslationCache(cacheKey: string) {
+export interface CacheAndSourceRow {
+  cacheProvider: string | null;
+  cacheResponse: Prisma.JsonValue | null;
+  sourceId: string | null;
+  sourceTitle: string | null;
+}
+
+export async function fetchCacheAndSource(cacheKey: string, userId: string, sourceId: string) {
   return Sentry.startSpan(
     {
-      name: "db:translate-cache-fetch",
+      name: "db:translate-cache-and-source-fetch",
       op: "db",
       attributes: {
-        "db.operation": "findUnique",
-        "db.model": "TranslationCache",
+        "db.operation": "queryRaw",
       },
     },
-    () => getTranslationCache(cacheKey),
+    () =>
+      db.$queryRaw<CacheAndSourceRow[]>`
+        SELECT
+          tc.provider AS "cacheProvider",
+          tc.response AS "cacheResponse",
+          p.id AS "sourceId",
+          p.title AS "sourceTitle"
+        FROM passages p
+        LEFT JOIN translation_caches tc
+          ON tc."cacheKey" = ${cacheKey}
+          AND tc."sourceId" = p.id
+        WHERE p.id = ${sourceId}
+          AND p."userId" = ${userId}
+          AND p."deletedAt" IS NULL
+        LIMIT 1
+      `,
   );
 }
 
@@ -45,22 +65,6 @@ export async function writeTranslationCache(input: {
       },
     },
     () => upsertTranslationCache(input),
-  );
-}
-
-export async function fetchOwnedSource(userId: string, sourceId: string) {
-  return Sentry.startSpan(
-    {
-      name: "db:translate-source-fetch",
-      op: "db",
-      attributes: {
-        "db.operation": "findUnique",
-        "db.model": "Passage",
-        "translation.source_id": sourceId,
-        "user.id": userId,
-      },
-    },
-    () => getOwnedTranslationSource(userId, sourceId),
   );
 }
 

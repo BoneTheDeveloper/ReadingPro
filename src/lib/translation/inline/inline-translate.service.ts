@@ -14,8 +14,7 @@ import {
 import { runWithPrismaQueryStep } from "@/lib/observability/prisma-query-metrics";
 import {
   buildTranslationCacheKey,
-  fetchOwnedSource,
-  fetchTranslationCache,
+  fetchCacheAndSource,
   writeTranslationCache,
   writeTranslationHistory,
 } from "./inline-translate.repository";
@@ -63,10 +62,19 @@ export async function executeTranslate(
     targetLanguage: input.targetLanguage,
   });
 
-  const cached = await measureStep(ctx, "cacheRead", () => fetchTranslationCache(cacheKey));
+  const rows = await measureStep(ctx, "cacheAndSourceRead", () =>
+    fetchCacheAndSource(cacheKey, ctx.userId, input.sourceId),
+  );
 
-  if (cached) {
-    const cachedResult = quickTranslationSchema.safeParse(cached.response);
+  const row = rows[0];
+
+  if (!row?.sourceId) {
+    ctx.requestLog.warn("Translation source not found");
+    return { ok: false, status: 404 };
+  }
+
+  if (row.cacheResponse) {
+    const cachedResult = quickTranslationSchema.safeParse(row.cacheResponse);
     if (cachedResult.success) {
       const data = asCacheProvider(cachedResult.data);
       ctx.requestLog.info(
@@ -81,35 +89,15 @@ export async function executeTranslate(
         "Translation cache hit",
       );
 
-      void persistTranslationResult(ctx.userId, input, data, ctx.requestLog);
+      void persistAsync(ctx.userId, input, data, ctx.requestLog);
 
       return { ok: true, data, resolutionSource: "cache" };
     }
   }
 
-  const source = await measureStep(ctx, "sourceFetch", () => fetchOwnedSource(ctx.userId, input.sourceId));
-
-  if (!source) {
-    ctx.requestLog.warn("Translation source not found");
-    return { ok: false, status: 404 };
-  }
-
   const result = await resolveTranslate(input, ctx);
 
-  await measureStep(ctx, "cacheWrite", () =>
-    writeTranslationCache({
-      userId: ctx.userId,
-      sourceId: input.sourceId,
-      selectedText: input.text,
-      contextSentence: input.context,
-      sourceLanguage: input.sourceLanguage,
-      targetLanguage: input.targetLanguage,
-      provider: result.provider,
-      response: toJsonValue(result),
-    }),
-  );
-
-  void persistTranslationResult(ctx.userId, input, result, ctx.requestLog);
+  void persistAsync(ctx.userId, input, result, ctx.requestLog, { cacheKey });
 
   ctx.requestLog.info(
     {
@@ -143,30 +131,51 @@ function resolveTranslate(
     : resolveSentenceTranslate(input, ctx);
 }
 
-async function persistTranslationResult(
+async function persistAsync(
   userId: string,
   input: TranslateServiceInput,
   result: QuickTranslation,
-  requestLog: ReturnType<typeof createRequestLogger>,
+  requestLog: RequestLogger,
+  cache?: { cacheKey: string },
 ) {
-  try {
-    await writeTranslationHistory({
-      userId,
-      sourceId: input.sourceId,
-      selectedText: input.text,
-      contextSentence: input.context,
-      sourceLanguage: input.sourceLanguage,
-      targetLanguage: input.targetLanguage,
-      provider: result.provider,
-      translation: result.translation,
-      response: toJsonValue(result),
-    });
-  } catch (error) {
+  const historyPromise = writeTranslationHistory({
+    userId,
+    sourceId: input.sourceId,
+    selectedText: input.text,
+    contextSentence: input.context,
+    sourceLanguage: input.sourceLanguage,
+    targetLanguage: input.targetLanguage,
+    provider: result.provider,
+    translation: result.translation,
+    response: toJsonValue(result),
+  }).catch((error) => {
     requestLog.warn({ err: error }, "Failed to persist translation history");
     Sentry.captureException(error, {
       tags: { route: "api:translate", component: "historyCreate" },
       level: "warning",
     });
+  });
+
+  if (cache) {
+    await Promise.all([
+      historyPromise,
+      writeTranslationCache({
+        userId,
+        sourceId: input.sourceId,
+        selectedText: input.text,
+        contextSentence: input.context,
+        sourceLanguage: input.sourceLanguage,
+        targetLanguage: input.targetLanguage,
+        provider: result.provider,
+        response: toJsonValue(result),
+      }).catch((error) => {
+        requestLog.warn({ err: error }, "Failed to persist translation cache");
+        Sentry.captureException(error, {
+          tags: { route: "api:translate", component: "cacheWrite" },
+          level: "warning",
+        });
+      }),
+    ]);
   }
 }
 
