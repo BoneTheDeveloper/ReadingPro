@@ -149,8 +149,9 @@ export async function runDictionaryFlowBenchmark(
   }
 
   const reports = aggregateScenarioSampleGroups(samplesByScenario);
-  await writePerformanceReport(reportPath, reports);
-  console.log(`Wrote dictionary performance report to ${reportPath}`);
+  const reportArtifacts = await writePerformanceReport(reportPath, reports);
+  console.log(`Wrote dictionary performance report to ${reportArtifacts.jsonPath}`);
+  console.log(`Wrote dictionary Markdown report to ${reportArtifacts.markdownPath}`);
   reportBudgetFailures("dictionary-flow", validateBudgets(reports));
   reportLatencyBudgetFailures("dictionary-flow", validateLatencyBudgets(reports));
 }

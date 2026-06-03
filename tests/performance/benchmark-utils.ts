@@ -1,6 +1,6 @@
 import { spawn, type ChildProcess } from "node:child_process";
 import { mkdir, writeFile } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
+import { basename, dirname, extname, resolve } from "node:path";
 import { config as loadEnvFile } from "dotenv";
 import getPort from "get-port";
 import { getE2EAuthCookieHeader } from "../e2e/helpers/auth-state";
@@ -46,6 +46,15 @@ export interface BenchmarkScenarioReport {
   performance: {
     prisma: {
       queryCount: number;
+      totalDurationMs?: number;
+      steps?: Record<string, {
+        queries: number;
+        ms: number;
+      }>;
+    };
+    timings?: {
+      totalMs?: number;
+      steps?: Record<string, number>;
     };
   };
   queryBudget?: ScenarioBudget;
@@ -94,6 +103,11 @@ interface OwnedBenchmarkServer {
   output: string[];
 }
 
+export interface BenchmarkReportDocument {
+  generatedAt: string;
+  reports: BenchmarkScenarioReport[];
+}
+
 const defaultBenchmarkBaseUrl = "http://localhost:3000";
 const ownedServerDistDir = ".next-performance";
 
@@ -138,12 +152,87 @@ export async function withBenchmarkContext(
   }
 }
 
-export async function writePerformanceReport(path: string, reports: unknown[]) {
+export async function writePerformanceReport(path: string, reports: BenchmarkScenarioReport[]) {
+  const document = { generatedAt: new Date().toISOString(), reports };
+  const markdownPath = benchmarkReportMarkdownPath(path);
+
   await mkdir(dirname(path), { recursive: true });
+  await writeFile(path, `${JSON.stringify(document, null, 2)}\n`);
   await writeFile(
-    path,
-    `${JSON.stringify({ generatedAt: new Date().toISOString(), reports }, null, 2)}\n`,
+    markdownPath,
+    renderPerformanceReportMarkdown({
+      title: benchmarkReportTitle(path),
+      ...document,
+    }),
   );
+
+  return { jsonPath: path, markdownPath };
+}
+
+export function benchmarkReportMarkdownPath(path: string) {
+  const extension = extname(path);
+  if (!extension) return `${path}.md`;
+  return `${path.slice(0, -extension.length)}.md`;
+}
+
+export function benchmarkReportTitle(path: string) {
+  const extension = extname(path);
+  const name = basename(extension ? path.slice(0, -extension.length) : path);
+  return name
+    .split(/[-_]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+export function renderPerformanceReportMarkdown(input: BenchmarkReportDocument & { title?: string }) {
+  const reports = [...input.reports].sort((a, b) => a.scenario.localeCompare(b.scenario));
+  const title = input.title ?? "Performance Benchmark";
+  const queryBudgetCount = reports.filter((report) => report.queryBudget ?? report.budget).length;
+  const queryBudgetPassed = reports.filter((report) => {
+    const budget = report.queryBudget ?? report.budget;
+    return budget && (report.queryPassed ?? report.passed);
+  }).length;
+  const latencyBudgetCount = reports.filter((report) => report.latencyBudget).length;
+  const latencyBudgetPassed = reports.filter((report) => report.latencyBudget && report.latencyPassed !== false).length;
+  const lines = [
+    `# ${title} Performance Report`,
+    "",
+    `Generated: ${input.generatedAt}`,
+    "",
+    "## Summary",
+    "",
+    `- Scenarios: ${reports.length}`,
+    `- Query budgets: ${queryBudgetCount ? `${queryBudgetPassed}/${queryBudgetCount} passed` : "none"}`,
+    `- Latency budgets: ${latencyBudgetCount ? `${latencyBudgetPassed}/${latencyBudgetCount} passed` : "none"}`,
+    "",
+    "## Scenario Results",
+    "",
+    [
+      "| Scenario | Samples | Median | P95 | Max | Prisma Queries | Query Budget | Latency Budget | Status |",
+      "| --- | ---: | ---: | ---: | ---: | ---: | --- | --- | --- |",
+      ...reports.map(renderScenarioResultRow),
+    ].join("\n"),
+    "",
+  ];
+
+  const failedBudgets = reports.flatMap((report) => [
+    ...queryBudgetFailureLines(report),
+    ...latencyBudgetFailureLines(report),
+  ]);
+
+  if (failedBudgets.length) {
+    lines.push("## Budget Failures", "", ...failedBudgets, "");
+  }
+
+  const stepSections = reports
+    .map(renderScenarioStepSection)
+    .filter((section) => section.length > 0);
+  if (stepSections.length) {
+    lines.push("## Scenario Details", "", ...stepSections);
+  }
+
+  return `${lines.join("\n").trimEnd()}\n`;
 }
 
 export function validateBudgets<T extends BenchmarkScenarioReport>(reports: T[]) {
@@ -393,6 +482,113 @@ export function roundMetric(value: number) {
 
 export function formatError(error: unknown) {
   return error instanceof Error ? error.message : String(error);
+}
+
+function renderScenarioResultRow(report: BenchmarkScenarioReport) {
+  const stats = report.roundTripStats;
+  const queryBudget = report.queryBudget ?? report.budget;
+  const queryPassed = report.queryPassed ?? report.passed;
+  const queryBudgetLabel = queryBudget
+    ? `${statusIcon(Boolean(queryPassed))} <= ${queryBudget.maxQueries} ${queryBudget.gate}`
+    : "n/a";
+  const latencyBudgetLabel = report.latencyBudget
+    ? `${statusIcon(report.latencyPassed !== false)} ${formatLatencyBudget(report.latencyBudget)}`
+    : "n/a";
+
+  return [
+    report.scenario,
+    String(report.samples ?? stats?.samples.length ?? 1),
+    formatMs(stats?.median ?? report.roundTripMs),
+    formatMs(stats?.p95 ?? report.roundTripMs),
+    formatMs(stats?.max ?? report.roundTripMs),
+    String(report.performance.prisma.queryCount),
+    queryBudgetLabel,
+    latencyBudgetLabel,
+    scenarioStatus(report),
+  ].map(markdownCell).join(" | ").replace(/^/, "| ").replace(/$/, " |");
+}
+
+function renderScenarioStepSection(report: BenchmarkScenarioReport) {
+  const prismaSteps = Object.entries(report.performance.prisma.steps ?? {});
+  const timingSteps = Object.entries(report.performance.timings?.steps ?? {});
+
+  if (prismaSteps.length === 0 && timingSteps.length === 0) return "";
+
+  const lines = [
+    `### ${report.scenario}`,
+    "",
+  ];
+
+  if (timingSteps.length) {
+    lines.push(
+      "Route timings:",
+      "",
+      "| Step | Duration |",
+      "| --- | ---: |",
+      ...timingSteps
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([step, ms]) => `| ${markdownCell(step)} | ${formatMs(ms)} |`),
+      "",
+    );
+  }
+
+  if (prismaSteps.length) {
+    lines.push(
+      "Prisma steps:",
+      "",
+      "| Step | Queries | Duration |",
+      "| --- | ---: | ---: |",
+      ...prismaSteps
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([step, metrics]) => `| ${markdownCell(step)} | ${metrics.queries} | ${formatMs(metrics.ms)} |`),
+      "",
+    );
+  }
+
+  return `${lines.join("\n").trimEnd()}\n`;
+}
+
+function queryBudgetFailureLines(report: BenchmarkScenarioReport) {
+  const budget = report.queryBudget ?? report.budget;
+  const passed = report.queryPassed ?? report.passed;
+  if (!budget || passed) return [];
+
+  return [
+    `- [${budget.gate.toUpperCase()}] ${report.scenario}: ${report.performance.prisma.queryCount} Prisma queries, budget <= ${budget.maxQueries}.`,
+  ];
+}
+
+function latencyBudgetFailureLines(report: BenchmarkScenarioReport) {
+  return (report.latencyFailures ?? []).map((failure) =>
+    `- [${failure.gate.toUpperCase()}] ${failure.scenario}: ${failure.metric} ${formatMs(failure.actual)}, budget <= ${formatMs(failure.max)}.`,
+  );
+}
+
+function scenarioStatus(report: BenchmarkScenarioReport) {
+  const queryPassed = report.queryPassed ?? report.passed ?? true;
+  const latencyPassed = report.latencyPassed ?? true;
+  return queryPassed && latencyPassed ? "pass" : "review";
+}
+
+function formatLatencyBudget(budget: LatencyBudget) {
+  const parts = [
+    budget.medianRoundTripMs === undefined ? null : `median <= ${formatMs(budget.medianRoundTripMs)}`,
+    budget.p95RoundTripMs === undefined ? null : `p95 <= ${formatMs(budget.p95RoundTripMs)}`,
+  ].filter(Boolean);
+
+  return `${parts.join(", ")} ${budget.gate}`.trim();
+}
+
+function statusIcon(passed: boolean) {
+  return passed ? "pass" : "fail";
+}
+
+function formatMs(value: number) {
+  return `${roundMetric(value)}ms`;
+}
+
+function markdownCell(value: string) {
+  return value.replaceAll("|", "\\|").replaceAll("\n", " ");
 }
 
 async function getCookieHeader() {

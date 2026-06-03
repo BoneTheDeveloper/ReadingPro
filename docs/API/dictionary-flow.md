@@ -504,7 +504,10 @@ The benchmark suite (`tests/performance/run-benchmarks.ts`) includes dictionary-
 pnpm test:performance
 ```
 
-Dictionary results are written to `test-results/performance/dictionary-flow.json`.
+Dictionary results are written to `test-results/performance/dictionary-flow.json`
+and rendered as a readable Markdown report at
+`test-results/performance/dictionary-flow.md`. Regenerate Markdown from an
+existing JSON artifact with `pnpm test:performance:report -- test-results/performance/dictionary-flow.json`.
 
 | Scenario | Endpoint | Budget | Gate |
 |----------|----------|--------|------|

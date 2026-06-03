@@ -244,7 +244,11 @@ The benchmark script (`tests/performance/translate-flow-benchmark.ts`) enforces 
 | fallback miss | `<=5` queries | soft warn |
 | server cache repeat | `<=2` queries | soft warn |
 
-A warm-up request runs before measured scenarios. Results are written to `test-results/performance/translate-flow.json` with `budget`, `actual`, and `passed` fields per scenario.
+A warm-up request runs before measured scenarios. Results are written to
+`test-results/performance/translate-flow.json` and rendered as
+`test-results/performance/translate-flow.md` for easier review. Regenerate
+Markdown from existing JSON with
+`pnpm test:performance:report -- test-results/performance/translate-flow.json`.
 
 Client memory cache hits should not call `POST /api/translate`; they are a UI-level optimization and are not counted by the server benchmark.
 

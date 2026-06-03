@@ -88,7 +88,13 @@ Do not use the default dev-server timing as a production latency SLA. Run the be
 Reports:
 
 - `test-results/performance/translate-flow.json`
+- `test-results/performance/translate-flow.md`
 - `test-results/performance/dictionary-flow.json`
+- `test-results/performance/dictionary-flow.md`
+
+The JSON reports preserve the raw benchmark data. The Markdown reports render
+the same results as readable summary tables with budget status, latency stats,
+and per-scenario route/Prisma step timings.
 
 Each report includes aggregate Prisma metrics, `queryBudget`, `queryPassed`,
 `latencyBudget`, `latencyPassed`, `latencyFailures`, per-step Prisma query
@@ -97,6 +103,13 @@ metrics under `performance.prisma.steps`, raw round-trip samples, and `min` /
 into finer query groups such as `suggestResolve.headwordPrefix`,
 `suggestResolve.aliasPrefix`, `lookupResolve.headword`, and
 `lookupResolve.alias`.
+
+Regenerate Markdown from existing JSON artifacts without rerunning the benchmark:
+
+```bash
+pnpm test:performance:report
+pnpm test:performance:report -- test-results/performance/translate-flow.json
+```
 
 ## Field Web Vitals
 

@@ -121,8 +121,9 @@ export async function runTranslateFlowBenchmark(
   }
 
   const reports = aggregateScenarioSampleGroups(samplesByScenario);
-  await writePerformanceReport(reportPath, reports);
-  console.log(`Wrote translate performance report to ${reportPath}`);
+  const reportArtifacts = await writePerformanceReport(reportPath, reports);
+  console.log(`Wrote translate performance report to ${reportArtifacts.jsonPath}`);
+  console.log(`Wrote translate Markdown report to ${reportArtifacts.markdownPath}`);
   reportBudgetFailures("translate-flow", validateBudgets(reports));
   reportLatencyBudgetFailures("translate-flow", validateLatencyBudgets(reports));
 }
