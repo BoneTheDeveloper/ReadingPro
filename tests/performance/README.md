@@ -111,6 +111,9 @@ pnpm test:performance:report
 pnpm test:performance:report -- test-results/performance/translate-flow.json
 ```
 
+Detailed query-count budgets and route coverage live in
+[query-budget-benchmarks.md](./query-budget-benchmarks.md).
+
 ## Field Web Vitals
 
 Real-user Core Web Vitals (LCP, CLS, INP, FCP, TTFB) are collected via

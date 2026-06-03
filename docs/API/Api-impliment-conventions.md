@@ -1,4 +1,4 @@
-# API Conventions
+# API Implementation Conventions
 
 ## Overview
 
@@ -10,8 +10,11 @@ organization, so this repo uses a small layered convention around those route
 handlers.
 
 API code should keep HTTP concerns, business flow, data access, DTO types,
-shared validation, pure helpers, and performance instrumentation separate. This
-keeps route handlers small and makes query-budget work easier to review.
+shared validation, pure helpers, and observability helpers separate. For route
+families with multiple endpoints, reusable contracts/helpers live in a `shared/`
+lib folder and endpoint-specific flow/query code lives in the matching route lib
+folder. This keeps route handlers small and makes data-access behavior easier to
+review.
 
 Use this convention for new API work and when refactoring existing API routes.
 
@@ -28,24 +31,44 @@ These are framework constraints or recommendations from current Next.js docs:
   (`params: Promise<...>`). Await them before use.
 - Files can be colocated under `app/` without becoming public routes unless a
   special route file such as `page.tsx` or `route.ts` exists.
-- This repo still keeps reusable API logic under `src/lib` by default. This
+- This repo keeps reusable API logic under `src/lib` by default. This
   avoids turning route folders into mixed HTTP/domain/database modules.
 
 ## File Roles
 
 | Pattern | Role | Should Contain | Should Not Contain |
 | --- | --- | --- | --- |
-| `route.ts` | HTTP boundary | Request/path/header/body parsing, route-local validation, auth, response shaping, route logs, route-level performance wrapper | Business ranking rules, raw SQL, Prisma query composition, reusable DTO definitions |
+| `route.ts` | HTTP boundary | Request/path/header/body parsing, route-local validation, auth, response shaping, route logs, route-level observability wrapper | Business ranking rules, raw SQL, Prisma query composition, reusable DTO definitions |
 | `*-service.ts` | Use case / business flow | Normalization, business rules, orchestration, repository calls, DTO formatting | `NextRequest`, `NextResponse`, route status codes, Prisma/raw SQL |
-| `*-repository.ts` | Prisma/raw SQL data access | Shared or use-case-specific Prisma queries, raw SQL, DB-specific filtering, candidate fetching, DB spans, DB return types | HTTP responses, auth, UI-facing business flow |
+| `*-repository.ts` | Prisma/raw SQL data access | Route-specific or shared Prisma queries, raw SQL, DB-specific filtering, candidate fetching, DB spans, DB return types | HTTP responses, auth, UI-facing business flow |
 | `*-dto.ts` / `*-dtos.ts` | DTO types | API input/output DTO types, response unions, API-facing type constants | Runtime DB calls, HTTP handling |
 | `*-schema.ts` | Shared Zod validation | Reusable Zod schemas used by multiple routes/services | Route-only schemas, DB queries |
 | `*-utils.ts` | Pure helpers | Deterministic helpers with no DB/network side effects | Prisma, raw SQL, auth, request/response handling |
-| `*-performance.ts` | Performance helpers | Performance headers, trackers, snapshots, metric helpers | Business logic, query composition |
 
-Use `*-repository.ts` as the single DB-access suffix for new API work. Existing
-`*-queries.ts` files are legacy/shared-data-access modules; do not create new
-ones. Rename them opportunistically only when already touching their API surface.
+Use `*-repository.ts` as the DB-access suffix for API route data access.
+
+## Library Layout
+
+For a route family, mirror the public route shape under `src/lib/<domain>/`:
+
+```text
+src/app/api/<domain>/<route>/route.ts
+  -> src/lib/<domain>/<route>/<route>.service.ts
+      -> src/lib/<domain>/<route>/<route>.repository.ts
+
+src/lib/<domain>/shared/
+  <domain>-dtos.ts
+  <domain>-schema.ts        # only when shared
+  <domain>-utils.ts
+```
+
+Use route-specific folders for behavior that belongs to one endpoint. Use
+`shared/` only for types, builders, validation, normalization, observability
+helpers, or pure utilities used by two or more endpoints in the same domain.
+
+Do not put endpoint business flow in `shared/` just because another endpoint
+might use it later. Move code to `shared/` when reuse exists and the shared
+contract is stable.
 
 ## Layer Direction
 
@@ -53,15 +76,14 @@ Dependencies should flow downward:
 
 ```text
 route.ts
-  -> *-service.ts
-      -> *-repository.ts
+  -> <route>/<route>.service.ts
+      -> <route>/<route>.repository.ts
           -> db client / raw SQL
 
 shared:
-  *-dto.ts / *-dtos.ts
-  *-schema.ts       # only when shared
-  *-utils.ts
-  *-performance.ts
+  shared/*-dto.ts / shared/*-dtos.ts
+  shared/*-schema.ts       # only when shared
+  shared/*-utils.ts
 ```
 
 Avoid importing `route.ts` from application logic. Avoid importing service code
@@ -79,7 +101,6 @@ Route handlers should:
 - create request logs and route-level Sentry spans
 - call one service function
 - return the API response
-- attach performance snapshots when a performance header requests them
 
 Route handlers should not:
 
@@ -111,18 +132,14 @@ Services should return domain/API results, not HTTP responses.
 
 ## Queries And Repositories
 
-Use `*-repository.ts` for all new DB access. This includes both shared DB
+Use `*-repository.ts` for API route DB access. This includes both shared DB
 helpers and use-case-specific read/write models.
-
-Do not create new `*-queries.ts` files. Existing `*-queries.ts` files can stay
-until a related refactor makes renaming cheap.
 
 Database access files should:
 
 - keep SQL/Prisma-specific filtering close to the query
 - return typed rows or domain-shaped records
 - include DB-level Sentry spans when useful
-- preserve query-budget expectations
 
 Database access files should not produce API response DTOs unless the query is
 explicitly a compact read model for that API. Even then, final DTO labels and
@@ -137,7 +154,7 @@ For raw SQL:
 
 ## DTOs And Schemas
 
-Use `*-dto.ts` or `*-dtos.ts` for stable API input/output types.
+Use `*-dtos.ts` for stable API input/output types.
 
 Use `*-schema.ts` only when validation is shared by more than one route or
 service. If a Zod schema is route-local, keeping it inside `route.ts` is fine.
@@ -156,101 +173,52 @@ DTO files should not import DB clients, `NextRequest`, or `NextResponse`.
 Examples: string normalization, selection-key building, deterministic ranking
 score helpers, and formatting helpers that do not need IO.
 
-## Performance Helpers
-
-`*-performance.ts` is for reusable performance infrastructure:
-
-- opt-in performance headers
-- trackers and snapshots
-- metric payload types
-- helper functions for benchmark-only response metadata
-
-Keep benchmark policy and budgets in the benchmark suite or API flow docs, not
-inside route handlers.
-
-## Example Skeleton
+## Coding Pattern
 
 ```ts
-// src/app/api/example/route.ts
 export async function GET(request: NextRequest) {
   const parsed = schema.safeParse(readParams(request));
   if (!parsed.success) return NextResponse.json({ error: "Invalid request." }, { status: 400 });
 
   const user = await getAuthenticatedUser();
-  const data = await runExampleUseCase(parsed.data, { userId: user.id });
+  const data = await runUseCase(parsed.data, { userId: user.id });
 
   return NextResponse.json({ success: true, data });
 }
 ```
 
 ```ts
-// src/lib/example/example-service.ts
-export async function runExampleUseCase(input: ExampleInput, context: ExampleContext) {
-  const normalized = normalizeExample(input.q);
+export async function runUseCase(input: UseCaseInput, context: UseCaseContext) {
+  const normalized = normalizeInput(input.q);
   if (normalized.length < 2) return [];
 
-  const rows = await findExampleCandidates({ normalized, userId: context.userId });
-  return rows.map(toExampleDto);
+  const rows = await findCandidates({ normalized, userId: context.userId });
+  return rows.map(toDto);
 }
 ```
 
 ```ts
-// src/lib/example/example-repository.ts
-export async function findExampleCandidates(input: CandidateInput) {
+export async function findCandidates(input: CandidateInput) {
   return db.$queryRaw<CandidateRow[]>`SELECT ... WHERE value = ${input.normalized}`;
 }
 ```
 
-## Dictionary API Examples
+The route validates and authenticates, the service owns the use case, and the
+repository owns data access plus DB spans.
 
-All dictionary routes follow the target split:
+## Review Checklist
 
-### Search (`GET /api/dictionary/search`)
+Before merging API route work, check:
 
-| Layer | File |
-| --- | --- |
-| HTTP boundary | `src/app/api/dictionary/search/route.ts` |
-| Use case / business flow | `src/lib/dictionary/dictionary-search-service.ts` |
-| Raw SQL candidate search | `src/lib/dictionary/dictionary-search-repository.ts` |
-| DTO types | `src/lib/dictionary/dictionary-dtos.ts` |
-| Pure normalization helper | `src/lib/dictionary/normalize-dictionary-term.ts` |
-| Performance helper | `src/lib/dictionary/dictionary-performance.ts` |
-
-### Lookup (`GET /api/dictionary/lookup`)
-
-| Layer | File |
-| --- | --- |
-| HTTP boundary | `src/app/api/dictionary/lookup/route.ts` |
-| Use case / business flow | `src/lib/dictionary/dictionary-lookup-service.ts` |
-| DB access (Prisma + raw SQL) | `src/lib/dictionary/dictionary-lookup-repository.ts` |
-
-### Entry Detail (`GET /api/dictionary/entries/:entryId`)
-
-| Layer | File |
-| --- | --- |
-| HTTP boundary | `src/app/api/dictionary/entries/[entryId]/route.ts` |
-| Use case / business flow | `src/lib/dictionary/dictionary-entry-detail-service.ts` |
-| DB access | `src/lib/dictionary/dictionary-entry-detail-repository.ts` |
-
-### Suggest (`GET /api/dictionary/suggest`)
-
-| Layer | File |
-| --- | --- |
-| HTTP boundary | `src/app/api/dictionary/suggest/route.ts` |
-| Use case / business flow | `src/lib/dictionary/dictionary-suggest-service.ts` |
-| DB access | `src/lib/dictionary/dictionary-suggest-repository.ts` |
-
-### Shared across dictionary routes
-
-| Concern | File |
-| --- | --- |
-| DTO types | `src/lib/dictionary/dictionary-dtos.ts` |
-| DTO building (entry + translation) | `src/lib/dictionary/dictionary-entry-dto-builder.ts` |
-| Pure normalization helper | `src/lib/dictionary/normalize-dictionary-term.ts` |
-| Performance helper | `src/lib/dictionary/dictionary-performance.ts` |
-
-The route validates and authenticates, the service normalizes and formats
-DTOs, and the repository owns all DB queries plus DB spans.
+- Route handler contains no Prisma query, raw SQL, or business ranking logic.
+- Request validation is explicit at the HTTP boundary or in a shared schema.
+- Auth/authorization happens before user-scoped data access.
+- Service returns data, not `NextResponse`.
+- Repository returns typed rows or domain records, not HTTP responses.
+- Shared code is used by more than one route or has a stable cross-route
+  contract.
+- Logs, Sentry metadata, and diagnostic metrics do not include raw sensitive user
+  input.
 
 ## References
 

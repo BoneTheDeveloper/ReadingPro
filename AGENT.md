@@ -20,7 +20,8 @@ Re-index: `index_project` with `project_absolute_path: "/home/luc/Project/englis
 - Architecture & data flow: see `docs/system-architecture.md` after `docs/codebase-summary.md` for full details.
 - Code standards: see `docs/code-standards.md` — TS rules, file naming, project structure, components, API responses, error handling, Prisma patterns
 - Commands: see `package.json` scripts; `pnpm tsc --noEmit` for type check
-- API routes: see `docs/API/Api-conventions.md`
+- API route implementation: see `docs/API/Api-impliment-conventions.md`
+- API route docs: see `docs/API/Api-doc-convention.md`
 ## Test Rules
 
 - **Playwright test rule:** `tests/e2e/playwright-test-rule.md` — project split, auth storage state, screenshot output, Docker fallback, and required verification notes.

@@ -19,7 +19,7 @@ Context:
 - Brainstorm report:
   `plans/reports/260603-1716-dictionary-raw-sql-query-grouping.md`
 - Route docs:
-  `docs/API/Routes/dictionary-flow.md`
+  `docs/API/Routes/dictionary-feature.md`
 - Current performance report:
   `test-results/performance/dictionary-flow.md`
 

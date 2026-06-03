@@ -8,7 +8,7 @@ type: journal
 
 ## Context
 
-Reviewed `docs/API/Routes/dictionary-flow.md`,
+Reviewed `docs/API/Routes/dictionary-feature.md`,
 `test-results/performance/dictionary-flow.md`, and current dictionary
 repositories/services.
 

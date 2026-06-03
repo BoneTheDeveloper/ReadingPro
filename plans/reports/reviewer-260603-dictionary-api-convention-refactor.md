@@ -14,7 +14,7 @@
 
 ## Overall Assessment
 
-The refactor is well-executed. All 4 dictionary routes now follow the `route -> service -> repository` convention from `docs/API/Api-conventions.md`. Routes are thin HTTP boundaries, services own business logic and DTO building, repositories own DB access with Sentry spans. No stale imports remain, TypeScript compiles clean, and all 232 tests pass. There are a few medium-priority issues worth addressing.
+The refactor is well-executed. All 4 dictionary routes now follow the `route -> service -> repository` convention from `docs/API/Api-impliment-conventions.md`. Routes are thin HTTP boundaries, services own business logic and DTO building, repositories own DB access with Sentry spans. No stale imports remain, TypeScript compiles clean, and all 232 tests pass. There are a few medium-priority issues worth addressing.
 
 ## Critical Issues
 

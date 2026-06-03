@@ -34,7 +34,7 @@ production latency SLA language.
 - Modify:
   `tests/performance/dictionary-flow-benchmark.ts`
 - Modify:
-  `docs/API/Routes/dictionary-flow.md`
+  `docs/API/Routes/dictionary-feature.md`
 - Modify:
   `test-results/performance/dictionary-flow.md`
 - Modify:

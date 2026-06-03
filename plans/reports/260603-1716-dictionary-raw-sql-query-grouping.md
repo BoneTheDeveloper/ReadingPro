@@ -68,7 +68,7 @@ Out of scope:
 Non-negotiable constraints:
 
 - Keep Next.js route handlers as HTTP boundary.
-- Keep route/service/repository split from `docs/API/Api-conventions.md`.
+- Keep route/service/repository split from `docs/API/Api-impliment-conventions.md`.
 - Raw SQL is allowed inside dictionary repositories.
 - Avoid logging raw query text.
 - Runtime results only include approved/reviewed translations unless existing
@@ -84,7 +84,7 @@ Touchpoints:
 - `src/lib/dictionary/dictionary-entry-detail-service.ts`
 - `src/lib/dictionary/dictionary-entry-dto-builder.ts`
 - `tests/performance/dictionary-flow-benchmark.ts`
-- `docs/API/Routes/dictionary-flow.md`
+- `docs/API/Routes/dictionary-feature.md`
 
 ## Evaluated Approaches
 

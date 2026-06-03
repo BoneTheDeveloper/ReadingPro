@@ -29,7 +29,7 @@ Tests should cover API schema, route behavior, UI triggers, vocabulary save, dic
 - Modify: `tests/vitest/integration/api/translation-vocabulary-routes.test.ts`
 - Modify: `src/features/study/*.test.tsx` where relevant
 - Modify: `scripts/performance/translate-flow-benchmark.ts`
-- Modify: `docs/API/translation-flow.md`
+- Modify: `docs/API/Routes/translation-feature.md`
 - Modify: `docs/project-roadmap.md`
 - Modify: `docs/project-changelog.md`
 

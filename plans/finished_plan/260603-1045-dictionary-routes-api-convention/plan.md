@@ -2,7 +2,7 @@
 
 ## Overview
 
-Refactor all 4 dictionary API routes to follow `docs/API/Api-conventions.md`.
+Refactor all 4 dictionary API routes to follow `docs/API/Api-impliment-conventions.md`.
 Target pattern: `route.ts` (HTTP) -> `*-service.ts` (business) -> `*-repository.ts` (DB).
 
 ## Status

@@ -73,7 +73,7 @@ Out of scope:
 - `prisma/seed-dictionary.ts`
 - `package.json`
 - `.env.example`
-- `docs/API/translation-flow.md`
+- `docs/API/Routes/translation-feature.md`
 - Relevant tests under `__tests__/api`, `__tests__/components/study`, and `src/lib/dictionary`
 
 ## Decisions
