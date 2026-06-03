@@ -1,4 +1,4 @@
-import type { PrismaQueryMetrics } from "@/lib/observability/prisma-query-metrics";
+import { runWithPrismaQueryStep, type PrismaQueryMetrics } from "@/lib/observability/prisma-query-metrics";
 
 export const DICTIONARY_PERFORMANCE_HEADER = "x-dictionary-perf-metrics";
 
@@ -71,4 +71,13 @@ class DictionaryPerformanceTracker {
 
 function roundMetric(value: number) {
   return Math.round(value * 100) / 100;
+}
+
+export function measureDictionaryStep<T>(
+  performanceTracker: DictionaryPerformanceTracker | null,
+  step: string,
+  callback: () => Promise<T>,
+) {
+  if (!performanceTracker) return callback();
+  return performanceTracker.measure(step, () => runWithPrismaQueryStep(step, callback));
 }

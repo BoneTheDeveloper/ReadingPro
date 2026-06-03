@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { resolveQuickDictionaryTranslation } from "./resolve-quick-dictionary-translation";
 
-vi.mock("./resolve-dictionary-lookup", () => ({
+vi.mock("./dictionary-lookup-service", () => ({
   resolveQuickDictionaryLookupSql: vi.fn(),
 }));
 
-import { resolveQuickDictionaryLookupSql } from "./resolve-dictionary-lookup";
+import { resolveQuickDictionaryLookupSql } from "./dictionary-lookup-service";
 
 const mockLookup = vi.mocked(resolveQuickDictionaryLookupSql);
 

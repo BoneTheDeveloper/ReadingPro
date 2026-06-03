@@ -6,14 +6,14 @@ import { createRequestLogContext, createRequestLogger } from "@/lib/core/logger"
 import {
   getPrismaQueryMetrics,
   runWithPrismaQueryMetrics,
-  runWithPrismaQueryStep,
 } from "@/lib/observability/prisma-query-metrics";
 import {
   createDictionaryPerformanceTracker,
+  measureDictionaryStep,
   shouldIncludeDictionaryPerformanceMetrics,
 } from "@/lib/dictionary/dictionary-performance";
 import { normalizeDictionaryTerm } from "@/lib/dictionary/normalize-dictionary-term";
-import { resolveDictionarySearch } from "@/lib/dictionary/dictionary-search-resolver";
+import { searchDictionary } from "@/lib/dictionary/dictionary-search-service";
 import type { DictionarySearchResultDto } from "@/lib/dictionary/dictionary-dtos";
 
 const dictionarySearchQuerySchema = z.object({
@@ -69,13 +69,6 @@ async function handleDictionarySearchGet(request: NextRequest, includePerformanc
         })
       : null;
 
-    if (normalizedQuery.length < 2) {
-      return createSearchSuccessResponse({
-        data: [],
-        performanceTracker,
-      });
-    }
-
     const user = await measureDictionaryStep(
       performanceTracker,
       "auth",
@@ -97,7 +90,7 @@ async function handleDictionarySearchGet(request: NextRequest, includePerformanc
             "user.id": user.id,
           },
         },
-        () => resolveDictionarySearch(parsed.data.q, {
+        () => searchDictionary(parsed.data.q, {
           sourceLanguage: parsed.data.sourceLanguage,
           targetLanguage: parsed.data.targetLanguage,
         }),
@@ -148,11 +141,3 @@ function createSearchSuccessResponse(input: {
   });
 }
 
-function measureDictionaryStep<T>(
-  performanceTracker: ReturnType<typeof createDictionaryPerformanceTracker> | null,
-  step: string,
-  callback: () => Promise<T>,
-) {
-  if (!performanceTracker) return callback();
-  return performanceTracker.measure(step, () => runWithPrismaQueryStep(step, callback));
-}

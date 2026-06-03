@@ -6,15 +6,13 @@ import { createRequestLogContext, createRequestLogger } from "@/lib/core/logger"
 import {
   getPrismaQueryMetrics,
   runWithPrismaQueryMetrics,
-  runWithPrismaQueryStep,
 } from "@/lib/observability/prisma-query-metrics";
 import {
   createDictionaryPerformanceTracker,
+  measureDictionaryStep,
   shouldIncludeDictionaryPerformanceMetrics,
 } from "@/lib/dictionary/dictionary-performance";
-import { findEntryById } from "@/lib/db/dictionary-queries";
-import { buildEntryDto } from "@/lib/dictionary/resolve-dictionary-lookup";
-import { RUNTIME_STATUSES } from "@/lib/dictionary/dictionary-dtos";
+import { getDictionaryEntryDetail } from "@/lib/dictionary/dictionary-entry-detail-service";
 
 const entryDetailQuerySchema = z.object({
   sourceLanguage: z.literal("en"),
@@ -88,7 +86,7 @@ async function handleEntryDetailGet(
       ),
     );
 
-    const entry = await measureDictionaryStep(
+    const dto = await measureDictionaryStep(
       performanceTracker,
       "entryDetailResolve",
       () => Sentry.startSpan(
@@ -97,19 +95,20 @@ async function handleEntryDetailGet(
           op: "db",
           attributes: { "dictionary.entry_id": entryId, "user.id": user.id },
         },
-        () => findEntryById(entryId, parsed.data.sourceLanguage, parsed.data.targetLanguage),
+        () => getDictionaryEntryDetail(entryId, {
+          sourceLanguage: parsed.data.sourceLanguage,
+          targetLanguage: parsed.data.targetLanguage,
+        }),
       ),
     );
 
-    if (!entry) {
+    if (!dto) {
       requestLog.info(
         { context: { entryId } },
         "Dictionary entry not found",
       );
       return NextResponse.json({ error: "Entry not found." }, { status: 404 });
     }
-
-    const dto = buildEntryDto(entry, parsed.data.targetLanguage, RUNTIME_STATUSES);
 
     requestLog.info(
       { context: { entryId, found: true } },
@@ -134,7 +133,7 @@ async function handleEntryDetailGet(
 }
 
 function createEntryDetailSuccessResponse(input: {
-  data: ReturnType<typeof buildEntryDto>;
+  data: unknown;
   performanceTracker: ReturnType<typeof createDictionaryPerformanceTracker> | null;
 }) {
   if (!input.performanceTracker) {
@@ -148,13 +147,4 @@ function createEntryDetailSuccessResponse(input: {
       getPrismaQueryMetrics() ?? { queryCount: 0, totalDurationMs: 0, steps: {} },
     ),
   });
-}
-
-function measureDictionaryStep<T>(
-  performanceTracker: ReturnType<typeof createDictionaryPerformanceTracker> | null,
-  step: string,
-  callback: () => Promise<T>,
-) {
-  if (!performanceTracker) return callback();
-  return performanceTracker.measure(step, () => runWithPrismaQueryStep(step, callback));
 }

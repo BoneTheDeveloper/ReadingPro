@@ -6,14 +6,14 @@ import { createRequestLogContext, createRequestLogger } from "@/lib/core/logger"
 import {
   getPrismaQueryMetrics,
   runWithPrismaQueryMetrics,
-  runWithPrismaQueryStep,
 } from "@/lib/observability/prisma-query-metrics";
 import {
   createDictionaryPerformanceTracker,
+  measureDictionaryStep,
   shouldIncludeDictionaryPerformanceMetrics,
 } from "@/lib/dictionary/dictionary-performance";
 import { normalizeDictionaryTerm } from "@/lib/dictionary/normalize-dictionary-term";
-import { resolveDictionaryLookup } from "@/lib/dictionary/resolve-dictionary-lookup";
+import { resolveDictionaryLookup } from "@/lib/dictionary/dictionary-lookup-service";
 import type {
   DictionaryEntryDto,
   DictionaryMissDto,
@@ -144,13 +144,4 @@ function createDictionaryLookupSuccessResponse(input: {
       getPrismaQueryMetrics() ?? { queryCount: 0, totalDurationMs: 0, steps: {} },
     ),
   });
-}
-
-function measureDictionaryStep<T>(
-  performanceTracker: ReturnType<typeof createDictionaryPerformanceTracker> | null,
-  step: string,
-  callback: () => Promise<T>,
-) {
-  if (!performanceTracker) return callback();
-  return performanceTracker.measure(step, () => runWithPrismaQueryStep(step, callback));
 }

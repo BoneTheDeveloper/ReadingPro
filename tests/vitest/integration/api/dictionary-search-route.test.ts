@@ -8,15 +8,15 @@ import { expectApiErrorPayload, expectApiSuccessPayload } from "../../helpers/as
 
 const routeMocks = vi.hoisted(() => ({
   getAuthenticatedUser: vi.fn(),
-  resolveDictionarySearch: vi.fn(),
+  searchDictionary: vi.fn(),
 }));
 
 vi.mock("@/lib/auth/auth-utils", () => ({
   getAuthenticatedUser: routeMocks.getAuthenticatedUser,
 }));
 
-vi.mock("@/lib/dictionary/dictionary-search-resolver", () => ({
-  resolveDictionarySearch: routeMocks.resolveDictionarySearch,
+vi.mock("@/lib/dictionary/dictionary-search-service", () => ({
+  searchDictionary: routeMocks.searchDictionary,
 }));
 
 function createSearchRequest(query: string) {
@@ -40,7 +40,7 @@ beforeEach(() => {
 
 describe("GET /api/dictionary/search", () => {
   it("returns search results for the authenticated user", async () => {
-    routeMocks.resolveDictionarySearch.mockResolvedValue([searchResult]);
+    routeMocks.searchDictionary.mockResolvedValue([searchResult]);
 
     const response = await dictionarySearch(
       createSearchRequest("q=algorithm&sourceLanguage=en&targetLanguage=vi"),
@@ -50,13 +50,15 @@ describe("GET /api/dictionary/search", () => {
     expect(response.status).toBe(200);
     expectApiSuccessPayload(payload);
     expect(payload).toMatchObject({ success: true, data: [searchResult] });
-    expect(routeMocks.resolveDictionarySearch).toHaveBeenCalledWith("algorithm", {
+    expect(routeMocks.searchDictionary).toHaveBeenCalledWith("algorithm", {
       sourceLanguage: "en",
       targetLanguage: "vi",
     });
   });
 
-  it("returns empty results for short queries before authentication", async () => {
+  it("delegates short query handling to the service after authentication", async () => {
+    routeMocks.searchDictionary.mockResolvedValue([]);
+
     const response = await dictionarySearch(
       createSearchRequest("q=a&sourceLanguage=en&targetLanguage=vi"),
     );
@@ -65,8 +67,11 @@ describe("GET /api/dictionary/search", () => {
     expect(response.status).toBe(200);
     expectApiSuccessPayload(payload);
     expect(payload.data).toEqual([]);
-    expect(routeMocks.getAuthenticatedUser).not.toHaveBeenCalled();
-    expect(routeMocks.resolveDictionarySearch).not.toHaveBeenCalled();
+    expect(routeMocks.getAuthenticatedUser).toHaveBeenCalled();
+    expect(routeMocks.searchDictionary).toHaveBeenCalledWith("a", {
+      sourceLanguage: "en",
+      targetLanguage: "vi",
+    });
   });
 
   it("rejects invalid query parameters before authentication", async () => {
@@ -77,7 +82,7 @@ describe("GET /api/dictionary/search", () => {
     expect(response.status).toBe(400);
     expectApiErrorPayload(await readJsonResponse(response), "Invalid query parameters.");
     expect(routeMocks.getAuthenticatedUser).not.toHaveBeenCalled();
-    expect(routeMocks.resolveDictionarySearch).not.toHaveBeenCalled();
+    expect(routeMocks.searchDictionary).not.toHaveBeenCalled();
   });
 
   it("returns 401 when the user is not authenticated", async () => {

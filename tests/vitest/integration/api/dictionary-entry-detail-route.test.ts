@@ -8,47 +8,15 @@ import { expectApiErrorPayload, expectApiSuccessPayload } from "../../helpers/as
 
 const routeMocks = vi.hoisted(() => ({
   getAuthenticatedUser: vi.fn(),
-  findEntryById: vi.fn(),
+  getDictionaryEntryDetail: vi.fn(),
 }));
 
 vi.mock("@/lib/auth/auth-utils", () => ({
   getAuthenticatedUser: routeMocks.getAuthenticatedUser,
 }));
 
-vi.mock("@/lib/db/dictionary-queries", () => ({
-  findEntryById: routeMocks.findEntryById,
-}));
-
-vi.mock("@/lib/dictionary/resolve-dictionary-lookup", () => ({
-  buildEntryDto: vi.fn((_entry: unknown, _targetLanguage: string, statuses: readonly string[]) => ({
-    id: "entry-1",
-    headword: "test",
-    sourceLanguage: "en",
-    frequencyRank: 1,
-    senses: [{
-      id: "sense-1",
-      partOfSpeech: "noun",
-      definition: "a test",
-      example: null,
-      tags: [],
-      usageRank: 0,
-      translations: [{
-        id: "trans-1",
-        senseId: "sense-1",
-        targetLanguage: "vi",
-        translation: "kiem tra",
-        isPrimary: true,
-        rank: 1,
-        confidence: null,
-        status: "reviewed",
-        sourceType: "seed",
-        sourceName: null,
-        reviewedAt: null,
-        sourceLabel: "Seed Data",
-      }],
-    }],
-  })),
-  RUNTIME_STATUSES: ["reviewed", "approved"],
+vi.mock("@/lib/dictionary/dictionary-entry-detail-service", () => ({
+  getDictionaryEntryDetail: routeMocks.getDictionaryEntryDetail,
 }));
 
 function createEntryDetailRequest(entryId: string, query: string) {
@@ -97,13 +65,7 @@ beforeEach(() => {
 
 describe("GET /api/dictionary/entries/:entryId", () => {
   it("returns entry detail for a valid entry id", async () => {
-    routeMocks.findEntryById.mockResolvedValue({
-      id: "entry-1",
-      headword: "test",
-      sourceLanguage: "en",
-      frequencyRank: 1,
-      senses: [],
-    });
+    routeMocks.getDictionaryEntryDetail.mockResolvedValue(dictionaryEntry);
 
     const response = await dictionaryEntryDetail(
       createEntryDetailRequest("entry-1", "sourceLanguage=en&targetLanguage=vi"),
@@ -114,11 +76,14 @@ describe("GET /api/dictionary/entries/:entryId", () => {
     expect(response.status).toBe(200);
     expectApiSuccessPayload(payload);
     expect(payload).toMatchObject({ success: true, data: dictionaryEntry });
-    expect(routeMocks.findEntryById).toHaveBeenCalledWith("entry-1", "en", "vi");
+    expect(routeMocks.getDictionaryEntryDetail).toHaveBeenCalledWith("entry-1", {
+      sourceLanguage: "en",
+      targetLanguage: "vi",
+    });
   });
 
   it("returns 404 for a non-existent entry id", async () => {
-    routeMocks.findEntryById.mockResolvedValue(null);
+    routeMocks.getDictionaryEntryDetail.mockResolvedValue(null);
 
     const response = await dictionaryEntryDetail(
       createEntryDetailRequest("entry-missing", "sourceLanguage=en&targetLanguage=vi"),

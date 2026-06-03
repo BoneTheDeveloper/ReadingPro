@@ -1,6 +1,6 @@
 import { createModuleLogger } from "@/lib/core/logger";
 import { normalizeDictionaryTerm } from "./normalize-dictionary-term";
-import { resolveQuickDictionaryLookupSql } from "./resolve-dictionary-lookup";
+import { resolveQuickDictionaryLookupSql } from "./dictionary-lookup-service";
 
 const log = createModuleLogger("dictionary:quick-resolver");
 
