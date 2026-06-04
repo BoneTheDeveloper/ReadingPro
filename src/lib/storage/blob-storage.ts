@@ -97,7 +97,7 @@ function localPath(pathname: string) {
 }
 
 const localAdapter: StorageAdapter = {
-  async upload(pathname, body, _contentType) {
+  async upload(pathname, body) {
     try {
       const full = localPath(pathname);
       await ensureDir();

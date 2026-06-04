@@ -104,3 +104,59 @@ jobs:
           E2E_TEST_USER_EMAIL: ${{ secrets.E2E_TEST_USER_EMAIL }}
           E2E_TEST_USER_PASSWORD: ${{ secrets.E2E_TEST_USER_PASSWORD }}
         run: pnpm e2e
+
+  validate-migration:
+    name: Validate migration
+    needs: test
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check schema change has migration
+        run: |
+          BASE="${{ github.base_ref }}"
+          if git diff --name-only "origin/$BASE...HEAD" | grep -q "prisma/schema.prisma"; then
+            echo "::group::Schema changes detected"
+            git diff --name-only "origin/$BASE...HEAD" | grep "prisma/schema.prisma"
+            echo "::endgroup::"
+
+            if git diff --name-only "origin/$BASE...HEAD" | grep -q "prisma/migrations/"; then
+              echo "OK: migration file(s) included"
+              git diff --name-only "origin/$BASE...HEAD" | grep "prisma/migrations/"
+            else
+              echo "::error::schema.prisma changed but no migration file included. Run 'pnpm exec prisma migrate dev --name <name>' locally."
+              exit 1
+            fi
+          else
+            echo "No schema changes — skipping migration check."
+          fi
+
+      - name: Audit migration SQL
+        if: always()
+        run: |
+          if git diff --name-only "origin/$BASE...HEAD" | grep -q "prisma/migrations/"; then
+            echo "Migration files changed — review the SQL below:"
+            git diff "origin/$BASE...HEAD" -- "prisma/migrations/**/*.sql"
+          fi
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.3.0
+          run_install: false
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate schema
+        run: pnpm exec prisma validate

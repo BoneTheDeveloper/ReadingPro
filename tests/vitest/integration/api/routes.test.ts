@@ -26,6 +26,13 @@ const routeMocks = vi.hoisted(() => {
     }
   }
 
+  class AuthenticationRequiredError extends Error {
+    constructor() {
+      super("Authentication required");
+      this.name = "AuthenticationRequiredError";
+    }
+  }
+
   return {
     getAuthenticatedUser: vi.fn(),
     getDueCards: vi.fn(),
@@ -37,11 +44,13 @@ const routeMocks = vi.hoisted(() => {
     analyzeAndPersistContent: vi.fn(),
     getStudyChatModelId: vi.fn(() => "gpt-4o-mini"),
     UploadWorkflowError,
+    AuthenticationRequiredError,
   };
 });
 
 vi.mock("@/lib/auth/auth-utils", () => ({
   getAuthenticatedUser: routeMocks.getAuthenticatedUser,
+  AuthenticationRequiredError: routeMocks.AuthenticationRequiredError,
 }));
 
 vi.mock("@/lib/db/card-review-queries", () => ({
@@ -441,7 +450,7 @@ describe("POST /api/study-chat", () => {
       "Invalid chat request. Select a passage and enter a message.",
     );
 
-    routeMocks.getAuthenticatedUser.mockRejectedValueOnce(apiError("Authentication required"));
+    routeMocks.getAuthenticatedUser.mockRejectedValueOnce(new routeMocks.AuthenticationRequiredError());
     await expectJsonError(
       await studyChat(createJsonRequest({ passageId: passageFixture.id, messages: [] })),
       401,
