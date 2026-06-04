@@ -11,19 +11,20 @@ dependencies: []
 
 ## Overview
 
-Normalize every persisted identifier in the PostgreSQL `public` schema to
-native UUID columns before fixing route boundaries. The database is
-development-only, so reset and reseed instead of supporting CUID-to-UUID data
-conversion.
+Verify every application-owned persisted identifier uses native UUID columns
+before fixing route boundaries. The blocking Clerk/Neon migration owns the
+clean baseline, string Clerk identity fields, and removal of Supabase/RLS.
+
+Do not execute the old Supabase/RLS migration workflow after the blocking plan.
 
 ## Requirements
 
-- Functional: every public-table primary key uses PostgreSQL `uuid`.
-- Functional: every foreign key or persisted entity-reference column uses
-  PostgreSQL `uuid`.
+- Functional: every application-owned primary key uses PostgreSQL `uuid`.
+- Functional: every application-owned foreign key or persisted entity-reference
+  column uses PostgreSQL `uuid`.
 - Functional: Prisma-created application records receive UUID defaults.
-- Functional: `profiles.id` remains supplied by Supabase Auth and uses native
-  UUID without an application-generated default.
+- Functional: `profiles.id` and every owned-table `userId` remain Clerk string
+  identities without application-generated defaults.
 - Functional: development reset recreates the schema and dictionary data using
   UUIDs only.
 - Non-functional: do not attempt to preserve current development CUID rows.
@@ -31,22 +32,27 @@ conversion.
 ## Identifier Standard
 
 ```prisma
-// Supabase Auth owns this value.
-id String @id @db.Uuid
+// Clerk owns this value.
+id String @id
 
 // Application/public-table records: database-generated UUID v4.
 id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
 
-// Relations and persisted entity references.
+// Application-owned relations and persisted entity references.
 passageId String @db.Uuid
 ```
 
 Apply native UUIDs to:
 
-- All model primary keys.
-- All relation fields: `userId`, `passageId`, `sourceId`, `questionId`,
+- All application-owned model primary keys.
+- Application-owned relation fields: `passageId`, `sourceId`, `questionId`,
   `entryId`, and `senseId`.
 - `DictionarySourceAudit.entityId`, because it stores a public-table entity ID.
+
+Keep Clerk identity strings unchanged:
+
+- `profiles.id`.
+- Every owned-table `userId` foreign key.
 
 Keep ordinary strings unchanged:
 
@@ -56,28 +62,23 @@ Keep ordinary strings unchanged:
 ## Related Code Files
 
 - Modify: `prisma/schema.prisma`
-- Create: `prisma/migrations/*_normalize_public_ids_to_uuid/migration.sql`
-- Modify: `supabase/migrations/enable_rls.sql`
-- Modify: `prisma/seed-dictionary.ts`
+- Review: clean Prisma baseline from the blocking Clerk/Neon migration
+- Modify: `prisma/seed.ts`
 - Modify as needed: dictionary dataset generation/validation scripts
 - Modify: `docs/database/erd.md`
 - Modify: `docs/database/data-dictionary.md`
 
 ## Implementation Steps
 
-1. Change every public-table primary key to native `@db.Uuid`.
+1. Verify every application-owned primary key uses native `@db.Uuid`.
 2. Use database-side `gen_random_uuid()` defaults for application-owned record
-   IDs; keep `UserProfile.id` without a default because Supabase Auth supplies
-   it.
-3. Change every relation and persisted entity-reference field to `@db.Uuid`.
-4. Generate a migration with `--create-only`; review native UUID columns,
-   defaults, foreign-key order, and required `pgcrypto` support.
-5. Update RLS policies from text-cast comparisons to native UUID comparisons.
-6. Reset the development database and replay Prisma migrations.
-7. Reapply and verify the Supabase RLS migration/policies after reset.
-8. Regenerate Prisma Client, reseed dictionary data, and validate the seed.
-9. Verify no public identifier column remains `TEXT` and no generated persisted
-   record uses CUID.
+   IDs; keep Clerk identity fields as strings without defaults.
+3. Verify application-owned relation and entity-reference fields use `@db.Uuid`.
+4. Review the clean baseline supplied by the blocking migration plan.
+5. Replay the plain-PostgreSQL migration baseline on a disposable branch.
+6. Regenerate Prisma Client, reseed dictionary data, and validate the seed.
+7. Verify no application-owned identifier remains `TEXT` and no generated
+   persisted record uses CUID.
 
 ## Reset Gate
 
@@ -93,13 +94,10 @@ pnpm run db:validate:dictionary
 
 ## Success Criteria
 
-- [ ] Every public-table PK/FK/entity-reference identifier is PostgreSQL
-  `uuid`.
+- [ ] Every application-owned PK/FK/entity-reference identifier is PostgreSQL `uuid`.
 - [ ] Application-owned IDs have database UUID defaults.
-- [ ] `profiles.id` accepts Supabase Auth UUIDs without generating a replacement.
-- [ ] RLS policies compare native UUID values without `::text`.
-- [ ] Development reset, Prisma migration replay, and RLS policy reapplication
-  succeed.
+- [ ] `profiles.id` and owned `userId` fields accept Clerk string IDs.
+- [ ] Plain-PostgreSQL migration replay succeeds with no RLS/Supabase objects.
 - [ ] Dictionary reseed and validation succeed.
 - [ ] Prisma schema, generated client, migration SQL, and database docs agree.
 

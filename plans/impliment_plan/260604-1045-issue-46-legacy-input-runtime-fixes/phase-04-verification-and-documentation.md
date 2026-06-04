@@ -68,8 +68,8 @@ pnpm test:performance
 ## Success Criteria
 
 - [ ] Focused regressions pass.
-- [ ] Typecheck, lint, full tests, migration reset/replay, RLS verification, and
-  seed validation pass or unrelated baselines are recorded.
+- [ ] Typecheck, lint, full tests, plain-PostgreSQL migration replay, and seed
+  validation pass or unrelated baselines are recorded.
 - [ ] Translation docs, tests, benchmarks, and study callers contain no
   client-selected translation mode contract.
 - [ ] API docs match corrected malformed/invalid input behavior.
