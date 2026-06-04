@@ -23,7 +23,7 @@ export default clerkMiddleware(async (auth, request) => {
   }
 
   const { userId } = await auth();
-  const localeMatch = pathname.match(/^\/(en|vi)/);
+  const localeMatch = pathname.match(/^\/(en|vi)(?:\/|$)/);
   const locale = localeMatch?.[1] ?? routing.defaultLocale;
 
   if (!userId && !isAuthPage(request)) {

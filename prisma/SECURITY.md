@@ -7,8 +7,8 @@ Authorization is enforced explicitly in application service/repository queries.
 
 ## Connection Setup
 
-| Purpose | Env Var | Port | Description |
-|---------|---------|------|-------------|
+| Purpose | Env Var | Description |
+|---------|---------|-------------|
 | App queries | `DATABASE_URL` | Pooled Neon runtime connection |
 | Migrations | `DIRECT_URL` | Direct Neon connection, configured in `prisma.config.ts` |
 

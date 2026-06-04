@@ -2,8 +2,8 @@ import { clerkClient } from "@clerk/nextjs/server";
 import dotenv from "dotenv";
 import { resolve } from "node:path";
 
-dotenv.config({ path: resolve(__dirname, "../../.env.local") });
-dotenv.config({ path: resolve(__dirname, "../../.env.test") });
+dotenv.config({ path: resolve(__dirname, "../../../.env.local") });
+dotenv.config({ path: resolve(__dirname, "../../../.env.test") });
 
 const testUserEmail = process.env.E2E_TEST_USER_EMAIL;
 const testUserPassword = process.env.E2E_TEST_USER_PASSWORD;

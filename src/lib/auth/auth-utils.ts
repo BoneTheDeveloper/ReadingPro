@@ -15,7 +15,7 @@ export class AuthenticationRequiredError extends Error {
 
 export async function getAuthenticatedUser() {
   const user = await requireAuth();
-  log.info({ userId: user.id, email: user.email }, "Authenticated user retrieved");
+  log.info({ userId: user.id }, "Authenticated user retrieved");
   return user;
 }
 

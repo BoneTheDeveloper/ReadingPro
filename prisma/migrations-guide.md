@@ -44,7 +44,7 @@ pnpm run db:generate
 pnpm exec prisma migrate dev --name <descriptive_name> --create-only
 ```
 
-Review and edit the generated SQL, then apply:
+Review the generated SQL, and only edit when needed for column renames, data migration, or custom SQL (for example indexes/triggers), then apply:
 
 ```bash
 pnpm exec prisma migrate dev

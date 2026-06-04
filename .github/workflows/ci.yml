@@ -118,8 +118,10 @@ jobs:
           fetch-depth: 0
 
       - name: Check schema change has migration
+        id: schema-check
         run: |
           BASE="${{ github.base_ref }}"
+          echo "base_ref=$BASE" >> "$GITHUB_OUTPUT"
           if git diff --name-only "origin/$BASE...HEAD" | grep -q "prisma/schema.prisma"; then
             echo "::group::Schema changes detected"
             git diff --name-only "origin/$BASE...HEAD" | grep "prisma/schema.prisma"
@@ -138,6 +140,8 @@ jobs:
 
       - name: Audit migration SQL
         if: always()
+        env:
+          BASE: ${{ steps.schema-check.outputs.base_ref }}
         run: |
           if git diff --name-only "origin/$BASE...HEAD" | grep -q "prisma/migrations/"; then
             echo "Migration files changed — review the SQL below:"

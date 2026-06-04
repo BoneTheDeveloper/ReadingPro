@@ -10,7 +10,12 @@ export async function GET(
   }
 
   const { pathname } = await params;
-  const decoded = decodeURIComponent(pathname);
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(pathname);
+  } catch {
+    return NextResponse.json({ error: "Invalid pathname encoding" }, { status: 400 });
+  }
   const buffer = await readFileBuffer(decoded);
 
   if (!buffer) {

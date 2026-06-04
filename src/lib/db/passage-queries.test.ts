@@ -89,7 +89,7 @@ describe("passage queries", () => {
       simplifiedLevel: "B1" as const,
       wordCount: 120,
       sourceType: "TEXT" as const,
-      filePath: "https://storage.test/file.txt",
+      filePath: "uploads/user-1/file.txt",
     };
 
     await createPassage("user-1", passageData);

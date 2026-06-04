@@ -60,12 +60,12 @@ export async function processFileUpload(userId: string, file: File): Promise<Fil
       text,
       title: sanitizeTitle(file.name),
       sourceType: file.type === 'application/pdf' ? 'PDF' : 'TEXT',
-      filePath: storageResult.url,
+      filePath: storageResult.pathname,
     });
 
     return {
       filename,
-      filePath: storageResult.url,
+      filePath: storageResult.pathname,
       ...analysis,
     };
   } catch (error) {
