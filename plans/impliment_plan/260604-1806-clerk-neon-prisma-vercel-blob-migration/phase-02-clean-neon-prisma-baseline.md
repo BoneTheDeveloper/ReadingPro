@@ -1,9 +1,9 @@
 ---
 phase: 2
 title: "Clean Neon Prisma Baseline"
-status: pending
+status: in-progress
 priority: P1
-effort: "6h"
+effort: "7h"
 dependencies: [1]
 ---
 
@@ -18,9 +18,9 @@ application-owned IDs remain UUID. Remove every Supabase/RLS object.
 ## Context Links
 
 - [Plan](./plan.md)
+- [Manual provider checklist](./phase-01-02-manual-provider-checklist.md)
 - [Prisma schema](../../../prisma/schema.prisma)
-- [Current baseline](../../../prisma/migrations/20260604120000_init/migration.sql)
-- [Current RLS migration](../../../prisma/migrations/20260604123000_enable_rls/migration.sql)
+- [Clean baseline](../../../prisma/migrations/20260604190000_init_neon_clerk/migration.sql)
 - [Prisma config](../../../prisma.config.ts)
 
 ## Requirements
@@ -31,6 +31,8 @@ application-owned IDs remain UUID. Remove every Supabase/RLS object.
   - Domain IDs and domain FKs remain UUID.
   - Clean baseline deploys to empty plain PostgreSQL.
   - Dictionary seed remains reproducible.
+  - Private Blob client uploads have a durable, expiring upload-intent record.
+  - `StudySession.passageId` is a real optional FK to `Passage`.
 - Non-functional:
   - Migration SQL contains only plain PostgreSQL schema objects/extensions.
   - No RLS, Supabase schemas, roles, auth functions, or auth triggers.
@@ -46,7 +48,16 @@ model UserProfile {
 model Passage {
   id     String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId String
+  filePath String? @unique
   user   UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model FileUploadIntent {
+  id        String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String
+  pathname  String @unique
+  expiresAt DateTime
+  user      UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 ```
 
@@ -54,13 +65,14 @@ Apply the same text identity FK pattern to `StudyChatMessage`, `CardReview`,
 `StudySession`, `TranslationCache`, `TranslationHistory`, and
 `VocabularyItem`. Remove `@db.Uuid` from identity fields only. Remove
 `@unique` from cached profile email because Clerk ID is authoritative and email
-is mutable metadata.
+is mutable metadata. Add the missing optional `StudySession` to `Passage`
+relation with explicit `onDelete: SetNull` behavior.
 
 ## File Inventory
 
 | Action | File | Change | Test impact |
 |---|---|---|---|
-| Modify | `prisma/schema.prisma` | Clerk string identity fields; `fileUrl` to `filePath`; keep domain UUIDs | Prisma generation/typecheck |
+| Modify | `prisma/schema.prisma` | Clerk string identity fields; unique `filePath`; upload intents; StudySession passage FK; keep domain UUIDs | Prisma generation/typecheck |
 | Delete/replace | `prisma/migrations/*` | One clean plain-Postgres baseline | Migration replay |
 | Delete | `prisma/rls/` | Remove RLS source and docs | Forbidden-term audit |
 | Create | `scripts/database/assert-plain-postgres-migrations.ts` | Fail on Supabase/RLS forbidden objects | CI smoke |
@@ -70,12 +82,39 @@ is mutable metadata.
 
 ## Model Checklist
 
-- [ ] `UserProfile.id`: `String @id`, no `@db.Uuid`.
-- [ ] All owned `userId`: `String`, no `@db.Uuid`, FK to profile.
-- [ ] All passage/question/session/dictionary/translation record IDs remain UUID.
-- [ ] `Passage.filePath` replaces `fileUrl`.
-- [ ] Profile `email` is cached metadata, not identity/unique key.
-- [ ] Existing cascade rules and owned-table indexes remain.
+- [x] `UserProfile.id`: `String @id`, no `@db.Uuid`.
+- [x] All owned `userId`: `String`, no `@db.Uuid`, FK to profile.
+- [x] All passage/question/session/dictionary/translation record IDs remain UUID.
+- [x] `Passage.filePath` replaces `fileUrl`.
+- [x] `Passage.filePath` is unique so upload finalization retries are idempotent.
+- [x] `FileUploadIntent` uses UUID ID, Clerk string `userId`, unique pathname,
+  expiry index, and profile cascade.
+- [x] `StudySession.passageId` has an explicit FK/relation with `onDelete: SetNull`.
+- [x] Profile `email` is cached metadata, not identity/unique key.
+- [x] Existing cascade rules and owned-table indexes remain.
+
+## Implementation Status — June 4, 2026
+
+### Completed And Verified In Repository
+
+- [x] Updated Prisma identity, `filePath`, upload-intent, and StudySession
+  relation contracts.
+- [x] Removed the old Supabase/RLS migrations and canonical RLS directory.
+- [x] Generated one clean baseline migration from the final Prisma schema.
+- [x] Added `pnpm db:migrate:audit` and CI migration-audit execution.
+- [x] Updated affected application properties and fixtures from `fileUrl` to
+  `filePath` and representative Clerk IDs.
+- [x] Ran `prisma format`, `prisma validate`, Prisma client generation,
+  migration audit, and `pnpm typecheck` successfully.
+
+### Manual Database Work Required
+
+- [ ] Deploy and seed the clean baseline on empty `development`.
+- [ ] Recreate/reset `dev/luc` from seeded `development`.
+- [ ] Replay and seed on an additional empty throwaway branch.
+- [ ] Run the FK, uniqueness, cascade, and column-type checks from
+  [the manual provider checklist](./phase-01-02-manual-provider-checklist.md).
+- [ ] Leave `production` unchanged.
 
 ## Forbidden Migration Tokens
 
@@ -95,7 +134,8 @@ on_auth_user_created
 
 ## Implementation Steps
 
-1. Update Prisma schema identity and `filePath` fields.
+1. Update Prisma schema identity, unique `filePath`, upload-intent, and missing
+   StudySession passage-relation fields.
 2. Delete current baseline/RLS migrations and canonical RLS directory.
 3. Generate one new baseline from the final schema against an empty temporary
    PostgreSQL/Neon branch.
@@ -114,6 +154,8 @@ on_auth_user_created
 | Critical | Fresh migrate deploy on empty PostgreSQL | All schema objects created |
 | Critical | Insert `profiles.id = user_test123` and owned row | FK succeeds |
 | Critical | Insert owned row without profile | FK fails |
+| Critical | Duplicate finalized `filePath` | Unique constraint prevents duplicate passage |
+| Critical | Delete profile with pending upload intent | Intent cascades |
 | Critical | Migration forbidden-token audit | Zero Supabase/RLS matches |
 | High | Delete profile | Owned DB rows cascade |
 | High | Dictionary seed and validation | Reproducible and valid |
@@ -130,10 +172,11 @@ on_auth_user_created
 ## Success Criteria
 
 - [ ] Empty plain PostgreSQL migration replay passes.
-- [ ] Clerk IDs persist directly and satisfy all owned FKs.
-- [ ] Domain entity IDs remain UUID and current UUID boundary validation remains valid.
-- [ ] No Supabase/RLS-specific object remains in migrations.
-- [ ] `filePath` replaces `fileUrl` in generated Prisma types.
+- [ ] Clerk IDs persist directly and satisfy all owned FKs on a replayed database.
+- [x] Domain entity IDs remain UUID and current UUID boundary validation remains valid.
+- [x] No Supabase/RLS-specific object remains in migrations.
+- [x] `filePath` replaces `fileUrl` in generated Prisma types.
+- [ ] Upload-intent and StudySession-passage integrity constraints exist and replay on an empty database.
 - [ ] Development/local branches share the approved clean baseline; production
   remains gated for final cutover.
 

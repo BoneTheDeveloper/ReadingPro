@@ -506,7 +506,7 @@ describe("POST /api/upload", () => {
   it("processes an authenticated file upload", async () => {
     const uploadResult = {
       filename: "user_test_123/story.txt",
-      fileUrl: "https://example.test/story.txt",
+      filePath: "https://example.test/story.txt",
       passageId: passageFixture.id,
       originalLevel: "B1",
       simplifiedLevel: "A2",

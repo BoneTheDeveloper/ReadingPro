@@ -5,20 +5,16 @@ development database, or deploying migrations.
 
 ## Migration Requirements
 
-### RLS Migration Must Use Source-of-Truth Script
+### Plain PostgreSQL Only
 
-The RLS migration must contain the exact SQL from `prisma/rls/enable_rls.sql`.
-This file is the single source of truth for all RLS policies and the
-`handle_new_user` trigger.
+Migration SQL must remain provider-neutral plain PostgreSQL. Supabase auth
+schemas, roles, triggers, and row-level security policies are forbidden.
 
-When updating RLS policies:
+Run the automated audit before applying migrations:
 
-1. Edit `prisma/rls/enable_rls.sql` first.
-2. Copy the updated file contents into the RLS migration SQL file.
-3. Verify the two files are byte-identical before committing.
-
-Never edit the migration SQL directly — always propagate changes from the
-canonical source.
+```bash
+pnpm db:migrate:audit
+```
 
 ### Schema Migrations Must Be Prisma-Generated
 
@@ -107,15 +103,11 @@ pnpm db:seed:dictionary small-test     # test fixture
 
 Verify the application can create, read, update, and delete affected records.
 
-## RLS and Seed Execution Order
+## Baseline and Seed Execution Order
 
-After a fresh reset, migrations replay in timestamp order. The RLS migration
-runs as part of this sequence.
+After a fresh reset, the clean plain-PostgreSQL baseline runs first.
 
 Then run `pnpm db:seed:dictionary` to populate dictionary data.
-
-The canonical RLS SQL lives at `prisma/rls/enable_rls.sql`. The migration copy
-must stay byte-identical. See `prisma/rls/README.md` for maintenance workflow.
 
 ## Deploy Migrations
 
@@ -146,11 +138,10 @@ Confirm that older migrations are recorded as applied.
 
 ### Step 2: Mark the new baseline as applied
 
-For each new migration that already exists in the database schema:
+For a new migration that already exists in the database schema:
 
 ```bash
-pnpm exec prisma migrate resolve --applied 20260604120000_init
-pnpm exec prisma migrate resolve --applied 20260604123000_enable_rls
+pnpm exec prisma migrate resolve --applied 20260604190000_init_neon_clerk
 ```
 
 Use `--applied` for migrations whose SQL has already been applied to the
@@ -188,6 +179,7 @@ After applying a migration:
 
 ```bash
 pnpm exec prisma validate
+pnpm db:migrate:audit
 pnpm exec prisma migrate status
 pnpm run db:generate
 pnpm run typecheck

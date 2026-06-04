@@ -1,9 +1,9 @@
 ---
 phase: 1
 title: "Environment and Branch Contracts"
-status: pending
+status: in-progress
 priority: P1
-effort: "4h"
+effort: "5h"
 dependencies: []
 ---
 
@@ -19,20 +19,24 @@ production Clerk/Blob resources.
 ## Context Links
 
 - [Plan](./plan.md)
+- [Manual provider checklist](./phase-01-02-manual-provider-checklist.md)
 - [Current env template](../../../.env.example)
 - [Current Prisma config](../../../prisma.config.ts)
 - [Current CI](../../../.github/workflows/ci.yml)
 - [Neon Vercel integration](https://neon.com/docs/guides/vercel/)
+- [Neon protected branches](https://neon.com/docs/guides/protected-branches)
 - [Vercel environment variables](https://vercel.com/docs/projects/environment-variables)
+- [GitHub deployment environments](https://docs.github.com/en/actions/reference/workflows-and-actions/deployments-and-environments)
 
 ## Requirements
 
 - Functional:
   - Local `.env.local` targets `dev/luc`.
   - Vercel Development targets `development`.
-  - Each PR targets exactly one `preview/pr-<number>`.
+  - Each trusted same-repository PR deployment targets exactly one `preview/pr-<number>`.
   - Vercel Production targets protected `production`.
   - Development and production use separate Clerk instances and private Blob stores.
+  - Provider/account plans can enforce the required protected production controls.
 - Non-functional:
   - Runtime receives pooled DB credentials only.
   - Direct DB credentials are limited to trusted migration contexts.
@@ -78,27 +82,53 @@ branches.
 
 ## Interface Checklist
 
-- [ ] `DATABASE_URL` always means pooled runtime connection.
-- [ ] `DIRECT_URL` always means direct Prisma migration connection.
+- [x] `DATABASE_URL` always means pooled runtime connection.
+- [x] `DIRECT_URL` always means direct Prisma migration connection.
 - [ ] `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` matches deployment environment.
 - [ ] `CLERK_SECRET_KEY` and `CLERK_WEBHOOK_SIGNING_SECRET` never reach clients.
 - [ ] `BLOB_READ_WRITE_TOKEN` points to environment-specific private store.
-- [ ] Neon automation secrets are GitHub-only, not application runtime envs.
+- [ ] `CRON_SECRET` protects expired-upload cleanup and is never client-visible.
+- [x] Neon automation secrets are documented as GitHub-only, not application runtime envs.
+- [ ] Production approval capability and Neon branch protection availability are verified before code migration.
+
+## Implementation Status — June 4, 2026
+
+### Completed In Repository
+
+- [x] Replaced Supabase variables in `.env.example` with the Clerk, Neon,
+  private Blob, cron, and automation variable contract.
+- [x] Updated `.gitignore` so all `.env*` files except `.env.example`, Vercel
+  state, Neon state, and agent-local files remain untracked.
+- [x] Created `docs/database/neon-environment-contract.md` with branch topology,
+  connection ownership, reset rules, provider boundaries, and the pre-launch
+  sanitized-preview blocker.
+
+### Manual Provider Work Required
+
+- [ ] Complete every Phase 1 item in
+  [the manual provider checklist](./phase-01-02-manual-provider-checklist.md).
+- [ ] Confirm `.env.local` points to `dev/luc` without sharing its values.
+- [ ] Confirm provider capability gates before applying the Phase 2 baseline to
+  shared Neon branches.
 
 ## Implementation Steps
 
-1. Create Neon `production`; enable branch protection.
-2. Create `development` from `production`, then `dev/luc` from `development`.
-3. Reserve `preview/pr-<number>` naming; parent previews from `production`.
-4. Create Clerk development and production instances with email/password and
+1. Verify the Neon/GitHub/Vercel account capabilities in the plan feasibility
+   gates. Stop if protected production and required approval cannot be enforced.
+2. Create Neon `production`; enable branch protection.
+3. Create `development` from `production`, then `dev/luc` from `development`.
+4. Reserve `preview/pr-<number>` naming; parent previews from `production`
+   only during the development-only period.
+5. Create Clerk development and production instances with email/password and
    Google OAuth settings required by current UX.
-5. Create separate private Vercel Blob stores/tokens for development and production.
-6. Define Vercel Development/Preview/Production variable ownership.
-7. Define GitHub environments and secret owners for preview automation and
-   production approval.
-8. Update `.env.example`; document branch reset, seed, and forbidden operations.
-9. Add an operational warning: before real production user data, change preview
-   branching to schema-only or sanitized preview parent.
+6. Create separate private Vercel Blob stores/tokens for development and production.
+7. Define Vercel Development/Preview/Production variable ownership, including
+   `CRON_SECRET` and no direct DB/admin credentials in app runtime.
+8. Define GitHub preview/production environments, allowed branches/actors,
+   required reviewer, no self-approval, and secret owners.
+9. Update `.env.example`; document branch reset, seed, and forbidden operations.
+10. Define a launch blocker: before real production user data, change preview
+    branching to a sanitized/schema-only parent and verify it in automation.
 
 ## Test Scenario Matrix
 
@@ -106,6 +136,8 @@ branches.
 |---|---|---|
 | Critical | Inspect production runtime env | No `DIRECT_URL`, Neon API key, or dev provider keys |
 | Critical | Inspect preview runtime env | Pooled URL points to `preview/pr-N`; no direct URL |
+| Critical | Fork/Dependabot PR | No privileged preview job and no provider secrets |
+| Critical | Provider capability review | Protected branch and required approval controls exist |
 | High | Local `.env.local` connection check | Branch reports `dev/luc` |
 | High | Vercel Development connection check | Branch reports `development` |
 | High | Close PR | Temporary preview branch eligible for deletion |
@@ -119,11 +151,13 @@ branches.
 
 ## Success Criteria
 
-- [ ] All four environment mappings are explicit and non-ambiguous.
+- [x] All four environment mappings are explicit and non-ambiguous.
 - [ ] `production` is protected; `development` and `dev/luc` exist.
 - [ ] Development/production Clerk and Blob resources are separate.
 - [ ] Direct URLs and provider admin secrets are excluded from app runtime.
-- [ ] Environment contract doc identifies owners, reset rules, and data-copy risk.
+- [x] Untrusted PRs are explicitly excluded from privileged preview deployment.
+- [ ] Account/provider plan capabilities satisfy the production protection contract.
+- [x] Environment contract doc identifies owners, reset rules, and data-copy risk.
 
 ## Risk Assessment
 

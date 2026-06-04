@@ -19,7 +19,7 @@ export interface AnalyzeAndPersistContentInput {
   text: string;
   title: string;
   sourceType: SourceType;
-  fileUrl?: string;
+  filePath?: string;
 }
 
 export interface AnalyzeAndPersistContentResult {
@@ -34,7 +34,7 @@ export async function analyzeAndPersistContent({
   text,
   title,
   sourceType,
-  fileUrl,
+  filePath,
 }: AnalyzeAndPersistContentInput): Promise<AnalyzeAndPersistContentResult> {
   const truncatedText = text.slice(0, 10000);
 
@@ -81,7 +81,7 @@ export async function analyzeAndPersistContent({
         simplifiedLevel,
         wordCount,
         sourceType,
-        fileUrl,
+        filePath,
         questions: {
           create: questions.map(toQuestionCreateInput),
         },

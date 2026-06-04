@@ -8,8 +8,7 @@ issue: 46
 branch: "feat/clerk-neon-prisma-vercel-blob-migration"
 tags: [bugfix, api, backend, frontend, critical]
 blockedBy:
-  - 260604-prisma-baseline-rls-dictionary-source-of-truth
-  - project:impliment_plan/260604-1806-clerk-neon-prisma-vercel-blob-migration
+  - 260604-1806-clerk-neon-prisma-vercel-blob-migration
 blocks: [260604-1102-issue-46-output-boundary-migration]
 created: "2026-06-04T03:45:57.125Z"
 createdBy: "ck:plan"

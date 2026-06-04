@@ -100,9 +100,6 @@ vi.mock("next-intl", () => ({
   }),
 }));
 
-vi.mock("@/lib/supabase/client", () => import("../mocks/supabase"));
-vi.mock("@/lib/supabase/server", () => import("../mocks/supabase"));
-
 afterEach(() => {
   cleanup();
   resetAiMocks();

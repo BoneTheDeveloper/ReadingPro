@@ -74,7 +74,7 @@ export async function createPassage(
     simplifiedLevel?: CEFRLevel;
     wordCount: number;
     sourceType: 'TEXT' | 'PDF';
-    fileUrl?: string;
+    filePath?: string;
   }
 ) {
   return db.passage.create({ data: { userId, ...data } });

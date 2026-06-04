@@ -1,16 +1,16 @@
-# Prisma & Supabase — Security Model
+# Prisma & Neon Security Model
 
 ## Key Fact
 
-Prisma connects via a dedicated `prisma` database user with `bypassrls`, using `@prisma/adapter-pg` (Prisma 7 requires explicit driver adapters).
-RLS policies exist as a safety net for direct DB access but do not apply to Prisma queries.
+Prisma connects server-side to Neon PostgreSQL using `@prisma/adapter-pg`.
+Authorization is enforced explicitly in application service/repository queries.
 
 ## Connection Setup
 
 | Purpose | Env Var | Port | Description |
 |---------|---------|------|-------------|
-| App queries | `DATABASE_URL` | 6543 | Pooled via Supavisor (`?pgbouncer=true`) |
-| Migrations | `DIRECT_URL` | 5432 | Direct connection, configured in `prisma.config.ts` |
+| App queries | `DATABASE_URL` | Pooled Neon runtime connection |
+| Migrations | `DIRECT_URL` | Direct Neon connection, configured in `prisma.config.ts` |
 
 Prisma 7 removed the built-in PostgreSQL driver. `@prisma/adapter-pg` is mandatory — no standalone `PrismaClient()` possible.
 
@@ -18,20 +18,14 @@ Migration and reset procedures are documented in
 [`prisma/MIGRATIONS.md`](./MIGRATIONS.md). Review that runbook before changing
 or resetting a database.
 
-## RLS Ownership
-
-The canonical RLS SQL lives at [`prisma/rls/enable_rls.sql`](./rls/enable_rls.sql).
-A byte-identical copy is placed in the corresponding Prisma migration
-(`prisma/migrations/00000001_enable_rls/migration.sql`).
-See [`prisma/rls/README.md`](./rls/README.md) for the maintenance workflow.
-
 ## Security Model
 
 | Layer | Mechanism | Protects |
 |-------|-----------|----------|
 | Primary | Explicit `where: { userId }` on all queries | Every read/write scoped to authenticated user |
 | Required | `getAuthenticatedUser()` before any DB call | Auth check must precede all DB operations |
-| Secondary | Supabase RLS policies | Direct DB access via non-Prisma clients |
+| Infrastructure | Runtime receives pooled credentials only | Limits application credential exposure |
+| Migration gate | Direct credentials only in trusted migration contexts | Prevents runtime schema/admin access |
 
 ## Rules
 
@@ -40,4 +34,4 @@ See [`prisma/rls/README.md`](./rls/README.md) for the maintenance workflow.
 3. **Verify ownership before update/delete** — fetch with userId, then mutate by id
 4. **`db` is the single Prisma client** — import from `@/lib/db/client`
 5. **Prisma is server-side only** — never expose to client components
-6. **RLS stays enabled** — defense-in-depth for direct DB access
+6. **No browser database access** — Prisma and database credentials remain server-only

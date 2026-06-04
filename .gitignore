@@ -37,9 +37,8 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # env files
-.env
-.env.local
-.env*.local
+.env*
+!.env.example
 
 # database
 prisma/dev.db
@@ -50,6 +49,9 @@ supabase/.temp/
 
 # vercel
 .vercel
+
+# neon
+.neon/
 
 # typescript
 *.tsbuildinfo

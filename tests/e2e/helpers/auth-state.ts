@@ -1,5 +1,4 @@
 import { readFile } from "node:fs/promises";
-import { createServerClient } from "@supabase/ssr";
 
 export const E2E_AUTH_FILE = ".auth/user.json";
 
@@ -23,11 +22,8 @@ export async function getE2EAuthCookieHeader(options?: {
   const storageStateCookie = await getAuthCookieFromStorageState(storageStatePath);
   if (storageStateCookie) return storageStateCookie;
 
-  const credentialsCookie = await getAuthCookieFromSupabaseCredentials();
-  if (credentialsCookie) return credentialsCookie;
-
   throw new Error(
-    `Missing auth cookies. Provide ${formatEnvNames(options?.envCookieNames)}, create ${storageStatePath}, or set E2E_TEST_USER_EMAIL and E2E_TEST_USER_PASSWORD.`,
+    `Missing Clerk auth cookies. Provide ${formatEnvNames(options?.envCookieNames)} or create ${storageStatePath} with the Playwright setup project.`,
   );
 }
 
@@ -50,36 +46,6 @@ async function getAuthCookieFromStorageState(storageStatePath: string) {
   }
 
   return formatCookieHeader(storageState.cookies);
-}
-
-async function getAuthCookieFromSupabaseCredentials() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  const email = process.env.E2E_TEST_USER_EMAIL;
-  const password = process.env.E2E_TEST_USER_PASSWORD;
-
-  if (!supabaseUrl || !supabaseAnonKey || !email || !password) {
-    return null;
-  }
-
-  const responseCookies: StorageState["cookies"] = [];
-  const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
-    cookies: {
-      getAll() {
-        return responseCookies;
-      },
-      setAll(cookiesToSet) {
-        responseCookies.splice(0, responseCookies.length, ...cookiesToSet);
-      },
-    },
-  });
-
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) {
-    throw new Error(`Failed to sign in E2E test user: ${error.message}`);
-  }
-
-  return formatCookieHeader(responseCookies);
 }
 
 function formatCookieHeader(cookies: StorageState["cookies"]) {

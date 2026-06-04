@@ -1,19 +1,20 @@
 # Playwright E2E and Screenshots
 
-Playwright uses one pre-created Supabase Auth user for authenticated browser tests. The test run signs in through the UI once, saves `.auth/user.json`, and reuses that storage state for protected routes and generated screenshots.
+Playwright uses one pre-created Clerk development user for authenticated browser tests. The test run signs in through the Clerk UI once, saves `.auth/user.json`, and reuses that storage state for protected routes and generated screenshots.
 
 E2E specs and helpers live under `tests/e2e/`. Performance test scenarios should live under `tests/performance/`.
 
 ## Local Environment
 
-The app reads Supabase and database settings from `.env.local`. Playwright additionally loads `.env.test` for the E2E user credentials:
+The app reads Clerk and database settings from `.env.local`. Playwright additionally loads `.env.test` for the E2E user credentials:
 
 ```bash
 E2E_TEST_USER_EMAIL=reader@example.com
 E2E_TEST_USER_PASSWORD=secure-password
 ```
 
-The user must already exist in the Supabase project referenced by `.env.local`. Playwright does not create users automatically. `pnpm e2e:create-user` and `make e2e-setup` are manual helper commands for maintainers who intentionally want to create that user with `SUPABASE_SERVICE_ROLE_KEY`.
+The user must exist in the Clerk development instance referenced by `.env.local`.
+Run `pnpm e2e:create-user` to create it with `CLERK_SECRET_KEY`.
 
 ## Commands
 
@@ -44,8 +45,8 @@ make screenshot PAGE=/en/study NAME=study
 GitHub Actions pins `ubuntu-24.04` so Playwright can install Chromium on a supported runner. It runs Playwright only when all required secrets are present:
 
 ```text
-NEXT_PUBLIC_SUPABASE_URL
-NEXT_PUBLIC_SUPABASE_ANON_KEY
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+CLERK_SECRET_KEY
 DATABASE_URL
 DIRECT_URL
 E2E_TEST_USER_EMAIL
@@ -54,4 +55,4 @@ E2E_TEST_USER_PASSWORD
 
 When secrets are missing, CI prints a skip notice and keeps lint, typecheck, unit tests, and coverage unchanged. When secrets are present, CI installs Chromium, runs `pnpm db:migrate:deploy`, then runs `pnpm e2e`.
 
-The configured Supabase database must be safe for CI migration deployment and the E2E user must already exist before the Playwright job starts.
+The configured Neon branch must be safe for CI migration deployment and the Clerk E2E user must already exist before the Playwright job starts.

@@ -11,8 +11,8 @@ datasource db {
 // USER PROFILE MODEL
 // ============================================
 model UserProfile {
-  id               String    @id @db.Uuid
-  email            String?   @unique
+  id               String    @id
+  email            String?
   name             String?
   avatarUrl        String?
   bio              String?
@@ -29,6 +29,7 @@ model UserProfile {
   translationCaches    TranslationCache[]
   translationHistories TranslationHistory[]
   vocabularyItems      VocabularyItem[]
+  fileUploadIntents    FileUploadIntent[]
 
   @@map("profiles")
 }
@@ -38,7 +39,7 @@ model UserProfile {
 // ============================================
 model Passage {
   id                String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId            String     @db.Uuid
+  userId            String
   title             String
   content           String
   simplifiedContent String?
@@ -46,7 +47,7 @@ model Passage {
   simplifiedLevel   CEFRLevel?
   wordCount         Int
   sourceType        SourceType
-  fileUrl           String?
+  filePath          String?    @unique
   deletedAt         DateTime?
   createdAt         DateTime   @default(now())
   updatedAt         DateTime   @updatedAt
@@ -57,6 +58,7 @@ model Passage {
   translationCaches    TranslationCache[]
   translationHistories TranslationHistory[]
   vocabularyItems      VocabularyItem[]
+  studySessions        StudySession[]
 
   @@index([userId])
   @@index([createdAt])
@@ -66,7 +68,7 @@ model Passage {
 
 model StudyChatMessage {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId    String   @db.Uuid
+  userId    String
   passageId String   @db.Uuid
   role      String
   content   String
@@ -165,7 +167,7 @@ model DictionarySourceAudit {
 model TranslationCache {
   id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   cacheKey        String   @unique
-  userId          String   @db.Uuid
+  userId          String
   sourceId        String   @db.Uuid
   selectedText    String
   contextSentence String
@@ -187,7 +189,7 @@ model TranslationCache {
 
 model TranslationHistory {
   id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId          String   @db.Uuid
+  userId          String
   sourceId        String   @db.Uuid
   selectedText    String
   contextSentence String
@@ -209,7 +211,7 @@ model TranslationHistory {
 model VocabularyItem {
   id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   normalizedKey   String   @unique
-  userId          String   @db.Uuid
+  userId          String
   sourceId        String   @db.Uuid
   selectedText    String
   translation     String
@@ -256,7 +258,7 @@ model Question {
 model CardReview {
   id         String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   questionId String @db.Uuid
-  userId     String @db.Uuid
+  userId     String
 
   qualityRating Int
   easeFactor    Float @default(2.5)
@@ -279,7 +281,7 @@ model CardReview {
 // ============================================
 model StudySession {
   id        String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId    String  @db.Uuid
+  userId    String
   passageId String? @db.Uuid
 
   startedAt   DateTime  @default(now())
@@ -291,10 +293,28 @@ model StudySession {
   incorrectCount Int    @default(0)
   accuracyRate   Float?
 
-  user UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user    UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  passage Passage?    @relation(fields: [passageId], references: [id], onDelete: SetNull)
 
   @@index([userId, startedAt])
   @@map("study_sessions")
+}
+
+// ============================================
+// PRIVATE BLOB UPLOAD INTENT MODEL
+// ============================================
+model FileUploadIntent {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String
+  pathname  String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+  @@index([userId, expiresAt])
+  @@map("file_upload_intents")
 }
 
 // ============================================

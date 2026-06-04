@@ -17,8 +17,7 @@ import {
 import { cn } from "@/lib/shared/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { UserMenu, type UserMenuUser } from "./user-menu";
-import { SignOutButton } from "./sign-out-button";
+import { AuthControls } from "./auth-controls";
 import { ThemeToggle } from "./theme-toggle";
 import { LanguageSwitcher } from "./language-switcher";
 import { useTranslations } from "next-intl";
@@ -31,10 +30,8 @@ const navItems = [
 
 export function DashboardSidebar({
   children,
-  user,
 }: {
   children: React.ReactNode;
-  user: UserMenuUser;
 }) {
   const t = useTranslations();
   const pathname = usePathname();
@@ -86,7 +83,7 @@ export function DashboardSidebar({
       </aside>
 
       <div className="flex-1 lg:ml-20 flex flex-col h-dvh overflow-hidden">
-        <TopBar onMenuToggle={() => setMobileOpen(true)} user={user} />
+        <TopBar onMenuToggle={() => setMobileOpen(true)} />
         <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
           {children}
         </main>
@@ -97,10 +94,8 @@ export function DashboardSidebar({
 
 function TopBar({
   onMenuToggle,
-  user,
 }: {
   onMenuToggle: () => void;
-  user: UserMenuUser;
 }) {
   return (
     <>
@@ -124,7 +119,7 @@ function TopBar({
           >
             <Bell className="w-5 h-5" />
           </Button>
-          <UserMenu user={user} />
+          <AuthControls />
         </div>
       </header>
 
@@ -206,7 +201,7 @@ function SidebarContent({ isActive, t }: { isActive: (href: string) => boolean; 
         >
           <HelpCircle className="w-5 h-5" />
         </Button>
-        <SignOutButton />
+        <AuthControls compact />
       </div>
     </div>
   );
@@ -267,7 +262,7 @@ function MobileSidebarContent({
       </nav>
 
       <div className="px-3 py-3 border-t border-border">
-        <SignOutButton />
+        <AuthControls compact />
       </div>
     </div>
   );

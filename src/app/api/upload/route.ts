@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
       success: true,
       data: {
         filename: result.filename,
-        fileUrl: result.fileUrl,
+        filePath: result.filePath,
         passageId: result.passageId,
         originalLevel: result.originalLevel,
         simplifiedLevel: result.simplifiedLevel,

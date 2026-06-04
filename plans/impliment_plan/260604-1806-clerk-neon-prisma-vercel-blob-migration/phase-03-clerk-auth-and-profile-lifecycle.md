@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "Clerk Auth and Profile Lifecycle"
-status: pending
+status: in-progress
 priority: P1
 effort: "8h"
 dependencies: [2]
@@ -23,6 +23,8 @@ bootstrap and verified webhook synchronization/deletion.
 - [Current sign-in](../../../src/app/[locale]/(auth)/sign-in/page.tsx)
 - [Current sign-up](../../../src/app/[locale]/(auth)/sign-up/page.tsx)
 - [Clerk Next.js quickstart](https://clerk.com/docs/nextjs/getting-started/quickstart)
+- [Clerk middleware with next-intl](https://clerk.com/docs/reference/nextjs/clerk-middleware)
+- [Clerk webhook verification](https://clerk.com/docs/references/backend/verify-webhook)
 
 ## Requirements
 
@@ -32,6 +34,7 @@ bootstrap and verified webhook synchronization/deletion.
   - Authenticated app requests always have a corresponding `profiles` row.
   - Clerk create/update/delete events synchronize profile lifecycle.
   - Missing/delayed webhooks do not block first authenticated request.
+  - Missing/invalid auth produces one provider-neutral typed error and stable `401` handling.
 - Non-functional:
   - Authoritative user ID comes only from Clerk server auth.
   - Webhooks are signature verified and idempotent.
@@ -50,7 +53,7 @@ Request
 
 Clerk webhook (public route, verified)
   -> user.created/user.updated: upsert cached profile metadata
-  -> user.deleted: cleanup private blobs, delete profile, cascade DB rows
+  -> user.deleted: bounded retryable private-blob cleanup, delete profile, cascade DB rows
 ```
 
 Expose two explicit auth APIs:
@@ -59,6 +62,8 @@ Expose two explicit auth APIs:
   FK parent exists, then returns Clerk ID for scoped operations.
 - `requireAppProfile(): Promise<UserProfile>` returns the guaranteed profile for
   UI/profile metadata.
+- `AuthenticationRequiredError` plus `isAuthenticationRequiredError()` replaces
+  provider-specific error-name/message checks.
 
 Do not return or accept client-provided identity as authoritative.
 
@@ -73,38 +78,78 @@ Do not return or accept client-provided identity as authoritative.
 | Move/create | `src/app/[locale]/(auth)/sign-up/[[...sign-up]]/page.tsx` | Embedded Clerk `<SignUp />` | E2E |
 | Delete | `src/app/auth/callback/route.ts` | Clerk owns callbacks | Route smoke |
 | Modify | `src/lib/auth/auth-utils.ts` | Clerk auth ID/profile helpers | Auth unit/integration |
+| Create | `src/lib/auth/auth-errors.ts` | Provider-neutral auth error/classifier | Route auth tests |
 | Create | `src/lib/auth/profile-sync.ts` | Profile mapping/upsert/delete orchestration | Unit/integration |
 | Delete | `src/lib/auth/auth-cache.ts`, `src/lib/auth/sync-user.ts` | Remove Supabase token/profile lifecycle | Unit cleanup |
 | Create | `src/app/api/webhooks/clerk/route.ts` | Verified lifecycle webhook | Route integration |
 | Modify | `src/components/layout/use-sign-out.ts` | Clerk sign-out with localized redirect | Component unit |
 | Modify | `tests/vitest/mocks/*`, `tests/vitest/setup/vitest.setup.ts` | Clerk auth/current-user mocks | All tests |
+| Modify | authenticated API route error handling | Remove Supabase error imports/string classifiers; return typed `401` | Route integration |
 
 ## Interface Checklist
 
 - [ ] `requireAuthUserId()` guarantees profile then returns Clerk string ID or
   throws typed auth error.
-- [ ] `requireAppProfile()` upserts missing profile without race failure.
-- [ ] Clerk-to-profile mapper handles missing primary email/name/image.
+- [x] Existing `getAuthenticatedUser()` / `getCurrentUser()` callers now use
+  Clerk server auth and first-use profile upsert.
+- [x] Auth helper throws a provider-neutral typed error for missing sessions.
+- [ ] API adapters use one shared classifier and never import Supabase auth error types.
+- [x] Clerk-to-profile mapping handles missing primary email/name/image.
 - [ ] Profile metadata updates do not overwrite app-owned profile fields.
 - [ ] Webhook replay is idempotent.
 - [ ] Delete event handles already-deleted profiles.
-- [ ] Proxy excludes webhook/monitoring/static paths and preserves locale redirect.
+- [ ] Proxy leaves Clerk webhook, Vercel Blob completion callback, monitoring,
+  and static paths public while preserving locale redirect.
+
+## Implementation Status — June 4, 2026
+
+### Completed
+
+- [x] Added `@clerk/nextjs` and removed `@supabase/ssr`.
+- [x] Replaced Supabase session middleware with `clerkMiddleware()` composed
+  with next-intl; matcher includes `'/__clerk/:path*'` and API routes.
+- [x] Added locale-aware `ClerkProvider` inside `<body>`.
+- [x] Replaced custom Supabase sign-in/sign-up forms with embedded Clerk
+  components at the existing localized URLs.
+- [x] Replaced server auth/profile bootstrap with `auth()` and `clerkClient()`.
+- [x] Replaced dashboard auth controls with `<Show>`, Clerk sign-in/sign-up
+  buttons, and `<UserButton>`.
+- [x] Removed Supabase auth callback, browser/server session helpers, token
+  cache, sign-out hook, and Supabase E2E auth fallback.
+- [x] Updated Playwright setup, test-user helper, and CI auth secret names for
+  Clerk.
+- [x] Prisma/typecheck, lint, migration audit, production build, and all 265
+  Vitest tests pass.
+
+### Remaining
+
+- [ ] Add English/Vietnamese Clerk component localizations.
+- [x] Auth pages use Clerk catch-all routes for multi-step auth flows.
+- [ ] Add `requireAuthUserId()` / `requireAppProfile()` and race-safe focused tests.
+- [ ] Add verified Clerk lifecycle webhook and deletion orchestration.
+- [ ] Convert authenticated API adapters to the shared typed-error classifier
+  and stable `401` responses.
+- [ ] Add proxy/webhook/auth E2E and integration coverage.
 
 ## Implementation Steps
 
 1. Add Clerk packages and environment validation.
 2. Add locale-aware Clerk provider using English/Vietnamese Clerk localizations.
 3. Replace Supabase session work in `src/proxy.ts` with Clerk middleware and
-   existing next-intl negotiation.
+   existing next-intl negotiation; run Clerk for API and `__clerk` routes,
+   keep Clerk-webhook/Blob-callback/monitoring/static route policy explicit, and configure
+   `authorizedParties` for approved origins.
 4. Convert auth pages to embedded catch-all Clerk routes; configure sign-in,
    sign-up, fallback, and post-auth redirect URLs.
 5. Replace auth utilities with Clerk ID/profile helpers.
 6. Implement profile mapper and `upsert` bootstrap using Clerk `currentUser()`
    only when the DB row is missing.
 7. Add verified Clerk webhook route for user create/update/delete.
-8. Replace sign-out hook with Clerk SDK behavior and locale-aware redirect.
-9. Delete callback/token-cache/sync logic that is no longer reachable.
-10. Add focused auth/profile/proxy/webhook tests before converting all callers.
+8. Add provider-neutral auth error/classifier and convert authenticated API
+   adapters away from Supabase-specific and message-string detection.
+9. Replace sign-out hook with Clerk SDK behavior and locale-aware redirect.
+10. Delete callback/token-cache/sync logic that is no longer reachable.
+11. Add focused auth/profile/proxy/webhook tests before converting all callers.
 
 ## Test Scenario Matrix
 
@@ -113,6 +158,7 @@ Do not return or accept client-provided identity as authoritative.
 | Critical | Authenticated Clerk user without profile | First request creates profile and succeeds |
 | Critical | Two concurrent first requests | One stable profile; no unique/FK failure |
 | Critical | Forged webhook | Rejected before DB/storage calls |
+| Critical | Missing/invalid Clerk session on any authenticated API | Stable `401`; no Sentry unexpected capture |
 | Critical | `user.deleted` replay | Idempotent success |
 | High | `/en/sign-in` and `/vi/sign-in` | Embedded localized Clerk UI |
 | High | Authenticated user visits auth page | Redirected to localized app route |
@@ -129,10 +175,11 @@ Do not return or accept client-provided identity as authoritative.
 
 ## Success Criteria
 
-- [ ] Clerk is the only authentication/session provider in active code.
+- [x] Clerk is the only authentication/session provider in active code.
 - [ ] Localized embedded auth pages preserve approved URLs and branding shell.
 - [ ] Profile bootstrap removes webhook timing race.
 - [ ] Verified webhooks synchronize user metadata and deletion.
+- [ ] Authenticated APIs use provider-neutral typed auth errors and stable `401`.
 - [ ] Sign-out and protected-route redirects work.
 - [ ] Auth/profile tests cover race, replay, invalid signature, and missing metadata.
 

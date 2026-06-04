@@ -3,7 +3,7 @@ phase: 4
 title: "Application Authorization Hardening"
 status: pending
 priority: P1
-effort: "8h"
+effort: "9h"
 dependencies: [3]
 ---
 
@@ -61,12 +61,13 @@ Indirect ownership:
 | Action | Area/files | Change | Test impact |
 |---|---|---|---|
 | Modify | `src/lib/db/passage-queries.ts` | Complete scoped create/read/update/delete APIs | Query tests |
-| Modify | `src/lib/db/card-review-queries.ts` | Scope update/delete predicates by user | Query tests |
+| Modify | `src/lib/db/card-review-queries.ts` | Scope update predicates and verify question/passage ownership on create | Query tests |
 | Modify | `src/lib/db/study-session-queries.ts` | Scope final mutations by user | Query tests |
 | Modify | `src/lib/db/translation-queries.ts` | Audit every source/user predicate | Query/service tests |
 | Create | `src/lib/db/study-chat-queries.ts` | Move owned chat access from route | Route/service tests |
 | Modify | `src/app/api/study-chat/route.ts` | Adapter/orchestration only | Route tests |
-| Modify | reading/test pages and study/upload actions | Replace direct owned `db` calls | Integration tests |
+| Modify | reading/test pages, upload analysis, and study/upload actions | Replace direct owned `db` calls | Integration tests |
+| Modify | authenticated route adapters | Use shared typed auth classifier and stable `401` | Route tests |
 | Modify | performance fixture routes | Isolate test-only DB access and ownership | Performance tests |
 | Create | `tests/vitest/smoke/authorization-boundaries.test.ts` | Enforce allowed owned-model DB import locations | Smoke |
 | Add/modify | repository/service tests | Cross-user denial matrix | Security regression |
@@ -75,6 +76,8 @@ Indirect ownership:
 
 - [ ] Passage read/list/create/update/delete always requires `userId`.
 - [ ] Question mutation verifies parent passage ownership in same service flow.
+- [ ] New-card lookup verifies the requested passage belongs to the actor.
+- [ ] Card-review creation verifies the question belongs to an actor-owned passage.
 - [ ] Card review lookup and update remain scoped by `userId`.
 - [ ] Study session lookup and update remain scoped by `userId`.
 - [ ] Study chat history/create remain scoped by user and passage.
@@ -89,14 +92,16 @@ Indirect ownership:
 2. Add missing repository/service functions before changing callers.
 3. Move direct owned queries out of reading/test pages, study upload action, and
    study-chat route.
-4. Change mutations to include ownership in final predicate where Prisma allows;
+4. Close confirmed gaps: question/card-review creation, new-card lookup,
+   StudySession passage ownership, and chat-history parent ownership.
+5. Change mutations to include ownership in final predicate where Prisma allows;
    otherwise perform verified ownership and mutation in a transaction.
-5. Audit raw SQL for explicit user predicates and correct text-ID comparisons.
-6. Normalize not-found/not-owned behavior so ownership is not disclosed.
-7. Add cross-user tests for each owned aggregate.
-8. Add a source-boundary smoke test that rejects future direct owned-model
+6. Audit raw SQL for explicit user predicates and correct text-ID comparisons.
+7. Normalize auth and not-found/not-owned behavior so ownership is not disclosed.
+8. Add cross-user tests for each owned aggregate.
+9. Add a source-boundary smoke test that rejects future direct owned-model
    Prisma access from route/page/action adapters.
-9. Update security documentation contract references, leaving final docs cleanup
+10. Update security documentation contract references, leaving final docs cleanup
    to Phase 7.
 
 ## Test Scenario Matrix
@@ -106,10 +111,13 @@ Indirect ownership:
 | Critical | Passage read/update/delete | Not found/denied; no mutation |
 | Critical | Study chat read/create | Denied when passage belongs to another user |
 | Critical | Card review update | Denied; review unchanged |
+| Critical | Card review create for another user's question | Denied; no review created |
 | Critical | Study session update | Denied; session unchanged |
 | Critical | Translation/vocabulary source access | Denied; no cache/history write |
 | High | Question regenerate/delete | Denied through parent passage ownership |
+| High | New-card lookup for another user's passage | Denied/empty without disclosure |
 | High | Private file lookup | Denied through passage ownership |
+| High | Missing auth on every authenticated route family | Stable `401`; no unexpected capture |
 | High | Source-boundary architecture test | Fails on new direct adapter DB access |
 
 ## Dependency Map
@@ -125,6 +133,7 @@ Indirect ownership:
 - [ ] All owned operations require server-derived Clerk `userId`.
 - [ ] Cross-user denial tests cover every owned aggregate.
 - [ ] Final mutations are ownership-scoped or transactionally protected.
+- [ ] Parent-derived ownership checks protect question/card creation and new-card lookup.
 - [ ] Raw SQL remains explicitly user-scoped after text-ID migration.
 - [ ] Architecture smoke test prevents regression.
 

@@ -55,7 +55,7 @@ describe("processFileUpload", () => {
 
     expect(result).toEqual({
       filename: "user_1/1779357600000-My_Notes.txt",
-      fileUrl: "https://cdn.test/upload.txt",
+      filePath: "https://cdn.test/upload.txt",
       passageId: "passage_1",
       originalLevel: "A2",
       simplifiedLevel: null,
@@ -71,7 +71,7 @@ describe("processFileUpload", () => {
       text: validText,
       title: "My Notes",
       sourceType: "TEXT",
-      fileUrl: "https://cdn.test/upload.txt",
+      filePath: "https://cdn.test/upload.txt",
     });
     expect(parser.parsePDF).not.toHaveBeenCalled();
   });

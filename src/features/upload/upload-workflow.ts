@@ -6,7 +6,7 @@ import { analyzeAndPersistContent } from './content-analysis-service';
 
 export interface FileUploadWorkflowResult {
   filename: string;
-  fileUrl: string;
+  filePath: string;
   passageId: string;
   originalLevel: string;
   simplifiedLevel: string | null;
@@ -60,12 +60,12 @@ export async function processFileUpload(userId: string, file: File): Promise<Fil
       text,
       title: sanitizeTitle(file.name),
       sourceType: file.type === 'application/pdf' ? 'PDF' : 'TEXT',
-      fileUrl: storageResult.url,
+      filePath: storageResult.url,
     });
 
     return {
       filename,
-      fileUrl: storageResult.url,
+      filePath: storageResult.url,
       ...analysis,
     };
   } catch (error) {

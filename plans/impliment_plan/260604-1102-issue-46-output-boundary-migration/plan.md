@@ -9,8 +9,7 @@ branch: "feat/clerk-neon-prisma-vercel-blob-migration"
 tags: [api, backend, frontend, refactor]
 blockedBy:
   - 260604-1045-issue-46-legacy-input-runtime-fixes
-  - 260604-prisma-baseline-rls-dictionary-source-of-truth
-  - project:impliment_plan/260604-1806-clerk-neon-prisma-vercel-blob-migration
+  - 260604-1806-clerk-neon-prisma-vercel-blob-migration
 blocks: []
 created: "2026-06-04T04:02:37.382Z"
 createdBy: "ck:plan"
