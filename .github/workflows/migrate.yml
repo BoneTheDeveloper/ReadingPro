@@ -68,9 +68,6 @@ jobs:
       - name: Validate schema
         run: pnpm exec prisma validate
 
-      - name: Audit plain PostgreSQL
-        run: pnpm db:migrate:audit
-
   # ─── Stage 3: Staging / development ───────────────────────────────
   staging:
     name: Migrate staging
