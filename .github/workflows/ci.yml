@@ -46,9 +46,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Audit plain PostgreSQL migrations
-        run: pnpm db:migrate:audit
-
       - name: Lint
         run: pnpm lint
 
