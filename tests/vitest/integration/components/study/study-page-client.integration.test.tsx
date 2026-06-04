@@ -108,7 +108,7 @@ describe("StudyPageClient", () => {
     useChatState.messages = [];
     vi.stubGlobal(
       "fetch",
-      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      vi.fn(async (input: RequestInfo | URL) => {
         const url = String(input);
 
         if (url === "/api/translate") {
@@ -660,7 +660,7 @@ describe("StudyPageClient", () => {
     const deferred = deferredResponse();
     let quickRequestCount = 0;
     vi.mocked(fetch).mockImplementation(
-      async (input: RequestInfo | URL, init?: RequestInit) => {
+      async (input: RequestInfo | URL) => {
         const url = String(input);
         if (url === "/api/translate") {
           quickRequestCount++;
