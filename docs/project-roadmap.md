@@ -113,7 +113,7 @@ Supabase Auth (email/password + Google OAuth), middleware route protection, sign
 **Goal:** Word-by-word dictionary lookup + paragraph translation using the chat function.
 
 **Done:**
-- Dictionary seed system with multi-source dataset generator (`prisma/seed-dictionary.ts`)
+- Dictionary seed system with normalized split files (`prisma/seed.ts`)
 - Quick translate flow: single-query dictionary lookup, cache-first ordering, non-blocking history
 - Benchmark gate enforcing ≤4 Prisma queries for single-word dictionary hit
 - `/api/translate` and `/api/vocabulary` endpoints with Zod validation

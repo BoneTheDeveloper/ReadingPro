@@ -11,7 +11,7 @@ datasource db {
 // USER PROFILE MODEL
 // ============================================
 model UserProfile {
-  id               String    @id
+  id               String    @id @db.Uuid
   email            String?   @unique
   name             String?
   avatarUrl        String?
@@ -22,10 +22,10 @@ model UserProfile {
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
-  passages      Passage[]
-  studySessions StudySession[]
-  cardReviews   CardReview[]
-  chatMessages  StudyChatMessage[]
+  passages             Passage[]
+  studySessions        StudySession[]
+  cardReviews          CardReview[]
+  chatMessages         StudyChatMessage[]
   translationCaches    TranslationCache[]
   translationHistories TranslationHistory[]
   vocabularyItems      VocabularyItem[]
@@ -37,8 +37,8 @@ model UserProfile {
 // PASSAGE MODEL
 // ============================================
 model Passage {
-  id                String     @id @default(cuid())
-  userId            String
+  id                String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId            String     @db.Uuid
   title             String
   content           String
   simplifiedContent String?
@@ -51,12 +51,12 @@ model Passage {
   createdAt         DateTime   @default(now())
   updatedAt         DateTime   @updatedAt
 
-  user      UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
-  questions Question[]
-  chatMessages StudyChatMessage[]
-  translationCaches TranslationCache[]
+  user                 UserProfile          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questions            Question[]
+  chatMessages         StudyChatMessage[]
+  translationCaches    TranslationCache[]
   translationHistories TranslationHistory[]
-  vocabularyItems VocabularyItem[]
+  vocabularyItems      VocabularyItem[]
 
   @@index([userId])
   @@index([createdAt])
@@ -65,9 +65,9 @@ model Passage {
 }
 
 model StudyChatMessage {
-  id        String   @id @default(cuid())
-  userId    String
-  passageId String
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @db.Uuid
+  passageId String   @db.Uuid
   role      String
   content   String
   createdAt DateTime @default(now())
@@ -80,13 +80,13 @@ model StudyChatMessage {
 }
 
 model DictionaryEntry {
-  id             String   @id @default(cuid())
-  headword       String
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  headword           String
   normalizedHeadword String
-  sourceLanguage String   @default("en")
-  frequencyRank  Int      @default(0)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  sourceLanguage     String   @default("en")
+  frequencyRank      Int      @default(0)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   senses  DictionarySense[]
   aliases DictionaryAlias[]
@@ -97,17 +97,17 @@ model DictionaryEntry {
 }
 
 model DictionarySense {
-  id          String   @id @default(cuid())
-  entryId     String
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  entryId      String   @db.Uuid
   partOfSpeech String?
-  definition  String?
-  example     String?
-  tags        String[]
-  usageRank   Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  definition   String?
+  example      String?
+  tags         String[]
+  usageRank    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  entry        DictionaryEntry        @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  entry        DictionaryEntry         @relation(fields: [entryId], references: [id], onDelete: Cascade)
   translations DictionaryTranslation[]
 
   @@index([entryId, usageRank])
@@ -115,8 +115,8 @@ model DictionarySense {
 }
 
 model DictionaryTranslation {
-  id             String    @id @default(cuid())
-  senseId        String
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  senseId        String    @db.Uuid
   targetLanguage String    @default("vi")
   translation    String
   isPrimary      Boolean   @default(false)
@@ -137,10 +137,10 @@ model DictionaryTranslation {
 }
 
 model DictionaryAlias {
-  id               String @id @default(cuid())
-  entryId          String
-  normalizedAlias  String
-  aliasType        String @default("variant")
+  id              String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  entryId         String @db.Uuid
+  normalizedAlias String
+  aliasType       String @default("variant")
 
   entry DictionaryEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
 
@@ -150,10 +150,10 @@ model DictionaryAlias {
 }
 
 model DictionarySourceAudit {
-  id         String   @id @default(cuid())
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   batchName  String
   entityType String
-  entityId   String
+  entityId   String   @db.Uuid
   note       String?
   createdAt  DateTime @default(now())
 
@@ -163,10 +163,10 @@ model DictionarySourceAudit {
 }
 
 model TranslationCache {
-  id              String   @id @default(cuid())
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   cacheKey        String   @unique
-  userId          String
-  sourceId        String
+  userId          String   @db.Uuid
+  sourceId        String   @db.Uuid
   selectedText    String
   contextSentence String
   sourceLanguage  String
@@ -186,9 +186,9 @@ model TranslationCache {
 }
 
 model TranslationHistory {
-  id              String   @id @default(cuid())
-  userId          String
-  sourceId        String
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String   @db.Uuid
+  sourceId        String   @db.Uuid
   selectedText    String
   contextSentence String
   sourceLanguage  String
@@ -207,10 +207,10 @@ model TranslationHistory {
 }
 
 model VocabularyItem {
-  id              String   @id @default(cuid())
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   normalizedKey   String   @unique
-  userId          String
-  sourceId        String
+  userId          String   @db.Uuid
+  sourceId        String   @db.Uuid
   selectedText    String
   translation     String
   contextSentence String
@@ -231,8 +231,8 @@ model VocabularyItem {
 // QUESTION MODEL (Flashcards)
 // ============================================
 model Question {
-  id            String       @id @default(cuid())
-  passageId     String
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  passageId     String       @db.Uuid
   questionText  String
   options       Json
   correctOption String
@@ -254,9 +254,9 @@ model Question {
 // CARD REVIEW MODEL (SM-2 Tracking)
 // ============================================
 model CardReview {
-  id         String @id @default(cuid())
-  questionId String
-  userId     String
+  id         String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  questionId String @db.Uuid
+  userId     String @db.Uuid
 
   qualityRating Int
   easeFactor    Float @default(2.5)
@@ -278,9 +278,9 @@ model CardReview {
 // STUDY SESSION MODEL
 // ============================================
 model StudySession {
-  id        String  @id @default(cuid())
-  userId    String
-  passageId String?
+  id        String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String  @db.Uuid
+  passageId String? @db.Uuid
 
   startedAt   DateTime  @default(now())
   completedAt DateTime?
