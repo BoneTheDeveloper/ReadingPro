@@ -3,6 +3,18 @@
 -- RLS is kept enabled as defense-in-depth for direct Supabase client queries.
 -- See prisma/SECURITY.md for details.
 
+-- Stub auth.uid() for Prisma shadow DB compatibility.
+-- In Supabase the auth schema already exists so this block is a no-op.
+-- In the shadow DB (plain Postgres) the stub allows RLS SQL to parse.
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_namespace WHERE nspname = 'auth') THEN
+    CREATE SCHEMA auth;
+    EXECUTE 'CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS ''SELECT gen_random_uuid()''';
+  END IF;
+END
+$$;
+
 -- Enable RLS on all tables
 ALTER TABLE "profiles" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "passages" ENABLE ROW LEVEL SECURITY;
@@ -31,10 +43,30 @@ CREATE POLICY "Users can CRUD own passages" ON "passages"
   FOR ALL USING ("userId" = auth.uid())
   WITH CHECK ("userId" = auth.uid());
 
--- Study chat messages: direct UUID comparison
-CREATE POLICY "Users can CRUD own chat messages" ON "study_chat_messages"
-  FOR ALL USING ("userId" = auth.uid())
-  WITH CHECK ("userId" = auth.uid());
+-- Study chat messages: verify both userId ownership and passage ownership
+CREATE POLICY "Users can read own chat messages" ON "study_chat_messages"
+  FOR SELECT USING (
+    "userId" = auth.uid()
+    AND "passageId" IN (SELECT id FROM passages WHERE "userId" = auth.uid())
+  );
+
+CREATE POLICY "Users can insert own chat messages" ON "study_chat_messages"
+  FOR INSERT WITH CHECK (
+    "userId" = auth.uid()
+    AND "passageId" IN (SELECT id FROM passages WHERE "userId" = auth.uid())
+  );
+
+CREATE POLICY "Users can update own chat messages" ON "study_chat_messages"
+  FOR UPDATE USING (
+    "userId" = auth.uid()
+    AND "passageId" IN (SELECT id FROM passages WHERE "userId" = auth.uid())
+  );
+
+CREATE POLICY "Users can delete own chat messages" ON "study_chat_messages"
+  FOR DELETE USING (
+    "userId" = auth.uid()
+    AND "passageId" IN (SELECT id FROM passages WHERE "userId" = auth.uid())
+  );
 
 -- Questions: via passage ownership
 CREATE POLICY "Users can read own questions" ON "questions"

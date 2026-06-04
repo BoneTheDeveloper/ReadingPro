@@ -5,7 +5,7 @@
  * Usage:
  *   pnpm db:seed:dictionary                # default: production split files
  *   pnpm db:seed:dictionary small-test     # use fixtures/small-test.json
- *   pnpm db:seed:dictionary entries        # legacy nested entries.json format
+ *   pnpm db:seed:dictionary benchmark      # use generated-50000.json (legacy format)
  */
 
 import { PrismaPg } from "@prisma/adapter-pg";
@@ -18,14 +18,14 @@ dotenv.config({ path: ".env.local" });
 
 // --- Dataset resolution ---
 
-type DatasetMode = "normalized" | "small-test" | "entries";
+type DatasetMode = "normalized" | "small-test" | "benchmark";
 
 function resolveDatasetArg(): DatasetMode {
   const arg = process.argv[2];
   if (!arg) return "normalized";
   if (arg === "small-test") return "small-test";
-  if (arg === "entries") return "entries";
-  console.error(`Unknown dataset "${arg}". Valid: small-test, entries (no arg = normalized split files)`);
+  if (arg === "benchmark") return "benchmark";
+  console.error(`Unknown dataset "${arg}". Valid: small-test, benchmark (no arg = normalized split files)`);
   process.exit(1);
 }
 
@@ -335,7 +335,7 @@ async function main() {
   } else if (mode === "small-test") {
     await seedLegacy(prisma, "fixtures/small-test");
   } else {
-    await seedLegacy(prisma, "entries");
+    await seedLegacy(prisma, "generated-50000");
   }
 
   await prisma.$disconnect();

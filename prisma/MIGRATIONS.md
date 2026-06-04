@@ -130,6 +130,44 @@ pnpm exec prisma migrate status
 
 Never use `migrate dev` or `migrate reset` in production.
 
+## Baselining An Existing Environment
+
+When deploying a clean migration baseline to a database that already has older
+migrations applied, Prisma must be told that the new baseline is already applied.
+Otherwise `migrate deploy` tries to recreate existing tables and fails.
+
+### Step 1: Verify current state
+
+```bash
+pnpm exec prisma migrate status
+```
+
+Confirm that older migrations are recorded as applied.
+
+### Step 2: Mark the new baseline as applied
+
+For each new migration that already exists in the database schema:
+
+```bash
+pnpm exec prisma migrate resolve --applied 20260604120000_init
+pnpm exec prisma migrate resolve --applied 20260604123000_enable_rls
+```
+
+Use `--applied` for migrations whose SQL has already been applied to the
+database through older migration history or manual schema changes.
+
+### Step 3: Verify
+
+```bash
+pnpm exec prisma migrate status
+```
+
+All migrations should show as applied. Future `migrate deploy` calls will
+skip the baselined migrations and apply only new ones.
+
+Do not run `migrate resolve` against a database that does not already contain
+the expected schema. In that case, use `migrate deploy` normally.
+
 ## Review Migration SQL
 
 Before applying a migration, review it for:
