@@ -6,11 +6,11 @@ Migration pipeline across Neon database branches.
 
 All preview branches share the staging database. Per-branch DB will be added later.
 
-| Git Branch    | Neon Branch    | Stage       |
-| ------------- | -------------- | ----------- |
-| `feat/*`      | `develop`      | Local dev   |
-| PRs (any)     | `staging`      | Preview     |
-| `main`        | `production`   | Production  |
+| Git Branch    | Neon Branch    | GitHub Env   | Stage       |
+| ------------- | -------------- | ------------ | ----------- |
+| `feat/*`      | `develop`      | —            | Local dev   |
+| PRs (any)     | `staging`      | `preview`    | Preview     |
+| `main`        | `production`   | `production` | Production  |
 
 ## Stage 1 — Local (`develop`)
 
@@ -108,7 +108,7 @@ This is not implemented yet. All PRs share the staging DB for simplicity.
 
 ### Environments (Settings → Environments)
 
-1. **`staging`** — auto-deploy, no approval needed
+1. **`preview`** — auto-deploy, no approval needed
    - Secrets: `DATABASE_URL`, `DIRECT_URL` → staging Neon branch endpoint
 2. **`production`** — enable "Required reviewers" for manual approval
    - Secrets: `DATABASE_URL`, `DIRECT_URL` → production Neon branch endpoint
