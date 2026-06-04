@@ -1,9 +1,13 @@
-import { clerkMiddleware } from "@clerk/nextjs/server";
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import createMiddleware from "next-intl/middleware";
 import { NextResponse } from "next/server";
 import { routing } from "@/i18n/routing";
 
 const intlMiddleware = createMiddleware(routing);
+const isAuthPage = createRouteMatcher([
+  "/:locale/sign-in(.*)",
+  "/:locale/sign-up(.*)",
+]);
 
 export default clerkMiddleware(async (auth, request) => {
   const { pathname } = request.nextUrl;
@@ -21,19 +25,14 @@ export default clerkMiddleware(async (auth, request) => {
   const { userId } = await auth();
   const localeMatch = pathname.match(/^\/(en|vi)/);
   const locale = localeMatch?.[1] ?? routing.defaultLocale;
-  const isAuthPage =
-    pathname === `/${locale}/sign-in` ||
-    pathname.startsWith(`/${locale}/sign-in/`) ||
-    pathname === `/${locale}/sign-up` ||
-    pathname.startsWith(`/${locale}/sign-up/`);
 
-  if (!userId && !isAuthPage) {
+  if (!userId && !isAuthPage(request)) {
     const signInUrl = new URL(`/${locale}/sign-in`, request.url);
-    signInUrl.searchParams.set("next", pathname);
+    signInUrl.searchParams.set("redirect_url", request.url);
     return NextResponse.redirect(signInUrl);
   }
 
-  if (userId && isAuthPage) {
+  if (userId && isAuthPage(request)) {
     return NextResponse.redirect(new URL(`/${locale}`, request.url));
   }
 

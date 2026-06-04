@@ -13,7 +13,7 @@ const analysis = vi.hoisted(() => ({
   analyzeAndPersistContent: vi.fn(),
 }));
 
-vi.mock("@/lib/storage/supabase-storage", () => ({
+vi.mock("@/lib/storage/blob-storage", () => ({
   uploadFile: storage.uploadFile,
   deleteFile: storage.deleteFile,
 }));

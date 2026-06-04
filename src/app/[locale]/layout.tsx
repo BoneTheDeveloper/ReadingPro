@@ -53,8 +53,6 @@ export default async function LocaleLayout({
         <ClerkProvider
           signInUrl={`/${locale}/sign-in`}
           signUpUrl={`/${locale}/sign-up`}
-          afterSignInUrl={`/${locale}`}
-          afterSignUpUrl={`/${locale}`}
           afterSignOutUrl={`/${locale}/sign-in`}
         >
           <ThemeProvider>
