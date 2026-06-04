@@ -140,7 +140,7 @@ describe("POST /api/cards/review", () => {
     await expectJsonError(
       await reviewCard(createJsonRequest({ cardReviewId: dueCardFixture.id, qualityRating: 6 })),
       400,
-      "Quality rating must be between 0 and 5",
+      "Invalid request",
     );
     expect(routeMocks.updateCardReview).not.toHaveBeenCalled();
   });
@@ -157,6 +157,23 @@ describe("POST /api/cards/review", () => {
     expect(Sentry.captureException).toHaveBeenCalledWith(error, {
       tags: { route: "api:cards:review", method: "POST" },
     });
+  });
+
+  it("rejects malformed JSON with 400", async () => {
+    await expectJsonError(
+      await reviewCard(new NextRequest("https://english-reading.test/api/cards/review", { method: "POST", body: "{" })),
+      400,
+      "Invalid JSON payload.",
+    );
+  });
+
+  it("rejects non-UUID card review IDs", async () => {
+    await expectJsonError(
+      await reviewCard(createJsonRequest({ cardReviewId: "not-a-uuid", qualityRating: 3 })),
+      400,
+      "Invalid request",
+    );
+    expect(routeMocks.updateCardReview).not.toHaveBeenCalled();
   });
 });
 
@@ -238,6 +255,23 @@ describe("POST/PATCH /api/study-session", () => {
     expect(Sentry.captureException).toHaveBeenCalledWith(updateError, {
       tags: { route: "api:study-session", method: "PATCH" },
     });
+  });
+
+  it("rejects malformed JSON with 400", async () => {
+    await expectJsonError(
+      await createStudySessionRoute(new NextRequest("https://english-reading.test/api/study-session", { method: "POST", body: "{" })),
+      400,
+      "Invalid JSON payload.",
+    );
+  });
+
+  it("rejects non-UUID session IDs", async () => {
+    await expectJsonError(
+      await updateStudySessionRoute(createJsonRequest({ sessionId: "not-a-uuid", cardsReviewed: 1 })),
+      400,
+      "Invalid UUID",
+    );
+    expect(routeMocks.updateStudySession).not.toHaveBeenCalled();
   });
 });
 
@@ -503,6 +537,16 @@ describe("POST /api/upload", () => {
     );
   });
 
+  it("rejects string file entries", async () => {
+    const stringFileRequest = {
+      formData: vi.fn(async () => ({
+        get: vi.fn(() => "not-a-file"),
+      })),
+    } as unknown as NextRequest;
+
+    await expectJsonError(await uploadFileRoute(stringFileRequest), 400, "No file provided");
+  });
+
   it("captures unexpected upload failures", async () => {
     const error = apiError("storage down");
     routeMocks.processFileUpload.mockRejectedValue(error);
@@ -548,8 +592,8 @@ describe("POST /api/upload/text", () => {
   it("captures malformed JSON and analysis failures", async () => {
     await expectJsonError(
       await uploadTextRoute(new NextRequest("https://english-reading.test/api/upload/text", { method: "POST", body: "{" })),
-      500,
-      "Failed to process text",
+      400,
+      "Invalid JSON payload.",
     );
 
     const error = apiError("ai down");

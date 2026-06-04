@@ -21,7 +21,7 @@ Request body:
 
 ```ts
 {
-  passageId?: string;
+  passageId?: string;  // Must be valid UUID if provided
 }
 ```
 
@@ -58,7 +58,7 @@ Request body:
 
 | Status | Meaning |
 |--------|---------|
-| `400` | Invalid request body |
+| `400` | Invalid request body, malformed JSON, or invalid UUID format |
 | `401` | Missing auth |
 | `500` | Unexpected session creation failure |
 
@@ -86,7 +86,7 @@ Request body:
 
 ```ts
 {
-  sessionId: string;
+  sessionId: string;   // Must be valid UUID
   cardsReviewed?: number;
   correctCount?: number;
   incorrectCount?: number;
@@ -126,7 +126,7 @@ Request body:
 
 | Status | Meaning |
 |--------|---------|
-| `400` | Invalid request body |
+| `400` | Invalid request body, malformed JSON, or invalid UUID format |
 | `401` | Missing auth |
 | `500` | Unexpected session update failure |
 
@@ -201,8 +201,8 @@ Request body:
 
 ```ts
 {
-  cardReviewId: string;
-  qualityRating: number;     // 0-5
+  cardReviewId: string;    // Must be valid UUID
+  qualityRating: number;  // 0-5, validated via Zod schema
 }
 ```
 
@@ -237,7 +237,7 @@ Quality rating meanings:
 
 | Status | Meaning |
 |--------|---------|
-| `400` | Missing card review id or quality rating outside `0-5` |
+| `400` | Missing card review id, quality rating outside `0-5`, malformed JSON, or invalid UUID format |
 | `401` | Missing auth |
 | `500` | Unexpected review update failure |
 

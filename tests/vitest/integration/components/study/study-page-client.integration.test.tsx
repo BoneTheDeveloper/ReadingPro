@@ -102,11 +102,10 @@ describe("StudyPageClient", () => {
     useChatState.messages = [];
     vi.stubGlobal(
       "fetch",
-      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) => {
         const url = String(input);
-        const body = init?.body ? JSON.parse(String(init.body)) : null;
 
-        if (url === "/api/translate" && body?.mode === "quick") {
+        if (url === "/api/translate") {
           return new Response(
             JSON.stringify({
               success: true,
@@ -114,27 +113,6 @@ describe("StudyPageClient", () => {
                 translation: "thiên lệch thuật toán",
                 type: "noun phrase",
                 provider: "dictionary",
-              },
-            }),
-            { status: 200 },
-          );
-        }
-
-        if (url === "/api/translate" && body?.mode === "detailed") {
-          return new Response(
-            JSON.stringify({
-              success: true,
-              data: {
-                translation: "thiên lệch thuật toán",
-                explanation: "A systematic unfair pattern in automated decisions.",
-                meaningInSentence: "The term describes a risk in hiring systems.",
-                sentenceTranslation:
-                  "Các mối quan tâm chính bao gồm thiên lệch thuật toán trong hệ thống tuyển dụng tự động.",
-                examples: ["Teams audit algorithmic bias before launch."],
-                relatedWords: ["fairness"],
-                pronunciation: null,
-                type: "noun phrase",
-                provider: "ai",
               },
             }),
             { status: 200 },
@@ -327,14 +305,13 @@ describe("StudyPageClient", () => {
       }),
     );
 
-    // Click translate icon to trigger quick translation
+    // Click translate icon to trigger translation
     await user.click(popupTranslateBtn!);
     expect(await screen.findByText("thiên lệch thuật toán")).toBeInTheDocument();
     expect(fetch).toHaveBeenCalledWith(
       "/api/translate",
       expect.objectContaining({
         method: "POST",
-        body: expect.stringContaining('"mode":"quick"'),
       }),
     );
   });
@@ -377,7 +354,7 @@ describe("StudyPageClient", () => {
     expect(fetch).not.toHaveBeenCalledWith("/api/translate", expect.anything());
   });
 
-  it("shows quick translation without Save vocabulary and opens details on demand", async () => {
+  it("shows translation without Save vocabulary and opens details without second API call", async () => {
     const passage = createStudyPassage({
       content: "Key concerns include algorithmic bias in automated hiring systems.",
       simplifiedContent: null,
@@ -397,24 +374,18 @@ describe("StudyPageClient", () => {
     fireEvent.mouseUp(screen.getByText(/Key concerns include algorithmic bias/));
     await user.click(getPopupTranslateButton());
 
-    // Quick popup shows translation but no Save vocabulary action
+    // Popup shows translation but no Save vocabulary action
     expect(await screen.findByText("thiên lệch thuật toán")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Save/ })).not.toBeInTheDocument();
 
-    // Open details triggers detailed translation
+    // Open details shows the translate panel reusing the same translation, no second API call
+    const fetchCallsBeforeDetails = vi.mocked(fetch).mock.calls.length;
     await user.click(screen.getByRole("button", { name: /Open details/ }));
     expect(await screen.findByText("Translate: algorithmic bias")).toBeInTheDocument();
-    expect(await screen.findByText("A systematic unfair pattern in automated decisions.")).toBeInTheDocument();
-    expect(fetch).toHaveBeenCalledWith(
-      "/api/translate",
-      expect.objectContaining({
-        method: "POST",
-        body: expect.stringContaining('"mode":"detailed"'),
-      }),
-    );
+    expect(fetch).toHaveBeenCalledTimes(fetchCallsBeforeDetails);
   });
 
-  it("omits null quick translation type when saving vocabulary from details", async () => {
+  it("omits null translation type when saving vocabulary from details", async () => {
     const passage = createStudyPassage({
       content: "Quorvex drift appears here.",
       simplifiedContent: null,
@@ -423,9 +394,8 @@ describe("StudyPageClient", () => {
     let vocabularyBody: Record<string, unknown> | null = null;
     vi.mocked(fetch).mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
-      const body = init?.body ? JSON.parse(String(init.body)) : null;
 
-      if (url === "/api/translate" && body?.mode === "quick") {
+      if (url === "/api/translate") {
         return new Response(
           JSON.stringify({
             success: true,
@@ -439,28 +409,8 @@ describe("StudyPageClient", () => {
         );
       }
 
-      if (url === "/api/translate" && body?.mode === "detailed") {
-        return new Response(
-          JSON.stringify({
-            success: true,
-            data: {
-              translation: "quorvex sự trôi",
-              explanation: "A fallback phrase used for testing.",
-              meaningInSentence: null,
-              sentenceTranslation: "Quorvex drift xuất hiện ở đây.",
-              examples: [],
-              relatedWords: [],
-              pronunciation: null,
-              type: null,
-              provider: "ai",
-            },
-          }),
-          { status: 200 },
-        );
-      }
-
       if (url === "/api/vocabulary") {
-        vocabularyBody = body;
+        vocabularyBody = init?.body ? JSON.parse(String(init.body)) : null;
         return new Response(JSON.stringify({ success: true, data: { id: "vocab-fallback" } }), {
           status: 200,
         });
@@ -483,7 +433,6 @@ describe("StudyPageClient", () => {
     expect(await screen.findByText("quorvex sự trôi")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /Open details/ }));
-    await screen.findByText("A fallback phrase used for testing.");
     await user.click(await screen.findByRole("button", { name: /Save/ }));
 
     await waitFor(() => {
@@ -607,7 +556,7 @@ describe("StudyPageClient", () => {
       expect.objectContaining({
         category: "study-translation",
         level: "error",
-        message: "study-translation-quick-error",
+        message: "study-translation-error",
       }),
     );
   });
@@ -620,10 +569,9 @@ describe("StudyPageClient", () => {
     });
     const deferred = deferredResponse();
     let quickRequestCount = 0;
-    vi.mocked(fetch).mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+    vi.mocked(fetch).mockImplementation(async (input: RequestInfo | URL, _init?: RequestInit) => {
       const url = String(input);
-      const body = init?.body ? JSON.parse(String(init.body)) : null;
-      if (url === "/api/translate" && body?.mode === "quick") {
+      if (url === "/api/translate") {
         quickRequestCount++;
         return deferred.promise;
       }

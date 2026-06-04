@@ -13,7 +13,8 @@ export async function POST(request: NextRequest) {
   try {
     const user = await getAuthenticatedUser();
     const formData = await request.formData();
-    const file = formData.get("file") as File;
+    const rawFile = formData.get("file");
+    const file = rawFile instanceof File ? rawFile : null;
 
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });

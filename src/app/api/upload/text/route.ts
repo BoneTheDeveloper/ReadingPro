@@ -1,9 +1,15 @@
+import { z } from 'zod';
 import { NextRequest, NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
 import { validateTextContent } from '@/lib/validation/upload';
 import { getAuthenticatedUser } from '@/lib/auth/auth-utils';
 import { createRequestLogContext, createRequestLogger } from '@/lib/core/logger';
 import { analyzeAndPersistContent } from '@/features/upload/content-analysis-service';
+
+const textUploadSchema = z.object({
+  text: z.string().min(1),
+  title: z.string().optional(),
+});
 
 export async function POST(request: NextRequest) {
   const requestLog = createRequestLogger(
@@ -12,16 +18,19 @@ export async function POST(request: NextRequest) {
   );
 
   try {
-    const body = await request.json();
-
-    if (!body.text || typeof body.text !== 'string') {
-      return NextResponse.json(
-        { error: 'Text content is required' },
-        { status: 400 }
-      );
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON payload.' }, { status: 400 });
     }
 
-    const validation = validateTextContent(body.text);
+    const parsed = textUploadSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Text content is required' }, { status: 400 });
+    }
+
+    const validation = validateTextContent(parsed.data.text);
     if (!validation.valid) {
       return NextResponse.json({ error: validation.error }, { status: 400 });
     }
@@ -29,8 +38,8 @@ export async function POST(request: NextRequest) {
     const user = await getAuthenticatedUser();
     const result = await analyzeAndPersistContent({
       userId: user.id,
-      text: body.text,
-      title: body.title || 'Untitled',
+      text: parsed.data.text,
+      title: parsed.data.title || 'Untitled',
       sourceType: 'TEXT',
     });
 

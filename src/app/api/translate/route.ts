@@ -19,13 +19,13 @@ import { executeTranslate } from "@/lib/translation/inline/inline-translate.serv
 const translateRequestSchema = z.object({
   text: z.string().trim().min(1).max(MAX_TRANSLATE_TEXT_LENGTH),
   context: z.string().trim().min(1).max(MAX_TRANSLATE_CONTEXT_LENGTH),
-  sourceId: z.string().min(1),
+  sourceId: z.string().uuid(),
   sourceLanguage: z.literal("en"),
   targetLanguage: z.literal("vi"),
   clientMetrics: z.object({
     wordsBeforeSelected: z.number().int().nonnegative().optional(),
   }).optional(),
-});
+}).strict();
 
 function isAuthenticationError(error: unknown) {
   return error instanceof Error && error.message === "Authentication required";

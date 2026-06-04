@@ -131,7 +131,7 @@ export function StudyPageClient({
     Sentry.addBreadcrumb({
       category: "study-translation",
       level: "info",
-      message: "study-translation-quick-request",
+      message: "study-translation-request",
       data: { sourceId: selection.sourceId, selectedTextLength: selection.selectedText.length },
     });
 
@@ -144,7 +144,6 @@ export function StudyPageClient({
         sourceId: selection.sourceId,
         sourceLanguage: "en",
         targetLanguage: "vi",
-        mode: "quick",
         clientMetrics: selection.clientMetrics,
       }),
     })
@@ -159,7 +158,7 @@ export function StudyPageClient({
           Sentry.addBreadcrumb({
             category: "study-translation",
             level: "info",
-            message: "study-translation-quick-success",
+            message: "study-translation-success",
             data: { provider: json.data.provider },
           });
           return { requestId, data: json.data, status: "success" };
@@ -171,7 +170,7 @@ export function StudyPageClient({
           Sentry.addBreadcrumb({
             category: "study-translation",
             level: "error",
-            message: "study-translation-quick-error",
+            message: "study-translation-error",
           });
           return { requestId, data: null, status: "error" };
         });

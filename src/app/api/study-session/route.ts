@@ -6,11 +6,11 @@ import { createRequestLogContext, createRequestLogger } from '@/lib/core/logger'
 import { createStudySession, updateStudySession } from '@/lib/db/study-session-queries';
 
 const studySessionPostSchema = z.object({
-  passageId: z.string().optional(),
+  passageId: z.string().uuid().optional(),
 });
 
 const studySessionPatchSchema = z.object({
-  sessionId: z.string().min(1),
+  sessionId: z.string().uuid(),
   cardsReviewed: z.number().int().nonnegative().optional().default(0),
   correctCount: z.number().int().nonnegative().optional().default(0),
   incorrectCount: z.number().int().nonnegative().optional().default(0),
@@ -23,7 +23,13 @@ export async function POST(request: NextRequest) {
   );
 
   try {
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON payload.' }, { status: 400 });
+    }
+
     const parsed = studySessionPostSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
@@ -59,7 +65,13 @@ export async function PATCH(request: NextRequest) {
   );
 
   try {
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON payload.' }, { status: 400 });
+    }
+
     const parsed = studySessionPatchSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });

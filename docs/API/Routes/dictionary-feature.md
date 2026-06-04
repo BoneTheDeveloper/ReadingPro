@@ -259,7 +259,7 @@ Path params:
 
 ```ts
 {
-  entryId: string;           // DictionaryEntry.id from suggest/search result
+  entryId: string;           // DictionaryEntry.id from suggest/search result, must be valid UUID
 }
 ```
 
@@ -289,7 +289,7 @@ Query params:
 
 | Status | Meaning |
 |--------|---------|
-| `400` | Invalid entry id or query parameters |
+| `400` | Invalid entry id, invalid UUID format, or query parameters |
 | `401` | Missing auth |
 | `404` | Entry id not found or not available for runtime dictionary display |
 | `500` | Unexpected entry detail failure |

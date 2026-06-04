@@ -131,14 +131,3 @@ export interface QuickTranslationData {
   provider: TranslationProvider;
 }
 
-export interface DetailedTranslationData {
-  translation: string;
-  explanation: string;
-  meaningInSentence?: string;
-  sentenceTranslation: string;
-  examples: string[];
-  relatedWords: string[];
-  pronunciation?: string | null;
-  type?: string | null;
-  provider: TranslationProvider;
-}

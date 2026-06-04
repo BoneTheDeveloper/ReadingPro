@@ -133,7 +133,6 @@ async function warmUpTranslateFlow(context: BenchmarkContext) {
       sourceId: warmupFixture!.passageId,
       sourceLanguage: "en",
       targetLanguage: "vi",
-      mode: "quick",
     });
 
     await postJson(`${context.baseUrl}/api/translate`, context.cookie, translateBody(warmupFixture.singleWord));
@@ -229,7 +228,6 @@ async function translateScenario(
     sourceId: input.sourceId,
     sourceLanguage: "en",
     targetLanguage: "vi",
-    mode: "quick",
     clientMetrics: {
       wordsBeforeSelected: countWords(input.context.slice(0, input.context.indexOf(input.text))),
     },

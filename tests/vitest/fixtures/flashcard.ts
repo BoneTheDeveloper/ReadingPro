@@ -1,8 +1,8 @@
 import { generatedQuestionsFixture, passageFixture } from "./article";
 
 export const cardReviewFixture = {
-  id: "review_test_1",
-  userId: "user_test_123",
+  id: "f1e2d3c4-b5a6-4978-8695-abcdef012345",
+  userId: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
   questionId: generatedQuestionsFixture[0].id,
   qualityRating: 4,
   easeFactor: 2.5,
@@ -24,8 +24,8 @@ export const dueCardFixture = {
 };
 
 export const studySessionFixture = {
-  id: "session_test_1",
-  userId: "user_test_123",
+  id: "b2c3d4e5-f6a7-48b9-9c0d-1e2f3a4b5c6d",
+  userId: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
   passageId: passageFixture.id,
   startedAt: new Date("2026-05-21T00:00:00.000Z"),
   completedAt: null,
