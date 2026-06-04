@@ -36,10 +36,11 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
-    "db:seed:dictionary": "tsx prisma/seed-dictionary.ts",
-    "db:validate:dictionary": "tsx scripts/dictionary/validate-seed.ts",
-    "db:generate:common": "tsx scripts/dictionary/generate-common-dataset.ts",
-    "db:generate:benchmark": "tsx scripts/dictionary/generate-benchmark-dataset.ts"
+    "db:seed:dictionary": "tsx prisma/seed.ts",
+    "db:validate:dictionary": "tsx scripts/dictionary/validate-dictionary.ts",
+    "db:normalize:dictionary": "tsx scripts/dictionary/normalize-dictionary.ts",
+    "db:import:dictionary": "tsx scripts/dictionary/import-dictionary.ts",
+    "db:generate:benchmark": "tsx scripts/dictionary/generate-seed-data.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.72",
