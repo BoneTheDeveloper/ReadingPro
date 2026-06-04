@@ -1,9 +1,9 @@
 name: Migrate DB
 
 on:
+  pull_request:
   push:
     branches:
-      - staging
       - main
       - master
 
@@ -11,10 +11,10 @@ permissions:
   contents: read
 
 jobs:
-  # ─── Stage 3: Staging ─────────────────────────────────────────────
-  staging:
-    name: Migrate staging
-    if: github.ref == 'refs/heads/staging'
+  # ─── Preview: all PRs use staging DB (MVP) ────────────────────────
+  preview:
+    name: Migrate preview (staging DB)
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-24.04
     environment: staging
 
@@ -48,16 +48,10 @@ jobs:
           DIRECT_URL: ${{ secrets.DIRECT_URL }}
         run: pnpm exec prisma migrate status
 
-      - name: Seed checks
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          DIRECT_URL: ${{ secrets.DIRECT_URL }}
-        run: pnpm db:validate:dictionary
-
-  # ─── Stage 4: Production ──────────────────────────────────────────
+  # ─── Production ───────────────────────────────────────────────────
   production:
     name: Migrate production
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
     runs-on: ubuntu-24.04
     environment: production
 

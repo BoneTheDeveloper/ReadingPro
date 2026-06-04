@@ -1,13 +1,15 @@
 # Prisma Migration Flow
 
-Four-stage migration pipeline across Neon database branches.
+Migration pipeline across Neon database branches.
 
-## Branch Mapping
+## Branch Mapping (MVP)
+
+All preview branches share the staging database. Per-branch DB will be added later.
 
 | Git Branch    | Neon Branch    | Stage       |
 | ------------- | -------------- | ----------- |
 | `feat/*`      | `develop`      | Local dev   |
-| `staging`     | `staging`      | Staging     |
+| PRs (any)     | `staging`      | Preview     |
 | `main`        | `production`   | Production  |
 
 ## Stage 1 — Local (`develop`)
@@ -21,7 +23,7 @@ test locally
         ↓
 commit schema + migration files
         ↓
-open PR → development
+open PR
 ```
 
 - `migrate dev` generates SQL, applies it, records in `_prisma_migrations`.
@@ -37,39 +39,35 @@ PR opened / updated
 ✓ schema.prisma changed? → migration file must be included
 ✓ migration SQL reviewed (printed in CI logs)
 ✓ prisma validate passes
-✓ db:migrate:audit (plain PostgreSQL check)
-✓ app tests pass
+✓ lint, typecheck, tests pass
 ```
 
-- No migration is applied to any database at this stage.
-- CI fails if schema changes without a migration file.
+No migration is applied at this stage.
 
-## Stage 3 — Staging / development DB
+## Stage 3 — Preview (staging DB)
 
-GitHub Actions runs on `push to development`:
+GitHub Actions runs on `pull_request` (parallel with CI):
 
 ```
-PR merged → development
+PR opened / updated
         ↓
-pnpm db:migrate:deploy  (against development Neon branch)
+pnpm db:migrate:deploy  (against staging Neon branch)
         ↓
 prisma migrate status
         ↓
-seed / dictionary validation
-        ↓
-Vercel preview deploys
+Vercel deploys preview
 ```
 
-- `migrate deploy` applies pending migrations only.
-- Smoke tests and seed checks validate the new schema.
-- Only approve production migration if everything passes here.
+- All PRs share the staging database.
+- `migrate deploy` is idempotent — safe to re-run.
+- Vercel preview deploys in parallel.
 
 ## Stage 4 — Production
 
 GitHub Actions runs on `push to main` (manual approval required):
 
 ```
-development → main merge
+merge to main
         ↓
 ⏸ manual approval (GitHub environment protection rule)
         ↓
@@ -87,7 +85,6 @@ post-deploy /api/health check
 - Manual approval gate prevents accidental production migrations.
 - Restore point (Neon branch snapshot) enables fast rollback.
 - Vercel deploy triggered only after migration succeeds.
-- Post-deploy health check catches deployment issues.
 
 ## Key Rules
 
@@ -97,14 +94,24 @@ post-deploy /api/health check
 - **Never edit applied migrations.** Create a new one to correct issues.
 - **Schema change without migration = CI failure.**
 
+## Future: Per-Branch DB
+
+When needed, each PR preview can get its own Neon branch:
+
+1. Neon auto-creates a branch per PR (via Neon-Vercel integration or GitHub Action).
+2. `DATABASE_URL` is set dynamically per PR.
+3. Branch is cleaned up when PR is closed.
+
+This is not implemented yet. All PRs share the staging DB for simplicity.
+
 ## GitHub Setup
 
 ### Environments (Settings → Environments)
 
 1. **`staging`** — auto-deploy, no approval needed
-   - Secrets: `DATABASE_URL`, `DIRECT_URL` → `development` Neon branch endpoint
+   - Secrets: `DATABASE_URL`, `DIRECT_URL` → staging Neon branch endpoint
 2. **`production`** — enable "Required reviewers" for manual approval
-   - Secrets: `DATABASE_URL`, `DIRECT_URL` → `production` Neon branch endpoint
+   - Secrets: `DATABASE_URL`, `DIRECT_URL` → production Neon branch endpoint
    - Secrets: `NEON_API_KEY`, `NEON_PROJECT_ID` → for restore points
    - Secrets: `VERCEL_DEPLOY_HOOK` → Vercel deploy hook URL for `main`
    - Secrets: `PRODUCTION_URL` → app domain for health check
@@ -113,8 +120,3 @@ post-deploy /api/health check
 
 - Disable auto-deploy for `main` branch (Settings → Git).
 - Create a deploy hook for `main` (Settings → Git → Deploy Hooks).
-
-### Neon
-
-- `development` branch: auto-reset or rebase from `production` as needed.
-- Production restore points are ephemeral Neon branches — delete after confirming stability.
