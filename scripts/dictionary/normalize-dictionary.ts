@@ -1,13 +1,19 @@
 /**
- * Splits common-1000.json into normalized canonical files:
+ * One-time migration script: splits a legacy nested JSON dictionary file
+ * into normalized canonical files:
  *   entries.json, senses.json, translations.json, aliases.json
  * Each file uses stable cross-file keys (entryKey, senseKey) for joining.
  *
- * Usage: npx tsx scripts/dictionary/split-dictionary.ts
+ * NOTE: The original input (common-1000.json) has been deleted after migration.
+ * This script is kept for reference and for normalizing future legacy-format imports.
+ * Provide a compatible nested JSON file as the first argument.
+ *
+ * Usage: npx tsx scripts/dictionary/normalize-dictionary.ts [input.json]
+ * Default input: prisma/data/dictionary/en-vi/fixtures/small-test.json
  */
 
 import { readFileSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 
 interface RawTranslation {
   targetLanguage: string;
@@ -88,7 +94,8 @@ function normalizeTerm(value: string): string {
 }
 
 function main() {
-  const inputPath = join(process.cwd(), "prisma/data/dictionary/en-vi/common-1000.json");
+  const defaultInput = join(process.cwd(), "prisma/data/dictionary/en-vi/fixtures/small-test.json");
+  const inputPath = process.argv[2] ? resolve(process.argv[2]) : defaultInput;
   const outputDir = join(process.cwd(), "prisma/data/dictionary/en-vi");
 
   const raw = readFileSync(inputPath, "utf8");

@@ -2,228 +2,154 @@
 
 **English Reading Training App**
 
----
-
-## Mermaid ERD
+All persisted identifiers in the PostgreSQL `public` schema use native `uuid`.
+Supabase Auth supplies `UserProfile.id`; application-owned records use
+`gen_random_uuid()`.
 
 ```mermaid
 erDiagram
     UserProfile {
-        string id PK "cuid()"
+        uuid id PK "Supabase Auth"
         string email UK "nullable"
         string name "nullable"
-        string avatarUrl "nullable"
-        string bio "nullable"
-        enum targetLevel "CEFRLevel, default B2"
-        enum tier "Tier, default FREE"
-        string stripeCustomerId UK "nullable"
-        datetime createdAt "now()"
-        datetime updatedAt "auto"
+        enum targetLevel "default B2"
+        enum tier "default FREE"
     }
 
     Passage {
-        string id PK "cuid()"
-        string userId FK "→ UserProfile.id"
+        uuid id PK "gen_random_uuid()"
+        uuid userId FK
         string title
         string content
-        string simplifiedContent "nullable"
-        enum originalLevel "CEFRLevel, nullable"
-        enum simplifiedLevel "CEFRLevel, nullable"
-        int wordCount
-        enum sourceType "SourceType"
-        string fileUrl "nullable"
-        datetime createdAt "now()"
-        datetime updatedAt "auto"
+        enum sourceType
+        datetime deletedAt "nullable"
+    }
+
+    StudyChatMessage {
+        uuid id PK "gen_random_uuid()"
+        uuid userId FK
+        uuid passageId FK
+        string role
+        string content
     }
 
     Question {
-        string id PK "cuid()"
-        string passageId FK "→ Passage.id"
+        uuid id PK "gen_random_uuid()"
+        uuid passageId FK
         string questionText
-        json options "[{id, text}]"
-        string correctOption "option ID"
-        string sourceText
-        int sourceLine
-        string explanation
-        enum questionType "default MULTIPLE_CHOICE"
-        int difficulty "default 3"
-        datetime createdAt "now()"
+        json options
+        string correctOption "UI option ID"
     }
 
     CardReview {
-        string id PK "cuid()"
-        string questionId FK "→ Question.id"
-        string userId FK "→ UserProfile.id"
-        int qualityRating "SM-2: 0-5"
-        float easeFactor "default 2.5"
-        int intervalDays "default 1"
-        int repetitions "default 0"
-        datetime nextReviewDate "default now()"
-        datetime reviewedAt "default now()"
+        uuid id PK "gen_random_uuid()"
+        uuid questionId FK
+        uuid userId FK
+        int qualityRating
     }
 
     StudySession {
-        string id PK "cuid()"
-        string userId FK "→ UserProfile.id"
-        string passageId FK "→ Passage.id, nullable"
-        datetime startedAt "default now()"
-        datetime completedAt "nullable"
-        int cardsReviewed "default 0"
-        int newCards "default 0"
-        int correctCount "default 0"
-        int incorrectCount "default 0"
-        float accuracyRate "nullable"
-    }
-
-    DictionaryEntry {
-        string id PK "cuid()"
-        string normalizedKey UK
-        string normalizedTerm
-        string sourceLanguage
-        string targetLanguage
-        string translation
-        string type "nullable"
-        string pronunciation "nullable"
-        json meanings "nullable"
-        json examples "nullable"
-        json relatedWords "nullable"
-        string source "default local"
-        float confidence "default 0.8"
-        datetime createdAt "now()"
-        datetime updatedAt "auto"
+        uuid id PK "gen_random_uuid()"
+        uuid userId FK
+        uuid passageId "nullable entity reference"
+        datetime startedAt
     }
 
     TranslationCache {
-        string id PK "cuid()"
+        uuid id PK "gen_random_uuid()"
         string cacheKey UK
-        string userId FK "→ UserProfile.id"
-        string sourceId FK "→ Passage.id"
-        string selectedText
-        string contextSentence
-        string sourceLanguage
-        string targetLanguage
-        string mode
-        string provider
+        uuid userId FK
+        uuid sourceId FK
         json response
-        datetime createdAt "now()"
-        datetime updatedAt "auto"
     }
 
     TranslationHistory {
-        string id PK "cuid()"
-        string userId FK "→ UserProfile.id"
-        string sourceId FK "→ Passage.id"
-        string selectedText
-        string contextSentence
-        string sourceLanguage
-        string targetLanguage
-        string mode
-        string provider
+        uuid id PK "gen_random_uuid()"
+        uuid userId FK
+        uuid sourceId FK
         string translation
         json response
-        datetime createdAt "now()"
     }
 
     VocabularyItem {
-        string id PK "cuid()"
+        uuid id PK "gen_random_uuid()"
         string normalizedKey UK
-        string userId FK "→ UserProfile.id"
-        string sourceId FK "→ Passage.id"
-        string selectedText
+        uuid userId FK
+        uuid sourceId FK
         string translation
-        string contextSentence
+    }
+
+    DictionaryEntry {
+        uuid id PK "gen_random_uuid()"
+        string headword
+        string normalizedHeadword
         string sourceLanguage
+    }
+
+    DictionarySense {
+        uuid id PK "gen_random_uuid()"
+        uuid entryId FK
+        string partOfSpeech "nullable"
+        string definition "nullable"
+    }
+
+    DictionaryTranslation {
+        uuid id PK "gen_random_uuid()"
+        uuid senseId FK
         string targetLanguage
-        string type "nullable"
-        datetime createdAt "now()"
-        datetime updatedAt "auto"
+        string translation
     }
 
-    UserProfile ||--o{ Passage : "uploads"
-    UserProfile ||--o{ StudySession : "creates"
-    UserProfile ||--o{ CardReview : "reviews"
-    UserProfile ||--o{ TranslationCache : "caches"
-    UserProfile ||--o{ TranslationHistory : "records"
-    UserProfile ||--o{ VocabularyItem : "saves"
-    Passage ||--o{ Question : "contains"
-    Question ||--o{ CardReview : "tracked by"
-    Passage ||--o{ StudySession : "studied in"
-    Passage ||--o{ TranslationCache : "translated in"
-    Passage ||--o{ TranslationHistory : "translated in"
-    Passage ||--o{ VocabularyItem : "saved from"
+    DictionaryAlias {
+        uuid id PK "gen_random_uuid()"
+        uuid entryId FK
+        string normalizedAlias
+    }
+
+    DictionarySourceAudit {
+        uuid id PK "gen_random_uuid()"
+        string entityType
+        uuid entityId "persisted entity reference"
+        string batchName
+    }
+
+    UserProfile ||--o{ Passage : owns
+    UserProfile ||--o{ StudyChatMessage : sends
+    UserProfile ||--o{ StudySession : creates
+    UserProfile ||--o{ CardReview : reviews
+    UserProfile ||--o{ TranslationCache : caches
+    UserProfile ||--o{ TranslationHistory : records
+    UserProfile ||--o{ VocabularyItem : saves
+    Passage ||--o{ StudyChatMessage : contains
+    Passage ||--o{ Question : contains
+    Passage ||--o{ TranslationCache : scopes
+    Passage ||--o{ TranslationHistory : scopes
+    Passage ||--o{ VocabularyItem : sources
+    Question ||--o{ CardReview : tracked-by
+    DictionaryEntry ||--o{ DictionarySense : defines
+    DictionaryEntry ||--o{ DictionaryAlias : aliases
+    DictionarySense ||--o{ DictionaryTranslation : translates
 ```
 
----
+## Identifier Notes
 
-## Relationship Summary
+- `StudySession.passageId` is a nullable UUID entity reference without a
+  database foreign-key relation.
+- `DictionarySourceAudit.entityId` is a UUID entity reference. `entityType`
+  identifies the referenced public entity type.
+- `Question.options` and `Question.correctOption` contain UI/result option IDs,
+  not persisted public-table identifiers.
+- Ordinary string keys such as `cacheKey`, `normalizedKey`, and
+  `stripeCustomerId` remain text.
 
-| Relationship | Cardinality | Cascade |
-|-------------|-------------|---------|
-| UserProfile → Passage | One-to-Many | Yes |
-| UserProfile → StudySession | One-to-Many | Yes |
-| UserProfile → CardReview | One-to-Many | Yes |
-| Passage → Question | One-to-Many | Yes |
-| Question → CardReview | One-to-Many | Yes |
-| Passage → StudySession | One-to-Many (nullable) | No |
-| UserProfile → TranslationCache | One-to-Many | Yes |
-| UserProfile → TranslationHistory | One-to-Many | Yes |
-| UserProfile → VocabularyItem | One-to-Many | Yes |
-| Passage → TranslationCache | One-to-Many | Yes |
-| Passage → TranslationHistory | One-to-Many | Yes |
-| Passage → VocabularyItem | One-to-Many | Yes |
+## Cascade Rules
 
----
+| Parent | Children with `ON DELETE CASCADE` |
+|--------|------------------------------------|
+| UserProfile | Passage, StudyChatMessage, CardReview, StudySession, TranslationCache, TranslationHistory, VocabularyItem |
+| Passage | StudyChatMessage, Question, TranslationCache, TranslationHistory, VocabularyItem |
+| Question | CardReview |
+| DictionaryEntry | DictionarySense, DictionaryAlias |
+| DictionarySense | DictionaryTranslation |
 
-## Indexes
-
-| Table | Index | Purpose |
-|-------|-------|---------|
-| Passage | `[userId, createdAt]` | Query user's passages sorted by date |
-| CardReview | `[userId, nextReviewDate]` | Fetch due cards for review |
-| StudySession | `[userId, startedAt]` | Query user's sessions sorted by date |
-| CardReview | `[questionId, userId]` UNIQUE | Prevent duplicate reviews per card |
-| DictionaryEntry | `[sourceLanguage, targetLanguage, normalizedTerm]` | Dictionary lookup and suggest search |
-| TranslationCache | `cacheKey` UNIQUE | Reuse exact translation requests |
-| TranslationCache | `[userId, sourceId, targetLanguage]` | User/source-scoped cache queries |
-| TranslationHistory | `[userId, sourceId, createdAt]` | Translation analytics |
-| VocabularyItem | `normalizedKey` UNIQUE | Upsert duplicate saved vocabulary |
-| VocabularyItem | `[userId, sourceId, createdAt]` | Saved vocabulary listing |
-
----
-
-## Enum Definitions
-
-```mermaid
-classDiagram
-    class CEFRLevel {
-        <<enumeration>>
-        A1
-        A2
-        B1
-        B2
-        C1
-        C2
-    }
-
-    class SourceType {
-        <<enumeration>>
-        TEXT
-        PDF
-    }
-
-    class QuestionType {
-        <<enumeration>>
-        MULTIPLE_CHOICE
-        TRUE_FALSE
-    }
-
-    class Tier {
-        <<enumeration>>
-        FREE
-        PRO
-    }
-```
-
----
-
-**Last Updated:** 2026-05-29
+**Last Updated:** 2026-06-04

@@ -1,6 +1,7 @@
 /**
  * Validates the normalized split dictionary files for structural consistency.
- * Checks: cross-file key integrity, required fields, value constraints.
+ * Checks: cross-file key integrity, required fields, value constraints,
+ * parent-child coverage, and database-unique key uniqueness.
  *
  * Usage:
  *   pnpm db:validate:dictionary              # validate split files
@@ -91,6 +92,16 @@ function validateNormalized(): number {
     if (!e.headword) errors.push(`Entry missing headword: ${e.entryKey}`);
   }
 
+  // Check (normalizedHeadword, sourceLanguage) uniqueness — mirrors the DB unique constraint
+  const seenDbUnique = new Set<string>();
+  for (const e of entries) {
+    const dbKey = `${e.normalizedHeadword}__${e.sourceLanguage}`;
+    if (seenDbUnique.has(dbKey)) {
+      errors.push(`Duplicate DB unique key (normalizedHeadword, sourceLanguage): "${e.normalizedHeadword}" / "${e.sourceLanguage}"`);
+    }
+    seenDbUnique.add(dbKey);
+  }
+
   // Check sense→entry references
   for (const s of senses) {
     if (!entryKeys.has(s.entryKey)) errors.push(`Sense ${s.senseKey} references missing entryKey: ${s.entryKey}`);
@@ -103,18 +114,41 @@ function validateNormalized(): number {
     seenSenseKeys.add(s.senseKey);
   }
 
-  // Check translation→sense references and values
-  const primariesBySense = new Map<string, number>();
+  // Check that every entry has at least one sense
+  const entriesWithSenses = new Set(senses.map((s) => s.entryKey));
+  for (const e of entries) {
+    if (!entriesWithSenses.has(e.entryKey)) {
+      errors.push(`Entry "${e.headword}" (${e.entryKey}) has no senses`);
+    }
+  }
+
+  // Check that every sense has at least one translation
+  const sensesWithTranslations = new Set(translations.map((t) => t.senseKey));
+  for (const s of senses) {
+    if (!sensesWithTranslations.has(s.senseKey)) {
+      errors.push(`Sense ${s.senseKey} (entryKey: ${s.entryKey}) has no translations`);
+    }
+  }
+
+  // Check translation→sense references, values, and primary counts
+  const groupsBySenseLang = new Map<string, { total: number; primaries: number }>();
   for (const t of translations) {
     if (!senseKeys.has(t.senseKey)) errors.push(`Translation references missing senseKey: ${t.senseKey}`);
     if (!VALID_STATUSES.has(t.status)) errors.push(`Invalid status "${t.status}" in senseKey ${t.senseKey}`);
     if (!VALID_SOURCE_TYPES.has(t.sourceType)) errors.push(`Invalid sourceType "${t.sourceType}" in senseKey ${t.senseKey}`);
     if (typeof t.rank !== "number" || t.rank < 1) errors.push(`Invalid rank ${t.rank} in senseKey ${t.senseKey}`);
+
     const key = `${t.senseKey}__${t.targetLanguage}`;
-    if (t.isPrimary) primariesBySense.set(key, (primariesBySense.get(key) ?? 0) + 1);
+    const group = groupsBySenseLang.get(key) ?? { total: 0, primaries: 0 };
+    group.total++;
+    if (t.isPrimary) group.primaries++;
+    groupsBySenseLang.set(key, group);
   }
-  for (const [key, count] of primariesBySense) {
-    if (count !== 1) errors.push(`${key} has ${count} primary translations (expected 1)`);
+
+  for (const [key, { total, primaries }] of groupsBySenseLang) {
+    if (primaries !== 1) {
+      errors.push(`${key} has ${primaries} primary translations out of ${total} (expected exactly 1)`);
+    }
   }
 
   // Check alias→entry references and values
