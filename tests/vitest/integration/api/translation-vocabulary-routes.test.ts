@@ -3,7 +3,14 @@ import * as Sentry from "@sentry/nextjs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { POST as translateRoute } from "@/app/api/translate/route";
 import { POST as vocabularyRoute } from "@/app/api/vocabulary/route";
-import { createJsonRequest, readJsonResponse } from "../../helpers/api";
+import {
+  translatePerformanceResponseSchema,
+  translateResponseSchema,
+  translateSuccessResponseSchema,
+  vocabularyResponseSchema,
+  vocabularySuccessResponseSchema,
+} from "@/lib/translation/shared/translation-response-schema";
+import { createJsonRequest, parseJsonResponse } from "../../helpers/api";
 import { expectApiErrorPayload, expectApiSuccessPayload } from "../../helpers/assertions";
 import { passageFixture, userProfileFixture } from "../../fixtures";
 import { db } from "../../mocks/db";
@@ -104,7 +111,14 @@ function vocabularyBody(overrides: Partial<Record<string, unknown>> = {}) {
 
 async function expectJsonError(response: Response, status: number, message: string) {
   expect(response.status).toBe(status);
-  expectApiErrorPayload(await readJsonResponse(response), message);
+  const payload = await parseJsonResponse(response, translateResponseSchema);
+  expectApiErrorPayload(payload, message);
+}
+
+async function expectVocabularyJsonError(response: Response, status: number, message: string) {
+  expect(response.status).toBe(status);
+  const payload = await parseJsonResponse(response, vocabularyResponseSchema);
+  expectApiErrorPayload(payload, message);
 }
 
 function mockOwnedSource() {
@@ -219,11 +233,11 @@ describe("POST /api/translate", () => {
     "resolves dictionary translation for %s without AI",
     async (text, context, expectedTranslation) => {
       const response = await translateRoute(createJsonRequest(translationBody({ text, context })));
-      const payload = await readJsonResponse(response);
+      const payload = await parseJsonResponse(response, translateSuccessResponseSchema);
 
       expect(response.status).toBe(200);
       expectApiSuccessPayload(payload);
-      expect(payload).toMatchObject({
+      expect(payload).toEqual({
         success: true,
         data: {
           translation: expectedTranslation,
@@ -270,7 +284,7 @@ describe("POST /api/translate", () => {
     const first = await translateRoute(
       createJsonRequest(translationBody({ text: "quorvex drift", context: TEST_CONTEXT[3] })),
     );
-    expect(await readJsonResponse(first)).toMatchObject({ success: true, data: fallback });
+    expect(await parseJsonResponse(first, translateSuccessResponseSchema)).toEqual({ success: true, data: fallback });
     expect(generateObject).not.toHaveBeenCalled();
 
     db.dictionaryEntry.findUnique.mockClear();
@@ -279,7 +293,7 @@ describe("POST /api/translate", () => {
     const repeat = await translateRoute(
       createJsonRequest(translationBody({ text: "quorvex drift", context: TEST_CONTEXT[3] })),
     );
-    expect(await readJsonResponse(repeat)).toMatchObject({
+    expect(await parseJsonResponse(repeat, translateSuccessResponseSchema)).toEqual({
       success: true,
       data: { ...fallback, provider: "cache" },
     });
@@ -321,11 +335,7 @@ describe("POST /api/translate", () => {
       }),
       { headers: { "x-translate-perf-metrics": "1" } },
     ));
-    const payload = await readJsonResponse<{
-      performance: {
-        timings: { totalMs: number; steps: Record<string, number> };
-      };
-    } & Record<string, unknown>>(response);
+    const payload = await parseJsonResponse(response, translatePerformanceResponseSchema);
 
     expect(response.status).toBe(200);
     expect(payload).toMatchObject({
@@ -371,10 +381,10 @@ describe("POST /api/translate", () => {
     const response = await translateRoute(
       createJsonRequest(translationBody({ text: sentenceText, context: TEST_CONTEXT[0] })),
     );
-    const payload = await readJsonResponse(response);
+    const payload = await parseJsonResponse(response, translateSuccessResponseSchema);
 
     expect(response.status).toBe(200);
-    expect(payload).toMatchObject({
+    expect(payload).toEqual({
       success: true,
       data: {
         translation: "Các mối quan tâm chính bao gồm thiên lệch thuật toán trong hệ thống tuyển dụng tự động.",
@@ -416,7 +426,7 @@ describe("POST /api/translate", () => {
     const first = await translateRoute(
       createJsonRequest(translationBody({ text: sentenceText, context: TEST_CONTEXT[0] })),
     );
-    expect(await readJsonResponse(first)).toMatchObject({
+    expect(await parseJsonResponse(first, translateSuccessResponseSchema)).toEqual({
       success: true,
       data: cachedResponse,
     });
@@ -427,7 +437,7 @@ describe("POST /api/translate", () => {
     const repeat = await translateRoute(
       createJsonRequest(translationBody({ text: sentenceText, context: TEST_CONTEXT[0] })),
     );
-    expect(await readJsonResponse(repeat)).toMatchObject({
+    expect(await parseJsonResponse(repeat, translateSuccessResponseSchema)).toEqual({
       success: true,
       data: { ...cachedResponse, provider: "cache" },
     });
@@ -453,21 +463,21 @@ describe("POST /api/translate", () => {
 
 describe("POST /api/vocabulary", () => {
   it("rejects invalid payloads, unauthenticated users, and missing sources", async () => {
-    await expectJsonError(
+    await expectVocabularyJsonError(
       await vocabularyRoute(createJsonRequest(vocabularyBody({ selectedText: "" }))),
       400,
       "Invalid vocabulary request.",
     );
 
     routeMocks.getAuthenticatedUser.mockRejectedValueOnce(new Error("Authentication required"));
-    await expectJsonError(
+    await expectVocabularyJsonError(
       await vocabularyRoute(createJsonRequest(vocabularyBody())),
       401,
       "Authentication required.",
     );
 
     db.passage.findUnique.mockResolvedValueOnce(null);
-    await expectJsonError(
+    await expectVocabularyJsonError(
       await vocabularyRoute(createJsonRequest(vocabularyBody())),
       404,
       "Source not found.",
@@ -479,17 +489,27 @@ describe("POST /api/vocabulary", () => {
     const first = await vocabularyRoute(createJsonRequest(vocabularyBody(), requestInit));
     const duplicate = await vocabularyRoute(createJsonRequest(vocabularyBody(), requestInit));
 
-    expect(await readJsonResponse(first)).toMatchObject({
+    expect(await parseJsonResponse(first, vocabularySuccessResponseSchema)).toEqual({
       success: true,
       data: {
         id: "vocabulary-item-1",
         selectedText: "algorithmic bias",
         translation: "thiên lệch thuật toán",
+        type: "noun phrase",
+        createdAt: "2026-05-29T00:00:00.000Z",
+        updatedAt: "2026-05-29T00:00:00.000Z",
       },
     });
-    expect(await readJsonResponse(duplicate)).toMatchObject({
+    expect(await parseJsonResponse(duplicate, vocabularySuccessResponseSchema)).toEqual({
       success: true,
-      data: { id: "vocabulary-item-1" },
+      data: {
+        id: "vocabulary-item-1",
+        selectedText: "algorithmic bias",
+        translation: "thiên lệch thuật toán",
+        type: "noun phrase",
+        createdAt: "2026-05-29T00:00:00.000Z",
+        updatedAt: "2026-05-29T00:00:00.000Z",
+      },
     });
     expect(db.vocabularyItem.upsert).toHaveBeenCalledTimes(2);
     expect(db.vocabularyItem.upsert).toHaveBeenCalledWith({

@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: "Public Schema UUID Normalization"
-status: pending
+status: completed
 priority: P0
 effort: "4h"
 dependencies: []
@@ -94,12 +94,12 @@ pnpm run db:validate:dictionary
 
 ## Success Criteria
 
-- [ ] Every application-owned PK/FK/entity-reference identifier is PostgreSQL `uuid`.
-- [ ] Application-owned IDs have database UUID defaults.
-- [ ] `profiles.id` and owned `userId` fields accept Clerk string IDs.
-- [ ] Plain-PostgreSQL migration replay succeeds with no RLS/Supabase objects.
-- [ ] Dictionary reseed and validation succeed.
-- [ ] Prisma schema, generated client, migration SQL, and database docs agree.
+- [x] Every application-owned PK/FK/entity-reference identifier is PostgreSQL `uuid`.
+- [x] Application-owned IDs have database UUID defaults.
+- [x] `profiles.id` and owned `userId` fields accept Clerk string IDs.
+- [x] Plain-PostgreSQL migration replay succeeds with no RLS/Supabase objects.
+- [x] Dictionary reseed and validation succeed.
+- [x] Prisma schema, generated client, migration SQL, and database docs agree.
 
 ## Risk Assessment
 

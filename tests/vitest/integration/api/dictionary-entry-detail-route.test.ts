@@ -1,9 +1,14 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET as dictionaryEntryDetail } from "@/app/api/dictionary/entries/[entryId]/route";
+import {
+  dictionaryEntryDetailPerformanceResponseSchema,
+  dictionaryEntryDetailResponseSchema,
+  dictionaryEntryDetailSuccessResponseSchema,
+} from "@/lib/dictionary/shared/dictionary-response-schema";
 import type { DictionaryEntryDto } from "@/lib/dictionary/shared/dictionary-dtos";
 import { userProfileFixture } from "../../fixtures/user";
-import { readJsonResponse } from "../../helpers/api";
+import { parseJsonResponse } from "../../helpers/api";
 import { expectApiErrorPayload, expectApiSuccessPayload } from "../../helpers/assertions";
 
 const routeMocks = vi.hoisted(() => ({
@@ -19,14 +24,24 @@ vi.mock("@/lib/dictionary/entry-detail/entry-detail.service", () => ({
   getDictionaryEntryDetail: routeMocks.getDictionaryEntryDetail,
 }));
 
-function createEntryDetailRequest(entryId: string, query: string) {
+function createEntryDetailRequest(
+  entryId: string,
+  query: string,
+  init?: ConstructorParameters<typeof NextRequest>[1],
+) {
   return new NextRequest(
     `https://english-reading.test/api/dictionary/entries/${entryId}?${query}`,
+    init,
   );
 }
 
 function createParams(entryId: string) {
   return { params: Promise.resolve({ entryId }) };
+}
+
+async function expectJsonError(response: Response, status: number, message: string) {
+  expect(response.status).toBe(status);
+  expectApiErrorPayload(await parseJsonResponse(response, dictionaryEntryDetailResponseSchema), message);
 }
 
 const ENTRY_UUID = "c1d2e3f4-a5b6-4c7d-8e9f-0a1b2c3d4e5f";
@@ -74,14 +89,44 @@ describe("GET /api/dictionary/entries/:entryId", () => {
       createEntryDetailRequest(ENTRY_UUID, "sourceLanguage=en&targetLanguage=vi"),
       createParams(ENTRY_UUID),
     );
-    const payload = await readJsonResponse(response);
+    const payload = await parseJsonResponse(response, dictionaryEntryDetailSuccessResponseSchema);
 
     expect(response.status).toBe(200);
     expectApiSuccessPayload(payload);
-    expect(payload).toMatchObject({ success: true, data: dictionaryEntry });
+    expect(payload).toEqual({ success: true, data: dictionaryEntry });
     expect(routeMocks.getDictionaryEntryDetail).toHaveBeenCalledWith(ENTRY_UUID, {
       sourceLanguage: "en",
       targetLanguage: "vi",
+    });
+  });
+
+  it("returns explicit performance diagnostics when requested", async () => {
+    routeMocks.getDictionaryEntryDetail.mockResolvedValue(dictionaryEntry);
+
+    const response = await dictionaryEntryDetail(
+      createEntryDetailRequest(ENTRY_UUID, "sourceLanguage=en&targetLanguage=vi", {
+        headers: { "x-dictionary-perf-metrics": "1" },
+      }),
+      createParams(ENTRY_UUID),
+    );
+    const payload = await parseJsonResponse(response, dictionaryEntryDetailPerformanceResponseSchema);
+
+    expect(response.status).toBe(200);
+    expect(payload).toMatchObject({
+      success: true,
+      data: dictionaryEntry,
+      performance: {
+        queryLength: ENTRY_UUID.length,
+        normalizedQueryLength: ENTRY_UUID.length,
+        phase: "entry-detail",
+        timings: {
+          totalMs: expect.any(Number),
+          steps: expect.objectContaining({
+            auth: expect.any(Number),
+            entryDetailResolve: expect.any(Number),
+          }),
+        },
+      },
     });
   });
 
@@ -93,8 +138,7 @@ describe("GET /api/dictionary/entries/:entryId", () => {
       createParams(MISSING_UUID),
     );
 
-    expect(response.status).toBe(404);
-    expectApiErrorPayload(await readJsonResponse(response), "Entry not found.");
+    await expectJsonError(response, 404, "Entry not found.");
   });
 
   it("returns 400 for an empty entry id", async () => {
@@ -103,8 +147,7 @@ describe("GET /api/dictionary/entries/:entryId", () => {
       createParams(""),
     );
 
-    expect(response.status).toBe(400);
-    expectApiErrorPayload(await readJsonResponse(response), "Invalid entry id.");
+    await expectJsonError(response, 400, "Invalid entry id.");
   });
 
   it("returns 400 for a non-UUID entry id", async () => {
@@ -113,8 +156,7 @@ describe("GET /api/dictionary/entries/:entryId", () => {
       createParams("entry-1"),
     );
 
-    expect(response.status).toBe(400);
-    expectApiErrorPayload(await readJsonResponse(response), "Invalid entry id.");
+    await expectJsonError(response, 400, "Invalid entry id.");
   });
 
   it("returns 400 for invalid query parameters", async () => {
@@ -123,8 +165,7 @@ describe("GET /api/dictionary/entries/:entryId", () => {
       createParams(ENTRY_UUID),
     );
 
-    expect(response.status).toBe(400);
-    expectApiErrorPayload(await readJsonResponse(response), "Invalid query parameters.");
+    await expectJsonError(response, 400, "Invalid query parameters.");
   });
 
   it("returns 401 when the user is not authenticated", async () => {
@@ -135,7 +176,17 @@ describe("GET /api/dictionary/entries/:entryId", () => {
       createParams(ENTRY_UUID),
     );
 
-    expect(response.status).toBe(401);
-    expectApiErrorPayload(await readJsonResponse(response), "Authentication required.");
+    await expectJsonError(response, 401, "Authentication required.");
+  });
+
+  it("returns a stable 500 error when entry detail resolution fails", async () => {
+    routeMocks.getDictionaryEntryDetail.mockRejectedValue(new Error("db down"));
+
+    const response = await dictionaryEntryDetail(
+      createEntryDetailRequest(ENTRY_UUID, "sourceLanguage=en&targetLanguage=vi"),
+      createParams(ENTRY_UUID),
+    );
+
+    await expectJsonError(response, 500, "Entry detail failed.");
   });
 });

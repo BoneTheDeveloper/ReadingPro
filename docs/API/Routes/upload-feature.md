@@ -38,11 +38,9 @@ FormData:
 
 ```ts
 {
-  filename: string;
-  filePath: string;
   passageId: string;
-  originalLevel: CEFRLevel;
-  simplifiedLevel: CEFRLevel | null;
+  originalLevel: string;
+  simplifiedLevel: string | null;
   questionCount: number;
 }
 ```
@@ -106,8 +104,8 @@ Request body:
 ```ts
 {
   passageId: string;
-  originalLevel: CEFRLevel;
-  simplifiedLevel: CEFRLevel | null;
+  originalLevel: string;
+  simplifiedLevel: string | null;
   questionCount: number;
 }
 ```

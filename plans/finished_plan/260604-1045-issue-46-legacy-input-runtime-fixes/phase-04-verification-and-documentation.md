@@ -1,7 +1,7 @@
 ---
 phase: 4
 title: "Verification and Documentation"
-status: pending
+status: completed
 priority: P2
 effort: "2h"
 dependencies: [3]
@@ -67,13 +67,13 @@ pnpm test:performance
 
 ## Success Criteria
 
-- [ ] Focused regressions pass.
-- [ ] Typecheck, lint, full tests, plain-PostgreSQL migration replay, and seed
+- [x] Focused regressions pass.
+- [x] Typecheck, lint, full tests, plain-PostgreSQL migration replay, and seed
   validation pass or unrelated baselines are recorded.
-- [ ] Translation docs, tests, benchmarks, and study callers contain no
+- [x] Translation docs, tests, benchmarks, and study callers contain no
   client-selected translation mode contract.
-- [ ] API docs match corrected malformed/invalid input behavior.
-- [ ] Diff contains no response-schema migration or auth normalization.
+- [x] API docs match corrected malformed/invalid input behavior.
+- [x] Diff contains no response-schema migration or auth normalization.
 
 ## Risk Assessment
 

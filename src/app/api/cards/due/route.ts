@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getDueCards } from '@/lib/db/card-review-queries';
 import { getAuthenticatedUser } from '@/lib/auth/auth-utils';
 import { createModuleLogger } from '@/lib/core/logger';
+import { toCardReviewDto } from '@/lib/study/shared/study-response-schema';
 
 const log = createModuleLogger('api:cards:due');
 
@@ -10,7 +11,7 @@ export async function GET() {
     const user = await getAuthenticatedUser();
     const dueCards = await getDueCards(user.id);
 
-    return NextResponse.json({ success: true, data: dueCards });
+    return NextResponse.json({ success: true, data: dueCards.map(toCardReviewDto) });
   } catch (error) {
     log.error(
       { err: error, context: { path: '/api/cards/due', method: 'GET' } },

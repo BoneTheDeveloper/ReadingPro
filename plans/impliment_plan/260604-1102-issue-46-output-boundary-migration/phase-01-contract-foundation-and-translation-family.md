@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: "Contract Foundation and Translation Family"
-status: pending
+status: completed
 priority: P1
 effort: "4h"
 dependencies: []
@@ -73,13 +73,13 @@ pnpm exec vitest run tests/vitest/integration/api/translation-vocabulary-routes.
 
 ## Success Criteria
 
-- [ ] Translation response schema accepts the documented simple result and
+- [x] Translation response schema accepts the documented simple result and
   rejects malformed success payloads.
-- [ ] Translation/vocabulary clients validate JSON before use.
-- [ ] Optional performance response shape is covered.
-- [ ] Translation/vocabulary success and error responses have complete contract
+- [x] Translation/vocabulary clients validate JSON before use.
+- [x] Optional performance response shape is covered.
+- [x] Translation/vocabulary success and error responses have complete contract
   tests.
-- [ ] No generic API client abstraction is added without demonstrated reuse.
+- [x] No generic API client abstraction is added without demonstrated reuse.
 
 ## Risk Assessment
 

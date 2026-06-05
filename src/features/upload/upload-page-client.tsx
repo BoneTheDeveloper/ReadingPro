@@ -2,10 +2,12 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import * as Sentry from "@sentry/nextjs"
 import { UploadZone } from "./upload-zone"
 import { TextInputArea } from "./text-input-area"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/shared/utils"
+import { uploadResponseSchema } from "@/lib/upload/shared/upload-response-schema"
 
 export function UploadPageClient() {
   const router = useRouter()
@@ -18,13 +20,20 @@ export function UploadPageClient() {
       const formData = new FormData()
       formData.append("file", file)
       const response = await fetch("/api/upload", { method: "POST", body: formData })
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || "Upload failed")
+      const json: unknown = await response.json()
+      const result = uploadResponseSchema.safeParse(json)
+      if (!result.success) {
+        Sentry.addBreadcrumb({
+          category: "upload",
+          level: "error",
+          message: "upload-file-schema-error",
+          data: { route: "/api/upload" },
+        })
+        throw new Error("Upload failed")
       }
-      const result = await response.json()
-      if (result.data?.passageId) router.push(`/reading/${result.data.passageId}`)
-      else router.push(`/processing?filename=${result.data.filename}`)
+      if ("error" in result.data) throw new Error(result.data.error || "Upload failed")
+      if (!response.ok) throw new Error("Upload failed")
+      router.push(`/reading/${result.data.data.passageId}`)
     } catch (error) {
       console.error("Upload error:", error)
       alert(error instanceof Error ? error.message : "Upload failed")
@@ -41,13 +50,20 @@ export function UploadPageClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text, isText: true }),
       })
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || "Processing failed")
+      const json: unknown = await response.json()
+      const result = uploadResponseSchema.safeParse(json)
+      if (!result.success) {
+        Sentry.addBreadcrumb({
+          category: "upload",
+          level: "error",
+          message: "upload-text-schema-error",
+          data: { route: "/api/upload/text" },
+        })
+        throw new Error("Processing failed")
       }
-      const result = await response.json()
-      if (result.data?.passageId) router.push(`/reading/${result.data.passageId}`)
-      else router.push("/upload")
+      if ("error" in result.data) throw new Error(result.data.error || "Processing failed")
+      if (!response.ok) throw new Error("Processing failed")
+      router.push(`/reading/${result.data.data.passageId}`)
     } catch (error) {
       console.error("Text processing error:", error)
       alert(error instanceof Error ? error.message : "Processing failed")
