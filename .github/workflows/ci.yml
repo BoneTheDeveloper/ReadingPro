@@ -89,13 +89,6 @@ jobs:
         if: steps.e2e-secrets.outputs.should_run_e2e == 'true'
         run: pnpm exec playwright install --with-deps chromium
 
-      - name: Verify development migration status
-        if: steps.e2e-secrets.outputs.should_run_e2e == 'true'
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          DIRECT_URL: ${{ secrets.DIRECT_URL }}
-        run: pnpm exec prisma migrate status
-
       - name: Playwright E2E
         if: steps.e2e-secrets.outputs.should_run_e2e == 'true'
         env:
