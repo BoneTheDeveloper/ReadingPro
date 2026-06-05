@@ -162,4 +162,32 @@ describe("StudyChatPanel", () => {
 
     expect(screen.getByPlaceholderText("Ask about this passage...")).toBeInTheDocument();
   });
+
+  it("rejects malformed persisted chat history payloads", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(JSON.stringify({ messages: [{ id: "msg-bad", role: "user" }] }), {
+          status: 200,
+        }),
+      ),
+    );
+
+    renderWithUser(<StudyChatPanel passageId="passage-one" />);
+
+    await waitFor(() => {
+      expect(useChatState.setMessages).toHaveBeenCalledWith([]);
+      expect(Sentry.addBreadcrumb).toHaveBeenCalledWith(
+        expect.objectContaining({
+          category: "study-chat",
+          level: "error",
+          message: "Study chat history schema error",
+          data: expect.objectContaining({
+            passageId: "passage-one",
+            route: "/api/study-chat",
+          }),
+        }),
+      );
+    });
+  });
 });

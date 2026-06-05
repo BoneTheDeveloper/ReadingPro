@@ -1,9 +1,14 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET as dictionarySuggest } from "@/app/api/dictionary/suggest/route";
+import {
+  dictionarySuggestPerformanceResponseSchema,
+  dictionarySuggestResponseSchema,
+  dictionarySuggestSuccessResponseSchema,
+} from "@/lib/dictionary/shared/dictionary-response-schema";
 import type { DictionarySuggestItemDto } from "@/lib/dictionary/shared/dictionary-dtos";
 import { userProfileFixture } from "../../fixtures";
-import { readJsonResponse } from "../../helpers/api";
+import { parseJsonResponse } from "../../helpers/api";
 import { expectApiErrorPayload, expectApiSuccessPayload } from "../../helpers/assertions";
 
 const routeMocks = vi.hoisted(() => ({
@@ -19,8 +24,13 @@ vi.mock("@/lib/dictionary/suggest/suggest.service", () => ({
   suggestDictionaryTerms: routeMocks.suggestDictionaryTerms,
 }));
 
-function createSuggestRequest(query: string) {
-  return new NextRequest(`https://english-reading.test/api/dictionary/suggest?${query}`);
+function createSuggestRequest(query: string, init?: ConstructorParameters<typeof NextRequest>[1]) {
+  return new NextRequest(`https://english-reading.test/api/dictionary/suggest?${query}`, init);
+}
+
+async function expectJsonError(response: Response, status: number, message: string) {
+  expect(response.status).toBe(status);
+  expectApiErrorPayload(await parseJsonResponse(response, dictionarySuggestResponseSchema), message);
 }
 
 const suggestItems: DictionarySuggestItemDto[] = [
@@ -54,11 +64,11 @@ describe("GET /api/dictionary/suggest", () => {
     const response = await dictionarySuggest(
       createSuggestRequest("q=algo&sourceLanguage=en&targetLanguage=vi"),
     );
-    const payload = await readJsonResponse<{ success: boolean; data: DictionarySuggestItemDto[] }>(response);
+    const payload = await parseJsonResponse(response, dictionarySuggestSuccessResponseSchema);
 
     expect(response.status).toBe(200);
     expectApiSuccessPayload(payload);
-    expect(payload).toMatchObject({ success: true, data: suggestItems });
+    expect(payload).toEqual({ success: true, data: suggestItems });
     expect(routeMocks.suggestDictionaryTerms).toHaveBeenCalledWith("algo", {
       sourceLanguage: "en",
       targetLanguage: "vi",
@@ -69,7 +79,7 @@ describe("GET /api/dictionary/suggest", () => {
     const response = await dictionarySuggest(
       createSuggestRequest("q=a&sourceLanguage=en&targetLanguage=vi"),
     );
-    const payload = await readJsonResponse<{ success: boolean; data: unknown[] }>(response);
+    const payload = await parseJsonResponse(response, dictionarySuggestSuccessResponseSchema);
 
     expect(response.status).toBe(200);
     expectApiSuccessPayload(payload);
@@ -78,13 +88,41 @@ describe("GET /api/dictionary/suggest", () => {
     expect(routeMocks.suggestDictionaryTerms).not.toHaveBeenCalled();
   });
 
+  it("returns explicit performance diagnostics when requested", async () => {
+    routeMocks.suggestDictionaryTerms.mockResolvedValue(suggestItems);
+
+    const response = await dictionarySuggest(
+      createSuggestRequest("q=algo&sourceLanguage=en&targetLanguage=vi", {
+        headers: { "x-dictionary-perf-metrics": "1" },
+      }),
+    );
+    const payload = await parseJsonResponse(response, dictionarySuggestPerformanceResponseSchema);
+
+    expect(response.status).toBe(200);
+    expect(payload).toMatchObject({
+      success: true,
+      data: suggestItems,
+      performance: {
+        queryLength: 4,
+        normalizedQueryLength: 4,
+        phase: "suggest",
+        timings: {
+          totalMs: expect.any(Number),
+          steps: expect.objectContaining({
+            auth: expect.any(Number),
+            suggestResolve: expect.any(Number),
+          }),
+        },
+      },
+    });
+  });
+
   it("rejects invalid query parameters before authentication", async () => {
     const response = await dictionarySuggest(
       createSuggestRequest("q=&sourceLanguage=en&targetLanguage=vi"),
     );
 
-    expect(response.status).toBe(400);
-    expectApiErrorPayload(await readJsonResponse(response), "Invalid query parameters.");
+    await expectJsonError(response, 400, "Invalid query parameters.");
     expect(routeMocks.getAuthenticatedUser).not.toHaveBeenCalled();
     expect(routeMocks.suggestDictionaryTerms).not.toHaveBeenCalled();
   });
@@ -96,7 +134,16 @@ describe("GET /api/dictionary/suggest", () => {
       createSuggestRequest("q=algo&sourceLanguage=en&targetLanguage=vi"),
     );
 
-    expect(response.status).toBe(401);
-    expectApiErrorPayload(await readJsonResponse(response), "Authentication required.");
+    await expectJsonError(response, 401, "Authentication required.");
+  });
+
+  it("returns a stable 500 error when suggest resolution fails", async () => {
+    routeMocks.suggestDictionaryTerms.mockRejectedValue(new Error("db down"));
+
+    const response = await dictionarySuggest(
+      createSuggestRequest("q=algo&sourceLanguage=en&targetLanguage=vi"),
+    );
+
+    await expectJsonError(response, 500, "Suggest failed.");
   });
 });

@@ -13,8 +13,23 @@ import {
 } from "@/app/api/study-session/route";
 import { POST as uploadFileRoute } from "@/app/api/upload/route";
 import { POST as uploadTextRoute } from "@/app/api/upload/text/route";
+import {
+  cardReviewSuccessResponseSchema,
+  dueCardsResponseSchema,
+  dueCardsSuccessResponseSchema,
+  progressStatsResponseSchema,
+  progressStatsSuccessResponseSchema,
+  studyChatHistoryResponseSchema,
+  studyChatHistorySuccessResponseSchema,
+  studySessionResponseSchema,
+  studySessionSuccessResponseSchema,
+  toCardReviewDto,
+  toStudySessionDto,
+} from "@/lib/study/shared/study-response-schema";
+import { uploadSuccessResponseSchema } from "@/lib/upload/shared/upload-response-schema";
+import { apiErrorResponseSchema } from "@/lib/api/shared/api-response-schema";
 import { dueCardFixture, passageFixture, studySessionFixture, userProfileFixture } from "../../fixtures";
-import { createFile, createJsonRequest, readJsonResponse } from "../../helpers/api";
+import { createFile, createJsonRequest, parseJsonResponse, readJsonResponse } from "../../helpers/api";
 import { expectApiErrorPayload, expectApiSuccessPayload } from "../../helpers/assertions";
 import { db } from "../../mocks/db";
 import { convertToModelMessages, streamText } from "../../mocks/ai";
@@ -79,11 +94,10 @@ vi.mock("@/lib/ai/model-config", () => ({
 }));
 
 const apiError = (message = "boom") => new Error(message);
-const serializeForJson = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 
 async function expectJsonError(response: Response, status: number, message: string) {
   expect(response.status).toBe(status);
-  expectApiErrorPayload(await readJsonResponse(response), message);
+  expectApiErrorPayload(await parseJsonResponse(response, apiErrorResponseSchema), message);
 }
 
 function createUploadRequest(file: File | null) {
@@ -106,27 +120,39 @@ afterEach(() => {
 
 describe("GET /api/cards/due", () => {
   it("returns due cards for the authenticated user", async () => {
-    routeMocks.getDueCards.mockResolvedValue([dueCardFixture]);
+    const dueCardWithPersistedOptions = {
+      ...dueCardFixture,
+      question: {
+        ...dueCardFixture.question,
+        options: JSON.stringify(dueCardFixture.question.options),
+      },
+    };
+    routeMocks.getDueCards.mockResolvedValue([dueCardWithPersistedOptions]);
 
     const response = await getDueCardsRoute();
-    const payload = await readJsonResponse(response);
+    const payload = await parseJsonResponse(response, dueCardsSuccessResponseSchema);
 
     expect(response.status).toBe(200);
     expectApiSuccessPayload(payload);
-    expect(payload).toMatchObject({ success: true, data: [serializeForJson(dueCardFixture)] });
+    expect(payload).toEqual({ success: true, data: [toCardReviewDto(dueCardWithPersistedOptions)] });
+    expect(payload.data[0].question?.options).toEqual(dueCardFixture.question.options);
     expect(routeMocks.getDueCards).toHaveBeenCalledWith(userProfileFixture.id);
   });
 
   it("returns a stable error payload when auth fails", async () => {
     routeMocks.getAuthenticatedUser.mockRejectedValue(apiError("Authentication required"));
 
-    await expectJsonError(await getDueCardsRoute(), 500, "Failed to fetch due cards");
+    const response = await getDueCardsRoute();
+    expect(response.status).toBe(500);
+    expectApiErrorPayload(await parseJsonResponse(response, dueCardsResponseSchema), "Failed to fetch due cards");
   });
 
   it("returns a stable error payload when the card query fails", async () => {
     routeMocks.getDueCards.mockRejectedValue(apiError("db down"));
 
-    await expectJsonError(await getDueCardsRoute(), 500, "Failed to fetch due cards");
+    const response = await getDueCardsRoute();
+    expect(response.status).toBe(500);
+    expectApiErrorPayload(await parseJsonResponse(response, dueCardsResponseSchema), "Failed to fetch due cards");
   });
 });
 
@@ -154,11 +180,11 @@ describe("POST /api/cards/review", () => {
     routeMocks.updateCardReview.mockResolvedValue(updatedReview);
 
     const response = await reviewCard(createJsonRequest({ cardReviewId: dueCardFixture.id, qualityRating: 5 }));
-    const payload = await readJsonResponse(response);
+    const payload = await parseJsonResponse(response, cardReviewSuccessResponseSchema);
 
     expect(response.status).toBe(200);
     expectApiSuccessPayload(payload);
-    expect(payload).toMatchObject({ success: true, data: serializeForJson(updatedReview) });
+    expect(payload).toEqual({ success: true, data: toCardReviewDto(updatedReview) });
     expect(routeMocks.updateCardReview).toHaveBeenCalledWith(userProfileFixture.id, dueCardFixture.id, 5);
   });
 
@@ -211,22 +237,24 @@ describe("POST /api/cards/review", () => {
 
 describe("GET /api/progress/stats", () => {
   it("returns progress stats for the authenticated user", async () => {
-    const stats = { totalCards: 12, dueToday: 3, reviewedToday: 4, averageEase: 2.4 };
+    const stats = { totalCards: 12, dueCards: 3, matureCards: 6, todayReviews: 4, streakDays: 2 };
     routeMocks.getUserProgress.mockResolvedValue(stats);
 
     const response = await getProgressStats();
-    const payload = await readJsonResponse(response);
+    const payload = await parseJsonResponse(response, progressStatsSuccessResponseSchema);
 
     expect(response.status).toBe(200);
     expectApiSuccessPayload(payload);
-    expect(payload).toMatchObject({ success: true, data: stats });
+    expect(payload).toEqual({ success: true, data: stats });
     expect(routeMocks.getUserProgress).toHaveBeenCalledWith(userProfileFixture.id);
   });
 
   it("returns a stable error payload when progress lookup fails", async () => {
     routeMocks.getUserProgress.mockRejectedValue(apiError("db down"));
 
-    await expectJsonError(await getProgressStats(), 500, "Failed to fetch progress");
+    const response = await getProgressStats();
+    expect(response.status).toBe(500);
+    expectApiErrorPayload(await parseJsonResponse(response, progressStatsResponseSchema), "Failed to fetch progress");
   });
 });
 
@@ -236,18 +264,18 @@ describe("POST/PATCH /api/study-session", () => {
     routeMocks.updateStudySession.mockResolvedValue({ ...studySessionFixture, cardsReviewed: 2 });
 
     const createResponse = await createStudySessionRoute(createJsonRequest({ passageId: passageFixture.id }));
-    expect(await readJsonResponse(createResponse)).toMatchObject({
+    expect(await parseJsonResponse(createResponse, studySessionSuccessResponseSchema)).toEqual({
       success: true,
-      data: serializeForJson(studySessionFixture),
+      data: toStudySessionDto(studySessionFixture),
     });
     expect(routeMocks.createStudySession).toHaveBeenCalledWith(userProfileFixture.id, passageFixture.id);
 
     const updateResponse = await updateStudySessionRoute(
       createJsonRequest({ sessionId: studySessionFixture.id, cardsReviewed: 2, correctCount: 1, incorrectCount: 1 }),
     );
-    expect(await readJsonResponse(updateResponse)).toMatchObject({
+    expect(await parseJsonResponse(updateResponse, studySessionSuccessResponseSchema)).toEqual({
       success: true,
-      data: serializeForJson({ ...studySessionFixture, cardsReviewed: 2 }),
+      data: toStudySessionDto({ ...studySessionFixture, cardsReviewed: 2 }),
     });
     expect(routeMocks.updateStudySession).toHaveBeenCalledWith(userProfileFixture.id, studySessionFixture.id, {
       completedAt: expect.any(Date),
@@ -261,7 +289,7 @@ describe("POST/PATCH /api/study-session", () => {
     const response = await updateStudySessionRoute(createJsonRequest({ cardsReviewed: -1 }));
 
     expect(response.status).toBe(400);
-    expectApiErrorPayload(await readJsonResponse(response));
+    expectApiErrorPayload(await parseJsonResponse(response, studySessionResponseSchema));
     expect(routeMocks.updateStudySession).not.toHaveBeenCalled();
   });
 
@@ -438,7 +466,7 @@ describe("POST /api/study-chat", () => {
     const history = await getStudyChatHistory(
       new NextRequest(`https://english-reading.test/api/study-chat?passageId=${passageFixture.id}`),
     );
-    expect(await readJsonResponse(history)).toEqual({
+    expect(await parseJsonResponse(history, studyChatHistorySuccessResponseSchema)).toEqual({
       messages: [{ id: "chat-1", role: "user", parts: [{ type: "text", text: "History A" }] }],
     });
     expect(Sentry.startSpan).toHaveBeenCalledWith(
@@ -459,6 +487,41 @@ describe("POST /api/study-chat", () => {
     expect(db.studyChatMessage.findMany).toHaveBeenLastCalledWith(
       expect.objectContaining({ where: { userId: userProfileFixture.id, passageId: "another-passage" } }),
     );
+  });
+
+  it("returns stable history error payloads", async () => {
+    const missingPassage = await getStudyChatHistory(
+      new NextRequest("https://english-reading.test/api/study-chat"),
+    );
+    expect(missingPassage.status).toBe(400);
+    expectApiErrorPayload(
+      await parseJsonResponse(missingPassage, studyChatHistoryResponseSchema),
+      "A passageId is required.",
+    );
+
+    routeMocks.getAuthenticatedUser.mockRejectedValueOnce(new routeMocks.AuthenticationRequiredError());
+    const unauthenticated = await getStudyChatHistory(
+      new NextRequest(`https://english-reading.test/api/study-chat?passageId=${passageFixture.id}`),
+    );
+    expect(unauthenticated.status).toBe(401);
+    expectApiErrorPayload(
+      await parseJsonResponse(unauthenticated, studyChatHistoryResponseSchema),
+      "Authentication required.",
+    );
+
+    const error = apiError("history db down");
+    db.studyChatMessage.findMany.mockRejectedValueOnce(error);
+    const failed = await getStudyChatHistory(
+      new NextRequest(`https://english-reading.test/api/study-chat?passageId=${passageFixture.id}`),
+    );
+    expect(failed.status).toBe(500);
+    expectApiErrorPayload(
+      await parseJsonResponse(failed, studyChatHistoryResponseSchema),
+      "Unable to load study chat history.",
+    );
+    expect(Sentry.captureException).toHaveBeenCalledWith(error, {
+      tags: { route: "api:study-chat", method: "GET" },
+    });
   });
 
   it("handles malformed chat bodies, unauthenticated users, missing passages, and stream failures", async () => {
@@ -548,11 +611,21 @@ describe("POST /api/upload", () => {
     const file = createFile("story.txt", "A useful story for reading practice.");
 
     const response = await uploadFileRoute(createUploadRequest(file));
-    const payload = await readJsonResponse(response);
+    const payload = await parseJsonResponse(response, uploadSuccessResponseSchema);
 
     expect(response.status).toBe(200);
     expectApiSuccessPayload(payload);
-    expect(payload).toMatchObject({ success: true, data: uploadResult });
+    expect(payload).toEqual({
+      success: true,
+      data: {
+        passageId: uploadResult.passageId,
+        originalLevel: uploadResult.originalLevel,
+        simplifiedLevel: uploadResult.simplifiedLevel,
+        questionCount: uploadResult.questionCount,
+      },
+    });
+    expect(payload.data).not.toHaveProperty("filename");
+    expect(payload.data).not.toHaveProperty("filePath");
     expect(routeMocks.processFileUpload).toHaveBeenCalledWith(userProfileFixture.id, file);
   });
 
@@ -598,11 +671,11 @@ describe("POST /api/upload/text", () => {
     const text = "This is a sufficiently long text passage for upload route testing with enough characters.";
 
     const response = await uploadTextRoute(createJsonRequest({ text, title: "Practice Text" }));
-    const payload = await readJsonResponse(response);
+    const payload = await parseJsonResponse(response, uploadSuccessResponseSchema);
 
     expect(response.status).toBe(200);
     expectApiSuccessPayload(payload);
-    expect(payload).toMatchObject({ success: true, data: result });
+    expect(payload).toEqual({ success: true, data: result });
     expect(routeMocks.analyzeAndPersistContent).toHaveBeenCalledWith({
       userId: userProfileFixture.id,
       text,

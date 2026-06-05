@@ -38,6 +38,23 @@ function translationResponse(translation: string, provider = "dictionary") {
   );
 }
 
+function vocabularySaveResponse(id = "vocab-1") {
+  return new Response(
+    JSON.stringify({
+      success: true,
+      data: {
+        id,
+        selectedText: "algorithmic bias",
+        translation: "thiên lệch thuật toán",
+        type: "noun phrase",
+        createdAt: "2026-05-29T00:00:00.000Z",
+        updatedAt: "2026-05-29T00:00:00.000Z",
+      },
+    }),
+    { status: 200 },
+  );
+}
+
 vi.mock("@ai-sdk/react", () => ({
   useChat: () => ({
     messages: useChatState.messages,
@@ -126,13 +143,7 @@ describe("StudyPageClient", () => {
         }
 
         if (url === "/api/vocabulary") {
-          return new Response(
-            JSON.stringify({
-              success: true,
-              data: { id: "vocab-1" },
-            }),
-            { status: 200 },
-          );
+          return vocabularySaveResponse();
         }
 
         if (url.startsWith("/api/study-chat")) {
@@ -478,12 +489,7 @@ describe("StudyPageClient", () => {
 
         if (url === "/api/vocabulary") {
           vocabularyBody = init?.body ? JSON.parse(String(init.body)) : null;
-          return new Response(
-            JSON.stringify({ success: true, data: { id: "vocab-fallback" } }),
-            {
-              status: 200,
-            },
-          );
+          return vocabularySaveResponse("vocab-fallback");
         }
 
         return new Response(JSON.stringify({ messages: [] }), { status: 200 });
@@ -517,6 +523,93 @@ describe("StudyPageClient", () => {
       );
     });
     expect(vocabularyBody).not.toHaveProperty("type");
+  });
+
+  it("rejects malformed quick translation success payloads", async () => {
+    const passage = createStudyPassage({
+      content: "Malformed translation payload appears here.",
+      simplifiedContent: null,
+      originalLevel: "B2",
+    });
+    vi.mocked(fetch).mockImplementation(async (input: RequestInfo | URL) => {
+      if (String(input) === "/api/translate") {
+        return new Response(
+          JSON.stringify({ success: true, data: { translation: "missing provider", type: null } }),
+          { status: 200 },
+        );
+      }
+      return new Response(JSON.stringify({ messages: [] }), { status: 200 });
+    });
+    vi.mocked(extractSelectionInfo).mockReturnValue({
+      selectedText: "Malformed translation",
+      selectionRect: { top: 120, left: 160, width: 90, height: 20 },
+      contextSentence: "Malformed translation payload appears here.",
+      sourceId: passage.id,
+      targetLanguage: "vi",
+    });
+
+    const { user } = renderWithUser(
+      <StudyPageClient initialPassages={[passage]} />,
+    );
+    await user.click(screen.getByText(passage.title));
+    fireEvent.mouseUp(screen.getByText(/Malformed translation payload/));
+    await user.click(getPopupTranslateButton());
+
+    expect(await screen.findByText("Translation failed")).toBeInTheDocument();
+    expect(Sentry.addBreadcrumb).toHaveBeenCalledWith(
+      expect.objectContaining({
+        category: "study-translation",
+        level: "error",
+        message: "study-translation-schema-error",
+        data: { route: "/api/translate" },
+      }),
+    );
+  });
+
+  it("rejects malformed vocabulary save success payloads", async () => {
+    const passage = createStudyPassage({
+      content: "Vocabulary malformed payload appears here.",
+      simplifiedContent: null,
+      originalLevel: "B2",
+    });
+    vi.mocked(fetch).mockImplementation(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url === "/api/translate") return translationResponse("tu loi");
+      if (url === "/api/vocabulary") {
+        return new Response(JSON.stringify({ success: true, data: { id: "vocab-bad" } }), {
+          status: 200,
+        });
+      }
+      return new Response(JSON.stringify({ messages: [] }), { status: 200 });
+    });
+    vi.mocked(extractSelectionInfo).mockReturnValue({
+      selectedText: "Vocabulary malformed",
+      selectionRect: { top: 120, left: 160, width: 90, height: 20 },
+      contextSentence: "Vocabulary malformed payload appears here.",
+      sourceId: passage.id,
+      targetLanguage: "vi",
+    });
+
+    const { user } = renderWithUser(
+      <StudyPageClient initialPassages={[passage]} />,
+    );
+    await user.click(screen.getByText(passage.title));
+    fireEvent.mouseUp(screen.getByText(/Vocabulary malformed payload/));
+    await user.click(getPopupTranslateButton());
+    await user.click(screen.getByRole("button", { name: /Open details/ }));
+    await user.click(await screen.findByRole("button", { name: /Save/ }));
+
+    await waitFor(() => {
+      expect(Sentry.addBreadcrumb).toHaveBeenCalledWith(
+        expect.objectContaining({
+          category: "study-vocabulary",
+          level: "error",
+          message: "study-vocabulary-schema-error",
+          data: { route: "/api/vocabulary" },
+        }),
+      );
+    });
+    expect(screen.getByRole("button", { name: /Save/ })).toBeEnabled();
   });
 
   it("clears stale translation selection on mode change and does not open a custom context menu", async () => {

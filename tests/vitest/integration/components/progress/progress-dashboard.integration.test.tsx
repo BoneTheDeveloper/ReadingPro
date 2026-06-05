@@ -1,4 +1,5 @@
 import { waitFor, screen } from "@testing-library/react";
+import * as Sentry from "@sentry/nextjs";
 import { useRouter } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ProgressDashboard } from "@/features/progress/progress-dashboard";
@@ -72,6 +73,29 @@ describe("ProgressDashboard", () => {
 
     expect(await screen.findByText("All caught up!")).toBeInTheDocument();
     await waitFor(() => expect(screen.getAllByText("0")).toHaveLength(4));
+  });
+
+  it("rejects malformed progress success payloads", async () => {
+    mockProgressFetch({
+      totalCards: 12,
+      dueToday: 3,
+      reviewedToday: 4,
+    });
+
+    renderWithUser(<ProgressDashboard />);
+
+    expect(await screen.findByText("All caught up!")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(Sentry.addBreadcrumb).toHaveBeenCalledWith(
+        expect.objectContaining({
+          category: "progress",
+          level: "error",
+          message: "progress-stats-schema-error",
+          data: { route: "/api/progress/stats" },
+        }),
+      );
+    });
+    expect(screen.getAllByText("0")).toHaveLength(4);
   });
 
   it("navigates from header and progress actions", async () => {
