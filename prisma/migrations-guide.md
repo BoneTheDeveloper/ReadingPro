@@ -1,76 +1,86 @@
 # Prisma Migration Guide
 
-Reference for creating, reviewing, and deploying Prisma migrations.
+Use this guide when changing `prisma/schema.prisma`.
 
-This project has two database states:
+## Mental Model
 
-- `development` for local development and review deployments.
-- `production` for protected production.
+- `development` is for local work and review.
+- `production` is for real users.
+- CI validates migration files but does not apply them.
+- Production migrations run only through GitHub Actions.
 
-There is no staging database.
+## Local Schema Change
 
-## Before Changing The Schema
-
-1. Confirm which database environment you are targeting.
-2. Back up data when the change may be destructive.
-3. Review current migration status:
-
-```bash
-pnpm exec prisma validate
-pnpm exec prisma migrate status
-```
-
-Never paste or commit database credentials.
-
-## Create A Development Migration
-
-1. Edit `prisma/schema.prisma`.
-2. Format and validate:
+1. Point `.env.local` at the Neon `development` branch.
+2. Edit `prisma/schema.prisma`.
+3. Format and validate:
 
 ```bash
 pnpm exec prisma format
 pnpm exec prisma validate
 ```
 
-3. Create and apply the migration:
+4. Create and apply the migration to `development`:
 
 ```bash
-pnpm exec prisma migrate dev --name <descriptive_name>
+pnpm db:migrate:dev
 ```
 
-4. Review the generated SQL in `prisma/migrations/`.
-5. Regenerate Prisma Client:
+Use a name when helpful:
+
+```bash
+pnpm exec prisma migrate dev --name add_reading_goal
+```
+
+5. Review the generated SQL in `prisma/migrations/`.
+6. Run local checks:
 
 ```bash
 pnpm run db:generate
+pnpm run typecheck
+pnpm run lint
+pnpm run test
 ```
 
-## Create Without Applying
+7. Commit `prisma/schema.prisma` and the new `prisma/migrations/*` folder.
+
+## Safer SQL Review For Risky Changes
+
+For deletes, renames, required columns, or large tables, create the migration
+without applying first:
 
 ```bash
 pnpm exec prisma migrate dev --name <descriptive_name> --create-only
 ```
 
-Review the generated SQL, and only edit when needed for column renames, data migration, or custom SQL (for example indexes/triggers), then apply:
+Review and adjust the SQL if needed, then apply to `development`:
 
 ```bash
 pnpm exec prisma migrate dev
 ```
 
-## Deploy Migrations (Production)
+## Production Deploy
 
-```bash
-pnpm exec prisma migrate deploy
-pnpm run db:generate
+Do not deploy production manually from your laptop.
+
+After merge to `main`, `.github/workflows/migrate.yml` does this:
+
+```text
+approval
+verify production branch
+build exact Vercel artifact
+pnpm db:migrate:deploy
 pnpm exec prisma migrate status
+vercel deploy --prebuilt --prod
+health check deployed commit
 ```
 
-Never use `migrate dev` or `migrate reset` in production. Review deployments use
-the shared `development` branch and must not run `migrate deploy`.
+Before approving destructive changes, confirm Neon point-in-time restore is
+available. If the change is high risk, create a manual Neon backup branch first.
 
-## Reset A Development Database
+## Development Reset
 
-Deletes all data and replays migration history. **Never run against production.**
+This deletes all data in the target database. Use only on `development`.
 
 ```bash
 pnpm exec prisma migrate reset --force
@@ -78,37 +88,24 @@ pnpm run db:generate
 pnpm db:seed:dictionary
 ```
 
-## Baselining An Existing Database
+Never run this against production.
 
-When deploying a migration to a database whose schema already matches:
+## Existing Database Baseline
+
+Only use this when a database already has the schema and you need Prisma to mark
+a migration as applied:
 
 ```bash
 pnpm exec prisma migrate resolve --applied <migration_name>
 ```
 
-Only use this when the schema already exists in the database. For clean databases, use `migrate deploy`.
+For a clean database, use `migrate deploy` instead.
 
-## Review Checklist
+## Quick Checklist
 
-Before applying any migration:
-
-- Unexpected table or column deletions
-- Data loss from type changes or new required columns
-- Missing defaults for existing rows
-- Incorrect foreign-key or cascade behavior
-- Dropped or recreated indexes
-- Operations that may lock large tables
-
-Do not edit an already-applied migration. Create a new one to correct it.
-
-## Verify After Applying
-
-```bash
-pnpm exec prisma validate
-pnpm exec prisma migrate status
-pnpm run db:generate
-pnpm run typecheck
-pnpm run lint
-```
-
-Then test affected CRUD workflows and run related automated tests.
+- `migrate dev` only on `development`.
+- `migrate deploy` only in trusted production workflow.
+- No `db push` for shared or production schema.
+- No edits to already-applied migration SQL.
+- Schema change must include a migration folder.
+- Review SQL before approving production.

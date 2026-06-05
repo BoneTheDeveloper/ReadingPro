@@ -53,6 +53,6 @@ E2E_TEST_USER_EMAIL
 E2E_TEST_USER_PASSWORD
 ```
 
-When secrets are missing, CI prints a skip notice and keeps lint, typecheck, unit tests, and coverage unchanged. When secrets are present, CI installs Chromium, runs `pnpm db:migrate:deploy`, then runs `pnpm e2e`.
+When secrets are missing, CI prints a skip notice and keeps lint, typecheck, unit tests, and coverage unchanged. When secrets are present, CI installs Chromium, checks `pnpm exec prisma migrate status`, then runs `pnpm e2e`.
 
-The configured Neon branch must be safe for CI migration deployment and the Clerk E2E user must already exist before the Playwright job starts.
+The configured Neon `development` branch must already have the needed migrations applied before the Playwright job starts. CI checks migration status but does not run database migrations.

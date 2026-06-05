@@ -5,7 +5,7 @@ export function GET() {
     success: true,
     data: {
       status: "ok",
-      commitSha: process.env.VERCEL_GIT_COMMIT_SHA ?? null,
+      commitSha: process.env.APP_COMMIT_SHA ?? process.env.VERCEL_GIT_COMMIT_SHA ?? null,
     },
   });
 }

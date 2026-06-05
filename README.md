@@ -41,6 +41,11 @@ Then update `.env.local` with your own values:
 
 `DATABASE_URL` should use the Neon pooled runtime connection string. `DIRECT_URL` should use the Neon direct connection string for local and trusted Prisma migration jobs.
 
+Production GitHub Actions also needs `NEON_API_KEY`, `NEON_PROJECT_ID`,
+`NEON_PRODUCTION_BRANCH_ID`, `VERCEL_TOKEN`, `VERCEL_ORG_ID`,
+`VERCEL_PROJECT_ID`, and `PRODUCTION_URL` in the protected `production`
+environment.
+
 For production auth redirects, set `NEXT_PUBLIC_SITE_URL` to your deployed host, for example `https://your-app.vercel.app`, and configure the same domain in Clerk.
 
 ## Set Up the Database

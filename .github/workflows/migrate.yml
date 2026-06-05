@@ -28,8 +28,26 @@ jobs:
           ref: ${{ github.event.workflow_run.head_sha }}
           persist-credentials: false
 
-      - name: Set up Neon CLI
-        run: npm install -g neonctl
+      - name: Verify workflow run is current branch head
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          EXPECTED_SHA: ${{ github.event.workflow_run.head_sha }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          curl --fail-with-body -sS \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/commits/$HEAD_BRANCH" \
+            > latest-commit.json
+
+          LATEST_SHA=$(node -e "const fs=require('node:fs'); const body=JSON.parse(fs.readFileSync('latest-commit.json','utf8')); console.log(body.sha ?? '')")
+          if [ "$LATEST_SHA" != "$EXPECTED_SHA" ]; then
+            echo "::error::Skipping stale production migration for $EXPECTED_SHA because $HEAD_BRANCH is now $LATEST_SHA."
+            exit 1
+          fi
+
+          echo "Verified $HEAD_BRANCH still points to $EXPECTED_SHA."
 
       - name: Verify production database target
         env:
@@ -50,17 +68,19 @@ jobs:
           fi
           echo "Verified Neon production branch '$BRANCH_NAME'."
 
-      - name: Create branch restore point
+      - name: Verify production migration URL target
         env:
           NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
           NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID }}
-          NEON_PRODUCTION_BRANCH_NAME: production
+          NEON_PRODUCTION_BRANCH_ID: ${{ secrets.NEON_PRODUCTION_BRANCH_ID }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
         run: |
-          echo "Creating restore point on production branch..."
-          neonctl branches create \
-            --project-id "$NEON_PROJECT_ID" \
-            --name "restore-$(date +%Y%m%d-%H%M%S)" \
-            --parent "$NEON_PRODUCTION_BRANCH_NAME"
+          curl --fail-with-body -sS \
+            -H "Authorization: Bearer $NEON_API_KEY" \
+            "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches/$NEON_PRODUCTION_BRANCH_ID/endpoints" \
+            > neon-endpoints.json
+
+          node -e "const fs=require('node:fs'); const directUrl=process.env.DIRECT_URL; if (!directUrl) { console.error('Missing DIRECT_URL.'); process.exit(1); } const directHost=new URL(directUrl).hostname; const body=JSON.parse(fs.readFileSync('neon-endpoints.json','utf8')); const endpoints=body.endpoints ?? []; const hosts=endpoints.flatMap((endpoint) => [endpoint.host, endpoint.proxy_host].filter(Boolean)); if (!hosts.includes(directHost)) { console.error(\`DIRECT_URL host ${directHost} does not match production branch endpoint hosts: ${hosts.join(', ') || 'none'}\`); process.exit(1); } if (directHost.includes('-pooler.')) { console.error('DIRECT_URL must use a direct Neon endpoint, not a pooled endpoint.'); process.exit(1); } console.log(\`Verified DIRECT_URL host ${directHost} belongs to the production branch.\`);"
 
       - name: Set up Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
@@ -76,6 +96,42 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Preflight production deploy config
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          PRODUCTION_URL: ${{ secrets.PRODUCTION_URL }}
+        run: |
+          missing=()
+          for name in VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID PRODUCTION_URL; do
+            if [ -z "${!name}" ]; then
+              missing+=("$name")
+            fi
+          done
+
+          if [ "${#missing[@]}" -gt 0 ]; then
+            echo "::error::Missing required production deploy secret(s): ${missing[*]}"
+            exit 1
+          fi
+
+          node -e "const host=process.env.PRODUCTION_URL; if (!host || host.includes('://')) { console.error('PRODUCTION_URL must be a bare host such as app.example.com.'); process.exit(1); } new URL(\`https://${host}\`);"
+
+      - name: Pull Vercel production environment
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: pnpm dlx vercel@latest pull --yes --environment=production --token "$VERCEL_TOKEN"
+
+      - name: Build Vercel production artifact
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          APP_COMMIT_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: pnpm dlx vercel@latest build --prod --build-env APP_COMMIT_SHA="$APP_COMMIT_SHA" --token "$VERCEL_TOKEN"
+
       - name: Apply migrations
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
@@ -86,13 +142,51 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           DIRECT_URL: ${{ secrets.DIRECT_URL }}
-        run: pnpm exec prisma migrate status
+        run: |
+          set +e
+          status_output="$(pnpm exec prisma migrate status 2>&1)"
+          status_code=$?
+          set -e
 
-      - name: Trigger Vercel production deploy
+          printf '%s\n' "$status_output"
+
+          if printf '%s\n' "$status_output" | grep -Eiq "not yet been applied|database schema is not up to date|pending migrations?:"; then
+            echo "::error::Production migration status still reports pending migrations."
+            exit 1
+          fi
+
+          if [ "$status_code" -ne 0 ]; then
+            echo "::error::Prisma migration status failed."
+            exit "$status_code"
+          fi
+
+      - name: Verify branch head before deploy
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          EXPECTED_SHA: ${{ github.event.workflow_run.head_sha }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          curl --fail-with-body -sS \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/commits/$HEAD_BRANCH" \
+            > latest-commit.json
+
+          LATEST_SHA=$(node -e "const fs=require('node:fs'); const body=JSON.parse(fs.readFileSync('latest-commit.json','utf8')); console.log(body.sha ?? '')")
+          if [ "$LATEST_SHA" != "$EXPECTED_SHA" ]; then
+            echo "::error::Refusing to deploy $EXPECTED_SHA because $HEAD_BRANCH is now $LATEST_SHA."
+            exit 1
+          fi
+
+      - name: Deploy Vercel production artifact
         if: success()
         env:
-          VERCEL_DEPLOY_HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
-        run: curl --fail-with-body -sS -X POST "$VERCEL_DEPLOY_HOOK"
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          APP_COMMIT_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: pnpm dlx vercel@latest deploy --prebuilt --prod --env APP_COMMIT_SHA="$APP_COMMIT_SHA" --token "$VERCEL_TOKEN"
 
       - name: Post-deploy health check
         env:
