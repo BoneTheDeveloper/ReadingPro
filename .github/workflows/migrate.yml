@@ -130,7 +130,7 @@ jobs:
           VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
           APP_COMMIT_SHA: ${{ github.event.workflow_run.head_sha }}
-        run: pnpm dlx vercel@latest build --prod --build-env APP_COMMIT_SHA="$APP_COMMIT_SHA" --token "$VERCEL_TOKEN"
+        run: pnpm dlx vercel@latest build --prod --token "$VERCEL_TOKEN"
 
       - name: Apply migrations
         env:
