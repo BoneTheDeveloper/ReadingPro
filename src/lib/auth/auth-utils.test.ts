@@ -37,12 +37,45 @@ describe("Clerk auth profile bootstrap", () => {
     expect(db.userProfile.findUnique).not.toHaveBeenCalled();
   });
 
-  it("returns an existing profile without calling the Clerk Backend API", async () => {
+  it("refreshes an existing profile from Clerk identity metadata", async () => {
     clerkMocks.auth.mockResolvedValue({ userId: userProfileFixture.id });
-    vi.mocked(db.userProfile.findUnique).mockResolvedValue(userProfileFixture);
+    clerkMocks.getUser.mockResolvedValue({
+      id: userProfileFixture.id,
+      firstName: "Test",
+      fullName: "Updated Reader",
+      imageUrl: "https://img.example.test/updated-avatar.png",
+      primaryEmailAddressId: "email_1",
+      emailAddresses: [
+        { id: "email_1", emailAddress: "updated-reader@example.test" },
+      ],
+    });
+    vi.mocked(db.userProfile.upsert).mockResolvedValue({
+      ...userProfileFixture,
+      email: "updated-reader@example.test",
+      name: "Updated Reader",
+      avatarUrl: "https://img.example.test/updated-avatar.png",
+    });
 
-    await expect(getCurrentUser()).resolves.toBe(userProfileFixture);
-    expect(clerkMocks.clerkClient).not.toHaveBeenCalled();
+    await expect(getCurrentUser()).resolves.toMatchObject({
+      email: "updated-reader@example.test",
+      name: "Updated Reader",
+      avatarUrl: "https://img.example.test/updated-avatar.png",
+    });
+    expect(clerkMocks.clerkClient).toHaveBeenCalled();
+    expect(db.userProfile.upsert).toHaveBeenCalledWith({
+      where: { id: userProfileFixture.id },
+      update: {
+        email: "updated-reader@example.test",
+        name: "Updated Reader",
+        avatarUrl: "https://img.example.test/updated-avatar.png",
+      },
+      create: {
+        id: userProfileFixture.id,
+        email: "updated-reader@example.test",
+        name: "Updated Reader",
+        avatarUrl: "https://img.example.test/updated-avatar.png",
+      },
+    });
   });
 
   it("upserts a missing profile from Clerk identity metadata", async () => {

@@ -52,7 +52,7 @@ const vercelBlobAdapter: StorageAdapter = {
       const env = getStorageEnv();
       const blob = await put(pathname, body, {
         contentType,
-        access: "public",
+        access: "private",
         addRandomSuffix: false,
       });
       log.info({ pathname, url: blob.url, env }, "Uploaded to Vercel Blob");

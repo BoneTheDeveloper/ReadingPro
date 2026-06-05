@@ -14,7 +14,7 @@
 | FR-01.2 | Accept file upload (txt/pdf, max 10MB) |
 | FR-01.3 | Extract text from PDF via `pdf-parse` |
 | FR-01.4 | Validate file type, size, and text length before processing |
-| FR-01.5 | Store file in Supabase Storage, persist passage in DB |
+| FR-01.5 | Store file through the storage adapter: local filesystem in development, Vercel Blob in preview/production; persist Blob pathname on the Passage record |
 
 ### FR-02: CEFR Level Detection
 
@@ -84,7 +84,7 @@
 | FR-09.1 | Email/password sign-in and sign-up |
 | FR-09.2 | Google OAuth sign-in and sign-up |
 | FR-09.3 | Middleware route protection — redirect unauthenticated users to /sign-in |
-| FR-09.4 | Sync Supabase Auth user to local User record |
+| FR-09.4 | Sync Clerk user identity to local `UserProfile` record |
 | FR-09.5 | User menu with sign-out functionality |
 
 ### FR-10: Study Workspace
@@ -106,7 +106,7 @@
 | NFR-02 | Performance | Page load under 2s |
 | NFR-03 | Usability | Keyboard accessible, mobile responsive |
 | NFR-04 | Usability | WCAG 2.1 AA compliance |
-| NFR-05 | Security | Supabase Auth for all protected routes |
+| NFR-05 | Security | Clerk auth for all protected routes |
 | NFR-06 | Security | Input validation at API boundaries with Zod |
 | NFR-07 | Observability | Sentry error tracking + performance spans |
 | NFR-08 | Observability | Pino structured logging |
@@ -118,9 +118,10 @@
 | Constraint | Detail |
 |-----------|--------|
 | Framework | Next.js 16 App Router with React Server Components |
-| Database | SQLite (dev) via Prisma ORM, PostgreSQL (production planned) |
+| Database | Neon PostgreSQL via Prisma ORM |
 | AI Model | OpenAI gpt-4o-mini via Vercel AI SDK |
-| Auth | Supabase Auth (email/password + Google OAuth) |
+| Auth | Clerk (email/password + Google OAuth) |
+| Storage | Local filesystem in development, Vercel Blob in preview/production |
 | Browser | Modern browsers (Chrome, Firefox, Safari, Edge latest 2 versions) |
 
 ---
@@ -162,11 +163,11 @@ User answers question → Quality rating (0-5)
 ### Auth Flow
 
 ```
-Protected route → Middleware session refresh
-    → No session → redirect /sign-in?next={original}
+Protected route → Clerk middleware
+    → No session → redirect /sign-in?redirect_url={original}
     → Has session → Server action/route uses authenticated user
 ```
 
 ---
 
-**Last Updated:** 2026-05-09
+**Last Updated:** 2026-06-05

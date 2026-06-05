@@ -1,9 +1,10 @@
 import { NextRequest } from "next/server";
 import * as Sentry from "@sentry/nextjs";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { openai } from "@ai-sdk/openai";
 import { POST as reviewCard } from "@/app/api/cards/review/route";
 import { GET as getDueCardsRoute } from "@/app/api/cards/due/route";
+import { GET as getHealth } from "@/app/api/health/route";
 import { GET as getProgressStats } from "@/app/api/progress/stats/route";
 import { GET as getStudyChatHistory, POST as studyChat } from "@/app/api/study-chat/route";
 import {
@@ -99,6 +100,10 @@ beforeEach(() => {
   db.studyChatMessage.findMany.mockResolvedValue([]);
 });
 
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
+
 describe("GET /api/cards/due", () => {
   it("returns due cards for the authenticated user", async () => {
     routeMocks.getDueCards.mockResolvedValue([dueCardFixture]);
@@ -122,6 +127,24 @@ describe("GET /api/cards/due", () => {
     routeMocks.getDueCards.mockRejectedValue(apiError("db down"));
 
     await expectJsonError(await getDueCardsRoute(), 500, "Failed to fetch due cards");
+  });
+});
+
+describe("GET /api/health", () => {
+  it("returns the current deployment commit SHA for deployment verification", async () => {
+    vi.stubEnv("VERCEL_GIT_COMMIT_SHA", "commit_123");
+
+    const response = getHealth();
+    const payload = await readJsonResponse(response);
+
+    expect(response.status).toBe(200);
+    expect(payload).toEqual({
+      success: true,
+      data: {
+        status: "ok",
+        commitSha: "commit_123",
+      },
+    });
   });
 });
 
@@ -515,7 +538,7 @@ describe("POST /api/upload", () => {
   it("processes an authenticated file upload", async () => {
     const uploadResult = {
       filename: "user_test_123/story.txt",
-      filePath: "https://example.test/story.txt",
+      filePath: "user_test_reader/story.txt",
       passageId: passageFixture.id,
       originalLevel: "B1",
       simplifiedLevel: "A2",

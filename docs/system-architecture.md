@@ -2,263 +2,202 @@
 
 **English Reading Training App**
 
----
-
 ## High-Level Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        Client (Browser)                          │
-│  React 19 + Next.js App Router + Tailwind CSS + shadcn/ui       │
-│  @supabase/ssr (browser client for auth + storage)               │
-└────────────────────────────┬────────────────────────────────────┘
-                             │
-                             ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                     Next.js Server (Node.js)                     │
-│  ┌──────────────────┐  ┌─────────────────────────────────────┐  │
-│  │    Middleware     │  │        Server Actions / API Routes   │  │
-│  │  Session refresh │  │  analyze │ upload │ cards │ progress │  │
-│  │  Route protect   │  └──────┬──────────┬────────┬───────────┘  │
-│  └──────────────────┘         │          │        │              │
-└───────────────────────────────┼──────────┼────────┼──────────────┘
-                                │          │        │
-                          ┌─────┴──┐  ┌────┴────┐  ┌─┴──┐  ┌──────┐
-                          ▼        ▼  ▼         ▼  ▼    ▼  ▼      ▼
-                       ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐┌──────┐
-                       │OpenAI│ │pdf-  │ │ SM-2 │ │Post- ││Supa- │
-                       │  AI  │ │parse │ │Algo  │ │greSQL││base  │
-                       │(gpt-4o│ │      │ │      │ │(Supa-││Auth +│
-                       │mini) │ │      │ │      │ │base) ││Stor. │
-                       └──────┘ └──────┘ └──────┘ └──────┘└──────┘
+```text
+Browser
+  React 19 + Next.js App Router + Tailwind CSS + shadcn/ui
+  Clerk client UI, next-intl navigation, study workspace
+    |
+    v
+Next.js Server
+  src/proxy.ts: Clerk middleware + next-intl routing
+  Server Components, Server Actions, Route Handlers
+    |
+    +--> Clerk                 auth sessions, user profile metadata
+    +--> Neon PostgreSQL       Prisma ORM, app data, dictionary, progress
+    +--> Vercel Blob           private preview/production uploads
+    +--> Local filesystem      development uploads in .local-blob-storage/
+    +--> OpenAI/Google AI      CEFR, simplification, questions, chat
+    +--> Sentry/Pino           errors, spans, structured logs
 ```
 
----
+## Request And Auth Flow
 
-## Data Flow: Content Upload & Analysis
-
-```
-User uploads file/pastes text
-         │
-         ▼
-┌──────────────────┐
-│  Upload API      │  POST /api/upload or /api/upload/text
-│  Validation      │  File type (txt/pdf), size (10MB), text length (50-100k)
-└────────┬─────────┘
-         │
-         ▼
-┌──────────────────┐
-│  PDF Parser      │  If PDF: extract text via pdf-parse
-│  (if needed)     │  Extract title from first line
-└────────┬─────────┘
-         │
-         ▼
-┌──────────────────┐
-│  analyzeContent  │  Server action (orchestrator)
-│  Action          │  Calls 2 AI services + heuristic CEFR
-└────────┬─────────┘
-         │
-    ┌────┴─────┬────────────┐
-    ▼          ▼            ▼
-┌────────┐ ┌─────────┐ ┌──────────┐
-│ CEFR   │ │Content  │ │Question  │
-│Heuris- │→│Simplify │→│Generator │
-│tic     │ │         │ │          │
-└────────┘ └─────────┘ └────┬─────┘
-                                │
-                                ▼
-                    ┌──────────────────┐
-                    │  PostgreSQL DB   │
-                    │  (Supabase)      │
-                    │  Persist:        │
-                    │  - Passage       │
-                    │  - Questions     │
-                    │  - File → Storage│
-                    └──────────────────┘
+```text
+User-facing request
+  -> src/proxy.ts
+  -> skip API, Next internals, monitoring, favicon, Clerk internals
+  -> Clerk middleware reads session
+  -> unauthenticated protected route: redirect to /{locale}/sign-in?redirect_url={url}
+  -> authenticated auth page: redirect to /{locale}
+  -> next-intl middleware handles locale routing
+  -> route/page renders
 ```
 
----
+Server-side user access is centralized in `src/lib/auth/auth-utils.ts`:
 
-## Data Flow: Flashcard Test & SM-2
-
-```
-User navigates to /test/[id]
-         │
-         ▼
-┌──────────────────┐
-│  GET Passage +   │  Server component fetches from DB
-│  Questions       │  (via passage-queries.ts)
-└────────┬─────────┘
-         │
-         ▼
-┌──────────────────┐
-│  FlashcardTest   │  Client component renders quiz
-│  Client          │  Tracks selections, streak, score
-└────────┬─────────┘
-         │
-         ▼ (each answer)
-┌──────────────────┐
-│  POST /api/cards │  Submit quality rating (0-5)
-│  /review         │
-└────────┬─────────┘
-         │
-         ▼
-┌──────────────────┐
-│  SM-2 Algorithm  │  Calculate new easeFactor,
-│  (card-review-   │  intervalDays, nextReviewDate
-│   queries.ts)    │
-└────────┬─────────┘
-         │
-         ▼
-┌──────────────────┐
-│  UPDATE          │  Upsert CardReview record
-│  CardReview      │  (unique on [questionId, userId])
-└──────────────────┘
+```text
+requireAuth()
+  -> Clerk auth()
+  -> clerkClient().users.getUser(userId)
+  -> syncUser(clerk id, email, name, avatar)
+  -> return UserProfile
 ```
 
----
+`UserProfile.id` is the Clerk user id. App-owned entities use Postgres UUIDs.
 
-## Data Flow: Spaced Repetition Review
+## Data Flow: Content Upload And Analysis
 
-```
-User navigates to /progress → clicks "Study Now"
-         │
-         ▼
-┌──────────────────┐
-│  GET /api/cards  │  Fetch cards where
-│  /due            │  nextReviewDate <= now
-│                  │  Limit: 20 cards
-└────────┬─────────┘
-         │
-         ▼
-┌──────────────────┐
-│  POST /api/      │  Create StudySession
-│  study-session   │  Record startedAt
-└────────┬─────────┘
-         │
-         ▼
-┌──────────────────┐
-│  Review loop     │  For each card:
-│                  │  - Show question
-│                  │  - User answers
-│                  │  - Rate quality (0-5)
-│                  │  - SM-2 updates interval
-└────────┬─────────┘
-         │
-         ▼
-┌──────────────────┐
-│  PATCH /api/     │  Complete session:
-│  study-session   │  completedAt, cardsReviewed,
-│                  │  accuracyRate
-└──────────────────┘
+```text
+User uploads PDF/TXT or pastes text
+  -> /api/upload or /api/upload/text
+  -> Zod/file validation
+  -> PDF text extraction with pdf-parse when needed
+  -> upload file through storage adapter
+       local: .local-blob-storage/
+       preview/production: private Vercel Blob
+  -> analyzeAndPersistContent()
+       CEFR heuristic + AI analysis
+       simplification
+       question generation
+  -> Prisma persists Passage, Question, and filePath
+  -> UI navigates to reading/study experience
 ```
 
----
+`Passage.filePath` stores the storage pathname, not a provider-specific public URL. Local file reads are served through `/api/local-blob/[pathname]`; Vercel Blob access is resolved by `src/lib/storage/blob-storage.ts`.
 
-## Data Flow: Authentication
+## Data Flow: Study, Translation, And Chat
 
-```
-Protected route → Middleware session refresh
-    → No session → redirect /sign-in?next={original}
-    → Has session → Server action/route uses authenticated user
-
-Email/Password: /sign-in → signInWithPassword() → redirect
-Google OAuth:   /sign-in → Google consent → /auth/callback → syncUser → redirect
-
-All server actions/routes:
-  getAuthenticatedUser() → requireAuth() → getCurrentUser()
-  Prisma client extension auto-injects userId from Supabase session
+```text
+Study workspace
+  -> server actions load user passages and selected passage
+  -> content panel renders original/simplified passage
+  -> studio panel runs quiz, translation, and chat actions
+  -> /api/translate uses dictionary/cache/history services
+  -> /api/vocabulary saves selected vocabulary
+  -> /api/study-chat streams tutor responses and persists messages
 ```
 
----
+Dictionary lookups use normalized headwords, aliases, senses, and translations in Neon through Prisma repositories. Quick translation is cache-first and uses query-budget performance tests.
 
-## Data Flow: File Storage
+## Data Flow: Flashcard Test And SM-2
 
-```
-User uploads PDF
-         │
-         ▼
-┌──────────────────┐
-│  Upload API      │  POST /api/upload
-│  route.ts        │
-└────────┬─────────┘
-         │
-         ▼
-┌──────────────────┐
-│  Supabase Storage│  uploadFile() → {bucket}/{userId}/{filename}
-│  (lib/storage/)  │  Returns public URL stored in Passage.fileUrl
-└──────────────────┘
+```text
+User opens /{locale}/test/[id]
+  -> Server Component fetches passage and questions
+  -> Flashcard client tracks answers, streak, score
+  -> POST /api/cards/review
+  -> card-review queries calculate SM-2 interval
+  -> Prisma upserts CardReview by [questionId, userId]
 ```
 
----
+## Data Flow: Progress Review
+
+```text
+Progress dashboard
+  -> GET /api/progress/stats
+  -> due-card stats from CardReview
+  -> POST /api/study-session creates a session
+  -> review loop updates CardReview records
+  -> PATCH /api/study-session completes counters and accuracy
+```
 
 ## Module Dependency Map
 
-```
-app/actions/analyze.ts (orchestrator)
-├── lib/shared/cefr-utils.ts     → heuristic CEFR detection
-├── lib/ai/content-simplifier.ts → ai SDK
-├── lib/ai/question-generator.ts → ai SDK
-├── lib/ai/prompt-utils.ts       → text wrapping helpers
-└── lib/db/passage-queries.ts    → lib/db/client.ts (Prisma + PrismaPg)
+```text
+src/proxy.ts
+├── @clerk/nextjs/server
+├── next-intl/middleware
+└── src/i18n/routing.ts
 
-app/api/upload/route.ts
-├── lib/validation/upload.ts
-├── lib/parsers/pdf.ts
-├── lib/storage/supabase-storage.ts  → Supabase Storage
-└── app/actions/analyze.ts
+src/lib/auth/auth-utils.ts
+├── @clerk/nextjs/server
+├── src/lib/auth/sync-user.ts
+└── src/lib/db/client.ts
 
-app/api/cards/review/route.ts    → lib/db/card-review-queries.ts (SM-2, upsert)
-app/api/cards/due/route.ts       → lib/db/card-review-queries.ts (getDueCards)
-app/api/progress/stats/route.ts  → lib/db/card-review-queries.ts (getUserProgress)
-app/api/study-session/route.ts   → lib/db/study-session-queries.ts
+src/features/upload/upload-workflow.ts
+├── src/lib/validation/upload.ts
+├── src/lib/parsers/pdf.ts
+├── src/lib/storage/blob-storage.ts
+└── src/features/upload/content-analysis-service.ts
 
-lib/auth/auth-utils.ts
-├── lib/supabase/server.ts       → @supabase/ssr
-└── lib/db/client.ts              → Prisma (auto user context via extension)
+src/features/upload/content-analysis-service.ts
+├── src/lib/ai/content-simplifier.ts
+├── src/lib/ai/question-generator.ts
+├── src/lib/domain/cefr.ts
+└── src/lib/db/passage-queries.ts
 
-lib/auth/sync-user.ts            → lib/db/client.ts
-```
+src/app/api/translate/route.ts
+├── src/lib/translation/inline/*
+├── src/lib/db/translation-queries.ts
+└── src/lib/dictionary/*
 
----
-
-## Database Layer Architecture
-
-```
-Prisma Client (lib/db/client.ts)
-├── PrismaPg adapter (PostgreSQL via DATABASE_URL)
-├── Security extension: auto userId injection from Supabase session
-└── Singleton pattern via globalThis
-
-Query Modules (per domain):
-├── passage-queries.ts      → getUserPassages, getPassageWithQuestions, createPassage, createQuestion, getNewCards
-├── card-review-queries.ts  → getDueCards, updateCardReview, createCardReview, getUserProgress, calculateSM2Interval
-└── study-session-queries.ts → createStudySession, updateStudySession, computeSessionAccuracy
+src/app/api/study-chat/route.ts
+├── ai SDK streaming
+├── src/lib/auth/auth-utils.ts
+└── src/lib/db/study-session-queries.ts
 ```
 
----
+## Database Layer
+
+```text
+Prisma Client
+  -> @prisma/adapter-pg
+  -> Neon pooled DATABASE_URL at runtime
+  -> Neon direct DIRECT_URL for migrations
+  -> generated client in src/generated/prisma
+
+Domain query modules
+  -> passage-queries.ts
+  -> card-review-queries.ts
+  -> study-session-queries.ts
+  -> translation-queries.ts
+  -> dictionary repositories/services
+```
+
+Migration rules:
+
+- Runtime app code uses `DATABASE_URL`.
+- Prisma migration jobs use `DIRECT_URL` only in local or trusted CI contexts.
+- Neon API credentials are CI-only and never injected into application runtime.
+- Migrations must remain plain PostgreSQL; `scripts/database/assert-plain-postgres-migrations.ts` rejects provider-specific SQL.
+
+## Storage Layer
+
+```text
+uploadFile(filename, buffer, contentType)
+  -> development: write .local-blob-storage/{pathname}
+  -> preview/production: put private object in Vercel Blob
+  -> return { pathname, url }
+
+deleteFile(pathname)
+  -> local unlink or Vercel Blob delete
+
+getSignedUrl(pathname)
+  -> local /api/local-blob route or Vercel Blob URL
+```
+
+Vercel environments should use separate Blob tokens for preview and production.
 
 ## Rendering Strategy
 
-| Page | Type | Data Fetching |
-|------|------|--------------|
-| `/` | Server Component | Static |
-| `/sign-in`, `/sign-up` | Client Component | None (auth pages) |
-| `/auth/callback` | Route Handler | OAuth code exchange |
-| `/upload` | Client Component | None |
-| `/reading/[id]` | Server → Client | Server fetches passage |
-| `/test/[id]` | Server → Client | Server fetches passage+questions |
-| `/study` | Client Component | `force-dynamic`, actions for data |
-| `/progress` | Server → Client | Server fetches stats |
-
----
+| Page | Type | Data fetching |
+|------|------|---------------|
+| `/[locale]/sign-in`, `/[locale]/sign-up` | Clerk UI page | Clerk client/server integration |
+| `/[locale]` | Server Component | Authenticated dashboard data |
+| `/[locale]/upload` | Client Component | Upload workflow calls API/actions |
+| `/[locale]/reading/[id]` | Server -> Client | Server fetches passage |
+| `/[locale]/test/[id]` | Server -> Client | Server fetches passage and questions |
+| `/[locale]/study` | Server -> Client | Dynamic study workspace data |
+| `/[locale]/progress` | Server -> Client | Progress stats |
+| `/[locale]/dictionary` | Client Component | Dictionary APIs |
 
 **See also:**
-- Data models & schema → [`docs/database/data-dictionary.md`](database/data-dictionary.md)
-- ERD → [`docs/database/erd.md`](database/erd.md)
-- API endpoints & requirements → [`docs/database/srs.md`](database/srs.md)
-
----
+- Data models and schema -> [`docs/database/data-dictionary.md`](database/data-dictionary.md)
+- ERD -> [`docs/database/erd.md`](database/erd.md)
+- API endpoints and requirements -> [`docs/database/srs.md`](database/srs.md)
+- Neon environment contract -> [`docs/database/neon-environment-contract.md`](database/neon-environment-contract.md)
 
 **Status:** Active
-**Last Updated:** 2026-05-11
+**Last Updated:** 2026-06-05

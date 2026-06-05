@@ -39,7 +39,7 @@ FormData:
 ```ts
 {
   filename: string;
-  fileUrl: string;
+  filePath: string;
   passageId: string;
   originalLevel: CEFRLevel;
   simplifiedLevel: CEFRLevel | null;

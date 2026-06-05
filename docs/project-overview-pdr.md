@@ -47,17 +47,18 @@ Progress Dashboard → Due Cards → Review Session → Session Summary
 
 ---
 
-## Current State (2026-05-11)
+## Current State (2026-06-05)
 
-Fully functional MVP with Supabase Auth + PostgreSQL + Supabase Storage. All core features operational: upload/analyze pipeline, three-panel study workspace, SM-2 spaced repetition, progress tracking.
+Fully functional MVP with Clerk auth, Neon PostgreSQL, Prisma, and local/Vercel Blob storage. Core workflows are operational: upload/analyze pipeline, three-panel study workspace, SM-2 spaced repetition, translation/dictionary support, and progress tracking.
 
 **Completed milestones:**
 - Phase 1-4: Core MVP + Sentry integration (2026-04-27 to 2026-05-01)
 - Phase 6 (partial): Three-panel resizable study workspace
-- Phase 7: Supabase Auth — email/password + Google OAuth, middleware protection
-- Phase 8 (partial): PostgreSQL migration (Supabase), Supabase Storage for file uploads
-- Prisma client security extension for auto user context injection
+- Phase 7: Clerk Auth - email/password + Google OAuth, middleware protection
+- Phase 8 (partial): Neon PostgreSQL migration, Vercel Blob file storage, Vercel deploy contract
+- User profile sync from Clerk identity into the application database
 - Zod validation across all server actions and API routes
+- Dictionary seed/import system and performance benchmark gates
 
 ---
 
@@ -77,4 +78,4 @@ Fully functional MVP with Supabase Auth + PostgreSQL + Supabase Storage. All cor
 ---
 
 **Status:** Active
-**Last Updated:** 2026-05-11
+**Last Updated:** 2026-06-05

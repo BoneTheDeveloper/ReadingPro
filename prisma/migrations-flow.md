@@ -2,17 +2,18 @@
 
 Migration pipeline across Neon database branches.
 
-## Branch Mapping (MVP)
+## Branch Mapping
 
-All preview branches share the staging database. Per-branch DB will be added later.
+Preview migrations are not applied to a shared database. Production migrations
+run only after CI validates the exact pushed SHA.
 
 | Git Branch    | Neon Branch    | GitHub Env   | Stage       |
 | ------------- | -------------- | ------------ | ----------- |
-| `feat/*`      | `develop`      | —            | Local dev   |
-| PRs (any)     | `staging`      | `preview`    | Preview     |
+| `feat/*`      | `development`  | —            | Local dev   |
+| PRs           | —              | —            | Secretless CI validation |
 | `main`        | `production`   | `production` | Production  |
 
-## Stage 1 — Local (`develop`)
+## Stage 1 — Local (`development`)
 
 ```
 edit schema.prisma
@@ -31,45 +32,40 @@ open PR
 
 ## Stage 2 — Pull Request (CI validation)
 
-GitHub Actions runs on `pull_request`:
+GitHub Actions runs on `pull_request` and protected-branch `push` events:
 
 ```
 PR opened / updated
         ↓
 ✓ schema.prisma changed? → migration file must be included
-✓ migration SQL reviewed (printed in CI logs)
+✓ added/renamed migration SQL required for schema changes
+✓ migration SQL audited for plain PostgreSQL compatibility
 ✓ prisma validate passes
 ✓ lint, typecheck, tests pass
 ```
 
 No migration is applied at this stage.
 
-## Stage 3 — Preview (staging DB)
+## Stage 3 — Preview
 
-GitHub Actions runs on `pull_request` (parallel with CI):
-
-```
-PR opened / updated
-        ↓
-pnpm db:migrate:deploy  (against staging Neon branch)
-        ↓
-prisma migrate status
-        ↓
-Vercel deploys preview
-```
-
-- All PRs share the staging database.
-- `migrate deploy` is idempotent — safe to re-run.
-- Vercel preview deploys in parallel.
+Preview database migration is intentionally disabled until isolated
+`preview/pr-<number>` Neon branches and trusted same-repository PR gating are
+implemented. This avoids recording unrelated PR migration histories in one
+shared database and keeps fork/Dependabot PRs secretless.
 
 ## Stage 4 — Production
 
-GitHub Actions runs on `push to main` (manual approval required):
+GitHub Actions runs after the CI workflow succeeds for a `main` or `master`
+push (manual approval required):
 
 ```
 merge to main
         ↓
+CI validates the exact pushed SHA
+        ↓
 ⏸ manual approval (GitHub environment protection rule)
+        ↓
+verify Neon production branch ID/name
         ↓
 Neon branch restore point created
         ↓
@@ -77,14 +73,15 @@ pnpm db:migrate:deploy  (against production Neon branch)
         ↓
 prisma migrate status
         ↓
-curl Vercel deploy hook → production deploy starts
+curl --fail-with-body Vercel deploy hook → production deploy starts
         ↓
-post-deploy /api/health check
+post-deploy /api/health commit check
 ```
 
 - Manual approval gate prevents accidental production migrations.
 - Restore point (Neon branch snapshot) enables fast rollback.
-- Vercel deploy triggered only after migration succeeds.
+- Vercel deploy is triggered only after migration succeeds, and the health check
+  must report the expected deployed commit SHA.
 
 ## Key Rules
 
@@ -98,21 +95,21 @@ post-deploy /api/health check
 
 When needed, each PR preview can get its own Neon branch:
 
-1. Neon auto-creates a branch per PR (via Neon-Vercel integration or GitHub Action).
+1. GitHub Actions creates a `preview/pr-<number>` Neon branch per trusted
+   same-repository PR.
 2. `DATABASE_URL` is set dynamically per PR.
 3. Branch is cleaned up when PR is closed.
 
-This is not implemented yet. All PRs share the staging DB for simplicity.
+This is not implemented yet. Shared PR migration databases are not allowed.
 
 ## GitHub Setup
 
 ### Environments (Settings → Environments)
 
-1. **`preview`** — auto-deploy, no approval needed
-   - Secrets: `DATABASE_URL`, `DIRECT_URL` → staging Neon branch endpoint
-2. **`production`** — enable "Required reviewers" for manual approval
+1. **`production`** — enable "Required reviewers" for manual approval
    - Secrets: `DATABASE_URL`, `DIRECT_URL` → production Neon branch endpoint
-   - Secrets: `NEON_API_KEY`, `NEON_PROJECT_ID` → for restore points
+   - Secrets: `NEON_API_KEY`, `NEON_PROJECT_ID`, `NEON_PRODUCTION_BRANCH_ID` →
+     for target verification and restore points
    - Secrets: `VERCEL_DEPLOY_HOOK` → Vercel deploy hook URL for `main`
    - Secrets: `PRODUCTION_URL` → app domain for health check
 

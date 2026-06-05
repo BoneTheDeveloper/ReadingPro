@@ -14,10 +14,10 @@
 | Phase 4: Sentry Source Maps | Production debugging with readable stack traces | 100% ✅ |
 | Phase 5: Content Expansion | YouTube transcription, OCR for scanned PDFs | 0% 🔲 |
 | Phase 6: Advanced Features | Resizable workspace, analytics dashboard | 70% 🔧 |
-| Phase 7: Supabase Auth | Email/password + Google OAuth, middleware, user sync | 100% ✅ |
-| Phase 8: Production Infra | PostgreSQL migration, Supabase Storage, Vercel deploy | 60% 🔧 |
-| Phase 9: Study Chat | AI chat assistant in Studio panel with passage context | 0% 🔲 |
-| Phase 10: Translation | Word-by-word dictionary + paragraph translation via chat | 20% 🔧 |
+| Phase 7: Clerk Auth | Email/password + Google OAuth, middleware, profile sync | 100% ✅ |
+| Phase 8: Production Infra | Neon PostgreSQL, Vercel Blob, Vercel deploy contract | 75% 🔧 |
+| Phase 9: Study Chat | AI chat assistant in Studio panel with passage context | 70% 🔧 |
+| Phase 10: Translation | Word selection, dictionary, cache/history, vocabulary | 65% 🔧 |
 
 ---
 
@@ -50,35 +50,39 @@ YouTube URL → transcript via Whisper API, scanned PDF text extraction (OCR), n
 - Detailed progress per passage/question
 - Custom UI themes
 
-### Phase 7: Supabase Authentication (Completed 2026-05-07)
+### Phase 7: Clerk Authentication (Completed)
 
-Supabase Auth (email/password + Google OAuth), middleware route protection, sign-in/sign-up pages, OAuth callback with user sync, UserMenu with sign-out, demo user replaced with authenticated users in all actions/routes.
+Clerk sign-in/sign-up pages, Google OAuth, middleware route protection, account controls, and profile sync into `UserProfile`. Demo-user logic has been replaced by authenticated Clerk users in server actions and API routes.
 
-### Phase 8: Production Infrastructure (In Progress — 60%)
+### Phase 8: Production Infrastructure (In Progress - 75%)
 
 **Done:**
-- SQLite → PostgreSQL migration (Supabase hosted)
-- Prisma client restructured: `PrismaPg` adapter, separate query modules per domain
-- Supabase Storage integration for file uploads (replaces local file storage)
-- Prisma client security extension for auto user context injection
+- SQLite -> PostgreSQL migration on Neon
+- Prisma client restructured around the `@prisma/adapter-pg` Postgres adapter and separate query modules per domain
+- Vercel Blob integration for preview/production file uploads
+- Local filesystem storage adapter for development
+- Clerk development/production environment split documented
+- Neon branch and migration environment contract documented
 - Zod validation across all server actions and API routes
 - `prisma.config.ts` with `DIRECT_URL` for migrations
-- User model migrated to UserProfile with Supabase auth integration
+- User model migrated to `UserProfile` with Clerk identity integration
 - ERD auto-generation via `prisma-erd-generator`
 
 **Planned:**
-- Vercel deployment setup
-- Production environment configuration
+- Final Vercel production environment verification
+- Scheduled expired-upload cleanup verification
 - Multi-user load testing
 
 ---
 
 ## Recent Changes (since 2026-05-09)
 
+- Clerk auth replaced the previous auth provider and now owns sign-in/sign-up, OAuth, and route protection.
+- Neon environment contract defines development, preview, and production database branches.
+- Vercel Blob storage replaced provider-specific object storage for uploaded files outside local development.
 - Translate flow performance: 7→≤4 blocking Prisma queries (single `$queryRaw` dictionary lookup, cache-first ordering, non-blocking history)
 - Dictionary seed system with multi-source dataset generator and benchmark dataset
 - Benchmark gate with per-scenario query budgets and warm-up handling
-- Prisma client security extension for auto userId injection from Supabase session
 - Zod schema validation for study sessions and question options
 - Simplified Prisma database client setup (removed legacy extensions)
 - Database layer restructured into domain-specific query modules
@@ -90,12 +94,12 @@ Supabase Auth (email/password + Google OAuth), middleware route protection, sign
 
 1. PDF size limits for production (currently 10MB)
 2. YouTube video length constraints for Phase 5
-3. Vercel deployment timeline and environment setup
+3. Final production Vercel environment verification
 4. Offline capability requirements
 
 ---
 
-### Phase 9: Study Chat (Planned)
+### Phase 9: Study Chat (In Progress)
 
 **Goal:** AI chat assistant embedded in the Studio panel, context-aware of the active passage.
 
@@ -106,9 +110,9 @@ Supabase Auth (email/password + Google OAuth), middleware route protection, sign
 - Chat history scoped to current passage session
 - System prompt: English reading tutor that explains vocabulary, grammar, and meaning
 
-**Depends on:** `@ai-sdk/react` package (needs install)
+**Status:** API route, dependency, and message persistence exist; UI completion and product polish remain.
 
-### Phase 10: Translation (In Progress — 20%)
+### Phase 10: Translation (In Progress - 65%)
 
 **Goal:** Word-by-word dictionary lookup + paragraph translation using the chat function.
 
@@ -117,18 +121,18 @@ Supabase Auth (email/password + Google OAuth), middleware route protection, sign
 - Quick translate flow: single-query dictionary lookup, cache-first ordering, non-blocking history
 - Benchmark gate enforcing ≤4 Prisma queries for single-word dictionary hit
 - `/api/translate` and `/api/vocabulary` endpoints with Zod validation
+- Selection translation popup and study translation panel
 
 **Planned:**
-- Word-by-word: Click/tap any word in `StudyContentPanel` → popover with dictionary definition
-- Paragraph translation: "Translate passage" button sends paragraph to chat endpoint
-- Translate Studio panel integration
-- Dictionary popover component
+- Paragraph-level translation flow polish
+- Saved vocabulary review experience
+- Dictionary popover refinements
 
-**Depends on:** Phase 9 (uses chat endpoint for AI-powered translation)
+**Depends on:** Stable dictionary seed/import quality and translation provider reliability.
 
 **See also:** Business milestones → [`docs/database/brd.md`](database/brd.md)
 
 ---
 
 **Status:** Active
-**Last Updated:** 2026-06-01
+**Last Updated:** 2026-06-05

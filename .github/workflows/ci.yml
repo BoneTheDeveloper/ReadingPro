@@ -108,7 +108,7 @@ jobs:
   validate-migration:
     name: Validate migration
     needs: test
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
     runs-on: ubuntu-24.04
 
     steps:
@@ -116,37 +116,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Check schema change has migration
-        id: schema-check
-        run: |
-          BASE="${{ github.base_ref }}"
-          echo "base_ref=$BASE" >> "$GITHUB_OUTPUT"
-          if git diff --name-only "origin/$BASE...HEAD" | grep -q "prisma/schema.prisma"; then
-            echo "::group::Schema changes detected"
-            git diff --name-only "origin/$BASE...HEAD" | grep "prisma/schema.prisma"
-            echo "::endgroup::"
-
-            if git diff --name-only "origin/$BASE...HEAD" | grep -q "prisma/migrations/"; then
-              echo "OK: migration file(s) included"
-              git diff --name-only "origin/$BASE...HEAD" | grep "prisma/migrations/"
-            else
-              echo "::error::schema.prisma changed but no migration file included. Run 'pnpm exec prisma migrate dev --name <name>' locally."
-              exit 1
-            fi
-          else
-            echo "No schema changes — skipping migration check."
-          fi
-
-      - name: Audit migration SQL
-        if: always()
-        env:
-          BASE: ${{ steps.schema-check.outputs.base_ref }}
-        run: |
-          if git diff --name-only "origin/$BASE...HEAD" | grep -q "prisma/migrations/"; then
-            echo "Migration files changed — review the SQL below:"
-            git diff "origin/$BASE...HEAD" -- "prisma/migrations/**/*.sql"
-          fi
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -161,6 +130,63 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Determine migration diff base
+        id: migration-diff
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            diff_base="origin/${{ github.base_ref }}"
+          else
+            diff_base="${{ github.event.before }}"
+            if [ -z "$diff_base" ] || [ "$diff_base" = "0000000000000000000000000000000000000000" ] || ! git cat-file -e "$diff_base^{commit}" 2>/dev/null; then
+              if git cat-file -e "HEAD~1^{commit}" 2>/dev/null; then
+                diff_base="HEAD~1"
+              else
+                diff_base=""
+              fi
+            fi
+          fi
+          echo "diff_base=$diff_base" >> "$GITHUB_OUTPUT"
+
+      - name: Check schema change has migration
+        id: schema-check
+        shell: bash
+        run: |
+          DIFF_BASE="${{ steps.migration-diff.outputs.diff_base }}"
+          echo "diff_base=$DIFF_BASE" >> "$GITHUB_OUTPUT"
+          if [ -z "$DIFF_BASE" ]; then
+            echo "::notice::No previous commit is available for migration validation."
+            exit 0
+          fi
+
+          if git diff --name-only "$DIFF_BASE...HEAD" | grep -qx "prisma/schema.prisma"; then
+            echo "::group::Schema changes detected"
+            git diff --name-only "$DIFF_BASE...HEAD" | grep "prisma/schema.prisma"
+            echo "::endgroup::"
+
+            migration_sql="$(git diff --name-status --diff-filter=AR "$DIFF_BASE...HEAD" -- "prisma/migrations/**/migration.sql" || true)"
+            if [ -n "$migration_sql" ]; then
+              echo "OK: added or renamed migration SQL file(s) included"
+              printf '%s\n' "$migration_sql"
+            else
+              echo "::error::schema.prisma changed but no migration file included. Run 'pnpm exec prisma migrate dev --name <name>' locally."
+              exit 1
+            fi
+          else
+            echo "No schema changes — skipping migration check."
+          fi
+
+      - name: Audit migration SQL
+        if: always()
+        shell: bash
+        run: |
+          DIFF_BASE="${{ steps.schema-check.outputs.diff_base }}"
+          if [ -n "$DIFF_BASE" ] && git diff --name-only "$DIFF_BASE...HEAD" -- "prisma/migrations/**/migration.sql" | grep -q .; then
+            echo "Migration files changed — review the SQL below:"
+            git diff "$DIFF_BASE...HEAD" -- "prisma/migrations/**/*.sql"
+            pnpm db:migrate:audit
+          fi
 
       - name: Validate schema
         run: pnpm exec prisma validate

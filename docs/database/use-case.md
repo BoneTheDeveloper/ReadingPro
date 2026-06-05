@@ -116,19 +116,19 @@
 
 ### Main Flow — Email/Password Sign In
 
-1. User visits protected route → redirected to `/sign-in?next={original}`
+1. User visits protected route → redirected to `/{locale}/sign-in?redirect_url={original}`
 2. User enters email and password
-3. System calls Supabase `signInWithPassword()`
-4. System syncs user to local DB (upsert by supabaseAuthId)
+3. Clerk authenticates the user
+4. System syncs the Clerk identity to local DB (`UserProfile.id = Clerk user id`)
 5. System redirects to original route
 
 ### Main Flow — Google OAuth
 
 1. User clicks "Continue with Google"
-2. System redirects to Google consent screen
-3. Google redirects to `/auth/callback` with code
-4. System exchanges code for session
-5. System syncs user to local DB (upsert by supabaseAuthId)
+2. Clerk redirects to Google consent screen
+3. Google redirects through Clerk's OAuth callback
+4. Clerk establishes the app session
+5. System syncs the Clerk identity to local DB
 6. System redirects to `/study`
 
 ### Alternative Flows
@@ -149,8 +149,8 @@
 
 1. User clicks avatar in sidebar
 2. User clicks "Sign Out" in dropdown menu
-3. System calls Supabase `signOut()`
-4. System clears session cookies
+3. Clerk signs out the active session
+4. System clears auth state
 5. System redirects to `/sign-in`
 
 ---
@@ -194,4 +194,4 @@
 
 ---
 
-**Last Updated:** 2026-05-09
+**Last Updated:** 2026-06-05

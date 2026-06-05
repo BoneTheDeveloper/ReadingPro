@@ -2,14 +2,15 @@
 
 **English Reading Training App**
 
-All persisted identifiers in the PostgreSQL `public` schema use native `uuid`.
-Supabase Auth supplies `UserProfile.id`; application-owned records use
+Application-owned identifiers in the PostgreSQL `public` schema use native
+`uuid`. `UserProfile.id` stores the external Clerk user id as text, and
+user-owned records reference that text id. Application-owned records use
 `gen_random_uuid()`.
 
 ```mermaid
 erDiagram
     UserProfile {
-        uuid id PK "Supabase Auth"
+        string id PK "Clerk user id"
         string email UK "nullable"
         string name "nullable"
         enum targetLevel "default B2"
@@ -18,16 +19,17 @@ erDiagram
 
     Passage {
         uuid id PK "gen_random_uuid()"
-        uuid userId FK
+        string userId FK
         string title
         string content
+        string filePath UK "nullable"
         enum sourceType
         datetime deletedAt "nullable"
     }
 
     StudyChatMessage {
         uuid id PK "gen_random_uuid()"
-        uuid userId FK
+        string userId FK
         uuid passageId FK
         string role
         string content
@@ -44,28 +46,28 @@ erDiagram
     CardReview {
         uuid id PK "gen_random_uuid()"
         uuid questionId FK
-        uuid userId FK
+        string userId FK
         int qualityRating
     }
 
     StudySession {
         uuid id PK "gen_random_uuid()"
-        uuid userId FK
-        uuid passageId "nullable entity reference"
+        string userId FK
+        uuid passageId FK "nullable"
         datetime startedAt
     }
 
     TranslationCache {
         uuid id PK "gen_random_uuid()"
         string cacheKey UK
-        uuid userId FK
+        string userId FK
         uuid sourceId FK
         json response
     }
 
     TranslationHistory {
         uuid id PK "gen_random_uuid()"
-        uuid userId FK
+        string userId FK
         uuid sourceId FK
         string translation
         json response
@@ -74,9 +76,16 @@ erDiagram
     VocabularyItem {
         uuid id PK "gen_random_uuid()"
         string normalizedKey UK
-        uuid userId FK
+        string userId FK
         uuid sourceId FK
         string translation
+    }
+
+    FileUploadIntent {
+        uuid id PK "gen_random_uuid()"
+        string userId FK
+        string pathname UK
+        datetime expiresAt
     }
 
     DictionaryEntry {
@@ -120,6 +129,7 @@ erDiagram
     UserProfile ||--o{ TranslationCache : caches
     UserProfile ||--o{ TranslationHistory : records
     UserProfile ||--o{ VocabularyItem : saves
+    UserProfile ||--o{ FileUploadIntent : authorizes
     Passage ||--o{ StudyChatMessage : contains
     Passage ||--o{ Question : contains
     Passage ||--o{ TranslationCache : scopes
@@ -133,8 +143,8 @@ erDiagram
 
 ## Identifier Notes
 
-- `StudySession.passageId` is a nullable UUID entity reference without a
-  database foreign-key relation.
+- `UserProfile.id` is the Clerk user id and is intentionally text.
+- `StudySession.passageId` is a nullable UUID foreign key to `Passage`.
 - `DictionarySourceAudit.entityId` is a UUID entity reference. `entityType`
   identifies the referenced public entity type.
 - `Question.options` and `Question.correctOption` contain UI/result option IDs,
@@ -146,10 +156,10 @@ erDiagram
 
 | Parent | Children with `ON DELETE CASCADE` |
 |--------|------------------------------------|
-| UserProfile | Passage, StudyChatMessage, CardReview, StudySession, TranslationCache, TranslationHistory, VocabularyItem |
+| UserProfile | Passage, StudyChatMessage, CardReview, StudySession, TranslationCache, TranslationHistory, VocabularyItem, FileUploadIntent |
 | Passage | StudyChatMessage, Question, TranslationCache, TranslationHistory, VocabularyItem |
 | Question | CardReview |
 | DictionaryEntry | DictionarySense, DictionaryAlias |
 | DictionarySense | DictionaryTranslation |
 
-**Last Updated:** 2026-06-04
+**Last Updated:** 2026-06-05

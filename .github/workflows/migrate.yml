@@ -1,77 +1,65 @@
 name: Migrate DB
 
 on:
-  pull_request:
-  push:
-    branches:
-      - main
-      - master
+  workflow_run:
+    workflows:
+      - CI
+    types:
+      - completed
 
 permissions:
   contents: read
 
 jobs:
-  # ─── Preview: all PRs use staging DB (MVP) ────────────────────────
-  preview:
-    name: Migrate preview (staging DB)
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-24.04
-    environment: preview
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-
-      - name: Set up pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 11.3.0
-          run_install: false
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Apply migrations
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          DIRECT_URL: ${{ secrets.DIRECT_URL }}
-        run: pnpm db:migrate:deploy
-
-      - name: Verify migration status
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          DIRECT_URL: ${{ secrets.DIRECT_URL }}
-        run: pnpm exec prisma migrate status
-
   # ─── Production ───────────────────────────────────────────────────
   production:
     name: Migrate production
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    if: github.event.workflow_run.event == 'push' && github.event.workflow_run.conclusion == 'success' && (github.event.workflow_run.head_branch == 'main' || github.event.workflow_run.head_branch == 'master')
     runs-on: ubuntu-24.04
     environment: production
+    concurrency:
+      group: production-migration
+      cancel-in-progress: false
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Set up Neon CLI
         run: npm install -g neonctl
 
+      - name: Verify production database target
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID }}
+          NEON_PRODUCTION_BRANCH_ID: ${{ secrets.NEON_PRODUCTION_BRANCH_ID }}
+          NEON_PRODUCTION_BRANCH_NAME: production
+        run: |
+          curl --fail-with-body -sS \
+            -H "Authorization: Bearer $NEON_API_KEY" \
+            "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches/$NEON_PRODUCTION_BRANCH_ID" \
+            > neon-branch.json
+
+          BRANCH_NAME=$(node -e "const fs=require('node:fs'); const body=JSON.parse(fs.readFileSync('neon-branch.json','utf8')); console.log(body.branch?.name ?? '')")
+          if [ "$BRANCH_NAME" != "$NEON_PRODUCTION_BRANCH_NAME" ]; then
+            echo "::error::Expected Neon branch '$NEON_PRODUCTION_BRANCH_NAME' but got '$BRANCH_NAME'."
+            exit 1
+          fi
+          echo "Verified Neon production branch '$BRANCH_NAME'."
+
       - name: Create branch restore point
         env:
           NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID }}
+          NEON_PRODUCTION_BRANCH_NAME: production
         run: |
           echo "Creating restore point on production branch..."
           neonctl branches create \
-            --project-id "${{ secrets.NEON_PROJECT_ID }}" \
-            --branch-name "restore-$(date +%Y%m%d-%H%M%S)" \
-            --parent "production" \
-            || echo "::warning::Restore point creation failed — continuing migration."
+            --project-id "$NEON_PROJECT_ID" \
+            --name "restore-$(date +%Y%m%d-%H%M%S)" \
+            --parent "$NEON_PRODUCTION_BRANCH_NAME"
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -101,15 +89,17 @@ jobs:
 
       - name: Trigger Vercel production deploy
         if: success()
-        run: curl -X POST "${{ secrets.VERCEL_DEPLOY_HOOK }}"
+        env:
+          VERCEL_DEPLOY_HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
+        run: curl --fail-with-body -sS -X POST "$VERCEL_DEPLOY_HOOK"
 
       - name: Post-deploy health check
+        env:
+          EXPECTED_COMMIT_SHA: ${{ github.event.workflow_run.head_sha }}
+          PRODUCTION_URL: ${{ secrets.PRODUCTION_URL }}
         run: |
           echo "Waiting for deployment to go live..."
           sleep 60
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://${{ secrets.PRODUCTION_URL }}/api/health" || echo "000")
-          if [ "$STATUS" != "200" ]; then
-            echo "::error::Post-deploy health check failed (HTTP $STATUS)"
-            exit 1
-          fi
-          echo "Post-deploy health check passed (HTTP $STATUS)"
+          curl --fail-with-body -sS "https://$PRODUCTION_URL/api/health" > health.json
+          node -e "const fs=require('node:fs'); const body=JSON.parse(fs.readFileSync('health.json','utf8')); if (body.data?.commitSha !== process.env.EXPECTED_COMMIT_SHA) { console.error(\`Expected deployed commit ${process.env.EXPECTED_COMMIT_SHA}, got ${body.data?.commitSha ?? 'unknown'}\`); process.exit(1); }"
+          echo "Post-deploy health check passed for commit $EXPECTED_COMMIT_SHA"

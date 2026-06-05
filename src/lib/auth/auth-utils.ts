@@ -1,7 +1,6 @@
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { cache } from "react";
 import { createModuleLogger } from "@/lib/core/logger";
-import { db } from "@/lib/db/client";
 import { syncUser } from "./sync-user";
 
 const log = createModuleLogger("auth:utils");
@@ -15,18 +14,13 @@ export class AuthenticationRequiredError extends Error {
 
 export async function getAuthenticatedUser() {
   const user = await requireAuth();
-  log.info({ userId: user.id }, "Authenticated user retrieved");
+  log.info({ authenticated: true, userPresent: true }, "Authenticated user retrieved");
   return user;
 }
 
 export const getCurrentUser = cache(async () => {
   const { userId } = await auth();
   if (!userId) return null;
-
-  const existingProfile = await db.userProfile.findUnique({
-    where: { id: userId },
-  });
-  if (existingProfile) return existingProfile;
 
   const client = await clerkClient();
   const clerkUser = await client.users.getUser(userId);
