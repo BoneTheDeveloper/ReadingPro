@@ -13,6 +13,7 @@ import {
   shouldIncludeDictionaryPerformanceMetrics,
 } from "@/lib/dictionary/shared/dictionary-performance";
 import { getDictionaryEntryDetail } from "@/lib/dictionary/entry-detail/entry-detail.service";
+import type { DictionaryEntryDto } from "@/lib/dictionary/shared/dictionary-dtos";
 
 const entryIdSchema = z.string().uuid();
 
@@ -136,7 +137,7 @@ async function handleEntryDetailGet(
 }
 
 function createEntryDetailSuccessResponse(input: {
-  data: unknown;
+  data: DictionaryEntryDto;
   performanceTracker: ReturnType<typeof createDictionaryPerformanceTracker> | null;
 }) {
   if (!input.performanceTracker) {

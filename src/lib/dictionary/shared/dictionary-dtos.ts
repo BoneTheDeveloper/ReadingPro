@@ -1,61 +1,12 @@
-export interface DictionaryTranslationDto {
-  id: string;
-  senseId: string;
-  targetLanguage: "vi";
-  translation: string;
-  isPrimary: boolean;
-  rank: number;
-  confidence: number | null;
-  status: "draft" | "reviewed" | "approved" | "deprecated";
-  sourceType: "seed" | "manual" | "provider" | "llm" | "mixed";
-  sourceName: string | null;
-  reviewedAt: string | null;
-  sourceLabel: string;
-}
-
-export interface DictionarySenseDto {
-  id: string;
-  partOfSpeech: string | null;
-  definition: string | null;
-  example: string | null;
-  tags: string[];
-  usageRank: number;
-  translations: DictionaryTranslationDto[];
-}
-
-export interface DictionaryEntryDto {
-  id: string;
-  headword: string;
-  sourceLanguage: string;
-  frequencyRank: number;
-  senses: DictionarySenseDto[];
-}
-
-export interface DictionaryMissDto {
-  headword: string;
-  found: false;
-}
-
-export type DictionaryLookupResult = DictionaryEntryDto | DictionaryMissDto;
-
-export interface DictionarySuggestItemDto {
-  id: string;
-  headword: string;
-  matchType: "exact" | "alias" | "prefix" | "phrase";
-  matchedAlias: string | null;
-  primaryTranslation: string | null;
-  sourceLabel: string | null;
-}
-
-export interface DictionarySearchResultDto {
-  id: string;
-  headword: string;
-  matchType: "exact" | "alias" | "phrase" | "prefix" | "contains";
-  matchedText: string | null;
-  primaryTranslation: string | null;
-  partOfSpeech: string | null;
-  sourceLabel: string | null;
-}
+export type {
+  DictionaryEntryDto,
+  DictionaryLookupResult,
+  DictionaryMissDto,
+  DictionarySearchResultDto,
+  DictionarySenseDto,
+  DictionarySuggestItemDto,
+  DictionaryTranslationDto,
+} from "./dictionary-response-schema";
 
 const SOURCE_LABELS: Record<string, Record<string, string>> = {
   seed: {

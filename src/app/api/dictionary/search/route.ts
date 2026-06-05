@@ -20,7 +20,7 @@ const dictionarySearchQuerySchema = z.object({
   q: z.string().trim().min(1).max(200),
   sourceLanguage: z.literal("en"),
   targetLanguage: z.literal("vi"),
-  limit: z.coerce.number().int().min(1).max(50).default(8).optional(),
+  limit: z.coerce.number().int().min(1).max(50).default(8),
 });
 
 function isAuthenticationError(error: unknown) {
@@ -49,6 +49,7 @@ async function handleDictionarySearchGet(request: NextRequest, includePerformanc
       q: searchParams.get("q") ?? "",
       sourceLanguage: searchParams.get("sourceLanguage") ?? "en",
       targetLanguage: searchParams.get("targetLanguage") ?? "vi",
+      limit: searchParams.get("limit") ?? undefined,
     };
 
     const parsed = dictionarySearchQuerySchema.safeParse(raw);
@@ -142,4 +143,3 @@ function createSearchSuccessResponse(input: {
     ),
   });
 }
-

@@ -4,6 +4,7 @@ import * as Sentry from '@sentry/nextjs';
 import { getAuthenticatedUser } from '@/lib/auth/auth-utils';
 import { createRequestLogContext, createRequestLogger } from '@/lib/core/logger';
 import { createStudySession, updateStudySession } from '@/lib/db/study-session-queries';
+import { toStudySessionDto } from '@/lib/study/shared/study-response-schema';
 
 const studySessionPostSchema = z.object({
   passageId: z.string().uuid().optional(),
@@ -42,7 +43,7 @@ export async function POST(request: NextRequest) {
       return createStudySession(user.id, passageId);
     });
 
-    return NextResponse.json({ success: true, data: session });
+    return NextResponse.json({ success: true, data: toStudySessionDto(session) });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.issues[0]?.message ?? 'Invalid request' }, { status: 400 });
@@ -89,7 +90,7 @@ export async function PATCH(request: NextRequest) {
       });
     });
 
-    return NextResponse.json({ success: true, data: updated });
+    return NextResponse.json({ success: true, data: toStudySessionDto(updated) });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.issues[0]?.message ?? 'Invalid request' }, { status: 400 });

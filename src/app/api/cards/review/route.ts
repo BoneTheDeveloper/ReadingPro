@@ -4,6 +4,7 @@ import * as Sentry from '@sentry/nextjs';
 import { updateCardReview } from '@/lib/db/card-review-queries';
 import { getAuthenticatedUser } from '@/lib/auth/auth-utils';
 import { createRequestLogContext, createRequestLogger } from '@/lib/core/logger';
+import { toCardReviewDto } from '@/lib/study/shared/study-response-schema';
 
 const cardReviewSchema = z.object({
   cardReviewId: z.string().uuid(),
@@ -36,7 +37,7 @@ export async function POST(request: NextRequest) {
       return updateCardReview(user.id, cardReviewId, qualityRating);
     });
 
-    return NextResponse.json({ success: true, data: updatedReview });
+    return NextResponse.json({ success: true, data: toCardReviewDto(updatedReview) });
   } catch (error) {
     requestLog.error({ err: error }, 'Failed to submit review');
     Sentry.captureException(error, {
