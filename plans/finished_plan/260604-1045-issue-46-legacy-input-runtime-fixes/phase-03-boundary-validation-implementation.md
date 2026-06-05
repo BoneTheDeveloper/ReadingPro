@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "Boundary Validation Implementation"
-status: pending
+status: completed
 priority: P1
 effort: "4h"
 dependencies: [2]
@@ -120,18 +120,18 @@ pnpm exec vitest run tests/vitest/integration/api/translation-vocabulary-routes.
 
 ## Success Criteria
 
-- [ ] Valid study translation requests contain no mode.
-- [ ] Legacy mode input returns `400`.
-- [ ] Opening the study translation panel reuses the simple result and does not
+- [x] Valid study translation requests contain no mode.
+- [x] Legacy mode input returns `400`.
+- [x] Opening the study translation panel reuses the simple result and does not
   call `/api/translate`.
-- [ ] No detailed AI translation path remains reachable from study translation.
-- [ ] Valid UUID passage ID reaches ownership lookup and session creation.
-- [ ] Malformed persisted-record UUIDs are rejected before domain/database
+- [x] No detailed AI translation path remains reachable from study translation.
+- [x] Valid UUID passage ID reaches ownership lookup and session creation.
+- [x] Malformed persisted-record UUIDs are rejected before domain/database
   calls.
-- [ ] All new invalid/malformed request cases return `400`.
-- [ ] Card-review rejects non-integer ratings and non-UUID IDs.
-- [ ] File upload never passes a string value to `processFileUpload`.
-- [ ] No generic request parsing helper or response schema is added.
+- [x] All new invalid/malformed request cases return `400`.
+- [x] Card-review rejects non-integer ratings and non-UUID IDs.
+- [x] File upload never passes a string value to `processFileUpload`.
+- [x] No generic request parsing helper or response schema is added.
 
 ## Risk Assessment
 
