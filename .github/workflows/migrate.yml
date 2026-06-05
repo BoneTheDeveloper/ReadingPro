@@ -23,9 +23,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
 
       - name: Set up Neon CLI
         run: npm install -g neonctl
@@ -62,12 +63,12 @@ jobs:
             --parent "$NEON_PRODUCTION_BRANCH_NAME"
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version-file: .nvmrc
 
       - name: Set up pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1
         with:
           version: 11.3.0
           run_install: false
@@ -99,7 +100,19 @@ jobs:
           PRODUCTION_URL: ${{ secrets.PRODUCTION_URL }}
         run: |
           echo "Waiting for deployment to go live..."
-          sleep 60
-          curl --fail-with-body -sS "https://$PRODUCTION_URL/api/health" > health.json
-          node -e "const fs=require('node:fs'); const body=JSON.parse(fs.readFileSync('health.json','utf8')); if (body.data?.commitSha !== process.env.EXPECTED_COMMIT_SHA) { console.error(\`Expected deployed commit ${process.env.EXPECTED_COMMIT_SHA}, got ${body.data?.commitSha ?? 'unknown'}\`); process.exit(1); }"
-          echo "Post-deploy health check passed for commit $EXPECTED_COMMIT_SHA"
+          for attempt in {1..20}; do
+            echo "Health check attempt $attempt/20..."
+            if curl --fail-with-body -sS "https://$PRODUCTION_URL/api/health" > health.json; then
+              if node -e "const fs=require('node:fs'); const body=JSON.parse(fs.readFileSync('health.json','utf8')); if (body.data?.commitSha !== process.env.EXPECTED_COMMIT_SHA) { console.error(\`Expected deployed commit ${process.env.EXPECTED_COMMIT_SHA}, got ${body.data?.commitSha ?? 'unknown'}\`); process.exit(1); }"; then
+                echo "Post-deploy health check passed for commit $EXPECTED_COMMIT_SHA"
+                exit 0
+              fi
+            fi
+
+            if [ "$attempt" -lt 20 ]; then
+              sleep 15
+            fi
+          done
+
+          echo "::error::Post-deploy health check did not observe commit $EXPECTED_COMMIT_SHA."
+          exit 1
