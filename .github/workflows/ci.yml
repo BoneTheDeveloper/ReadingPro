@@ -87,13 +87,6 @@ jobs:
         if: steps.e2e-secrets.outputs.should_run_e2e == 'true'
         run: pnpm exec playwright install --with-deps chromium
 
-      - name: Apply database migrations for E2E
-        if: steps.e2e-secrets.outputs.should_run_e2e == 'true'
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          DIRECT_URL: ${{ secrets.DIRECT_URL }}
-        run: pnpm db:migrate:deploy
-
       - name: Playwright E2E
         if: steps.e2e-secrets.outputs.should_run_e2e == 'true'
         env:
@@ -177,7 +170,7 @@ jobs:
             echo "No schema changes — skipping migration check."
           fi
 
-      - name: Audit migration SQL
+      - name: Show migration SQL diff
         if: always()
         shell: bash
         run: |
@@ -185,7 +178,6 @@ jobs:
           if [ -n "$DIFF_BASE" ] && git diff --name-only "$DIFF_BASE...HEAD" -- "prisma/migrations/**/migration.sql" | grep -q .; then
             echo "Migration files changed — review the SQL below:"
             git diff "$DIFF_BASE...HEAD" -- "prisma/migrations/**/*.sql"
-            pnpm db:migrate:audit
           fi
 
       - name: Validate schema

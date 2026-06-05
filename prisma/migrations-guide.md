@@ -2,6 +2,13 @@
 
 Reference for creating, reviewing, and deploying Prisma migrations.
 
+This project has two database states:
+
+- `development` for local development and review deployments.
+- `production` for protected production.
+
+There is no staging database.
+
 ## Before Changing The Schema
 
 1. Confirm which database environment you are targeting.
@@ -50,7 +57,7 @@ Review the generated SQL, and only edit when needed for column renames, data mig
 pnpm exec prisma migrate dev
 ```
 
-## Deploy Migrations (Staging / Production)
+## Deploy Migrations (Production)
 
 ```bash
 pnpm exec prisma migrate deploy
@@ -58,11 +65,12 @@ pnpm run db:generate
 pnpm exec prisma migrate status
 ```
 
-Never use `migrate dev` or `migrate reset` in staging or production.
+Never use `migrate dev` or `migrate reset` in production. Review deployments use
+the shared `development` branch and must not run `migrate deploy`.
 
 ## Reset A Development Database
 
-Deletes all data and replays migration history. **Never run against staging or production.**
+Deletes all data and replays migration history. **Never run against production.**
 
 ```bash
 pnpm exec prisma migrate reset --force

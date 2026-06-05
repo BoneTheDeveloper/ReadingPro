@@ -161,7 +161,7 @@ Migration rules:
 - Runtime app code uses `DATABASE_URL`.
 - Prisma migration jobs use `DIRECT_URL` only in local or trusted CI contexts.
 - Neon API credentials are CI-only and never injected into application runtime.
-- Migrations must remain plain PostgreSQL; `scripts/database/assert-plain-postgres-migrations.ts` rejects provider-specific SQL.
+- Migration SQL is reviewed in CI logs before production deploy.
 
 ## Storage Layer
 

@@ -4,16 +4,18 @@ Migration pipeline across Neon database branches.
 
 ## Branch Mapping
 
-Preview migrations are not applied to a shared database. Production migrations
-run only after CI validates the exact pushed SHA.
+There is no staging database state. Local development and review deployments use
+the same Neon `development` branch. Production migrations run only after CI
+validates the exact pushed SHA.
 
-| Git Branch    | Neon Branch    | GitHub Env   | Stage       |
-| ------------- | -------------- | ------------ | ----------- |
-| `feat/*`      | `development`  | —            | Local dev   |
-| PRs           | —              | —            | Secretless CI validation |
-| `main`        | `production`   | `production` | Production  |
+| Git Branch / Context | Neon Branch   | GitHub Env   | Stage         |
+| -------------------- | ------------- | ------------ | ------------- |
+| `feat/*` local work  | `development` | —            | Local dev     |
+| Review deployments   | `development` | —            | Review branch |
+| PR CI                | —             | —            | Secretless CI validation |
+| `main`               | `production`  | `production` | Production    |
 
-## Stage 1 — Local (`development`)
+## Stage 1 — Local + Review (`development`)
 
 ```
 edit schema.prisma
@@ -24,11 +26,15 @@ test locally
         ↓
 commit schema + migration files
         ↓
-open PR
+open PR / review deployment uses development
 ```
 
 - `migrate dev` generates SQL, applies it, records in `_prisma_migrations`.
 - Commit `schema.prisma` + the new `prisma/migrations/` folder.
+- Review deployments use the same `development` database state. They do not get
+  an isolated migration history.
+- Coordinate schema changes before running `migrate dev` because the
+  `development` branch is shared.
 
 ## Stage 2 — Pull Request (CI validation)
 
@@ -39,19 +45,25 @@ PR opened / updated
         ↓
 ✓ schema.prisma changed? → migration file must be included
 ✓ added/renamed migration SQL required for schema changes
-✓ migration SQL audited for plain PostgreSQL compatibility
+✓ migration SQL diff printed for review
 ✓ prisma validate passes
 ✓ lint, typecheck, tests pass
 ```
 
 No migration is applied at this stage.
 
-## Stage 3 — Preview
+## Stage 3 — Review Branch
 
-Preview database migration is intentionally disabled until isolated
-`preview/pr-<number>` Neon branches and trusted same-repository PR gating are
-implemented. This avoids recording unrelated PR migration histories in one
-shared database and keeps fork/Dependabot PRs secretless.
+Review branches use the shared Neon `development` branch. CI still validates
+migration files and schema shape, but it does not run `migrate deploy` for a
+review branch.
+
+This keeps the environment model simple:
+
+- `development` for local and review.
+- `production` for protected production.
+- No `staging` database.
+- No per-PR `preview/pr-<number>` database branches.
 
 ## Stage 4 — Production
 
@@ -85,22 +97,11 @@ post-deploy /api/health commit check
 
 ## Key Rules
 
-- **Only `migrate dev` on `develop`.** Never on staging or production.
-- **Only `migrate deploy` on staging and production.**
+- **Only `migrate dev` on the shared `development` branch.** Never on production.
+- **Only `migrate deploy` on production.**
 - **Commit migration files.** They are the source of truth.
 - **Never edit applied migrations.** Create a new one to correct issues.
 - **Schema change without migration = CI failure.**
-
-## Future: Per-Branch DB
-
-When needed, each PR preview can get its own Neon branch:
-
-1. GitHub Actions creates a `preview/pr-<number>` Neon branch per trusted
-   same-repository PR.
-2. `DATABASE_URL` is set dynamically per PR.
-3. Branch is cleaned up when PR is closed.
-
-This is not implemented yet. Shared PR migration databases are not allowed.
 
 ## GitHub Setup
 

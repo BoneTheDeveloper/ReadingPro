@@ -13,8 +13,8 @@ confirmed:
   reviewer and no self-approval.
 - Vercel production variables and deployments can be restricted to the
   protected production workflow.
-- Trusted same-repository PRs can be distinguished from forks and Dependabot
-  before privileged preview jobs receive secrets.
+- Review deployments can be restricted to trusted same-repository branches before
+  development provider secrets are exposed.
 
 If any gate is unavailable, production migration and deployment are blocked.
 
@@ -23,25 +23,19 @@ If any gate is unavailable, production migration and deployment are blocked.
 | Branch | Parent | Lifecycle | Data policy |
 |---|---|---|---|
 | `production` | Neon project root | Persistent and protected | Production data |
-| `development` | `production` during development-only period | Persistent | Shared development baseline |
-| `dev/luc` | `development` | Persistent local branch | Developer-owned disposable data |
-| `preview/pr-<number>` | `production` during development-only period | Temporary per trusted PR | Disposable preview data |
+| `development` | `production` during development-only period | Persistent | Shared local and review data |
 
-Before real production user data exists, preview branches must switch to a
-schema-only or sanitized parent. Copying production PII into previews is
-forbidden.
-
-Only GitHub Actions owns `preview/pr-<number>` creation and deletion. Disable
-other automatic Neon preview-branch integrations to avoid duplicate branches.
+There is no staging database and no per-PR Neon preview branch in the current
+strategy. Review deployments use the shared `development` branch. Copying
+production PII into `development` is forbidden.
 
 ## Connection Ownership
 
 | Context | `DATABASE_URL` pooled runtime | `DIRECT_URL` direct migration |
 |---|---|---|
-| Local `.env.local` | `dev/luc` | `dev/luc` |
+| Local `.env.local` | `development` | `development` |
 | Vercel Development | `development` | Not injected |
-| Vercel Preview runtime | `preview/pr-<number>` | Not injected |
-| Trusted preview migration job | Optional | `preview/pr-<number>` |
+| Trusted review runtime | `development` | Not injected |
 | Vercel Production runtime | protected `production` | Not injected |
 | Protected production migration job | Optional | protected `production` |
 
@@ -51,20 +45,19 @@ GitHub-only and must never be injected into application runtime.
 
 ## Provider Resource Boundaries
 
-- Local, Vercel Development, and Preview use the Clerk development instance and
+- Local, Vercel Development, and review use the Clerk development instance and
   development private Blob store.
 - Vercel Production uses a separate Clerk production instance and private Blob
   store.
 - `CLERK_SECRET_KEY`, `CLERK_WEBHOOK_SIGNING_SECRET`,
   `BLOB_READ_WRITE_TOKEN`, and `CRON_SECRET` are never client-visible.
 - Production secrets live only in protected GitHub/Vercel environments.
-- Fork and Dependabot PRs run secretless CI and receive no privileged preview.
+- Fork and Dependabot PRs run secretless CI and receive no development or
+  production provider secrets.
 
 ## Reset And Migration Rules
 
-- Confirm the target branch name and emptiness before applying the clean
-  baseline.
-- `dev/luc` and temporary preview branches may be reset by their owner.
+- Confirm the target branch name before applying migrations.
 - `development` may be reset only while the team agrees it is disposable.
 - Never reset `production`.
 - Apply migrations using direct credentials only from trusted migration jobs.
@@ -74,12 +67,11 @@ GitHub-only and must never be injected into application runtime.
 
 ## Local Setup
 
-Keep `dev/luc` URLs in `.env.local`. If `vercel env pull` is needed, pull into a
-separate file and preserve the explicit local database override:
+Keep `development` URLs in `.env.local`. If `vercel env pull` is needed, pull
+into a separate file and preserve the explicit local database override:
 
 ```bash
 vercel env pull .env.vercel-development
-pnpm db:migrate:audit
 pnpm exec prisma validate
 ```
 
