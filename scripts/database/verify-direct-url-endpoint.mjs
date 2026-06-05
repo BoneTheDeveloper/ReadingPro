@@ -1,4 +1,4 @@
-const fs = require("node:fs");
+import { readFileSync } from "node:fs";
 
 const directUrl = process.env.DIRECT_URL;
 if (!directUrl) {
@@ -7,7 +7,7 @@ if (!directUrl) {
 }
 
 const directHost = new URL(directUrl).hostname;
-const body = JSON.parse(fs.readFileSync("neon-endpoints.json", "utf8"));
+const body = JSON.parse(readFileSync("neon-endpoints.json", "utf8"));
 const endpoints = body.endpoints ?? [];
 const hosts = endpoints.flatMap((ep) =>
   [ep.host, ep.proxy_host].filter(Boolean),

@@ -80,7 +80,7 @@ jobs:
             "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches/$NEON_PRODUCTION_BRANCH_ID/endpoints" \
             > neon-endpoints.json
 
-          node scripts/database/verify-direct-url-endpoint.js
+          node scripts/database/verify-direct-url-endpoint.mjs
 
       - name: Set up Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
