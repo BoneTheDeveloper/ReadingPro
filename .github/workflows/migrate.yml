@@ -115,7 +115,7 @@ jobs:
             exit 1
           fi
 
-          node -e "const host=process.env.PRODUCTION_URL; if (!host || host.includes('://')) { console.error('PRODUCTION_URL must be a bare host such as app.example.com.'); process.exit(1); } new URL(\`https://${host}\`);"
+          node scripts/database/verify-production-deploy-config.mjs
 
       - name: Pull Vercel production environment
         env:
@@ -197,7 +197,7 @@ jobs:
           for attempt in {1..20}; do
             echo "Health check attempt $attempt/20..."
             if curl --fail-with-body -sS "https://$PRODUCTION_URL/api/health" > health.json; then
-              if node -e "const fs=require('node:fs'); const body=JSON.parse(fs.readFileSync('health.json','utf8')); if (body.data?.commitSha !== process.env.EXPECTED_COMMIT_SHA) { console.error(\`Expected deployed commit ${process.env.EXPECTED_COMMIT_SHA}, got ${body.data?.commitSha ?? 'unknown'}\`); process.exit(1); }"; then
+              if node scripts/database/verify-deployed-commit-sha.mjs; then
                 echo "Post-deploy health check passed for commit $EXPECTED_COMMIT_SHA"
                 exit 0
               fi
