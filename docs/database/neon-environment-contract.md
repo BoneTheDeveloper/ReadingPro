@@ -13,7 +13,7 @@ confirmed:
   reviewer and no self-approval.
 - Vercel production variables and deployments can be restricted to the
   protected production workflow.
-- Review deployments can be restricted to trusted same-repository branches before
+- Preview deployments can be restricted to trusted same-repository branches before
   development provider secrets are exposed.
 
 If any gate is unavailable, production migration and deployment are blocked.
@@ -23,10 +23,10 @@ If any gate is unavailable, production migration and deployment are blocked.
 | Branch | Parent | Lifecycle | Data policy |
 |---|---|---|---|
 | `production` | Neon project root | Persistent and protected | Production data |
-| `development` | `production` during development-only period | Persistent | Shared local and review data |
+| `development` | `production` during development-only period | Persistent | Shared local and preview data |
 
 There is no staging database and no per-PR Neon preview branch in the current
-strategy. Review deployments use the shared `development` branch. Copying
+strategy. Preview deployments use the shared `development` branch. Copying
 production PII into `development` is forbidden.
 
 ## Connection Ownership
@@ -35,7 +35,7 @@ production PII into `development` is forbidden.
 |---|---|---|
 | Local `.env.local` | `development` | `development` |
 | Vercel Development | `development` | Not injected |
-| Trusted review runtime | `development` | Not injected |
+| Trusted preview runtime | `development` | Not injected |
 | Vercel Production runtime | protected `production` | Not injected |
 | Protected production migration job | Optional | protected `production` |
 
@@ -45,7 +45,7 @@ GitHub-only and must never be injected into application runtime.
 
 ## Provider Resource Boundaries
 
-- Local, Vercel Development, and review use the Clerk development instance and
+- Local, Vercel Development, and preview use the Clerk development instance and
   development private Blob store.
 - Vercel Production uses a separate Clerk production instance and private Blob
   store.

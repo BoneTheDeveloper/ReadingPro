@@ -7,7 +7,7 @@ Actions, and Vercel.
 
 | Context | Neon branch | Who changes schema |
 |---|---|---|
-| Local dev and review | `development` | You, from local machine |
+| Local dev and preview | `development` | You, from local machine |
 | CI | none | Checks files only |
 | Production | `production` | GitHub Actions after approval |
 
