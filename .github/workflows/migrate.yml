@@ -193,20 +193,25 @@ jobs:
           EXPECTED_COMMIT_SHA: ${{ github.event.workflow_run.head_sha }}
           PRODUCTION_URL: ${{ vars.PRODUCTION_URL }}
         run: |
-          echo "Waiting for deployment to go live..."
-          for attempt in {1..20}; do
-            echo "Health check attempt $attempt/20..."
-            if curl --fail-with-body -sS "https://$PRODUCTION_URL/api/health" > health.json; then
-              if node scripts/database/verify-deployed-commit-sha.mjs; then
-                echo "Post-deploy health check passed for commit $EXPECTED_COMMIT_SHA"
+          HOST="$(echo "$PRODUCTION_URL" | tr -d '[:space:]')"
+          URL="https://${HOST}/api/health"
+          echo "Polling $URL for commit $EXPECTED_COMMIT_SHA ..."
+
+          for attempt in $(seq 1 10); do
+            echo "Attempt $attempt/10 ..."
+            STATUS="$(curl -sS -o health.json -w '%{http_code}' "$URL" || true)"
+            if [ "$STATUS" = "200" ]; then
+              DEPLOYED="$(node -p "JSON.parse(require('fs').readFileSync('health.json','utf8')).data?.commitSha ?? ''")"
+              if [ "$DEPLOYED" = "$EXPECTED_COMMIT_SHA" ]; then
+                echo "Health check passed: $DEPLOYED"
                 exit 0
               fi
+              echo "Commit mismatch: got $DEPLOYED, expected $EXPECTED_COMMIT_SHA"
+            else
+              echo "HTTP $STATUS"
             fi
-
-            if [ "$attempt" -lt 20 ]; then
-              sleep 15
-            fi
+            sleep 10
           done
 
-          echo "::error::Post-deploy health check did not observe commit $EXPECTED_COMMIT_SHA."
+          echo "::error::Health check failed after 10 attempts."
           exit 1
