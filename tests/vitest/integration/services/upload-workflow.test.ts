@@ -13,7 +13,7 @@ const analysis = vi.hoisted(() => ({
   analyzeAndPersistContent: vi.fn(),
 }));
 
-vi.mock("@/lib/storage/supabase-storage", () => ({
+vi.mock("@/lib/storage/blob-storage", () => ({
   uploadFile: storage.uploadFile,
   deleteFile: storage.deleteFile,
 }));
@@ -39,7 +39,7 @@ describe("processFileUpload", () => {
     storage.deleteFile.mockReset();
     parser.parsePDF.mockReset();
     analysis.analyzeAndPersistContent.mockReset();
-    storage.uploadFile.mockResolvedValue({ url: "https://cdn.test/upload.txt", path: "stored/path" });
+    storage.uploadFile.mockResolvedValue({ url: "https://cdn.test/upload.txt", pathname: "stored/path" });
     storage.deleteFile.mockResolvedValue(true);
     parser.parsePDF.mockResolvedValue({ text: validText, pages: 1 });
     analysis.analyzeAndPersistContent.mockResolvedValue({
@@ -55,7 +55,7 @@ describe("processFileUpload", () => {
 
     expect(result).toEqual({
       filename: "user_1/1779357600000-My_Notes.txt",
-      fileUrl: "https://cdn.test/upload.txt",
+      filePath: "stored/path",
       passageId: "passage_1",
       originalLevel: "A2",
       simplifiedLevel: null,
@@ -71,7 +71,7 @@ describe("processFileUpload", () => {
       text: validText,
       title: "My Notes",
       sourceType: "TEXT",
-      fileUrl: "https://cdn.test/upload.txt",
+      filePath: "stored/path",
     });
     expect(parser.parsePDF).not.toHaveBeenCalled();
   });

@@ -9,7 +9,7 @@ plan: "plans/260521-issue-19-vitest-test-infrastructure/plan.md"
 
 ## Context
 
-Issue 19 needed the app to move from no automated unit test runner to a usable Vitest baseline for Next.js, React, TypeScript, Prisma, Supabase, Sentry, and AI SDK code.
+Issue 19 needed the app to move from no automated unit test runner to a usable Vitest baseline for Next.js, React, TypeScript, Prisma, auth, Sentry, and AI SDK code.
 
 ## What Happened
 

@@ -9,7 +9,7 @@ import {
 } from "@/lib/db/translation-queries";
 
 const vocabularyRequestSchema = z.object({
-  sourceId: z.string().min(1),
+  sourceId: z.string().uuid(),
   selectedText: z.string().trim().min(1).max(500),
   translation: z.string().trim().min(1).max(500),
   contextSentence: z.string().trim().min(1).max(4000),

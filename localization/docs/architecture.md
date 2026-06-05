@@ -19,7 +19,7 @@ Current locales:
 | Request-time locale and messages | `src/i18n/request.ts` | Validates `requestLocale` with `hasLocale` and imports `localization/messages/{locale}.json`. |
 | Locale-aware navigation helpers | `src/i18n/navigation.ts` | Exports `Link`, `redirect`, `usePathname`, `useRouter`, and `getPathname`. |
 | Next.js plugin wiring | `next.config.ts` | Wraps config with `createNextIntlPlugin("./src/i18n/request.ts")`. |
-| Middleware and auth redirects | `src/proxy.ts` | Runs next-intl middleware, then Supabase auth checks and locale-aware redirects. |
+| Middleware and auth redirects | `src/proxy.ts` | Runs Clerk middleware, applies locale-aware auth redirects, then returns the next-intl response. |
 | Locale layout/provider | `src/app/[locale]/layout.tsx` | Validates locale, calls `setRequestLocale`, loads messages, and wraps children in `NextIntlClientProvider`. |
 
 ## Request Flow
@@ -27,10 +27,10 @@ Current locales:
 ```text
 Browser request
   -> src/proxy.ts
-    -> skip API, Next internals, monitoring, favicon, auth callback
-    -> run next-intl middleware with routing config
-    -> refresh/read Supabase auth session
+    -> skip API, Next internals, monitoring, favicon, Clerk internals
+    -> read Clerk auth session
     -> redirect auth/protected pages with locale prefix when needed
+    -> run next-intl middleware with routing config
   -> src/app/[locale]/layout.tsx
     -> reject unsupported locale with notFound()
     -> setRequestLocale(locale)
@@ -88,7 +88,7 @@ Both catalogs currently contain the same 212 flattened keys. Top-level namespace
 - Some dashboard and layout strings are still hard-coded in English, including helper copy, search placeholder, mobile brand text, and a few button titles.
 - Some formatting is fixed to English, for example `Intl.DateTimeFormat("en")` and unlocalized plural helper text in `src/app/[locale]/page.tsx`.
 - `src/proxy.ts` extracts locales with a hard-coded `/^(en|vi)/` regex. Add new locales in both `routing.ts` and this matcher if the matcher remains manual.
-- `src/app/auth/callback/route.ts` can redirect to `/sign-in?error=auth_callback_failed` without an explicit locale on failure. The middleware can negotiate this on the next request, but a locale-aware fallback would be clearer.
+- Clerk auth redirects use `redirect_url`; verify this remains aligned with Clerk page props if auth pages are customized.
 
 ## References
 

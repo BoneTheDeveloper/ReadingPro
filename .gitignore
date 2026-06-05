@@ -37,19 +37,22 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # env files
-.env
-.env.local
-.env*.local
+.env*
+!.env.example
 
 # database
 prisma/dev.db
 prisma/dev.db-journal
 
-# supabase
-supabase/.temp/
+
+# local blob storage (dev)
+.local-blob-storage/
 
 # vercel
 .vercel
+
+# neon
+.neon/
 
 # typescript
 *.tsbuildinfo
@@ -57,7 +60,7 @@ next-env.d.ts
 
 /src/generated/prisma
 
-# agent file 
+# agent file
 .claude
 .codex
 .agents

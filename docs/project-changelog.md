@@ -7,6 +7,9 @@
 ## [Unreleased]
 
 ### Added
+- Clerk auth integration for sign-in/sign-up, Google OAuth, route protection, and profile sync.
+- Neon PostgreSQL environment contract for local, preview, and production database branches.
+- Vercel Blob storage adapter for private preview/production uploads with local filesystem storage in development.
 - Vitest test infrastructure with React Testing Library, jest-dom, jsdom, v8 coverage, shared mocks, fixtures, helpers, and smoke tests.
 - GitHub Actions CI workflow for lint, TypeScript, tests, coverage, and gated Playwright E2E.
 - `docs/quality-assurance/vitest.md` documenting test commands and the shared test scaffold.
@@ -14,6 +17,7 @@
 - `tests/e2e/README.md` documenting local `.env.test`, pre-created test users, screenshot commands, and CI secrets.
 
 ### Changed
+- Replaced the previous auth, hosted Postgres, and object storage design with Clerk + Neon + Vercel Blob.
 - Optimized `/api/translate` quick dictionary path from 7 Prisma queries to ≤4 blocking queries.
 - Replaced 3-query sequential dictionary lookup (`findEntryByHeadword` + `findEntryByAlias`) with single `$queryRaw` using LEFT JOINs on entries, aliases, senses, and translations.
 - Reordered translate route to cache-first: `cacheRead` before `sourceFetch`, skipping source ownership check on cache hit.
@@ -30,7 +34,7 @@
 - YouTube transcription (Whisper API)
 - Scanned PDF OCR support
 - Advanced analytics dashboard
-- Replace demo user with authenticated user in all actions/routes (Phase 04)
+- Verify production Vercel environment variables and scheduled cleanup behavior
 
 ---
 ## [2026-05-07] — Phase 05-06: Auth UI Updates & Testing
@@ -51,24 +55,20 @@
 
 ---
 
-## [2026-05-07] — Supabase Authentication
+## [2026-05-07] — Legacy Authentication Implementation
 
 ### Added
-- `@supabase/supabase-js` + `@supabase/ssr` packages (removed `@types/bcryptjs`)
-- `lib/supabase/client.ts` — browser client via `createBrowserClient`
-- `lib/supabase/server.ts` — server component client (read-only) + server action client (read+write)
-- `lib/supabase/middleware.ts` — middleware client with `updateSession()` for cookie exchange
-- `lib/auth/sync-user.ts` — upserts local User row keyed by Supabase Auth UUID
+- Legacy auth client packages and middleware utilities
+- `lib/auth/sync-user.ts` — upserts local user profile rows from external auth identity
 - `(auth)/layout.tsx` — centered card layout with ReadingPro branding
 - `(auth)/sign-in/page.tsx` — email/password + Google OAuth sign-in (Suspense-wrapped)
 - `(auth)/sign-up/page.tsx` — email/password/confirm + Google OAuth sign-up
-- `auth/callback/route.ts` — OAuth code exchange + user sync + redirect
-- `middleware.ts` — session refresh, route protection, `?next=` redirect preservation
-- `docs/auth/oauth-setup-guide.md` — OAuth setup for local, Vercel preview, and production
-- `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` to `.env.example`
+- Legacy OAuth callback route with user sync and redirect
+- Middleware session handling, route protection, and redirect preservation
+- OAuth setup documentation for local, Vercel preview, and production
 
 ### Changed
-- `prisma/schema.prisma` — added `supabaseAuthId` column (nullable, unique) to User model
+- `prisma/schema.prisma` — added an external auth id column to the user model
 - Unauthenticated users redirected to `/sign-in` for all protected routes
 - Auth pages (`/sign-in`, `/sign-up`) accessible without authentication
 
@@ -111,7 +111,7 @@
 ## [2026-05-01] — Phase 04: Sentry Source Maps Upload
 
 ### Added
-- `next.config.ts` — Source maps upload configuration via `withSentryConfig()`:
+- `next.config.ts` — Source maps upload configuration:
   - `authToken: process.env.SENTRY_AUTH_TOKEN` for CI-based source maps upload
   - `org` and `project` now use environment variables with fallbacks (`process.env.SENTRY_ORG || "pham-dac-luc"`, `process.env.SENTRY_PROJECT || "javascript-nextjs"`)
   - `widenClientFileUpload: true` for more complete source maps coverage
@@ -160,7 +160,6 @@
   - Dev: pretty-printed via `pino-pretty`
   - Prod: JSON format with ISO timestamps
   - `createModuleLogger(module)` for per-module child loggers
-  - `LOG_LEVEL` env var (default: `debug` dev, `info` prod)
 
 ### Changed
 - All API routes and server actions now use `createModuleLogger()` instead of console.log

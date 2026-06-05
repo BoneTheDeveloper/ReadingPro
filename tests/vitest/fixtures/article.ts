@@ -1,6 +1,6 @@
 export const passageFixture = {
   id: "550e8400-e29b-41d4-a716-446655440000",
-  userId: "user_test_123",
+  userId: "user_test_reader",
   title: "The Test Passage",
   content: "Reading tests become easier when fixtures are predictable.",
   simplifiedContent: "Tests are easier with predictable examples.",
@@ -8,7 +8,7 @@ export const passageFixture = {
   simplifiedLevel: "A2" as const,
   wordCount: 8,
   sourceType: "TEXT" as const,
-  fileUrl: null,
+  filePath: null,
   deletedAt: null,
   createdAt: new Date("2026-05-21T00:00:00.000Z"),
   updatedAt: new Date("2026-05-21T00:00:00.000Z"),

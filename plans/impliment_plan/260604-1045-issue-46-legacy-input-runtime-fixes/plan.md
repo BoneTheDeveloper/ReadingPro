@@ -5,10 +5,10 @@ status: pending
 priority: P1
 effort: 13h
 issue: 46
-branch: "fix/issue-46-api-boundary-contracts"
+branch: "feat/clerk-neon-prisma-vercel-blob-migration"
 tags: [bugfix, api, backend, frontend, critical]
 blockedBy:
-  - 260604-prisma-baseline-rls-dictionary-source-of-truth
+  - 260604-1806-clerk-neon-prisma-vercel-blob-migration
 blocks: [260604-1102-issue-46-output-boundary-migration]
 created: "2026-06-04T03:45:57.125Z"
 createdBy: "ck:plan"
@@ -20,8 +20,8 @@ source: skill
 ## Overview
 
 Deliver Part 1 of GitHub issue #46. Fix current user-visible/runtime defects
-before introducing response DTO schemas: normalize every public-table
-identifier to native UUID, align stale study translation callers with the
+before introducing response DTO schemas: normalize application-owned
+identifiers to native UUID, align stale study translation callers with the
 mode-less translation API, and return stable `400` responses for malformed or
 structurally invalid legacy requests.
 
@@ -40,10 +40,10 @@ Design decisions:
   values unchanged; database cleanup is outside this issue.
 - Use route-local Zod schemas for legacy JSON request bodies.
 - Parse malformed JSON separately from unexpected server failures.
-- Use native PostgreSQL UUID columns for every public-table primary key,
-  relation key, and persisted entity-reference ID.
-- Let Supabase Auth supply `profiles.id`; generate UUIDs for application-owned
-  records at the database layer.
+- Use native PostgreSQL UUID columns for application-owned primary keys,
+  relation keys, and persisted entity-reference IDs.
+- Exception: Clerk supplies `profiles.id`; all owned-table `userId` foreign keys
+  are Clerk string IDs after the auth/database migration plan.
 - Reset and reseed the development database. Do not preserve current CUID rows
   or add CUID compatibility behavior.
 - Validate persisted-record IDs as UUIDs at untrusted request boundaries;
@@ -79,8 +79,8 @@ Design decisions:
   expectations.
 - Replace stale route, component, and performance fixtures that send translation
   modes.
-- Normalize all public-table persisted identifiers from CUID/text to native
-  PostgreSQL UUID.
+- Normalize application-owned persisted identifiers from CUID/text to native
+  PostgreSQL UUID; preserve Clerk profile/user identity fields as strings.
 - Reset and reseed the development database after migration review.
 - Align request schemas and fixtures with the UUID identifier contract.
 - Fix malformed/invalid input handling for study-session POST/PATCH,
@@ -97,7 +97,8 @@ Design decisions:
 - Renaming or migrating required legacy translation cache/history database
   `mode` columns.
 - Preserving current development CUID data or writing CUID-to-UUID conversion.
-- Changing ownership semantics, cascade behavior, or Supabase Auth identity.
+- Changing ownership semantics or cascade behavior beyond the blocking
+  Clerk/Neon migration plan.
 - Adding dictionary lookup/search behavior to the study translation panel.
 
 ## Success Criteria
@@ -108,8 +109,9 @@ Design decisions:
   causes no second `/api/translate` request.
 - Legacy translation mode input is rejected with `400`; no detailed AI
   translation path remains reachable from study translation.
-- Every public-table PK/FK/entity-reference identifier is native PostgreSQL
-  UUID, and no persisted application record uses CUID.
+- Every application-owned PK/FK/entity-reference identifier is native
+  PostgreSQL UUID, Clerk identity fields are strings, and no persisted
+  application record uses CUID.
 - Development reset, migration replay, Prisma generation, dictionary reseed,
   and dictionary validation succeed.
 - Valid UUID passage IDs create study sessions after ownership checks; malformed

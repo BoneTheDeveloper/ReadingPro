@@ -10,22 +10,22 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const csp = {
   defaultSrc: "default-src 'self'",
-  scriptSrc: "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel-scripts.com",
+  scriptSrc: "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel-scripts.com https://*.clerk.accounts.dev https://challenges.cloudflare.com",
   styleSrc: "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  imgSrc: "img-src 'self' blob: data: https://*.supabase.co https://*.supabase.in https://*.supabase.com",
+  imgSrc: "img-src 'self' blob: data: https://img.clerk.com",
   fontSrc: "font-src 'self' https://fonts.gstatic.com",
   connectSrc: [
     "connect-src 'self'",
-    "https://*.supabase.co https://*.supabase.in https://*.supabase.com",
-    "wss://*.supabase.co wss://*.supabase.in wss://*.supabase.com",
     "https://*.sentry.io",
     "https://vitals.vercel-insights.com",
+    "https://*.clerk.com",
+    "https://*.clerk.accounts.dev",
   ].join(" "),
   objectSrc: "object-src 'none'",
   baseUri: "base-uri 'self'",
   formAction: "form-action 'self'",
   frameAncestors: "frame-ancestors 'none'",
-  frameSrc: "frame-src 'self'",
+  frameSrc: "frame-src 'self' https://*.clerk.com https://challenges.cloudflare.com",
   upgradeInsecure: "upgrade-insecure-requests",
 };
 

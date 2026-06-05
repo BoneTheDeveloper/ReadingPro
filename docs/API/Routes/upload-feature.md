@@ -39,7 +39,7 @@ FormData:
 ```ts
 {
   filename: string;
-  fileUrl: string;
+  filePath: string;
   passageId: string;
   originalLevel: CEFRLevel;
   simplifiedLevel: CEFRLevel | null;
@@ -87,7 +87,7 @@ Request body:
 
 ```ts
 {
-  text: string;              // 50-100,000 chars
+  text: string;              // 50-100,000 chars, validated via Zod schema
   title?: string;            // defaults to "Untitled"
 }
 ```
@@ -120,7 +120,7 @@ Request body:
 
 | Status | Meaning |
 |--------|---------|
-| `400` | Missing text or invalid text length |
+| `400` | Missing text, invalid text length, malformed JSON, or invalid text content |
 | `401` | Missing auth |
 | `500` | Analysis or persistence failure |
 

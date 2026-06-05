@@ -85,7 +85,6 @@ function translationBody(overrides: Partial<Record<string, unknown>> = {}) {
     sourceId: passageFixture.id,
     sourceLanguage: "en",
     targetLanguage: "vi",
-    mode: "quick",
     ...overrides,
   };
 }
@@ -217,7 +216,7 @@ describe("POST /api/translate", () => {
     ["bias", TEST_CONTEXT[0], "thiên lệch"],
     ["data", TEST_CONTEXT[1], "dữ liệu"],
   ])(
-    "resolves quick dictionary translation for %s without AI",
+    "resolves dictionary translation for %s without AI",
     async (text, context, expectedTranslation) => {
       const response = await translateRoute(createJsonRequest(translationBody({ text, context })));
       const payload = await readJsonResponse(response);
@@ -290,22 +289,11 @@ describe("POST /api/translate", () => {
     expect(generateObject).not.toHaveBeenCalled();
   });
 
-  it("ignores mode field and resolves through word translate path", async () => {
-    // mode is ignored — the route auto-detects input shape
+  it("rejects requests containing a mode field with 400", async () => {
     const response = await translateRoute(
-      createJsonRequest(translationBody({ mode: "detailed", text: "algorithmic bias", context: TEST_CONTEXT[0] })),
+      createJsonRequest({ ...translationBody({ text: "algorithmic bias", context: TEST_CONTEXT[0] }), mode: "detailed" }),
     );
-    const payload = await readJsonResponse(response);
-
-    expect(response.status).toBe(200);
-    expect(payload).toMatchObject({
-      success: true,
-      data: {
-        translation: "thiên lệch thuật toán",
-        provider: "dictionary",
-      },
-    });
-    expect(generateObject).not.toHaveBeenCalled();
+    await expectJsonError(response, 400, "Invalid translation request.");
   });
 
   it("records privacy-safe spans and logs without raw selected text or context", async () => {

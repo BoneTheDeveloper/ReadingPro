@@ -30,7 +30,6 @@ src/app
 |       +-- reading/[id]/page.tsx
 |       +-- test/[id]/page.tsx
 +-- api
-+-- auth/callback/route.ts
 ```
 
 ## Public And Protected Paths
@@ -45,7 +44,7 @@ src/app
 | `/{locale}/progress` | Protected | Currently redirects to dashboard. |
 | `/{locale}/reading/{id}` | Protected | Reading view for a saved passage. |
 | `/{locale}/test/{id}` | Protected | Flashcard test for a saved passage. |
-| `/auth/callback` | Public callback | Handles Supabase OAuth and redirects to a safe next path. |
+| `/__clerk/*` | Clerk internal | Skipped by locale middleware. |
 | `/api/*` | API | Skipped by locale middleware and handled by route code. |
 | `/monitoring` | Sentry tunnel | Skipped by locale middleware. |
 
@@ -55,12 +54,11 @@ src/app
 
 ```text
 request path
-  -> skip API, _next, favicon, monitoring, auth callback
-  -> run next-intl middleware
-  -> read Supabase session
+  -> skip API, _next, favicon, monitoring, Clerk internals
+  -> read Clerk session
   -> if authenticated and on auth page, redirect to /{locale}
-  -> if unauthenticated and on protected page, redirect to /{locale}/sign-in?next={pathname}
-  -> otherwise return next-intl response
+  -> if unauthenticated and on protected page, redirect to /{locale}/sign-in?redirect_url={url}
+  -> otherwise run next-intl middleware and return the localized response
 ```
 
 Locale selection for auth redirects is derived from the current path:
@@ -74,7 +72,7 @@ Locale selection for auth redirects is derived from the current path:
 - Use unprefixed hrefs with the app helpers, for example `href="/study"` instead of `href="/en/study"`.
 - Use `router.replace(pathname, { locale: newLocale })` to switch language while staying on the same logical route.
 - Preserve route params in page components; `[locale]` is handled by the layout and next-intl navigation layer.
-- API routes, Supabase callback routes, and monitoring routes should not use locale-prefixed paths unless they intentionally return a localized UI redirect.
+- API routes, Clerk internal routes, and monitoring routes should not use locale-prefixed paths unless they intentionally return a localized UI redirect.
 
 ## Language Switcher
 
@@ -99,11 +97,11 @@ The switcher uses `routing.locales`, so adding a locale to `routing.ts` automati
 ## Edge Cases To Test
 
 - Visiting `/` while signed out redirects to the default locale sign-in page.
-- Visiting `/vi/study` while signed out redirects to `/vi/sign-in?next=/vi/study`.
+- Visiting `/vi/study` while signed out redirects to `/vi/sign-in?redirect_url={absolute-url}`.
 - Visiting `/en/sign-in` while signed in redirects to `/en`.
 - Switching language on `/en/study` lands on `/vi/study`.
 - Invalid locale params that reach the locale layout render not-found from `src/app/[locale]/layout.tsx`.
-- OAuth callback success redirects to the sanitized `next` path from `src/lib/auth/redirects.ts`.
+- Clerk sign-in success redirects to the `redirect_url` value set by `src/proxy.ts`.
 
 ## References
 
@@ -112,4 +110,3 @@ The switcher uses `routing.locales`, so adding a locale to `routing.ts` automati
 - `src/proxy.ts`
 - `src/app/[locale]/layout.tsx`
 - `src/components/layout/language-switcher.tsx`
-- `src/lib/auth/redirects.ts`

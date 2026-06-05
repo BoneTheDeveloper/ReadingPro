@@ -1,14 +1,9 @@
 import { openai } from "@ai-sdk/openai";
-import {
-  isAuthApiError,
-  isAuthError,
-  isAuthSessionMissingError,
-} from "@supabase/supabase-js";
 import { convertToModelMessages, streamText } from "ai";
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
-import { getAuthenticatedUser } from "@/lib/auth/auth-utils";
+import { AuthenticationRequiredError, getAuthenticatedUser } from "@/lib/auth/auth-utils";
 import { db } from "@/lib/db/client";
 import { createRequestLogContext, createRequestLogger } from "@/lib/core/logger";
 import { wrapUserText } from "@/lib/ai/prompt-utils";
@@ -28,12 +23,6 @@ const uiMessageSchema = z.object({
 const MAX_PASSAGE_CHARS = 50_000;
 const MAX_HISTORY_MESSAGES = 24;
 const MAX_USER_TEXT_PART_CHARS = 2_000;
-const AUTHENTICATION_REQUIRED_MESSAGE = "Authentication required";
-const UNAUTHENTICATED_AUTH_STATUSES = new Set([400, 401, 403]);
-const UNAUTHENTICATED_AUTH_ERROR_NAMES = new Set([
-  "AuthInvalidJwtError",
-  "AuthSessionMissingError",
-]);
 
 const studyChatRequestSchema = z.object({
   messages: z.array(uiMessageSchema).max(MAX_HISTORY_MESSAGES).default([]),
@@ -82,16 +71,7 @@ function extractTextContent(content: unknown) {
 }
 
 function isUnauthenticatedError(error: unknown) {
-  if (!(error instanceof Error)) return false;
-  if (error.message === AUTHENTICATION_REQUIRED_MESSAGE) return true;
-  if (isAuthSessionMissingError(error)) return true;
-  if (isAuthApiError(error)) {
-    return UNAUTHENTICATED_AUTH_STATUSES.has(error.status);
-  }
-
-  return (
-    isAuthError(error) && UNAUTHENTICATED_AUTH_ERROR_NAMES.has(error.name)
-  );
+  return error instanceof AuthenticationRequiredError;
 }
 
 /**

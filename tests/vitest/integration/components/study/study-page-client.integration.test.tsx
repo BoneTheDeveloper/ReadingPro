@@ -50,11 +50,17 @@ vi.mock("@ai-sdk/react", () => ({
 }));
 
 vi.mock("react-resizable-panels", () => ({
-  Group: ({ children, className }: { children: React.ReactNode; className?: string }) => (
-    <div className={className}>{children}</div>
-  ),
+  Group: ({
+    children,
+    className,
+  }: {
+    children: React.ReactNode;
+    className?: string;
+  }) => <div className={className}>{children}</div>,
   Panel: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  Separator: ({ className }: { className?: string }) => <div className={className} />,
+  Separator: ({ className }: { className?: string }) => (
+    <div className={className} />
+  ),
   useDefaultLayout: () => ({
     defaultLayout: undefined,
     onLayoutChanged: vi.fn(),
@@ -90,9 +96,9 @@ vi.mock("@/features/study/study-selection-utils", () => ({
 }));
 
 function getPopupTranslateButton() {
-  return screen.getAllByRole("button", { name: /Translate/ }).find(
-    (btn) => btn.closest(".fixed"),
-  )!;
+  return screen
+    .getAllByRole("button", { name: /Translate/ })
+    .find((btn) => btn.closest(".fixed"))!;
 }
 
 describe("StudyPageClient", () => {
@@ -102,11 +108,10 @@ describe("StudyPageClient", () => {
     useChatState.messages = [];
     vi.stubGlobal(
       "fetch",
-      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      vi.fn(async (input: RequestInfo | URL) => {
         const url = String(input);
-        const body = init?.body ? JSON.parse(String(init.body)) : null;
 
-        if (url === "/api/translate" && body?.mode === "quick") {
+        if (url === "/api/translate") {
           return new Response(
             JSON.stringify({
               success: true,
@@ -114,27 +119,6 @@ describe("StudyPageClient", () => {
                 translation: "thiên lệch thuật toán",
                 type: "noun phrase",
                 provider: "dictionary",
-              },
-            }),
-            { status: 200 },
-          );
-        }
-
-        if (url === "/api/translate" && body?.mode === "detailed") {
-          return new Response(
-            JSON.stringify({
-              success: true,
-              data: {
-                translation: "thiên lệch thuật toán",
-                explanation: "A systematic unfair pattern in automated decisions.",
-                meaningInSentence: "The term describes a risk in hiring systems.",
-                sentenceTranslation:
-                  "Các mối quan tâm chính bao gồm thiên lệch thuật toán trong hệ thống tuyển dụng tự động.",
-                examples: ["Teams audit algorithmic bias before launch."],
-                relatedWords: ["fairness"],
-                pronunciation: null,
-                type: "noun phrase",
-                provider: "ai",
               },
             }),
             { status: 200 },
@@ -152,10 +136,14 @@ describe("StudyPageClient", () => {
         }
 
         if (url.startsWith("/api/study-chat")) {
-          return new Response(JSON.stringify({ messages: [] }), { status: 200 });
+          return new Response(JSON.stringify({ messages: [] }), {
+            status: 200,
+          });
         }
 
-        return new Response(JSON.stringify({ success: false }), { status: 404 });
+        return new Response(JSON.stringify({ success: false }), {
+          status: 404,
+        });
       }),
     );
   });
@@ -176,7 +164,9 @@ describe("StudyPageClient", () => {
           ),
       ),
     ).toBeInTheDocument();
-    expect(screen.getByText("Select a document from Sources")).toBeInTheDocument();
+    expect(
+      screen.getByText("Select a document from Sources"),
+    ).toBeInTheDocument();
     expect(screen.getByText("Select a passage")).toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: "Quiz" })[0]).toBeDisabled();
   });
@@ -192,7 +182,9 @@ describe("StudyPageClient", () => {
       simplifiedLevel: "B1",
       createdAt: first.createdAt + 1000,
     });
-    const { user } = renderWithUser(<StudyPageClient initialPassages={[first, second]} />);
+    const { user } = renderWithUser(
+      <StudyPageClient initialPassages={[first, second]} />,
+    );
 
     await user.type(screen.getByPlaceholderText("Search sources..."), "solar");
 
@@ -221,8 +213,13 @@ describe("StudyPageClient", () => {
     await user.click(screen.getByRole("button", { name: "Add Source" }));
     expect(screen.getByRole("dialog")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: /Paste text Copied text/ }));
-    await user.type(screen.getByPlaceholderText("Paste your English text content here..."), "A pasted source for the study workspace.");
+    await user.click(
+      screen.getByRole("button", { name: /Paste text Copied text/ }),
+    );
+    await user.type(
+      screen.getByPlaceholderText("Paste your English text content here..."),
+      "A pasted source for the study workspace.",
+    );
     await user.click(screen.getByRole("button", { name: "Continue" }));
 
     await waitFor(() => {
@@ -231,7 +228,9 @@ describe("StudyPageClient", () => {
         title: "Pasted Text",
       });
     });
-    expect((await screen.findAllByText("Uploaded Text")).length).toBeGreaterThan(0);
+    expect(
+      (await screen.findAllByText("Uploaded Text")).length,
+    ).toBeGreaterThan(0);
     expect(screen.getByText("Uploaded text content.")).toBeInTheDocument();
   });
 
@@ -245,12 +244,18 @@ describe("StudyPageClient", () => {
       simplifiedContent: "New simple version.",
       simplifiedLevel: "A2",
     });
-    const { user, unmount } = renderWithUser(<StudyPageClient initialPassages={[eligible]} />);
+    const { user, unmount } = renderWithUser(
+      <StudyPageClient initialPassages={[eligible]} />,
+    );
 
     await user.click(screen.getByText(eligible.title));
     await user.click(screen.getByRole("button", { name: "Simplify" }));
 
-    await waitFor(() => expect(studySimplifyAction).toHaveBeenCalledWith({ passageId: eligible.id }));
+    await waitFor(() =>
+      expect(studySimplifyAction).toHaveBeenCalledWith({
+        passageId: eligible.id,
+      }),
+    );
     expect(await screen.findByText("New simple version.")).toBeInTheDocument();
 
     unmount();
@@ -261,31 +266,47 @@ describe("StudyPageClient", () => {
       simplifiedLevel: null,
       originalLevel: "A2",
     });
-    const secondRender = renderWithUser(<StudyPageClient initialPassages={[simple]} />);
+    const secondRender = renderWithUser(
+      <StudyPageClient initialPassages={[simple]} />,
+    );
     await secondRender.user.click(screen.getByText("Already Simple"));
 
-    expect(screen.queryByRole("button", { name: "Simplify" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Simplify" }),
+    ).not.toBeInTheDocument();
   });
 
   it("generates quiz results and opens result detail", async () => {
     const passage = createStudyPassage();
     const question = createStudyQuestion();
-    vi.mocked(studyGenerateQuestionsAction).mockResolvedValue({ questions: [question] });
-    const { user } = renderWithUser(<StudyPageClient initialPassages={[passage]} />);
+    vi.mocked(studyGenerateQuestionsAction).mockResolvedValue({
+      questions: [question],
+    });
+    const { user } = renderWithUser(
+      <StudyPageClient initialPassages={[passage]} />,
+    );
 
     await user.click(screen.getByText(passage.title));
     await user.click(screen.getByRole("button", { name: "Quiz" }));
 
-    await waitFor(() => expect(studyGenerateQuestionsAction).toHaveBeenCalledWith({ passageId: passage.id }));
+    await waitFor(() =>
+      expect(studyGenerateQuestionsAction).toHaveBeenCalledWith({
+        passageId: passage.id,
+      }),
+    );
     expect(await screen.findByText("Results")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: /Quiz: The Test Passage/ }));
+    await user.click(
+      screen.getByRole("button", { name: /Quiz: The Test Passage/ }),
+    );
     expect(screen.getByText(question.questionText)).toBeInTheDocument();
   });
 
   it("opens the chat view for the active passage", async () => {
     const passage = createStudyPassage();
-    const { user } = renderWithUser(<StudyPageClient initialPassages={[passage]} />);
+    const { user } = renderWithUser(
+      <StudyPageClient initialPassages={[passage]} />,
+    );
 
     await user.click(screen.getByText(passage.title));
     await user.click(screen.getByRole("button", { name: "Chat" }));
@@ -294,7 +315,8 @@ describe("StudyPageClient", () => {
 
   it("does not auto-translate on selection; requires translate icon click", async () => {
     const passage = createStudyPassage({
-      content: "Key concerns include algorithmic bias in automated hiring systems.",
+      content:
+        "Key concerns include algorithmic bias in automated hiring systems.",
       simplifiedContent: null,
       originalLevel: "B2",
       wordCount: 8,
@@ -302,23 +324,29 @@ describe("StudyPageClient", () => {
     vi.mocked(extractSelectionInfo).mockReturnValue({
       selectedText: "algorithmic bias",
       selectionRect: { top: 120, left: 160, width: 80, height: 20 },
-      contextSentence: "Key concerns include algorithmic bias in automated hiring systems.",
+      contextSentence:
+        "Key concerns include algorithmic bias in automated hiring systems.",
       sourceId: passage.id,
       targetLanguage: "vi",
     });
-    const { user } = renderWithUser(<StudyPageClient initialPassages={[passage]} />);
+    const { user } = renderWithUser(
+      <StudyPageClient initialPassages={[passage]} />,
+    );
 
     await user.click(screen.getByText(passage.title));
-    fireEvent.mouseUp(screen.getByText(/Key concerns include algorithmic bias/));
+    fireEvent.mouseUp(
+      screen.getByText(/Key concerns include algorithmic bias/),
+    );
 
     // Selection captured — translate icon appears, no fetch yet
-    const allTranslateBtns = await screen.findAllByRole("button", { name: /Translate/ });
-    const popupTranslateBtn = allTranslateBtns.find((btn) => btn.closest(".fixed"));
-    expect(popupTranslateBtn).toBeTruthy();
-    expect(fetch).not.toHaveBeenCalledWith(
-      "/api/translate",
-      expect.anything(),
+    const allTranslateBtns = await screen.findAllByRole("button", {
+      name: /Translate/,
+    });
+    const popupTranslateBtn = allTranslateBtns.find((btn) =>
+      btn.closest(".fixed"),
     );
+    expect(popupTranslateBtn).toBeTruthy();
+    expect(fetch).not.toHaveBeenCalledWith("/api/translate", expect.anything());
     expect(Sentry.addBreadcrumb).toHaveBeenCalledWith(
       expect.objectContaining({
         category: "study-translation",
@@ -327,14 +355,15 @@ describe("StudyPageClient", () => {
       }),
     );
 
-    // Click translate icon to trigger quick translation
+    // Click translate icon to trigger translation
     await user.click(popupTranslateBtn!);
-    expect(await screen.findByText("thiên lệch thuật toán")).toBeInTheDocument();
+    expect(
+      await screen.findByText("thiên lệch thuật toán"),
+    ).toBeInTheDocument();
     expect(fetch).toHaveBeenCalledWith(
       "/api/translate",
       expect.objectContaining({
         method: "POST",
-        body: expect.stringContaining('"mode":"quick"'),
       }),
     );
   });
@@ -354,7 +383,9 @@ describe("StudyPageClient", () => {
       sourceId: passage.id,
       targetLanguage: "vi",
     });
-    const { user } = renderWithUser(<StudyPageClient initialPassages={[passage]} />);
+    const { user } = renderWithUser(
+      <StudyPageClient initialPassages={[passage]} />,
+    );
 
     await user.click(screen.getByText(passage.title));
     fireEvent.mouseUp(screen.getByText(longSelection));
@@ -370,16 +401,17 @@ describe("StudyPageClient", () => {
     });
     expect(screen.queryByText("Selection too long")).not.toBeInTheDocument();
     expect(
-      screen.queryAllByRole("button", { name: /^Translate$/ }).find((button) =>
-        button.className.includes("fixed"),
-      ),
+      screen
+        .queryAllByRole("button", { name: /^Translate$/ })
+        .find((button) => button.className.includes("fixed")),
     ).toBeUndefined();
     expect(fetch).not.toHaveBeenCalledWith("/api/translate", expect.anything());
   });
 
-  it("shows quick translation without Save vocabulary and opens details on demand", async () => {
+  it("shows translation without Save vocabulary and opens details without second API call", async () => {
     const passage = createStudyPassage({
-      content: "Key concerns include algorithmic bias in automated hiring systems.",
+      content:
+        "Key concerns include algorithmic bias in automated hiring systems.",
       simplifiedContent: null,
       originalLevel: "B2",
       wordCount: 8,
@@ -387,87 +419,76 @@ describe("StudyPageClient", () => {
     vi.mocked(extractSelectionInfo).mockReturnValue({
       selectedText: "algorithmic bias",
       selectionRect: { top: 120, left: 160, width: 80, height: 20 },
-      contextSentence: "Key concerns include algorithmic bias in automated hiring systems.",
+      contextSentence:
+        "Key concerns include algorithmic bias in automated hiring systems.",
       sourceId: passage.id,
       targetLanguage: "vi",
     });
-    const { user } = renderWithUser(<StudyPageClient initialPassages={[passage]} />);
+    const { user } = renderWithUser(
+      <StudyPageClient initialPassages={[passage]} />,
+    );
 
     await user.click(screen.getByText(passage.title));
-    fireEvent.mouseUp(screen.getByText(/Key concerns include algorithmic bias/));
+    fireEvent.mouseUp(
+      screen.getByText(/Key concerns include algorithmic bias/),
+    );
     await user.click(getPopupTranslateButton());
 
-    // Quick popup shows translation but no Save vocabulary action
-    expect(await screen.findByText("thiên lệch thuật toán")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /Save/ })).not.toBeInTheDocument();
+    // Popup shows translation but no Save vocabulary action
+    expect(
+      await screen.findByText("thiên lệch thuật toán"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /Save/ }),
+    ).not.toBeInTheDocument();
 
-    // Open details triggers detailed translation
+    // Open details shows the translate panel reusing the same translation, no second API call
+    const fetchCallsBeforeDetails = vi.mocked(fetch).mock.calls.length;
     await user.click(screen.getByRole("button", { name: /Open details/ }));
-    expect(await screen.findByText("Translate: algorithmic bias")).toBeInTheDocument();
-    expect(await screen.findByText("A systematic unfair pattern in automated decisions.")).toBeInTheDocument();
-    expect(fetch).toHaveBeenCalledWith(
-      "/api/translate",
-      expect.objectContaining({
-        method: "POST",
-        body: expect.stringContaining('"mode":"detailed"'),
-      }),
-    );
+    expect(
+      await screen.findByText("Translate: algorithmic bias"),
+    ).toBeInTheDocument();
+    expect(fetch).toHaveBeenCalledTimes(fetchCallsBeforeDetails);
   });
 
-  it("omits null quick translation type when saving vocabulary from details", async () => {
+  it("omits null translation type when saving vocabulary from details", async () => {
     const passage = createStudyPassage({
       content: "Quorvex drift appears here.",
       simplifiedContent: null,
       originalLevel: "B2",
     });
     let vocabularyBody: Record<string, unknown> | null = null;
-    vi.mocked(fetch).mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
-      const url = String(input);
-      const body = init?.body ? JSON.parse(String(init.body)) : null;
+    vi.mocked(fetch).mockImplementation(
+      async (input: RequestInfo | URL, init?: RequestInit) => {
+        const url = String(input);
 
-      if (url === "/api/translate" && body?.mode === "quick") {
-        return new Response(
-          JSON.stringify({
-            success: true,
-            data: {
-              translation: "quorvex sự trôi",
-              type: null,
-              provider: "fallback",
+        if (url === "/api/translate") {
+          return new Response(
+            JSON.stringify({
+              success: true,
+              data: {
+                translation: "quorvex sự trôi",
+                type: null,
+                provider: "fallback",
+              },
+            }),
+            { status: 200 },
+          );
+        }
+
+        if (url === "/api/vocabulary") {
+          vocabularyBody = init?.body ? JSON.parse(String(init.body)) : null;
+          return new Response(
+            JSON.stringify({ success: true, data: { id: "vocab-fallback" } }),
+            {
+              status: 200,
             },
-          }),
-          { status: 200 },
-        );
-      }
+          );
+        }
 
-      if (url === "/api/translate" && body?.mode === "detailed") {
-        return new Response(
-          JSON.stringify({
-            success: true,
-            data: {
-              translation: "quorvex sự trôi",
-              explanation: "A fallback phrase used for testing.",
-              meaningInSentence: null,
-              sentenceTranslation: "Quorvex drift xuất hiện ở đây.",
-              examples: [],
-              relatedWords: [],
-              pronunciation: null,
-              type: null,
-              provider: "ai",
-            },
-          }),
-          { status: 200 },
-        );
-      }
-
-      if (url === "/api/vocabulary") {
-        vocabularyBody = body;
-        return new Response(JSON.stringify({ success: true, data: { id: "vocab-fallback" } }), {
-          status: 200,
-        });
-      }
-
-      return new Response(JSON.stringify({ messages: [] }), { status: 200 });
-    });
+        return new Response(JSON.stringify({ messages: [] }), { status: 200 });
+      },
+    );
     vi.mocked(extractSelectionInfo).mockReturnValue({
       selectedText: "quorvex drift",
       selectionRect: { top: 120, left: 160, width: 90, height: 20 },
@@ -476,14 +497,15 @@ describe("StudyPageClient", () => {
       targetLanguage: "vi",
     });
 
-    const { user } = renderWithUser(<StudyPageClient initialPassages={[passage]} />);
+    const { user } = renderWithUser(
+      <StudyPageClient initialPassages={[passage]} />,
+    );
     await user.click(screen.getByText(passage.title));
     fireEvent.mouseUp(screen.getByText(/Quorvex drift appears here/));
     await user.click(getPopupTranslateButton());
     expect(await screen.findByText("quorvex sự trôi")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /Open details/ }));
-    await screen.findByText("A fallback phrase used for testing.");
     await user.click(await screen.findByRole("button", { name: /Save/ }));
 
     await waitFor(() => {
@@ -511,17 +533,25 @@ describe("StudyPageClient", () => {
       sourceId: passage.id,
       targetLanguage: "vi",
     });
-    const { user } = renderWithUser(<StudyPageClient initialPassages={[passage]} />);
+    const { user } = renderWithUser(
+      <StudyPageClient initialPassages={[passage]} />,
+    );
 
     await user.click(screen.getByText(passage.title));
-    fireEvent.mouseUp(screen.getByText(/Simple text contains algorithmic bias/));
+    fireEvent.mouseUp(
+      screen.getByText(/Simple text contains algorithmic bias/),
+    );
     await user.click(getPopupTranslateButton());
-    expect(await screen.findByText("thiên lệch thuật toán")).toBeInTheDocument();
+    expect(
+      await screen.findByText("thiên lệch thuật toán"),
+    ).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Original (B2)" }));
     expect(screen.queryByText("thiên lệch thuật toán")).not.toBeInTheDocument();
 
-    fireEvent.contextMenu(screen.getByText(/Original text contains algorithmic bias/));
+    fireEvent.contextMenu(
+      screen.getByText(/Original text contains algorithmic bias/),
+    );
     expect(screen.queryByRole("menu")).not.toBeInTheDocument();
   });
 
@@ -532,15 +562,18 @@ describe("StudyPageClient", () => {
       originalLevel: "B2",
     });
     const first = deferredResponse();
-    vi.mocked(fetch).mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
-      const url = String(input);
-      const body = init?.body ? JSON.parse(String(init.body)) : null;
-      if (url === "/api/translate" && body?.text === "first term") return first.promise;
-      if (url === "/api/translate" && body?.text === "second term") {
-        return translationResponse("ban dich thu hai");
-      }
-      return new Response(JSON.stringify({ messages: [] }), { status: 200 });
-    });
+    vi.mocked(fetch).mockImplementation(
+      async (input: RequestInfo | URL, init?: RequestInit) => {
+        const url = String(input);
+        const body = init?.body ? JSON.parse(String(init.body)) : null;
+        if (url === "/api/translate" && body?.text === "first term")
+          return first.promise;
+        if (url === "/api/translate" && body?.text === "second term") {
+          return translationResponse("ban dich thu hai");
+        }
+        return new Response(JSON.stringify({ messages: [] }), { status: 200 });
+      },
+    );
     vi.mocked(extractSelectionInfo)
       .mockReturnValueOnce({
         selectedText: "first term",
@@ -557,7 +590,9 @@ describe("StudyPageClient", () => {
         targetLanguage: "vi",
       });
 
-    const { user } = renderWithUser(<StudyPageClient initialPassages={[passage]} />);
+    const { user } = renderWithUser(
+      <StudyPageClient initialPassages={[passage]} />,
+    );
     await user.click(screen.getByText(passage.title));
 
     // Select first term, click translate
@@ -585,7 +620,9 @@ describe("StudyPageClient", () => {
     });
     vi.mocked(fetch).mockImplementation(async (input: RequestInfo | URL) => {
       if (String(input) === "/api/translate") {
-        return new Response(JSON.stringify({ error: "Unable to translate." }), { status: 500 });
+        return new Response(JSON.stringify({ error: "Unable to translate." }), {
+          status: 500,
+        });
       }
       return new Response(JSON.stringify({ messages: [] }), { status: 200 });
     });
@@ -597,7 +634,9 @@ describe("StudyPageClient", () => {
       targetLanguage: "vi",
     });
 
-    const { user } = renderWithUser(<StudyPageClient initialPassages={[passage]} />);
+    const { user } = renderWithUser(
+      <StudyPageClient initialPassages={[passage]} />,
+    );
     await user.click(screen.getByText(passage.title));
     fireEvent.mouseUp(screen.getByText(/Unknown phrase appears here/));
     await user.click(getPopupTranslateButton());
@@ -607,7 +646,7 @@ describe("StudyPageClient", () => {
       expect.objectContaining({
         category: "study-translation",
         level: "error",
-        message: "study-translation-quick-error",
+        message: "study-translation-error",
       }),
     );
   });
@@ -620,15 +659,16 @@ describe("StudyPageClient", () => {
     });
     const deferred = deferredResponse();
     let quickRequestCount = 0;
-    vi.mocked(fetch).mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
-      const url = String(input);
-      const body = init?.body ? JSON.parse(String(init.body)) : null;
-      if (url === "/api/translate" && body?.mode === "quick") {
-        quickRequestCount++;
-        return deferred.promise;
-      }
-      return new Response(JSON.stringify({ messages: [] }), { status: 200 });
-    });
+    vi.mocked(fetch).mockImplementation(
+      async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url === "/api/translate") {
+          quickRequestCount++;
+          return deferred.promise;
+        }
+        return new Response(JSON.stringify({ messages: [] }), { status: 200 });
+      },
+    );
     vi.mocked(extractSelectionInfo).mockReturnValue({
       selectedText: "Rapid click",
       selectionRect: { top: 120, left: 160, width: 80, height: 20 },
@@ -637,7 +677,9 @@ describe("StudyPageClient", () => {
       targetLanguage: "vi",
     });
 
-    const { user } = renderWithUser(<StudyPageClient initialPassages={[passage]} />);
+    const { user } = renderWithUser(
+      <StudyPageClient initialPassages={[passage]} />,
+    );
     await user.click(screen.getByText(passage.title));
     fireEvent.mouseUp(screen.getByText(/Rapid click test content/));
 

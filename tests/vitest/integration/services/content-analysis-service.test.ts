@@ -94,7 +94,7 @@ describe("analyzeAndPersistContent", () => {
         text: complexText,
         title: "No questions",
         sourceType: "PDF",
-        fileUrl: "https://cdn.test/file.pdf",
+        filePath: "https://cdn.test/file.pdf",
       }),
     ).resolves.toEqual({
       passageId: "passage_no_questions",
@@ -105,7 +105,7 @@ describe("analyzeAndPersistContent", () => {
 
     expect(db.passage.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
-        fileUrl: "https://cdn.test/file.pdf",
+        filePath: "https://cdn.test/file.pdf",
         questions: { create: [] },
       }),
     });

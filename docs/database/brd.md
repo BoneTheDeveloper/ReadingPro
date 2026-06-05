@@ -96,12 +96,12 @@ _Payment/billing integration deferred — not permanently excluded. All features
 | Phase | Scope | Status |
 |-------|-------|--------|
 | MVP | Upload, CEFR detect, simplify, questions, flashcards, progress | Done |
-| Auth | Supabase Auth (email/password + Google OAuth) | Done |
+| Auth | Clerk (email/password + Google OAuth) | Done |
 | Sentry | Error tracking, performance monitoring, source maps | Done |
 | Content Expansion | YouTube transcription, OCR for scanned PDFs | Planned |
 | Advanced Features | Resizable workspace, analytics dashboard | In Progress |
-| Production | PostgreSQL, Vercel deploy, multi-user | Future |
+| Production | Neon PostgreSQL, Vercel Blob, Vercel deploy, multi-user | In Progress |
 
 ---
 
-**Last Updated:** 2026-05-11
+**Last Updated:** 2026-06-05

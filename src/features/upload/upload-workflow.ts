@@ -1,12 +1,12 @@
 import * as Sentry from '@sentry/nextjs';
 import { parsePDF } from '@/lib/parsers/pdf';
-import { deleteFile, uploadFile } from '@/lib/storage/supabase-storage';
+import { deleteFile, uploadFile } from '@/lib/storage/blob-storage';
 import { sanitizeFilename, sanitizeTitle, validateFile, validateTextContent } from '@/lib/validation/upload';
 import { analyzeAndPersistContent } from './content-analysis-service';
 
 export interface FileUploadWorkflowResult {
   filename: string;
-  fileUrl: string;
+  filePath: string;
   passageId: string;
   originalLevel: string;
   simplifiedLevel: string | null;
@@ -28,7 +28,7 @@ export async function processFileUpload(userId: string, file: File): Promise<Fil
   let storedInStorage = false;
 
   try {
-    Sentry.addBreadcrumb({ category: 'upload', message: 'Uploading file to Supabase Storage', level: 'info' });
+    Sentry.addBreadcrumb({ category: 'upload', message: 'Uploading file to blob storage', level: 'info' });
     const buffer = Buffer.from(await file.arrayBuffer());
 
     // Derive safe MIME type from the validated and sanitized extension instead of trusting user's file.type
@@ -60,12 +60,12 @@ export async function processFileUpload(userId: string, file: File): Promise<Fil
       text,
       title: sanitizeTitle(file.name),
       sourceType: file.type === 'application/pdf' ? 'PDF' : 'TEXT',
-      fileUrl: storageResult.url,
+      filePath: storageResult.pathname,
     });
 
     return {
       filename,
-      fileUrl: storageResult.url,
+      filePath: storageResult.pathname,
       ...analysis,
     };
   } catch (error) {

@@ -17,9 +17,10 @@ setup('authenticate', async ({ page }) => {
 
   await page.goto('/en/sign-in')
 
-  await page.locator('#email').fill(email)
-  await page.locator('#password').fill(password)
-  await page.getByRole('button', { name: /^sign in$/i }).click()
+  await page.locator('input[name="identifier"]').fill(email)
+  await page.getByRole('button', { name: /^continue$/i }).click()
+  await page.locator('input[name="password"]').fill(password)
+  await page.getByRole('button', { name: /^continue$/i }).click()
 
   // Wait for redirect away from sign-in page
   await page.waitForURL((url) => !url.pathname.includes('sign-in'), { timeout: 15000 })

@@ -1,9 +1,10 @@
 import { NextRequest } from "next/server";
 import * as Sentry from "@sentry/nextjs";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { openai } from "@ai-sdk/openai";
 import { POST as reviewCard } from "@/app/api/cards/review/route";
 import { GET as getDueCardsRoute } from "@/app/api/cards/due/route";
+import { GET as getHealth } from "@/app/api/health/route";
 import { GET as getProgressStats } from "@/app/api/progress/stats/route";
 import { GET as getStudyChatHistory, POST as studyChat } from "@/app/api/study-chat/route";
 import {
@@ -26,6 +27,13 @@ const routeMocks = vi.hoisted(() => {
     }
   }
 
+  class AuthenticationRequiredError extends Error {
+    constructor() {
+      super("Authentication required");
+      this.name = "AuthenticationRequiredError";
+    }
+  }
+
   return {
     getAuthenticatedUser: vi.fn(),
     getDueCards: vi.fn(),
@@ -37,11 +45,13 @@ const routeMocks = vi.hoisted(() => {
     analyzeAndPersistContent: vi.fn(),
     getStudyChatModelId: vi.fn(() => "gpt-4o-mini"),
     UploadWorkflowError,
+    AuthenticationRequiredError,
   };
 });
 
 vi.mock("@/lib/auth/auth-utils", () => ({
   getAuthenticatedUser: routeMocks.getAuthenticatedUser,
+  AuthenticationRequiredError: routeMocks.AuthenticationRequiredError,
 }));
 
 vi.mock("@/lib/db/card-review-queries", () => ({
@@ -90,6 +100,10 @@ beforeEach(() => {
   db.studyChatMessage.findMany.mockResolvedValue([]);
 });
 
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
+
 describe("GET /api/cards/due", () => {
   it("returns due cards for the authenticated user", async () => {
     routeMocks.getDueCards.mockResolvedValue([dueCardFixture]);
@@ -113,6 +127,24 @@ describe("GET /api/cards/due", () => {
     routeMocks.getDueCards.mockRejectedValue(apiError("db down"));
 
     await expectJsonError(await getDueCardsRoute(), 500, "Failed to fetch due cards");
+  });
+});
+
+describe("GET /api/health", () => {
+  it("returns the current deployment commit SHA for deployment verification", async () => {
+    vi.stubEnv("VERCEL_GIT_COMMIT_SHA", "commit_123");
+
+    const response = getHealth();
+    const payload = await readJsonResponse(response);
+
+    expect(response.status).toBe(200);
+    expect(payload).toEqual({
+      success: true,
+      data: {
+        status: "ok",
+        commitSha: "commit_123",
+      },
+    });
   });
 });
 
@@ -140,7 +172,7 @@ describe("POST /api/cards/review", () => {
     await expectJsonError(
       await reviewCard(createJsonRequest({ cardReviewId: dueCardFixture.id, qualityRating: 6 })),
       400,
-      "Quality rating must be between 0 and 5",
+      "Invalid request",
     );
     expect(routeMocks.updateCardReview).not.toHaveBeenCalled();
   });
@@ -157,6 +189,23 @@ describe("POST /api/cards/review", () => {
     expect(Sentry.captureException).toHaveBeenCalledWith(error, {
       tags: { route: "api:cards:review", method: "POST" },
     });
+  });
+
+  it("rejects malformed JSON with 400", async () => {
+    await expectJsonError(
+      await reviewCard(new NextRequest("https://english-reading.test/api/cards/review", { method: "POST", body: "{" })),
+      400,
+      "Invalid JSON payload.",
+    );
+  });
+
+  it("rejects non-UUID card review IDs", async () => {
+    await expectJsonError(
+      await reviewCard(createJsonRequest({ cardReviewId: "not-a-uuid", qualityRating: 3 })),
+      400,
+      "Invalid request",
+    );
+    expect(routeMocks.updateCardReview).not.toHaveBeenCalled();
   });
 });
 
@@ -238,6 +287,23 @@ describe("POST/PATCH /api/study-session", () => {
     expect(Sentry.captureException).toHaveBeenCalledWith(updateError, {
       tags: { route: "api:study-session", method: "PATCH" },
     });
+  });
+
+  it("rejects malformed JSON with 400", async () => {
+    await expectJsonError(
+      await createStudySessionRoute(new NextRequest("https://english-reading.test/api/study-session", { method: "POST", body: "{" })),
+      400,
+      "Invalid JSON payload.",
+    );
+  });
+
+  it("rejects non-UUID session IDs", async () => {
+    await expectJsonError(
+      await updateStudySessionRoute(createJsonRequest({ sessionId: "not-a-uuid", cardsReviewed: 1 })),
+      400,
+      "Invalid UUID",
+    );
+    expect(routeMocks.updateStudySession).not.toHaveBeenCalled();
   });
 });
 
@@ -407,7 +473,7 @@ describe("POST /api/study-chat", () => {
       "Invalid chat request. Select a passage and enter a message.",
     );
 
-    routeMocks.getAuthenticatedUser.mockRejectedValueOnce(apiError("Authentication required"));
+    routeMocks.getAuthenticatedUser.mockRejectedValueOnce(new routeMocks.AuthenticationRequiredError());
     await expectJsonError(
       await studyChat(createJsonRequest({ passageId: passageFixture.id, messages: [] })),
       401,
@@ -472,7 +538,7 @@ describe("POST /api/upload", () => {
   it("processes an authenticated file upload", async () => {
     const uploadResult = {
       filename: "user_test_123/story.txt",
-      fileUrl: "https://example.test/story.txt",
+      filePath: "user_test_reader/story.txt",
       passageId: passageFixture.id,
       originalLevel: "B1",
       simplifiedLevel: "A2",
@@ -501,6 +567,16 @@ describe("POST /api/upload", () => {
       400,
       "Only .txt and .pdf files are supported",
     );
+  });
+
+  it("rejects string file entries", async () => {
+    const stringFileRequest = {
+      formData: vi.fn(async () => ({
+        get: vi.fn(() => "not-a-file"),
+      })),
+    } as unknown as NextRequest;
+
+    await expectJsonError(await uploadFileRoute(stringFileRequest), 400, "No file provided");
   });
 
   it("captures unexpected upload failures", async () => {
@@ -548,8 +624,8 @@ describe("POST /api/upload/text", () => {
   it("captures malformed JSON and analysis failures", async () => {
     await expectJsonError(
       await uploadTextRoute(new NextRequest("https://english-reading.test/api/upload/text", { method: "POST", body: "{" })),
-      500,
-      "Failed to process text",
+      400,
+      "Invalid JSON payload.",
     );
 
     const error = apiError("ai down");

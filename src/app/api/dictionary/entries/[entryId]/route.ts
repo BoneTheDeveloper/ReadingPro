@@ -14,6 +14,8 @@ import {
 } from "@/lib/dictionary/shared/dictionary-performance";
 import { getDictionaryEntryDetail } from "@/lib/dictionary/entry-detail/entry-detail.service";
 
+const entryIdSchema = z.string().uuid();
+
 const entryDetailQuerySchema = z.object({
   sourceLanguage: z.literal("en"),
   targetLanguage: z.literal("vi"),
@@ -49,7 +51,8 @@ async function handleEntryDetailGet(
   try {
     const { entryId } = await params;
 
-    if (!entryId || entryId.trim().length === 0) {
+    const idParsed = entryIdSchema.safeParse(entryId);
+    if (!idParsed.success) {
       return NextResponse.json({ error: "Invalid entry id." }, { status: 400 });
     }
 

@@ -20,7 +20,7 @@ This was a massive undertaking that required complete database restructuring. Th
 - **RLS Expansion**: Added policies for 9 additional tables (study_chat_messages, translation_caches, translation_histories, vocabulary_items), bringing total coverage to 15 public tables
 - **Dictionary Split**: Broke 34K-line common-1000.json (1009 entries) into entries.json, senses.json, translations.json, aliases.json with stable cross-file reference keys
 - **Script Modernization**: Replaced prisma/seed-dictionary.ts with prisma/seed.ts and created 4 new helper scripts: normalize-dictionary.ts, validate-dictionary.ts, generate-seed-data.ts, import-dictionary.ts
-- **Supabase Cleanup**: Deleted entire supabase/migrations/ directory, kept only config.toml for hosting
+- **Provider Cleanup**: Deleted obsolete provider-specific migrations and kept only the minimal hosting config that still existed at the time
 
 ## What We Tried
 
@@ -51,4 +51,4 @@ The root cause was architectural debt from early development phases:
 - Unblocked plan 260604-1102-issue-46-output-boundary-migration  
 - Monitor performance of new dictionary loading structure
 - Document new RLS policies and dictionary schema for future developers
-- Evaluate if any remaining Supabase-specific configurations can be moved to Prisma
+- Evaluate if any remaining provider-specific database configuration can be moved to Prisma

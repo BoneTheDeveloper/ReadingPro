@@ -22,7 +22,7 @@ pnpm exec playwright test --config=playwright.screenshot.config.ts --list
 pnpm e2e --project=public
 ```
 
-Run authenticated and screenshot flows when valid Supabase E2E credentials and a reachable database are available:
+Run authenticated and screenshot flows when valid Clerk E2E credentials and a reachable Neon database are available:
 
 ```bash
 pnpm e2e --project=setup

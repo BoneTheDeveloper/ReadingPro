@@ -3,8 +3,10 @@
 ## Prerequisites
 
 - Node.js
-- pnpm 10.33.2 or newer
-- A Supabase project with a PostgreSQL database
+- pnpm 11.3.0 or newer
+- A Clerk application for authentication
+- A Neon PostgreSQL database
+- A Vercel Blob store for preview/production file uploads
 - An OpenAI API key for AI features
 
 
@@ -30,15 +32,21 @@ Then update `.env.local` with your own values:
 - `OPENAI_API_KEY`
 - `OPENAI_STUDY_CHAT_MODEL` (optional, defaults to `gpt-4o-mini` when missing/empty/invalid)
 - `NEXT_PUBLIC_SITE_URL`
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY`
+- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
+- `CLERK_SECRET_KEY`
+- `CLERK_WEBHOOK_SIGNING_SECRET`
 - `DATABASE_URL`
 - `DIRECT_URL`
+- `BLOB_READ_WRITE_TOKEN` (required on Vercel; local dev uses `.local-blob-storage/`)
 
-`DATABASE_URL` should use the Supabase pooled connection string. `DIRECT_URL` should use the direct database connection string for Prisma migrations.
+`DATABASE_URL` should use the Neon pooled runtime connection string. `DIRECT_URL` should use the Neon direct connection string for local and trusted Prisma migration jobs.
 
-For production OAuth redirects, set `NEXT_PUBLIC_SITE_URL` to your deployed host, for example `https://your-app.vercel.app`.
+Production GitHub Actions also needs `NEON_API_KEY`, `NEON_PROJECT_ID`,
+`NEON_PRODUCTION_BRANCH_ID`, `VERCEL_TOKEN`, `VERCEL_ORG_ID`,
+`VERCEL_PROJECT_ID`, and `PRODUCTION_URL` in the protected `production`
+environment.
+
+For production auth redirects, set `NEXT_PUBLIC_SITE_URL` to your deployed host, for example `https://your-app.vercel.app`, and configure the same domain in Clerk.
 
 ## Set Up the Database
 
@@ -70,7 +78,7 @@ http://localhost:3000
 
 ## Run Browser Tests and Screenshots
 
-Playwright E2E uses a pre-created Supabase Auth test user. Add the user credentials to `.env.test`:
+Playwright E2E uses a pre-created Clerk development test user. Add the user credentials to `.env.test`:
 
 ```bash
 E2E_TEST_USER_EMAIL=reader@example.com

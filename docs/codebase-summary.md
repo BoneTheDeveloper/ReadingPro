@@ -5,218 +5,122 @@
 ## Tech Stack
 
 | Layer | Technology |
-|-------|-----------|
-| Framework | Next.js 16.2.6 (App Router, RSC, locale routing) |
-| UI | React 19.2.6, shadcn/ui, Tailwind CSS 4 |
-| i18n | next-intl (locale-prefixed routes: /en/*, /vi/*) |
-| Theming | next-themes (class-based dark mode) |
-| AI | Vercel AI SDK v6 + OpenAI/Google providers (`@ai-sdk/openai`, `@ai-sdk/google`) |
-| Auth | Supabase Auth (`@supabase/supabase-js` + `@supabase/ssr`) |
-| Database | PostgreSQL (Supabase) + Prisma ORM v7.8 (`@prisma/adapter-pg`) |
-| Storage | Supabase Storage (file uploads) |
+|-------|------------|
+| Framework | Next.js 16.2.6 App Router, React Server Components |
+| UI | React 19.2.6, shadcn/ui, Tailwind CSS 4, Lucide React |
+| i18n | next-intl with locale-prefixed routes (`/en/*`, `/vi/*`) |
+| Theming | next-themes with class-based dark mode |
+| Auth | Clerk (`@clerk/nextjs`) |
+| Database | Neon PostgreSQL + Prisma ORM v7.8 (`@prisma/adapter-pg`) |
+| Storage | Local filesystem in development, Vercel Blob in preview/production |
+| AI | Vercel AI SDK v6 + OpenAI/Google providers |
 | PDF | `pdf-parse` v2.4.5 |
 | Validation | Zod v4 |
-| File Upload | `react-dropzone` v15 |
-| Panel Layout | `react-resizable-panels` v4 |
-| Icons | Lucide React |
-| Monitoring | Sentry (server + edge configs) |
+| Monitoring | Sentry, Vercel Speed Insights |
 | Logging | Pino structured logging |
-| TypeScript | Strict mode |
+| Tests | Vitest, Testing Library, Playwright |
 
----
+## Source Layout
 
-## Directory Structure
+The codebase separates route surfaces from feature implementation:
 
-The codebase now separates routing from feature implementation:
+- `src/app/` contains App Router layouts, locale routes, auth pages, and API routes.
+- `src/features/` contains feature-specific UI, hooks, server actions, and workflows.
+- `src/components/ui/` contains reusable shadcn-style primitives.
+- `src/components/layout/` contains dashboard chrome, theme/language controls, and auth controls.
+- `src/lib/` contains auth, database, storage, AI, dictionary, translation, validation, and observability infrastructure.
+- `src/generated/prisma/` contains the generated Prisma client.
+- `localization/` contains message catalogs and i18n reference docs.
+- `prisma/` contains schema, migrations, seed data, and migration workflow notes.
 
-- `src/app/` contains locale-prefixed route handlers ([locale] segment) and API routes.
-- `src/features/<name>/` contains feature-specific UI, types, server actions, and workflow logic.
-- `src/components/ui/` contains reusable UI primitives.
-- `src/components/layout/` contains dashboard shell and account controls.
-- `src/lib/` contains cross-feature infrastructure and reusable domain utilities.
-- `localization/` contains i18n message catalogs and localization docs.
-
-```
+```text
 src/
 ├── app/
-│   ├── layout.tsx                        # Root layout (Geist fonts + ThemeProvider)
-│   ├── page.tsx                          # Landing page
-│   ├── globals.css                       # Tailwind + shadcn theme + dark mode variables
-│   ├── middleware.ts                     # Locale routing + Supabase auth protection
+│   ├── api/
+│   │   ├── cards/{due,review}/route.ts
+│   │   ├── dictionary/{lookup,search,suggest}/route.ts
+│   │   ├── local-blob/[pathname]/route.ts
+│   │   ├── progress/stats/route.ts
+│   │   ├── study-chat/route.ts
+│   │   ├── study-session/route.ts
+│   │   ├── translate/route.ts
+│   │   ├── upload/{route,text/route}.ts
+│   │   └── vocabulary/route.ts
 │   ├── [locale]/
-│   │   ├── layout.tsx                    # Localized layout
-│   │   ├── page.tsx                      # Landing page
-│   │   ├── api/
-│   │   │   ├── upload/route.ts           # POST: file upload + analyze
-│   │   │   ├── upload/text/route.ts      # POST: text content + analyze
-│   │   │   ├── cards/review/route.ts     # POST: submit SM-2 card review
-│   │   │   ├── cards/due/route.ts        # GET: fetch due cards
-│   │   │   ├── study-session/route.ts    # POST+PATCH: session CRUD
-│   │   │   ├── translate/route.ts        # POST: quick/detailed inline translation
-│   │   │   ├── vocabulary/route.ts       # POST: save/upsert vocabulary
-│   │   │   ├── dictionary/route.ts       # GET: dictionary exact lookup
-│   │   │   ├── dictionary/suggest/route.ts # GET: dictionary suggest search
-│   │   │   ├── progress/stats/route.ts   # GET: user progress stats
-│   │   │   └── sentry-example-api/route.ts # Sentry test endpoint
-│   │   ├── (auth)/
-│   │   │   ├── layout.tsx               # Auth pages centered layout
-│   │   │   ├── sign-in/page.tsx         # Email/password + Google OAuth
-│   │   │   └── sign-up/page.tsx         # Email/password + Google OAuth
-│   │   ├── auth/callback/route.ts       # OAuth callback handler
-│   │   └── (dashboard)/
-│   │       ├── layout.tsx               # Dashboard layout (sidebar)
-│   │       ├── error.tsx                # Dashboard error boundary
-│   │       ├── upload/page.tsx          # Thin route: renders upload feature client
-│   │       ├── progress/page.tsx        # Thin route: renders progress feature
-│   │       ├── processing/page.tsx      # Thin route: renders processing feature client
-│   │       ├── dictionary/page.tsx      # Thin route: renders dictionary feature
-│   │       ├── reading/[id]/            # Server route: loads passage, renders reading feature
-│   │       ├── test/[id]/               # Server route: loads questions, renders test feature
-│   │       └── study/                   # Server route + error boundary for study workspace
+│   │   ├── (auth)/sign-in/[[...sign-in]]/page.tsx
+│   │   ├── (auth)/sign-up/[[...sign-up]]/page.tsx
+│   │   ├── (dashboard)/{study,upload,progress,dictionary}/page.tsx
+│   │   ├── (dashboard)/reading/[id]/page.tsx
+│   │   ├── (dashboard)/test/[id]/page.tsx
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── globals.css
+│   └── layout.tsx
 ├── components/
-│   ├── ui/                              # shadcn/ui primitives (don't modify)
-│   ├── layout/                          # Dashboard shell and account controls
-│   │   ├── dashboard-sidebar.tsx         # Dashboard navigation/sidebar/top bar
-│   │   ├── user-menu.tsx                 # User dropdown menu
-│   │   ├── sign-out-button.tsx          # Sign-out icon button
-│   │   ├── use-sign-out.ts               # Layout-owned sign-out hook
-│   │   ├── theme-toggle.tsx             # Dark mode toggle component
-│   │   └── language-switcher.tsx        # Language switcher component
-│   └── error-boundary.tsx                # Global error boundary
-├── components/
-│   ├── ui/                               # shadcn/ui primitives (don't modify)
-│   ├── layout/                           # Dashboard shell and account controls
-│   │   ├── dashboard-sidebar.tsx         # Dashboard navigation/sidebar/top bar
-│   │   ├── user-menu.tsx                 # User dropdown menu
-│   │   ├── sign-out-button.tsx           # Sign-out icon button
-│   │   └── use-sign-out.ts               # Layout-owned sign-out hook
-│   └── error-boundary.tsx                # Global error boundary
 ├── features/
-│   ├── study/
-│   │   ├── study-page-client.tsx         # Main 3-panel workspace composition
-│   │   ├── study-*.tsx                   # Study panels, quiz UI, inline translation, upload modal
-│   │   ├── use-study-*.ts                # Workspace state, layout, and actions
-│   │   ├── actions/                      # Server action adapters
-│   │   ├── services/                     # Study business workflows
-│   │   └── study-types.ts                # Study feature types
-│   ├── upload/
-│   │   ├── upload-*.tsx                  # Upload and processing UI
-│   │   ├── text-input-area.tsx           # Text paste input
-│   │   ├── *workflow.ts                  # Upload orchestration
-│   │   ├── *service.ts                   # Content analysis business logic
-│   │   └── analyze-content-action.ts     # Server action adapter
-│   ├── reading/
-│   │   └── reading-view-client.tsx       # Reading view with original/simplified toggle
-│   ├── dictionary/
-│   │   ├── dictionary-page-client.tsx     # Dictionary lookup and suggest search UI
-│   │   ├── dictionary-entry-card.tsx      # Dictionary result rendering
-│   │   └── dictionary-suggest-dropdown.tsx # Suggest result dropdown
-│   ├── test/
-│   │   ├── flashcard-test-client.tsx     # Flashcard test state and flow
-│   │   ├── test-types.ts                 # Test data types
-│   │   ├── test-header.tsx               # Test header with progress
-│   │   ├── test-passage-panel.tsx        # Passage display panel
-│   │   ├── test-question-card.tsx        # Question card UI
-│   │   └── test-results-screen.tsx       # Results summary screen
-│   └── progress/
-│       └── progress-dashboard.tsx        # Progress stats display
+├── generated/prisma/
+├── i18n/
 ├── lib/
-│   ├── supabase/
-│   │   ├── client.ts                     # Browser client
-│   │   ├── server.ts                     # Server client (component + action)
-│   │   └── middleware.ts                 # Session management
-│   ├── auth/
-│   │   ├── auth-utils.ts                 # getAuthenticatedUser, requireAuth, ensureProfile
-│   │   └── sync-user.ts                  # Upsert user profile on OAuth
-│   ├── db/
-│   │   ├── client.ts                     # Prisma singleton + PrismaPg + security extension
-│   │   ├── passage-queries.ts            # Passage CRUD + question creation
-│   │   ├── card-review-queries.ts        # SM-2 logic, due cards, progress stats
-│   │   ├── study-session-queries.ts      # Session CRUD + accuracy computation
-│   │   ├── dictionary-queries.ts         # Dictionary lookup/list/suggest helpers
-│   │   └── translation-queries.ts        # Translation cache/history/vocabulary helpers
-│   ├── dictionary/
-│   │   └── resolve-quick-dictionary-translation.ts # Quick translate ranking/fallback
-│   ├── storage/
-│   │   └── supabase-storage.ts           # File upload/download/delete via Supabase Storage
-│   ├── shared/
-│   │   ├── utils.ts                      # cn() utility
-│   │   └── reading-utils.ts              # Reading time, word highlighting
-│   ├── domain/                           # Cross-feature domain helpers
-│   ├── ui/                               # Cross-feature UI helpers
-│   ├── parsers/
-│   │   └── pdf.ts                        # PDF text extraction
-│   ├── validation/
-│   │   └── upload.ts                     # File/text validation
-│   ├── algorithms/
-│   │   └── sm2.ts                        # SM-2 standalone implementation
-│   ├── core/
-│   │   ├── logger.ts                     # Pino structured logging
-│   │   └── sentry.ts                     # Sentry client configuration
-│   └── ai/
-│       ├── content-simplifier.ts         # AI text simplification
-│       ├── question-generator.ts         # AI question generation
-│       ├── translator.ts                 # Detailed contextual translation generation
-│       └── prompt-utils.ts               # Text wrapping helpers for AI prompts
-├── generated/prisma/                     # Generated Prisma client
-├── instrumentation.ts                    # Sentry server instrumentation
-├── instrumentation-client.ts             # Sentry client instrumentation
-└── proxy.ts                              # Auth route protection and redirects
+└── proxy.ts
 ```
 
----
+## Core Modules
+
+| Area | Files | Responsibility |
+|------|-------|----------------|
+| Route protection | `src/proxy.ts` | Runs Clerk middleware, applies auth redirects, then delegates localized requests to next-intl. |
+| Auth profile sync | `src/lib/auth/auth-utils.ts`, `src/lib/auth/sync-user.ts` | Reads Clerk session/user metadata and upserts `UserProfile`. |
+| Database client | `src/lib/db/client.ts`, `src/lib/db/create-prisma-client.ts` | Creates Prisma client with Postgres adapter and query instrumentation. |
+| Upload workflow | `src/features/upload/upload-workflow.ts` | Validates file/text, stores file, extracts PDF text, runs analysis. |
+| Storage adapter | `src/lib/storage/blob-storage.ts` | Uses `.local-blob-storage/` in development and private Vercel Blob in preview/production. |
+| Study workspace | `src/features/study/*` | Three-panel reading, quiz, translation, chat, and upload experience. |
+| Translation | `src/lib/translation/*`, `src/app/api/translate/route.ts` | Quick/detailed translation, cache/history, vocabulary saving. |
+| Dictionary | `src/lib/dictionary/*`, `src/app/api/dictionary/*` | Lookup, suggest, search, and entry detail services. |
+| Observability | `src/lib/core/*`, `src/instrumentation*.ts` | Pino logging, Sentry instrumentation, metrics helpers. |
 
 ## Pages
 
 | Route | Purpose |
 |-------|---------|
-| `/` | Landing page (redirects to locale-prefixed version) |
-| `/[locale]/` | Locale-prefixed landing page |
-| `/[locale]/sign-in` | Email/password + Google OAuth sign-in |
-| `/[locale]/sign-up` | Email/password + Google OAuth sign-up |
-| `/[locale]/auth/callback` | OAuth callback handler |
-| `/[locale]/upload` | File upload or text paste |
-| `/[locale]/processing` | Simulated processing animation |
-| `/[locale]/reading/[id]` | Reading view with original/simplified toggle |
-| `/[locale]/test/[id]` | Flashcard test with feedback and scoring |
-| `/[locale]/study` | Three-panel resizable workspace |
-| `/[locale]/dictionary` | Dictionary lookup and suggest search |
-| `/[locale]/progress` | Progress dashboard with stats |
-
----
+| `/` | Redirects into the default locale flow. |
+| `/[locale]` | Locale-prefixed dashboard home. |
+| `/[locale]/sign-in` | Clerk sign-in page. |
+| `/[locale]/sign-up` | Clerk sign-up page. |
+| `/[locale]/upload` | Upload or paste content. |
+| `/[locale]/processing` | Processing transition UI. |
+| `/[locale]/reading/[id]` | Reading view for a saved passage. |
+| `/[locale]/test/[id]` | Flashcard test for a passage. |
+| `/[locale]/study` | Three-panel study workspace. |
+| `/[locale]/dictionary` | Dictionary lookup/search. |
+| `/[locale]/progress` | Progress dashboard. |
 
 ## Environment Variables
 
 | Variable | Purpose |
 |----------|---------|
-| `DATABASE_URL` | PostgreSQL connection string (Supabase pooled) |
-| `DIRECT_URL` | PostgreSQL direct connection (Prisma migrations) |
-| `OPENAI_API_KEY` | OpenAI API key (required) |
-| `OPENAI_TRANSLATION_MODEL` | Optional model override for detailed translation |
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anonymous public key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase admin access |
-| `NEXT_PUBLIC_SENTRY_DSN` | Sentry DSN (optional) |
-| `SENTRY_ORG` | Sentry organization (optional) |
-| `SENTRY_PROJECT` | Sentry project name (optional) |
+| `NEXT_PUBLIC_SITE_URL` | Canonical app URL for redirects and absolute links. |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Public Clerk browser key. |
+| `CLERK_SECRET_KEY` | Server-side Clerk API key. |
+| `CLERK_WEBHOOK_SIGNING_SECRET` | Clerk webhook verification secret. |
+| `DATABASE_URL` | Neon pooled runtime Postgres connection. |
+| `DIRECT_URL` | Neon direct Postgres connection for migrations only. |
+| `BLOB_READ_WRITE_TOKEN` | Vercel Blob token for preview/production file storage. |
+| `OPENAI_API_KEY` | OpenAI API key for AI features. |
+| `NEXT_PUBLIC_SENTRY_DSN` | Optional Sentry browser DSN. |
+| `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` | CI-only source-map upload settings. |
+| `CRON_SECRET` | Secret for scheduled cleanup endpoints. |
 
----
+## Known Gaps
 
-## Known Issues
-
-- Processing page is simulated (fake progress, auto-redirects after ~6s)
-- No real-time updates (no WebSockets/SSE)
-- Translation requests are cached, but other AI flows still have limited caching
-- Unused deps pending audit: `react-hook-form`, `@hookform/resolvers`, `date-fns`, `@base-ui/react`
-
----
+- Processing page still uses a transition/progress UI rather than live job progress.
+- Production deployment depends on correctly separated Clerk development/production instances, Neon branches, and Blob stores.
+- Some AI and translation flows have caching, but not every generated artifact is cached.
+- Some UI strings remain hard-coded in English; see `localization/docs/architecture.md`.
 
 **See also:**
-- Data models → [`docs/database/data-dictionary.md`](database/data-dictionary.md)
-- API endpoints & requirements → [`docs/database/srs.md`](database/srs.md)
-- ERD → [`docs/database/erd.md`](database/erd.md)
-
----
+- Data models -> [`docs/database/data-dictionary.md`](database/data-dictionary.md)
+- API endpoints and requirements -> [`docs/database/srs.md`](database/srs.md)
+- ERD -> [`docs/database/erd.md`](database/erd.md)
 
 **Status:** Active
-**Last Updated:** 2026-05-29
+**Last Updated:** 2026-06-05
