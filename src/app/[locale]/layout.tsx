@@ -3,7 +3,7 @@ import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Inter, JetBrains_Mono, Literata } from "next/font/google";
-import { SpeedInsights } from "@vercel/speed-insights/react";
+import { VercelSpeedInsights } from "@/components/vercel-speed-insights";
 import { ThemeProvider } from "@/components/theme-provider";
 import { routing } from "@/i18n/routing";
 import "../globals.css";
@@ -61,7 +61,7 @@ export default async function LocaleLayout({
             </NextIntlClientProvider>
           </ThemeProvider>
         </ClerkProvider>
-        <SpeedInsights />
+        <VercelSpeedInsights />
       </body>
     </html>
   );
