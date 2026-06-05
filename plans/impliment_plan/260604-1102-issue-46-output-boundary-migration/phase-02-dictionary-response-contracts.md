@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Dictionary Response Contracts"
-status: pending
+status: completed
 priority: P2
 effort: "3h"
 dependencies: [1]
@@ -59,11 +59,11 @@ pnpm exec vitest run tests/vitest/integration/api/dictionary-lookup-route.test.t
 
 ## Success Criteria
 
-- [ ] Existing dictionary DTO fields are represented by runtime schemas.
-- [ ] Suggest and entry-detail clients reject malformed success payloads.
-- [ ] All four dictionary routes have complete success/error contract tests.
-- [ ] Optional performance diagnostics are explicitly modeled.
-- [ ] No raw repository row becomes a public API contract accidentally.
+- [x] Existing dictionary DTO fields are represented by runtime schemas.
+- [x] Suggest and entry-detail clients reject malformed success payloads.
+- [x] All four dictionary routes have complete success/error contract tests.
+- [x] Optional performance diagnostics are explicitly modeled.
+- [x] No raw repository row becomes a public API contract accidentally.
 
 ## Risk Assessment
 

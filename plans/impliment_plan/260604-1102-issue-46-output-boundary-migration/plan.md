@@ -1,7 +1,7 @@
 ---
 title: "Issue 46 Output Boundary Migration"
 description: "Add shared response DTO schemas, frontend runtime parsing, and complete JSON response contract tests by route family."
-status: pending
+status: completed
 priority: P2
 effort: 12h
 issue: 46
@@ -44,9 +44,9 @@ Migration rules:
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 1 | [Contract Foundation and Translation Family](./phase-01-contract-foundation-and-translation-family.md) | Pending |
-| 2 | [Dictionary Response Contracts](./phase-02-dictionary-response-contracts.md) | Pending |
-| 3 | [Remaining Route Families and Verification](./phase-03-remaining-route-families-and-verification.md) | Pending |
+| 1 | [Contract Foundation and Translation Family](./phase-01-contract-foundation-and-translation-family.md) | Completed |
+| 2 | [Dictionary Response Contracts](./phase-02-dictionary-response-contracts.md) | Completed |
+| 3 | [Remaining Route Families and Verification](./phase-03-remaining-route-families-and-verification.md) | Completed |
 
 ## Dependencies
 

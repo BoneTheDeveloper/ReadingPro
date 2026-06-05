@@ -39,11 +39,11 @@ Request body:
 ```ts
 {
   id: string;
-  userId: string;
   passageId: string | null;
-  startedAt: Date;
-  completedAt: Date | null;
+  startedAt: string;        // ISO date string
+  completedAt: string | null;
   cardsReviewed: number;
+  newCards: number;
   correctCount: number;
   incorrectCount: number;
   accuracyRate: number | null;
@@ -107,11 +107,11 @@ Request body:
 ```ts
 {
   id: string;
-  userId: string;
   passageId: string | null;
-  startedAt: Date;
-  completedAt: Date;
+  startedAt: string;        // ISO date string
+  completedAt: string | null;
   cardsReviewed: number;
+  newCards: number;
   correctCount: number;
   incorrectCount: number;
   accuracyRate: number | null;
@@ -163,6 +163,34 @@ None.
 ```
 
 `CardReview` includes nested question and passage data needed by the review UI.
+It is a public DTO and does not expose ownership fields such as `userId`.
+Date fields are ISO strings.
+
+```ts
+{
+  id: string;
+  questionId: string;
+  qualityRating: number;
+  easeFactor: number;
+  intervalDays: number;
+  repetitions: number;
+  nextReviewDate: string;
+  reviewedAt: string;
+  question?: {
+    id: string;
+    passageId: string;
+    questionText: string;
+    options: { id: string; text: string }[];
+    correctAnswer: string;
+    sourceText: string;
+    sourceLine: number;
+    explanation: string;
+    questionType: string;
+    difficulty: number;
+    passage?: { id: string; title: string };
+  };
+}
+```
 
 #### 5. Error response
 
@@ -227,7 +255,7 @@ Quality rating meanings:
 ```
 
 `CardReview` includes updated `easeFactor`, `intervalDays`, `repetitions`, and
-`nextReviewDate`.
+`nextReviewDate`. It uses the same public DTO as `GET /api/cards/due`.
 
 #### 5. Error response
 
@@ -294,6 +322,7 @@ None.
   matureCards: number;
   dueCards: number;
   todayReviews: number;
+  streakDays?: number;
 }
 ```
 
@@ -303,6 +332,7 @@ None.
 | `matureCards` | Reviews with `intervalDays >= 21` |
 | `dueCards` | Reviews where `nextReviewDate <= now` |
 | `todayReviews` | Reviews where `reviewedAt >= midnight today` |
+| `streakDays` | Consecutive days with review activity, when available |
 
 #### 5. Error response
 
