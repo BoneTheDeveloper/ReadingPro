@@ -1,9 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import * as Sentry from "@sentry/nextjs";
 import { BookMarked, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useTranslations } from "next-intl";
+import {
+  dictionaryEntryDetailResponseSchema,
+  dictionarySuggestResponseSchema,
+} from "@/lib/dictionary/shared/dictionary-response-schema";
 import type {
   DictionaryEntryDto,
   DictionarySuggestItemDto,
@@ -29,9 +34,11 @@ export function DictionaryPageClient() {
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const requestIdRef = useRef(0);
+  const detailRequestIdRef = useRef(0);
   const suggestCacheRef = useRef<Map<string, DictionarySuggestItemDto[]>>(new Map());
 
   const handleQueryChange = useCallback((value: string) => {
+    requestIdRef.current += 1;
     setQuery(value);
     if (!value.trim()) {
       setSuggestions([]);
@@ -65,7 +72,7 @@ export function DictionaryPageClient() {
         return;
       }
 
-      const thisRequestId = ++requestIdRef.current;
+      const thisRequestId = requestIdRef.current;
       try {
         const params = new URLSearchParams({
           q: trimmed,
@@ -73,12 +80,27 @@ export function DictionaryPageClient() {
           targetLanguage: "vi",
         });
         const res = await fetch(`/api/dictionary/suggest?${params}`);
-        const json = await res.json();
+        const json: unknown = await res.json();
+        const parsed = dictionarySuggestResponseSchema.safeParse(json);
 
-        if (json.success && requestIdRef.current === thisRequestId) {
-          setSuggestions(json.data);
+        if (!parsed.success || "error" in parsed.data) {
+          Sentry.addBreadcrumb({
+            category: "dictionary",
+            level: "error",
+            message: "dictionary-suggest-schema-error",
+            data: { route: "/api/dictionary/suggest" },
+          });
+          if (requestIdRef.current === thisRequestId) {
+            setSuggestions([]);
+            setDropdownVisible(false);
+          }
+          return;
+        }
+
+        if (requestIdRef.current === thisRequestId) {
+          setSuggestions(parsed.data.data);
           setDropdownVisible(true);
-          suggestCacheRef.current.set(normalized, json.data);
+          suggestCacheRef.current.set(normalized, parsed.data.data);
         }
       } catch {
         if (requestIdRef.current === thisRequestId) {
@@ -107,6 +129,7 @@ export function DictionaryPageClient() {
   }, []);
 
   const handleSelect = useCallback(async (item: DictionarySuggestItemDto) => {
+    const thisDetailRequestId = ++detailRequestIdRef.current;
     setDropdownVisible(false);
     setDetailStatus("loading");
     setSelectedEntry(null);
@@ -118,14 +141,29 @@ export function DictionaryPageClient() {
       });
       const res = await fetch(`/api/dictionary/entries/${item.id}?${params}`);
 
+      if (detailRequestIdRef.current !== thisDetailRequestId) return;
+
       if (res.ok) {
-        const json = await res.json();
-        setSelectedEntry(json.data as DictionaryEntryDto);
+        const json: unknown = await res.json();
+        const parsed = dictionaryEntryDetailResponseSchema.safeParse(json);
+        if (detailRequestIdRef.current !== thisDetailRequestId) return;
+        if (!parsed.success || "error" in parsed.data) {
+          Sentry.addBreadcrumb({
+            category: "dictionary",
+            level: "error",
+            message: "dictionary-entry-detail-schema-error",
+            data: { route: "/api/dictionary/entries/:entryId" },
+          });
+          setDetailStatus("error");
+          return;
+        }
+        setSelectedEntry(parsed.data.data);
         setDetailStatus("found");
       } else {
         setDetailStatus("not-found");
       }
     } catch {
+      if (detailRequestIdRef.current !== thisDetailRequestId) return;
       setDetailStatus("error");
     }
   }, []);

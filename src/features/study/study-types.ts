@@ -1,3 +1,5 @@
+import type { TranslationData } from "@/lib/translation/shared/translation-response-schema";
+
 export type StudyStatus =
   | "idle"
   | "uploading"
@@ -101,7 +103,7 @@ export interface ResultItem {
   data?: ResultItemData;
 }
 
-export type TranslationProvider = "cache" | "dictionary" | "fallback" | "google_translate" | "ai";
+export type TranslationProvider = TranslationData["provider"];
 
 export interface TranslationSelection {
   selectedText: string;
@@ -125,9 +127,4 @@ export interface TranslationSelection {
   };
 }
 
-export interface QuickTranslationData {
-  translation: string;
-  type?: string | null;
-  provider: TranslationProvider;
-}
-
+export type QuickTranslationData = TranslationData;

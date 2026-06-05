@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import * as Sentry from "@sentry/nextjs"
 import {
   BookOpen,
   Target,
@@ -14,25 +15,32 @@ import {
 import { cn } from "@/lib/shared/utils"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-
-interface ProgressStats {
-  totalCards: number
-  matureCards: number
-  dueCards: number
-  todayReviews: number
-}
+import {
+  progressStatsResponseSchema,
+  type ProgressStatsDto,
+} from "@/lib/study/shared/study-response-schema"
 
 export function ProgressDashboard() {
   const router = useRouter()
-  const [stats, setStats] = useState<ProgressStats | null>(null)
+  const [stats, setStats] = useState<ProgressStatsDto | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function fetchStats() {
       try {
         const response = await fetch("/api/progress/stats")
-        const result = await response.json()
-        if (result.success) setStats(result.data)
+        const result: unknown = await response.json()
+        const parsed = progressStatsResponseSchema.safeParse(result)
+        if (!parsed.success || "error" in parsed.data) {
+          Sentry.addBreadcrumb({
+            category: "progress",
+            level: "error",
+            message: "progress-stats-schema-error",
+            data: { route: "/api/progress/stats" },
+          })
+          return
+        }
+        setStats(parsed.data.data)
       } catch (error) {
         console.error("Error fetching stats:", error)
       } finally {
