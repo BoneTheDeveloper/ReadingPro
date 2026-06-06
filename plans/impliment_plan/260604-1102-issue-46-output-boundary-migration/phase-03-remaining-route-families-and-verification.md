@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "Remaining Route Families and Verification"
-status: pending
+status: completed
 priority: P2
 effort: "5h"
 dependencies: [2]
@@ -72,13 +72,13 @@ pnpm run test
 
 ## Success Criteria
 
-- [ ] Progress, upload, and study-chat history clients validate responses.
-- [ ] Cards, progress, sessions, uploads, and chat history have shared schemas.
-- [ ] Every non-streaming product JSON route has complete success/error contract
+- [x] Progress, upload, and study-chat history clients validate responses.
+- [x] Cards, progress, sessions, uploads, and chat history have shared schemas.
+- [x] Every non-streaming product JSON route has complete success/error contract
   coverage.
-- [ ] Study-chat POST is documented and tested as a streaming exception.
-- [ ] Typecheck, lint, and full tests pass or unrelated baselines are recorded.
-- [ ] API docs match final wire contracts.
+- [x] Study-chat POST is documented and tested as a streaming exception.
+- [x] Typecheck, lint, and full tests pass or unrelated baselines are recorded.
+- [x] API docs match final wire contracts.
 
 ## Risk Assessment
 

@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Regression Contracts"
-status: pending
+status: completed
 priority: P1
 effort: "3h"
 dependencies: [1]
@@ -89,12 +89,12 @@ pnpm exec vitest run tests/vitest/integration/api/translation-vocabulary-routes.
 
 ## Success Criteria
 
-- [ ] Valid translation tests and benchmarks send no `mode`.
-- [ ] Legacy translation mode input is rejected with `400`.
-- [ ] Study translation panel tests prove no detailed request is fired.
-- [ ] Shared database/API fixtures represent UUID production shape.
-- [ ] Each confirmed defect has a focused failing regression assertion.
-- [ ] Assertions distinguish client `400` failures from server `500` failures.
+- [x] Valid translation tests and benchmarks send no `mode`.
+- [x] Legacy translation mode input is rejected with `400`.
+- [x] Study translation panel tests prove no detailed request is fired.
+- [x] Shared database/API fixtures represent UUID production shape.
+- [x] Each confirmed defect has a focused failing regression assertion.
+- [x] Assertions distinguish client `400` failures from server `500` failures.
 
 ## Risk Assessment
 

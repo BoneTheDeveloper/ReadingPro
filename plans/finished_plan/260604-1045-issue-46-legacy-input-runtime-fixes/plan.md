@@ -1,7 +1,7 @@
 ---
 title: "Issue 46 UUID Schema and Legacy Input Runtime Fixes"
 description: "Normalize public identifiers to UUID, remove stale translation mode callers, and fix confirmed legacy request-boundary defects."
-status: pending
+status: completed
 priority: P1
 effort: 13h
 issue: 46
@@ -57,10 +57,10 @@ Design decisions:
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 1 | [Public Schema UUID Normalization](./phase-01-uuid-schema-normalization.md) | Pending |
-| 2 | [Regression Contracts](./phase-02-regression-contracts.md) | Pending |
-| 3 | [Boundary Validation Implementation](./phase-03-boundary-validation-implementation.md) | Pending |
-| 4 | [Verification and Documentation](./phase-04-verification-and-documentation.md) | Pending |
+| 1 | [Public Schema UUID Normalization](./phase-01-uuid-schema-normalization.md) | Completed |
+| 2 | [Regression Contracts](./phase-02-regression-contracts.md) | Completed |
+| 3 | [Boundary Validation Implementation](./phase-03-boundary-validation-implementation.md) | Completed |
+| 4 | [Verification and Documentation](./phase-04-verification-and-documentation.md) | Completed |
 
 ## Dependencies
 

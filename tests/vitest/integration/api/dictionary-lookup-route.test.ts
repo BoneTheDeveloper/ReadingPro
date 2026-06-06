@@ -1,9 +1,14 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET as dictionaryLookup } from "@/app/api/dictionary/lookup/route";
+import {
+  dictionaryLookupPerformanceResponseSchema,
+  dictionaryLookupResponseSchema,
+  dictionaryLookupSuccessResponseSchema,
+} from "@/lib/dictionary/shared/dictionary-response-schema";
 import type { DictionaryEntryDto, DictionaryMissDto } from "@/lib/dictionary/shared/dictionary-dtos";
 import { userProfileFixture } from "../../fixtures";
-import { readJsonResponse } from "../../helpers/api";
+import { parseJsonResponse } from "../../helpers/api";
 import { expectApiErrorPayload, expectApiSuccessPayload } from "../../helpers/assertions";
 
 const routeMocks = vi.hoisted(() => ({
@@ -19,8 +24,13 @@ vi.mock("@/lib/dictionary/lookup/lookup.service", () => ({
   resolveDictionaryLookup: routeMocks.resolveDictionaryLookup,
 }));
 
-function createLookupRequest(query: string) {
-  return new NextRequest(`https://english-reading.test/api/dictionary/lookup?${query}`);
+function createLookupRequest(query: string, init?: ConstructorParameters<typeof NextRequest>[1]) {
+  return new NextRequest(`https://english-reading.test/api/dictionary/lookup?${query}`, init);
+}
+
+async function expectJsonError(response: Response, status: number, message: string) {
+  expect(response.status).toBe(status);
+  expectApiErrorPayload(await parseJsonResponse(response, dictionaryLookupResponseSchema), message);
 }
 
 const lookupResult: DictionaryEntryDto = {
@@ -69,11 +79,11 @@ describe("GET /api/dictionary/lookup", () => {
     const response = await dictionaryLookup(
       createLookupRequest("q=algorithm&sourceLanguage=en&targetLanguage=vi"),
     );
-    const payload = await readJsonResponse<{ success: boolean; data: DictionaryEntryDto }>(response);
+    const payload = await parseJsonResponse(response, dictionaryLookupSuccessResponseSchema);
 
     expect(response.status).toBe(200);
     expectApiSuccessPayload(payload);
-    expect(payload).toMatchObject({ success: true, data: lookupResult });
+    expect(payload).toEqual({ success: true, data: lookupResult });
     expect(routeMocks.resolveDictionaryLookup).toHaveBeenCalledWith("algorithm", {
       sourceLanguage: "en",
       targetLanguage: "vi",
@@ -87,11 +97,45 @@ describe("GET /api/dictionary/lookup", () => {
     const response = await dictionaryLookup(
       createLookupRequest("q=xyznonexistent&sourceLanguage=en&targetLanguage=vi"),
     );
-    const payload = await readJsonResponse<{ success: boolean; data: DictionaryMissDto }>(response);
+    const payload = await parseJsonResponse(response, dictionaryLookupSuccessResponseSchema);
 
     expect(response.status).toBe(200);
     expectApiSuccessPayload(payload);
-    expect(payload).toMatchObject({ success: true, data: missResult });
+    expect(payload).toEqual({ success: true, data: missResult });
+  });
+
+  it("returns explicit performance diagnostics when requested", async () => {
+    routeMocks.resolveDictionaryLookup.mockResolvedValue(lookupResult);
+
+    const response = await dictionaryLookup(
+      createLookupRequest("q=algorithm&sourceLanguage=en&targetLanguage=vi", {
+        headers: { "x-dictionary-perf-metrics": "1" },
+      }),
+    );
+    const payload = await parseJsonResponse(response, dictionaryLookupPerformanceResponseSchema);
+
+    expect(response.status).toBe(200);
+    expect(payload).toMatchObject({
+      success: true,
+      data: lookupResult,
+      performance: {
+        queryLength: 9,
+        normalizedQueryLength: 9,
+        phase: "lookup",
+        timings: {
+          totalMs: expect.any(Number),
+          steps: expect.objectContaining({
+            auth: expect.any(Number),
+            lookupResolve: expect.any(Number),
+          }),
+        },
+        prisma: {
+          queryCount: expect.any(Number),
+          totalDurationMs: expect.any(Number),
+          steps: expect.any(Object),
+        },
+      },
+    });
   });
 
   it("rejects empty query parameters before authentication", async () => {
@@ -99,8 +143,7 @@ describe("GET /api/dictionary/lookup", () => {
       createLookupRequest("q=&sourceLanguage=en&targetLanguage=vi"),
     );
 
-    expect(response.status).toBe(400);
-    expectApiErrorPayload(await readJsonResponse(response), "Invalid query parameters.");
+    await expectJsonError(response, 400, "Invalid query parameters.");
     expect(routeMocks.getAuthenticatedUser).not.toHaveBeenCalled();
     expect(routeMocks.resolveDictionaryLookup).not.toHaveBeenCalled();
   });
@@ -112,7 +155,16 @@ describe("GET /api/dictionary/lookup", () => {
       createLookupRequest("q=algorithm&sourceLanguage=en&targetLanguage=vi"),
     );
 
-    expect(response.status).toBe(401);
-    expectApiErrorPayload(await readJsonResponse(response), "Authentication required.");
+    await expectJsonError(response, 401, "Authentication required.");
+  });
+
+  it("returns a stable 500 error when lookup resolution fails", async () => {
+    routeMocks.resolveDictionaryLookup.mockRejectedValue(new Error("db down"));
+
+    const response = await dictionaryLookup(
+      createLookupRequest("q=algorithm&sourceLanguage=en&targetLanguage=vi"),
+    );
+
+    await expectJsonError(response, 500, "Dictionary lookup failed.");
   });
 });

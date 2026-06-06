@@ -4,6 +4,10 @@ import { useCallback, useState } from "react";
 import { Group, Panel, Separator } from "react-resizable-panels";
 import { useTranslations } from "next-intl";
 import * as Sentry from "@sentry/nextjs";
+import {
+  translateResponseSchema,
+  vocabularyResponseSchema,
+} from "@/lib/translation/shared/translation-response-schema";
 import { clampTranslationContext, isTranslateTextWithinLimit } from "@/lib/translation/translation-limits";
 import type { PassageData, TranslationSelection, QuickTranslationData } from "./study-types";
 import { StudySourcesPanel } from "./study-left-panel";
@@ -148,20 +152,30 @@ export function StudyPageClient({
       }),
     })
       .then(async (r) => {
-        const json = await r.json();
-        if (!r.ok || !json.success) throw new Error("Quick translation failed");
-        return json;
+        const json: unknown = await r.json();
+        const parsed = translateResponseSchema.safeParse(json);
+        if (!parsed.success) {
+          Sentry.addBreadcrumb({
+            category: "study-translation",
+            level: "error",
+            message: "study-translation-schema-error",
+            data: { route: "/api/translate" },
+          });
+          throw new Error("Quick translation failed");
+        }
+        if (!r.ok || "error" in parsed.data) throw new Error("Quick translation failed");
+        return parsed.data.data;
       })
-      .then((json) => {
+      .then((data) => {
         setQuickTranslationState((prev) => {
           if (prev.requestId !== requestId) return prev;
           Sentry.addBreadcrumb({
             category: "study-translation",
             level: "info",
             message: "study-translation-success",
-            data: { provider: json.data.provider },
+            data: { provider: data.provider },
           });
-          return { requestId, data: json.data, status: "success" };
+          return { requestId, data, status: "success" };
         });
       })
       .catch(() => {
@@ -214,19 +228,27 @@ export function StudyPageClient({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(vocabularyPayload),
       });
-      const json = await res.json();
-      if (!res.ok || !json.success) throw new Error("Vocabulary save failed");
-      if (json.success && json.data?.id) {
-        setSavedVocabularyIds((prev) =>
-          new Set(prev).add(buildTranslationSelectionKey(selection)),
-        );
+      const json: unknown = await res.json();
+      const parsed = vocabularyResponseSchema.safeParse(json);
+      if (!parsed.success) {
         Sentry.addBreadcrumb({
           category: "study-vocabulary",
-          level: "info",
-          message: "study-vocabulary-save-success",
-          data: { vocabularyItemId: json.data.id },
+          level: "error",
+          message: "study-vocabulary-schema-error",
+          data: { route: "/api/vocabulary" },
         });
+        throw new Error("Vocabulary save failed");
       }
+      if (!res.ok || "error" in parsed.data) throw new Error("Vocabulary save failed");
+      setSavedVocabularyIds((prev) =>
+        new Set(prev).add(buildTranslationSelectionKey(selection)),
+      );
+      Sentry.addBreadcrumb({
+        category: "study-vocabulary",
+        level: "info",
+        message: "study-vocabulary-save-success",
+        data: { vocabularyItemId: parsed.data.data.id },
+      });
     } catch {
       Sentry.addBreadcrumb({
         category: "study-vocabulary",

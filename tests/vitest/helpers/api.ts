@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import type { z } from "zod";
 
 const DEFAULT_URL = "https://english-reading.test/api/test";
 
@@ -42,4 +43,11 @@ export function createFile(name: string, content: string, type = "text/plain") {
 
 export async function readJsonResponse<T = unknown>(response: Response): Promise<T> {
   return response.json() as Promise<T>;
+}
+
+export async function parseJsonResponse<T extends z.ZodType>(
+  response: Response,
+  schema: T,
+): Promise<z.infer<T>> {
+  return schema.parse(await readJsonResponse(response));
 }

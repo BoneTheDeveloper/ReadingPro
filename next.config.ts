@@ -26,6 +26,7 @@ const csp = {
   formAction: "form-action 'self'",
   frameAncestors: "frame-ancestors 'none'",
   frameSrc: "frame-src 'self' https://*.clerk.com https://challenges.cloudflare.com",
+  workerSrc: "worker-src 'self' blob:",
   upgradeInsecure: "upgrade-insecure-requests",
 };
 

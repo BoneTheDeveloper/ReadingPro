@@ -1,0 +1,201 @@
+import { z } from "zod";
+import { makeResponseSchema, makeSuccessEnvelopeSchema } from "@/lib/api/shared/api-response-schema";
+
+const nullableIsoDateSchema = z.string().nullable();
+
+export const studyQuestionOptionSchema = z.object({
+  id: z.string(),
+  text: z.string(),
+}).strict();
+
+export const studyCardPassageSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+}).strict();
+
+export const studyCardQuestionSchema = z.object({
+  id: z.string(),
+  passageId: z.string(),
+  questionText: z.string(),
+  options: z.array(studyQuestionOptionSchema),
+  correctAnswer: z.string(),
+  sourceText: z.string(),
+  sourceLine: z.number(),
+  explanation: z.string(),
+  questionType: z.string(),
+  difficulty: z.number(),
+  passage: studyCardPassageSchema.optional(),
+}).strict();
+
+export const cardReviewSchema = z.object({
+  id: z.string(),
+  questionId: z.string(),
+  qualityRating: z.number(),
+  easeFactor: z.number(),
+  intervalDays: z.number(),
+  repetitions: z.number(),
+  nextReviewDate: z.string(),
+  reviewedAt: z.string(),
+  question: studyCardQuestionSchema.optional(),
+}).strict();
+
+export const dueCardsSuccessResponseSchema = makeSuccessEnvelopeSchema(z.array(cardReviewSchema));
+export const dueCardsResponseSchema = makeResponseSchema(z.array(cardReviewSchema));
+export const cardReviewSuccessResponseSchema = makeSuccessEnvelopeSchema(cardReviewSchema);
+export const cardReviewResponseSchema = makeResponseSchema(cardReviewSchema);
+
+export const progressStatsSchema = z.object({
+  totalCards: z.number(),
+  matureCards: z.number(),
+  dueCards: z.number(),
+  todayReviews: z.number(),
+  streakDays: z.number().optional(),
+}).strict();
+
+export const progressStatsSuccessResponseSchema = makeSuccessEnvelopeSchema(progressStatsSchema);
+export const progressStatsResponseSchema = makeResponseSchema(progressStatsSchema);
+
+export const studySessionSchema = z.object({
+  id: z.string(),
+  passageId: z.string().nullable(),
+  startedAt: z.string(),
+  completedAt: nullableIsoDateSchema,
+  cardsReviewed: z.number(),
+  newCards: z.number(),
+  correctCount: z.number(),
+  incorrectCount: z.number(),
+  accuracyRate: z.number().nullable(),
+}).strict();
+
+export const studySessionSuccessResponseSchema = makeSuccessEnvelopeSchema(studySessionSchema);
+export const studySessionResponseSchema = makeResponseSchema(studySessionSchema);
+
+export const studyChatMessageSchema = z.object({
+  id: z.string(),
+  role: z.enum(["system", "user", "assistant"]),
+  parts: z.array(z.object({
+    type: z.literal("text"),
+    text: z.string(),
+  }).strict()),
+}).strict();
+
+export const studyChatHistorySuccessResponseSchema = z.object({
+  messages: z.array(studyChatMessageSchema),
+}).strict();
+export const studyChatHistoryResponseSchema = z.union([
+  studyChatHistorySuccessResponseSchema,
+  z.object({ error: z.string() }).strict(),
+]);
+
+export type StudyQuestionOptionDto = z.infer<typeof studyQuestionOptionSchema>;
+export type StudyCardQuestionDto = z.infer<typeof studyCardQuestionSchema>;
+export type CardReviewDto = z.infer<typeof cardReviewSchema>;
+export type ProgressStatsDto = z.infer<typeof progressStatsSchema>;
+export type StudySessionDto = z.infer<typeof studySessionSchema>;
+export type StudyChatHistoryResponse = z.infer<typeof studyChatHistoryResponseSchema>;
+
+type RawCardReview = {
+  id: string;
+  questionId: string;
+  qualityRating: number;
+  easeFactor: number;
+  intervalDays: number;
+  repetitions: number;
+  nextReviewDate: Date | string;
+  reviewedAt: Date | string;
+  question?: {
+    id: string;
+    passageId: string;
+    questionText: string;
+    options: unknown;
+    correctOption?: string;
+    correctAnswer?: string;
+    sourceText: string;
+    sourceLine: number;
+    explanation: string;
+    questionType: string;
+    difficulty: number;
+    passage?: {
+      id: string;
+      title: string;
+    };
+  };
+};
+
+type RawStudySession = {
+  id: string;
+  passageId: string | null;
+  startedAt: Date | string;
+  completedAt: Date | string | null;
+  cardsReviewed: number;
+  newCards: number;
+  correctCount: number;
+  incorrectCount: number;
+  accuracyRate: number | null;
+};
+
+export function toCardReviewDto(card: RawCardReview): CardReviewDto {
+  const dto: CardReviewDto = {
+    id: card.id,
+    questionId: card.questionId,
+    qualityRating: card.qualityRating,
+    easeFactor: card.easeFactor,
+    intervalDays: card.intervalDays,
+    repetitions: card.repetitions,
+    nextReviewDate: toIsoString(card.nextReviewDate),
+    reviewedAt: toIsoString(card.reviewedAt),
+  };
+
+  if (card.question) {
+    const optionsResult = z.array(studyQuestionOptionSchema).safeParse(
+      normalizeQuestionOptions(card.question.options),
+    );
+    dto.question = {
+      id: card.question.id,
+      passageId: card.question.passageId,
+      questionText: card.question.questionText,
+      options: optionsResult.success ? optionsResult.data : [],
+      correctAnswer: card.question.correctAnswer ?? card.question.correctOption ?? "",
+      sourceText: card.question.sourceText,
+      sourceLine: card.question.sourceLine,
+      explanation: card.question.explanation,
+      questionType: card.question.questionType,
+      difficulty: card.question.difficulty,
+    };
+    if (card.question.passage) {
+      dto.question.passage = {
+        id: card.question.passage.id,
+        title: card.question.passage.title,
+      };
+    }
+  }
+
+  return dto;
+}
+
+export function toStudySessionDto(session: RawStudySession): StudySessionDto {
+  return {
+    id: session.id,
+    passageId: session.passageId,
+    startedAt: toIsoString(session.startedAt),
+    completedAt: session.completedAt ? toIsoString(session.completedAt) : null,
+    cardsReviewed: session.cardsReviewed,
+    newCards: session.newCards,
+    correctCount: session.correctCount,
+    incorrectCount: session.incorrectCount,
+    accuracyRate: session.accuracyRate,
+  };
+}
+
+function toIsoString(value: Date | string) {
+  return value instanceof Date ? value.toISOString() : value;
+}
+
+function normalizeQuestionOptions(value: unknown) {
+  if (typeof value !== "string") return value;
+  try {
+    return JSON.parse(value) as unknown;
+  } catch {
+    return value;
+  }
+}

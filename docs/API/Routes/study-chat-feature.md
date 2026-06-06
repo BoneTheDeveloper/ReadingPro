@@ -75,6 +75,55 @@ tokens back to the chat UI.
 - The route fetches only passages owned by the authenticated user.
 - Passage title/content are treated as untrusted user data in the prompt.
 - No client or server response cache is expected for chat streams.
+- `POST /api/study-chat` is the explicit streaming exception to shared JSON
+  success response schemas. Its request and JSON error envelopes are validated;
+  the success protocol is the AI SDK UI message stream.
+
+### Study Chat History API
+
+#### 1. Purpose
+
+Load persisted chat messages for the authenticated user and selected passage.
+
+#### 2. Method + path
+
+```http
+GET /api/study-chat?passageId=<id>
+```
+
+#### 3. Request input
+
+Query parameters:
+
+```ts
+{
+  passageId: string;
+}
+```
+
+#### 4. Success response
+
+```ts
+{
+  messages: Array<{
+    id: string;
+    role: "system" | "user" | "assistant";
+    parts: Array<{ type: "text"; text: string }>;
+  }>;
+}
+```
+
+#### 5. Error response
+
+```ts
+{ error: string }
+```
+
+| Status | Meaning |
+|--------|---------|
+| `400` | Missing passage id |
+| `401` | Missing auth |
+| `500` | Unexpected history fetch failure |
 
 ## Content Selection Logic
 

@@ -8,6 +8,7 @@ import * as Sentry from "@sentry/nextjs";
 import { Send, Loader2, AlertCircle, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/shared/utils";
+import { studyChatHistoryResponseSchema } from "@/lib/study/shared/study-response-schema";
 
 interface StudyChatPanelProps {
   passageId: string;
@@ -70,18 +71,32 @@ export function StudyChatPanel({ passageId, prefilledQuestion }: StudyChatPanelP
           setMessages([]);
           return;
         }
-        const payload = (await response.json()) as { messages?: unknown };
-        if (isMounted && Array.isArray(payload.messages)) {
+        const payload: unknown = await response.json();
+        const parsed = studyChatHistoryResponseSchema.safeParse(payload);
+        if (!parsed.success || "error" in parsed.data) {
+          Sentry.addBreadcrumb({
+            category: "study-chat",
+            level: "error",
+            message: "Study chat history schema error",
+            data: {
+              passageId,
+              route: "/api/study-chat",
+            },
+          });
+          if (isMounted) setMessages([]);
+          return;
+        }
+        if (isMounted) {
           Sentry.addBreadcrumb({
             category: "study-chat",
             level: "info",
             message: "Study chat history loaded",
             data: {
               passageId,
-              messageCount: payload.messages.length,
+              messageCount: parsed.data.messages.length,
             },
           });
-          setMessages(payload.messages);
+          setMessages(parsed.data.messages);
         }
       } catch (error) {
         Sentry.captureException(error, {
