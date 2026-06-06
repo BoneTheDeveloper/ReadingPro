@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "Dictionary and Translation Stability"
-status: pending
+status: Completed
 priority: P1
 effort: "2-3d"
 dependencies: [2]
@@ -72,8 +72,8 @@ Translation cache policy follows the conservative exact-cache strategy: cache on
 
 - [x] `pnpm db:validate:dictionary` passes with actionable failures when fixtures are malformed.
 - [x] Seed check policy is documented in `docs/database/seed-data.md`, including local/PR CI validation, read-only preview/production status checks, and approval-only mutating seed/import.
-- [ ] Dictionary route tests pass for exact headword, alias, prefix, contains, entry detail, and miss cases.
-- [ ] Translation route tests pass for dictionary, phrase, fallback, cache, source-miss, and auth cases.
+- [x] Dictionary route tests pass for exact headword, alias, prefix, contains, entry detail, and miss cases.
+- [x] Translation route tests pass for dictionary, phrase, fallback, cache, source-miss, and auth cases.
 - [x] `pnpm test:performance` passes current hard query budgets.
 - [x] Docs explain the current exact translation cache rule, dictionary/translation boundaries, and deferred cache/search work.
 
