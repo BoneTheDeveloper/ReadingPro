@@ -1,6 +1,6 @@
 # Test Strategy
 
-The repository uses `tests/` for Vitest suites, performance benchmarks, shared fixtures, and runner-agnostic test helpers. Local Playwright specs and config live in `playwright/`.
+The repository uses `tests/` for Vitest suites, Vitest config, performance benchmarks, shared fixtures, and runner-agnostic test helpers. Local Playwright specs and config live in `playwright/`.
 
 ## Test Types
 
@@ -15,7 +15,7 @@ The repository uses `tests/` for Vitest suites, performance benchmarks, shared f
 
 ## Folders
 
-- `tests/vitest/` contains Vitest unit, component, integration, smoke, mock, helper, fixture, and setup files.
+- `tests/vitest/` contains Vitest config, unit, component, integration, smoke, mock, helper, fixture, and setup files.
 - `tests/performance/` contains API benchmark runners and benchmark helpers.
 - `tests/shared/` contains runner-agnostic helpers used by more than one suite.
 - `tests/fixtures/` contains shared file fixtures used by manual, E2E, and integration workflows.

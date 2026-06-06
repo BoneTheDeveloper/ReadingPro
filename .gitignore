@@ -14,13 +14,12 @@
 /coverage
 /.auth/
 /test-results/
-/generated/
-/playwright-report/
 .env.test
 
 # next.js
 /.next/
 /.next-performance/
+/.next-performance-production/
 /out/
 
 # production

@@ -23,6 +23,7 @@ This `docs/` page is the architecture-level testing overview only. Do not duplic
 
 ## Ownership Boundaries
 
+- `tests/vitest/` owns Vitest config, setup, mocks, fixtures, helpers, and non-browser test suites.
 - `playwright/` owns Playwright configs, browser specs, screenshot scripts, Docker files, and Playwright-only helpers.
 - `tests/shared/` owns runner-agnostic helpers that are consumed by more than one suite.
 - `tests/performance/` may consume `tests/shared/` helpers, but it must not import from the Playwright playground.

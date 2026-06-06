@@ -22,7 +22,7 @@ Start here when onboarding to the English Reading Training App docs.
 | [API](API/api-index.md) | API conventions and per-feature route docs. |
 | [database](database/data-dictionary.md) | Prisma/Neon schema, migrations, seed data, and environment contracts. |
 | [ADR](ADR/0001-use-clerk.md) | Architecture decision records. |
-| [Operations](Operations/local-development.md) | Local setup, env vars, deployment, migrations, debugging, and security checklist. |
+| [Operations](Operations/local-development.md) | Local setup, env vars, deployment, migrations, root configuration, debugging, and security checklist. |
 | [Testing](Testing/testing-strategy.md) | Unit, integration, e2e, performance, and contract test expectations. |
 
 ## Supplemental Docs
@@ -36,6 +36,7 @@ Do not duplicate detailed rules that belong beside executable assets:
 | Rule area | Canonical location | `docs/` role |
 |-----------|--------------------|--------------|
 | Prisma migration procedure | [`../prisma/migrations-flow.md`](../prisma/migrations-flow.md), [`../prisma/migrations-guide.md`](../prisma/migrations-guide.md), [`../prisma/SECURITY.md`](../prisma/SECURITY.md) | Link and summarize only. |
+| Root configuration ownership | [`Operations/root-configuration.md`](Operations/root-configuration.md) | Record what belongs at root versus owning subdirectories. |
 | Test suite structure | [`../tests/README.md`](../tests/README.md) | Link and summarize only. |
 | Playwright local playground | [`../playwright/README.md`](../playwright/README.md) | Link and summarize only. |
 | Performance query budgets | [`../tests/performance/query-budget-benchmarks.md`](../tests/performance/query-budget-benchmarks.md), [`../tests/performance/README.md`](../tests/performance/README.md) | Link and summarize only. |
