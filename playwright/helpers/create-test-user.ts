@@ -5,6 +5,8 @@ import { resolve } from "node:path";
 dotenv.config({ path: resolve(__dirname, "../../.env.local") });
 dotenv.config({ path: resolve(__dirname, "../../.env.test") });
 
+// E2E_TEST_USER_* are Playwright helper inputs, normally stored in .env.test or
+// CI secrets. They are not required by the application runtime.
 const testUserEmail = process.env.E2E_TEST_USER_EMAIL;
 const testUserPassword = process.env.E2E_TEST_USER_PASSWORD;
 

@@ -185,3 +185,9 @@ environment variables.
 - If `prisma/migrations/` has a merge conflict, resolve by re-running
   `migrate dev` on the `development` branch. Never manually edit migration SQL
   files to resolve git conflicts.
+
+## Local Destructive Replay Guard
+
+`RESET_CONFIRM=true` is required only by the local empty migration replay helper
+before it runs `prisma migrate reset`. It is intentionally separate from normal
+app env and must never be set in production or shared runtime environments.

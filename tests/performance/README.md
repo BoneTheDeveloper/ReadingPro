@@ -59,6 +59,22 @@ port) with:
 - `TRANSLATE_PERFORMANCE_FIXTURES=1`
 - `DICTIONARY_PERFORMANCE_FIXTURES=1`
 
+These variables are benchmark-only. Do not add them to normal local app env or
+production runtime env.
+
+## Environment Inputs
+
+| Variable | Purpose |
+|----------|---------|
+| `NEXT_DIST_DIR` | Isolates benchmark-owned Next.js output from the normal `.next` directory. |
+| `PRISMA_QUERY_METRICS` | Enables query-count instrumentation required by benchmark assertions. |
+| `TRANSLATE_PERFORMANCE_FIXTURES` | Enables authenticated translate fixture setup/cleanup routes outside production. |
+| `DICTIONARY_PERFORMANCE_FIXTURES` | Enables authenticated dictionary fixture setup/cleanup routes outside production. |
+| `PERFORMANCE_BASE_URL` | Points benchmarks at an existing app when `--base-url` is not passed. |
+| `E2E_BASE_URL` | Fallback external app URL shared with Playwright. |
+| `E2E_AUTH_COOKIE` | Auth cookie used for authenticated benchmark requests. |
+| `BENCHMARK_COOKIE` | Alternate auth cookie used by benchmark runs. |
+
 ### Reuse an existing server
 
 ```bash
