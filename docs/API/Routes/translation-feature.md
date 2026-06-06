@@ -108,12 +108,18 @@ selection and routes it to the correct internal runtime path.
 
 - Route requires authenticated user.
 - Client should call this route only on client memory cache miss.
-- Server checks `TranslationCache` before source lookup.
-- Cache hits return `provider: "cache"` and skip redundant source fetch.
+- Server reads the owned source and matching `TranslationCache` in one database
+  query before returning any cached data.
+- Cache hits return `provider: "cache"` and skip dictionary/provider
+  resolution, but they still require the source passage to belong to the
+  authenticated user.
 - Word / short phrase selections use the word translate path.
 - Sentence / paragraph selections use the sentence translate path.
 - Clients do not choose the runtime path.
-- Successful results are cached and history is persisted asynchronously.
+- Successful final translation DTOs are cached and history is persisted
+  asynchronously.
+- Error responses, source misses, auth failures, and malformed cached JSON are
+  not cached.
 - Logs and Sentry metadata must not include raw selected text or raw context.
 
 ### Vocabulary API
@@ -196,11 +202,13 @@ Request body:
 `POST /api/translate` resolves in this order:
 
 1. Authenticate user.
-2. Build server translation cache key.
-3. Check `TranslationCache`.
-4. If cache hit, return `provider: "cache"` without redundant source fetch.
-5. If cache miss, verify the source passage is owned by the user.
-6. Classify the selected text by input shape:
+2. Build an exact server translation cache key from `userId`, `sourceId`,
+   selected text, context sentence, and target language.
+3. Read the owned source passage and matching `TranslationCache` in one query.
+4. If the source is missing or inaccessible, return `404`.
+5. If a valid cache response exists, return `provider: "cache"` without
+   dictionary/provider resolution.
+6. Classify the selected text by input shape on cache miss:
    - **Word / short phrase:** `<=4` tokens, `<=40` chars, no newline, no sentence-ending punctuation → word translate path.
    - **Sentence / paragraph:** newline, sentence-ending punctuation, `>4` tokens, or `>40` chars → sentence translate path.
 7. Resolve the translation.
@@ -208,6 +216,29 @@ Request body:
 9. Persist server cache and history asynchronously with error logging.
 
 If async cache persistence fails, the current request still succeeds. The only user-visible cost is that a later identical request may miss server cache and recompute the translation.
+
+## Server Cache Rule
+
+The translation cache uses the conservative exact-cache strategy. It stores only
+successful final inline translation DTOs for the exact authenticated user,
+source passage, selected text, context sentence, and target language. The route
+does not normalize or share cache entries across users, passages, contexts, or
+dictionary routes.
+
+Cacheable success providers:
+
+- `dictionary`
+- `fallback`
+- `google_translate`
+
+Non-cacheable outcomes:
+
+- Invalid request payloads.
+- Authentication failures.
+- Missing or inaccessible source passages.
+- Provider failures.
+- Invalid cached response JSON.
+- Dictionary suggest/search/lookup/entry-detail responses.
 
 ## Naming Convention
 
