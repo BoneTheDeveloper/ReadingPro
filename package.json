@@ -39,8 +39,7 @@
     "db:studio": "prisma studio",
     "db:seed:dictionary": "tsx prisma/seed.ts",
     "db:validate:dictionary": "tsx scripts/dictionary/validate-dictionary.ts",
-    "db:normalize:dictionary": "tsx scripts/dictionary/normalize-dictionary.ts",
-    "db:import:dictionary": "tsx scripts/dictionary/import-dictionary.ts",
+    "db:check:dictionary-seed": "tsx scripts/dictionary/check-seed-status.ts",
     "db:generate:benchmark": "tsx scripts/dictionary/generate-seed-data.ts"
   },
   "dependencies": {
