@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { getAuthenticatedUser } from "@/lib/auth/auth-utils";
+import { isAuthenticationRequiredError } from "@/lib/api/route-errors";
 import { createRequestLogContext, createRequestLogger } from "@/lib/core/logger";
 import { processFileUpload, UploadWorkflowError } from "@/features/upload/upload-workflow";
 
@@ -32,6 +33,10 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
+    if (isAuthenticationRequiredError(error)) {
+      return NextResponse.json({ error: "Authentication required." }, { status: 401 });
+    }
+
     if (error instanceof UploadWorkflowError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }

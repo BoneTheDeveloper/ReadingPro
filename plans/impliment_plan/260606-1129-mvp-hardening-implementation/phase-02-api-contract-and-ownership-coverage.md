@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "API Contract and Ownership Coverage"
-status: pending
+status: completed
 priority: P1
 effort: "2-3d"
 dependencies: [1]
@@ -62,11 +62,11 @@ Routes under `src/app/api/**/route.ts` parse request input, authenticate through
 
 ## Success Criteria
 
-- [ ] Priority routes have contract tests for success, validation, auth, ownership, and unexpected failures where applicable.
-- [ ] Auth failures return `401`, validation returns `400`, missing owned resources return `404`, and unexpected failures return stable `{ error }`.
-- [ ] Streaming study chat remains documented as a success-shape exception.
-- [ ] Route docs and tests agree on request and response shapes.
-- [ ] `pnpm run test` passes for the API integration suite.
+- [x] Priority routes have contract tests for success, validation, auth, ownership, and unexpected failures where applicable.
+- [x] Auth failures return `401`, validation returns `400`, missing owned resources return `404`, and unexpected failures return stable `{ error }`.
+- [x] Streaming study chat remains documented as a success-shape exception.
+- [x] Route docs and tests agree on request and response shapes.
+- [x] `pnpm run test` passes for the API integration suite.
 
 ## Risk Assessment
 

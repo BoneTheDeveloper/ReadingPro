@@ -143,8 +143,8 @@ describe("GET /api/cards/due", () => {
     routeMocks.getAuthenticatedUser.mockRejectedValue(apiError("Authentication required"));
 
     const response = await getDueCardsRoute();
-    expect(response.status).toBe(500);
-    expectApiErrorPayload(await parseJsonResponse(response, dueCardsResponseSchema), "Failed to fetch due cards");
+    expect(response.status).toBe(401);
+    expectApiErrorPayload(await parseJsonResponse(response, dueCardsResponseSchema), "Authentication required.");
   });
 
   it("returns a stable error payload when the card query fails", async () => {

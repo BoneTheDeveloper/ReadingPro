@@ -60,6 +60,7 @@ Request body:
 |--------|---------|
 | `400` | Invalid request body, malformed JSON, or invalid UUID format |
 | `401` | Missing auth |
+| `404` | Passage not found or not owned by user |
 | `500` | Unexpected session creation failure |
 
 #### 6. Notes about cache / auth / boundaries
@@ -128,6 +129,7 @@ Request body:
 |--------|---------|
 | `400` | Invalid request body, malformed JSON, or invalid UUID format |
 | `401` | Missing auth |
+| `404` | Session not found or not owned by user |
 | `500` | Unexpected session update failure |
 
 #### 6. Notes about cache / auth / boundaries
@@ -267,6 +269,7 @@ Quality rating meanings:
 |--------|---------|
 | `400` | Missing card review id, quality rating outside `0-5`, malformed JSON, or invalid UUID format |
 | `401` | Missing auth |
+| `404` | Card review not found or not owned by user |
 | `500` | Unexpected review update failure |
 
 #### 6. Notes about cache / auth / boundaries

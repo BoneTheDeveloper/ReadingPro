@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
 import { updateCardReview } from '@/lib/db/card-review-queries';
 import { getAuthenticatedUser } from '@/lib/auth/auth-utils';
+import { isAuthenticationRequiredError, isOwnershipMissError } from '@/lib/api/route-errors';
 import { createRequestLogContext, createRequestLogger } from '@/lib/core/logger';
 import { toCardReviewDto } from '@/lib/study/shared/study-response-schema';
 
@@ -39,6 +40,14 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, data: toCardReviewDto(updatedReview) });
   } catch (error) {
+    if (isAuthenticationRequiredError(error)) {
+      return NextResponse.json({ error: 'Authentication required.' }, { status: 401 });
+    }
+
+    if (isOwnershipMissError(error, ['card review', 'cardreview'])) {
+      return NextResponse.json({ error: 'Card review not found.' }, { status: 404 });
+    }
+
     requestLog.error({ err: error }, 'Failed to submit review');
     Sentry.captureException(error, {
       tags: { route: 'api:cards:review', method: 'POST' },

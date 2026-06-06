@@ -14,6 +14,9 @@ Expose due cards and update card review state with the SM-2 algorithm.
 ## Auth And Ownership
 
 Requires authentication. Due-card reads filter by `userId`. Review updates load the review by `id` and `userId`.
+Unauthenticated requests return `{ "error": "Authentication required." }` with
+`401`. Review ownership misses return `{ "error": "Card review not found." }`
+with `404`.
 
 ## Review Request
 

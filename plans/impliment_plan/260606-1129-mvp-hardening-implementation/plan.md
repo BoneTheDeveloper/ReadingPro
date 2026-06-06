@@ -4,7 +4,7 @@ description: >-
   Implementation plan for the current MVP-hardening scope: production
   verification, API contracts, dictionary and translation stability, study chat
   polish, learning-loop progress, and release gates.
-status: pending
+status: in-progress
 priority: P2
 branch: feature/63-stabilize-study-workspace-entry-source-selection
 tags:
@@ -63,7 +63,7 @@ GKG and file reads mark these as the main implementation surface:
 | Phase | Name | Status |
 |-------|------|--------|
 | 1 | [Production Environment Verification](./phase-01-production-environment-verification.md) | Completed |
-| 2 | [API Contract and Ownership Coverage](./phase-02-api-contract-and-ownership-coverage.md) | Pending |
+| 2 | [API Contract and Ownership Coverage](./phase-02-api-contract-and-ownership-coverage.md) | Completed |
 | 3 | [Dictionary and Translation Stability](./phase-03-dictionary-and-translation-stability.md) | Pending |
 | 4 | [Study Chat and Learning Loop Polish](./phase-04-study-chat-and-learning-loop-polish.md) | Pending |
 | 5 | [Progress Analytics and Release Verification](./phase-05-progress-analytics-and-release-verification.md) | Pending |
@@ -81,7 +81,7 @@ Phase dependencies:
 ## Success Criteria
 
 - [ ] Production verification docs and scripts cover Clerk, Neon, Blob, Sentry, Vercel, migrations, and smoke flows.
-- [ ] Priority API routes have contract tests for valid requests, invalid JSON/schema, missing auth, ownership misses, and stable error envelopes.
+- [x] Priority API routes have contract tests for valid requests, invalid JSON/schema, missing auth, ownership misses, and stable error envelopes.
 - [ ] Dictionary and translation performance budgets remain documented and pass with current benchmark fixtures.
 - [ ] Study chat has robust history load, stream, stop, retry, empty, and failure states with matching route tests.
 - [ ] Saved vocabulary and card review behavior have a documented MVP path and tests for the implemented path.

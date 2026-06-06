@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
 import { validateTextContent } from '@/lib/validation/upload';
 import { getAuthenticatedUser } from '@/lib/auth/auth-utils';
+import { isAuthenticationRequiredError } from '@/lib/api/route-errors';
 import { createRequestLogContext, createRequestLogger } from '@/lib/core/logger';
 import { analyzeAndPersistContent } from '@/features/upload/content-analysis-service';
 
@@ -45,6 +46,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, data: result });
   } catch (error) {
+    if (isAuthenticationRequiredError(error)) {
+      return NextResponse.json({ error: 'Authentication required.' }, { status: 401 });
+    }
+
     requestLog.error({ err: error }, 'Text processing failed');
     Sentry.captureException(error, {
       tags: { route: 'api:upload:text', method: 'POST' },
