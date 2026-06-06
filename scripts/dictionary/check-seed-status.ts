@@ -71,12 +71,17 @@ function formatCount(value: bigint | number) {
 }
 
 function printCountComparison(local: LocalCounts, remote: LocalCounts) {
+  let hasMismatch = false;
+
   console.log("Dictionary seed counts");
   console.log("----------------------");
   for (const key of ["entries", "senses", "translations", "aliases"] as const) {
     const status = local[key] === remote[key] ? "ok" : "mismatch";
+    if (status === "mismatch") hasMismatch = true;
     console.log(`${key.padEnd(13)} local=${local[key]} remote=${remote[key]} ${status}`);
   }
+
+  return hasMismatch;
 }
 
 async function main() {
@@ -99,13 +104,13 @@ async function main() {
       prisma.dictionaryAlias.count(),
     ]);
 
-    printCountComparison(localCounts, { entries, senses, translations, aliases });
+    const hasCountMismatch = printCountComparison(localCounts, { entries, senses, translations, aliases });
 
     const sourceLanguages = await prisma.$queryRaw<CountRow[]>`
-      SELECT source_language AS "label", COUNT(*) AS "count"
+      SELECT "sourceLanguage" AS "label", COUNT(*) AS "count"
       FROM dictionary_entries
-      GROUP BY source_language
-      ORDER BY source_language
+      GROUP BY "sourceLanguage"
+      ORDER BY "sourceLanguage"
     `;
 
     console.log("\nEntry source languages");
@@ -115,14 +120,14 @@ async function main() {
 
     const translationDistributions = await prisma.$queryRaw<TranslationDistributionRow[]>`
       SELECT
-        target_language AS "targetLanguage",
+        "targetLanguage",
         status,
-        source_type AS "sourceType",
-        source_name AS "sourceName",
+        "sourceType",
+        "sourceName",
         COUNT(*) AS "count"
       FROM dictionary_translations
-      GROUP BY target_language, status, source_type, source_name
-      ORDER BY COUNT(*) DESC, target_language, status, source_type, source_name
+      GROUP BY "targetLanguage", status, "sourceType", "sourceName"
+      ORDER BY COUNT(*) DESC, "targetLanguage", status, "sourceType", "sourceName"
     `;
 
     console.log("\nTranslation distributions");
@@ -133,10 +138,10 @@ async function main() {
     }
 
     const auditBatches = await prisma.$queryRaw<AuditRow[]>`
-      SELECT batch_name AS "batchName", COUNT(*) AS "count", MAX(created_at) AS "latestCreatedAt"
+      SELECT "batchName", COUNT(*) AS "count", MAX("createdAt") AS "latestCreatedAt"
       FROM dictionary_source_audits
-      GROUP BY batch_name
-      ORDER BY MAX(created_at) DESC NULLS LAST, batch_name
+      GROUP BY "batchName"
+      ORDER BY MAX("createdAt") DESC NULLS LAST, "batchName"
       LIMIT 5
     `;
 
@@ -151,20 +156,20 @@ async function main() {
     const samples = await prisma.$queryRaw<SampleRow[]>`
       SELECT
         e.headword,
-        e.normalized_headword AS "normalizedHeadword",
-        e.frequency_rank AS "frequencyRank",
-        a.normalized_alias AS "alias",
+        e."normalizedHeadword",
+        e."frequencyRank",
+        a."normalizedAlias" AS "alias",
         t.translation
       FROM dictionary_entries e
-      LEFT JOIN dictionary_aliases a ON a.entry_id = e.id
-      LEFT JOIN dictionary_senses s ON s.entry_id = e.id
-      LEFT JOIN dictionary_translations t ON t.sense_id = s.id
-        AND t.target_language = 'vi'
+      LEFT JOIN dictionary_aliases a ON a."entryId" = e.id
+      LEFT JOIN dictionary_senses s ON s."entryId" = e.id
+      LEFT JOIN dictionary_translations t ON t."senseId" = s.id
+        AND t."targetLanguage" = 'vi'
         AND t.status IN ('reviewed', 'approved')
-        AND t.is_primary = true
-      WHERE e.normalized_headword IN ('the', 'be', 'study')
-        OR a.normalized_alias IN ('lives', 'leaves')
-      ORDER BY e.frequency_rank, e.normalized_headword, a.normalized_alias NULLS LAST
+        AND t."isPrimary" = true
+      WHERE e."normalizedHeadword" IN ('the', 'be', 'study')
+        OR a."normalizedAlias" IN ('lives', 'leaves')
+      ORDER BY e."frequencyRank", e."normalizedHeadword", a."normalizedAlias" NULLS LAST
       LIMIT 12
     `;
 
@@ -176,6 +181,10 @@ async function main() {
       console.log(
         `${row.frequencyRank}: ${row.headword} (${row.normalizedHeadword}) alias=${row.alias ?? "none"} translation=${row.translation ?? "none"}`,
       );
+    }
+
+    if (hasCountMismatch) {
+      throw new Error("Dictionary seed count mismatch. Review the report above before running any mutating seed command.");
     }
   } finally {
     await prisma.$disconnect();

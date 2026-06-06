@@ -4,23 +4,12 @@
  * parent-child coverage, and database-unique key uniqueness.
  *
  * Usage:
- *   pnpm db:validate:dictionary              # validate split files
- *   pnpm db:validate:dictionary small-test   # validate fixtures/small-test.json
+ *   pnpm db:validate:dictionary
  */
 
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { normalizeDictionaryTerm } from "../../src/lib/dictionary/shared/normalize-dictionary-term";
-
-type DatasetMode = "normalized" | "small-test";
-
-function resolveArg(): DatasetMode {
-  const arg = process.argv[2];
-  if (!arg) return "normalized";
-  if (arg === "small-test") return "small-test";
-  console.error(`Unknown dataset "${arg}". Valid: small-test (no arg = normalized)`);
-  process.exit(1);
-}
 
 interface NormalizedEntry {
   entryKey: string;
@@ -57,17 +46,6 @@ interface NormalizedAlias {
   alias: string;
   normalizedAlias: string;
   aliasType: string;
-}
-
-interface LegacySense {
-  partOfSpeech: string;
-  definition: string;
-  translations: { targetLanguage: string; translation: string; isPrimary: boolean; status: string }[];
-}
-
-interface LegacyEntry {
-  headword: string;
-  senses: LegacySense[];
 }
 
 const VALID_STATUSES = new Set(["draft", "reviewed", "approved", "deprecated"]);
@@ -228,38 +206,4 @@ function validateNormalized(): number {
   return 1;
 }
 
-function validateLegacy(dataset: string): number {
-  const fixturePath = join(process.cwd(), `prisma/data/dictionary/en-vi/${dataset}.json`);
-  const raw = readFileSync(fixturePath, "utf8");
-  const entries: LegacyEntry[] = JSON.parse(raw);
-
-  const errors: string[] = [];
-
-  for (let i = 0; i < entries.length; i++) {
-    const entry = entries[i];
-    if (!entry.headword) { errors.push(`[${i}] missing headword`); continue; }
-    if (!Array.isArray(entry.senses) || entry.senses.length === 0) {
-      errors.push(`[${i}] "${entry.headword}" must have >= 1 sense`);
-      continue;
-    }
-    for (let s = 0; s < entry.senses.length; s++) {
-      const sense = entry.senses[s];
-      if (!Array.isArray(sense.translations) || sense.translations.length === 0) {
-        errors.push(`[${i}] "${entry.headword}" sense[${s}] must have >= 1 translation`);
-      }
-    }
-  }
-
-  if (errors.length === 0) {
-    console.log(`Validation passed: ${entries.length} entries, 0 errors`);
-    return 0;
-  }
-
-  console.error(`\nValidation failed: ${errors.length} error(s)\n`);
-  for (const e of errors) console.error(`  ${e}`);
-  return 1;
-}
-
-const mode = resolveArg();
-const exitCode = mode === "normalized" ? validateNormalized() : validateLegacy("fixtures/small-test");
-process.exit(exitCode);
+process.exit(validateNormalized());

@@ -38,9 +38,9 @@
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
     "db:seed:dictionary": "tsx prisma/seed.ts",
+    "db:seed:dictionary:bulk:dev": "DICTIONARY_SEED_BULK=1 DICTIONARY_SEED_BULK_TARGET=development tsx prisma/seed.ts",
     "db:validate:dictionary": "tsx scripts/dictionary/validate-dictionary.ts",
-    "db:check:dictionary-seed": "tsx scripts/dictionary/check-seed-status.ts",
-    "db:generate:benchmark": "tsx scripts/dictionary/generate-seed-data.ts"
+    "db:check:dictionary-seed": "tsx scripts/dictionary/check-seed-status.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.72",
