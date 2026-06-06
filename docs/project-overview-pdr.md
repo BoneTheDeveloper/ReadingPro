@@ -1,81 +1,75 @@
-# Project Overview (PDR)
+# Project Overview PDR
 
-**English Reading Training App**
+## Product
 
----
+English Reading Training App is an AI-assisted reading trainer for English learners. A learner uploads or pastes English content, studies the passage in a guided workspace, translates selected text, asks passage-grounded study questions, and reviews generated cards through spaced repetition.
 
-## Product Description
+## Users
 
-AI-powered English reading comprehension trainer for language learners. Users upload English text or PDF documents, and the app detects the CEFR difficulty level, provides simplified versions for easier comprehension, generates comprehension questions with source citations, and tracks long-term retention through spaced repetition.
+| User | Need |
+|------|------|
+| Independent learner | Practice reading with level-appropriate support and retention tracking. |
+| Exam learner | Build comprehension skills for CEFR-oriented study. |
+| Teacher or tutor | Turn learner-provided material into questions and study sessions. |
 
-**Target Users:** Non-native English speakers preparing for CEFR exams (A1-C2), self-learners wanting to improve reading skills, language teachers needing comprehension materials.
+## Problem
 
----
-
-## Problem Statement
-
-Language learners need accessible reading material at appropriate difficulty levels. Existing tools either:
-- Don't adapt content to learner's level
-- Lack systematic retention tracking
-- Don't provide source-backed comprehension testing
-
----
+Learners often read material that is either too hard, too isolated from vocabulary support, or not connected to long-term review. Generic translation and chat tools do not preserve passage ownership, progress, or review history.
 
 ## Solution
 
-An integrated pipeline: **Upload → Analyze → Read → Test → Retain**
+The app provides one integrated loop:
 
-1. Upload any English text or PDF
-2. AI detects CEFR level automatically
-3. Content simplified one level below for comprehension support
-4. Comprehension questions generated with source citations
-5. SM-2 spaced repetition schedules reviews for long-term retention
-
----
-
-## User Flows
-
-### Primary Flow: Upload & Study
-```
-Upload text/PDF → Processing → Reading View → Flashcard Test → Progress
+```text
+Upload or paste content
+  -> analyze CEFR level
+  -> simplify when useful
+  -> generate comprehension questions
+  -> study in a three-panel workspace
+  -> translate and save vocabulary
+  -> review cards with SM-2 scheduling
+  -> track progress
 ```
 
-### Secondary Flow: Spaced Repetition Review
-```
-Progress Dashboard → Due Cards → Review Session → Session Summary
-```
+## Current State
 
----
+As of 2026-06-06, the MVP is implemented on Next.js App Router with Clerk auth, Neon PostgreSQL through Prisma, local/Vercel Blob storage, AI-assisted study features, Sentry, Pino, and performance test hooks.
 
-## Current State (2026-06-05)
+Operational features include:
 
-Fully functional MVP with Clerk auth, Neon PostgreSQL, Prisma, and local/Vercel Blob storage. Core workflows are operational: upload/analyze pipeline, three-panel study workspace, SM-2 spaced repetition, translation/dictionary support, and progress tracking.
+- Text and PDF upload.
+- Passage persistence and soft deletion.
+- CEFR metadata, simplification, and question generation.
+- Three-panel study workspace.
+- Inline translation, dictionary lookup/search/suggest, translation cache/history, and vocabulary saving.
+- Study chat with streaming AI tutor responses scoped to the selected passage.
+- SM-2 review scheduling and progress stats.
+- Local, preview, and production environment contracts.
 
-**Completed milestones:**
-- Phase 1-4: Core MVP + Sentry integration (2026-04-27 to 2026-05-01)
-- Phase 6 (partial): Three-panel resizable study workspace
-- Phase 7: Clerk Auth - email/password + Google OAuth, middleware protection
-- Phase 8 (partial): Neon PostgreSQL migration, Vercel Blob file storage, Vercel deploy contract
-- User profile sync from Clerk identity into the application database
-- Zod validation across all server actions and API routes
-- Dictionary seed/import system and performance benchmark gates
+## MVP Scope
 
----
+In scope:
 
-## Out of Scope (Current)
+- Authenticated learner-owned passages.
+- English source content and Vietnamese translation/dictionary targets.
+- Private file storage abstraction.
+- Seeded dictionary data and raw-SQL optimized dictionary reads where needed.
+- Production deployment on Vercel with Neon and Vercel Blob.
 
-- Real-time collaboration, social features
-- Mobile native apps, payment/billing
-- Content library/curation, audio pronunciation, grammar exercises
+Out of scope for the current MVP:
 
----
+- Native mobile apps.
+- Payments and subscriptions.
+- Collaborative classrooms.
+- Audio pronunciation and speech input.
+- OCR and YouTube transcription.
 
-**See also:**
-- Business goals & metrics → [`docs/database/brd.md`](database/brd.md)
-- Functional requirements → [`docs/database/srs.md`](database/srs.md)
-- Use cases → [`docs/database/use-case.md`](database/use-case.md)
+## References
 
----
+- Product flows: [Product/user-flows.md](Product/user-flows.md)
+- Feature scope: [Product/feature-scope.md](Product/feature-scope.md)
+- System architecture: [Architecture/system-architecture.md](Architecture/system-architecture.md)
+- Roadmap: [project-roadmap.md](project-roadmap.md)
 
-**Status:** Active
-**Last Updated:** 2026-06-05
+**Status:** Active  
+**Last Updated:** 2026-06-06

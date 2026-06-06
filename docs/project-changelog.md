@@ -13,8 +13,8 @@
 - Vitest test infrastructure with React Testing Library, jest-dom, jsdom, v8 coverage, shared mocks, fixtures, helpers, and smoke tests.
 - GitHub Actions CI workflow for lint, TypeScript, tests, coverage, and gated Playwright E2E.
 - `docs/quality-assurance/vitest.md` documenting test commands and the shared test scaffold.
-- Playwright authenticated setup with reusable `.auth/user.json`, public/authenticated project split, and generated screenshot output under `generated/screenshot/`.
-- `tests/e2e/README.md` documenting local `.env.test`, pre-created test users, screenshot commands, and CI secrets.
+- Playwright authenticated setup with reusable `.auth/user.json`, public/authenticated project split, and generated screenshot output under `test-results/playwright/screenshots/`.
+- `playwright/README.md` documenting local `.env.test`, pre-created test users, screenshot commands, and CI secrets.
 
 ### Changed
 - Replaced the previous auth, hosted Postgres, and object storage design with Clerk + Neon + Vercel Blob.

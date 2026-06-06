@@ -1,49 +1,62 @@
-## Project Overview
+# Agent Guide
 
-AI-powered English reading comprehension trainer for non-native speakers. Upload text/PDF → AI detects CEFR level → Content simplified → Comprehension questions with source citations → SM-2 spaced repetition schedules reviews.
+Lightweight routing guide for agents working in this repo. Do not duplicate detailed docs here; read the canonical file for the task.
 
+## Start Here
 
-## Plans & Documentation
+1. Read `docs/README.md` for the docs map.
+2. Read `docs/codebase-summary.md` for source layout and core modules.
+3. Use the task routing table below before editing.
 
-- **Plans:** `./plans/` — naming: `{date}-{issue}-{slug}/plan.md`
-- **Docs:** `docs/` — `project-overview-pdr.md`, `system-architecture.md`, `code-standards.md`, `styling-guide.md`, `codebase-summary.md`, `database/`
+## Task Routing
 
-## Codebase Navigation (GKG MCP) — MANDATORY
+| Task | Read first | Then read when needed |
+|------|------------|-----------------------|
+| Product scope or user behavior | `docs/project-overview-pdr.md` | `docs/Product/feature-scope.md`, `docs/Product/user-flows.md`, `docs/Product/use-cases.md` |
+| System architecture | `docs/Architecture/system-architecture.md` | Runtime/auth/database/storage/API/observability/deployment docs under `docs/Architecture/` |
+| Next.js runtime or RSC boundaries | `docs/Architecture/runtime-architecture.md` | `docs/code-standards.md` |
+| Auth, Clerk, ownership | `docs/Architecture/auth-architecture.md` | `src/lib/auth/*`, `src/proxy.ts` |
+| Database schema or ownership fields | `docs/Architecture/database-architecture.md` | `docs/database/data-dictionary.md`, `docs/database/erd.md`, `prisma/schema.prisma` |
+| Prisma migration work | `prisma/migrations-flow.md` | `prisma/migrations-guide.md`, `prisma/SECURITY.md`, `docs/database/migration-flow.md` |
+| Storage or uploaded files | `docs/Architecture/storage-architecture.md` | `src/lib/storage/blob-storage.ts`, `docs/Flows/upload-flow.md` |
+| API implementation | `docs/Architecture/api-architecture.md` | `docs/API/Api-impliment-conventions.md`, `docs/API/api-index.md`, matching `docs/API/Routes/*.md` |
+| Upload flow | `docs/Flows/upload-flow.md` | `src/features/upload/*`, `src/app/api/upload/*` |
+| Study workspace | `docs/Flows/study-flow.md` | `src/features/study/*` |
+| Translation flow | `docs/Flows/translation-flow.md` | `src/lib/translation/*`, `src/app/api/translate/route.ts` |
+| Dictionary flow | `docs/Flows/dictionary-flow.md` | `src/lib/dictionary/*`, `docs/API/Routes/dictionary-feature.md` |
+| Study chat | `docs/Flows/study-chat-flow.md` | `src/app/api/study-chat/route.ts`, `src/features/study/study-chat-panel.tsx` |
+| Cards, SM-2, progress | `docs/Flows/spaced-repetition-flow.md` | `src/lib/algorithms/sm2.ts`, `src/lib/db/card-review-queries.ts` |
+| Testing strategy | `docs/Testing/testing-strategy.md` | `tests/README.md` |
+| Playwright local playground | `playwright/README.md` | `playwright/playwright.config.ts`, `playwright/playwright.screenshot.config.ts` |
+| Performance benchmarks | `docs/Testing/performance-benchmarks.md` | `tests/performance/README.md`, `tests/performance/query-budget-benchmarks.md` |
+| Deployment or env vars | `docs/Architecture/deployment-architecture.md` | `docs/Operations/deployment-runbook.md`, `docs/Operations/env-vars.md` |
+| Production migration runbook | `docs/Operations/production-migration-runbook.md` | `prisma/migrations-flow.md` |
+| Incident/debugging | `docs/Operations/incident-debugging.md` | Sentry docs under `docs/sentry/` |
+| Security review | `docs/Operations/security-checklist.md` | `prisma/SECURITY.md`, auth/database architecture docs |
+| Roadmap or priorities | `docs/project-roadmap.md` | `docs/Product/feature-scope.md` |
 
-Use GKG MCP FIRST for ALL code navigation. Fallback to Read/Glob/Grep only if GKG fails (state why).
+## Source-Of-Truth Rule
 
-Re-index: `index_project` with `project_absolute_path: "/home/luc/Project/english-reading-training-app"`
+- Keep detailed rules beside the files they govern.
+- `prisma/` owns Prisma migration and security procedure.
+- `tests/` owns test authoring, Playwright, and performance benchmark rules.
+- `docs/` owns architecture, product, flow, operations, and cross-links.
+- `AGENT.md` only tells agents what to read.
 
-## Conventions
+## Navigation
 
-- Startup: read `docs/codebase-summary.md` first every session before navigating or editing, then use GKG MCP for relation checks.
-- Architecture & data flow: see `docs/system-architecture.md` after `docs/codebase-summary.md` for full details.
-- Code standards: see `docs/code-standards.md` — TS rules, file naming, project structure, components, API responses, error handling, Prisma patterns
-- Commands: see `package.json` scripts; `pnpm tsc --noEmit` for type check
-- API route implementation: see `docs/API/Api-impliment-conventions.md`
-- API route docs: see `docs/API/Api-doc-convention.md`
-## Test Rules
+- Prefer `rg`/`rg --files` for text and file discovery.
+- Use code graph/MCP navigation when available for dependency and usage checks.
+- Do not read `node_modules` by default. If package API details are needed, inspect `package.json` and lockfile first, then read only the specific package `.d.ts` or export files required.
 
-- **Playwright test rule:** `tests/e2e/playwright-test-rule.md` — project split, auth storage state, screenshot output, Docker fallback, and required verification notes.
+## Common Checks
 
-## Library access
-Do not read node_modules by default.
+Use the smallest relevant verification:
 
-When library API/type information is needed, first inspect package.json and the lockfile to identify the installed package version.
-
-If local package source or .d.ts files are needed, request permission to read only the specific package path, for example:
-- node_modules/ai/**
-- node_modules/@ai-sdk/**
-- node_modules/react-resizable-panels/**
-
-Never request access to the entire node_modules directory unless explicitly justified.
-Prefer reading .d.ts files, package exports, and dist entrypoints only.
-## Prisma Migrations
-
+```bash
+pnpm run typecheck
+pnpm run lint
+pnpm run test
+pnpm build
+pnpm test:performance
 ```
-Never edit an applied migration — Prisma hashes content, editing will cause errors
-Never delete the migrations/ folder — required for migrate deploy and team sync
-Always commit migrations/ to git
-Schema change → always create a new migration, never modify old ones
-Manually edit migration.sql only for: renaming columns, migrating existing data, or custom SQL (indexes, triggers)
-Always review .sql files before applying, especially on production

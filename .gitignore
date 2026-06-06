@@ -13,9 +13,9 @@
 # testing
 /coverage
 /.auth/
+/test-results/
 /generated/
 /playwright-report/
-/test-results/
 .env.test
 
 # next.js

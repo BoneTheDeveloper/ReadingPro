@@ -1,82 +1,63 @@
 # Code Standards
 
-## General Principles
+## Architecture Rules
 
-- **YAGNI** — Don't build for hypothetical future requirements
-- **KISS** — Simple solutions over clever abstractions
-- **DRY** — Extract shared logic, but don't over-abstract
-- Files under 200 lines — split if larger
-
----
+- Keep Next.js route handlers thin: parse, authenticate, call service/repository, return response.
+- Put feature UI, hooks, workflows, and server actions under `src/features/<feature>/`.
+- Put shared infrastructure under `src/lib/`.
+- Avoid feature-to-feature imports. Move truly shared logic to `src/lib/`.
+- Keep generated Prisma code isolated under `src/generated/prisma/`.
+- Keep folder-specific rule docs beside their executable assets. `docs/` should link to `prisma/` and `tests/` rule docs instead of duplicating them.
 
 ## TypeScript
 
-- Strict mode enabled (`tsconfig.json`)
-- Prefer `interface` over `type` for object shapes
-- No `any` — use `unknown` and narrow with type guards
-- Export types from their definition file, not from barrel exports
-- Use Zod schemas for runtime validation at API boundaries
+- Use strict TypeScript.
+- Prefer explicit input/output types for service boundaries.
+- Use `unknown` plus narrowing instead of `any`.
+- Use Zod for external input: route bodies, query params, server action payloads, generated AI JSON.
+- Keep runtime DTOs close to the route/service that owns the contract.
 
----
+## Next.js Boundaries
 
-## File Naming
+- Default to Server Components for pages and layouts.
+- Add `"use client"` only for browser state, effects, refs, event handlers, browser APIs, or streaming UI hooks.
+- Route handlers live in `src/app/api/**/route.ts`.
+- Server actions stay in feature modules and must authenticate before user-owned writes.
+- API routes and server actions must not trust client-provided ownership fields.
 
-| Category | Convention | Examples |
-|----------|-----------|---------|
-| Components | kebab-case | `upload-zone.tsx`, `progress-dashboard.tsx` |
-| Pages | Next.js convention | `page.tsx`, `layout.tsx` |
-| Utilities | kebab-case, descriptive | `cefr-utils.ts`, `reading-utils.ts`, `upload-validator.ts` |
-| API routes | Next.js convention | `route.ts` inside `api/cards/review/` |
-| AI modules | kebab-case | `cefr-detector.ts`, `content-simplifier.ts` |
-| CSS | kebab-case | `globals.css` |
+## Data Access
 
-**Self-documenting names preferred** — long filenames OK if purpose is clear from the name.
+- Import `db` from `@/lib/db/client`.
+- Query modules under `src/lib/db/*-queries.ts` own app-domain Prisma access.
+- Dictionary repositories may use raw SQL when required for performance or grouping correctness.
+- Always include `userId` in user-owned reads/writes.
+- Use soft deletion for passages through `deletedAt`.
+- Select only fields needed for public/API DTOs.
 
----
+## API Contracts
 
-## Components
+- Successful JSON responses use `{ success: true, data }` unless the route is a streaming route.
+- Failed JSON responses use `{ error: string }` with an appropriate status.
+- Auth failures should return `401`.
+- Missing owned resources should return `404`.
+- Validation failures should return `400`.
 
-### Server vs Client Components
+## Observability
 
-- Default to Server Components
-- Add `"use client"` only when state/effects/event handlers needed
-- Keep client components thin — fetch data in server components, pass as props
+- Use `createRequestLogger` in route handlers when request context is useful.
+- Use `log.error({ err: error }, message)` for server-side errors.
+- Capture route failures with `Sentry.captureException(error, { tags: { route, method } })`.
+- Use `Sentry.startSpan` around meaningful auth, DB, storage, and AI steps.
+- Use performance headers only behind explicit performance fixture/header gates.
 
-### Component Patterns
+## Naming
 
-- Functional components only (no class components)
-- Props interface defined above the component or inline
-- Destructure props in function signature
-- Use `cn()` from `lib/shared/utils.ts` for conditional class merging
-- shadcn/ui primitives from `components/ui/` — don't modify, compose instead
-- Layout shell components and layout-owned hooks live in `components/layout/`
-- Feature components live beside their workflow in `features/<name>/`
+| Kind | Convention |
+|------|------------|
+| Components/hooks/services | kebab-case files |
+| Next pages/layouts/routes | Next.js file conventions |
+| Docs | kebab-case, except existing `Api-*` files retained for compatibility |
+| Tests | colocated `*.test.ts` / `*.test.tsx` |
 
-## Project-Specific Rules
-
-- API responses: `{ success: boolean, data?: T, error?: string }`
-- shadcn/ui primitives in `src/components/ui/` — compose, don't modify
-- Import `db` from `@/lib/db/client` — never use generated Prisma client imports directly in components
-- Avoid feature-to-feature imports. Promote shared behavior to `lib/` only after it is genuinely reused.
-- Avoid broad barrel exports for `features/` and `lib/`; import from the owning module so ownership remains visible.
-
-## Error Handling
-
-- Try/catch at API route and server action boundaries
-- `log.error({ err: error }, message)` (Pino) for server-side logging
-- `Sentry.captureException(error, { tags: { route, method } })` in API routes
-- `Sentry.withServerActionInstrumentation()` to wrap server actions
-- `Sentry.addBreadcrumb()` to track AI/DB operations
-- `Sentry.startSpan({ name, op }, fn)` for AI (`op: 'ai'`) and DB (`op: 'db'`) performance
-
-## Prisma Query Patterns
-
-- `prisma.$transaction()` for multi-step writes
-- Prefer `findFirst` over `findUnique` when unique constraint isn't guaranteed
-- Select only needed fields with `select` when performance matters
-- Use `include` for relations, avoid N+1
-
----
-
-**Status:** Active
-**Last Updated:** 2026-05-15
+**Status:** Active  
+**Last Updated:** 2026-06-06

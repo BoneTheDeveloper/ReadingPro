@@ -4,7 +4,7 @@ import { join } from 'node:path'
 
 const targetPath = process.env.SCREENSHOT_PATH ?? '/en/study'
 const screenshotName = process.env.SCREENSHOT_NAME ?? 'study-screenshot'
-const outDir = process.env.SCREENSHOT_DIR ?? 'generated/screenshot'
+const outDir = process.env.SCREENSHOT_DIR ?? 'test-results/playwright/screenshots'
 
 test(`screenshot ${targetPath}`, async ({ page }) => {
   await mkdir(outDir, { recursive: true })

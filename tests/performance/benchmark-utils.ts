@@ -3,7 +3,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { basename, dirname, extname, resolve } from "node:path";
 import { config as loadEnvFile } from "dotenv";
 import getPort from "get-port";
-import { getE2EAuthCookieHeader } from "../e2e/helpers/auth-state";
+import { getE2EAuthCookieHeader } from "../../playwright/helpers/auth-state";
 
 export type BudgetGate = "hard" | "soft";
 

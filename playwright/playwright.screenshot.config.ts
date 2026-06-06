@@ -1,13 +1,18 @@
 import { defineConfig, devices } from '@playwright/test'
-import { loadE2EEnv } from './tests/e2e/helpers/load-e2e-env'
+import { resolve } from 'node:path'
+import { loadE2EEnv } from './helpers/load-e2e-env'
 
 loadE2EEnv()
 
 const externalBaseURL = process.env.E2E_BASE_URL
 const baseURL = externalBaseURL ?? 'http://127.0.0.1:3000'
+const authStorageState = resolve(process.cwd(), '.auth/user.json')
+const playwrightResultsDir = resolve(process.cwd(), 'test-results/playwright')
 
 export default defineConfig({
-  testDir: './tests/e2e',
+  testDir: './tests',
+  outputDir: `${playwrightResultsDir}/artifacts`,
+  reporter: [['html', { outputFolder: `${playwrightResultsDir}/report`, open: 'never' }]],
   use: {
     baseURL,
     trace: 'on-first-retry',
@@ -25,7 +30,7 @@ export default defineConfig({
       testMatch: '**/screenshot-authenticated.ts',
       use: {
         ...devices['Desktop Chrome'],
-        storageState: '.auth/user.json',
+        storageState: authStorageState,
       },
       dependencies: ['setup'],
     },

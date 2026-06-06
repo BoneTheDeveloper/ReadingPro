@@ -1,112 +1,117 @@
 # English Reading Training App
 
-## Prerequisites
+AI-assisted reading trainer for English learners. Learners upload or paste English content, study it in a guided workspace, translate selections, ask passage-grounded tutor questions, and review generated cards with spaced repetition.
 
-- Node.js
-- pnpm 11.3.0 or newer
-- A Clerk application for authentication
-- A Neon PostgreSQL database
-- A Vercel Blob store for preview/production file uploads
-- An OpenAI API key for AI features
+## What It Does
 
+- Upload text or PDF reading material.
+- Persist learner-owned passages with CEFR metadata.
+- Simplify content and generate comprehension questions.
+- Study in a three-panel workspace with reading, quiz, translation, and chat surfaces.
+- Translate selected English text to Vietnamese, cache translation results, and save vocabulary.
+- Search a seeded English-Vietnamese dictionary.
+- Review cards with SM-2 scheduling and track progress.
 
+## Stack
 
-## Install Dependencies
+| Layer | Technology |
+|-------|------------|
+| App | Next.js App Router, React, TypeScript |
+| UI | Tailwind CSS, shadcn-style primitives, Lucide icons |
+| Auth | Clerk |
+| Database | Neon PostgreSQL, Prisma |
+| Storage | Local filesystem in development, Vercel Blob in preview/production |
+| AI | Vercel AI SDK with OpenAI/Google provider packages |
+| Observability | Sentry, Pino |
+| Tests | Vitest, Testing Library, performance scripts |
 
-Install the project dependencies from the lockfile:
+## Quick Start
+
+Prerequisites:
+
+- Node.js `24.x`
+- pnpm `11.3.0`
+- Clerk application
+- Neon PostgreSQL database
+- OpenAI API key
+- Vercel Blob store for preview/production uploads
+
+Install dependencies:
 
 ```bash
 pnpm install
 ```
 
-## Configure Environment Variables
-
-Create your local environment file:
+Create local env:
 
 ```bash
 cp .env.example .env.local
 ```
 
-Then update `.env.local` with your own values:
+Set the required local values:
 
 - `OPENAI_API_KEY`
-- `OPENAI_STUDY_CHAT_MODEL` (optional, defaults to `gpt-4o-mini` when missing/empty/invalid)
 - `NEXT_PUBLIC_SITE_URL`
 - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
 - `CLERK_SECRET_KEY`
-- `CLERK_WEBHOOK_SIGNING_SECRET`
 - `DATABASE_URL`
 - `DIRECT_URL`
-- `BLOB_READ_WRITE_TOKEN` (required on Vercel; local dev uses `.local-blob-storage/`)
 
-`DATABASE_URL` should use the Neon pooled runtime connection string. `DIRECT_URL` should use the Neon direct connection string for local and trusted Prisma migration jobs.
+Optional model overrides:
 
-Production GitHub Actions also needs `NEON_API_KEY`, `NEON_PROJECT_ID`,
-`NEON_PRODUCTION_BRANCH_ID`, `VERCEL_TOKEN`, `VERCEL_ORG_ID`,
-`VERCEL_PROJECT_ID`, and `PRODUCTION_URL` in the protected `production`
-environment.
+- `OPENAI_STUDY_CHAT_MODEL`
+- `OPENAI_TRANSLATION_MODEL`
 
-For production auth redirects, set `NEXT_PUBLIC_SITE_URL` to your deployed host, for example `https://your-app.vercel.app`, and configure the same domain in Clerk.
-
-## Set Up the Database
-
-Generate the Prisma client:
+Generate Prisma client and run development migrations:
 
 ```bash
 pnpm db:generate
-```
-
-Run database migrations in development:
-
-```bash
 pnpm db:migrate:dev
 ```
 
-## Start the Project
-
-Start the development server:
+Start the app:
 
 ```bash
 pnpm dev
 ```
 
-Open the app at:
+Open:
 
 ```text
 http://localhost:3000
 ```
 
-## Run Browser Tests and Screenshots
-
-Playwright E2E uses a pre-created Clerk development test user. Add the user credentials to `.env.test`:
+## Common Commands
 
 ```bash
-E2E_TEST_USER_EMAIL=reader@example.com
-E2E_TEST_USER_PASSWORD=secure-password
-```
-
-Then run:
-
-```bash
-pnpm e2e
-pnpm e2e:screenshot
-make screenshot PAGE=/en/study NAME=study
-```
-
-Screenshots are written to `generated/screenshot/`. See `tests/e2e/README.md` for project split, CI secrets, and database readiness details.
-
-On host OS versions unsupported by Playwright browser downloads, use `pnpm e2e:docker` and `make screenshot PAGE=/en/study NAME=study`.
-
-## Production Commands
-
-Build the project:
-
-```bash
+pnpm run typecheck
+pnpm run lint
+pnpm run test
 pnpm build
-```
-
-Start the production server:
-
-```bash
 pnpm start
 ```
+
+Dictionary seed/import helpers:
+
+```bash
+pnpm db:seed:dictionary
+pnpm db:validate:dictionary
+pnpm db:normalize:dictionary
+pnpm db:import:dictionary
+```
+
+## Documentation
+
+- Docs index: [docs/README.md](docs/README.md)
+- Product overview: [docs/project-overview-pdr.md](docs/project-overview-pdr.md)
+- Codebase summary: [docs/codebase-summary.md](docs/codebase-summary.md)
+- System architecture: [docs/Architecture/system-architecture.md](docs/Architecture/system-architecture.md)
+- API index: [docs/API/api-index.md](docs/API/api-index.md)
+- Local development: [docs/Operations/local-development.md](docs/Operations/local-development.md)
+- Environment variables: [docs/Operations/env-vars.md](docs/Operations/env-vars.md)
+
+## Source-Of-Truth Notes
+
+- Prisma migration procedure lives in [prisma/migrations-flow.md](prisma/migrations-flow.md).
+- Prisma/Neon security rules live in [prisma/SECURITY.md](prisma/SECURITY.md).
+- Test strategy lives in [docs/Testing/testing-strategy.md](docs/Testing/testing-strategy.md).

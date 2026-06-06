@@ -1,4 +1,4 @@
-.PHONY: dev build e2e e2e-setup e2e-ui e2e-debug e2e-docker e2e-clean screenshot db-generate db-migrate lint typecheck
+.PHONY: dev build e2e e2e-setup e2e-ui e2e-debug e2e-docker screenshot db-generate db-migrate lint typecheck
 
 PAGE ?= /en/study
 NAME ?= study-screenshot
@@ -44,7 +44,7 @@ e2e-docker: ## Start dev server, run E2E in Docker, then stop dev server
 	cleanup() { \
 		echo "Stopping dev server..."; \
 		kill $$DEV_PID 2>/dev/null || true; \
-		docker compose -f docker-compose.e2e.yml down --remove-orphans; \
+		docker compose -f playwright/docker-compose.yml down --remove-orphans; \
 	}; \
 	trap cleanup EXIT INT TERM; \
 	echo "Waiting for dev server..."; \
@@ -60,19 +60,16 @@ e2e-docker: ## Start dev server, run E2E in Docker, then stop dev server
 	done; \
 	echo "Dev server ready, running E2E tests..."; \
 	set +e; \
-	docker compose -f docker-compose.e2e.yml up --build --abort-on-container-exit --exit-code-from e2e; \
+	docker compose -f playwright/docker-compose.yml up --build --abort-on-container-exit --exit-code-from e2e; \
 	RESULT=$$?; \
 	set -e; \
 	exit $$RESULT
 
-e2e-clean: ## Remove auth state and test results
-	rm -rf .auth/ test-results/ playwright-report/
-
 screenshot: ## Screenshot authenticated page via Docker. Usage: make screenshot PAGE=/en/study NAME=study
-	@/usr/bin/mkdir -p generated/screenshot; \
-	/usr/bin/docker compose -f docker-compose.e2e.yml run --rm \
-		-v $$(pwd)/generated/screenshot:/app/generated/screenshot \
+	@/usr/bin/mkdir -p test-results/playwright/screenshots; \
+	/usr/bin/docker compose -f playwright/docker-compose.yml run --rm \
+		-v $$(pwd)/test-results/playwright/screenshots:/app/test-results/playwright/screenshots \
 		-e SCREENSHOT_PATH="$(PAGE)" \
 		-e SCREENSHOT_NAME="$(NAME)" \
-		-e SCREENSHOT_DIR=generated/screenshot \
-		e2e npx playwright test --config=playwright.screenshot.config.ts
+		-e SCREENSHOT_DIR=test-results/playwright/screenshots \
+		e2e npx playwright test --config=playwright/playwright.screenshot.config.ts

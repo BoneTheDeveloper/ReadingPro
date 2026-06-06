@@ -1,10 +1,10 @@
 services:
   e2e:
     build:
-      context: .
-      dockerfile: Dockerfile.playwright
+      context: ..
+      dockerfile: playwright/Dockerfile
     env_file:
-      - .env.test
+      - ../.env.test
     environment:
       - E2E_BASE_URL=http://host.docker.internal:3000
       - CI=true

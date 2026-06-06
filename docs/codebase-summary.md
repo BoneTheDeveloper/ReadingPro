@@ -1,126 +1,70 @@
 # Codebase Summary
 
-**English Reading Training App**
+## Stack
 
-## Tech Stack
-
-| Layer | Technology |
-|-------|------------|
-| Framework | Next.js 16.2.6 App Router, React Server Components |
-| UI | React 19.2.6, shadcn/ui, Tailwind CSS 4, Lucide React |
-| i18n | next-intl with locale-prefixed routes (`/en/*`, `/vi/*`) |
-| Theming | next-themes with class-based dark mode |
-| Auth | Clerk (`@clerk/nextjs`) |
-| Database | Neon PostgreSQL + Prisma ORM v7.8 (`@prisma/adapter-pg`) |
-| Storage | Local filesystem in development, Vercel Blob in preview/production |
-| AI | Vercel AI SDK v6 + OpenAI/Google providers |
-| PDF | `pdf-parse` v2.4.5 |
-| Validation | Zod v4 |
-| Monitoring | Sentry, Vercel Speed Insights |
-| Logging | Pino structured logging |
-| Tests | Vitest, Testing Library, Playwright |
+| Layer | Current choice |
+|-------|----------------|
+| Framework | Next.js 16.2 App Router, React 19, RSC |
+| UI | Tailwind CSS 4, shadcn-style primitives, Lucide icons |
+| Auth | Clerk for session and identity, app `UserProfile` for ownership |
+| Database | Neon Postgres, Prisma 7 generated into `src/generated/prisma` |
+| Storage | Local filesystem in development, private Vercel Blob in preview/production |
+| AI | Vercel AI SDK, OpenAI and Google provider packages |
+| Validation | Zod at API/server-action boundaries |
+| Observability | Sentry, Pino, optional Prisma/query performance headers |
+| Tests | Vitest, Testing Library, Playwright, performance benchmark scripts |
 
 ## Source Layout
 
-The codebase separates route surfaces from feature implementation:
-
-- `src/app/` contains App Router layouts, locale routes, auth pages, and API routes.
-- `src/features/` contains feature-specific UI, hooks, server actions, and workflows.
-- `src/components/ui/` contains reusable shadcn-style primitives.
-- `src/components/layout/` contains dashboard chrome, theme/language controls, and auth controls.
-- `src/lib/` contains auth, database, storage, AI, dictionary, translation, validation, and observability infrastructure.
-- `src/generated/prisma/` contains the generated Prisma client.
-- `localization/` contains message catalogs and i18n reference docs.
-- `prisma/` contains schema, migrations, seed data, and migration workflow notes.
-
 ```text
 src/
-├── app/
-│   ├── api/
-│   │   ├── cards/{due,review}/route.ts
-│   │   ├── dictionary/{lookup,search,suggest}/route.ts
-│   │   ├── local-blob/[pathname]/route.ts
-│   │   ├── progress/stats/route.ts
-│   │   ├── study-chat/route.ts
-│   │   ├── study-session/route.ts
-│   │   ├── translate/route.ts
-│   │   ├── upload/{route,text/route}.ts
-│   │   └── vocabulary/route.ts
-│   ├── [locale]/
-│   │   ├── (auth)/sign-in/[[...sign-in]]/page.tsx
-│   │   ├── (auth)/sign-up/[[...sign-up]]/page.tsx
-│   │   ├── (dashboard)/{study,upload,progress,dictionary}/page.tsx
-│   │   ├── (dashboard)/reading/[id]/page.tsx
-│   │   ├── (dashboard)/test/[id]/page.tsx
-│   │   ├── layout.tsx
-│   │   └── page.tsx
-│   ├── globals.css
-│   └── layout.tsx
-├── components/
-├── features/
-├── generated/prisma/
-├── i18n/
-├── lib/
-└── proxy.ts
+  app/                  Next.js pages, layouts, route handlers
+  components/           Shared UI and layout components
+  features/             Product feature UI, hooks, actions, workflows
+  generated/prisma/     Generated Prisma client
+  i18n/                 next-intl routing/request helpers
+  lib/                  Auth, DB, storage, AI, dictionary, translation, observability
+  proxy.ts              Clerk + next-intl middleware boundary
+
+prisma/
+  schema.prisma         Data model source of truth
+  migrations/           SQL migrations
+  data/dictionary/      Dictionary seed/import inputs
+  seed.ts               Dictionary seed entrypoint
 ```
 
-## Core Modules
+## Runtime Surfaces
 
-| Area | Files | Responsibility |
-|------|-------|----------------|
-| Route protection | `src/proxy.ts` | Runs Clerk middleware, applies auth redirects, then delegates localized requests to next-intl. |
-| Auth profile sync | `src/lib/auth/auth-utils.ts`, `src/lib/auth/sync-user.ts` | Reads Clerk session/user metadata and upserts `UserProfile`. |
-| Database client | `src/lib/db/client.ts`, `src/lib/db/create-prisma-client.ts` | Creates Prisma client with Postgres adapter and query instrumentation. |
-| Upload workflow | `src/features/upload/upload-workflow.ts` | Validates file/text, stores file, extracts PDF text, runs analysis. |
-| Storage adapter | `src/lib/storage/blob-storage.ts` | Uses `.local-blob-storage/` in development and private Vercel Blob in preview/production. |
-| Study workspace | `src/features/study/*` | Three-panel reading, quiz, translation, chat, and upload experience. |
-| Translation | `src/lib/translation/*`, `src/app/api/translate/route.ts` | Quick/detailed translation, cache/history, vocabulary saving. |
-| Dictionary | `src/lib/dictionary/*`, `src/app/api/dictionary/*` | Lookup, suggest, search, and entry detail services. |
-| Observability | `src/lib/core/*`, `src/instrumentation*.ts` | Pino logging, Sentry instrumentation, metrics helpers. |
+| Surface | Files | Notes |
+|---------|-------|-------|
+| Locale pages | `src/app/[locale]/**/page.tsx` | Dashboard, auth, upload, reading, study, dictionary, progress, test. |
+| Route handlers | `src/app/api/**/route.ts` | JSON/streaming APIs. Authenticated routes call `getAuthenticatedUser`. |
+| Server actions | `src/features/study/actions/*.ts`, `src/features/upload/analyze-content-action.ts` | Mutations colocated with feature modules. |
+| Services | `src/lib/**`, `src/features/**/services` | Business logic and data access behind routes/actions. |
+| Repositories | `src/lib/dictionary/**/repository.ts`, `src/lib/db/*-queries.ts` | Prisma/raw SQL data access. |
 
-## Pages
+## Key Feature Modules
 
-| Route | Purpose |
-|-------|---------|
-| `/` | Redirects into the default locale flow. |
-| `/[locale]` | Locale-prefixed dashboard home. |
-| `/[locale]/sign-in` | Clerk sign-in page. |
-| `/[locale]/sign-up` | Clerk sign-up page. |
-| `/[locale]/upload` | Upload or paste content. |
-| `/[locale]/processing` | Processing transition UI. |
-| `/[locale]/reading/[id]` | Reading view for a saved passage. |
-| `/[locale]/test/[id]` | Flashcard test for a passage. |
-| `/[locale]/study` | Three-panel study workspace. |
-| `/[locale]/dictionary` | Dictionary lookup/search. |
-| `/[locale]/progress` | Progress dashboard. |
+| Feature | Primary files |
+|---------|---------------|
+| Upload | `src/features/upload/*`, `src/app/api/upload/*` |
+| Study workspace | `src/features/study/*`, `src/app/[locale]/(dashboard)/study/page.tsx` |
+| Translation | `src/lib/translation/*`, `src/app/api/translate/route.ts` |
+| Dictionary | `src/lib/dictionary/*`, `src/app/api/dictionary/*` |
+| Study chat | `src/app/api/study-chat/route.ts`, `src/features/study/study-chat-panel.tsx` |
+| Cards/progress | `src/lib/db/card-review-queries.ts`, `src/app/api/cards/*`, `src/app/api/progress/stats/route.ts` |
+| Auth | `src/proxy.ts`, `src/lib/auth/*`, Clerk pages under `(auth)` |
 
-## Environment Variables
+## API Inventory
 
-| Variable | Purpose |
-|----------|---------|
-| `NEXT_PUBLIC_SITE_URL` | Canonical app URL for redirects and absolute links. |
-| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Public Clerk browser key. |
-| `CLERK_SECRET_KEY` | Server-side Clerk API key. |
-| `CLERK_WEBHOOK_SIGNING_SECRET` | Clerk webhook verification secret. |
-| `DATABASE_URL` | Neon pooled runtime Postgres connection. |
-| `DIRECT_URL` | Neon direct Postgres connection for migrations only. |
-| `BLOB_READ_WRITE_TOKEN` | Vercel Blob token for preview/production file storage. |
-| `OPENAI_API_KEY` | OpenAI API key for AI features. |
-| `NEXT_PUBLIC_SENTRY_DSN` | Optional Sentry browser DSN. |
-| `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` | CI-only source-map upload settings. |
-| `CRON_SECRET` | Secret for scheduled cleanup endpoints. |
+See [API/api-index.md](API/api-index.md). Implemented production feature routes include upload, translate, dictionary, vocabulary, cards, progress, study session, study chat, health, and local development blob access.
 
 ## Known Gaps
 
-- Processing page still uses a transition/progress UI rather than live job progress.
-- Production deployment depends on correctly separated Clerk development/production instances, Neon branches, and Blob stores.
-- Some AI and translation flows have caching, but not every generated artifact is cached.
-- Some UI strings remain hard-coded in English; see `localization/docs/architecture.md`.
+- Processing is still a transition UI, not a durable background-job status system.
+- Production readiness depends on environment separation for Clerk, Neon, Blob, Sentry, and Vercel.
+- OCR, YouTube transcription, billing, and native mobile are not in the current product scope.
+- Some docs in `docs/Design/` and `docs/sentry/` are supplemental and not part of the primary docs tree.
 
-**See also:**
-- Data models -> [`docs/database/data-dictionary.md`](database/data-dictionary.md)
-- API endpoints and requirements -> [`docs/database/srs.md`](database/srs.md)
-- ERD -> [`docs/database/erd.md`](database/erd.md)
-
-**Status:** Active
-**Last Updated:** 2026-06-05
+**Status:** Active  
+**Last Updated:** 2026-06-06
