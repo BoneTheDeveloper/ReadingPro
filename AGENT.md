@@ -26,7 +26,7 @@ Lightweight routing guide for agents working in this repo. Do not duplicate deta
 | Dictionary flow | `docs/Flows/dictionary-flow.md` | `src/lib/dictionary/*`, `docs/API/Routes/dictionary-feature.md` |
 | Study chat | `docs/Flows/study-chat-flow.md` | `src/app/api/study-chat/route.ts`, `src/features/study/study-chat-panel.tsx` |
 | Cards, SM-2, progress | `docs/Flows/spaced-repetition-flow.md` | `src/lib/algorithms/sm2.ts`, `src/lib/db/card-review-queries.ts` |
-| Testing strategy | `docs/Testing/testing-strategy.md` | `tests/README.md` |
+| Testing strategy | `docs/Testing/testing-strategy.md` | `tests/README.md`, `playwright/README.md` |
 | Playwright local playground | `playwright/README.md` | `playwright/playwright.config.ts`, `playwright/playwright.screenshot.config.ts` |
 | Performance benchmarks | `docs/Testing/performance-benchmarks.md` | `tests/performance/README.md`, `tests/performance/query-budget-benchmarks.md` |
 | Deployment or env vars | `docs/Architecture/deployment-architecture.md` | `docs/Operations/deployment-runbook.md`, `docs/Operations/env-vars.md` |
@@ -39,7 +39,8 @@ Lightweight routing guide for agents working in this repo. Do not duplicate deta
 
 - Keep detailed rules beside the files they govern.
 - `prisma/` owns Prisma migration and security procedure.
-- `tests/` owns test authoring, Playwright, and performance benchmark rules.
+- `tests/` owns Vitest, performance benchmark, shared fixture, and shared test-helper rules.
+- `playwright/` owns the local Playwright playground.
 - `docs/` owns architecture, product, flow, operations, and cross-links.
 - `AGENT.md` only tells agents what to read.
 

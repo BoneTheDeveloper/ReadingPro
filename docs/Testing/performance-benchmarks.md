@@ -15,6 +15,7 @@ This file exists so the main docs tree can point readers to performance testing 
 - Latency budgets are currently soft warnings while baselines stabilize.
 - Benchmark reports are written under `test-results/performance/`.
 - Performance diagnostics are enabled through explicit environment flags and benchmark routes.
+- Shared auth/storage helpers come from `tests/shared/`; performance code must not import from `playwright/`.
 
 ## Commands
 
@@ -25,4 +26,3 @@ pnpm dev:performance
 pnpm build:performance
 pnpm start:performance
 ```
-

@@ -10,11 +10,11 @@ playwright/
   playwright.screenshot.config.ts
   Dockerfile
   docker-compose.yml
-  helpers/
+  helpers/              # Playwright-only helpers
   tests/
 ```
 
-Performance benchmark scenarios stay under `tests/performance/`; they are not part of this Playwright playground.
+Performance benchmark scenarios stay under `tests/performance/`; they are not part of this Playwright playground. Helpers shared by Playwright and another suite belong in `tests/shared/`.
 
 ## Local Environment
 
@@ -54,6 +54,7 @@ make screenshot PAGE=/en/study NAME=study
 - Keep public tests independent of authentication. Public specs must run under the `public` project and must not require `.auth/user.json`, `.env.test`, or E2E credentials.
 - Put authenticated browser coverage in `authenticated-*.spec.ts`. Authenticated specs must run under the `authenticated` project and reuse `.auth/user.json` from the `setup` project.
 - Keep UI sign-in steps only in `playwright/tests/auth.setup.ts`. Do not duplicate sign-in form automation in feature specs or screenshot specs.
+- Keep Playwright-only helpers under `playwright/helpers/`. Move shared helpers to `tests/shared/` before importing them from performance, Vitest, scripts, or other suites.
 - Use stable user-visible locators for readiness, such as headings, buttons, landmarks, and route-specific content. Avoid relying only on `networkidle`.
 - Keep all Playwright-generated results under `test-results/playwright/`.
 - HTML reports go to `test-results/playwright/report/`.

@@ -18,7 +18,14 @@ This `docs/` page is the architecture-level testing overview only. Do not duplic
 | Unit/component/integration/smoke | Vitest + Testing Library | [../../tests/README.md](../../tests/README.md) |
 | Local E2E and screenshots | Playwright | [../../playwright/README.md](../../playwright/README.md) |
 | Performance/query budgets | Custom TS runner | [../../tests/performance/README.md](../../tests/performance/README.md) |
+| Shared test helpers | TypeScript utilities | [../../tests/README.md](../../tests/README.md) |
 | API contracts | Vitest/focused route tests | [contract-tests.md](contract-tests.md) |
+
+## Ownership Boundaries
+
+- `playwright/` owns Playwright configs, browser specs, screenshot scripts, Docker files, and Playwright-only helpers.
+- `tests/shared/` owns runner-agnostic helpers that are consumed by more than one suite.
+- `tests/performance/` may consume `tests/shared/` helpers, but it must not import from the Playwright playground.
 
 ## Required Checks
 

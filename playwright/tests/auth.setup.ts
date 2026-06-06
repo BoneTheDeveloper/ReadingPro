@@ -1,7 +1,7 @@
 import { test as setup } from '@playwright/test'
 import { mkdir } from 'node:fs/promises'
 import { dirname } from 'node:path'
-import { E2E_AUTH_FILE } from '../helpers/auth-state'
+import { E2E_AUTH_FILE } from '../../tests/shared/auth-state'
 
 setup('authenticate', async ({ page }) => {
   const email = process.env.E2E_TEST_USER_EMAIL
