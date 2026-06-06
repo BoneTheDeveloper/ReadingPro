@@ -64,4 +64,3 @@ Dictionary tables are shared read data and are not user-owned.
 - API: [api-architecture.md](api-architecture.md)
 - Observability: [observability-architecture.md](observability-architecture.md)
 - Deployment: [deployment-architecture.md](deployment-architecture.md)
-

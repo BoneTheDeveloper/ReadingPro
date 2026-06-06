@@ -66,5 +66,5 @@ See [API/api-index.md](API/api-index.md). Implemented production feature routes 
 - OCR, YouTube transcription, billing, and native mobile are not in the current product scope.
 - Some docs in `docs/Design/` and `docs/sentry/` are supplemental and not part of the primary docs tree.
 
-**Status:** Active  
+**Status:** Active
 **Last Updated:** 2026-06-06

@@ -28,4 +28,3 @@ Generated Question
 - Review queries: `src/lib/db/card-review-queries.ts`
 - Session queries: `src/lib/db/study-session-queries.ts`
 - Progress UI: `src/features/progress/progress-dashboard.tsx`
-

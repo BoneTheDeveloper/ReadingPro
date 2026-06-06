@@ -33,4 +33,3 @@ Client workspace state is managed by:
 - Passages must be filtered by authenticated `userId`.
 - Deleted passages use `deletedAt`.
 - Generated questions are associated with `Passage`.
-

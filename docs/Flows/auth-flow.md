@@ -40,4 +40,3 @@ Every user-owned operation must use the synced `UserProfile.id`:
 - API routes return `401` when no authenticated user exists.
 - Owned resources should return `404` rather than exposing cross-user existence.
 - Protected pages redirect through Clerk/localized sign-in.
-

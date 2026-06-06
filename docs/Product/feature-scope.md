@@ -32,4 +32,3 @@
 - Uploads are private and tied to authenticated users.
 - Runtime data access must go through `DATABASE_URL`.
 - Production storage must use private Vercel Blob tokens separated by environment.
-

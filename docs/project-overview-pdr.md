@@ -71,5 +71,5 @@ Out of scope for the current MVP:
 - System architecture: [Architecture/system-architecture.md](Architecture/system-architecture.md)
 - Roadmap: [project-roadmap.md](project-roadmap.md)
 
-**Status:** Active  
+**Status:** Active
 **Last Updated:** 2026-06-06

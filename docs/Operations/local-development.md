@@ -36,4 +36,3 @@ Development uploads write to `.local-blob-storage/`. The local read endpoint is 
 ## Performance Mode
 
 Use `pnpm dev:performance` to enable performance fixture routes and query metrics for dictionary/translation benchmark work.
-

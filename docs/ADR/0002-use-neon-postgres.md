@@ -22,4 +22,3 @@ Use Neon PostgreSQL with separate development, preview, and production contexts.
 
 - SQLite: useful for early MVP, not sufficient for production multi-user deployment.
 - Managed Postgres on another provider: viable but weaker branch workflow for this project.
-

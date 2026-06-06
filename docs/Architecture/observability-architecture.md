@@ -32,4 +32,3 @@ Dictionary and translation routes can include performance snapshots only when th
 
 - Supplemental Sentry docs: [../sentry/README.md](../sentry/README.md)
 - Performance benchmarks: [../Testing/performance-benchmarks.md](../Testing/performance-benchmarks.md)
-

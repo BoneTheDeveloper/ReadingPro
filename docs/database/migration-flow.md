@@ -24,4 +24,3 @@ This `docs/` page is an architecture index only. Do not copy the full migration 
 - [database-architecture.md](../Architecture/database-architecture.md)
 - [neon-environment-contract.md](neon-environment-contract.md)
 - [../Operations/production-migration-runbook.md](../Operations/production-migration-runbook.md)
-

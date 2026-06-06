@@ -60,4 +60,3 @@ Server actions must authenticate and enforce ownership before reads/writes.
 - Route handlers and server actions must validate all external input with Zod or equivalent guards.
 - Shared logic belongs in `src/lib/` only when reused across features or route surfaces.
 - Use path aliases from `@/` consistently.
-

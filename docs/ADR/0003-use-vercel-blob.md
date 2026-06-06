@@ -23,4 +23,3 @@ Use a storage adapter with local filesystem storage in development and private V
 
 - Store files in Postgres: simpler infra, poor fit for PDF/blob payloads.
 - S3/R2: viable, but Vercel Blob is simpler for the Vercel deployment target.
-

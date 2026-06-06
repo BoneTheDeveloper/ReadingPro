@@ -49,4 +49,3 @@ Dictionary data is shared seed data:
 - Services: `src/lib/dictionary/**/service.ts`
 - Repositories: `src/lib/dictionary/**/repository.ts`
 - DTO builders: `src/lib/dictionary/shared/*`
-

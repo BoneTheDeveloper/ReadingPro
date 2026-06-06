@@ -40,4 +40,3 @@ Before promoting:
 - Package manager is `pnpm@11.3.0`.
 - Runtime app code uses `DATABASE_URL`, not `DIRECT_URL`.
 - CI-only credentials must not be exposed to the Next.js runtime.
-

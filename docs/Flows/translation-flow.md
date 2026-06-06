@@ -34,4 +34,3 @@ Select text in owned passage
 ## Performance Mode
 
 Performance snapshots are included only when the route receives the expected performance header/gate. Default product responses do not expose benchmark internals.
-

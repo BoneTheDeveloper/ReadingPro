@@ -39,4 +39,3 @@ The seed script is `prisma/seed.ts`.
 - Validate normalized headwords and aliases before import.
 - Keep benchmark fixtures separate from production-quality seed data.
 - Do not seed user-owned study data into production.
-

@@ -38,4 +38,3 @@ GET /api/study-chat?passageId=...
 - UI: `src/features/study/study-chat-panel.tsx`
 - Prompt helper: `src/lib/ai/prompt-utils.ts`
 - Model config: `src/lib/ai/model-config.ts`
-

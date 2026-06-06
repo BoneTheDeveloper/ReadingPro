@@ -47,4 +47,3 @@ Primary route: `POST /api/study-chat`
 Learner reviews due cards. The app updates card review state with SM-2 interval calculations and exposes progress stats.
 
 Primary routes: `/api/cards/due`, `/api/cards/review`, `/api/progress/stats`
-

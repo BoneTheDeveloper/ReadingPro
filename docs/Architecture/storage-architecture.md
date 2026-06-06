@@ -28,4 +28,3 @@
 ## Production Access
 
 Preview and production uploads use Vercel Blob with `access: "private"` and `addRandomSuffix: false`. Any future download endpoint must authenticate and verify ownership before exposing a signed URL.
-

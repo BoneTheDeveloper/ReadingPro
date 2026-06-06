@@ -60,4 +60,3 @@ Visit protected route
   -> redirect to localized sign-in when unauthenticated
   -> sync Clerk user into UserProfile on authenticated server access
 ```
-

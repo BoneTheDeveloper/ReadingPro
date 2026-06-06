@@ -23,4 +23,3 @@ Use Prisma for the primary database client and migrations. Allow raw SQL in dict
 
 - Prisma-only dictionary queries: simpler, but can increase query count and grouping complexity.
 - Full search engine: more capability than the MVP needs.
-

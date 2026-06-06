@@ -41,4 +41,3 @@
 ## CI/Provider Secrets
 
 Neon API and Vercel deployment tokens are CI-only. Do not inject them into Next.js runtime.
-

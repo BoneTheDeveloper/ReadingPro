@@ -23,4 +23,3 @@ Use Clerk for authentication and identity. Store an app-owned `UserProfile` row 
 
 - Custom auth: more control, higher security and maintenance burden.
 - NextAuth/Auth.js: viable, but Clerk provides faster hosted UI/OAuth setup for the MVP.
-

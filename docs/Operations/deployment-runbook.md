@@ -33,4 +33,3 @@ Run Playwright or targeted e2e tests for release-sensitive UI changes.
 - App rollback is separate from database rollback.
 - Do not roll back code across incompatible schema changes without a reviewed DB mitigation.
 - Blob uploads are external side effects and are not automatically rolled back.
-

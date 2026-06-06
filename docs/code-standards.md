@@ -59,5 +59,5 @@
 | Docs | kebab-case, except existing `Api-*` files retained for compatibility |
 | Tests | colocated `*.test.ts` / `*.test.tsx` |
 
-**Status:** Active  
+**Status:** Active
 **Last Updated:** 2026-06-06

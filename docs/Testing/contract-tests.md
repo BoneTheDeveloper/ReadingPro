@@ -31,4 +31,3 @@ Contract tests protect stable API request and response shapes, especially routes
 ## Implementation Notes
 
 Use route-local schemas as the source for request validation expectations. For stable frontend-facing DTOs, add response parsing or backend contract tests before refactoring route data shapes.
-
