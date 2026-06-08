@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: "QuizAttempt Model + API"
-status: pending
+status: completed
 priority: P1
 effort: "2h"
 dependencies: []
@@ -136,14 +136,14 @@ API:
 
 ## Success Criteria
 
-- [ ] QuizAttempt model exists in Prisma schema with all fields and relations
-- [ ] Migration runs successfully
-- [ ] Prisma client generated with QuizAttempt type
-- [ ] POST /api/quiz-attempt creates attempt and returns DTO
-- [ ] PATCH /api/quiz-attempt completes attempt with computed accuracy
-- [ ] Ownership validation on both endpoints
-- [ ] Cannot complete an already-completed attempt
-- [ ] Typecheck passes
+- [x] QuizAttempt model exists in Prisma schema with all fields and relations
+- [x] Migration runs successfully
+- [x] Prisma client generated with QuizAttempt type
+- [x] POST /api/quiz-attempt creates attempt and returns DTO
+- [x] PATCH /api/quiz-attempt completes attempt with computed accuracy
+- [x] Ownership validation on both endpoints
+- [x] Cannot complete an already-completed attempt
+- [x] Typecheck passes
 
 ## Risk Assessment
 

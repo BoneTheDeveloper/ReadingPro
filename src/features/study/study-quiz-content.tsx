@@ -11,16 +11,19 @@ import { QuizResults } from "./study-quiz-results"
 interface QuizContentProps {
   questions: QuestionData[]
   passageTitle: string
+  passageId: string | null
   onReset: () => void
 }
 
-export function QuizContent({ questions, passageTitle, onReset }: QuizContentProps) {
+export function QuizContent({ questions, passageTitle, passageId, onReset }: QuizContentProps) {
   const t = useTranslations("Study")
   const [currentIndex, setCurrentIndex] = useState(0)
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
   const [showFeedback, setShowFeedback] = useState(false)
   const [answers, setAnswers] = useState<Record<string, boolean>>({})
   const [isComplete, setIsComplete] = useState(false)
+  const [sessionId, setSessionId] = useState<string | null>(null)
+  const [attemptId, setAttemptId] = useState<string | null>(null)
 
   const resetTest = useCallback(() => {
     setCurrentIndex(0)
@@ -28,6 +31,8 @@ export function QuizContent({ questions, passageTitle, onReset }: QuizContentPro
     setShowFeedback(false)
     setAnswers({})
     setIsComplete(false)
+    setSessionId(null)
+    setAttemptId(null)
   }, [])
 
   const currentQuestion = questions[currentIndex]
@@ -37,12 +42,38 @@ export function QuizContent({ questions, passageTitle, onReset }: QuizContentPro
     if (!showFeedback) setSelectedAnswer(optionId)
   }, [showFeedback])
 
-  const handleCheckAnswer = useCallback(() => {
+  const handleCheckAnswer = useCallback(async () => {
     if (!selectedAnswer || !currentQuestion) return
+
+    if (!sessionId && passageId) {
+      try {
+        const sessionRes = await fetch('/api/study-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ passageId }),
+        })
+        const sessionData = await sessionRes.json()
+        if (sessionData.success) {
+          const newSessionId = sessionData.data.id
+          setSessionId(newSessionId)
+
+          const attemptRes = await fetch('/api/quiz-attempt', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ studySessionId: newSessionId, passageId }),
+          })
+          const attemptData = await attemptRes.json()
+          if (attemptData.success) setAttemptId(attemptData.data.id)
+        }
+      } catch {
+        // Quiz still works if persistence fails
+      }
+    }
+
     const isCorrect = selectedAnswer === currentQuestion.correctAnswer
     setAnswers((prev) => ({ ...prev, [currentQuestion.id]: isCorrect }))
     setShowFeedback(true)
-  }, [selectedAnswer, currentQuestion])
+  }, [selectedAnswer, currentQuestion, sessionId, passageId])
 
   const handleNext = useCallback(() => {
     if (currentIndex < questions.length - 1) {
@@ -90,6 +121,7 @@ export function QuizContent({ questions, passageTitle, onReset }: QuizContentPro
         correctCount={correctCount}
         totalQuestions={questions.length}
         passageTitle={passageTitle}
+        attemptId={attemptId}
         onReset={resetTest}
         onNewPassage={onReset}
       />

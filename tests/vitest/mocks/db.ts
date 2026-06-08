@@ -43,6 +43,7 @@ export const db = {
   vocabularyOccurrence: createModelMock(),
   vocabularySet: createModelMock(),
   vocabularySetItem: createModelMock(),
+  quizAttempt: createModelMock(),
   fileUploadIntent: createModelMock(),
   userProfile: createModelMock(),
 };

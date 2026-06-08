@@ -225,6 +225,7 @@ export function StudyStudioPanel({
               <QuizContent
                 questions={viewingResult.data.questions}
                 passageTitle={viewingResult.passageTitle}
+                passageId={viewingResult.passageId}
                 onReset={() => setViewingResult(null)}
               />
             )}

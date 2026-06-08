@@ -50,10 +50,28 @@ export const progressStatsSchema = z.object({
   dueCards: z.number(),
   todayReviews: z.number(),
   streakDays: z.number().optional(),
+  totalQuizAttempts: z.number(),
+  avgQuizAccuracy: z.number().nullable(),
+  todayQuizAttempts: z.number(),
 }).strict();
 
 export const progressStatsSuccessResponseSchema = makeSuccessEnvelopeSchema(progressStatsSchema);
 export const progressStatsResponseSchema = makeResponseSchema(progressStatsSchema);
+
+export const quizAttemptSchema = z.object({
+  id: z.string(),
+  studySessionId: z.string(),
+  passageId: z.string().nullable(),
+  correctCount: z.number(),
+  incorrectCount: z.number(),
+  totalQuestions: z.number(),
+  accuracyRate: z.number().nullable(),
+  startedAt: z.string(),
+  completedAt: nullableIsoDateSchema,
+}).strict();
+
+export const quizAttemptSuccessResponseSchema = makeSuccessEnvelopeSchema(quizAttemptSchema);
+export const quizAttemptResponseSchema = makeResponseSchema(quizAttemptSchema);
 
 export const studySessionSchema = z.object({
   id: z.string(),
@@ -92,6 +110,7 @@ export type StudyCardQuestionDto = z.infer<typeof studyCardQuestionSchema>;
 export type CardReviewDto = z.infer<typeof cardReviewSchema>;
 export type ProgressStatsDto = z.infer<typeof progressStatsSchema>;
 export type StudySessionDto = z.infer<typeof studySessionSchema>;
+export type QuizAttemptDto = z.infer<typeof quizAttemptSchema>;
 export type StudyChatHistoryResponse = z.infer<typeof studyChatHistoryResponseSchema>;
 
 type RawCardReview = {
@@ -132,6 +151,18 @@ type RawStudySession = {
   correctCount: number;
   incorrectCount: number;
   accuracyRate: number | null;
+};
+
+type RawQuizAttempt = {
+  id: string;
+  studySessionId: string;
+  passageId: string | null;
+  correctCount: number;
+  incorrectCount: number;
+  totalQuestions: number;
+  accuracyRate: number | null;
+  startedAt: Date | string;
+  completedAt: Date | string | null;
 };
 
 export function toCardReviewDto(card: RawCardReview): CardReviewDto {
@@ -184,6 +215,20 @@ export function toStudySessionDto(session: RawStudySession): StudySessionDto {
     correctCount: session.correctCount,
     incorrectCount: session.incorrectCount,
     accuracyRate: session.accuracyRate,
+  };
+}
+
+export function toQuizAttemptDto(attempt: RawQuizAttempt): QuizAttemptDto {
+  return {
+    id: attempt.id,
+    studySessionId: attempt.studySessionId,
+    passageId: attempt.passageId,
+    correctCount: attempt.correctCount,
+    incorrectCount: attempt.incorrectCount,
+    totalQuestions: attempt.totalQuestions,
+    accuracyRate: attempt.accuracyRate,
+    startedAt: toIsoString(attempt.startedAt),
+    completedAt: attempt.completedAt ? toIsoString(attempt.completedAt) : null,
   };
 }
 

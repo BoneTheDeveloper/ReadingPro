@@ -151,7 +151,7 @@ beforeEach(() => {
   db.translationHistory.create.mockResolvedValue({ id: "translation-history-1" });
   db.vocabularyItem.upsert.mockResolvedValue({
     id: "vocabulary-item-1",
-    selectedText: "algorithmic bias",
+    displayText: "algorithmic bias",
     translation: "thiên lệch thuật toán",
     type: "noun phrase",
     createdAt: new Date("2026-05-29T00:00:00.000Z"),
@@ -528,6 +528,7 @@ describe("POST /api/vocabulary", () => {
       success: true,
       data: {
         id: "vocabulary-item-1",
+        displayText: "algorithmic bias",
         translation: "thiên lệch thuật toán",
       },
     });
@@ -536,17 +537,35 @@ describe("POST /api/vocabulary", () => {
       success: true,
       data: {
         id: "vocabulary-item-1",
+        displayText: "algorithmic bias",
         translation: "thiên lệch thuật toán",
       },
     });
-    expect(routeMocks.upsertVocabularyItem).toHaveBeenCalledTimes(2);
-    expect(routeMocks.upsertVocabularyItem).toHaveBeenCalledWith(
-      expect.objectContaining({
-        userId: userProfileFixture.id,
-        selectedText: "algorithmic bias",
+    expect(db.vocabularyItem.upsert).toHaveBeenCalledTimes(2);
+    expect(db.vocabularyItem.upsert).toHaveBeenCalledWith({
+      where: { userId_normalizedText_targetLanguage_translation: expect.objectContaining({ userId: userProfileFixture.id }) },
+      update: expect.objectContaining({
         translation: "thiên lệch thuật toán",
-        sourceId: passageFixture.id,
+        type: "noun phrase",
       }),
+      create: expect.objectContaining({
+        userId: userProfileFixture.id,
+        displayText: "algorithmic bias",
+        targetLanguage: "vi",
+      }),
+      select: expect.objectContaining({
+        id: true,
+        displayText: true,
+        translation: true,
+      }),
+    });
+    expect(Sentry.startSpan).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "db:vocabulary-upsert", op: "db" }),
+      expect.any(Function),
+    );
+    expect(createRequestLogger).toHaveBeenCalledWith(
+      "api:vocabulary",
+      expect.objectContaining({ method: "POST", path: "/api/vocabulary" }),
     );
   });
 

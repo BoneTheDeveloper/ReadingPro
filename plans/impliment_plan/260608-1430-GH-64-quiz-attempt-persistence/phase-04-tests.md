@@ -1,7 +1,7 @@
 ---
 phase: 4
 title: "Tests"
-status: pending
+status: completed
 priority: P1
 effort: "2h"
 dependencies: [1, 2, 3]
@@ -45,12 +45,12 @@ Cover the quiz attempt create/complete, study session creation on first answer, 
 
 ## Success Criteria
 
-- [ ] Quiz attempt create/complete query tests pass
-- [ ] Progress stats include quiz attempt data
-- [ ] Only completed attempts counted in stats
-- [ ] Quiz retry creates new session + attempt
-- [ ] Accuracy computed server-side: `correctCount / totalQuestions * 100`
-- [ ] All existing tests still pass
+- [x] Quiz attempt create/complete query tests pass
+- [x] Progress stats include quiz attempt data
+- [x] Only completed attempts counted in stats
+- [x] Quiz retry creates new session + attempt
+- [x] Accuracy computed server-side: `correctCount / totalQuestions * 100`
+- [x] All existing tests still pass
 
 ## Risk Assessment
 

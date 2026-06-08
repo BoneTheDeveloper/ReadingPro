@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Quiz Flow Wiring"
-status: pending
+status: completed
 priority: P1
 effort: "2.5h"
 dependencies: [1]
@@ -184,17 +184,17 @@ Retry flow:
 
 ## Success Criteria
 
-- [ ] passageId threaded from study-right-panel through QuizContent
-- [ ] First answer submission creates StudySession then QuizAttempt (both awaited)
-- [ ] sessionId and attemptId stored in state
-- [ ] QuizResults receives attemptId and completes attempt on mount
-- [ ] accuracyRate computed server-side from correctCount / totalQuestions
-- [ ] "Try Again" resets both sessionId and attemptId
-- [ ] Next first answer after retry creates new session + attempt
-- [ ] Old attempt stays completed with its counts
-- [ ] Abandoned quizzes (no completedAt) excluded from stats
-- [ ] Graceful degradation if API calls fail (quiz still works)
-- [ ] Typecheck passes
+- [x] passageId threaded from study-right-panel through QuizContent
+- [x] First answer submission creates StudySession then QuizAttempt (both awaited)
+- [x] sessionId and attemptId stored in state
+- [x] QuizResults receives attemptId and completes attempt on mount
+- [x] accuracyRate computed server-side from correctCount / totalQuestions
+- [x] "Try Again" resets both sessionId and attemptId
+- [x] Next first answer after retry creates new session + attempt
+- [x] Old attempt stays completed with its counts
+- [x] Abandoned quizzes (no completedAt) excluded from stats
+- [x] Graceful degradation if API calls fail (quiz still works)
+- [x] Typecheck passes
 
 ## Risk Assessment
 

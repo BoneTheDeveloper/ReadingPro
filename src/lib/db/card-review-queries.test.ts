@@ -108,6 +108,13 @@ describe("card-review queries", () => {
         { day: today },
         { day: yesterday },
         { day: twoDaysAgo },
+      ])
+      .mockResolvedValueOnce([
+        {
+          totalQuizAttempts: BigInt(5),
+          avgQuizAccuracy: 72.5,
+          todayQuizAttempts: BigInt(1),
+        },
       ]);
 
     await expect(getUserProgress("user-1")).resolves.toEqual({
@@ -116,6 +123,9 @@ describe("card-review queries", () => {
       dueCards: 2,
       todayReviews: 4,
       streakDays: 3,
+      totalQuizAttempts: 5,
+      avgQuizAccuracy: 72.5,
+      todayQuizAttempts: 1,
     });
   });
 });

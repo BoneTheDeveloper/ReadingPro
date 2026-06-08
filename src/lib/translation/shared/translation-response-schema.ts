@@ -42,7 +42,7 @@ export type TranslateResponse = z.infer<typeof translateResponseSchema>;
 
 export const vocabularyDataSchema = z.object({
   id: z.string(),
-  selectedText: z.string(),
+  displayText: z.string(),
   translation: z.string(),
   type: z.string().nullable(),
   createdAt: z.string(),

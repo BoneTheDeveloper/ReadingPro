@@ -1,7 +1,7 @@
 ---
 title: "Persist Quiz Completion into Study Sessions and Progress"
 description: "Add QuizAttempt model as source of truth for quiz performance, wire quiz flow to persist attempts on first answer submit and complete on finish, update progress dashboard"
-status: pending
+status: completed
 priority: P1
 branch: "feat/64-persist-quiz-completion"
 tags: [core-study-loop, study-session, quiz-attempt, progress]
@@ -72,10 +72,10 @@ Quiz Flow:
 
 | Phase | Name | Status | Effort |
 |-------|------|--------|--------|
-| 1 | [QuizAttempt Model + API](./phase-01-quiz-attempt-model-and-api.md) | Pending | 2h |
-| 2 | [Quiz Flow Wiring](./phase-02-quiz-flow-wiring.md) | Pending | 2.5h |
-| 3 | [Progress Dashboard Update](./phase-03-progress-dashboard-update.md) | Pending | 1h |
-| 4 | [Tests](./phase-04-tests.md) | Pending | 2h |
+| 1 | [QuizAttempt Model + API](./phase-01-quiz-attempt-model-and-api.md) | Done | 2h |
+| 2 | [Quiz Flow Wiring](./phase-02-quiz-flow-wiring.md) | Done | 2.5h |
+| 3 | [Progress Dashboard Update](./phase-03-progress-dashboard-update.md) | Done | 1h |
+| 4 | [Tests](./phase-04-tests.md) | Done | 2h |
 
 ## Dependencies
 

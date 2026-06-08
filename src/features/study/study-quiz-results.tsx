@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect } from "react"
 import { useTranslations } from "next-intl"
 import { Trophy } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -9,6 +10,7 @@ interface QuizResultsProps {
   correctCount: number
   totalQuestions: number
   passageTitle: string
+  attemptId: string | null
   onReset: () => void
   onNewPassage: () => void
 }
@@ -17,10 +19,29 @@ export function QuizResults({
   correctCount,
   totalQuestions,
   passageTitle,
+  attemptId,
   onReset,
   onNewPassage,
 }: QuizResultsProps) {
   const t = useTranslations("Study")
+
+  useEffect(() => {
+    if (!attemptId) return
+    const controller = new AbortController()
+    fetch('/api/quiz-attempt', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        attemptId,
+        correctCount,
+        incorrectCount: totalQuestions - correctCount,
+        totalQuestions,
+      }),
+      signal: controller.signal,
+    }).catch(() => {})
+    return () => controller.abort()
+  }, [attemptId]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const accuracy = Math.round((correctCount / totalQuestions) * 100)
   const message =
     accuracy >= 80

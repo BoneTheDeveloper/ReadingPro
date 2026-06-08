@@ -40,6 +40,14 @@ export function buildTranslationCacheKey(input: TranslationKeyInput) {
   });
 }
 
+export function buildVocabularyKey(input: Omit<VocabularyInput, "translation" | "sourceLanguage" | "type">) {
+  return stableHash({
+    userId: input.userId,
+    selectedText: input.selectedText,
+    targetLanguage: input.targetLanguage,
+  });
+}
+
 export async function getOwnedTranslationSource(userId: string, sourceId: string) {
   return db.passage.findUnique({
     where: { id: sourceId, userId, deletedAt: null },
@@ -95,3 +103,40 @@ export async function createTranslationHistory(input: TranslationHistoryInput) {
   });
 }
 
+export async function saveVocabularyItem(input: VocabularyInput) {
+  const normalizedText = input.selectedText.toLowerCase().replace(/\s+/g, " ").trim();
+
+  return db.vocabularyItem.upsert({
+    where: {
+      userId_normalizedText_targetLanguage_translation: {
+        userId: input.userId,
+        normalizedText,
+        targetLanguage: input.targetLanguage,
+        translation: input.translation,
+      },
+    },
+    update: {
+      translation: input.translation,
+      type: input.type ?? "WORD",
+      savedCount: { increment: 1 },
+    },
+    create: {
+      userId: input.userId,
+      normalizedText,
+      displayText: input.selectedText,
+      translation: input.translation,
+      sourceLanguage: input.sourceLanguage,
+      targetLanguage: input.targetLanguage,
+      type: input.type ?? "WORD",
+      source: "TRANSLATE",
+    },
+    select: {
+      id: true,
+      displayText: true,
+      translation: true,
+      type: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+}

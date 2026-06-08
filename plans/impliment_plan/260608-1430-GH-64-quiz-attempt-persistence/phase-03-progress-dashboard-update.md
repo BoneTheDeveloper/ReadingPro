@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "Progress Dashboard Update"
-status: pending
+status: completed
 priority: P2
 effort: "1h"
 dependencies: [2]
@@ -65,11 +65,11 @@ GET /api/progress/stats
 
 ## Success Criteria
 
-- [ ] Progress API returns `totalQuizAttempts`, `avgQuizAccuracy`, `todayQuizAttempts`
-- [ ] Schema validates new fields
-- [ ] Dashboard displays completed quiz count and average accuracy
-- [ ] Only completed attempts counted (`completedAt IS NOT NULL`)
-- [ ] Abandoned quizzes not counted
+- [x] Progress API returns `totalQuizAttempts`, `avgQuizAccuracy`, `todayQuizAttempts`
+- [x] Schema validates new fields
+- [x] Dashboard displays completed quiz count and average accuracy
+- [x] Only completed attempts counted (`completedAt IS NOT NULL`)
+- [x] Abandoned quizzes not counted
 
 ## Risk Assessment
 

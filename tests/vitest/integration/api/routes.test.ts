@@ -237,7 +237,7 @@ describe("POST /api/cards/review", () => {
 
 describe("GET /api/progress/stats", () => {
   it("returns progress stats for the authenticated user", async () => {
-    const stats = { totalCards: 12, dueCards: 3, matureCards: 6, todayReviews: 4, streakDays: 2 };
+    const stats = { totalCards: 12, dueCards: 3, matureCards: 6, todayReviews: 4, streakDays: 2, totalQuizAttempts: 0, avgQuizAccuracy: null, todayQuizAttempts: 0 };
     routeMocks.getUserProgress.mockResolvedValue(stats);
 
     const response = await getProgressStats();
