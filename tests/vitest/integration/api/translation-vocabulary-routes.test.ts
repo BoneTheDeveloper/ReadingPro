@@ -8,7 +8,6 @@ import {
   translateResponseSchema,
   translateSuccessResponseSchema,
   vocabularyResponseSchema,
-  vocabularySuccessResponseSchema,
 } from "@/lib/translation/shared/translation-response-schema";
 import { createJsonRequest, parseJsonResponse } from "../../helpers/api";
 import { expectApiErrorPayload, expectApiSuccessPayload } from "../../helpers/assertions";
