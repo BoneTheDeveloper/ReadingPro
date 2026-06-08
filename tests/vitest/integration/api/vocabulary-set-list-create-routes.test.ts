@@ -5,22 +5,11 @@ import {
   POST as createSetRoute,
 } from "@/app/api/vocabulary/sets/route";
 import { createJsonRequest } from "../../helpers/api";
-import { expectApiErrorPayload, expectApiSuccessPayload } from "../../helpers/assertions";
-import { userProfileFixture } from "../../fixtures";
+import { expectApiSuccessPayload } from "../../helpers/assertions";
+import { expectJsonError } from "../../helpers/api-test-helpers";
+import { userProfileFixture, vocabularySetFixture, VOCAB_SET_ID } from "../../fixtures";
 
-const SET_ID = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
-
-const vocabularySetFixture = {
-  id: SET_ID,
-  userId: userProfileFixture.id,
-  name: "My Words",
-  type: "MANUAL" as const,
-  periodStart: null,
-  periodEnd: null,
-  createdAt: new Date("2026-06-01T00:00:00.000Z"),
-  updatedAt: new Date("2026-06-01T00:00:00.000Z"),
-  _count: { items: 2 },
-};
+const setWithCount = { ...vocabularySetFixture, _count: { items: 2 } };
 
 const routeMocks = vi.hoisted(() => ({
   getAuthenticatedUser: vi.fn(),
@@ -31,10 +20,7 @@ const routeMocks = vi.hoisted(() => ({
 vi.mock("@/lib/auth/auth-utils", () => ({
   getAuthenticatedUser: routeMocks.getAuthenticatedUser,
   AuthenticationRequiredError: class AuthenticationRequiredError extends Error {
-    constructor() {
-      super("Authentication required");
-      this.name = "AuthenticationRequiredError";
-    }
+    constructor() { super("Authentication required"); this.name = "AuthenticationRequiredError"; }
   },
 }));
 
@@ -43,16 +29,11 @@ vi.mock("@/lib/db/vocabulary-set-queries", () => ({
   createManualSet: routeMocks.createManualSet,
 }));
 
-async function expectJsonError(response: Response, status: number, message: string) {
-  expect(response.status).toBe(status);
-  expectApiErrorPayload(await response.json(), message);
-}
-
 beforeEach(() => {
   vi.clearAllMocks();
   routeMocks.getAuthenticatedUser.mockResolvedValue(userProfileFixture);
-  routeMocks.listVocabularySets.mockResolvedValue([vocabularySetFixture]);
-  routeMocks.createManualSet.mockResolvedValue(vocabularySetFixture);
+  routeMocks.listVocabularySets.mockResolvedValue([setWithCount]);
+  routeMocks.createManualSet.mockResolvedValue(setWithCount);
 });
 
 describe("POST /api/vocabulary/sets (create manual set)", () => {
@@ -106,7 +87,7 @@ describe("GET /api/vocabulary/sets (list sets)", () => {
     expectApiSuccessPayload(payload);
     expect(payload.data).toHaveLength(1);
     expect(payload.data[0]).toMatchObject({
-      id: SET_ID,
+      id: VOCAB_SET_ID,
       userId: userProfileFixture.id,
       name: "My Words",
       type: "MANUAL",

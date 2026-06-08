@@ -2,29 +2,9 @@ import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { POST as vocabularyRoute } from "@/app/api/vocabulary/route";
 import { createJsonRequest } from "../../helpers/api";
-import { expectApiErrorPayload, expectApiSuccessPayload } from "../../helpers/assertions";
-import { passageFixture, userProfileFixture } from "../../fixtures";
-
-const VOCABULARY_ITEM_ID = "550e8400-e29b-41d4-a716-446655440001";
-const SOURCE_ID = passageFixture.id;
-
-const vocabularyItemFixture = {
-  id: VOCABULARY_ITEM_ID,
-  userId: userProfileFixture.id,
-  normalizedText: "ephemeral",
-  displayText: "ephemeral",
-  type: "WORD",
-  translation: "hap dan",
-  sourceLanguage: "en",
-  targetLanguage: "vi",
-  source: "TRANSLATE",
-  dictionaryEntryId: null,
-  dictionarySenseId: null,
-  status: "NEW",
-  savedCount: 1,
-  createdAt: new Date("2026-06-01T00:00:00.000Z"),
-  updatedAt: new Date("2026-06-01T00:00:00.000Z"),
-};
+import { expectApiSuccessPayload } from "../../helpers/assertions";
+import { expectJsonError } from "../../helpers/api-test-helpers";
+import { passageFixture, userProfileFixture, vocabularyBody, vocabularyItemFixture } from "../../fixtures";
 
 const routeMocks = vi.hoisted(() => ({
   getAuthenticatedUser: vi.fn(),
@@ -35,10 +15,7 @@ const routeMocks = vi.hoisted(() => ({
 vi.mock("@/lib/auth/auth-utils", () => ({
   getAuthenticatedUser: routeMocks.getAuthenticatedUser,
   AuthenticationRequiredError: class AuthenticationRequiredError extends Error {
-    constructor() {
-      super("Authentication required");
-      this.name = "AuthenticationRequiredError";
-    }
+    constructor() { super("Authentication required"); this.name = "AuthenticationRequiredError"; }
   },
 }));
 
@@ -49,23 +26,6 @@ vi.mock("@/lib/db/vocabulary-queries", () => ({
 vi.mock("@/lib/db/translation-queries", () => ({
   getOwnedTranslationSource: routeMocks.getOwnedTranslationSource,
 }));
-
-function vocabularyBody(overrides: Record<string, unknown> = {}) {
-  return {
-    selectedText: "ephemeral",
-    translation: "hap dan",
-    sourceLanguage: "en",
-    targetLanguage: "vi",
-    sourceId: SOURCE_ID,
-    contextSentence: "The ephemeral nature of beauty.",
-    ...overrides,
-  };
-}
-
-async function expectJsonError(response: Response, status: number, message: string) {
-  expect(response.status).toBe(status);
-  expectApiErrorPayload(await response.json(), message);
-}
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -90,7 +50,7 @@ describe("POST /api/vocabulary (save from translate)", () => {
         selectedText: "ephemeral",
         translation: "hap dan",
         source: "TRANSLATE",
-        sourceId: SOURCE_ID,
+        sourceId: passageFixture.id,
         contextSentence: "The ephemeral nature of beauty.",
       }),
     );

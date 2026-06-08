@@ -1,28 +1,9 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET as listVocabularyRoute } from "@/app/api/vocabulary/list/route";
-import { expectApiErrorPayload, expectApiSuccessPayload } from "../../helpers/assertions";
-import { userProfileFixture } from "../../fixtures";
-
-const VOCABULARY_ITEM_ID = "550e8400-e29b-41d4-a716-446655440001";
-
-const vocabularyItemFixture = {
-  id: VOCABULARY_ITEM_ID,
-  userId: userProfileFixture.id,
-  normalizedText: "ephemeral",
-  displayText: "ephemeral",
-  type: "WORD",
-  translation: "hap dan",
-  sourceLanguage: "en",
-  targetLanguage: "vi",
-  source: "TRANSLATE",
-  dictionaryEntryId: null,
-  dictionarySenseId: null,
-  status: "NEW",
-  savedCount: 1,
-  createdAt: new Date("2026-06-01T00:00:00.000Z"),
-  updatedAt: new Date("2026-06-01T00:00:00.000Z"),
-};
+import { expectApiSuccessPayload } from "../../helpers/assertions";
+import { expectJsonError } from "../../helpers/api-test-helpers";
+import { userProfileFixture, vocabularyItemFixture, VOCABULARY_ITEM_ID } from "../../fixtures";
 
 const routeMocks = vi.hoisted(() => ({
   getAuthenticatedUser: vi.fn(),
@@ -32,21 +13,13 @@ const routeMocks = vi.hoisted(() => ({
 vi.mock("@/lib/auth/auth-utils", () => ({
   getAuthenticatedUser: routeMocks.getAuthenticatedUser,
   AuthenticationRequiredError: class AuthenticationRequiredError extends Error {
-    constructor() {
-      super("Authentication required");
-      this.name = "AuthenticationRequiredError";
-    }
+    constructor() { super("Authentication required"); this.name = "AuthenticationRequiredError"; }
   },
 }));
 
 vi.mock("@/lib/db/vocabulary-queries", () => ({
   listVocabularyItems: routeMocks.listVocabularyItems,
 }));
-
-async function expectJsonError(response: Response, status: number, message: string) {
-  expect(response.status).toBe(status);
-  expectApiErrorPayload(await response.json(), message);
-}
 
 beforeEach(() => {
   vi.clearAllMocks();
