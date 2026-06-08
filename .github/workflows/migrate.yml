@@ -132,6 +132,11 @@ jobs:
           APP_COMMIT_SHA: ${{ github.event.workflow_run.head_sha }}
         run: pnpm dlx vercel@latest build --prod --token "$VERCEL_TOKEN"
 
+      - name: Wake Neon database
+        env:
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+        run: node scripts/database/wake-neon-database.mjs
+
       - name: Apply migrations
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
