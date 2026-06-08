@@ -101,10 +101,10 @@ jobs:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
-          PRODUCTION_URL: ${{ vars.PRODUCTION_URL }}
+          NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}
         run: |
           missing=()
-          for name in VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID PRODUCTION_URL; do
+          for name in VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID NEXT_PUBLIC_SITE_URL; do
             if [ -z "${!name}" ]; then
               missing+=("$name")
             fi
@@ -191,10 +191,10 @@ jobs:
       - name: Post-deploy health check
         env:
           EXPECTED_COMMIT_SHA: ${{ github.event.workflow_run.head_sha }}
-          PRODUCTION_URL: ${{ vars.PRODUCTION_URL }}
+          NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}
         run: |
-          HOST="$(echo "$PRODUCTION_URL" | tr -d '[:space:]')"
-          URL="https://${HOST}/api/health"
+          SITE_URL="$(echo "$NEXT_PUBLIC_SITE_URL" | tr -d '[:space:]')"
+          URL="${SITE_URL}/api/health"
           echo "Polling $URL for commit $EXPECTED_COMMIT_SHA ..."
 
           for attempt in $(seq 1 10); do
