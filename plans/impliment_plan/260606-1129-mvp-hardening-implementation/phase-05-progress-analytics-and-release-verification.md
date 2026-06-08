@@ -11,7 +11,7 @@ dependencies: [2, 3, 4]
 
 ## Overview
 
-Finish MVP hardening with progress analytics and release verification. This phase validates that card reviews, study sessions, vocabulary decisions, and dashboard metrics produce trustworthy learner-facing progress.
+Finish MVP hardening with progress analytics and release verification. This phase validates that card reviews, study sessions, vocabulary status metrics, and dashboard aggregates produce trustworthy learner-facing progress.
 
 ## Requirements
 
@@ -20,7 +20,7 @@ Finish MVP hardening with progress analytics and release verification. This phas
 
 ## Architecture
 
-Progress data comes primarily from `CardReview` and `StudySession`, with optional vocabulary behavior decided in Phase 4. `GET /api/progress/stats` calls `getUserProgress`, and `ProgressDashboard` validates the response with shared schemas before rendering.
+Progress data comes from `CardReview`, `StudySession`, and `VocabularyItem` (status distribution from Phase 4). `GET /api/progress/stats` calls `getUserProgress`, and `ProgressDashboard` validates the response with shared schemas before rendering. Vocabulary metrics (total saved, NEW/LEARNING/MASTERED counts, due for review) are optional additions decided by product need.
 
 ## Related Code Files
 
@@ -46,7 +46,7 @@ Progress data comes primarily from `CardReview` and `StudySession`, with optiona
 
 ## Implementation Steps
 
-1. Confirm progress metrics against the product docs and decide whether any Phase 4 vocabulary/session metrics are part of MVP.
+1. Confirm progress metrics against the product docs. Decide whether vocabulary status distribution (NEW/LEARNING/MASTERED counts, due for review count) joins the progress stats response for MVP.
 2. Add unit tests for aggregate query edge cases: no cards, due cards, mature cards, today boundary, streak continuity, and multi-user isolation.
 3. Add route tests for auth, stable errors, and success schema for progress and study-session routes.
 4. Update `ProgressDashboard` for loading, empty, error, and metric display states without changing layout more than necessary.

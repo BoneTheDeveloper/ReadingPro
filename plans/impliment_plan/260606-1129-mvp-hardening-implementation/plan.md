@@ -39,7 +39,7 @@ In scope:
 - Expand API contract tests for auth, validation, ownership, success envelopes, and stable error envelopes.
 - Stabilize dictionary seed/import quality and preserve dictionary and translation query budgets.
 - Harden study chat history, streaming, retry/error states, and persistence behavior.
-- Clarify how saved vocabulary participates in the learning loop, then implement the smallest reviewed path.
+- Implement vocabulary data model from ADR 0005: two-table VocabularyItem + VocabularyOccurrence, vocabulary sets (MANUAL/DAILY/WEEKLY), save from translate and dictionary, vocabulary page UI.
 - Add progress analytics needed for MVP release confidence and release verification.
 
 Out of scope:
@@ -47,16 +47,19 @@ Out of scope:
 - Multi-target-language dictionary support beyond current `en` to `vi` contracts.
 - Redis/server memory caches for dictionary or translation.
 - Study chat mode switching unless a separate state model is designed first.
+- Full SM-2 integration for vocabulary review (deferred to post-MVP).
+- SOURCE vocabulary set type (deferred).
+- Vocabulary import/export, shared/public sets.
 
 ## Related Code Surface
 
 GKG and file reads mark these as the main implementation surface:
-- Runtime/API: `src/app/api/upload/route.ts`, `src/app/api/upload/text/route.ts`, `src/app/api/translate/route.ts`, `src/app/api/vocabulary/route.ts`, `src/app/api/dictionary/**/route.ts`, `src/app/api/study-chat/route.ts`, `src/app/api/cards/**/route.ts`, `src/app/api/progress/stats/route.ts`, `src/app/api/study-session/route.ts`.
-- Auth/data/storage: `src/lib/auth/auth-utils.ts`, `src/lib/auth/sync-user.ts`, `src/lib/db/client.ts`, `src/lib/db/translation-queries.ts`, `src/lib/db/card-review-queries.ts`, `src/lib/db/study-session-queries.ts`, `src/lib/storage/blob-storage.ts`, `prisma/schema.prisma`.
+- Runtime/API: `src/app/api/upload/route.ts`, `src/app/api/upload/text/route.ts`, `src/app/api/translate/route.ts`, `src/app/api/vocabulary/route.ts`, `src/app/api/vocabulary/**/route.ts` (new), `src/app/api/dictionary/**/route.ts`, `src/app/api/study-chat/route.ts`, `src/app/api/cards/**/route.ts`, `src/app/api/progress/stats/route.ts`, `src/app/api/study-session/route.ts`.
+- Auth/data/storage: `src/lib/auth/auth-utils.ts`, `src/lib/auth/sync-user.ts`, `src/lib/db/client.ts`, `src/lib/db/translation-queries.ts`, `src/lib/db/vocabulary-queries.ts` (new), `src/lib/db/vocabulary-set-queries.ts` (new), `src/lib/db/card-review-queries.ts`, `src/lib/db/study-session-queries.ts`, `src/lib/storage/blob-storage.ts`, `prisma/schema.prisma`.
 - Dictionary/translation: `src/lib/dictionary/**`, `src/lib/translation/**`, `scripts/dictionary/**`, `prisma/seed.ts`, `prisma/data/dictionary/en-vi/**`.
-- Study/progress UI: `src/features/study/study-chat-panel.tsx`, `src/features/study/study-right-panel.tsx`, `src/features/progress/progress-dashboard.tsx`, `src/lib/study/shared/study-response-schema.ts`.
+- Study/progress UI: `src/features/study/study-chat-panel.tsx`, `src/features/study/study-right-panel.tsx`, `src/features/vocabulary/**` (new), `src/features/progress/progress-dashboard.tsx`, `src/lib/study/shared/study-response-schema.ts`.
 - Tests/performance: `tests/vitest/integration/api/**`, `tests/vitest/integration/components/study/study-chat-panel.integration.test.tsx`, `tests/vitest/integration/components/progress/progress-dashboard.integration.test.tsx`, `tests/performance/**`, `playwright/tests/**`.
-- Docs/operations: `docs/Operations/**`, `docs/API/**`, `docs/Flows/**`, `docs/Testing/**`, `.env.example`, `vercel.json`.
+- Docs/operations: `docs/Operations/**`, `docs/API/**`, `docs/Flows/**`, `docs/Testing/**`, `docs/ADR/0005-vocabulary-review-mvp-path.md`, `.env.example`, `vercel.json`.
 
 ## Phases
 
@@ -64,7 +67,7 @@ GKG and file reads mark these as the main implementation surface:
 |-------|------|--------|
 | 1 | [Production Environment Verification](./phase-01-production-environment-verification.md) | Completed |
 | 2 | [API Contract and Ownership Coverage](./phase-02-api-contract-and-ownership-coverage.md) | Completed |
-| 3 | [Dictionary and Translation Stability](./phase-03-dictionary-and-translation-stability.md) | Pending |
+| 3 | [Dictionary and Translation Stability](./phase-03-dictionary-and-translation-stability.md) | Completed |
 | 4 | [Study Chat and Learning Loop Polish](./phase-04-study-chat-and-learning-loop-polish.md) | Pending |
 | 5 | [Progress Analytics and Release Verification](./phase-05-progress-analytics-and-release-verification.md) | Pending |
 
@@ -84,7 +87,8 @@ Phase dependencies:
 - [x] Priority API routes have contract tests for valid requests, invalid JSON/schema, missing auth, ownership misses, and stable error envelopes.
 - [ ] Dictionary and translation performance budgets remain documented and pass with current benchmark fixtures.
 - [ ] Study chat has robust history load, stream, stop, retry, empty, and failure states with matching route tests.
-- [ ] Saved vocabulary and card review behavior have a documented MVP path and tests for the implemented path.
+- [ ] Vocabulary data model (ADR 0005) is migrated: VocabularyItem + VocabularyOccurrence two-table model, VocabularySet with MANUAL/DAILY/WEEKLY types, save from translate and dictionary, dedup by normalized text + translation.
+- [ ] Vocabulary page renders items with status badges, source badges, savedCount, occurrences, and set grouping.
 - [ ] Progress analytics show correct review/card/session aggregates and pass release verification.
 
 ## Verification Commands
@@ -95,7 +99,7 @@ Run the smallest relevant subset during each phase, then the full release gate i
 pnpm run typecheck
 pnpm run lint
 pnpm run test
-pnpm test:performance
+pnpm run test:performance
 pnpm build
 pnpm e2e
 ```

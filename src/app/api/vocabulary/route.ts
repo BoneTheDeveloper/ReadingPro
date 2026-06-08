@@ -2,25 +2,25 @@ import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 import { getAuthenticatedUser } from "@/lib/auth/auth-utils";
-import { createRequestLogContext, createRequestLogger } from "@/lib/core/logger";
 import {
-  getOwnedTranslationSource,
-  saveVocabularyItem,
-} from "@/lib/db/translation-queries";
+  createRequestLogContext,
+  createRequestLogger,
+} from "@/lib/core/logger";
+import { upsertVocabularyItem } from "@/lib/db/vocabulary-queries";
+import { getOwnedTranslationSource } from "@/lib/db/translation-queries";
+import { isAuthenticationRequiredError } from "@/lib/api/route-errors";
 
 const vocabularyRequestSchema = z.object({
-  sourceId: z.string().uuid(),
   selectedText: z.string().trim().min(1).max(500),
   translation: z.string().trim().min(1).max(500),
-  contextSentence: z.string().trim().min(1).max(4000),
+  contextSentence: z.string().trim().max(4000).optional(),
+  sourceId: z.string().uuid().optional(),
   sourceLanguage: z.literal("en"),
   targetLanguage: z.literal("vi"),
-  type: z.string().trim().min(1).max(80).optional(),
+  source: z.enum(["TRANSLATE", "DICTIONARY"]).default("TRANSLATE"),
+  dictionaryEntryId: z.string().uuid().optional(),
+  dictionarySenseId: z.string().uuid().optional(),
 });
-
-function isAuthenticationError(error: unknown) {
-  return error instanceof Error && error.message === "Authentication required";
-}
 
 export async function POST(request: NextRequest) {
   let requestLog = createRequestLogger(
@@ -49,38 +49,38 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid vocabulary request." }, { status: 400 });
     }
 
+    const input = parsed.data;
     requestLog = requestLog.child({
-      sourceId: parsed.data.sourceId,
-      targetLanguage: parsed.data.targetLanguage,
+      targetLanguage: input.targetLanguage,
+      source: input.source,
     });
 
     const user = await Sentry.startSpan(
-      {
-        name: "api:vocabulary-authenticate",
-        op: "auth",
-        attributes: { "translation.source_id": parsed.data.sourceId },
-      },
+      { name: "api:vocabulary-authenticate", op: "auth" },
       () => getAuthenticatedUser(),
     );
     requestLog = requestLog.child({ userId: user.id });
 
-    const source = await Sentry.startSpan(
-      {
-        name: "db:vocabulary-source-fetch",
-        op: "db",
-        attributes: {
-          "db.operation": "findUnique",
-          "db.model": "Passage",
-          "translation.source_id": parsed.data.sourceId,
-          "user.id": user.id,
+    // For TRANSLATE source, verify passage ownership
+    if (input.source === "TRANSLATE" && input.sourceId) {
+      const passage = await Sentry.startSpan(
+        {
+          name: "db:vocabulary-source-fetch",
+          op: "db",
+          attributes: {
+            "db.operation": "findUnique",
+            "db.model": "Passage",
+            "translation.source_id": input.sourceId,
+            "user.id": user.id,
+          },
         },
-      },
-      () => getOwnedTranslationSource(user.id, parsed.data.sourceId),
-    );
+        () => getOwnedTranslationSource(user.id, input.sourceId!),
+      );
 
-    if (!source) {
-      requestLog.warn("Vocabulary source not found");
-      return NextResponse.json({ error: "Source not found." }, { status: 404 });
+      if (!passage) {
+        requestLog.warn("Vocabulary source not found");
+        return NextResponse.json({ error: "Source not found." }, { status: 404 });
+      }
     }
 
     const item = await Sentry.startSpan(
@@ -90,16 +90,22 @@ export async function POST(request: NextRequest) {
         attributes: {
           "db.operation": "upsert",
           "db.model": "VocabularyItem",
-          "translation.source_id": parsed.data.sourceId,
-          "translation.selected_text_length": parsed.data.selectedText.length,
-          "translation.context_length": parsed.data.contextSentence.length,
+          "translation.selected_text_length": input.selectedText.length,
           "user.id": user.id,
         },
       },
       () =>
-        saveVocabularyItem({
+        upsertVocabularyItem({
           userId: user.id,
-          ...parsed.data,
+          selectedText: input.selectedText,
+          translation: input.translation,
+          sourceLanguage: input.sourceLanguage,
+          targetLanguage: input.targetLanguage,
+          sourceId: input.sourceId,
+          contextSentence: input.contextSentence,
+          source: input.source,
+          dictionaryEntryId: input.dictionaryEntryId,
+          dictionarySenseId: input.dictionarySenseId,
         }),
     );
 
@@ -107,8 +113,7 @@ export async function POST(request: NextRequest) {
       {
         context: {
           vocabularyItemId: item.id,
-          selectedTextLength: parsed.data.selectedText.length,
-          contextLength: parsed.data.contextSentence.length,
+          selectedTextLength: input.selectedText.length,
         },
       },
       "Vocabulary item saved",
@@ -116,7 +121,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, data: item });
   } catch (error) {
-    if (isAuthenticationError(error)) {
+    if (isAuthenticationRequiredError(error)) {
       requestLog.warn("Unauthenticated vocabulary request rejected");
       return NextResponse.json({ error: "Authentication required." }, { status: 401 });
     }

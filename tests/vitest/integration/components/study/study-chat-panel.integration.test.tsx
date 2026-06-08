@@ -11,6 +11,7 @@ const useChatState = vi.hoisted(() => ({
   sendMessage: vi.fn(),
   setMessages: vi.fn(),
   stop: vi.fn(),
+  error: undefined as Error | undefined,
 }));
 
 let mockedStatus: ChatStatus = "ready";
@@ -20,7 +21,7 @@ vi.mock("@ai-sdk/react", () => ({
     messages: useChatState.messages,
     sendMessage: useChatState.sendMessage,
     status: mockedStatus,
-    error: undefined,
+    error: useChatState.error,
     setMessages: useChatState.setMessages,
     stop: useChatState.stop,
   }),
@@ -31,6 +32,7 @@ describe("StudyChatPanel", () => {
     vi.clearAllMocks();
     mockedStatus = "ready";
     useChatState.messages = [];
+    useChatState.error = undefined;
     vi.stubGlobal(
       "fetch",
       vi.fn(async (input: RequestInfo | URL) => {
@@ -189,5 +191,48 @@ describe("StudyChatPanel", () => {
         }),
       );
     });
+  });
+
+  it("clears messages and falls back to empty state on network fetch failure", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => Promise.reject(new TypeError("Failed to fetch"))),
+    );
+
+    renderWithUser(<StudyChatPanel passageId="passage-one" />);
+
+    await waitFor(() => {
+      expect(useChatState.setMessages).toHaveBeenCalledWith([]);
+      expect(Sentry.captureException).toHaveBeenCalledWith(
+        expect.any(TypeError),
+        expect.objectContaining({
+          tags: { component: "StudyChatPanel", operation: "history-fetch" },
+          extra: { passageId: "passage-one" },
+        }),
+      );
+    });
+
+    expect(
+      screen.getByText("Start a conversation about this passage"),
+    ).toBeInTheDocument();
+  });
+
+  it("displays error bar with retry button when status is error", async () => {
+    mockedStatus = "error";
+    useChatState.error = new Error("Stream interrupted");
+
+    const { user } = renderWithUser(<StudyChatPanel passageId="passage-one" />);
+
+    expect(screen.getByText("Something went wrong. Please try again.")).toBeInTheDocument();
+
+    const retryButton = screen.getByRole("button", { name: "Retry" });
+    expect(retryButton).toBeEnabled();
+
+    await user.click(retryButton);
+    expect(useChatState.sendMessage).toHaveBeenCalledTimes(1);
+    expect(Sentry.startSpan).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "ui:study-chat-retry", op: "ui.action" }),
+      expect.any(Function),
+    );
   });
 });

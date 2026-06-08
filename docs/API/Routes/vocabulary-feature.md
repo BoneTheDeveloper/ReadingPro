@@ -2,60 +2,519 @@
 
 ## Purpose
 
-Save a translated selection from an owned passage as a vocabulary item.
+Save, browse, and manage vocabulary items. Items are deduplicated by user, normalized text, target language, and translation. Each save creates an occurrence record and auto-adds the item to daily/weekly sets.
 
 ## Routes
 
 | Method | Path | Purpose |
 |--------|------|---------|
-| `POST` | `/api/vocabulary` | Upsert a vocabulary item for the authenticated user. |
+| `POST` | `/api/vocabulary` | Upsert vocabulary item + create occurrence + add to daily/weekly sets |
+| `GET` | `/api/vocabulary/list` | List user's vocabulary items (paginated, filterable by status, search) |
+| `PATCH` | `/api/vocabulary/[id]/status` | Update item status (manual override) |
+| `DELETE` | `/api/vocabulary/[id]` | Remove vocabulary item and all its occurrences |
+| `GET` | `/api/vocabulary/sets` | List user's vocabulary sets with item counts |
+| `POST` | `/api/vocabulary/sets` | Create a manual set |
+| `PATCH` | `/api/vocabulary/sets/[id]` | Update set name |
+| `DELETE` | `/api/vocabulary/sets/[id]` | Delete set |
+| `POST` | `/api/vocabulary/sets/[id]/items` | Add item(s) to set |
+| `DELETE` | `/api/vocabulary/sets/[id]/items/[itemId]` | Remove item from set |
 
 ## Auth And Ownership
 
-Requires authentication. The route verifies `sourceId` belongs to the authenticated user before saving.
+All routes require authentication. Ownership is enforced by checking `userId` on every read/update/delete. Unauthenticated requests return `{ "error": "Authentication required." }` with `401`. Ownership misses return appropriate `404` errors.
 
-## Request
+## Endpoints
 
-```json
+### Upsert Vocabulary Item
+
+#### 1. Purpose
+
+Save a vocabulary item from the translate or dictionary panel. Deduplicates by `userId + normalizedText + targetLanguage + translation`. On re-save, increments `savedCount` and creates a new occurrence. Auto-adds to daily and weekly sets.
+
+#### 2. Method + path
+
+```http
+POST /api/vocabulary
+```
+
+#### 3. Request input
+
+```ts
 {
-  "sourceId": "uuid",
-  "selectedText": "example",
-  "translation": "vi translation",
-  "contextSentence": "The full context sentence.",
-  "sourceLanguage": "en",
-  "targetLanguage": "vi",
-  "type": "optional label"
+  selectedText: string;       // 1-500 chars, trimmed
+  translation: string;       // 1-500 chars, trimmed
+  contextSentence?: string;   // 0-4000 chars, trimmed
+  sourceId?: string;          // UUID, required when source="TRANSLATE"
+  sourceLanguage: "en";
+  targetLanguage: "vi";
+  source?: "TRANSLATE" | "DICTIONARY";  // default "TRANSLATE"
+  dictionaryEntryId?: string;  // UUID
+  dictionarySenseId?: string;  // UUID
 }
 ```
 
-Limits:
+When `source="TRANSLATE"`, `sourceId` must be a passage UUID owned by the user. The route verifies passage ownership before saving.
 
-- `selectedText`: 1-500 chars.
-- `translation`: 1-500 chars.
-- `contextSentence`: 1-4000 chars.
-- `type`: optional, 1-80 chars.
+When `source="DICTIONARY"`, `dictionaryEntryId` and `dictionarySenseId` link the item to a dictionary entry.
 
-## Response
+#### 4. Success response
 
-```json
+```ts
 {
-  "success": true,
-  "data": {
-    "id": "uuid",
-    "selectedText": "example",
-    "translation": "vi translation",
-    "type": "optional label",
-    "createdAt": "date",
-    "updatedAt": "date"
-  }
+  success: true;
+  data: VocabularyItem;
 }
 ```
 
-## Side Effects
+`VocabularyItem`:
 
-Upserts `VocabularyItem` by a stable key built from user, source, selection, context, and target language.
+```ts
+{
+  id: string;
+  userId: string;
+  normalizedText: string;
+  displayText: string;
+  type: "WORD" | "PHRASE";
+  translation: string;
+  sourceLanguage: string;
+  targetLanguage: string;
+  dictionaryEntryId: string | null;
+  dictionarySenseId: string | null;
+  status: "NEW" | "LEARNING" | "MASTERED";
+  source: string;
+  savedCount: number;
+  nextReviewAt: string | null;
+  lastReviewedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+```
+
+#### 5. Error response
+
+```ts
+{ error: string }
+```
+
+| Status | Meaning |
+|--------|---------|
+| `400` | Invalid JSON payload, validation failure (missing/invalid fields) |
+| `401` | Missing auth |
+| `404` | Source passage not found or not owned by user |
+| `500` | Unexpected save failure |
+
+#### 6. Notes about cache / auth / boundaries
+
+- Dedup key: `userId + normalizedText + targetLanguage + translation`
+- On re-save: `savedCount` incremented, `updatedAt` refreshed, new `VocabularyOccurrence` created
+- `status`, `nextReviewAt`, `lastReviewedAt` preserved on re-save (review progress not reset)
+- `type` auto-detected: contains space => `PHRASE`, otherwise `WORD`
+- `normalizedText`: lowercased, whitespace-normalized
+- Daily/weekly set creation and item addition happen as side effects
+
+### List Vocabulary Items
+
+#### 1. Purpose
+
+List the authenticated user's vocabulary items with pagination, optional status filter, and text search.
+
+#### 2. Method + path
+
+```http
+GET /api/vocabulary/list
+```
+
+#### 3. Request input
+
+Query params:
+
+```ts
+{
+  status?: "NEW" | "LEARNING" | "MASTERED";
+  search?: string;    // case-insensitive match on normalizedText
+  page?: number;     // 1-based, default 1
+  pageSize?: number; // 1-100, default 20
+}
+```
+
+#### 4. Success response
+
+```ts
+{
+  success: true;
+  data: {
+    items: VocabularyItemWithOccurrences[];
+    total: number;
+    page: number;
+    pageSize: number;
+  };
+}
+```
+
+Each item includes up to 5 most recent occurrences:
+
+```ts
+{
+  id: string;
+  vocabularyItemId: string;
+  sourceId: string | null;
+  selectedText: string;
+  contextSentence: string | null;
+  createdAt: string;
+}
+```
+
+Items are ordered by `updatedAt` descending.
+
+#### 5. Error response
+
+```ts
+{ error: string }
+```
+
+| Status | Meaning |
+|--------|---------|
+| `401` | Missing auth |
+| `500` | Unexpected list failure |
+
+### Update Vocabulary Status
+
+#### 1. Purpose
+
+Manually override a vocabulary item's mastery status. Used from the vocabulary page to promote or reset items.
+
+#### 2. Method + path
+
+```http
+PATCH /api/vocabulary/[id]/status
+```
+
+#### 3. Request input
+
+```ts
+{
+  status: "NEW" | "LEARNING" | "MASTERED";
+}
+```
+
+#### 4. Success response
+
+```ts
+{
+  success: true;
+  data: VocabularyItem;  // updated item
+}
+```
+
+#### 5. Error response
+
+```ts
+{ error: string }
+```
+
+| Status | Meaning |
+|--------|---------|
+| `400` | Invalid JSON payload or invalid status value |
+| `401` | Missing auth |
+| `404` | Vocabulary item not found or not owned by user |
+| `500` | Unexpected update failure |
+
+### Delete Vocabulary Item
+
+#### 1. Purpose
+
+Remove a vocabulary item and all its occurrences. Set membership entries are also deleted via cascade.
+
+#### 2. Method + path
+
+```http
+DELETE /api/vocabulary/[id]
+```
+
+#### 3. Request input
+
+Path param: `id` (UUID).
+
+#### 4. Success response
+
+```ts
+{ success: true }
+```
+
+#### 5. Error response
+
+```ts
+{ error: string }
+```
+
+| Status | Meaning |
+|--------|---------|
+| `401` | Missing auth |
+| `404` | Vocabulary item not found or not owned by user |
+| `500` | Unexpected delete failure |
+
+#### 6. Notes about cache / auth / boundaries
+
+- Cascades to `VocabularyOccurrence` and `VocabularySetItem` records.
+- Does not delete the `VocabularySet` itself (sets may still contain other items).
+
+### List Vocabulary Sets
+
+#### 1. Purpose
+
+List the authenticated user's vocabulary sets with item counts.
+
+#### 2. Method + path
+
+```http
+GET /api/vocabulary/sets
+```
+
+#### 3. Request input
+
+Query params:
+
+```ts
+{
+  type?: "MANUAL" | "DAILY" | "WEEKLY";
+}
+```
+
+#### 4. Success response
+
+```ts
+{
+  success: true;
+  data: VocabularySetWithCount[];
+}
+```
+
+```ts
+{
+  id: string;
+  userId: string;
+  name: string;
+  type: "MANUAL" | "DAILY" | "WEEKLY";
+  periodStart: string | null;
+  periodEnd: string | null;
+  createdAt: string;
+  updatedAt: string;
+  _count: { items: number };
+}
+```
+
+Sets are ordered by `createdAt` descending.
+
+#### 5. Error response
+
+```ts
+{ error: string }
+```
+
+| Status | Meaning |
+|--------|---------|
+| `401` | Missing auth |
+| `500` | Unexpected list failure |
+
+### Create Manual Set
+
+#### 1. Purpose
+
+Create a user-named vocabulary set (MANUAL type).
+
+#### 2. Method + path
+
+```http
+POST /api/vocabulary/sets
+```
+
+#### 3. Request input
+
+```ts
+{
+  name: string;  // 1-100 chars, trimmed
+}
+```
+
+#### 4. Success response
+
+```ts
+{
+  success: true;
+  data: VocabularySet;
+}
+```
+
+#### 5. Error response
+
+```ts
+{ error: string }
+```
+
+| Status | Meaning |
+|--------|---------|
+| `400` | Invalid JSON payload or invalid name |
+| `401` | Missing auth |
+| `500` | Unexpected creation failure |
+
+### Update Set Name
+
+#### 1. Purpose
+
+Rename a manual vocabulary set.
+
+#### 2. Method + path
+
+```http
+PATCH /api/vocabulary/sets/[id]
+```
+
+#### 3. Request input
+
+```ts
+{
+  name: string;  // 1-100 chars, trimmed
+}
+```
+
+#### 4. Success response
+
+```ts
+{
+  success: true;
+  data: VocabularySet;  // updated set
+}
+```
+
+#### 5. Error response
+
+```ts
+{ error: string }
+```
+
+| Status | Meaning |
+|--------|---------|
+| `400` | Invalid JSON payload or invalid name |
+| `401` | Missing auth |
+| `404` | Vocabulary set not found or not owned by user |
+| `500` | Unexpected update failure |
+
+### Delete Set
+
+#### 1. Purpose
+
+Delete a vocabulary set. Cascades to set item membership but does not delete the vocabulary items themselves.
+
+#### 2. Method + path
+
+```http
+DELETE /api/vocabulary/sets/[id]
+```
+
+#### 3. Request input
+
+Path param: `id` (UUID).
+
+#### 4. Success response
+
+```ts
+{ success: true }
+```
+
+#### 5. Error response
+
+```ts
+{ error: string }
+```
+
+| Status | Meaning |
+|--------|---------|
+| `401` | Missing auth |
+| `404` | Vocabulary set not found or not owned by user |
+| `500` | Unexpected delete failure |
+
+### Add Items to Set
+
+#### 1. Purpose
+
+Add one or more vocabulary items to a set. Idempotent -- duplicate additions are silently ignored via unique constraint.
+
+#### 2. Method + path
+
+```http
+POST /api/vocabulary/sets/[id]/items
+```
+
+#### 3. Request input
+
+```ts
+{
+  itemIds: string[];  // 1-50 UUIDs
+}
+```
+
+#### 4. Success response
+
+```ts
+{ success: true }
+```
+
+#### 5. Error response
+
+```ts
+{ error: string }
+```
+
+| Status | Meaning |
+|--------|---------|
+| `400` | Invalid JSON payload or invalid itemIds |
+| `401` | Missing auth |
+| `404` | Vocabulary set not found or not owned by user |
+| `500` | Unexpected failure |
+
+#### 6. Notes about cache / auth / boundaries
+
+- All additions are processed in parallel. Individual unique-constraint violations are caught and silently resolved (idempotent).
+- Maximum 50 items per request.
+
+### Remove Item from Set
+
+#### 1. Purpose
+
+Remove a vocabulary item from a set. Does not delete the vocabulary item itself.
+
+#### 2. Method + path
+
+```http
+DELETE /api/vocabulary/sets/[id]/items/[itemId]
+```
+
+#### 3. Request input
+
+Path params: `id` (set UUID), `itemId` (vocabulary item UUID).
+
+#### 4. Success response
+
+```ts
+{ success: true }
+```
+
+#### 5. Error response
+
+```ts
+{ error: string }
+```
+
+| Status | Meaning |
+|--------|---------|
+| `401` | Missing auth |
+| `404` | Vocabulary set not found or not owned by user |
+| `500` | Unexpected failure |
 
 ## Implementation
 
-- Route: `src/app/api/vocabulary/route.ts`
-- DB helpers: `src/lib/db/translation-queries.ts`
+- Routes: `src/app/api/vocabulary/route.ts`, `src/app/api/vocabulary/list/route.ts`, `src/app/api/vocabulary/[id]/route.ts`, `src/app/api/vocabulary/[id]/status/route.ts`, `src/app/api/vocabulary/sets/route.ts`, `src/app/api/vocabulary/sets/[id]/route.ts`, `src/app/api/vocabulary/sets/[id]/items/route.ts`, `src/app/api/vocabulary/sets/[id]/items/[itemId]/route.ts`
+- Item queries: `src/lib/db/vocabulary-queries.ts`
+- Set queries: `src/lib/db/vocabulary-set-queries.ts`
+- Save flow: `docs/Flows/vocabulary-flow.md`
+- Data model ADR: `docs/ADR/0005-vocabulary-review-mvp-path.md`

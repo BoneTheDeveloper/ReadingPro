@@ -20,17 +20,6 @@ interface TranslationHistoryInput extends TranslationCacheInput {
   translation: string;
 }
 
-interface VocabularyInput {
-  userId: string;
-  sourceId: string;
-  selectedText: string;
-  translation: string;
-  contextSentence: string;
-  sourceLanguage: string;
-  targetLanguage: string;
-  type?: string;
-}
-
 function stableHash(value: unknown) {
   return createHash("sha256")
     .update(JSON.stringify(value))
@@ -42,16 +31,6 @@ export function normalizeDictionaryTerm(value: string) {
 }
 
 export function buildTranslationCacheKey(input: TranslationKeyInput) {
-  return stableHash({
-    userId: input.userId,
-    sourceId: input.sourceId,
-    selectedText: input.selectedText,
-    contextSentence: input.contextSentence,
-    targetLanguage: input.targetLanguage,
-  });
-}
-
-export function buildVocabularyKey(input: Omit<VocabularyInput, "translation" | "sourceLanguage" | "type">) {
   return stableHash({
     userId: input.userId,
     sourceId: input.sourceId,
@@ -116,34 +95,3 @@ export async function createTranslationHistory(input: TranslationHistoryInput) {
   });
 }
 
-export async function saveVocabularyItem(input: VocabularyInput) {
-  const normalizedKey = buildVocabularyKey(input);
-
-  return db.vocabularyItem.upsert({
-    where: { normalizedKey },
-    update: {
-      translation: input.translation,
-      type: input.type,
-      contextSentence: input.contextSentence,
-    },
-    create: {
-      normalizedKey,
-      userId: input.userId,
-      sourceId: input.sourceId,
-      selectedText: input.selectedText,
-      translation: input.translation,
-      contextSentence: input.contextSentence,
-      sourceLanguage: input.sourceLanguage,
-      targetLanguage: input.targetLanguage,
-      type: input.type,
-    },
-    select: {
-      id: true,
-      selectedText: true,
-      translation: true,
-      type: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-  });
-}

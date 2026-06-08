@@ -1,16 +1,26 @@
 "use client";
 
+import { Bookmark } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/shared/utils";
 import type { DictionaryEntryDto, DictionarySenseDto } from "@/lib/dictionary/shared/dictionary-dtos";
 import { useTranslations } from "next-intl";
+import type { SaveStatus } from "./use-save-dictionary-vocabulary";
 
 interface DictionaryEntryCardProps {
   entry: DictionaryEntryDto;
+  saveSense: (entry: DictionaryEntryDto, sense: DictionarySenseDto) => void;
+  getSaveStatus: (entryId: string, senseId: string) => SaveStatus;
 }
 
-export function DictionaryEntryCard({ entry }: DictionaryEntryCardProps) {
+export function DictionaryEntryCard({
+  entry,
+  saveSense,
+  getSaveStatus,
+}: DictionaryEntryCardProps) {
   const t = useTranslations();
 
   return (
@@ -23,7 +33,12 @@ export function DictionaryEntryCard({ entry }: DictionaryEntryCardProps) {
 
       <CardContent className="space-y-4">
         {entry.senses.map((sense) => (
-          <SenseBlock key={sense.id} sense={sense} />
+          <SenseBlock
+            key={sense.id}
+            sense={sense}
+            status={getSaveStatus(entry.id, sense.id)}
+            onSave={() => saveSense(entry, sense)}
+          />
         ))}
 
         {entry.senses.length > 0 && entry.senses[0].translations[0] && (
@@ -39,8 +54,16 @@ export function DictionaryEntryCard({ entry }: DictionaryEntryCardProps) {
   );
 }
 
-function SenseBlock({ sense }: { sense: DictionarySenseDto }) {
+interface SenseBlockProps {
+  sense: DictionarySenseDto;
+  status: SaveStatus;
+  onSave: () => void;
+}
+
+function SenseBlock({ sense, status, onSave }: SenseBlockProps) {
+  const t = useTranslations();
   const primary = sense.translations.find((t) => t.isPrimary) ?? sense.translations[0];
+  const isDisabled = status === "saved" || status === "saving";
 
   return (
     <div className="space-y-2">
@@ -73,13 +96,43 @@ function SenseBlock({ sense }: { sense: DictionarySenseDto }) {
         <p className="text-sm italic text-muted-foreground">&ldquo;{sense.example}&rdquo;</p>
       )}
 
-      {sense.tags.length > 0 && (
-        <div className="flex flex-wrap gap-1">
-          {sense.tags.map((tag) => (
-            <Badge key={tag} variant="outline" className="text-xs">{tag}</Badge>
-          ))}
-        </div>
-      )}
+      <div className="flex items-center gap-2">
+        <Button
+          variant={status === "saved" ? "ghost" : "outline"}
+          size="xs"
+          className={cn(
+            "text-xs gap-1.5",
+            status === "saved" && "text-muted-foreground",
+            status === "error" && "text-destructive",
+          )}
+          onClick={status === "error" ? onSave : onSave}
+          disabled={isDisabled}
+          aria-label={
+            status === "saved"
+              ? t("Dictionary.savedToVocabulary")
+              : t("Dictionary.saveToVocabulary")
+          }
+        >
+          <Bookmark
+            className={cn(
+              "w-3 h-3",
+              status === "saved" && "fill-current",
+            )}
+          />
+          {status === "idle" && t("Dictionary.saveToVocabulary")}
+          {status === "saving" && t("Dictionary.saving")}
+          {status === "saved" && t("Dictionary.savedToVocabulary")}
+          {status === "error" && t("Dictionary.saveFailed")}
+        </Button>
+
+        {sense.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {sense.tags.map((tag) => (
+              <Badge key={tag} variant="outline" className="text-xs">{tag}</Badge>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
