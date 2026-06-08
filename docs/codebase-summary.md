@@ -49,6 +49,7 @@ prisma/
 |---------|---------------|
 | Upload | `src/features/upload/*`, `src/app/api/upload/*` |
 | Study workspace | `src/features/study/*`, `src/app/[locale]/(dashboard)/study/page.tsx` |
+| Quiz attempts | `src/lib/db/quiz-attempt-queries.ts`, `src/app/api/quiz-attempt/route.ts` |
 | Translation | `src/lib/translation/*`, `src/app/api/translate/route.ts` |
 | Dictionary | `src/lib/dictionary/*`, `src/app/api/dictionary/*` |
 | Study chat | `src/app/api/study-chat/route.ts`, `src/features/study/study-chat-panel.tsx` |
@@ -67,4 +68,4 @@ See [API/api-index.md](API/api-index.md). Implemented production feature routes 
 - Some docs in `docs/Design/` and `docs/sentry/` are supplemental and not part of the primary docs tree.
 
 **Status:** Active
-**Last Updated:** 2026-06-06
+**Last Updated:** 2026-06-08

@@ -55,6 +55,24 @@ erDiagram
         string userId FK
         uuid passageId FK "nullable"
         datetime startedAt
+        int cardsReviewed
+        int newCards
+        int correctCount
+        int incorrectCount
+        float accuracyRate "nullable"
+    }
+
+    QuizAttempt {
+        uuid id PK "gen_random_uuid()"
+        uuid studySessionId FK
+        string userId FK
+        uuid passageId FK "nullable"
+        int correctCount
+        int incorrectCount
+        int totalQuestions
+        float accuracyRate "nullable"
+        datetime startedAt
+        datetime completedAt "nullable"
     }
 
     TranslationCache {
@@ -125,16 +143,19 @@ erDiagram
     UserProfile ||--o{ Passage : owns
     UserProfile ||--o{ StudyChatMessage : sends
     UserProfile ||--o{ StudySession : creates
+    UserProfile ||--o{ QuizAttempt : attempts
     UserProfile ||--o{ CardReview : reviews
     UserProfile ||--o{ TranslationCache : caches
     UserProfile ||--o{ TranslationHistory : records
     UserProfile ||--o{ VocabularyItem : saves
     UserProfile ||--o{ FileUploadIntent : authorizes
     Passage ||--o{ StudyChatMessage : contains
+    Passage ||--o{ QuizAttempt : has
     Passage ||--o{ Question : contains
     Passage ||--o{ TranslationCache : scopes
     Passage ||--o{ TranslationHistory : scopes
     Passage ||--o{ VocabularyItem : sources
+    StudySession ||--o{ QuizAttempt : contains
     Question ||--o{ CardReview : tracked-by
     DictionaryEntry ||--o{ DictionarySense : defines
     DictionaryEntry ||--o{ DictionaryAlias : aliases
@@ -156,10 +177,11 @@ erDiagram
 
 | Parent | Children with `ON DELETE CASCADE` |
 |--------|------------------------------------|
-| UserProfile | Passage, StudyChatMessage, CardReview, StudySession, TranslationCache, TranslationHistory, VocabularyItem, FileUploadIntent |
-| Passage | StudyChatMessage, Question, TranslationCache, TranslationHistory, VocabularyItem |
+| UserProfile | Passage, StudyChatMessage, CardReview, StudySession, QuizAttempt, TranslationCache, TranslationHistory, VocabularyItem, FileUploadIntent |
+| Passage | StudyChatMessage, QuizAttempt, Question, TranslationCache, TranslationHistory, VocabularyItem |
+| StudySession | QuizAttempt |
 | Question | CardReview |
 | DictionaryEntry | DictionarySense, DictionaryAlias |
 | DictionarySense | DictionaryTranslation |
 
-**Last Updated:** 2026-06-05
+**Last Updated:** 2026-06-08
