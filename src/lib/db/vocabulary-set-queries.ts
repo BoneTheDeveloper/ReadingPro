@@ -46,7 +46,7 @@ function formatWeeklyRange(monday: Date, sunday: Date): string {
 // --- Types ---
 
 export interface VocabularySetWithCount extends VocabularySet {
-  _count: { items: number };
+  _count: { setItems: number };
 }
 
 // --- Queries ---
@@ -127,7 +127,7 @@ export async function listVocabularySets(params: {
 
   return db.vocabularySet.findMany({
     where,
-    include: { _count: { select: { items: true } } },
+    include: { _count: { select: { setItems: true } } },
     orderBy: { createdAt: "desc" },
   });
 }

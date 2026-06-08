@@ -63,10 +63,14 @@ export function QuizContent({ questions, passageTitle, passageId, onReset }: Qui
             body: JSON.stringify({ studySessionId: newSessionId, passageId }),
           })
           const attemptData = await attemptRes.json()
-          if (attemptData.success) setAttemptId(attemptData.data.id)
+          if (attemptData.success) {
+            setAttemptId(attemptData.data.id)
+          } else {
+            setSessionId(null)
+          }
         }
       } catch {
-        // Quiz still works if persistence fails
+        setSessionId(null)
       }
     }
 

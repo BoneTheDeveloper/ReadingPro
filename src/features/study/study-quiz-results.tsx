@@ -27,7 +27,6 @@ export function QuizResults({
 
   useEffect(() => {
     if (!attemptId) return
-    const controller = new AbortController()
     fetch('/api/quiz-attempt', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -37,9 +36,7 @@ export function QuizResults({
         incorrectCount: totalQuestions - correctCount,
         totalQuestions,
       }),
-      signal: controller.signal,
     }).catch(() => {})
-    return () => controller.abort()
   }, [attemptId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const accuracy = Math.round((correctCount / totalQuestions) * 100)

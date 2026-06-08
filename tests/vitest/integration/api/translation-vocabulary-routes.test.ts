@@ -520,8 +520,8 @@ describe("POST /api/vocabulary", () => {
   });
 
   it("saves vocabulary through an upsert and reuses duplicates", async () => {
-    const first = await vocabularyRoute(createJsonRequest(vocabularyBody()));
-    const duplicate = await vocabularyRoute(createJsonRequest(vocabularyBody()));
+    const first = await vocabularyRoute(createJsonRequest(vocabularyBody(), { url: "https://english-reading.test/api/vocabulary" }));
+    const duplicate = await vocabularyRoute(createJsonRequest(vocabularyBody(), { url: "https://english-reading.test/api/vocabulary" }));
 
     const firstBody = await first.json();
     expect(firstBody).toMatchObject({
@@ -541,24 +541,15 @@ describe("POST /api/vocabulary", () => {
         translation: "thiên lệch thuật toán",
       },
     });
-    expect(db.vocabularyItem.upsert).toHaveBeenCalledTimes(2);
-    expect(db.vocabularyItem.upsert).toHaveBeenCalledWith({
-      where: { userId_normalizedText_targetLanguage_translation: expect.objectContaining({ userId: userProfileFixture.id }) },
-      update: expect.objectContaining({
-        translation: "thiên lệch thuật toán",
-        type: "noun phrase",
-      }),
-      create: expect.objectContaining({
+    expect(routeMocks.upsertVocabularyItem).toHaveBeenCalledTimes(2);
+    expect(routeMocks.upsertVocabularyItem).toHaveBeenCalledWith(
+      expect.objectContaining({
         userId: userProfileFixture.id,
-        displayText: "algorithmic bias",
+        selectedText: "algorithmic bias",
+        translation: "thiên lệch thuật toán",
         targetLanguage: "vi",
       }),
-      select: expect.objectContaining({
-        id: true,
-        displayText: true,
-        translation: true,
-      }),
-    });
+    );
     expect(Sentry.startSpan).toHaveBeenCalledWith(
       expect.objectContaining({ name: "db:vocabulary-upsert", op: "db" }),
       expect.any(Function),

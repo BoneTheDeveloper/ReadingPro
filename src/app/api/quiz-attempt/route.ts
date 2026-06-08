@@ -19,7 +19,10 @@ const quizAttemptPatchSchema = z.object({
   correctCount: z.number().int().nonnegative(),
   incorrectCount: z.number().int().nonnegative(),
   totalQuestions: z.number().int().positive(),
-});
+}).refine(
+  (d) => d.correctCount + d.incorrectCount === d.totalQuestions,
+  { message: 'correctCount + incorrectCount must equal totalQuestions', path: ['correctCount'] },
+);
 
 export async function POST(request: NextRequest) {
   const requestLog = createRequestLogger(

@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import type { Prisma } from "@/generated/prisma/client";
+import { Prisma } from "@/generated/prisma/client";
 import { db } from "./client";
 
 interface TranslationKeyInput {
@@ -18,6 +18,17 @@ interface TranslationCacheInput extends TranslationKeyInput {
 
 interface TranslationHistoryInput extends TranslationCacheInput {
   translation: string;
+}
+
+interface VocabularyInput {
+  userId: string;
+  selectedText: string;
+  translation: string;
+  sourceLanguage: string;
+  targetLanguage: string;
+  sourceId?: string;
+  contextSentence?: string;
+  type?: string;
 }
 
 function stableHash(value: unknown) {
@@ -106,7 +117,7 @@ export async function createTranslationHistory(input: TranslationHistoryInput) {
 export async function saveVocabularyItem(input: VocabularyInput) {
   const normalizedText = input.selectedText.toLowerCase().replace(/\s+/g, " ").trim();
 
-  return db.vocabularyItem.upsert({
+  const item = await db.vocabularyItem.upsert({
     where: {
       userId_normalizedText_targetLanguage_translation: {
         userId: input.userId,
@@ -139,4 +150,25 @@ export async function saveVocabularyItem(input: VocabularyInput) {
       updatedAt: true,
     },
   });
+
+  if (input.sourceId) {
+    try {
+      await db.vocabularyOccurrence.create({
+        data: {
+          vocabularyItemId: item.id,
+          sourceId: input.sourceId,
+          selectedText: input.selectedText,
+          contextSentence: input.contextSentence ?? null,
+        },
+      });
+    } catch (error: unknown) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+        // Duplicate occurrence — safe to ignore
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  return item;
 }

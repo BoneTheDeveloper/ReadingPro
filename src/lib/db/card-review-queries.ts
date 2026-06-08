@@ -136,7 +136,7 @@ export async function getUserProgress(userId: string) {
     todayReviews: Number(row?.todayReviews ?? 0),
     streakDays,
     totalQuizAttempts: Number(quizRow?.totalQuizAttempts ?? 0),
-    avgQuizAccuracy: quizRow?.avgQuizAccuracy ? Math.round(Number(quizRow.avgQuizAccuracy) * 100) / 100 : null,
+    avgQuizAccuracy: quizRow?.avgQuizAccuracy != null ? Math.round(Number(quizRow.avgQuizAccuracy) * 100) / 100 : null,
     todayQuizAttempts: Number(quizRow?.todayQuizAttempts ?? 0),
   };
 }
