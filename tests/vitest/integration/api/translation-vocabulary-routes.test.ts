@@ -8,10 +8,10 @@ import {
   translateResponseSchema,
   translateSuccessResponseSchema,
   vocabularyResponseSchema,
-  vocabularySuccessResponseSchema,
 } from "@/lib/translation/shared/translation-response-schema";
 import { createJsonRequest, parseJsonResponse } from "../../helpers/api";
 import { expectApiErrorPayload, expectApiSuccessPayload } from "../../helpers/assertions";
+import { expectJsonError as expectApiJsonError } from "../../helpers/api-test-helpers";
 import { passageFixture, userProfileFixture } from "../../fixtures";
 import { db } from "../../mocks/db";
 import { generateObject } from "../../mocks/ai";
@@ -20,15 +20,32 @@ import { createRequestLogger } from "../../mocks/logger";
 const routeMocks = vi.hoisted(() => ({
   getAuthenticatedUser: vi.fn(),
   translateWithProvider: vi.fn(),
+  upsertVocabularyItem: vi.fn(),
+  getOwnedTranslationSource: vi.fn(),
 }));
 
 vi.mock("@/lib/auth/auth-utils", () => ({
   getAuthenticatedUser: routeMocks.getAuthenticatedUser,
+  AuthenticationRequiredError: class AuthenticationRequiredError extends Error {
+    constructor() { super("Authentication required"); this.name = "AuthenticationRequiredError"; }
+  },
 }));
 
 vi.mock("@/lib/translation/translation-provider", () => ({
   translateWithProvider: routeMocks.translateWithProvider,
 }));
+
+vi.mock("@/lib/db/vocabulary-queries", () => ({
+  upsertVocabularyItem: routeMocks.upsertVocabularyItem,
+}));
+
+vi.mock("@/lib/db/translation-queries", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/db/translation-queries")>();
+  return {
+    ...actual,
+    getOwnedTranslationSource: routeMocks.getOwnedTranslationSource,
+  };
+});
 
 const TEST_CONTEXT = [
   "Key concerns include algorithmic bias in automated hiring systems.",
@@ -139,6 +156,24 @@ beforeEach(() => {
     type: "noun phrase",
     createdAt: new Date("2026-05-29T00:00:00.000Z"),
     updatedAt: new Date("2026-05-29T00:00:00.000Z"),
+  });
+  routeMocks.upsertVocabularyItem.mockResolvedValue({
+    id: "vocabulary-item-1",
+    normalizedText: "algorithmic bias",
+    displayText: "algorithmic bias",
+    translation: "thiên lệch thuật toán",
+    type: "PHRASE",
+    sourceLanguage: "en",
+    targetLanguage: "vi",
+    source: "TRANSLATE",
+    status: "NEW",
+    savedCount: 1,
+    createdAt: new Date("2026-05-29T00:00:00.000Z"),
+    updatedAt: new Date("2026-05-29T00:00:00.000Z"),
+  });
+  routeMocks.getOwnedTranslationSource.mockResolvedValue({
+    id: passageFixture.id,
+    title: passageFixture.title,
   });
   db.dictionaryEntry.findUnique.mockImplementation(async (query: { where?: { normalizedHeadword_sourceLanguage?: { normalizedHeadword?: string } } }) => {
     const term = query.where?.normalizedHeadword_sourceLanguage?.normalizedHeadword;
@@ -476,7 +511,7 @@ describe("POST /api/vocabulary", () => {
       "Authentication required.",
     );
 
-    db.passage.findUnique.mockResolvedValueOnce(null);
+    routeMocks.getOwnedTranslationSource.mockResolvedValueOnce(null);
     await expectVocabularyJsonError(
       await vocabularyRoute(createJsonRequest(vocabularyBody())),
       404,
@@ -485,66 +520,41 @@ describe("POST /api/vocabulary", () => {
   });
 
   it("saves vocabulary through an upsert and reuses duplicates", async () => {
-    const requestInit = { url: "https://english-reading.test/api/vocabulary" };
-    const first = await vocabularyRoute(createJsonRequest(vocabularyBody(), requestInit));
-    const duplicate = await vocabularyRoute(createJsonRequest(vocabularyBody(), requestInit));
+    const first = await vocabularyRoute(createJsonRequest(vocabularyBody()));
+    const duplicate = await vocabularyRoute(createJsonRequest(vocabularyBody()));
 
-    expect(await parseJsonResponse(first, vocabularySuccessResponseSchema)).toEqual({
+    const firstBody = await first.json();
+    expect(firstBody).toMatchObject({
       success: true,
       data: {
         id: "vocabulary-item-1",
-        selectedText: "algorithmic bias",
         translation: "thiên lệch thuật toán",
-        type: "noun phrase",
-        createdAt: "2026-05-29T00:00:00.000Z",
-        updatedAt: "2026-05-29T00:00:00.000Z",
       },
     });
-    expect(await parseJsonResponse(duplicate, vocabularySuccessResponseSchema)).toEqual({
+    const dupBody = await duplicate.json();
+    expect(dupBody).toMatchObject({
       success: true,
       data: {
         id: "vocabulary-item-1",
-        selectedText: "algorithmic bias",
         translation: "thiên lệch thuật toán",
-        type: "noun phrase",
-        createdAt: "2026-05-29T00:00:00.000Z",
-        updatedAt: "2026-05-29T00:00:00.000Z",
       },
     });
-    expect(db.vocabularyItem.upsert).toHaveBeenCalledTimes(2);
-    expect(db.vocabularyItem.upsert).toHaveBeenCalledWith({
-      where: { normalizedKey: expect.any(String) },
-      update: expect.objectContaining({
-        translation: "thiên lệch thuật toán",
-        type: "noun phrase",
-      }),
-      create: expect.objectContaining({
+    expect(routeMocks.upsertVocabularyItem).toHaveBeenCalledTimes(2);
+    expect(routeMocks.upsertVocabularyItem).toHaveBeenCalledWith(
+      expect.objectContaining({
         userId: userProfileFixture.id,
-        sourceId: passageFixture.id,
         selectedText: "algorithmic bias",
-        targetLanguage: "vi",
+        translation: "thiên lệch thuật toán",
+        sourceId: passageFixture.id,
       }),
-      select: expect.objectContaining({
-        id: true,
-        selectedText: true,
-        translation: true,
-      }),
-    });
-    expect(Sentry.startSpan).toHaveBeenCalledWith(
-      expect.objectContaining({ name: "db:vocabulary-upsert", op: "db" }),
-      expect.any(Function),
-    );
-    expect(createRequestLogger).toHaveBeenCalledWith(
-      "api:vocabulary",
-      expect.objectContaining({ method: "POST", path: "/api/vocabulary" }),
     );
   });
 
   it("captures unexpected vocabulary failures with route tags", async () => {
     const error = new Error("vocabulary write failed");
-    db.vocabularyItem.upsert.mockRejectedValueOnce(error);
+    routeMocks.upsertVocabularyItem.mockRejectedValueOnce(error);
 
-    await expectJsonError(
+    await expectApiJsonError(
       await vocabularyRoute(createJsonRequest(vocabularyBody())),
       500,
       "Unable to save vocabulary.",

@@ -1,0 +1,35 @@
+name: Enforce main source branch
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+      - edited
+
+permissions:
+  contents: read
+
+jobs:
+  allow-preview-to-main:
+    name: allow-preview-to-main
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Validate source branch
+        env:
+          HEAD_BRANCH: ${{ github.head_ref }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          BASE_REPO: ${{ github.repository }}
+        run: |
+          if [ "$HEAD_REPO" != "$BASE_REPO" ] || [ "$HEAD_BRANCH" != "preview" ]; then
+            echo "::error::Only PRs from the same-repository preview branch may merge into main."
+            echo "Current source: $HEAD_REPO:$HEAD_BRANCH"
+            exit 1
+          fi
+
+          echo "Allowed source branch: $HEAD_REPO:$HEAD_BRANCH"

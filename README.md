@@ -96,8 +96,7 @@ Dictionary seed/import helpers:
 ```bash
 pnpm db:seed:dictionary
 pnpm db:validate:dictionary
-pnpm db:normalize:dictionary
-pnpm db:import:dictionary
+pnpm db:check:dictionary-seed
 ```
 
 ## Documentation

@@ -4,17 +4,28 @@ import { useCallback, useMemo, useState } from "react";
 import { studyDeletePassageAction } from "@/features/study/actions/study-delete-passage-action";
 import type { DocumentItem, PassageData, StudyState } from "./study-types";
 
+function getMostRecentPassageId(passages: PassageData[]): string | null {
+  return passages.reduce<PassageData | null>((latest, passage) => {
+    if (!latest) return passage;
+    // Strict > preserves first-seen order on ties
+    return passage.createdAt > latest.createdAt ? passage : latest;
+  }, null)?.id ?? null;
+}
+
 export function useStudyWorkspaceState(initialPassages: PassageData[]) {
-  const [state, setState] = useState<StudyState>(() => ({
-    passages: initialPassages,
-    activePassageId: null,
-    questions: [],
-    status: "idle",
-    error: null,
-    simplifying: false,
-    generatingQuestions: false,
-    uploadModalOpen: false,
-  }));
+  const [state, setState] = useState<StudyState>(() => {
+    const initialId = getMostRecentPassageId(initialPassages);
+    return {
+      passages: initialPassages,
+      activePassageId: initialId,
+      questions: [],
+      status: initialId ? "ready" : "idle",
+      error: null,
+      simplifying: false,
+      generatingQuestions: false,
+      uploadModalOpen: false,
+    };
+  });
   const [isUploading, setIsUploading] = useState(false);
   const [uploadingFileName, setUploadingFileName] = useState("");
 
@@ -85,18 +96,33 @@ export function useStudyWorkspaceState(initialPassages: PassageData[]) {
   }, []);
 
   const handleDeletePassage = useCallback(async (passageId: string) => {
-    const result = await studyDeletePassageAction({ passageId });
-    if ("error" in result) {
-      setState((prev) => ({ ...prev, error: result.error }));
-      return;
+    try {
+      const result = await studyDeletePassageAction({ passageId });
+      if ("error" in result) {
+        setState((prev) => ({ ...prev, error: result.error }));
+        return;
+      }
+      setState((prev) => {
+        const remaining = prev.passages.filter((p) => p.id !== passageId);
+        if (prev.activePassageId === passageId) {
+          const replacementId = getMostRecentPassageId(remaining);
+          return {
+            ...prev,
+            passages: remaining,
+            activePassageId: replacementId,
+            questions: [],
+            status: replacementId ? "ready" : "idle",
+            error: null,
+          };
+        }
+        return { ...prev, passages: remaining, error: null };
+      });
+    } catch (err) {
+      setState((prev) => ({
+        ...prev,
+        error: err instanceof Error ? err.message : "Failed to delete passage",
+      }));
     }
-    setState((prev) => ({
-      ...prev,
-      passages: prev.passages.filter((passage) => passage.id !== passageId),
-      activePassageId: prev.activePassageId === passageId ? null : prev.activePassageId,
-      questions: prev.activePassageId === passageId ? [] : prev.questions,
-      status: prev.activePassageId === passageId ? "idle" : prev.status,
-    }));
   }, []);
 
   return {

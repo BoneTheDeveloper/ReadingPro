@@ -15,6 +15,8 @@ Track study session counters and expose aggregate progress stats.
 ## Auth And Ownership
 
 Requires authentication. All reads and writes use authenticated `userId`.
+Unauthenticated requests return `{ "error": "Authentication required." }` with
+`401`. Passage/session ownership misses on study-session writes return `404`.
 
 ## Study Session Create
 

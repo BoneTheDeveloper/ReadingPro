@@ -94,6 +94,8 @@ export const serializeErrorForLog = serializeError;
 
 const logger = pino({
   base: undefined,
+  // LOG_LEVEL is an operational override for temporary runtime diagnostics.
+  // Omit it to use the standard debug-in-dev and info-in-production defaults.
   level: process.env.LOG_LEVEL ?? (isDev ? "debug" : "info"),
   serializers: {
     err: serializeError,

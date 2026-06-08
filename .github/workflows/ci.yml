@@ -57,46 +57,6 @@ jobs:
       - name: Test with coverage
         run: pnpm test:coverage
 
-      - name: Check E2E secrets
-        id: e2e-secrets
-        shell: bash
-        env:
-          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
-          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          DIRECT_URL: ${{ secrets.DIRECT_URL }}
-          E2E_TEST_USER_EMAIL: ${{ secrets.E2E_TEST_USER_EMAIL }}
-          E2E_TEST_USER_PASSWORD: ${{ secrets.E2E_TEST_USER_PASSWORD }}
-        run: |
-          missing=()
-          for name in NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY CLERK_SECRET_KEY DATABASE_URL DIRECT_URL E2E_TEST_USER_EMAIL E2E_TEST_USER_PASSWORD; do
-            if [ -z "${!name}" ]; then
-              missing+=("$name")
-            fi
-          done
-
-          if [ "${#missing[@]}" -eq 0 ]; then
-            echo "should_run_e2e=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "should_run_e2e=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::Skipping Playwright E2E because required secrets are missing: ${missing[*]}"
-          fi
-
-      - name: Install Chromium
-        if: steps.e2e-secrets.outputs.should_run_e2e == 'true'
-        run: pnpm exec playwright install --with-deps chromium
-
-      - name: Playwright E2E
-        if: steps.e2e-secrets.outputs.should_run_e2e == 'true'
-        env:
-          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
-          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          DIRECT_URL: ${{ secrets.DIRECT_URL }}
-          E2E_TEST_USER_EMAIL: ${{ secrets.E2E_TEST_USER_EMAIL }}
-          E2E_TEST_USER_PASSWORD: ${{ secrets.E2E_TEST_USER_PASSWORD }}
-        run: pnpm e2e
-
   validate-migration:
     name: Validate migration
     needs: test

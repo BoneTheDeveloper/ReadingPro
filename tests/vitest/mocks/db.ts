@@ -40,6 +40,9 @@ export const db = {
   translationCache: createModelMock(),
   translationHistory: createModelMock(),
   vocabularyItem: createModelMock(),
+  vocabularyOccurrence: createModelMock(),
+  vocabularySet: createModelMock(),
+  vocabularySetItem: createModelMock(),
   fileUploadIntent: createModelMock(),
   userProfile: createModelMock(),
 };

@@ -16,6 +16,7 @@ import type {
 import { normalizeDictionaryTerm } from "@/lib/dictionary/shared/normalize-dictionary-term";
 import { DictionaryEntryCard } from "./dictionary-entry-card";
 import { DictionarySuggestDropdown } from "./dictionary-suggest-dropdown";
+import { useSaveDictionaryVocabulary } from "./use-save-dictionary-vocabulary";
 
 type DetailStatus = "idle" | "loading" | "found" | "not-found" | "error";
 
@@ -30,6 +31,8 @@ export function DictionaryPageClient() {
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState<DictionaryEntryDto | null>(null);
   const [detailStatus, setDetailStatus] = useState<DetailStatus>("idle");
+
+  const { saveSense, getStatus } = useSaveDictionaryVocabulary();
 
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -204,7 +207,11 @@ export function DictionaryPageClient() {
         )}
 
         {detailStatus === "found" && selectedEntry && (
-          <DictionaryEntryCard entry={selectedEntry} />
+          <DictionaryEntryCard
+            entry={selectedEntry}
+            saveSense={saveSense}
+            getSaveStatus={getStatus}
+          />
         )}
 
         {detailStatus === "not-found" && (

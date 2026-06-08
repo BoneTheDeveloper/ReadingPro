@@ -5,13 +5,14 @@ import { Link, usePathname } from "@/i18n/navigation";
 import {
   BookOpen,
   BookMarked,
-  Menu,
   GraduationCap,
   LayoutDashboard,
-  Settings,
-  HelpCircle,
+  Library,
+  Menu,
   Plus,
   Search,
+  Settings,
+  HelpCircle,
   Bell,
 } from "lucide-react";
 import { cn } from "@/lib/shared/utils";
@@ -25,6 +26,7 @@ import { useTranslations } from "next-intl";
 const navItems = [
   { href: "/", labelKey: "Navigation.dashboard", icon: LayoutDashboard },
   { href: "/study", labelKey: "Navigation.study", icon: BookOpen },
+  { href: "/vocabulary", labelKey: "Navigation.vocabulary", icon: Library },
   { href: "/dictionary", labelKey: "Navigation.dictionary", icon: BookMarked },
 ];
 
@@ -51,6 +53,9 @@ export function DashboardSidebar({
           pathname.startsWith("/reading/") ||
           pathname.startsWith("/test/")
         );
+      }
+      if (href === "/vocabulary") {
+        return pathname === "/vocabulary";
       }
       if (href === "/dictionary") {
         return pathname === "/dictionary";

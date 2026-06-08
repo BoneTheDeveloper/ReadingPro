@@ -4,22 +4,12 @@
  * parent-child coverage, and database-unique key uniqueness.
  *
  * Usage:
- *   pnpm db:validate:dictionary              # validate split files
- *   pnpm db:validate:dictionary small-test   # validate fixtures/small-test.json
+ *   pnpm db:validate:dictionary
  */
 
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-
-type DatasetMode = "normalized" | "small-test";
-
-function resolveArg(): DatasetMode {
-  const arg = process.argv[2];
-  if (!arg) return "normalized";
-  if (arg === "small-test") return "small-test";
-  console.error(`Unknown dataset "${arg}". Valid: small-test (no arg = normalized)`);
-  process.exit(1);
-}
+import { normalizeDictionaryTerm } from "../../src/lib/dictionary/shared/normalize-dictionary-term";
 
 interface NormalizedEntry {
   entryKey: string;
@@ -58,20 +48,20 @@ interface NormalizedAlias {
   aliasType: string;
 }
 
-interface LegacySense {
-  partOfSpeech: string;
-  definition: string;
-  translations: { targetLanguage: string; translation: string; isPrimary: boolean; status: string }[];
-}
-
-interface LegacyEntry {
-  headword: string;
-  senses: LegacySense[];
-}
-
 const VALID_STATUSES = new Set(["draft", "reviewed", "approved", "deprecated"]);
 const VALID_SOURCE_TYPES = new Set(["seed", "manual", "provider", "llm", "mixed"]);
 const VALID_ALIAS_TYPES = new Set(["variant", "inflection", "phrase"]);
+const SUPPORTED_SOURCE_LANGUAGE = "en";
+const SUPPORTED_TARGET_LANGUAGE = "vi";
+const VALID_NORMALIZED_SEED_SOURCE_NAMES = new Set(["seed-common-1000"]);
+
+function isPositiveInteger(value: unknown) {
+  return Number.isInteger(value) && typeof value === "number" && value >= 1;
+}
+
+function isConfidence(value: unknown) {
+  return typeof value === "number" && value >= 0 && value <= 1;
+}
 
 function validateNormalized(): number {
   const baseDir = join(process.cwd(), "prisma/data/dictionary/en-vi");
@@ -90,6 +80,20 @@ function validateNormalized(): number {
     if (seenEntryKeys.has(e.entryKey)) errors.push(`Duplicate entryKey: ${e.entryKey}`);
     seenEntryKeys.add(e.entryKey);
     if (!e.headword) errors.push(`Entry missing headword: ${e.entryKey}`);
+    if (e.sourceLanguage !== SUPPORTED_SOURCE_LANGUAGE) {
+      errors.push(`Entry "${e.headword}" (${e.entryKey}) has unsupported sourceLanguage "${e.sourceLanguage}"`);
+    }
+    if (!isPositiveInteger(e.frequencyRank)) {
+      errors.push(`Entry "${e.headword}" (${e.entryKey}) has invalid frequencyRank ${e.frequencyRank}`);
+    }
+
+    const normalizedHeadword = normalizeDictionaryTerm(e.headword);
+    if (e.normalizedHeadword !== normalizedHeadword) {
+      errors.push(`Entry "${e.headword}" normalizedHeadword "${e.normalizedHeadword}" does not match "${normalizedHeadword}"`);
+    }
+    if (e.entryKey !== normalizedHeadword) {
+      errors.push(`Entry "${e.headword}" entryKey "${e.entryKey}" does not match normalized headword "${normalizedHeadword}"`);
+    }
   }
 
   // Check (normalizedHeadword, sourceLanguage) uniqueness — mirrors the DB unique constraint
@@ -105,6 +109,13 @@ function validateNormalized(): number {
   // Check sense→entry references
   for (const s of senses) {
     if (!entryKeys.has(s.entryKey)) errors.push(`Sense ${s.senseKey} references missing entryKey: ${s.entryKey}`);
+    if (!s.senseKey) errors.push(`Sense for entryKey ${s.entryKey} is missing senseKey`);
+    if (!isPositiveInteger(s.usageRank)) {
+      errors.push(`Sense ${s.senseKey} has invalid usageRank ${s.usageRank}`);
+    }
+    if (!Array.isArray(s.tags) || s.tags.some((tag) => typeof tag !== "string")) {
+      errors.push(`Sense ${s.senseKey} has invalid tags`);
+    }
   }
 
   // Check duplicate senseKeys
@@ -131,30 +142,58 @@ function validateNormalized(): number {
   }
 
   // Check translation→sense references, values, and primary counts
-  const groupsBySenseLang = new Map<string, { total: number; primaries: number }>();
+  const groupsBySenseLang = new Map<string, { total: number; primaries: number; ranks: Set<number>; primaryRanks: number[] }>();
   for (const t of translations) {
     if (!senseKeys.has(t.senseKey)) errors.push(`Translation references missing senseKey: ${t.senseKey}`);
+    if (t.targetLanguage !== SUPPORTED_TARGET_LANGUAGE) {
+      errors.push(`Translation for senseKey ${t.senseKey} has unsupported targetLanguage "${t.targetLanguage}"`);
+    }
+    if (!t.translation) errors.push(`Translation for senseKey ${t.senseKey} is missing translation text`);
     if (!VALID_STATUSES.has(t.status)) errors.push(`Invalid status "${t.status}" in senseKey ${t.senseKey}`);
     if (!VALID_SOURCE_TYPES.has(t.sourceType)) errors.push(`Invalid sourceType "${t.sourceType}" in senseKey ${t.senseKey}`);
-    if (typeof t.rank !== "number" || t.rank < 1) errors.push(`Invalid rank ${t.rank} in senseKey ${t.senseKey}`);
+    if (t.sourceType === "seed" && !VALID_NORMALIZED_SEED_SOURCE_NAMES.has(t.sourceName ?? "")) {
+      errors.push(`Invalid seed sourceName "${t.sourceName ?? "null"}" in senseKey ${t.senseKey}`);
+    }
+    if (!isPositiveInteger(t.rank)) errors.push(`Invalid rank ${t.rank} in senseKey ${t.senseKey}`);
+    if (!isConfidence(t.confidence)) errors.push(`Invalid confidence ${t.confidence} in senseKey ${t.senseKey}`);
 
     const key = `${t.senseKey}__${t.targetLanguage}`;
-    const group = groupsBySenseLang.get(key) ?? { total: 0, primaries: 0 };
+    const group = groupsBySenseLang.get(key) ?? { total: 0, primaries: 0, ranks: new Set<number>(), primaryRanks: [] };
     group.total++;
     if (t.isPrimary) group.primaries++;
+    if (t.isPrimary) group.primaryRanks.push(t.rank);
+    if (group.ranks.has(t.rank)) {
+      errors.push(`${key} has duplicate translation rank ${t.rank}`);
+    }
+    group.ranks.add(t.rank);
     groupsBySenseLang.set(key, group);
   }
 
-  for (const [key, { total, primaries }] of groupsBySenseLang) {
+  for (const [key, { total, primaries, primaryRanks }] of groupsBySenseLang) {
     if (primaries !== 1) {
       errors.push(`${key} has ${primaries} primary translations out of ${total} (expected exactly 1)`);
+    }
+    if (primaryRanks.length === 1 && primaryRanks[0] !== 1) {
+      errors.push(`${key} primary translation rank is ${primaryRanks[0]} (expected 1)`);
     }
   }
 
   // Check alias→entry references and values
+  const seenAliasesByEntry = new Set<string>();
   for (const a of aliases) {
     if (!entryKeys.has(a.entryKey)) errors.push(`Alias references missing entryKey: ${a.entryKey}`);
+    if (!a.alias) errors.push(`Alias for entryKey ${a.entryKey} is missing alias text`);
     if (!VALID_ALIAS_TYPES.has(a.aliasType)) errors.push(`Invalid aliasType "${a.aliasType}" for ${a.normalizedAlias}`);
+    const normalizedAlias = normalizeDictionaryTerm(a.alias);
+    if (a.normalizedAlias !== normalizedAlias) {
+      errors.push(`Alias "${a.alias}" normalizedAlias "${a.normalizedAlias}" does not match "${normalizedAlias}"`);
+    }
+
+    const aliasKey = `${a.entryKey}__${a.normalizedAlias}`;
+    if (seenAliasesByEntry.has(aliasKey)) {
+      errors.push(`Duplicate alias for entryKey ${a.entryKey}: ${a.normalizedAlias}`);
+    }
+    seenAliasesByEntry.add(aliasKey);
   }
 
   if (errors.length === 0) {
@@ -167,38 +206,4 @@ function validateNormalized(): number {
   return 1;
 }
 
-function validateLegacy(dataset: string): number {
-  const fixturePath = join(process.cwd(), `prisma/data/dictionary/en-vi/${dataset}.json`);
-  const raw = readFileSync(fixturePath, "utf8");
-  const entries: LegacyEntry[] = JSON.parse(raw);
-
-  const errors: string[] = [];
-
-  for (let i = 0; i < entries.length; i++) {
-    const entry = entries[i];
-    if (!entry.headword) { errors.push(`[${i}] missing headword`); continue; }
-    if (!Array.isArray(entry.senses) || entry.senses.length === 0) {
-      errors.push(`[${i}] "${entry.headword}" must have >= 1 sense`);
-      continue;
-    }
-    for (let s = 0; s < entry.senses.length; s++) {
-      const sense = entry.senses[s];
-      if (!Array.isArray(sense.translations) || sense.translations.length === 0) {
-        errors.push(`[${i}] "${entry.headword}" sense[${s}] must have >= 1 translation`);
-      }
-    }
-  }
-
-  if (errors.length === 0) {
-    console.log(`Validation passed: ${entries.length} entries, 0 errors`);
-    return 0;
-  }
-
-  console.error(`\nValidation failed: ${errors.length} error(s)\n`);
-  for (const e of errors) console.error(`  ${e}`);
-  return 1;
-}
-
-const mode = resolveArg();
-const exitCode = mode === "normalized" ? validateNormalized() : validateLegacy("fixtures/small-test");
-process.exit(exitCode);
+process.exit(validateNormalized());

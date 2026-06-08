@@ -6,11 +6,8 @@ import {
   Plus,
   FileText,
   Search,
-  CheckSquare,
-  Square,
   MoreVertical,
   Trash2,
-  Pencil,
   PanelLeft,
   Video,
 } from "lucide-react";
@@ -20,7 +17,6 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -52,7 +48,6 @@ export function StudySourcesPanel({
 }: StudySourcesPanelProps) {
   const t = useTranslations("Study");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const filteredDocs = useMemo(
     () =>
@@ -61,24 +56,6 @@ export function StudySourcesPanel({
       ),
     [documents, searchQuery],
   );
-
-  const allSelected =
-    filteredDocs.length > 0 && filteredDocs.every((d) => selectedIds.has(d.id));
-
-  const toggleSelectAll = () => {
-    setSelectedIds(
-      allSelected ? new Set() : new Set(filteredDocs.map((d) => d.id)),
-    );
-  };
-
-  const toggleSelect = (id: string) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
 
   // Collapsed mode: icon-only strip
   if (collapsed) {
@@ -191,31 +168,12 @@ export function StudySourcesPanel({
 
         {/* Document list */}
         <div className="flex-1 overflow-y-auto panel-scroll px-3 pb-4">
-          {filteredDocs.length > 0 && (
-            <Button
-              variant="ghost"
-              onClick={toggleSelectAll}
-              className="w-full px-3 py-2 mb-1 h-auto text-[12px] text-muted-foreground justify-start gap-2.5"
-              size="sm"
-            >
-              {allSelected ? (
-                <CheckSquare className="w-4 h-4 text-primary" />
-              ) : (
-                <Square className="w-4 h-4" />
-              )}
-              {t("selectAll")}
-            </Button>
-          )}
-
           <div className="flex flex-col gap-1">
             {/* Streaming upload indicator */}
             {isUploading && (
               <div className="w-full p-3 flex items-center gap-3 rounded-xl border border-border bg-background relative overflow-hidden">
                 <div className="absolute inset-0 z-0 bg-accent animate-[upload-fill_2.8s_ease-in-out_forwards]">
                   <div className="absolute inset-y-0 w-16 right-0 bg-linear-to-r from-transparent via-white/55 to-transparent animate-[upload-shimmer_1.4s_ease-in-out_infinite]" />
-                </div>
-                <div className="relative z-10 shrink-0">
-                  <Square className="w-4 h-4 text-border" />
                 </div>
                 <div className="relative z-10 w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-accent text-primary">
                   <FileText className="w-4 h-4" />
@@ -232,7 +190,6 @@ export function StudySourcesPanel({
             )}
 
             {filteredDocs.map((doc) => {
-              const isSelected = selectedIds.has(doc.id);
               const isActive = activeId === doc.id;
               const isYoutube = doc.sourceType === "YOUTUBE";
               const DocIcon = isYoutube ? Video : FileText;
@@ -290,11 +247,6 @@ export function StudySourcesPanel({
                       align="end"
                       className="min-w-40"
                     >
-                      <DropdownMenuItem disabled className="opacity-60">
-                        <Pencil className="w-4 h-4 mr-2" />
-                        {t("renameSource")}
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
                       <DropdownMenuItem
                         onClick={(e) => {
                           e.stopPropagation();
@@ -307,22 +259,6 @@ export function StudySourcesPanel({
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
-
-                  <div
-                    role="checkbox"
-                    aria-checked={isSelected}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleSelect(doc.id);
-                    }}
-                    className="shrink-0 cursor-pointer"
-                  >
-                    {isSelected ? (
-                      <CheckSquare className="w-5 h-5 text-primary" />
-                    ) : (
-                      <Square className="w-5 h-5 text-white border border-muted-foreground/30 rounded-sm" />
-                    )}
-                  </div>
                 </div>
               );
             })}

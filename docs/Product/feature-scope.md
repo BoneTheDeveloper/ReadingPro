@@ -8,9 +8,10 @@
 | Upload | Text and PDF inputs, validation, local/Vercel Blob file storage. |
 | Study | Passage list, reading workspace, original/simplified content, generated questions. |
 | AI | CEFR support, simplification, question generation, passage-grounded study chat. |
-| Translation | English-to-Vietnamese selection translation, cache/history, vocabulary save. |
-| Dictionary | Seeded English-Vietnamese lookup/search/suggest/entry detail. |
-| Review | Card reviews, SM-2 interval updates, progress stats. |
+| Translation | English-to-Vietnamese selection translation, cache/history, vocabulary save from translate. |
+| Dictionary | Seeded English-Vietnamese lookup/search/suggest/entry detail, vocabulary save from dictionary. |
+| Vocabulary | Saved words/phrases with status tracking (NEW/LEARNING/MASTERED), auto daily/weekly sets, manual sets, occurrence history across passages. |
+| Review | Card reviews, SM-2 interval updates, progress stats, vocabulary review scheduling. |
 | Observability | Pino logs, Sentry errors/spans, performance benchmark hooks. |
 | Deployment | Vercel, Neon Postgres, Vercel Blob, env separation. |
 

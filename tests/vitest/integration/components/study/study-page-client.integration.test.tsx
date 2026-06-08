@@ -118,6 +118,19 @@ function getPopupTranslateButton() {
     .find((btn) => btn.closest(".fixed"))!;
 }
 
+function getSourceListItem(title: string) {
+  const sourceTitle = screen
+    .getAllByText(title)
+    .find((element) => element.tagName === "H4");
+  const sourceListItem = sourceTitle?.closest('[role="button"]');
+
+  if (!(sourceListItem instanceof HTMLElement)) {
+    throw new Error(`Source list item not found: ${title}`);
+  }
+
+  return sourceListItem;
+}
+
 describe("StudyPageClient", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -200,7 +213,7 @@ describe("StudyPageClient", () => {
     await user.type(screen.getByPlaceholderText("Search sources..."), "solar");
 
     expect(screen.queryByText(first.title)).not.toBeInTheDocument();
-    await user.click(screen.getByText("Solar Reading"));
+    await user.click(getSourceListItem("Solar Reading"));
 
     expect(screen.getByText("Simple solar content.")).toBeInTheDocument();
 
@@ -221,7 +234,7 @@ describe("StudyPageClient", () => {
     vi.mocked(studyUploadAction).mockResolvedValue({ passage: uploaded });
     const { user } = renderWithUser(<StudyPageClient initialPassages={[]} />);
 
-    await user.click(screen.getByRole("button", { name: "Add Source" }));
+    await user.click(screen.getAllByRole("button", { name: "Add Source" })[0]);
     expect(screen.getByRole("dialog")).toBeInTheDocument();
 
     await user.click(
@@ -259,7 +272,7 @@ describe("StudyPageClient", () => {
       <StudyPageClient initialPassages={[eligible]} />,
     );
 
-    await user.click(screen.getByText(eligible.title));
+    await user.click(getSourceListItem(eligible.title));
     await user.click(screen.getByRole("button", { name: "Simplify" }));
 
     await waitFor(() =>
@@ -280,7 +293,7 @@ describe("StudyPageClient", () => {
     const secondRender = renderWithUser(
       <StudyPageClient initialPassages={[simple]} />,
     );
-    await secondRender.user.click(screen.getByText("Already Simple"));
+    await secondRender.user.click(getSourceListItem("Already Simple"));
 
     expect(
       screen.queryByRole("button", { name: "Simplify" }),
@@ -297,7 +310,7 @@ describe("StudyPageClient", () => {
       <StudyPageClient initialPassages={[passage]} />,
     );
 
-    await user.click(screen.getByText(passage.title));
+    await user.click(getSourceListItem(passage.title));
     await user.click(screen.getByRole("button", { name: "Quiz" }));
 
     await waitFor(() =>
@@ -319,7 +332,7 @@ describe("StudyPageClient", () => {
       <StudyPageClient initialPassages={[passage]} />,
     );
 
-    await user.click(screen.getByText(passage.title));
+    await user.click(getSourceListItem(passage.title));
     await user.click(screen.getByRole("button", { name: "Chat" }));
     expect(screen.getByText("Chat: The Test Passage")).toBeInTheDocument();
   });
@@ -344,7 +357,7 @@ describe("StudyPageClient", () => {
       <StudyPageClient initialPassages={[passage]} />,
     );
 
-    await user.click(screen.getByText(passage.title));
+    await user.click(getSourceListItem(passage.title));
     fireEvent.mouseUp(
       screen.getByText(/Key concerns include algorithmic bias/),
     );
@@ -398,7 +411,7 @@ describe("StudyPageClient", () => {
       <StudyPageClient initialPassages={[passage]} />,
     );
 
-    await user.click(screen.getByText(passage.title));
+    await user.click(getSourceListItem(passage.title));
     fireEvent.mouseUp(screen.getByText(longSelection));
 
     await waitFor(() => {
@@ -439,7 +452,7 @@ describe("StudyPageClient", () => {
       <StudyPageClient initialPassages={[passage]} />,
     );
 
-    await user.click(screen.getByText(passage.title));
+    await user.click(getSourceListItem(passage.title));
     fireEvent.mouseUp(
       screen.getByText(/Key concerns include algorithmic bias/),
     );
@@ -506,7 +519,7 @@ describe("StudyPageClient", () => {
     const { user } = renderWithUser(
       <StudyPageClient initialPassages={[passage]} />,
     );
-    await user.click(screen.getByText(passage.title));
+    await user.click(getSourceListItem(passage.title));
     fireEvent.mouseUp(screen.getByText(/Quorvex drift appears here/));
     await user.click(getPopupTranslateButton());
     expect(await screen.findByText("quorvex sự trôi")).toBeInTheDocument();
@@ -551,7 +564,7 @@ describe("StudyPageClient", () => {
     const { user } = renderWithUser(
       <StudyPageClient initialPassages={[passage]} />,
     );
-    await user.click(screen.getByText(passage.title));
+    await user.click(getSourceListItem(passage.title));
     fireEvent.mouseUp(screen.getByText(/Malformed translation payload/));
     await user.click(getPopupTranslateButton());
 
@@ -593,7 +606,7 @@ describe("StudyPageClient", () => {
     const { user } = renderWithUser(
       <StudyPageClient initialPassages={[passage]} />,
     );
-    await user.click(screen.getByText(passage.title));
+    await user.click(getSourceListItem(passage.title));
     fireEvent.mouseUp(screen.getByText(/Vocabulary malformed payload/));
     await user.click(getPopupTranslateButton());
     await user.click(screen.getByRole("button", { name: /Open details/ }));
@@ -630,7 +643,7 @@ describe("StudyPageClient", () => {
       <StudyPageClient initialPassages={[passage]} />,
     );
 
-    await user.click(screen.getByText(passage.title));
+    await user.click(getSourceListItem(passage.title));
     fireEvent.mouseUp(
       screen.getByText(/Simple text contains algorithmic bias/),
     );
@@ -686,7 +699,7 @@ describe("StudyPageClient", () => {
     const { user } = renderWithUser(
       <StudyPageClient initialPassages={[passage]} />,
     );
-    await user.click(screen.getByText(passage.title));
+    await user.click(getSourceListItem(passage.title));
 
     // Select first term, click translate
     fireEvent.mouseUp(screen.getByText(/First term appears here/));
@@ -730,7 +743,7 @@ describe("StudyPageClient", () => {
     const { user } = renderWithUser(
       <StudyPageClient initialPassages={[passage]} />,
     );
-    await user.click(screen.getByText(passage.title));
+    await user.click(getSourceListItem(passage.title));
     fireEvent.mouseUp(screen.getByText(/Unknown phrase appears here/));
     await user.click(getPopupTranslateButton());
 
@@ -773,7 +786,7 @@ describe("StudyPageClient", () => {
     const { user } = renderWithUser(
       <StudyPageClient initialPassages={[passage]} />,
     );
-    await user.click(screen.getByText(passage.title));
+    await user.click(getSourceListItem(passage.title));
     fireEvent.mouseUp(screen.getByText(/Rapid click test content/));
 
     // Click translate button multiple times rapidly

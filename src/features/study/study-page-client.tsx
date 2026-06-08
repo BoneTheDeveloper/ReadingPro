@@ -323,6 +323,7 @@ export function StudyPageClient({
                 viewMode={contentViewMode}
                 onViewModeChange={setContentViewMode}
                 onSelectionChange={handleSelectionChange}
+                onOpenUploadModal={handleOpenUploadModal}
               />
               {selection && activePassage && (
                 <StudyTranslationPopup

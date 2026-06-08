@@ -31,3 +31,18 @@ Contract tests protect stable API request and response shapes, especially routes
 ## Implementation Notes
 
 Use route-local schemas as the source for request validation expectations. For stable frontend-facing DTOs, add response parsing or backend contract tests before refactoring route data shapes.
+
+## Current Coverage
+
+Phase 2 MVP-hardening coverage lives in:
+
+- `tests/vitest/integration/api/upload-routes.test.ts`
+- `tests/vitest/integration/api/translation-vocabulary-routes.test.ts`
+- `tests/vitest/integration/api/dictionary-lookup-route.test.ts`
+- `tests/vitest/integration/api/dictionary-search-route.test.ts`
+- `tests/vitest/integration/api/dictionary-suggest-route.test.ts`
+- `tests/vitest/integration/api/dictionary-entry-detail-route.test.ts`
+- `tests/vitest/integration/api/study-chat-route.test.ts`
+- `tests/vitest/integration/api/cards-progress-routes.test.ts`
+- `tests/vitest/integration/api/study-session-route.test.ts`
+- `tests/vitest/integration/api/routes.test.ts`

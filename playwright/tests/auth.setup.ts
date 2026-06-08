@@ -4,6 +4,8 @@ import { dirname } from 'node:path'
 import { E2E_AUTH_FILE } from '../../tests/shared/auth-state'
 
 setup('authenticate', async ({ page }) => {
+  // E2E_TEST_USER_* are Playwright-only credentials loaded from .env.test
+  // locally or injected as CI secrets.
   const email = process.env.E2E_TEST_USER_EMAIL
   const password = process.env.E2E_TEST_USER_PASSWORD
 

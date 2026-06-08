@@ -120,6 +120,8 @@ export async function withBenchmarkContext(
 ) {
   const server = options.reuseServer ? null : await startOwnedBenchmarkServer();
   const removeSignalCleanup = installOwnedServerSignalCleanup(server);
+  // PERFORMANCE_BASE_URL and E2E_BASE_URL are benchmark target overrides.
+  // They let the suite hit an already-running app instead of the owned server.
   const baseUrl = normalizeBaseUrl(
     server?.baseUrl
       ?? options.baseUrl
@@ -592,6 +594,8 @@ function markdownCell(value: string) {
 }
 
 async function getCookieHeader() {
+  // E2E_AUTH_COOKIE and BENCHMARK_COOKIE are test-only auth inputs consumed by
+  // benchmark runners; they must not be required by app runtime.
   return getE2EAuthCookieHeader({
     envCookieNames: ["E2E_AUTH_COOKIE", "BENCHMARK_COOKIE"],
   });
@@ -625,6 +629,8 @@ async function startOwnedBenchmarkServer() {
       detached: process.platform !== "win32",
       env: {
         ...process.env,
+        // Owned benchmark servers use an isolated Next.js dist dir and enable
+        // non-production fixture routes plus query metrics instrumentation.
         NEXT_DIST_DIR: ownedServerDistDir,
         PRISMA_QUERY_METRICS: "1",
         TRANSLATE_PERFORMANCE_FIXTURES: "1",

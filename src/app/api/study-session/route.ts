@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { NextRequest, NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
 import { getAuthenticatedUser } from '@/lib/auth/auth-utils';
+import { getZodErrorMessage, isAuthenticationRequiredError, isOwnershipMissError } from '@/lib/api/route-errors';
 import { createRequestLogContext, createRequestLogger } from '@/lib/core/logger';
 import { createStudySession, updateStudySession } from '@/lib/db/study-session-queries';
 import { toStudySessionDto } from '@/lib/study/shared/study-response-schema';
@@ -45,8 +46,16 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, data: toStudySessionDto(session) });
   } catch (error) {
+    if (isAuthenticationRequiredError(error)) {
+      return NextResponse.json({ error: 'Authentication required.' }, { status: 401 });
+    }
+
+    if (isOwnershipMissError(error, ['passage'])) {
+      return NextResponse.json({ error: 'Passage not found.' }, { status: 404 });
+    }
+
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.issues[0]?.message ?? 'Invalid request' }, { status: 400 });
+      return NextResponse.json({ error: getZodErrorMessage(error) }, { status: 400 });
     }
     requestLog.error({ err: error }, 'Failed to create session');
     Sentry.captureException(error, {
@@ -92,8 +101,16 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({ success: true, data: toStudySessionDto(updated) });
   } catch (error) {
+    if (isAuthenticationRequiredError(error)) {
+      return NextResponse.json({ error: 'Authentication required.' }, { status: 401 });
+    }
+
+    if (isOwnershipMissError(error, ['session'])) {
+      return NextResponse.json({ error: 'Session not found.' }, { status: 404 });
+    }
+
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.issues[0]?.message ?? 'Invalid request' }, { status: 400 });
+      return NextResponse.json({ error: getZodErrorMessage(error) }, { status: 400 });
     }
     requestLog.error({ err: error }, 'Failed to update session');
     Sentry.captureException(error, {

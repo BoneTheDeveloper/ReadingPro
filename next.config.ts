@@ -47,6 +47,8 @@ const securityHeaders = [
 // --- Next.js Config ---
 
 const nextConfig: NextConfig = {
+  // NEXT_DIST_DIR is a build/performance tooling override. Normal app builds
+  // should omit it and use Next.js' default .next directory.
   distDir: process.env.NEXT_DIST_DIR ?? ".next",
   allowedDevOrigins: ["host.docker.internal"],
   turbopack: {

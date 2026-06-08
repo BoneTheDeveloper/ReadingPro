@@ -31,6 +31,19 @@ The user must exist in the Clerk development instance referenced by `.env.local`
 pnpm e2e:create-user
 ```
 
+Optional Playwright-only env inputs:
+
+| Variable | Purpose |
+|----------|---------|
+| `E2E_BASE_URL` | Reuse an already-running app instead of Playwright starting `pnpm dev`. |
+| `E2E_TEST_USER_EMAIL` | Auth setup and test-user helper email. |
+| `E2E_TEST_USER_PASSWORD` | Auth setup and test-user helper password. |
+| `SCREENSHOT_PATH` | Target path for the authenticated screenshot helper; defaults to `/en/study`. |
+| `SCREENSHOT_NAME` | Screenshot filename stem; defaults to `study-screenshot`. |
+| `SCREENSHOT_DIR` | Screenshot output directory; defaults to `test-results/playwright/screenshots`. |
+
+Keep these in `.env.test` or CI secrets, not in normal app runtime env.
+
 ## Commands
 
 ```bash

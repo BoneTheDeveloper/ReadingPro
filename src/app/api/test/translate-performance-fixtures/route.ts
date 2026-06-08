@@ -10,6 +10,8 @@ const cleanupSchema = z.object({
 });
 
 function isEnabled() {
+  // TRANSLATE_PERFORMANCE_FIXTURES enables benchmark-only fixture writes.
+  // The NODE_ENV guard keeps this diagnostic route unavailable in production.
   return process.env.TRANSLATE_PERFORMANCE_FIXTURES === "1" && process.env.NODE_ENV !== "production";
 }
 

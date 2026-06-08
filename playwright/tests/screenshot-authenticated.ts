@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test'
 import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
 
+// SCREENSHOT_* variables customize the manual screenshot helper only.
 const targetPath = process.env.SCREENSHOT_PATH ?? '/en/study'
 const screenshotName = process.env.SCREENSHOT_NAME ?? 'study-screenshot'
 const outDir = process.env.SCREENSHOT_DIR ?? 'test-results/playwright/screenshots'
