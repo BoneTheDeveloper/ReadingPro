@@ -50,20 +50,20 @@ describe("useStudyWorkspaceState", () => {
     vi.clearAllMocks();
   });
 
-  it("builds initial state and sorted document summaries", () => {
+  it("builds initial state with newest passage active and sorted document summaries", () => {
     const { result } = renderHook(() => useStudyWorkspaceState([passageA, passageB]));
 
     expect(result.current.state).toMatchObject({
       passages: [passageA, passageB],
-      activePassageId: null,
+      activePassageId: "passage-b",
       questions: [],
-      status: "idle",
+      status: "ready",
       error: null,
       simplifying: false,
       generatingQuestions: false,
       uploadModalOpen: false,
     });
-    expect(result.current.activePassage).toBeNull();
+    expect(result.current.activePassage).toEqual(passageB);
     expect(result.current.documents.map((document) => document.id)).toEqual(["passage-b", "passage-a"]);
     expect(result.current.documents[0]).toMatchObject({
       title: "Newer Passage",
@@ -74,16 +74,24 @@ describe("useStudyWorkspaceState", () => {
     });
   });
 
-  it("selects an active passage and clears stale questions", () => {
+  it("initializes idle state when no passages exist", () => {
+    const { result } = renderHook(() => useStudyWorkspaceState([]));
+
+    expect(result.current.state.activePassageId).toBeNull();
+    expect(result.current.state.status).toBe("idle");
+    expect(result.current.activePassage).toBeNull();
+  });
+
+  it("selects a different active passage and clears stale questions", () => {
     const { result } = renderHook(() => useStudyWorkspaceState([passageA, passageB]));
 
     act(() => {
       result.current.setState((prev) => ({ ...prev, questions: [question], status: "idle" }));
-      result.current.handleSelectDocument("passage-b");
+      result.current.handleSelectDocument("passage-a");
     });
 
-    expect(result.current.state.activePassageId).toBe("passage-b");
-    expect(result.current.activePassage).toEqual(passageB);
+    expect(result.current.state.activePassageId).toBe("passage-a");
+    expect(result.current.activePassage).toEqual(passageA);
     expect(result.current.state.questions).toEqual([]);
     expect(result.current.state.status).toBe("ready");
   });
@@ -135,14 +143,13 @@ describe("useStudyWorkspaceState", () => {
     expect(result.current.state.uploadModalOpen).toBe(false);
   });
 
-  it("deletes passages and resets active state when deleting the selected passage", async () => {
+  it("deletes active passage and falls back to the newest remaining passage", async () => {
     vi.mocked(studyDeletePassageAction).mockResolvedValue({ success: true });
     const { result } = renderHook(() => useStudyWorkspaceState([passageA, passageB]));
 
     act(() => {
       result.current.setState((prev) => ({
         ...prev,
-        activePassageId: "passage-b",
         questions: [question],
         status: "ready",
       }));
@@ -154,9 +161,44 @@ describe("useStudyWorkspaceState", () => {
 
     expect(studyDeletePassageAction).toHaveBeenCalledWith({ passageId: "passage-b" });
     expect(result.current.state.passages).toEqual([passageA]);
-    expect(result.current.state.activePassageId).toBeNull();
+    expect(result.current.state.activePassageId).toBe("passage-a");
     expect(result.current.state.questions).toEqual([]);
+    expect(result.current.state.status).toBe("ready");
+  });
+
+  it("deletes active passage and clears state when no passages remain", async () => {
+    vi.mocked(studyDeletePassageAction).mockResolvedValue({ success: true });
+    const { result } = renderHook(() => useStudyWorkspaceState([passageB]));
+
+    await act(async () => {
+      await result.current.handleDeletePassage("passage-b");
+    });
+
+    expect(result.current.state.passages).toEqual([]);
+    expect(result.current.state.activePassageId).toBeNull();
     expect(result.current.state.status).toBe("idle");
+  });
+
+  it("deletes non-active passage without changing active state", async () => {
+    vi.mocked(studyDeletePassageAction).mockResolvedValue({ success: true });
+    const { result } = renderHook(() => useStudyWorkspaceState([passageA, passageB]));
+
+    act(() => {
+      result.current.setState((prev) => ({
+        ...prev,
+        questions: [question],
+        status: "ready",
+      }));
+    });
+
+    await act(async () => {
+      await result.current.handleDeletePassage("passage-a");
+    });
+
+    expect(result.current.state.passages).toEqual([passageB]);
+    expect(result.current.state.activePassageId).toBe("passage-b");
+    expect(result.current.state.questions).toEqual([question]);
+    expect(result.current.state.status).toBe("ready");
   });
 
   it("keeps local state and stores the server error when delete fails", async () => {
@@ -164,10 +206,11 @@ describe("useStudyWorkspaceState", () => {
     const { result } = renderHook(() => useStudyWorkspaceState([passageA, passageB]));
 
     await act(async () => {
-      await result.current.handleDeletePassage("passage-a");
+      await result.current.handleDeletePassage("passage-b");
     });
 
     expect(result.current.state.passages).toEqual([passageA, passageB]);
+    expect(result.current.state.activePassageId).toBe("passage-b");
     expect(result.current.state.error).toBe("Cannot delete passage");
   });
 });

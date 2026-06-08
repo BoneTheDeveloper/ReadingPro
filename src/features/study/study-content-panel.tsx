@@ -7,9 +7,8 @@ import {
   FileText,
   Clock,
   Languages,
-  Bookmark,
-  Share2,
   FileSearch,
+  Plus,
 } from "lucide-react";
 import { cn } from "@/lib/shared/utils";
 import { calculateReadingTime } from "@/lib/shared/reading-utils";
@@ -28,6 +27,7 @@ interface StudyContentPanelProps {
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
   onSelectionChange: (selection: TranslationSelection | null) => void;
+  onOpenUploadModal: () => void;
 }
 
 const SKIP_SIMPLIFY_LEVELS = new Set(["A1", "A2"]);
@@ -40,6 +40,7 @@ export function StudyContentPanel({
   viewMode,
   onViewModeChange,
   onSelectionChange,
+  onOpenUploadModal,
 }: StudyContentPanelProps) {
   const t = useTranslations("Study");
   const contentRef = useRef<HTMLDivElement>(null);
@@ -88,9 +89,16 @@ export function StudyContentPanel({
           <p className="text-base font-medium text-foreground">
             {t("selectDocumentFromSources")}
           </p>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-sm text-muted-foreground mt-1 mb-4">
             {t("chooseRecentOrAdd")}
           </p>
+          <button
+            onClick={onOpenUploadModal}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all shadow-sm"
+          >
+            <Plus className="w-4 h-4" />
+            {t("addSource")}
+          </button>
         </div>
       </div>
     );
@@ -203,24 +211,11 @@ export function StudyContentPanel({
           </div>
         </div>
 
-        <div className="mt-8 pt-6 border-t border-border flex justify-between items-center">
-          <button className="flex items-center gap-2 text-primary text-sm font-semibold hover:underline">
-            <Languages className="w-4 h-4" />
-            {t("translatePassage")}
-          </button>
-          <div className="flex gap-4">
-            <button className="p-2 hover:bg-muted rounded-full transition-colors">
-              <Bookmark className="w-5 h-5 text-muted-foreground" />
-            </button>
-            <button className="p-2 hover:bg-muted rounded-full transition-colors">
-              <Share2 className="w-5 h-5 text-muted-foreground" />
-            </button>
-          </div>
-        </div>
-
         {error && (
-          <div className="mt-4 p-3 bg-danger-soft border border-destructive/20 rounded-lg text-destructive text-sm">
-            {error}
+          <div className="mt-8 pt-6 border-t border-border">
+            <div className="p-3 bg-danger-soft border border-destructive/20 rounded-lg text-destructive text-sm">
+              {error}
+            </div>
           </div>
         )}
       </div>
