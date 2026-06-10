@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import {
   Sparkles,
@@ -21,8 +21,10 @@ import { Button } from "@/components/ui/button";
 import type {
   PassageData,
   QuickTranslationData,
-  ArtifactItem,
-  ArtifactType,
+  ResultsCacheEntry,
+  ResultRef,
+  DetailCacheEntry,
+  StudioResultType,
   StudioCardId,
   TranslationSelection,
 } from "@/features/study/study-types";
@@ -31,12 +33,13 @@ import { StudyChatPanel } from "./chat/chat-panel";
 import { StudyTranslatePanel } from "./translate/translate-panel";
 
 interface StudyStudioPanelProps {
-  artifacts: ArtifactItem[];
+  resultsCache: ResultsCacheEntry;
   activePassage: PassageData | null;
   hasActivePassage: boolean;
   simplifying: boolean;
-  viewingArtifactId: string | null;
-  onSetViewingArtifactId: (id: string | null) => void;
+  viewingResult: ResultRef | null;
+  onSetViewingResult: (ref: ResultRef | null) => void;
+  resultDetailById: Record<string, DetailCacheEntry>;
   onActionClick: (cardId: StudioCardId) => void;
   collapsed?: boolean;
   onToggleCollapse: () => void;
@@ -95,16 +98,19 @@ const studioCards: {
   },
 ];
 
-const artifactMeta: Record<
-  ArtifactType,
+const resultMeta: Record<
+  StudioResultType,
   { icon: typeof HelpCircle; labelKey: string }
 > = {
   quiz: { icon: HelpCircle, labelKey: "quiz" },
   summary: { icon: FileText, labelKey: "summary" },
+  chat: { icon: MessageCircle, labelKey: "chat" },
+  flashcard: { icon: Layers, labelKey: "flashcards" },
+  mindmap: { icon: GitBranch, labelKey: "mindMap" },
 };
 
-function formatRelativeTime(timestamp: number, t: ReturnType<typeof useTranslations<"Study">>): string {
-  const seconds = Math.floor((Date.now() - timestamp) / 1000);
+function formatRelativeTime(timestamp: string, t: ReturnType<typeof useTranslations<"Study">>): string {
+  const seconds = Math.floor((Date.now() - new Date(timestamp).getTime()) / 1000);
   if (seconds < 60) return t("justNow");
   const minutes = Math.floor(seconds / 60);
   if (minutes < 60) return t("minutesAgo", { count: minutes });
@@ -114,12 +120,13 @@ function formatRelativeTime(timestamp: number, t: ReturnType<typeof useTranslati
 }
 
 export function StudyStudioPanel({
-  artifacts,
+  resultsCache,
   activePassage,
   hasActivePassage,
   simplifying,
-  viewingArtifactId,
-  onSetViewingArtifactId,
+  viewingResult,
+  onSetViewingResult,
+  resultDetailById,
   onActionClick,
   collapsed = false,
   onToggleCollapse,
@@ -134,11 +141,9 @@ export function StudyStudioPanel({
   const [viewingChat, setViewingChat] = useState(false);
   const [chatPrefill, setChatPrefill] = useState<string | null>(null);
 
-  const passageArtifacts = artifacts.filter(
-    (a) => a.passageId === activePassage?.id,
-  );
-  const viewingArtifact = viewingArtifactId
-    ? artifacts.find((a) => a.id === viewingArtifactId) ?? null
+  const results = resultsCache.data ?? [];
+  const viewingArtifact = viewingResult
+    ? results.find((r) => r.id === viewingResult.id) ?? null
     : null;
 
   if (viewingChat && activePassage) {
@@ -206,12 +211,13 @@ export function StudyStudioPanel({
   }
 
   if (viewingArtifact) {
-    const meta = artifactMeta[viewingArtifact.type] ?? {
+    const meta = resultMeta[viewingArtifact.type] ?? {
       icon: HelpCircle,
       labelKey: viewingArtifact.type,
     };
     const Icon = meta.icon;
     const label = t(meta.labelKey);
+    const detail = resultDetailById[viewingArtifact.id];
 
     return (
       <Card className="h-full flex flex-col overflow-hidden">
@@ -221,34 +227,34 @@ export function StudyStudioPanel({
               variant="ghost"
               size="icon"
               className="shrink-0"
-              onClick={() => onSetViewingArtifactId(null)}
+              onClick={() => onSetViewingResult(null)}
             >
               <ArrowLeft className="w-4 h-4 text-muted-foreground" />
             </Button>
             <Icon className="w-4 h-4 text-muted-foreground" />
             <h2 className="text-sm font-semibold text-foreground truncate">
-              {t("resultTitle", { type: label, title: viewingArtifact.passageTitle })}
+              {t("resultTitle", { type: label, title: viewingArtifact.title })}
             </h2>
           </div>
           <div className="flex-1 overflow-y-auto panel-scroll p-4">
-            {viewingArtifact.type === "quiz" && viewingArtifact.data?.questions && (
+            {viewingArtifact.type === "quiz" && detail?.questions && (
               <QuizContent
-                questions={viewingArtifact.data.questions}
-                passageTitle={viewingArtifact.passageTitle}
+                questions={detail.questions}
+                passageTitle={viewingArtifact.title}
                 passageId={viewingArtifact.passageId}
-                onReset={() => onSetViewingArtifactId(null)}
+                onReset={() => onSetViewingResult(null)}
               />
             )}
             {viewingArtifact.type === "summary" &&
-              viewingArtifact.data?.simplifiedContent && (
+              detail?.simplifiedContent && (
                 <div>
-                  {viewingArtifact.data.simplifiedLevel && (
+                  {detail.simplifiedLevel && (
                     <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded">
-                      {viewingArtifact.data.simplifiedLevel}
+                      {detail.simplifiedLevel}
                     </span>
                   )}
                   <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap mt-3">
-                    {viewingArtifact.data.simplifiedContent}
+                    {detail.simplifiedContent}
                   </p>
                 </div>
               )}
@@ -300,13 +306,13 @@ export function StudyStudioPanel({
           </div>
 
           {/* Running indicators */}
-          {passageArtifacts.filter((a) => a.status === "running").length > 0 && (
+          {results.filter((r) => r.status === "running").length > 0 && (
             <div className="w-full px-2 py-1 flex flex-col items-center gap-1">
-              {passageArtifacts
-                .filter((a) => a.status === "running")
-                .map((a) => (
+              {results
+                .filter((r) => r.status === "running")
+                .map((r) => (
                   <div
-                    key={a.id}
+                    key={r.id}
                     className="w-11 h-11 rounded-lg flex items-center justify-center bg-primary/10"
                   >
                     <Loader2 className="w-5 h-5 text-primary animate-spin" />
@@ -318,10 +324,10 @@ export function StudyStudioPanel({
           {/* Completed artifacts as icons */}
           <div className="flex-1 overflow-y-auto panel-scroll w-full px-2 py-1">
             <div className="flex flex-col items-center gap-1">
-              {passageArtifacts
-                .filter((a) => a.status === "completed")
+              {results
+                .filter((r) => r.status === "completed")
                 .map((artifact) => {
-                  const meta = artifactMeta[artifact.type] ?? {
+                  const meta = resultMeta[artifact.type] ?? {
                     icon: HelpCircle,
                     labelKey: artifact.type,
                   };
@@ -330,8 +336,8 @@ export function StudyStudioPanel({
                   return (
                     <button
                       key={artifact.id}
-                      onClick={() => onSetViewingArtifactId(artifact.id)}
-                      title={t("resultTitle", { type: label, title: artifact.passageTitle })}
+                      onClick={() => onSetViewingResult({ type: artifact.type, id: artifact.id })}
+                      title={t("resultTitle", { type: label, title: artifact.title })}
                       className="w-11 h-11 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
                     >
                       <Icon className="w-5 h-5" />
@@ -344,16 +350,16 @@ export function StudyStudioPanel({
       </Card>
     );
   }
-  const runningCount = artifacts.filter((a) => a.status === "running").length;
+  const runningCount = results.filter((r) => r.status === "running").length;
   const maxConcurrent = 3;
   const isCardLocked = (cardId: StudioCardId) => {
     if (cardId === "summary")
       return (
         simplifying ||
-        artifacts.some((a) => a.status === "running" && a.type === "summary")
+        results.some((r) => r.status === "running" && r.type === "summary")
       );
     if (cardId === "quiz")
-      return artifacts.some((a) => a.status === "running" && a.type === "quiz");
+      return results.some((r) => r.status === "running" && r.type === "quiz");
     return false;
   };
 
@@ -445,13 +451,13 @@ export function StudyStudioPanel({
         </div>
 
         <div className="flex-1 overflow-y-auto panel-scroll px-4 pb-4">
-          {passageArtifacts.length > 0 && (
+          {results.length > 0 && (
             <div className="space-y-1">
               <h3 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-1 mb-2">
                 Results
               </h3>
-              {passageArtifacts.map((artifact) => {
-                const meta = artifactMeta[artifact.type] ?? {
+              {results.map((artifact) => {
+                const meta = resultMeta[artifact.type] ?? {
                   icon: HelpCircle,
                   labelKey: artifact.type,
                 };
@@ -462,7 +468,7 @@ export function StudyStudioPanel({
                     key={artifact.id}
                     variant="ghost"
                     onClick={() =>
-                      artifact.status === "completed" && onSetViewingArtifactId(artifact.id)
+                      artifact.status === "completed" && onSetViewingResult({ type: artifact.type, id: artifact.id })
                     }
                     disabled={artifact.status !== "completed"}
                     className={cn(
@@ -482,7 +488,7 @@ export function StudyStudioPanel({
                     )}
                     <div className="min-w-0 flex-1">
                       <p className="text-[13px] font-medium text-foreground truncate">
-                        {t("resultTitle", { type: label, title: artifact.passageTitle })}
+                        {t("resultTitle", { type: label, title: artifact.title })}
                       </p>
                       <p className="text-[11px] text-muted-foreground">
                         {artifact.status === "running"
@@ -490,7 +496,7 @@ export function StudyStudioPanel({
                           : artifact.status === "error"
                             ? t("failed")
                             : formatRelativeTime(
-                                artifact.completedAt ?? artifact.startedAt,
+                                artifact.updatedAt ?? artifact.createdAt,
                                 t,
                               )}
                       </p>
@@ -501,7 +507,7 @@ export function StudyStudioPanel({
             </div>
           )}
 
-          {passageArtifacts.length === 0 && hasActivePassage && (
+          {results.length === 0 && hasActivePassage && (
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <Sparkles className="w-8 h-8 text-muted-foreground/30 mb-3" />
               <p className="text-[13px] text-muted-foreground/60">

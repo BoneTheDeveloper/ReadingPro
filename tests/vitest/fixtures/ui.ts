@@ -1,5 +1,5 @@
 import { generatedQuestionsFixture, passageFixture } from "./article";
-import type { PassageData, QuestionData, ArtifactItem } from "@/features/study/study-types";
+import type { PassageData, QuestionData, StudioResult, StudioResultType, StudioResultStatus } from "@/features/study/study-types";
 
 export const uiTimestamp = Date.UTC(2026, 4, 21, 8, 0, 0);
 
@@ -62,19 +62,15 @@ export function createStudyQuestion(overrides: Partial<QuestionData> = {}): Ques
   };
 }
 
-export function createStudyArtifact(overrides: Partial<ArtifactItem> = {}): ArtifactItem {
+export function createStudyResult(overrides: Partial<StudioResult> = {}): StudioResult {
   return {
     id: "result-test-1",
     type: "summary",
     passageId: passageFixture.id,
-    passageTitle: passageFixture.title,
+    title: passageFixture.title,
     status: "completed",
-    startedAt: uiTimestamp,
-    completedAt: uiTimestamp + 1000,
-    data: {
-      simplifiedContent: "Completed summary text.",
-      simplifiedLevel: "A2",
-    },
+    createdAt: new Date(uiTimestamp).toISOString(),
+    updatedAt: new Date(uiTimestamp + 1000).toISOString(),
     ...overrides,
   };
 }

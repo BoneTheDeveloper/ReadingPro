@@ -48,16 +48,51 @@ export interface QuestionData {
   difficulty: number;
 }
 
+export type StudioResultType = "quiz" | "summary" | "chat" | "flashcard" | "mindmap";
+export type StudioResultStatus = "running" | "completed" | "error";
+
+export interface StudioResult {
+  id: string;
+  type: StudioResultType;
+  passageId: string;
+  title: string;
+  status: StudioResultStatus;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export type ResultsCacheStatus = "idle" | "loading" | "success" | "error";
+
+export interface ResultsCacheEntry {
+  status: ResultsCacheStatus;
+  data: StudioResult[];
+  fetchedAt?: number;
+  error?: string;
+}
+
+export interface ResultRef {
+  type: StudioResult["type"];
+  id: string;
+}
+
+export interface DetailCacheEntry {
+  questions?: QuestionData[];
+  simplifiedContent?: string | null;
+  simplifiedLevel?: string | null;
+}
+
+export const RESULT_STALE_TIME = 60_000;
+
 export interface StudyState {
   passages: PassageData[];
   activePassageId: string | null;
-  questions: QuestionData[];
   status: StudyStatus;
   error: string | null;
   simplifying: boolean;
-  generatingQuestions: boolean;
   uploadModalOpen: boolean;
-  viewingArtifactId: string | null;
+  resultsByPassageId: Record<string, ResultsCacheEntry>;
+  viewingResultByPassageId: Record<string, ResultRef | null>;
+  resultDetailById: Record<string, DetailCacheEntry>;
 }
 
 export interface StudyUploadModalProps {
@@ -84,25 +119,6 @@ export interface StudioCard {
   disabled?: boolean;
 }
 
-export type ArtifactType = "quiz" | "summary";
-export type ArtifactStatus = "running" | "completed" | "error";
-
-export interface ArtifactData {
-  questions?: QuestionData[];
-  simplifiedContent?: string | null;
-  simplifiedLevel?: string | null;
-}
-
-export interface ArtifactItem {
-  id: string;
-  type: ArtifactType;
-  passageId: string;
-  passageTitle: string;
-  status: ArtifactStatus;
-  startedAt: number;
-  completedAt?: number;
-  data?: ArtifactData;
-}
 
 export type TranslationProvider = TranslationData["provider"];
 

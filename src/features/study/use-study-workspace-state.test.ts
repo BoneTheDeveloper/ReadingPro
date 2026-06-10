@@ -1,7 +1,7 @@
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { studyDeletePassageAction } from "@/features/study/actions/study-delete-passage-action";
-import type { PassageData, QuestionData } from "./study-types";
+import type { PassageData } from "./study-types";
 import { useStudyWorkspaceState } from "./use-study-workspace-state";
 
 vi.mock("@/features/study/actions/study-delete-passage-action", () => ({
@@ -32,19 +32,6 @@ const passageB: PassageData = {
   sourceType: "PDF",
 };
 
-const question: QuestionData = {
-  id: "question-1",
-  number: 1,
-  questionText: "What happened?",
-  options: [{ id: "a", text: "Something" }],
-  correctAnswer: "a",
-  explanation: "Because the passage says so.",
-  sourceText: "Original content",
-  sourceLine: 1,
-  questionType: "main_idea",
-  difficulty: 2,
-};
-
 describe("useStudyWorkspaceState", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -56,13 +43,13 @@ describe("useStudyWorkspaceState", () => {
     expect(result.current.state).toMatchObject({
       passages: [passageA, passageB],
       activePassageId: "passage-b",
-      questions: [],
       status: "ready",
       error: null,
       simplifying: false,
-      generatingQuestions: false,
       uploadModalOpen: false,
-      viewingArtifactId: null,
+      resultsByPassageId: {},
+      viewingResultByPassageId: {},
+      resultDetailById: {},
     });
     expect(result.current.activePassage).toEqual(passageB);
     expect(result.current.documents.map((document) => document.id)).toEqual(["passage-b", "passage-a"]);
@@ -83,17 +70,16 @@ describe("useStudyWorkspaceState", () => {
     expect(result.current.activePassage).toBeNull();
   });
 
-  it("selects a different active passage and clears stale questions", () => {
+  it("selects a different active passage and resets status to ready", () => {
     const { result } = renderHook(() => useStudyWorkspaceState([passageA, passageB]));
 
     act(() => {
-      result.current.setState((prev) => ({ ...prev, questions: [question], status: "idle" }));
+      result.current.setState((prev) => ({ ...prev, status: "idle" }));
       result.current.handleSelectDocument("passage-a");
     });
 
     expect(result.current.state.activePassageId).toBe("passage-a");
     expect(result.current.activePassage).toEqual(passageA);
-    expect(result.current.state.questions).toEqual([]);
     expect(result.current.state.status).toBe("ready");
   });
 
@@ -151,7 +137,6 @@ describe("useStudyWorkspaceState", () => {
     act(() => {
       result.current.setState((prev) => ({
         ...prev,
-        questions: [question],
         status: "ready",
       }));
     });
@@ -163,7 +148,7 @@ describe("useStudyWorkspaceState", () => {
     expect(studyDeletePassageAction).toHaveBeenCalledWith({ passageId: "passage-b" });
     expect(result.current.state.passages).toEqual([passageA]);
     expect(result.current.state.activePassageId).toBe("passage-a");
-    expect(result.current.state.questions).toEqual([]);
+    expect(result.current.state.resultsByPassageId).toEqual({});
     expect(result.current.state.status).toBe("ready");
   });
 
@@ -187,7 +172,6 @@ describe("useStudyWorkspaceState", () => {
     act(() => {
       result.current.setState((prev) => ({
         ...prev,
-        questions: [question],
         status: "ready",
       }));
     });
@@ -198,7 +182,6 @@ describe("useStudyWorkspaceState", () => {
 
     expect(result.current.state.passages).toEqual([passageB]);
     expect(result.current.state.activePassageId).toBe("passage-b");
-    expect(result.current.state.questions).toEqual([question]);
     expect(result.current.state.status).toBe("ready");
   });
 

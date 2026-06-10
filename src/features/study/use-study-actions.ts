@@ -1,11 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import type { Dispatch, SetStateAction } from "react";
 import { studyGenerateQuestionsAction } from "@/features/study/actions/study-generate-questions-action";
 import { studySimplifyAction } from "@/features/study/actions/study-simplify-action";
-import type { ArtifactItem, ArtifactType, StudioCardId, StudyState } from "./study-types";
+import type {
+  DetailCacheEntry,
+  ResultsCacheEntry,
+  StudioCardId,
+  StudioResult,
+  StudyState,
+} from "./study-types";
 
 interface UseStudyActionsInput {
   state: StudyState;
@@ -14,12 +20,34 @@ interface UseStudyActionsInput {
 
 export function useStudyActions({ state, setState }: UseStudyActionsInput) {
   const t = useTranslations("Study");
-  const [artifacts, setArtifacts] = useState<ArtifactItem[]>([]);
   const activePassageIdRef = useRef(state.activePassageId);
 
   useEffect(() => {
     activePassageIdRef.current = state.activePassageId;
   }, [state.activePassageId]);
+
+  const updateCacheEntry = useCallback(
+    (passageId: string, updater: (entry: ResultsCacheEntry) => ResultsCacheEntry) => {
+      setState((prev) => ({
+        ...prev,
+        resultsByPassageId: {
+          ...prev.resultsByPassageId,
+          [passageId]: updater(prev.resultsByPassageId[passageId] ?? { status: "idle", data: [] }),
+        },
+      }));
+    },
+    [setState],
+  );
+
+  const updateResultStatus = useCallback(
+    (passageId: string, resultId: string, patch: Partial<StudioResult>) => {
+      updateCacheEntry(passageId, (entry) => ({
+        ...entry,
+        data: entry.data.map((r) => (r.id === resultId ? { ...r, ...patch } : r)),
+      }));
+    },
+    [updateCacheEntry],
+  );
 
   const handleSimplify = useCallback(async () => {
     const passageId = activePassageIdRef.current;
@@ -58,51 +86,42 @@ export function useStudyActions({ state, setState }: UseStudyActionsInput) {
     }
   }, [setState, t]);
 
-  const markArtifactError = useCallback((artifactId: string) => {
-    setArtifacts((prev) => prev.map((a) => (a.id === artifactId ? { ...a, status: "error" } : a)));
-  }, []);
-
   const generateQuizArtifact = useCallback(
-    async (passageId: string, artifactId: string) => {
+    async (passageId: string, resultId: string) => {
       try {
         const result = await studyGenerateQuestionsAction({ passageId });
         if (activePassageIdRef.current !== passageId) {
-          markArtifactError(artifactId);
+          updateResultStatus(passageId, resultId, { status: "error" });
           return;
         }
         if ("error" in result) {
           setState((prev) => ({ ...prev, error: result.error }));
-          markArtifactError(artifactId);
+          updateResultStatus(passageId, resultId, { status: "error" });
           return;
         }
-        setState((prev) => ({ ...prev, questions: result.questions }));
-        setArtifacts((prev) =>
-          prev.map((item) =>
-            item.id === artifactId
-              ? {
-                  ...item,
-                  status: "completed",
-                  completedAt: Date.now(),
-                  data: { questions: result.questions },
-                }
-              : item,
-          ),
-        );
+        updateResultStatus(passageId, resultId, { status: "completed", updatedAt: new Date().toISOString() });
+        setState((prev) => ({
+          ...prev,
+          resultDetailById: {
+            ...prev.resultDetailById,
+            [resultId]: { questions: result.questions },
+          },
+        }));
       } catch (err) {
         setState((prev) => ({
           ...prev,
           error: err instanceof Error ? err.message : t("generationFailed"),
         }));
-        markArtifactError(artifactId);
+        updateResultStatus(passageId, resultId, { status: "error" });
       }
     },
-    [markArtifactError, setState, t],
+    [setState, t, updateResultStatus],
   );
 
   const generateSummaryArtifact = useCallback(
     async (
       passageId: string,
-      artifactId: string,
+      resultId: string,
       existingSimplifiedContent: string | null,
       existingSimplifiedLevel: string | null,
     ) => {
@@ -110,17 +129,17 @@ export function useStudyActions({ state, setState }: UseStudyActionsInput) {
       try {
         const result = await studySimplifyAction({ passageId });
         if (activePassageIdRef.current !== passageId) {
-          markArtifactError(artifactId);
+          updateResultStatus(passageId, resultId, { status: "error" });
           setState((prev) => ({ ...prev, simplifying: false }));
           return;
         }
         if ("error" in result) {
           setState((prev) => ({ ...prev, simplifying: false, error: result.error }));
-          markArtifactError(artifactId);
+          updateResultStatus(passageId, resultId, { status: "error" });
           return;
         }
 
-        const data =
+        const detail: DetailCacheEntry =
           "skipped" in result
             ? {
                 simplifiedContent: existingSimplifiedContent,
@@ -131,6 +150,7 @@ export function useStudyActions({ state, setState }: UseStudyActionsInput) {
                 simplifiedLevel: result.simplifiedLevel,
               };
 
+        updateResultStatus(passageId, resultId, { status: "completed", updatedAt: new Date().toISOString() });
         setState((prev) => ({
           ...prev,
           simplifying: false,
@@ -143,29 +163,21 @@ export function useStudyActions({ state, setState }: UseStudyActionsInput) {
                 }
               : passage,
           ),
+          resultDetailById: {
+            ...prev.resultDetailById,
+            [resultId]: detail,
+          },
         }));
-        setArtifacts((prev) =>
-          prev.map((item) =>
-            item.id === artifactId
-              ? {
-                  ...item,
-                  status: "completed",
-                  completedAt: Date.now(),
-                  data,
-                }
-              : item,
-          ),
-        );
       } catch (err) {
         setState((prev) => ({
           ...prev,
           simplifying: false,
           error: err instanceof Error ? err.message : t("simplificationFailed"),
         }));
-        markArtifactError(artifactId);
+        updateResultStatus(passageId, resultId, { status: "error" });
       }
     },
-    [markArtifactError, setState, t],
+    [setState, t, updateResultStatus],
   );
 
   const handleActionClick = useCallback(
@@ -175,32 +187,38 @@ export function useStudyActions({ state, setState }: UseStudyActionsInput) {
       const passage = state.passages.find((item) => item.id === passageId);
       if (!passage) return;
 
-      const artifactId = crypto.randomUUID();
-      const artifactType: ArtifactType = cardId === "quiz" ? "quiz" : "summary";
+      const resultId = crypto.randomUUID();
+      const type: StudioResult["type"] = cardId === "quiz" ? "quiz" : "summary";
 
-      setArtifacts((prev) => [
-        {
-          id: artifactId,
-          type: artifactType,
-          passageId,
-          passageTitle: passage.title,
-          status: "running",
-          startedAt: Date.now(),
-        },
-        ...prev,
-      ]);
+      const optimistic: StudioResult = {
+        id: resultId,
+        type,
+        passageId,
+        title: passage.title,
+        status: "running",
+        createdAt: new Date().toISOString(),
+      };
+
+      updateCacheEntry(passageId, (entry) => ({
+        ...entry,
+        data: [optimistic, ...entry.data],
+      }));
 
       if (cardId === "quiz") {
-        await generateQuizArtifact(passageId, artifactId);
+        await generateQuizArtifact(passageId, resultId);
       } else if (cardId === "summary") {
-        await generateSummaryArtifact(passageId, artifactId, passage.simplifiedContent, passage.simplifiedLevel);
+        await generateSummaryArtifact(
+          passageId,
+          resultId,
+          passage.simplifiedContent,
+          passage.simplifiedLevel,
+        );
       }
     },
-    [generateQuizArtifact, generateSummaryArtifact, state.passages],
+    [generateQuizArtifact, generateSummaryArtifact, state.passages, updateCacheEntry],
   );
 
   return {
-    artifacts,
     handleSimplify,
     handleActionClick,
   };

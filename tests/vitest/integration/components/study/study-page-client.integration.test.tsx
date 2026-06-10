@@ -166,6 +166,12 @@ describe("StudyPageClient", () => {
           });
         }
 
+        if (url.startsWith("/api/study-results")) {
+          return new Response(JSON.stringify({ results: [] }), {
+            status: 200,
+          });
+        }
+
         return new Response(JSON.stringify({ success: false }), {
           status: 404,
         });

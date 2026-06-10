@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Group, Panel, Separator } from "react-resizable-panels";
 import { useTranslations } from "next-intl";
 import * as Sentry from "@sentry/nextjs";
@@ -9,7 +9,8 @@ import {
   vocabularyResponseSchema,
 } from "@/lib/translation/shared/translation-response-schema";
 import { clampTranslationContext, isTranslateTextWithinLimit } from "@/lib/translation/translation-limits";
-import type { PassageData, TranslationSelection, QuickTranslationData } from "@/features/study/study-types";
+import type { PassageData, TranslationSelection, QuickTranslationData, StudioResult } from "@/features/study/study-types";
+import { RESULT_STALE_TIME } from "@/features/study/study-types";
 import { StudySourcesPanel } from "./left-panel";
 import { StudyContentPanel } from "../studio/content/content-panel";
 import { StudyStudioPanel } from "../studio/right-panel";
@@ -50,7 +51,7 @@ export function StudyPageClient({
     handleUploadError,
     handleDeletePassage,
   } = useStudyWorkspaceState(initialPassages);
-  const { artifacts, handleSimplify, handleActionClick } = useStudyActions({ state, setState });
+  const { handleSimplify, handleActionClick } = useStudyActions({ state, setState });
   const layout = useStudyPanelLayout();
 
   // Translation state (lifted from StudyContentPanel)
@@ -263,6 +264,53 @@ export function StudyPageClient({
     ? savedVocabularyIds.has(vocabularySaveKey)
     : false;
 
+  // Fetch passage results from API when switching passages
+  useEffect(() => {
+    if (!state.activePassageId) return;
+    const passageId = state.activePassageId;
+    const cached = state.resultsByPassageId[passageId];
+    if (cached?.status === "success" && cached.fetchedAt && Date.now() - cached.fetchedAt < RESULT_STALE_TIME) return;
+
+    const controller = new AbortController();
+    setState((prev) => ({
+      ...prev,
+      resultsByPassageId: {
+        ...prev.resultsByPassageId,
+        [passageId]: { status: "loading", data: cached?.data ?? [] },
+      },
+    }));
+
+    fetch(`/api/study-results?passageId=${passageId}`, { signal: controller.signal })
+      .then((r) => r.json())
+      .then((json: { results: StudioResult[] }) => {
+        setState((prev) => {
+          if (prev.activePassageId !== passageId) return prev;
+          return {
+            ...prev,
+            resultsByPassageId: {
+              ...prev.resultsByPassageId,
+              [passageId]: { status: "success", data: json.results, fetchedAt: Date.now() },
+            },
+          };
+        });
+      })
+      .catch((err) => {
+        if (controller.signal.aborted) return;
+        setState((prev) => {
+          if (prev.activePassageId !== passageId) return prev;
+          return {
+            ...prev,
+            resultsByPassageId: {
+              ...prev.resultsByPassageId,
+              [passageId]: { status: "error", data: cached?.data ?? [], error: err instanceof Error ? err.message : "Failed to fetch results" },
+            },
+          };
+        });
+      });
+
+    return () => controller.abort();
+  }, [state.activePassageId]); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <>
       {/* Sticky reading progress bar */}
@@ -360,12 +408,22 @@ export function StudyPageClient({
             minSize="200px"
           >
             <StudyStudioPanel
-              artifacts={artifacts}
+              resultsCache={state.resultsByPassageId[state.activePassageId ?? ""] ?? { status: "idle", data: [] }}
               activePassage={activePassage}
               hasActivePassage={!!state.activePassageId}
               simplifying={state.simplifying}
-              viewingArtifactId={state.viewingArtifactId}
-              onSetViewingArtifactId={(id) => setState((prev) => ({ ...prev, viewingArtifactId: id }))}
+              viewingResult={state.activePassageId ? state.viewingResultByPassageId[state.activePassageId] ?? null : null}
+              onSetViewingResult={(ref) => {
+                if (!state.activePassageId) return;
+                setState((prev) => ({
+                  ...prev,
+                  viewingResultByPassageId: {
+                    ...prev.viewingResultByPassageId,
+                    [prev.activePassageId!]: ref,
+                  },
+                }));
+              }}
+              resultDetailById={state.resultDetailById}
               onActionClick={handleActionClick}
               collapsed={layout.rightPanelCollapsed}
               onToggleCollapse={layout.toggleRight}

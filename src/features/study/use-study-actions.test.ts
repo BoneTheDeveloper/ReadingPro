@@ -49,13 +49,13 @@ function createState(overrides: Partial<StudyState> = {}): StudyState {
   return {
     passages: [passage, otherPassage],
     activePassageId: "passage-1",
-    questions: [],
     status: "ready",
     error: null,
     simplifying: false,
-    generatingQuestions: false,
     uploadModalOpen: false,
-    viewingArtifactId: null,
+    resultsByPassageId: {},
+    viewingResultByPassageId: {},
+    resultDetailById: {},
     ...overrides,
   };
 }
@@ -145,17 +145,17 @@ describe("useStudyActions", () => {
     });
 
     expect(studyGenerateQuestionsAction).toHaveBeenCalledWith({ passageId: "passage-1" });
-    expect(result.current.state.questions).toEqual([question]);
-    expect(result.current.actions.artifacts).toHaveLength(1);
-    expect(result.current.actions.artifacts[0]).toMatchObject({
+    const quizResults = result.current.state.resultsByPassageId["passage-1"].data;
+    expect(quizResults).toHaveLength(1);
+    expect(quizResults[0]).toMatchObject({
       id: "result-1",
       type: "quiz",
       passageId: "passage-1",
-      passageTitle: "Study Passage",
+      title: "Study Passage",
       status: "completed",
-      data: { questions: [question] },
     });
-    expect(result.current.actions.artifacts[0].completedAt).toEqual(expect.any(Number));
+    expect(quizResults[0].updatedAt).toEqual(expect.any(String));
+    expect(result.current.state.resultDetailById["result-1"].questions).toEqual([question]);
   });
 
   it("inserts a completed summary result and updates the active passage", async () => {
@@ -175,13 +175,16 @@ describe("useStudyActions", () => {
       simplifiedContent: "Generated summary",
       simplifiedLevel: "A2",
     });
-    expect(result.current.actions.artifacts[0]).toMatchObject({
+    const summaryResults = result.current.state.resultsByPassageId["passage-1"].data;
+    expect(summaryResults).toHaveLength(1);
+    expect(summaryResults[0]).toMatchObject({
+      id: "result-1",
       type: "summary",
       status: "completed",
-      data: {
-        simplifiedContent: "Generated summary",
-        simplifiedLevel: "A2",
-      },
+    });
+    expect(result.current.state.resultDetailById["result-1"]).toMatchObject({
+      simplifiedContent: "Generated summary",
+      simplifiedLevel: "A2",
     });
   });
 
@@ -194,12 +197,15 @@ describe("useStudyActions", () => {
     });
 
     expect(result.current.state.passages[0].simplifiedContent).toBe("Existing summary");
-    expect(result.current.actions.artifacts[0]).toMatchObject({
+    const summaryResults = result.current.state.resultsByPassageId["passage-1"].data;
+    expect(summaryResults).toHaveLength(1);
+    expect(summaryResults[0]).toMatchObject({
+      id: "result-1",
       status: "completed",
-      data: {
-        simplifiedContent: "Existing summary",
-        simplifiedLevel: "B1",
-      },
+    });
+    expect(result.current.state.resultDetailById["result-1"]).toMatchObject({
+      simplifiedContent: "Existing summary",
+      simplifiedLevel: "B1",
     });
   });
 
@@ -212,7 +218,8 @@ describe("useStudyActions", () => {
     });
 
     expect(result.current.state.error).toBe("Generation failed");
-    expect(result.current.actions.artifacts[0]).toMatchObject({ status: "error" });
+    const firstResults = result.current.state.resultsByPassageId["passage-1"].data;
+    expect(firstResults[0]).toMatchObject({ status: "error" });
 
     let resolveQuestions: (value: { questions: QuestionData[] }) => void = () => {};
     vi.mocked(studyGenerateQuestionsAction).mockImplementationOnce(
@@ -237,12 +244,12 @@ describe("useStudyActions", () => {
       await actionPromise;
     });
 
-    expect(result.current.actions.artifacts).toHaveLength(2);
-    expect(result.current.actions.artifacts[0]).toMatchObject({
+    const secondResults = result.current.state.resultsByPassageId["passage-1"].data;
+    expect(secondResults).toHaveLength(2);
+    expect(secondResults[0]).toMatchObject({
       passageId: "passage-1",
       status: "error",
     });
-    expect(result.current.state.questions).toEqual([]);
   });
 
   it("ignores action clicks when active passage state is missing or stale", async () => {
@@ -253,6 +260,6 @@ describe("useStudyActions", () => {
     });
 
     expect(studyGenerateQuestionsAction).not.toHaveBeenCalled();
-    expect(result.current.actions.artifacts).toEqual([]);
+    expect(result.current.state.resultsByPassageId).toEqual({});
   });
 });
