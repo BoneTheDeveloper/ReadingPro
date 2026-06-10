@@ -50,8 +50,7 @@ export function DashboardSidebar({
         return (
           pathname === "/study" ||
           pathname === "/upload" ||
-          pathname.startsWith("/reading/") ||
-          pathname.startsWith("/test/")
+          pathname.startsWith("/reading/")
         );
       }
       if (href === "/vocabulary") {

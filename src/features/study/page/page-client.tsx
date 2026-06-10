@@ -9,15 +9,15 @@ import {
   vocabularyResponseSchema,
 } from "@/lib/translation/shared/translation-response-schema";
 import { clampTranslationContext, isTranslateTextWithinLimit } from "@/lib/translation/translation-limits";
-import type { PassageData, TranslationSelection, QuickTranslationData } from "./study-types";
-import { StudySourcesPanel } from "./study-left-panel";
-import { StudyContentPanel } from "./study-content-panel";
-import { StudyStudioPanel } from "./study-right-panel";
-import { StudyTranslationPopup } from "./study-translation-popup";
-import { StudyUploadModal } from "./study-upload-modal";
-import { useStudyActions } from "./use-study-actions";
-import { useStudyPanelLayout } from "./use-study-panel-layout";
-import { useStudyWorkspaceState } from "./use-study-workspace-state";
+import type { PassageData, TranslationSelection, QuickTranslationData } from "@/features/study/study-types";
+import { StudySourcesPanel } from "./left-panel";
+import { StudyContentPanel } from "../studio/content/content-panel";
+import { StudyStudioPanel } from "../studio/right-panel";
+import { StudyTranslationPopup } from "../studio/translate/translation-popup";
+import { StudyUploadModal } from "./upload-modal";
+import { useStudyActions } from "@/features/study/use-study-actions";
+import { useStudyPanelLayout } from "@/features/study/use-study-panel-layout";
+import { useStudyWorkspaceState } from "@/features/study/use-study-workspace-state";
 
 let quickTranslationRequestCounter = 0;
 
@@ -50,7 +50,7 @@ export function StudyPageClient({
     handleUploadError,
     handleDeletePassage,
   } = useStudyWorkspaceState(initialPassages);
-  const { results, handleSimplify, handleActionClick } = useStudyActions({ state, setState });
+  const { artifacts, handleSimplify, handleActionClick } = useStudyActions({ state, setState });
   const layout = useStudyPanelLayout();
 
   // Translation state (lifted from StudyContentPanel)
@@ -360,10 +360,12 @@ export function StudyPageClient({
             minSize="200px"
           >
             <StudyStudioPanel
-              results={results}
+              artifacts={artifacts}
               activePassage={activePassage}
               hasActivePassage={!!state.activePassageId}
               simplifying={state.simplifying}
+              viewingArtifactId={state.viewingArtifactId}
+              onSetViewingArtifactId={(id) => setState((prev) => ({ ...prev, viewingArtifactId: id }))}
               onActionClick={handleActionClick}
               collapsed={layout.rightPanelCollapsed}
               onToggleCollapse={layout.toggleRight}

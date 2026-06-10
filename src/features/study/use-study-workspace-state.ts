@@ -24,6 +24,7 @@ export function useStudyWorkspaceState(initialPassages: PassageData[]) {
       simplifying: false,
       generatingQuestions: false,
       uploadModalOpen: false,
+      viewingArtifactId: null,
     };
   });
   const [isUploading, setIsUploading] = useState(false);
@@ -58,6 +59,7 @@ export function useStudyWorkspaceState(initialPassages: PassageData[]) {
       ...prev,
       activePassageId: id,
       questions: [],
+      viewingArtifactId: null,
       status: "ready",
     }));
   }, []);
@@ -83,6 +85,7 @@ export function useStudyWorkspaceState(initialPassages: PassageData[]) {
       uploadModalOpen: false,
       status: "ready",
       questions: [],
+      viewingArtifactId: null,
       error: null,
     }));
     setIsUploading(false);
@@ -111,6 +114,7 @@ export function useStudyWorkspaceState(initialPassages: PassageData[]) {
             passages: remaining,
             activePassageId: replacementId,
             questions: [],
+            viewingArtifactId: null,
             status: replacementId ? "ready" : "idle",
             error: null,
           };

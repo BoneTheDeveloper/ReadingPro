@@ -57,6 +57,7 @@ export interface StudyState {
   simplifying: boolean;
   generatingQuestions: boolean;
   uploadModalOpen: boolean;
+  viewingArtifactId: string | null;
 }
 
 export interface StudyUploadModalProps {
@@ -83,24 +84,24 @@ export interface StudioCard {
   disabled?: boolean;
 }
 
-export type ResultItemType = "quiz" | "summary";
-export type ResultItemStatus = "running" | "completed" | "error";
+export type ArtifactType = "quiz" | "summary";
+export type ArtifactStatus = "running" | "completed" | "error";
 
-export interface ResultItemData {
+export interface ArtifactData {
   questions?: QuestionData[];
   simplifiedContent?: string | null;
   simplifiedLevel?: string | null;
 }
 
-export interface ResultItem {
+export interface ArtifactItem {
   id: string;
-  type: ResultItemType;
+  type: ArtifactType;
   passageId: string;
   passageTitle: string;
-  status: ResultItemStatus;
+  status: ArtifactStatus;
   startedAt: number;
   completedAt?: number;
-  data?: ResultItemData;
+  data?: ArtifactData;
 }
 
 export type TranslationProvider = TranslationData["provider"];

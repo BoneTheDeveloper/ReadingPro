@@ -55,6 +55,7 @@ function createState(overrides: Partial<StudyState> = {}): StudyState {
     simplifying: false,
     generatingQuestions: false,
     uploadModalOpen: false,
+    viewingArtifactId: null,
     ...overrides,
   };
 }
@@ -145,8 +146,8 @@ describe("useStudyActions", () => {
 
     expect(studyGenerateQuestionsAction).toHaveBeenCalledWith({ passageId: "passage-1" });
     expect(result.current.state.questions).toEqual([question]);
-    expect(result.current.actions.results).toHaveLength(1);
-    expect(result.current.actions.results[0]).toMatchObject({
+    expect(result.current.actions.artifacts).toHaveLength(1);
+    expect(result.current.actions.artifacts[0]).toMatchObject({
       id: "result-1",
       type: "quiz",
       passageId: "passage-1",
@@ -154,7 +155,7 @@ describe("useStudyActions", () => {
       status: "completed",
       data: { questions: [question] },
     });
-    expect(result.current.actions.results[0].completedAt).toEqual(expect.any(Number));
+    expect(result.current.actions.artifacts[0].completedAt).toEqual(expect.any(Number));
   });
 
   it("inserts a completed summary result and updates the active passage", async () => {
@@ -174,7 +175,7 @@ describe("useStudyActions", () => {
       simplifiedContent: "Generated summary",
       simplifiedLevel: "A2",
     });
-    expect(result.current.actions.results[0]).toMatchObject({
+    expect(result.current.actions.artifacts[0]).toMatchObject({
       type: "summary",
       status: "completed",
       data: {
@@ -193,7 +194,7 @@ describe("useStudyActions", () => {
     });
 
     expect(result.current.state.passages[0].simplifiedContent).toBe("Existing summary");
-    expect(result.current.actions.results[0]).toMatchObject({
+    expect(result.current.actions.artifacts[0]).toMatchObject({
       status: "completed",
       data: {
         simplifiedContent: "Existing summary",
@@ -202,7 +203,7 @@ describe("useStudyActions", () => {
     });
   });
 
-  it("marks quiz results as errors for server failures and stale active passage refs", async () => {
+  it("marks quiz artifacts as errors for server failures and stale active passage refs", async () => {
     vi.mocked(studyGenerateQuestionsAction).mockResolvedValueOnce({ error: "Generation failed" });
     const { result, rerender } = renderStudyActions();
 
@@ -211,7 +212,7 @@ describe("useStudyActions", () => {
     });
 
     expect(result.current.state.error).toBe("Generation failed");
-    expect(result.current.actions.results[0]).toMatchObject({ status: "error" });
+    expect(result.current.actions.artifacts[0]).toMatchObject({ status: "error" });
 
     let resolveQuestions: (value: { questions: QuestionData[] }) => void = () => {};
     vi.mocked(studyGenerateQuestionsAction).mockImplementationOnce(
@@ -236,8 +237,8 @@ describe("useStudyActions", () => {
       await actionPromise;
     });
 
-    expect(result.current.actions.results).toHaveLength(2);
-    expect(result.current.actions.results[0]).toMatchObject({
+    expect(result.current.actions.artifacts).toHaveLength(2);
+    expect(result.current.actions.artifacts[0]).toMatchObject({
       passageId: "passage-1",
       status: "error",
     });
@@ -252,6 +253,6 @@ describe("useStudyActions", () => {
     });
 
     expect(studyGenerateQuestionsAction).not.toHaveBeenCalled();
-    expect(result.current.actions.results).toEqual([]);
+    expect(result.current.actions.artifacts).toEqual([]);
   });
 });

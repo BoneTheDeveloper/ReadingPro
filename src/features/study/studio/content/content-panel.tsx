@@ -14,8 +14,8 @@ import { cn } from "@/lib/shared/utils";
 import { calculateReadingTime } from "@/lib/shared/reading-utils";
 import { getCEFRLabel } from "@/lib/domain/cefr";
 import { getCEFRColor } from "@/lib/ui/cefr-style";
-import type { PassageData, TranslationSelection } from "./study-types";
-import { extractSelectionInfo } from "./study-selection-utils";
+import type { PassageData, TranslationSelection } from "@/features/study/study-types";
+import { extractSelectionInfo } from "@/features/study/study-selection-utils";
 
 type ViewMode = "original" | "simplified";
 

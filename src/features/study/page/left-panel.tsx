@@ -21,7 +21,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { DocumentItem } from "./study-types";
+import type { DocumentItem } from "@/features/study/study-types";
 
 interface StudySourcesPanelProps {
   documents: DocumentItem[];

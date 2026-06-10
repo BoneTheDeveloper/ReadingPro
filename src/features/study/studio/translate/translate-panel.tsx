@@ -11,7 +11,7 @@ import { cn } from "@/lib/shared/utils";
 import type {
   TranslationSelection,
   QuickTranslationData,
-} from "./study-types";
+} from "@/features/study/study-types";
 
 interface StudyTranslatePanelProps {
   selection: TranslationSelection;

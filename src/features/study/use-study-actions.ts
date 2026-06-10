@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import type { Dispatch, SetStateAction } from "react";
 import { studyGenerateQuestionsAction } from "@/features/study/actions/study-generate-questions-action";
 import { studySimplifyAction } from "@/features/study/actions/study-simplify-action";
-import type { ResultItem, ResultItemType, StudioCardId, StudyState } from "./study-types";
+import type { ArtifactItem, ArtifactType, StudioCardId, StudyState } from "./study-types";
 
 interface UseStudyActionsInput {
   state: StudyState;
@@ -14,7 +14,7 @@ interface UseStudyActionsInput {
 
 export function useStudyActions({ state, setState }: UseStudyActionsInput) {
   const t = useTranslations("Study");
-  const [results, setResults] = useState<ResultItem[]>([]);
+  const [artifacts, setArtifacts] = useState<ArtifactItem[]>([]);
   const activePassageIdRef = useRef(state.activePassageId);
 
   useEffect(() => {
@@ -58,27 +58,27 @@ export function useStudyActions({ state, setState }: UseStudyActionsInput) {
     }
   }, [setState, t]);
 
-  const markResultError = useCallback((resultId: string) => {
-    setResults((prev) => prev.map((result) => (result.id === resultId ? { ...result, status: "error" } : result)));
+  const markArtifactError = useCallback((artifactId: string) => {
+    setArtifacts((prev) => prev.map((a) => (a.id === artifactId ? { ...a, status: "error" } : a)));
   }, []);
 
-  const generateQuizResult = useCallback(
-    async (passageId: string, resultId: string) => {
+  const generateQuizArtifact = useCallback(
+    async (passageId: string, artifactId: string) => {
       try {
         const result = await studyGenerateQuestionsAction({ passageId });
         if (activePassageIdRef.current !== passageId) {
-          markResultError(resultId);
+          markArtifactError(artifactId);
           return;
         }
         if ("error" in result) {
           setState((prev) => ({ ...prev, error: result.error }));
-          markResultError(resultId);
+          markArtifactError(artifactId);
           return;
         }
         setState((prev) => ({ ...prev, questions: result.questions }));
-        setResults((prev) =>
+        setArtifacts((prev) =>
           prev.map((item) =>
-            item.id === resultId
+            item.id === artifactId
               ? {
                   ...item,
                   status: "completed",
@@ -93,16 +93,16 @@ export function useStudyActions({ state, setState }: UseStudyActionsInput) {
           ...prev,
           error: err instanceof Error ? err.message : t("generationFailed"),
         }));
-        markResultError(resultId);
+        markArtifactError(artifactId);
       }
     },
-    [markResultError, setState, t],
+    [markArtifactError, setState, t],
   );
 
-  const generateSummaryResult = useCallback(
+  const generateSummaryArtifact = useCallback(
     async (
       passageId: string,
-      resultId: string,
+      artifactId: string,
       existingSimplifiedContent: string | null,
       existingSimplifiedLevel: string | null,
     ) => {
@@ -110,13 +110,13 @@ export function useStudyActions({ state, setState }: UseStudyActionsInput) {
       try {
         const result = await studySimplifyAction({ passageId });
         if (activePassageIdRef.current !== passageId) {
-          markResultError(resultId);
+          markArtifactError(artifactId);
           setState((prev) => ({ ...prev, simplifying: false }));
           return;
         }
         if ("error" in result) {
           setState((prev) => ({ ...prev, simplifying: false, error: result.error }));
-          markResultError(resultId);
+          markArtifactError(artifactId);
           return;
         }
 
@@ -144,9 +144,9 @@ export function useStudyActions({ state, setState }: UseStudyActionsInput) {
               : passage,
           ),
         }));
-        setResults((prev) =>
+        setArtifacts((prev) =>
           prev.map((item) =>
-            item.id === resultId
+            item.id === artifactId
               ? {
                   ...item,
                   status: "completed",
@@ -162,10 +162,10 @@ export function useStudyActions({ state, setState }: UseStudyActionsInput) {
           simplifying: false,
           error: err instanceof Error ? err.message : t("simplificationFailed"),
         }));
-        markResultError(resultId);
+        markArtifactError(artifactId);
       }
     },
-    [markResultError, setState, t],
+    [markArtifactError, setState, t],
   );
 
   const handleActionClick = useCallback(
@@ -175,13 +175,13 @@ export function useStudyActions({ state, setState }: UseStudyActionsInput) {
       const passage = state.passages.find((item) => item.id === passageId);
       if (!passage) return;
 
-      const resultId = crypto.randomUUID();
-      const resultType: ResultItemType = cardId === "quiz" ? "quiz" : "summary";
+      const artifactId = crypto.randomUUID();
+      const artifactType: ArtifactType = cardId === "quiz" ? "quiz" : "summary";
 
-      setResults((prev) => [
+      setArtifacts((prev) => [
         {
-          id: resultId,
-          type: resultType,
+          id: artifactId,
+          type: artifactType,
           passageId,
           passageTitle: passage.title,
           status: "running",
@@ -191,16 +191,16 @@ export function useStudyActions({ state, setState }: UseStudyActionsInput) {
       ]);
 
       if (cardId === "quiz") {
-        await generateQuizResult(passageId, resultId);
+        await generateQuizArtifact(passageId, artifactId);
       } else if (cardId === "summary") {
-        await generateSummaryResult(passageId, resultId, passage.simplifiedContent, passage.simplifiedLevel);
+        await generateSummaryArtifact(passageId, artifactId, passage.simplifiedContent, passage.simplifiedLevel);
       }
     },
-    [generateQuizResult, generateSummaryResult, state.passages],
+    [generateQuizArtifact, generateSummaryArtifact, state.passages],
   );
 
   return {
-    results,
+    artifacts,
     handleSimplify,
     handleActionClick,
   };

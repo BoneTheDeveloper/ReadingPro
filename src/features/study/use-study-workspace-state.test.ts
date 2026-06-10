@@ -62,6 +62,7 @@ describe("useStudyWorkspaceState", () => {
       simplifying: false,
       generatingQuestions: false,
       uploadModalOpen: false,
+      viewingArtifactId: null,
     });
     expect(result.current.activePassage).toEqual(passageB);
     expect(result.current.documents.map((document) => document.id)).toEqual(["passage-b", "passage-a"]);

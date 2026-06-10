@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   calculateStudyTranslationIconPosition,
   calculateStudyTranslationPopupPosition,
-} from "@/features/study/study-translation-popup";
+} from "@/features/study/studio/translate/translation-popup";
 
 describe("calculateStudyTranslationPopupPosition", () => {
   it("positions flipped popup fully above the selection using actual popup height", () => {

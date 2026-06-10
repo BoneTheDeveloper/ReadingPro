@@ -1,11 +1,12 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import * as Sentry from "@sentry/nextjs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { StudyPageClient } from "@/features/study/study-page-client";
+import { StudyPageClient } from "@/features/study/page/page-client";
 import { studyGenerateQuestionsAction } from "@/features/study/actions/study-generate-questions-action";
 import { studySimplifyAction } from "@/features/study/actions/study-simplify-action";
 import { studyUploadAction } from "@/features/study/actions/study-upload-action";
 import { extractSelectionInfo } from "@/features/study/study-selection-utils";
+
 import { createStudyPassage, createStudyQuestion } from "../../../fixtures";
 import { renderWithUser } from "../../../helpers";
 

@@ -1,6 +1,5 @@
 import { generatedQuestionsFixture, passageFixture } from "./article";
-import type { PassageData, QuestionData, ResultItem } from "@/features/study/study-types";
-import type { TestPassage, TestQuestion } from "@/features/test/test-types";
+import type { PassageData, QuestionData, ArtifactItem } from "@/features/study/study-types";
 
 export const uiTimestamp = Date.UTC(2026, 4, 21, 8, 0, 0);
 
@@ -63,7 +62,7 @@ export function createStudyQuestion(overrides: Partial<QuestionData> = {}): Ques
   };
 }
 
-export function createStudyResult(overrides: Partial<ResultItem> = {}): ResultItem {
+export function createStudyArtifact(overrides: Partial<ArtifactItem> = {}): ArtifactItem {
   return {
     id: "result-test-1",
     type: "summary",
@@ -76,39 +75,6 @@ export function createStudyResult(overrides: Partial<ResultItem> = {}): ResultIt
       simplifiedContent: "Completed summary text.",
       simplifiedLevel: "A2",
     },
-    ...overrides,
-  };
-}
-
-export function createTestPassage(overrides: Partial<TestPassage> = {}): TestPassage {
-  return {
-    id: passageFixture.id,
-    title: passageFixture.title,
-    content: "Line one introduces the topic.\nLine two says fixtures make tests predictable.\nLine three closes the passage.",
-    originalLevel: "B1",
-    wordCount: 24,
-    ...overrides,
-  };
-}
-
-export function createTestQuestion(overrides: Partial<TestQuestion> = {}): TestQuestion {
-  const source = generatedQuestionsFixture[0];
-  return {
-    id: source.id,
-    number: 1,
-    questionText: source.questionText,
-    options: [
-      { id: "A", text: "They make tests predictable." },
-      { id: "B", text: "They call live services." },
-      { id: "C", text: "They hide failures." },
-      { id: "D", text: "They remove assertions." },
-    ],
-    correctAnswer: "A",
-    explanation: source.explanation,
-    sourceText: source.sourceText,
-    sourceLine: 2,
-    questionType: source.questionType,
-    difficulty: source.difficulty,
     ...overrides,
   };
 }
