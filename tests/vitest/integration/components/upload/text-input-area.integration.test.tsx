@@ -1,6 +1,6 @@
 import { screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { TextInputArea } from "@/features/upload/text-input-area";
+import { TextInputArea } from "@/features/upload/ui/text-input-area";
 import { renderWithUser } from "../../../helpers";
 
 const validText =

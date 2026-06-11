@@ -18,23 +18,30 @@ Route handlers live in `src/app/api/**/route.ts` and should stay thin:
 
 ```text
 route.ts
-  -> service/workflow
+  -> feature service or src/lib/<domain> service/workflow
       -> query module or repository
           -> db client / provider / storage adapter
 ```
 
 Routes should not contain raw SQL, ranking logic, provider fallbacks, or complex DTO building.
+Reusable route-owned services and repositories should live in `src/lib/<domain>/**`. Feature-specific use-case services may live under `src/features/<feature>/services` when they are not reused outside that feature.
+
+Do not create `src/lib/services`. Group services by owning feature or domain.
 
 ## File Roles
 
 | Pattern | Role |
 |---------|------|
 | `route.ts` | HTTP boundary, parsing, validation, auth, status codes. |
-| `*-service.ts` | Business flow, fallback order, DTO assembly. |
-| `*-repository.ts` | Prisma/raw SQL data access. |
+| `src/features/<feature>/services/*` | Single-feature use-case services. |
+| `src/features/<feature>/api/*` | Client-side API wrappers and fetch helpers. |
+| `src/lib/<domain>/services/*` | Shared domain/business services. |
+| `src/lib/<domain>/repositories/*` | Prisma/raw SQL data access. |
 | `*-queries.ts` | App-domain Prisma query helpers. |
 | `*-dtos.ts` | Stable API types and DTO builders. |
 | `*-schema.ts` | Reused runtime schemas. |
+
+Feature folders may contain server actions, UI hooks, client API helpers, and feature-specific services. Shared API schemas, reusable backend domain services, and repository/database access belong in `src/lib/<domain>`.
 
 ## Response Contract
 

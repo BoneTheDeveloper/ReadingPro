@@ -29,13 +29,30 @@ Examples:
 ## Client Components
 
 Client components own browser state, panels, selection, chat UI, upload drag/drop, and interactions.
+They should call feature hooks, server actions, or feature-level client API helpers for data operations.
+
+Client components may keep trivial event glue, but should not own:
+
+- API response contract parsing.
+- Non-trivial URL/query construction.
+- Retry, cache, dedupe, or abort-controller policy shared across screens.
+- Persistence decisions or ownership rules.
+- Domain transformations that should be tested outside React rendering.
 
 Examples:
 
-- `src/features/study/study-page-client.tsx`
-- `src/features/study/study-chat-panel.tsx`
+- `src/features/study/ui/study-workspace-client.tsx`
+- `src/features/study/ui/studio/chat/chat-panel.tsx`
 - `src/features/upload/upload-page-client.tsx`
 - `src/features/dictionary/dictionary-page-client.tsx`
+
+Preferred browser-side data path:
+
+```text
+client component
+  -> src/features/<feature>/use-*.ts or <feature>-api.ts
+      -> /api route or server action
+```
 
 ## Route Handlers
 
@@ -57,6 +74,7 @@ Server actions must authenticate and enforce ownership before reads/writes.
 ## Runtime Boundary Rules
 
 - Browser code must not import Prisma, Clerk server APIs, filesystem, or server-only AI modules.
+- Browser fetch logic that is reused, contract-sensitive, or non-trivial should live in feature hooks/client API helpers rather than directly in components.
 - Route handlers and server actions must validate all external input with Zod or equivalent guards.
 - Shared logic belongs in `src/lib/` only when reused across features or route surfaces.
 - Use path aliases from `@/` consistently.

@@ -8,6 +8,26 @@ export const studyQuestionOptionSchema = z.object({
   text: z.string(),
 }).strict();
 
+export const generatedStudyQuestionSchema = z.object({
+  id: z.string(),
+  number: z.number().int().positive(),
+  questionText: z.string(),
+  options: z.array(studyQuestionOptionSchema),
+  correctAnswer: z.string(),
+  explanation: z.string(),
+  sourceText: z.string(),
+  sourceLine: z.number().int().positive(),
+  questionType: z.string(),
+  difficulty: z.number(),
+}).strict();
+
+export const generatedStudyQuestionsSchema = z.object({
+  questions: z.array(generatedStudyQuestionSchema),
+}).strict();
+
+export const generatedStudyQuestionsSuccessResponseSchema = makeSuccessEnvelopeSchema(generatedStudyQuestionsSchema);
+export const generatedStudyQuestionsResponseSchema = makeResponseSchema(generatedStudyQuestionsSchema);
+
 export const studyCardPassageSchema = z.object({
   id: z.string(),
   title: z.string(),
@@ -50,10 +70,28 @@ export const progressStatsSchema = z.object({
   dueCards: z.number(),
   todayReviews: z.number(),
   streakDays: z.number().optional(),
+  totalQuizAttempts: z.number(),
+  avgQuizAccuracy: z.number().nullable(),
+  todayQuizAttempts: z.number(),
 }).strict();
 
 export const progressStatsSuccessResponseSchema = makeSuccessEnvelopeSchema(progressStatsSchema);
 export const progressStatsResponseSchema = makeResponseSchema(progressStatsSchema);
+
+export const quizAttemptSchema = z.object({
+  id: z.string(),
+  studySessionId: z.string(),
+  passageId: z.string().nullable(),
+  correctCount: z.number(),
+  incorrectCount: z.number(),
+  totalQuestions: z.number(),
+  accuracyRate: z.number().nullable(),
+  startedAt: z.string(),
+  completedAt: nullableIsoDateSchema,
+}).strict();
+
+export const quizAttemptSuccessResponseSchema = makeSuccessEnvelopeSchema(quizAttemptSchema);
+export const quizAttemptResponseSchema = makeResponseSchema(quizAttemptSchema);
 
 export const studySessionSchema = z.object({
   id: z.string(),
@@ -88,10 +126,13 @@ export const studyChatHistoryResponseSchema = z.union([
 ]);
 
 export type StudyQuestionOptionDto = z.infer<typeof studyQuestionOptionSchema>;
+export type GeneratedStudyQuestionDto = z.infer<typeof generatedStudyQuestionSchema>;
+export type GeneratedStudyQuestionsDto = z.infer<typeof generatedStudyQuestionsSchema>;
 export type StudyCardQuestionDto = z.infer<typeof studyCardQuestionSchema>;
 export type CardReviewDto = z.infer<typeof cardReviewSchema>;
 export type ProgressStatsDto = z.infer<typeof progressStatsSchema>;
 export type StudySessionDto = z.infer<typeof studySessionSchema>;
+export type QuizAttemptDto = z.infer<typeof quizAttemptSchema>;
 export type StudyChatHistoryResponse = z.infer<typeof studyChatHistoryResponseSchema>;
 
 type RawCardReview = {
@@ -132,6 +173,18 @@ type RawStudySession = {
   correctCount: number;
   incorrectCount: number;
   accuracyRate: number | null;
+};
+
+type RawQuizAttempt = {
+  id: string;
+  studySessionId: string;
+  passageId: string | null;
+  correctCount: number;
+  incorrectCount: number;
+  totalQuestions: number;
+  accuracyRate: number | null;
+  startedAt: Date | string;
+  completedAt: Date | string | null;
 };
 
 export function toCardReviewDto(card: RawCardReview): CardReviewDto {
@@ -184,6 +237,20 @@ export function toStudySessionDto(session: RawStudySession): StudySessionDto {
     correctCount: session.correctCount,
     incorrectCount: session.incorrectCount,
     accuracyRate: session.accuracyRate,
+  };
+}
+
+export function toQuizAttemptDto(attempt: RawQuizAttempt): QuizAttemptDto {
+  return {
+    id: attempt.id,
+    studySessionId: attempt.studySessionId,
+    passageId: attempt.passageId,
+    correctCount: attempt.correctCount,
+    incorrectCount: attempt.incorrectCount,
+    totalQuestions: attempt.totalQuestions,
+    accuracyRate: attempt.accuracyRate,
+    startedAt: toIsoString(attempt.startedAt),
+    completedAt: attempt.completedAt ? toIsoString(attempt.completedAt) : null,
   };
 }
 

@@ -63,6 +63,9 @@ export function ProgressDashboard() {
     { icon: <Target className="w-5 h-5" />, label: "Due for Review", value: stats?.dueCards ?? 0, color: "bg-gold-soft text-gold", highlight: (stats?.dueCards ?? 0) > 0 },
     { icon: <TrendingUp className="w-5 h-5" />, label: "Mature Cards", value: stats?.matureCards ?? 0, color: "bg-success-soft text-success" },
     { icon: <Clock className="w-5 h-5" />, label: "Today's Reviews", value: stats?.todayReviews ?? 0, color: "bg-primary/10 text-primary" },
+    { icon: <Target className="w-5 h-5" />, label: "Quizzes Completed", value: stats?.totalQuizAttempts ?? 0, color: "bg-success-soft text-success" },
+    { icon: <TrendingUp className="w-5 h-5" />, label: "Avg. Accuracy", value: stats?.avgQuizAccuracy != null ? `${stats.avgQuizAccuracy}%` : "—", color: "bg-primary/10 text-primary" },
+    { icon: <Clock className="w-5 h-5" />, label: "Today's Quizzes", value: stats?.todayQuizAttempts ?? 0, color: "bg-gold-soft text-gold" },
   ]
 
   return (
@@ -80,7 +83,7 @@ export function ProgressDashboard() {
       </header>
 
       <main className="max-w-4xl mx-auto px-6 py-8">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
           {statCards.map((card) => (
             <Card key={card.label} className={cn(card.highlight && "border-2 border-gold/40")}>
               <CardContent className="p-5">

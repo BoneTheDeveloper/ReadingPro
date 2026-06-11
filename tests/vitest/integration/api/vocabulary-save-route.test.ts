@@ -8,8 +8,7 @@ import { passageFixture, userProfileFixture, vocabularyBody, vocabularyItemFixtu
 
 const routeMocks = vi.hoisted(() => ({
   getAuthenticatedUser: vi.fn(),
-  upsertVocabularyItem: vi.fn(),
-  getOwnedTranslationSource: vi.fn(),
+  saveVocabularyItem: vi.fn(),
 }));
 
 vi.mock("@/lib/auth/auth-utils", () => ({
@@ -19,32 +18,27 @@ vi.mock("@/lib/auth/auth-utils", () => ({
   },
 }));
 
-vi.mock("@/lib/db/vocabulary-queries", () => ({
-  upsertVocabularyItem: routeMocks.upsertVocabularyItem,
-}));
-
-vi.mock("@/lib/db/translation-queries", () => ({
-  getOwnedTranslationSource: routeMocks.getOwnedTranslationSource,
+vi.mock("@/lib/vocabulary/vocabulary.service", () => ({
+  saveVocabularyItem: routeMocks.saveVocabularyItem,
+  VocabularyServiceError: class VocabularyServiceError extends Error {
+    constructor(message: string) { super(message); this.name = "VocabularyServiceError"; }
+  },
 }));
 
 beforeEach(() => {
   vi.clearAllMocks();
   routeMocks.getAuthenticatedUser.mockResolvedValue(userProfileFixture);
-  routeMocks.upsertVocabularyItem.mockResolvedValue(vocabularyItemFixture);
-  routeMocks.getOwnedTranslationSource.mockResolvedValue({
-    id: passageFixture.id,
-    title: passageFixture.title,
-  });
+  routeMocks.saveVocabularyItem.mockResolvedValue(vocabularyItemFixture);
 });
 
 describe("POST /api/vocabulary (save from translate)", () => {
-  it("creates item via upsertVocabularyItem", async () => {
+  it("creates item via saveVocabularyItem", async () => {
     const response = await vocabularyRoute(createJsonRequest(vocabularyBody()));
     const payload = await response.json();
 
     expect(response.status).toBe(200);
     expectApiSuccessPayload(payload);
-    expect(routeMocks.upsertVocabularyItem).toHaveBeenCalledWith(
+    expect(routeMocks.saveVocabularyItem).toHaveBeenCalledWith(
       expect.objectContaining({
         userId: userProfileFixture.id,
         selectedText: "ephemeral",
@@ -69,7 +63,7 @@ describe("POST /api/vocabulary (save from translate)", () => {
   it("rejects missing fields with 400", async () => {
     const response = await vocabularyRoute(createJsonRequest({ selectedText: "", translation: "" }));
     await expectJsonError(response, 400, "Invalid vocabulary request.");
-    expect(routeMocks.upsertVocabularyItem).not.toHaveBeenCalled();
+    expect(routeMocks.saveVocabularyItem).not.toHaveBeenCalled();
   });
 
   it("rejects unauthenticated request with 401", async () => {
@@ -79,13 +73,14 @@ describe("POST /api/vocabulary (save from translate)", () => {
   });
 
   it("returns 404 when source passage not found", async () => {
-    routeMocks.getOwnedTranslationSource.mockResolvedValue(null);
+    const { VocabularyServiceError } = await import("@/lib/vocabulary/vocabulary.service");
+    routeMocks.saveVocabularyItem.mockRejectedValue(new VocabularyServiceError("Source not found."));
     const response = await vocabularyRoute(createJsonRequest(vocabularyBody()));
     await expectJsonError(response, 404, "Source not found.");
   });
 
-  it("returns 500 when upsert fails", async () => {
-    routeMocks.upsertVocabularyItem.mockRejectedValue(new Error("db down"));
+  it("returns 500 when save fails", async () => {
+    routeMocks.saveVocabularyItem.mockRejectedValue(new Error("db down"));
     const response = await vocabularyRoute(createJsonRequest(vocabularyBody()));
     await expectJsonError(response, 500, "Unable to save vocabulary.");
   });
@@ -101,12 +96,11 @@ describe("POST /api/vocabulary (save from dictionary)", () => {
     });
     const response = await vocabularyRoute(createJsonRequest(dictBody));
     expect(response.status).toBe(200);
-    expect(routeMocks.upsertVocabularyItem).toHaveBeenCalledWith(
+    expect(routeMocks.saveVocabularyItem).toHaveBeenCalledWith(
       expect.objectContaining({
         source: "DICTIONARY",
         dictionaryEntryId: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
         dictionarySenseId: "f1e2d3c4-b5a6-4978-8a9b-0c1d2e3f4a5b",
-        sourceId: undefined,
       }),
     );
   });

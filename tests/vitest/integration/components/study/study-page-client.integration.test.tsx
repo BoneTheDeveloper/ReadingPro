@@ -1,11 +1,12 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import * as Sentry from "@sentry/nextjs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { StudyPageClient } from "@/features/study/study-page-client";
-import { studyGenerateQuestionsAction } from "@/features/study/actions/study-generate-questions-action";
+import { StudyPageClient } from "@/features/study/ui/study-workspace-client";
+import { generateStudyQuestions } from "@/features/study/api/study-questions-client";
 import { studySimplifyAction } from "@/features/study/actions/study-simplify-action";
 import { studyUploadAction } from "@/features/study/actions/study-upload-action";
-import { extractSelectionInfo } from "@/features/study/study-selection-utils";
+import { extractSelectionInfo } from "@/features/study/model/selection-utils";
+
 import { createStudyPassage, createStudyQuestion } from "../../../fixtures";
 import { renderWithUser } from "../../../helpers";
 
@@ -92,8 +93,8 @@ vi.mock("react-dropzone", () => ({
   }),
 }));
 
-vi.mock("@/features/study/actions/study-generate-questions-action", () => ({
-  studyGenerateQuestionsAction: vi.fn(),
+vi.mock("@/features/study/api/study-questions-client", () => ({
+  generateStudyQuestions: vi.fn(),
 }));
 
 vi.mock("@/features/study/actions/study-simplify-action", () => ({
@@ -108,7 +109,7 @@ vi.mock("@/features/study/actions/study-delete-passage-action", () => ({
   studyDeletePassageAction: vi.fn(async () => ({ success: true })),
 }));
 
-vi.mock("@/features/study/study-selection-utils", () => ({
+vi.mock("@/features/study/model/selection-utils", () => ({
   extractSelectionInfo: vi.fn(),
 }));
 
@@ -161,6 +162,12 @@ describe("StudyPageClient", () => {
 
         if (url.startsWith("/api/study-chat")) {
           return new Response(JSON.stringify({ messages: [] }), {
+            status: 200,
+          });
+        }
+
+        if (url.startsWith("/api/study-results")) {
+          return new Response(JSON.stringify({ results: [] }), {
             status: 200,
           });
         }
@@ -303,7 +310,7 @@ describe("StudyPageClient", () => {
   it("generates quiz results and opens result detail", async () => {
     const passage = createStudyPassage();
     const question = createStudyQuestion();
-    vi.mocked(studyGenerateQuestionsAction).mockResolvedValue({
+    vi.mocked(generateStudyQuestions).mockResolvedValue({
       questions: [question],
     });
     const { user } = renderWithUser(
@@ -314,7 +321,7 @@ describe("StudyPageClient", () => {
     await user.click(screen.getByRole("button", { name: "Quiz" }));
 
     await waitFor(() =>
-      expect(studyGenerateQuestionsAction).toHaveBeenCalledWith({
+      expect(generateStudyQuestions).toHaveBeenCalledWith({
         passageId: passage.id,
       }),
     );

@@ -1,4 +1,6 @@
+import { z } from "zod";
 import { NextRequest, NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { getAuthenticatedUser } from "@/lib/auth/auth-utils";
 import {
   createRequestLogContext,
@@ -7,7 +9,12 @@ import {
 import { listVocabularyItems } from "@/lib/db/vocabulary-queries";
 import { isAuthenticationRequiredError } from "@/lib/api/route-errors";
 
-const VOCABULARY_PAGE_SIZE = 20;
+const vocabularyListQuerySchema = z.object({
+  status: z.enum(["NEW", "LEARNING", "MASTERED"]).optional(),
+  search: z.string().optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(100).default(20),
+});
 
 export async function GET(request: NextRequest) {
   const requestLog = createRequestLogger(
@@ -19,18 +26,24 @@ export async function GET(request: NextRequest) {
     const user = await getAuthenticatedUser();
 
     const { searchParams } = new URL(request.url);
-    const status = searchParams.get("status") ?? undefined;
-    const search = searchParams.get("search") ?? undefined;
-    const page = Math.max(1, Number(searchParams.get("page") ?? 1));
-    const pageSize = Math.min(100, Math.max(1, Number(searchParams.get("pageSize") ?? VOCABULARY_PAGE_SIZE)));
+    const parsed = vocabularyListQuerySchema.safeParse(
+      Object.fromEntries(searchParams.entries()),
+    );
 
-    const result = await listVocabularyItems({
-      userId: user.id,
-      status,
-      search,
-      page,
-      pageSize,
-    });
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0].message },
+        { status: 400 },
+      );
+    }
+
+    const { status, search, page, pageSize } = parsed.data;
+
+    const result = await Sentry.startSpan(
+      { name: "db:vocabulary-list", op: "db" },
+      async () =>
+        listVocabularyItems({ userId: user.id, status, search, page, pageSize }),
+    );
 
     return NextResponse.json({
       success: true,
@@ -47,6 +60,9 @@ export async function GET(request: NextRequest) {
     }
 
     requestLog.error({ err: error }, "Failed to list vocabulary items");
+    Sentry.captureException(error, {
+      tags: { route: "api:vocabulary:list", method: "GET" },
+    });
     return NextResponse.json({ error: "Failed to list vocabulary items." }, { status: 500 });
   }
 }

@@ -184,6 +184,7 @@
     "correctFeedback": "Chính xác!",
     "incorrectFeedback": "Chưa đúng lắm",
     "sourceLine": "Nguồn (Dòng {line}):",
+    "sourceTitle": "Nguồn trích dẫn",
     "viewResults": "Xem kết quả",
     "testComplete": "Hoàn thành bài kiểm tra",
     "wrong": "Sai",
@@ -200,7 +201,9 @@
     "chatError": "Đã có lỗi xảy ra. Vui lòng thử lại.",
     "chatRetry": "Thử lại",
     "chatNoMessages": "Bắt đầu trò chuyện về bài đọc này",
-    "chatStop": "Dừng"
+    "chatStop": "Dừng",
+    "previous": "Trước",
+    "next": "Sau"
   },
   "Reading": {
     "title": "Chế độ đọc",
@@ -210,25 +213,6 @@
     "cefrLevel": "CEFR {level}",
     "readingTime": "{minutes} phút đọc",
     "backToStudy": "Quay lại học"
-  },
-  "Test": {
-    "title": "Kiểm tra thẻ ghi nhớ",
-    "progress": "Tiến độ",
-    "questionOf": "{current} / {total}",
-    "showAnswer": "Xem đáp án",
-    "next": "Tiếp theo",
-    "finish": "Hoàn thành",
-    "results": "Kết quả",
-    "score": "Điểm",
-    "accuracy": "Độ chính xác",
-    "correct": "Đúng",
-    "incorrect": "Sai",
-    "reviewAnswers": "Xem lại đáp án",
-    "newTest": "Làm bài mới",
-    "yourAnswer": "Câu trả lời của bạn",
-    "correctAnswer": "Đáp án đúng",
-    "source": "Nguồn",
-    "passage": "Đoạn văn"
   },
   "Progress": {
     "title": "Tiến độ",

@@ -24,9 +24,9 @@ Learner opens /[locale]/study
 
 Client workspace state is managed by:
 
-- `src/features/study/use-study-workspace-state.ts`
-- `src/features/study/use-study-panel-layout.ts`
-- `src/features/study/use-study-actions.ts`
+- `src/features/study/model/use-study-workspace-state.ts`
+- `src/features/study/model/use-study-panel-layout.ts`
+- `src/features/study/model/use-study-actions.ts`
 
 ## Data Rules
 

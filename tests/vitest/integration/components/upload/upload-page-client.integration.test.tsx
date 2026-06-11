@@ -2,12 +2,12 @@ import { screen, waitFor } from "@testing-library/react";
 import { useRouter } from "next/navigation";
 import * as Sentry from "@sentry/nextjs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { UploadPageClient } from "@/features/upload/upload-page-client";
+import { UploadPageClient } from "@/features/upload/ui/upload-page-client";
 import { renderWithUser } from "../../../helpers";
 
 const push = vi.fn();
 
-vi.mock("@/features/upload/upload-zone", () => ({
+vi.mock("@/features/upload/ui/upload-zone", () => ({
   UploadZone: ({ onFileSelect }: { onFileSelect: (file: File) => void }) => (
     <button type="button" onClick={() => onFileSelect(new File(["content"], "story.txt", { type: "text/plain" }))}>
       Mock file upload
@@ -15,7 +15,7 @@ vi.mock("@/features/upload/upload-zone", () => ({
   ),
 }));
 
-vi.mock("@/features/upload/text-input-area", () => ({
+vi.mock("@/features/upload/ui/text-input-area", () => ({
   TextInputArea: ({ onSubmit }: { onSubmit: (text: string) => void }) => (
     <button type="button" onClick={() => onSubmit("This is a sufficiently long text passage for upload testing.")}>
       Mock text submit

@@ -4,13 +4,13 @@ import { POST as addItemsRoute } from "@/app/api/vocabulary/sets/[id]/items/rout
 import { DELETE as removeItemRoute } from "@/app/api/vocabulary/sets/[id]/items/[itemId]/route";
 import { createJsonRequest } from "../../helpers/api";
 import { expectJsonError } from "../../helpers/api-test-helpers";
-import { userProfileFixture, vocabularySetFixture, VOCAB_SET_ID, VOCAB_ITEM_FOR_SET_ID } from "../../fixtures";
-import { db } from "../../mocks/db";
+import { userProfileFixture, VOCAB_SET_ID, VOCAB_ITEM_FOR_SET_ID } from "../../fixtures";
 
 const routeMocks = vi.hoisted(() => ({
   getAuthenticatedUser: vi.fn(),
   addItemToSet: vi.fn(),
   removeItemFromSet: vi.fn(),
+  verifySetOwnership: vi.fn(),
 }));
 
 vi.mock("@/lib/auth/auth-utils", () => ({
@@ -23,6 +23,7 @@ vi.mock("@/lib/auth/auth-utils", () => ({
 vi.mock("@/lib/db/vocabulary-set-queries", () => ({
   addItemToSet: routeMocks.addItemToSet,
   removeItemFromSet: routeMocks.removeItemFromSet,
+  verifySetOwnership: routeMocks.verifySetOwnership,
 }));
 
 beforeEach(() => {
@@ -34,12 +35,11 @@ beforeEach(() => {
     vocabularyItemId: VOCAB_ITEM_FOR_SET_ID,
   });
   routeMocks.removeItemFromSet.mockResolvedValue(undefined);
+  routeMocks.verifySetOwnership.mockResolvedValue(undefined);
 });
 
 describe("POST /api/vocabulary/sets/[id]/items (add items)", () => {
   it("adds items to set", async () => {
-    db.vocabularySet.findUniqueOrThrow.mockResolvedValue(vocabularySetFixture);
-
     const response = await addItemsRoute(
       createJsonRequest({ itemIds: [VOCAB_ITEM_FOR_SET_ID] }),
       { params: Promise.resolve({ id: VOCAB_SET_ID }) },
@@ -48,6 +48,7 @@ describe("POST /api/vocabulary/sets/[id]/items (add items)", () => {
 
     expect(response.status).toBe(200);
     expect(payload).toEqual({ success: true });
+    expect(routeMocks.verifySetOwnership).toHaveBeenCalledWith(userProfileFixture.id, VOCAB_SET_ID);
     expect(routeMocks.addItemToSet).toHaveBeenCalledWith({
       setId: VOCAB_SET_ID,
       itemId: VOCAB_ITEM_FOR_SET_ID,
@@ -55,8 +56,6 @@ describe("POST /api/vocabulary/sets/[id]/items (add items)", () => {
   });
 
   it("is idempotent when adding duplicate items", async () => {
-    db.vocabularySet.findUniqueOrThrow.mockResolvedValue(vocabularySetFixture);
-
     const response = await addItemsRoute(
       createJsonRequest({ itemIds: [VOCAB_ITEM_FOR_SET_ID] }),
       { params: Promise.resolve({ id: VOCAB_SET_ID }) },
@@ -65,10 +64,7 @@ describe("POST /api/vocabulary/sets/[id]/items (add items)", () => {
   });
 
   it("returns 404 when set belongs to another user", async () => {
-    db.vocabularySet.findUniqueOrThrow.mockResolvedValue({
-      ...vocabularySetFixture,
-      userId: "other-user",
-    });
+    routeMocks.verifySetOwnership.mockRejectedValue(new Error("No vocabulary set found for user"));
 
     const response = await addItemsRoute(
       createJsonRequest({ itemIds: [VOCAB_ITEM_FOR_SET_ID] }),
@@ -96,7 +92,6 @@ describe("POST /api/vocabulary/sets/[id]/items (add items)", () => {
 
   it("rejects unauthenticated request with 401", async () => {
     routeMocks.getAuthenticatedUser.mockRejectedValue(new Error("Authentication required"));
-    db.vocabularySet.findUniqueOrThrow.mockResolvedValue(vocabularySetFixture);
 
     const response = await addItemsRoute(
       createJsonRequest({ itemIds: [VOCAB_ITEM_FOR_SET_ID] }),

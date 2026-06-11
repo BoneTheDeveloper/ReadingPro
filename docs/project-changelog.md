@@ -24,7 +24,7 @@
 - Made `historyCreate` non-blocking (fire-and-forget with Sentry error logging).
 - Moved performance benchmarks under `tests/performance` and added dictionary-flow benchmark coverage for suggest/search/lookup phases.
 - Updated `docs/API/Routes/translation-feature.md` with new flow order, non-blocking history, and performance budget table.
-- Extracted study simplification/question-generation orchestration into `features/study/services/passage-study-service.ts`.
+- Extracted study simplification/question-generation orchestration into `src/lib/study/passage/passage-study.service.ts`.
 - Split `StudyPageClient` state, async actions, and panel layout mechanics into focused hooks.
 - Moved CEFR domain helpers to `lib/domain/cefr.ts` and CEFR presentation classes to `lib/ui/cefr-style.ts`.
 - Reused the canonical `lib/algorithms/sm2.ts` implementation from card review queries.

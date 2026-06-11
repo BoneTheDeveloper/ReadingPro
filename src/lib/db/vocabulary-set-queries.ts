@@ -46,7 +46,7 @@ function formatWeeklyRange(monday: Date, sunday: Date): string {
 // --- Types ---
 
 export interface VocabularySetWithCount extends VocabularySet {
-  _count: { items: number };
+  _count: { setItems: number };
 }
 
 // --- Queries ---
@@ -116,6 +116,24 @@ export async function createManualSet(params: {
   });
 }
 
+// --- Ownership helpers ---
+
+async function requireOwnedSet(userId: string, setId: string): Promise<VocabularySet> {
+  const set = await db.vocabularySet.findUniqueOrThrow({
+    where: { id: setId },
+  });
+
+  if (set.userId !== userId) {
+    throw new Error(`No vocabulary set found for user`);
+  }
+
+  return set;
+}
+
+export async function verifySetOwnership(userId: string, setId: string): Promise<void> {
+  await requireOwnedSet(userId, setId);
+}
+
 export async function listVocabularySets(params: {
   userId: string;
   type?: VocabularySetType;
@@ -127,7 +145,7 @@ export async function listVocabularySets(params: {
 
   return db.vocabularySet.findMany({
     where,
-    include: { _count: { select: { items: true } } },
+    include: { _count: { select: { setItems: true } } },
     orderBy: { createdAt: "desc" },
   });
 }
@@ -137,13 +155,7 @@ export async function updateVocabularySet(params: {
   setId: string;
   name: string;
 }): Promise<VocabularySet> {
-  const set = await db.vocabularySet.findUniqueOrThrow({
-    where: { id: params.setId },
-  });
-
-  if (set.userId !== params.userId) {
-    throw new Error(`No vocabulary set found for user`);
-  }
+  await requireOwnedSet(params.userId, params.setId);
 
   return db.vocabularySet.update({
     where: { id: params.setId },
@@ -155,13 +167,7 @@ export async function deleteVocabularySet(params: {
   userId: string;
   setId: string;
 }): Promise<void> {
-  const set = await db.vocabularySet.findUniqueOrThrow({
-    where: { id: params.setId },
-  });
-
-  if (set.userId !== params.userId) {
-    throw new Error(`No vocabulary set found for user`);
-  }
+  await requireOwnedSet(params.userId, params.setId);
 
   await db.vocabularySet.delete({
     where: { id: params.setId },
@@ -201,13 +207,7 @@ export async function removeItemFromSet(params: {
   setId: string;
   itemId: string;
 }): Promise<void> {
-  const set = await db.vocabularySet.findUniqueOrThrow({
-    where: { id: params.setId },
-  });
-
-  if (set.userId !== params.userId) {
-    throw new Error(`No vocabulary set found for user`);
-  }
+  await requireOwnedSet(params.userId, params.setId);
 
   await db.vocabularySetItem.delete({
     where: {

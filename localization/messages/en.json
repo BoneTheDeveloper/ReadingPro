@@ -184,6 +184,7 @@
     "correctFeedback": "Correct!",
     "incorrectFeedback": "Not quite right",
     "sourceLine": "Source (Line {line}):",
+    "sourceTitle": "Source Reference",
     "viewResults": "View Results",
     "testComplete": "Test complete",
     "wrong": "Wrong",
@@ -200,7 +201,9 @@
     "chatError": "Something went wrong. Please try again.",
     "chatRetry": "Retry",
     "chatNoMessages": "Start a conversation about this passage",
-    "chatStop": "Stop"
+    "chatStop": "Stop",
+    "previous": "Previous",
+    "next": "Next"
   },
   "Reading": {
     "title": "Reading View",
@@ -210,25 +213,6 @@
     "cefrLevel": "CEFR {level}",
     "readingTime": "{minutes} min read",
     "backToStudy": "Back to study"
-  },
-  "Test": {
-    "title": "Flashcard Test",
-    "progress": "Progress",
-    "questionOf": "{current} / {total}",
-    "showAnswer": "Show answer",
-    "next": "Next",
-    "finish": "Finish",
-    "results": "Results",
-    "score": "Score",
-    "accuracy": "Accuracy",
-    "correct": "Correct",
-    "incorrect": "Incorrect",
-    "reviewAnswers": "Review answers",
-    "newTest": "New test",
-    "yourAnswer": "Your answer",
-    "correctAnswer": "Correct answer",
-    "source": "Source",
-    "passage": "Passage"
   },
   "Progress": {
     "title": "Progress",

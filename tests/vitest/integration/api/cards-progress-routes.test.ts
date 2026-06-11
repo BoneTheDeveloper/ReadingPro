@@ -9,7 +9,7 @@ import {
   progressStatsResponseSchema,
 } from "@/lib/study/shared/study-response-schema";
 import { dueCardFixture, userProfileFixture } from "../../fixtures";
-import { createJsonRequest, parseJsonResponse } from "../../helpers/api";
+import { createGetRequest, createJsonRequest, parseJsonResponse } from "../../helpers/api";
 import { expectApiErrorPayload } from "../../helpers/assertions";
 
 const routeMocks = vi.hoisted(() => {
@@ -49,7 +49,7 @@ describe("cards and progress API contracts", () => {
   it("returns 401 envelopes for unauthenticated card/progress requests", async () => {
     routeMocks.getAuthenticatedUser.mockRejectedValue(new routeMocks.AuthenticationRequiredError());
 
-    const dueCards = await getDueCardsRoute();
+    const dueCards = await getDueCardsRoute(createGetRequest());
     expect(dueCards.status).toBe(401);
     expectApiErrorPayload(
       await parseJsonResponse(dueCards, dueCardsResponseSchema),
@@ -65,7 +65,7 @@ describe("cards and progress API contracts", () => {
       "Authentication required.",
     );
 
-    const progress = await getProgressStatsRoute();
+    const progress = await getProgressStatsRoute(createGetRequest());
     expect(progress.status).toBe(401);
     expectApiErrorPayload(
       await parseJsonResponse(progress, progressStatsResponseSchema),

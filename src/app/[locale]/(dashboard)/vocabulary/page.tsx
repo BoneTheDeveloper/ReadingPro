@@ -1,5 +1,5 @@
 import { getAuthenticatedUser } from "@/lib/auth/auth-utils";
-import { VocabularyPageClient } from "@/features/vocabulary/vocabulary-page-client";
+import { VocabularyPageClient } from "@/features/vocabulary/ui/vocabulary-page-client";
 
 export const dynamic = "force-dynamic";
 

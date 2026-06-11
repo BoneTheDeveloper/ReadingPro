@@ -88,7 +88,7 @@ export async function getUserProgress(userId: string) {
   const startOfToday = new Date();
   startOfToday.setHours(0, 0, 0, 0);
 
-  const [rows, reviewDays] = await Promise.all([
+  const [rows, reviewDays, quizRows] = await Promise.all([
     db.$queryRaw<Array<{
       totalCards: bigint;
       matureCards: bigint;
@@ -110,9 +110,22 @@ export async function getUserProgress(userId: string) {
       ORDER BY day DESC
       LIMIT 30
     `,
+    db.$queryRaw<Array<{
+      totalQuizAttempts: bigint;
+      avgQuizAccuracy: number | null;
+      todayQuizAttempts: bigint;
+    }>>`
+      SELECT
+        COUNT(*) FILTER (WHERE "completedAt" IS NOT NULL)::bigint AS "totalQuizAttempts",
+        AVG("accuracyRate") FILTER (WHERE "completedAt" IS NOT NULL AND "accuracyRate" IS NOT NULL) AS "avgQuizAccuracy",
+        COUNT(*) FILTER (WHERE "completedAt" >= ${startOfToday})::bigint AS "todayQuizAttempts"
+      FROM "quiz_attempts"
+      WHERE "userId" = ${userId}
+    `,
   ]);
 
   const row = rows[0];
+  const quizRow = quizRows[0];
   const reviewDayKeys = new Set(reviewDays.map(({ day }) => toDateKey(day)));
   const streakDays = getCurrentStreakDays(reviewDayKeys);
 
@@ -122,6 +135,9 @@ export async function getUserProgress(userId: string) {
     dueCards: Number(row?.dueCards ?? 0),
     todayReviews: Number(row?.todayReviews ?? 0),
     streakDays,
+    totalQuizAttempts: Number(quizRow?.totalQuizAttempts ?? 0),
+    avgQuizAccuracy: quizRow?.avgQuizAccuracy != null ? Math.round(Number(quizRow.avgQuizAccuracy) * 100) / 100 : null,
+    todayQuizAttempts: Number(quizRow?.todayQuizAttempts ?? 0),
   };
 }
 

@@ -35,6 +35,9 @@ describe("ProgressDashboard", () => {
       dueCards: 3,
       matureCards: 5,
       todayReviews: 4,
+      totalQuizAttempts: 7,
+      avgQuizAccuracy: 85.5,
+      todayQuizAttempts: 2,
     });
 
     renderWithUser(<ProgressDashboard />);
@@ -45,6 +48,9 @@ describe("ProgressDashboard", () => {
     expect(screen.getByText("Due for Review")).toBeInTheDocument();
     expect(screen.getByText("Mature Cards")).toBeInTheDocument();
     expect(screen.getByText("Today's Reviews")).toBeInTheDocument();
+    expect(screen.getByText("Quizzes Completed")).toBeInTheDocument();
+    expect(screen.getByText("Avg. Accuracy")).toBeInTheDocument();
+    expect(screen.getByText("Today's Quizzes")).toBeInTheDocument();
     expect(screen.getByText("3 cards due for review")).toBeInTheDocument();
     expect(screen.getAllByText("12")[0]).toBeInTheDocument();
   });
@@ -55,6 +61,9 @@ describe("ProgressDashboard", () => {
       dueCards: 0,
       matureCards: 2,
       todayReviews: 1,
+      totalQuizAttempts: 3,
+      avgQuizAccuracy: null,
+      todayQuizAttempts: 0,
     });
 
     renderWithUser(<ProgressDashboard />);
@@ -72,7 +81,7 @@ describe("ProgressDashboard", () => {
     renderWithUser(<ProgressDashboard />);
 
     expect(await screen.findByText("All caught up!")).toBeInTheDocument();
-    await waitFor(() => expect(screen.getAllByText("0")).toHaveLength(4));
+    await waitFor(() => expect(screen.getAllByText("0")).toHaveLength(6));
   });
 
   it("rejects malformed progress success payloads", async () => {
@@ -95,7 +104,7 @@ describe("ProgressDashboard", () => {
         }),
       );
     });
-    expect(screen.getAllByText("0")).toHaveLength(4);
+    expect(screen.getAllByText("0")).toHaveLength(6);
   });
 
   it("navigates from header and progress actions", async () => {
@@ -104,6 +113,9 @@ describe("ProgressDashboard", () => {
       dueCards: 2,
       matureCards: 5,
       todayReviews: 4,
+      totalQuizAttempts: 7,
+      avgQuizAccuracy: 85.5,
+      todayQuizAttempts: 2,
     });
     const { user } = renderWithUser(<ProgressDashboard />);
 

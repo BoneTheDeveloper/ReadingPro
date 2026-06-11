@@ -2,10 +2,9 @@
 
 import { headers } from 'next/headers';
 import * as Sentry from '@sentry/nextjs';
-import { db } from '@/lib/db/client';
 import { createModuleLogger } from '@/lib/core/logger';
-import { getHeuristicCEFR, type CEFRLevel } from '@/lib/domain/cefr';
-import type { PassageData } from '../study-types';
+import { createPassageRecord } from '@/lib/upload/passage-create/passage-create.service';
+import type { PassageData } from '@/features/study/model/types';
 import { getAuthenticatedUser } from './study-shared';
 
 const log = createModuleLogger('actions:study-upload');
@@ -25,42 +24,17 @@ export async function studyUploadAction({ text, title, sourceType = 'TEXT' }: { 
       return { error: 'Text too short (minimum 50 characters)' };
     }
 
-    let originalLevel: CEFRLevel | null = null;
-
-    const detectStart = Date.now();
-    originalLevel = getHeuristicCEFR(text);
-    log.info({ level: originalLevel, ms: Date.now() - detectStart }, 'CEFR level computed');
-
     const user = await getAuthenticatedUser();
 
-    Sentry.addBreadcrumb({ category: 'db', message: 'Creating passage', level: 'info' });
-    const passage = await Sentry.startSpan({ name: 'db:passage-create', op: 'db' }, async () => {
-      return db.passage.create({
-        data: {
-          userId: user.id,
-          title,
-          content: text,
-          originalLevel,
-          wordCount: text.split(/\s+/).filter(w => w.length > 0).length,
-          sourceType,
-        },
-      });
+    const passage = await createPassageRecord({
+      userId: user.id,
+      text,
+      title,
+      sourceType,
     });
 
     log.info({ passageId: passage.id, totalMs: Date.now() - start }, 'Upload action complete');
 
-    return {
-      passage: {
-        id: passage.id,
-        title: passage.title,
-        content: passage.content,
-        simplifiedContent: passage.simplifiedContent,
-        originalLevel: passage.originalLevel,
-        simplifiedLevel: passage.simplifiedLevel,
-        wordCount: passage.wordCount,
-        createdAt: passage.createdAt.getTime(),
-        sourceType: passage.sourceType,
-      },
-    };
+    return { passage };
   });
 }

@@ -1,7 +1,7 @@
 import { screen, waitFor } from "@testing-library/react";
 import * as Sentry from "@sentry/nextjs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { StudyChatPanel } from "@/features/study/study-chat-panel";
+import { StudyChatPanel } from "@/features/study/ui/studio/chat/chat-panel";
 import { renderWithUser } from "../../../helpers";
 
 type ChatStatus = "ready" | "submitted" | "streaming" | "error";

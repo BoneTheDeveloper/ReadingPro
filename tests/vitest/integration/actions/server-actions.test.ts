@@ -1,6 +1,5 @@
 import * as Sentry from "@sentry/nextjs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { db } from "../../mocks/db";
 import { createModuleLogger } from "../../mocks/logger";
 
 const authUtils = vi.hoisted(() => ({
@@ -17,6 +16,10 @@ const analysisService = vi.hoisted(() => ({
 
 const passageQueries = vi.hoisted(() => ({
   deletePassage: vi.fn(),
+}));
+
+const passageCreateService = vi.hoisted(() => ({
+  createPassageRecord: vi.fn(),
 }));
 
 const studyService = vi.hoisted(() => {
@@ -36,9 +39,10 @@ const studyService = vi.hoisted(() => {
 
 vi.mock("@/lib/auth/auth-utils", () => authUtils);
 vi.mock("@/features/study/actions/study-shared", () => studyShared);
-vi.mock("@/features/upload/content-analysis-service", () => analysisService);
+vi.mock("@/lib/upload/content-analysis/content-analysis.service", () => analysisService);
 vi.mock("@/lib/db/passage-queries", () => passageQueries);
-vi.mock("@/features/study/services/passage-study-service", () => studyService);
+vi.mock("@/lib/upload/passage-create/passage-create.service", () => passageCreateService);
+vi.mock("@/lib/study/passage/passage-study.service", () => studyService);
 
 const enoughText = "This is enough text for a server action upload path because it is longer than fifty characters.";
 
@@ -46,10 +50,11 @@ describe("server actions", () => {
   beforeEach(() => {
     authUtils.getAuthenticatedUser.mockResolvedValue({ id: "user_1" });
     studyShared.getAuthenticatedUser.mockResolvedValue({ id: "user_1" });
+    passageCreateService.createPassageRecord.mockReset();
   });
 
   it("analyzeContentAction validates short text before authentication", async () => {
-    const { analyzeContentAction } = await import("@/features/upload/analyze-content-action");
+    const { analyzeContentAction } = await import("@/features/upload/actions/analyze-content-action");
     const formData = new FormData();
     formData.set("text", "too short");
 
@@ -70,7 +75,7 @@ describe("server actions", () => {
       simplifiedLevel: null,
       questionCount: 0,
     });
-    const { analyzeContentAction } = await import("@/features/upload/analyze-content-action");
+    const { analyzeContentAction } = await import("@/features/upload/actions/analyze-content-action");
     const formData = new FormData();
     formData.set("text", enoughText);
     formData.set("title", "Action title");
@@ -90,7 +95,7 @@ describe("server actions", () => {
   });
 
   it("studyUploadAction stores a passage and returns a stable action shape", async () => {
-    db.passage.create.mockResolvedValueOnce({
+    passageCreateService.createPassageRecord.mockResolvedValueOnce({
       id: "passage_1",
       title: "Study",
       content: enoughText,
@@ -98,7 +103,7 @@ describe("server actions", () => {
       originalLevel: "A2",
       simplifiedLevel: null,
       wordCount: 17,
-      createdAt: new Date("2026-05-21T00:00:00.000Z"),
+      createdAt: new Date("2026-05-21T00:00:00.000Z").getTime(),
       sourceType: "TEXT",
     });
     const { studyUploadAction } = await import("@/features/study/actions/study-upload-action");
@@ -116,12 +121,11 @@ describe("server actions", () => {
         sourceType: "TEXT",
       },
     });
-    expect(db.passage.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({
-        userId: "user_1",
-        title: "Study",
-        sourceType: "TEXT",
-      }),
+    expect(passageCreateService.createPassageRecord).toHaveBeenCalledWith({
+      userId: "user_1",
+      text: enoughText,
+      title: "Study",
+      sourceType: "TEXT",
     });
     expect(createModuleLogger).toHaveBeenCalledWith("actions:study-upload");
   });
@@ -132,7 +136,7 @@ describe("server actions", () => {
     await expect(studyUploadAction({ text: "short", title: "Study" })).resolves.toEqual({
       error: "Text too short (minimum 50 characters)",
     });
-    expect(db.passage.create).not.toHaveBeenCalled();
+    expect(passageCreateService.createPassageRecord).not.toHaveBeenCalled();
   });
 
   it("studyDeletePassageAction deletes only for the authenticated user", async () => {

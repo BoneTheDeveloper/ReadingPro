@@ -29,7 +29,9 @@ model UserProfile {
   translationCaches    TranslationCache[]
   translationHistories TranslationHistory[]
   vocabularyItems      VocabularyItem[]
+  vocabularySets       VocabularySet[]
   fileUploadIntents    FileUploadIntent[]
+  quizAttempts         QuizAttempt[]
 
   @@map("profiles")
 }
@@ -58,6 +60,7 @@ model Passage {
   translationCaches    TranslationCache[]
   translationHistories TranslationHistory[]
   studySessions        StudySession[]
+  quizAttempts         QuizAttempt[]
 
   @@index([userId])
   @@index([createdAt])
@@ -207,45 +210,45 @@ model TranslationHistory {
   @@map("translation_histories")
 }
 
+// ============================================
+// VOCABULARY MODELS
+// ============================================
 model VocabularyItem {
-  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                 String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId             String
-  normalizedText     String
-  displayText        String
-  type               String
   translation        String
   sourceLanguage     String
   targetLanguage     String
+  type               String              @default("WORD")
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  normalizedText     String              @default("")
+  displayText        String              @default("")
+  status             String              @default("NEW")
+  source             String              @default("TRANSLATE")
+  savedCount         Int                 @default(1)
+  nextReviewAt       DateTime?
+  lastReviewedAt     DateTime?
+  dictionaryEntryId  String?             @db.Uuid
+  dictionarySenseId  String?             @db.Uuid
 
-  dictionaryEntryId  String?   @db.Uuid
-  dictionarySenseId  String?   @db.Uuid
-
-  status        String    @default("NEW")
-  source        String    @default("TRANSLATE")
-  savedCount    Int       @default(1)
-  nextReviewAt  DateTime?
-  lastReviewedAt DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user        UserProfile           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  occurrences VocabularyOccurrence[]
-  setItems    VocabularySetItem[]
+  user            UserProfile           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  occurrences     VocabularyOccurrence[]
+  setItems        VocabularySetItem[]
 
   @@unique([userId, normalizedText, targetLanguage, translation])
-  @@index([userId, status])
   @@index([userId, nextReviewAt])
+  @@index([userId, status])
   @@map("vocabulary_items")
 }
 
 model VocabularyOccurrence {
-  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  vocabularyItemId String    @db.Uuid
-  sourceId         String?   @db.Uuid
+  id               String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  vocabularyItemId String         @db.Uuid
+  sourceId         String?        @db.Uuid
   selectedText     String
   contextSentence  String?
-  createdAt        DateTime  @default(now())
+  createdAt        DateTime       @default(now())
 
   vocabularyItem VocabularyItem @relation(fields: [vocabularyItemId], references: [id], onDelete: Cascade)
 
@@ -255,16 +258,17 @@ model VocabularyOccurrence {
 }
 
 model VocabularySet {
-  id          String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id          String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId      String
   name        String
   type        VocabularySetType
   periodStart DateTime?
   periodEnd   DateTime?
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
 
-  items VocabularySetItem[]
+  user      UserProfile         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  setItems  VocabularySetItem[]
 
   @@unique([userId, type, periodStart, periodEnd])
   @@index([userId, type])
@@ -272,13 +276,13 @@ model VocabularySet {
 }
 
 model VocabularySetItem {
-  id                String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  vocabularySetId   String @db.Uuid
-  vocabularyItemId  String @db.Uuid
-  addedAt           DateTime @default(now())
+  id               String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  vocabularySetId  String        @db.Uuid
+  vocabularyItemId String        @db.Uuid
+  addedAt          DateTime      @default(now())
 
-  set  VocabularySet  @relation(fields: [vocabularySetId], references: [id], onDelete: Cascade)
-  item VocabularyItem @relation(fields: [vocabularyItemId], references: [id], onDelete: Cascade)
+  vocabularySet  VocabularySet  @relation(fields: [vocabularySetId], references: [id], onDelete: Cascade)
+  vocabularyItem VocabularyItem @relation(fields: [vocabularyItemId], references: [id], onDelete: Cascade)
 
   @@unique([vocabularySetId, vocabularyItemId])
   @@map("vocabulary_set_items")
@@ -348,11 +352,37 @@ model StudySession {
   incorrectCount Int    @default(0)
   accuracyRate   Float?
 
-  user    UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
-  passage Passage?    @relation(fields: [passageId], references: [id], onDelete: SetNull)
+  user         UserProfile   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  passage      Passage?      @relation(fields: [passageId], references: [id], onDelete: SetNull)
+  quizAttempts QuizAttempt[]
 
   @@index([userId, startedAt])
   @@map("study_sessions")
+}
+
+// ============================================
+// QUIZ ATTEMPT MODEL
+// ============================================
+model QuizAttempt {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  studySessionId  String    @db.Uuid
+  userId          String
+  passageId       String?   @db.Uuid
+
+  correctCount    Int       @default(0)
+  incorrectCount  Int       @default(0)
+  totalQuestions  Int       @default(0)
+  accuracyRate    Float?
+
+  startedAt       DateTime  @default(now())
+  completedAt     DateTime?
+
+  studySession StudySession @relation(fields: [studySessionId], references: [id], onDelete: Cascade)
+  user         UserProfile  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  passage      Passage?     @relation(fields: [passageId], references: [id], onDelete: SetNull)
+
+  @@index([userId, startedAt])
+  @@map("quiz_attempts")
 }
 
 // ============================================
