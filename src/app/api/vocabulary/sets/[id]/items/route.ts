@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
-import { addItemToSet } from "@/lib/db/vocabulary-set-queries";
+import { addItemToSet, verifySetOwnership } from "@/lib/db/vocabulary-set-queries";
 import { getAuthenticatedUser } from "@/lib/auth/auth-utils";
 import { isAuthenticationRequiredError } from "@/lib/api/route-errors";
 import { createRequestLogContext, createRequestLogger } from "@/lib/core/logger";
-import { db } from "@/lib/db/client";
 
 const addItemsSchema = z.object({
   itemIds: z.array(z.string().uuid()).min(1).max(50),
@@ -36,13 +35,7 @@ export async function POST(
     const user = await getAuthenticatedUser();
     const { id } = await params;
 
-    // Verify set ownership
-    const set = await db.vocabularySet.findUniqueOrThrow({
-      where: { id },
-    });
-    if (set.userId !== user.id) {
-      return NextResponse.json({ error: "Vocabulary set not found." }, { status: 404 });
-    }
+    await verifySetOwnership(user.id, id);
 
     await Sentry.startSpan(
       { name: "db:vocabulary-set-add-items", op: "db" },
