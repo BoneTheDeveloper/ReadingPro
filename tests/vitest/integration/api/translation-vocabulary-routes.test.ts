@@ -20,7 +20,7 @@ import { createRequestLogger } from "../../mocks/logger";
 const routeMocks = vi.hoisted(() => ({
   getAuthenticatedUser: vi.fn(),
   translateWithProvider: vi.fn(),
-  upsertVocabularyItem: vi.fn(),
+  saveVocabularyItem: vi.fn(),
   getOwnedTranslationSource: vi.fn(),
 }));
 
@@ -36,7 +36,14 @@ vi.mock("@/lib/translation/translation-provider", () => ({
 }));
 
 vi.mock("@/lib/db/vocabulary-queries", () => ({
-  upsertVocabularyItem: routeMocks.upsertVocabularyItem,
+  upsertVocabularyItem: vi.fn(),
+}));
+
+vi.mock("@/lib/vocabulary/vocabulary.service", () => ({
+  saveVocabularyItem: routeMocks.saveVocabularyItem,
+  VocabularyServiceError: class VocabularyServiceError extends Error {
+    constructor(message: string) { super(message); this.name = "VocabularyServiceError"; }
+  },
 }));
 
 vi.mock("@/lib/db/translation-queries", async (importOriginal) => {
@@ -157,7 +164,7 @@ beforeEach(() => {
     createdAt: new Date("2026-05-29T00:00:00.000Z"),
     updatedAt: new Date("2026-05-29T00:00:00.000Z"),
   });
-  routeMocks.upsertVocabularyItem.mockResolvedValue({
+  routeMocks.saveVocabularyItem.mockResolvedValue({
     id: "vocabulary-item-1",
     normalizedText: "algorithmic bias",
     displayText: "algorithmic bias",
@@ -511,7 +518,8 @@ describe("POST /api/vocabulary", () => {
       "Authentication required.",
     );
 
-    routeMocks.getOwnedTranslationSource.mockResolvedValueOnce(null);
+    const { VocabularyServiceError } = await import("@/lib/vocabulary/vocabulary.service");
+    routeMocks.saveVocabularyItem.mockRejectedValueOnce(new VocabularyServiceError("Source not found."));
     await expectVocabularyJsonError(
       await vocabularyRoute(createJsonRequest(vocabularyBody())),
       404,
@@ -541,18 +549,14 @@ describe("POST /api/vocabulary", () => {
         translation: "thiên lệch thuật toán",
       },
     });
-    expect(routeMocks.upsertVocabularyItem).toHaveBeenCalledTimes(2);
-    expect(routeMocks.upsertVocabularyItem).toHaveBeenCalledWith(
+    expect(routeMocks.saveVocabularyItem).toHaveBeenCalledTimes(2);
+    expect(routeMocks.saveVocabularyItem).toHaveBeenCalledWith(
       expect.objectContaining({
         userId: userProfileFixture.id,
         selectedText: "algorithmic bias",
         translation: "thiên lệch thuật toán",
         targetLanguage: "vi",
       }),
-    );
-    expect(Sentry.startSpan).toHaveBeenCalledWith(
-      expect.objectContaining({ name: "db:vocabulary-upsert", op: "db" }),
-      expect.any(Function),
     );
     expect(createRequestLogger).toHaveBeenCalledWith(
       "api:vocabulary",
@@ -562,7 +566,7 @@ describe("POST /api/vocabulary", () => {
 
   it("captures unexpected vocabulary failures with route tags", async () => {
     const error = new Error("vocabulary write failed");
-    routeMocks.upsertVocabularyItem.mockRejectedValueOnce(error);
+    routeMocks.saveVocabularyItem.mockRejectedValueOnce(error);
 
     await expectApiJsonError(
       await vocabularyRoute(createJsonRequest(vocabularyBody())),

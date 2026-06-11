@@ -1,6 +1,5 @@
 import * as Sentry from "@sentry/nextjs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { db } from "../../mocks/db";
 import { createModuleLogger } from "../../mocks/logger";
 
 const authUtils = vi.hoisted(() => ({

@@ -3,7 +3,7 @@ import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 import { addItemToSet, verifySetOwnership } from "@/lib/db/vocabulary-set-queries";
 import { getAuthenticatedUser } from "@/lib/auth/auth-utils";
-import { isAuthenticationRequiredError } from "@/lib/api/route-errors";
+import { isAuthenticationRequiredError, isOwnershipMissError } from "@/lib/api/route-errors";
 import { createRequestLogContext, createRequestLogger } from "@/lib/core/logger";
 
 const addItemsSchema = z.object({
@@ -51,6 +51,10 @@ export async function POST(
   } catch (error) {
     if (isAuthenticationRequiredError(error)) {
       return NextResponse.json({ error: "Authentication required." }, { status: 401 });
+    }
+
+    if (isOwnershipMissError(error, ["vocabulary set"])) {
+      return NextResponse.json({ error: "Vocabulary set not found." }, { status: 404 });
     }
 
     requestLog.error({ err: error }, "Failed to add items to vocabulary set");

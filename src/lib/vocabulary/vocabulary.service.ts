@@ -42,7 +42,7 @@ export async function saveVocabularyItem(input: SaveVocabularyItemInput) {
     );
 
     if (!passage) {
-      throw new VocabularyServiceError("Source not found");
+      throw new VocabularyServiceError("Source not found.");
     }
   }
 

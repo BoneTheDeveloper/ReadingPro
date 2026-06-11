@@ -37,7 +37,7 @@ export async function getOwnedPassageForChat(userId: string, passageId: string) 
   );
 
   if (!passage) {
-    throw new StudyChatServiceError("Passage not found");
+    throw new StudyChatServiceError("Passage not found.");
   }
 
   return passage;

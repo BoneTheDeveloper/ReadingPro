@@ -116,6 +116,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Authentication required." }, { status: 401 });
     }
 
+    if (error instanceof StudyChatServiceError) {
+      return NextResponse.json({ error: error.message }, { status: 404 });
+    }
+
     requestLog.error({ err: error }, "Study chat streaming failed");
     Sentry.captureException(error, {
       tags: { route: "api:study-chat", method: "POST" },
@@ -172,6 +176,10 @@ export async function GET(request: NextRequest) {
     if (isUnauthenticatedError(error)) {
       requestLog.warn("Unauthenticated study chat history request rejected");
       return NextResponse.json({ error: "Authentication required." }, { status: 401 });
+    }
+
+    if (error instanceof StudyChatServiceError) {
+      return NextResponse.json({ error: error.message }, { status: 404 });
     }
 
     requestLog.error({ err: error }, "Study chat history fetch failed");
