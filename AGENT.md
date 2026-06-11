@@ -7,18 +7,21 @@ the detailed docs.
 ## Start Here
 
 1. Read `docs/README.md` for the current documentation map.
-2. Read `docs/codebase-summary.md` when you need a source layout overview.
-3. Read the most relevant domain doc before editing code.
+2. Read `docs/codebase-summary.md` when you need the source layout or feature map.
+3. Read `docs/code-standards.md` for broad code and file placement conventions.
+4. Read the most relevant detailed domain doc before editing code.
 
 ## Documentation Map
 
 Use the docs structure instead of adding long path lists here:
 
 - `docs/Product/` - scope, user flows, use cases, and product assumptions.
+- `docs/code-standards.md` - thin top-level convention for writing code and placing files.
+- `docs/codebase-summary.md` - stack, source layout, runtime surfaces, and feature cross-reference.
 - `docs/Architecture/` - runtime, auth, database, storage, API, deployment, and system design.
 - `docs/Flows/` - end-to-end feature behavior.
 - `docs/API/` - API conventions, route inventory, and route-specific notes.
-- `docs/database/` - schema shape, ERD, migration notes, and data contracts.
+- `docs/Database/` - schema shape, ERD, migration notes, and data contracts.
 - `docs/Testing/` - unit, integration, e2e, performance, and contract test expectations.
 - `docs/Operations/` - local setup, environment, deployment, debugging, migrations, and security.
 - `docs/ADR/` - architecture decision records.
@@ -31,7 +34,7 @@ search source with `rg`.
 
 - Do not turn `AGENT.md` into a source path index.
 - Prefer canonical docs over stale memory or inferred behavior.
-- Keep detailed rules beside the files or folders they govern.
+- Keep `docs/code-standards.md` broad; put detailed rules beside the files or folders they govern.
 - Update docs when a code change alters product behavior, architecture,
   operations, API contracts, database shape, or test expectations.
 - Preserve existing user changes in the worktree unless the user explicitly asks

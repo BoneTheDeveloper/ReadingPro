@@ -53,5 +53,5 @@ Docs must state whether the route is:
 
 ## Related Docs
 
-- [API Implementation Conventions](Api-impliment-conventions.md)
+- [API Implementation Conventions](api-implementation-conventions.md)
 - [API Index](api-index.md)

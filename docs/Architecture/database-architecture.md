@@ -37,4 +37,4 @@ Migration SQL is stored under `prisma/migrations/`. Production migrations should
 
 ## Branch Contract
 
-See [../database/neon-environment-contract.md](../database/neon-environment-contract.md). Development, preview, and production must use separate Neon contexts/branches.
+See [../Database/neon-environment-contract.md](../Database/neon-environment-contract.md). Development, preview, and production must use separate Neon contexts/branches.

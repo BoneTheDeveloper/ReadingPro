@@ -66,18 +66,22 @@ src/features/<feature>
 +-- services  single-feature use-case services
 ```
 
-## Key Feature Modules
+## Feature Cross-reference
 
-| Feature | Primary files |
-|---------|---------------|
-| Upload | `src/features/upload/*`, `src/app/api/upload/*` |
-| Study workspace | `src/features/study/ui/*`, `src/features/study/model/*`, `src/features/study/api/*`, `src/lib/study/*`, `src/app/[locale]/(dashboard)/study/page.tsx` |
-| Quiz attempts | `src/lib/db/quiz-attempt-queries.ts`, `src/app/api/quiz-attempt/route.ts` |
-| Translation | `src/lib/translation/*`, `src/app/api/translate/route.ts` |
-| Dictionary | `src/lib/dictionary/*`, `src/app/api/dictionary/*` |
-| Study chat | `src/app/api/study-chat/route.ts`, `src/features/study/ui/studio/chat/chat-panel.tsx` |
-| Cards/progress | `src/lib/db/card-review-queries.ts`, `src/app/api/cards/*`, `src/app/api/progress/stats/route.ts` |
-| Auth | `src/proxy.ts`, `src/lib/auth/*`, Clerk pages under `(auth)` |
+| Feature | UI | Client API / hooks | Routes | Domain / service | DB tables | Tests | Detail docs |
+|---|---|---|---|---|---|---|---|
+| Upload | Upload and processing pages; `src/features/upload/ui` | `src/features/upload/hooks` | `src/app/api/upload` | Upload workflow; content analysis; validation; storage | `passages`, `file_upload_intents` | API, component, service, validation | [Upload API](API/Routes/upload-feature.md), [Upload flow](Flows/upload-flow.md), [Upload UI](Architecture/frontend-ui-architecture/upload-page.md), [Processing UI](Architecture/frontend-ui-architecture/processing-page.md) |
+| Study workspace | Study page; `src/features/study/ui` | Study hooks and model | `src/app/api/study-session` | Study actions; passage study service; passage queries | `passages`, `study_sessions` | Component, service, hook/model | [Study API](API/Routes/study-session-feature.md), [Study flow](Flows/study-flow.md), [Study UI](Architecture/frontend-ui-architecture/study-page.md) |
+| Study chat | Study chat panel | Chat panel client state; study response schemas | `src/app/api/study-chat` | Chat service; AI model config | `study_chat_messages`, `passages`, `profiles` | API, component | [Study chat API](API/Routes/study-chat-feature.md), [Study chat flow](Flows/study-chat-flow.md) |
+| Study questions | Study quiz UI | Study API client; question generation action | `src/app/api/study-questions` | Question generator; study response schemas | `questions`, `passages` | API, action | [Study questions API](API/Routes/study-questions-feature.md), [Study flow](Flows/study-flow.md) |
+| Quiz attempt | Study quiz UI | Quiz attempt client | `src/app/api/quiz-attempt` | Quiz attempt and session queries | `quiz_attempts`, `study_sessions` | API | [Quiz attempt API](API/Routes/quiz-attempt-feature.md), [Study flow](Flows/study-flow.md) |
+| Study results | Study studio and content panels | Study hooks and result model | `src/app/api/study-results` | Study results service; passage queries | `passages`, `questions` | Component, service | [Study results API](API/Routes/study-results-feature.md), [Study flow](Flows/study-flow.md), [Study UI](Architecture/frontend-ui-architecture/study-page.md) |
+| Translation | Study translate popup and content panel | Selection model; translation schemas | `src/app/api/translate` | Translation service; AI translator; translation queries | `translation_caches`, `translation_histories`, `passages` | API, component, performance | [Translation API](API/Routes/translation-feature.md), [Translation flow](Flows/translation-flow.md), [Study UI](Architecture/frontend-ui-architecture/study-page.md) |
+| Dictionary | Dictionary page; `src/features/dictionary/ui` | `src/features/dictionary/hooks` | `src/app/api/dictionary` | Dictionary lookup, search, suggest, and entry services | `dictionary_entries`, `dictionary_senses`, `dictionary_translations`, `dictionary_aliases`, `dictionary_source_audits` | API, component, service | [Dictionary API](API/Routes/dictionary-feature.md), [Dictionary flow](Flows/dictionary-flow.md), [Dictionary UI](Architecture/frontend-ui-architecture/dictionary-page.md) |
+| Vocabulary | Vocabulary page; dictionary save UI | Vocabulary hooks/model; dictionary save hook | `src/app/api/vocabulary` | Vocabulary service; vocabulary and set queries | `vocabulary_items`, `vocabulary_occurrences`, `vocabulary_sets`, `vocabulary_set_items` | API | [Vocabulary API](API/Routes/vocabulary-feature.md), [Vocabulary flow](Flows/vocabulary-flow.md), [Vocabulary UI](Architecture/frontend-ui-architecture/vocabulary-page.md) |
+| Cards / review | Study quiz UI; progress dashboard | Study API client | `src/app/api/cards` | Card review queries; SM-2 algorithm | `questions`, `card_reviews` | API, query, algorithm | [Cards API](API/Routes/cards-feature.md), [Spaced repetition flow](Flows/spaced-repetition-flow.md) |
+| Progress / session | Progress page and dashboard | Progress dashboard client | `src/app/api/progress`, `src/app/api/study-session` | Progress/session queries | `study_sessions`, `quiz_attempts`, `card_reviews` | API, component, query | [Progress API](API/Routes/progress-feature.md), [Study session API](API/Routes/study-session-feature.md), [Progress UI](Architecture/frontend-ui-architecture/progress-page.md) |
+| Auth | Clerk auth pages; layout auth controls | Auth helpers; `src/proxy.ts` | Clerk auth pages | Auth sync and ownership helpers | `profiles` | Auth helper, smoke | [Auth architecture](Architecture/auth-architecture.md), [Auth flow](Flows/auth-flow.md), [Auth UI](Architecture/frontend-ui-architecture/auth-pages.md) |
 
 ## API Inventory
 
@@ -88,7 +92,7 @@ See [API/api-index.md](API/api-index.md). Implemented production feature routes 
 - Processing is still a transition UI, not a durable background-job status system.
 - Production readiness depends on environment separation for Clerk, Neon, Blob, Sentry, and Vercel.
 - OCR, YouTube transcription, billing, and native mobile are not in the current product scope.
-- Some docs in `docs/Design/` and `docs/sentry/` are supplemental and not part of the primary docs tree.
+- Some docs in `docs/Design/` and `docs/Sentry/` are supplemental and not part of the primary docs tree.
 
 **Status:** Active
 **Last Updated:** 2026-06-11

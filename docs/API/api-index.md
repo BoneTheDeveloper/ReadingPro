@@ -2,7 +2,7 @@
 
 ## Conventions
 
-- Implementation convention: [Api-impliment-conventions.md](Api-impliment-conventions.md)
+- Implementation convention: [api-implementation-conventions.md](api-implementation-conventions.md)
 - Documentation convention: [Api-doc-convention.md](Api-doc-convention.md)
 - Architecture: [../Architecture/api-architecture.md](../Architecture/api-architecture.md)
 
