@@ -1,13 +1,13 @@
 import { act, renderHook } from "@testing-library/react";
 import { useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { studyGenerateQuestionsAction } from "@/features/study/actions/study-generate-questions-action";
 import { studySimplifyAction } from "@/features/study/actions/study-simplify-action";
+import { generateStudyQuestions } from "@/features/study/study-api";
 import type { PassageData, QuestionData, StudyState } from "./study-types";
 import { useStudyActions } from "./use-study-actions";
 
-vi.mock("@/features/study/actions/study-generate-questions-action", () => ({
-  studyGenerateQuestionsAction: vi.fn(),
+vi.mock("@/features/study/study-api", () => ({
+  generateStudyQuestions: vi.fn(),
 }));
 
 vi.mock("@/features/study/actions/study-simplify-action", () => ({
@@ -137,14 +137,14 @@ describe("useStudyActions", () => {
   });
 
   it("inserts a completed quiz result and writes generated questions", async () => {
-    vi.mocked(studyGenerateQuestionsAction).mockResolvedValue({ questions: [question] });
+    vi.mocked(generateStudyQuestions).mockResolvedValue({ questions: [question] });
     const { result } = renderStudyActions();
 
     await act(async () => {
       await result.current.actions.handleActionClick("quiz");
     });
 
-    expect(studyGenerateQuestionsAction).toHaveBeenCalledWith({ passageId: "passage-1" });
+    expect(generateStudyQuestions).toHaveBeenCalledWith({ passageId: "passage-1" });
     const quizResults = result.current.state.resultsByPassageId["passage-1"].data;
     expect(quizResults).toHaveLength(1);
     expect(quizResults[0]).toMatchObject({
@@ -210,7 +210,7 @@ describe("useStudyActions", () => {
   });
 
   it("marks quiz artifacts as errors for server failures and stale active passage refs", async () => {
-    vi.mocked(studyGenerateQuestionsAction).mockResolvedValueOnce({ error: "Generation failed" });
+    vi.mocked(generateStudyQuestions).mockResolvedValueOnce({ error: "Generation failed" });
     const { result, rerender } = renderStudyActions();
 
     await act(async () => {
@@ -222,7 +222,7 @@ describe("useStudyActions", () => {
     expect(firstResults[0]).toMatchObject({ status: "error" });
 
     let resolveQuestions: (value: { questions: QuestionData[] }) => void = () => {};
-    vi.mocked(studyGenerateQuestionsAction).mockImplementationOnce(
+    vi.mocked(generateStudyQuestions).mockImplementationOnce(
       () =>
         new Promise((resolve) => {
           resolveQuestions = resolve;
@@ -259,7 +259,7 @@ describe("useStudyActions", () => {
       await result.current.actions.handleActionClick("quiz");
     });
 
-    expect(studyGenerateQuestionsAction).not.toHaveBeenCalled();
+    expect(generateStudyQuestions).not.toHaveBeenCalled();
     expect(result.current.state.resultsByPassageId).toEqual({});
   });
 });

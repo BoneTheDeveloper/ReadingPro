@@ -17,8 +17,12 @@ API DTOs unless they are mapped into the documented response schema first.
 | `GET /api/cards/due` | JSON contracted | `dueCardsResponseSchema` |
 | `POST /api/cards/review` | JSON contracted | `cardReviewResponseSchema` |
 | `GET /api/progress/stats` | JSON contracted | `progressStatsResponseSchema` |
+| `POST /api/study-questions` | JSON contracted | `generatedStudyQuestionsResponseSchema` |
 | `POST /api/study-session` | JSON contracted | `studySessionResponseSchema` |
 | `PATCH /api/study-session` | JSON contracted | `studySessionResponseSchema` |
+| `POST /api/quiz-attempt` | JSON contracted | `quizAttemptResponseSchema` |
+| `PATCH /api/quiz-attempt` | JSON contracted | `quizAttemptResponseSchema` |
+| `GET /api/study-results` | JSON contracted | (inline Zod query schema, StudioResult type) |
 | `POST /api/upload` | JSON contracted | `uploadResponseSchema` |
 | `POST /api/upload/text` | JSON contracted | `uploadResponseSchema` |
 | `GET /api/study-chat` | JSON contracted history payload | `studyChatHistoryResponseSchema` |
@@ -40,6 +44,9 @@ payloads.
 | Upload | `tests/vitest/integration/api/upload-routes.test.ts`, `tests/vitest/integration/api/routes.test.ts` |
 | Translation and vocabulary | `tests/vitest/integration/api/translation-vocabulary-routes.test.ts` |
 | Dictionary | `tests/vitest/integration/api/dictionary-lookup-route.test.ts`, `tests/vitest/integration/api/dictionary-search-route.test.ts`, `tests/vitest/integration/api/dictionary-suggest-route.test.ts`, `tests/vitest/integration/api/dictionary-entry-detail-route.test.ts` |
+| Study questions | `tests/vitest/integration/api/study-questions-route.test.ts` |
+| Quiz attempt | `tests/vitest/integration/api/routes.test.ts` |
+| Study results | no dedicated test file yet |
 | Study chat | `tests/vitest/integration/api/study-chat-route.test.ts`, `tests/vitest/integration/api/routes.test.ts` |
 | Cards and progress | `tests/vitest/integration/api/cards-progress-routes.test.ts`, `tests/vitest/integration/api/routes.test.ts` |
 | Study session | `tests/vitest/integration/api/study-session-route.test.ts`, `tests/vitest/integration/api/routes.test.ts` |

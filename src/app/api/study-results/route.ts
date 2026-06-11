@@ -10,8 +10,7 @@ import {
   createRequestLogContext,
   createRequestLogger,
 } from "@/lib/core/logger";
-import { db } from "@/lib/db/client";
-import type { StudioResult } from "@/features/study/study-types";
+import { fetchStudyResults } from "@/lib/study/passage/study-results-service";
 
 const studyResultsQuerySchema = z.object({
   passageId: z.string().uuid(),
@@ -39,71 +38,20 @@ export async function GET(request: NextRequest) {
     const { passageId } = parsed.data;
     const user = await getAuthenticatedUser();
 
-    const passage = await Sentry.startSpan(
-      { name: "db:passage-fetch", op: "db" },
-      async () =>
-        db.passage.findFirst({
-          where: {
-            id: passageId,
-            userId: user.id,
-            deletedAt: null,
-          },
-          select: {
-            id: true,
-            simplifiedContent: true,
-            updatedAt: true,
-          },
-        }),
+    const { results } = await Sentry.startSpan(
+      { name: "study:fetch-results", op: "db" },
+      async () => fetchStudyResults(user.id, passageId),
     );
-
-    if (!passage) {
-      return NextResponse.json(
-        { error: "Passage not found." },
-        { status: 404 },
-      );
-    }
-
-    const results: StudioResult[] = [];
-
-    // Check quiz existence via Question table
-    const question = await Sentry.startSpan(
-      { name: "db:question-exists-check", op: "db" },
-      async () =>
-        db.question.findFirst({
-          where: { passageId },
-          select: { createdAt: true },
-        }),
-    );
-
-    if (question) {
-      results.push({
-        id: `quiz:${passageId}`,
-        type: "quiz",
-        passageId,
-        title: "Quiz",
-        status: "completed",
-        createdAt: question.createdAt.toISOString(),
-      });
-    }
-
-    // Check summary existence via simplifiedContent
-    if (passage.simplifiedContent != null) {
-      results.push({
-        id: `summary:${passageId}`,
-        type: "summary",
-        passageId,
-        title: "Summary",
-        status: "completed",
-        createdAt: passage.updatedAt.toISOString(),
-      });
-    }
 
     requestLog.info(
       { passageId, resultCount: results.length },
       "Study results fetched",
     );
 
-    return NextResponse.json({ results });
+    return NextResponse.json({
+      success: true,
+      data: { results },
+    });
   } catch (error) {
     if (isAuthenticationRequiredError(error)) {
       requestLog.warn("Unauthenticated study-results request rejected");

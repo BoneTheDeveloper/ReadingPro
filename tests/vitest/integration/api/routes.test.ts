@@ -29,7 +29,7 @@ import {
 import { uploadSuccessResponseSchema } from "@/lib/upload/shared/upload-response-schema";
 import { apiErrorResponseSchema } from "@/lib/api/shared/api-response-schema";
 import { dueCardFixture, passageFixture, studySessionFixture, userProfileFixture } from "../../fixtures";
-import { createFile, createJsonRequest, parseJsonResponse, readJsonResponse } from "../../helpers/api";
+import { createFile, createGetRequest, createJsonRequest, parseJsonResponse, readJsonResponse } from "../../helpers/api";
 import { expectApiErrorPayload, expectApiSuccessPayload } from "../../helpers/assertions";
 import { db } from "../../mocks/db";
 import { convertToModelMessages, streamText } from "../../mocks/ai";
@@ -129,7 +129,7 @@ describe("GET /api/cards/due", () => {
     };
     routeMocks.getDueCards.mockResolvedValue([dueCardWithPersistedOptions]);
 
-    const response = await getDueCardsRoute();
+    const response = await getDueCardsRoute(createGetRequest());
     const payload = await parseJsonResponse(response, dueCardsSuccessResponseSchema);
 
     expect(response.status).toBe(200);
@@ -142,7 +142,7 @@ describe("GET /api/cards/due", () => {
   it("returns a stable error payload when auth fails", async () => {
     routeMocks.getAuthenticatedUser.mockRejectedValue(apiError("Authentication required"));
 
-    const response = await getDueCardsRoute();
+    const response = await getDueCardsRoute(createGetRequest());
     expect(response.status).toBe(401);
     expectApiErrorPayload(await parseJsonResponse(response, dueCardsResponseSchema), "Authentication required.");
   });
@@ -150,7 +150,7 @@ describe("GET /api/cards/due", () => {
   it("returns a stable error payload when the card query fails", async () => {
     routeMocks.getDueCards.mockRejectedValue(apiError("db down"));
 
-    const response = await getDueCardsRoute();
+    const response = await getDueCardsRoute(createGetRequest());
     expect(response.status).toBe(500);
     expectApiErrorPayload(await parseJsonResponse(response, dueCardsResponseSchema), "Failed to fetch due cards");
   });
@@ -240,7 +240,7 @@ describe("GET /api/progress/stats", () => {
     const stats = { totalCards: 12, dueCards: 3, matureCards: 6, todayReviews: 4, streakDays: 2, totalQuizAttempts: 0, avgQuizAccuracy: null, todayQuizAttempts: 0 };
     routeMocks.getUserProgress.mockResolvedValue(stats);
 
-    const response = await getProgressStats();
+    const response = await getProgressStats(createGetRequest());
     const payload = await parseJsonResponse(response, progressStatsSuccessResponseSchema);
 
     expect(response.status).toBe(200);
@@ -252,7 +252,7 @@ describe("GET /api/progress/stats", () => {
   it("returns a stable error payload when progress lookup fails", async () => {
     routeMocks.getUserProgress.mockRejectedValue(apiError("db down"));
 
-    const response = await getProgressStats();
+    const response = await getProgressStats(createGetRequest());
     expect(response.status).toBe(500);
     expectApiErrorPayload(await parseJsonResponse(response, progressStatsResponseSchema), "Failed to fetch progress");
   });

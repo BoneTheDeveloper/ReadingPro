@@ -8,6 +8,26 @@ export const studyQuestionOptionSchema = z.object({
   text: z.string(),
 }).strict();
 
+export const generatedStudyQuestionSchema = z.object({
+  id: z.string(),
+  number: z.number().int().positive(),
+  questionText: z.string(),
+  options: z.array(studyQuestionOptionSchema),
+  correctAnswer: z.string(),
+  explanation: z.string(),
+  sourceText: z.string(),
+  sourceLine: z.number().int().positive(),
+  questionType: z.string(),
+  difficulty: z.number(),
+}).strict();
+
+export const generatedStudyQuestionsSchema = z.object({
+  questions: z.array(generatedStudyQuestionSchema),
+}).strict();
+
+export const generatedStudyQuestionsSuccessResponseSchema = makeSuccessEnvelopeSchema(generatedStudyQuestionsSchema);
+export const generatedStudyQuestionsResponseSchema = makeResponseSchema(generatedStudyQuestionsSchema);
+
 export const studyCardPassageSchema = z.object({
   id: z.string(),
   title: z.string(),
@@ -106,6 +126,8 @@ export const studyChatHistoryResponseSchema = z.union([
 ]);
 
 export type StudyQuestionOptionDto = z.infer<typeof studyQuestionOptionSchema>;
+export type GeneratedStudyQuestionDto = z.infer<typeof generatedStudyQuestionSchema>;
+export type GeneratedStudyQuestionsDto = z.infer<typeof generatedStudyQuestionsSchema>;
 export type StudyCardQuestionDto = z.infer<typeof studyCardQuestionSchema>;
 export type CardReviewDto = z.infer<typeof cardReviewSchema>;
 export type ProgressStatsDto = z.infer<typeof progressStatsSchema>;

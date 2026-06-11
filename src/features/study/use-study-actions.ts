@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import type { Dispatch, SetStateAction } from "react";
-import { studyGenerateQuestionsAction } from "@/features/study/actions/study-generate-questions-action";
 import { studySimplifyAction } from "@/features/study/actions/study-simplify-action";
+import { generateStudyQuestions } from "./study-api";
 import type {
   DetailCacheEntry,
   ResultsCacheEntry,
@@ -89,7 +89,7 @@ export function useStudyActions({ state, setState }: UseStudyActionsInput) {
   const generateQuizArtifact = useCallback(
     async (passageId: string, resultId: string) => {
       try {
-        const result = await studyGenerateQuestionsAction({ passageId });
+        const result = await generateStudyQuestions({ passageId });
         if (activePassageIdRef.current !== passageId) {
           updateResultStatus(passageId, resultId, { status: "error" });
           return;

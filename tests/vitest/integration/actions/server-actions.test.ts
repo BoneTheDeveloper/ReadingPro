@@ -38,7 +38,7 @@ vi.mock("@/lib/auth/auth-utils", () => authUtils);
 vi.mock("@/features/study/actions/study-shared", () => studyShared);
 vi.mock("@/features/upload/content-analysis-service", () => analysisService);
 vi.mock("@/lib/db/passage-queries", () => passageQueries);
-vi.mock("@/features/study/services/passage-study-service", () => studyService);
+vi.mock("@/lib/study/passage/passage-study.service", () => studyService);
 
 const enoughText = "This is enough text for a server action upload path because it is longer than fifty characters.";
 

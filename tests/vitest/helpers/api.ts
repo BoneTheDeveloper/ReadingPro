@@ -17,6 +17,10 @@ function toNextRequestInit(init: TestRequestInit) {
   };
 }
 
+export function createGetRequest(url?: string) {
+  return new NextRequest(url ?? DEFAULT_URL, { method: "GET" });
+}
+
 export function createJsonRequest(body: unknown, init: TestRequestInit = {}) {
   return new NextRequest(init.url?.toString() ?? DEFAULT_URL, {
     ...toNextRequestInit(init),

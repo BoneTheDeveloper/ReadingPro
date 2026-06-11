@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl"
 import { Trophy } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { completeQuizAttempt } from "@/features/study/study-api"
 
 interface QuizResultsProps {
   correctCount: number
@@ -27,15 +28,11 @@ export function QuizResults({
 
   useEffect(() => {
     if (!attemptId) return
-    fetch('/api/quiz-attempt', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        attemptId,
-        correctCount,
-        incorrectCount: totalQuestions - correctCount,
-        totalQuestions,
-      }),
+    completeQuizAttempt({
+      attemptId,
+      correctCount,
+      incorrectCount: totalQuestions - correctCount,
+      totalQuestions,
     }).catch(() => {})
   }, [attemptId]) // eslint-disable-line react-hooks/exhaustive-deps
 

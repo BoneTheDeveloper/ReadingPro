@@ -3,8 +3,8 @@
 import { headers } from 'next/headers';
 import * as Sentry from '@sentry/nextjs';
 import { createModuleLogger } from '@/lib/core/logger';
+import { PassageStudyServiceError, simplifyPassageForUser } from '@/lib/study/passage/passage-study.service';
 import { getAuthenticatedUser } from './study-shared';
-import { PassageStudyServiceError, simplifyPassageForUser } from '../services/passage-study-service';
 
 const log = createModuleLogger('actions:study-simplify');
 

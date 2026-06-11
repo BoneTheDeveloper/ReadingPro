@@ -6,6 +6,7 @@ import { BookOpen, CheckCircle, XCircle, ArrowRight, ChevronLeft, ChevronRight }
 import { cn } from "@/lib/shared/utils"
 import { Button } from "@/components/ui/button"
 import type { QuestionData } from "@/features/study/study-types"
+import { createQuizAttemptForPassage } from "@/features/study/study-api"
 import { QuizResults } from "./quiz-results"
 
 interface QuizContentProps {
@@ -47,27 +48,10 @@ export function QuizContent({ questions, passageTitle, passageId, onReset }: Qui
 
     if (!sessionId && passageId) {
       try {
-        const sessionRes = await fetch('/api/study-session', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ passageId }),
-        })
-        const sessionData = await sessionRes.json()
-        if (sessionData.success) {
-          const newSessionId = sessionData.data.id
-          setSessionId(newSessionId)
-
-          const attemptRes = await fetch('/api/quiz-attempt', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ studySessionId: newSessionId, passageId }),
-          })
-          const attemptData = await attemptRes.json()
-          if (attemptData.success) {
-            setAttemptId(attemptData.data.id)
-          } else {
-            setSessionId(null)
-          }
+        const result = await createQuizAttemptForPassage(passageId)
+        if (!("error" in result)) {
+          setSessionId(result.sessionId)
+          setAttemptId(result.attemptId)
         }
       } catch {
         setSessionId(null)
