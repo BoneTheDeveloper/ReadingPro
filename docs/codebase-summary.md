@@ -20,7 +20,7 @@
 src/
   app/                  Next.js pages, layouts, route handlers
   components/           Shared UI and layout components
-  features/             Product feature shell: UI, hooks, client state, actions
+  features/             Feature/use-case layer: UI, model, API helpers, actions, services
   generated/prisma/     Generated Prisma client
   i18n/                 next-intl routing/request helpers
   lib/                  Backend/domain/runtime modules and shared contracts
@@ -39,20 +39,32 @@ prisma/
 |---------|-------|-------|
 | Locale pages | `src/app/[locale]/**/page.tsx` | Dashboard, auth, upload, reading, study, dictionary, progress, test. |
 | Route handlers | `src/app/api/**/route.ts` | JSON/streaming APIs. Authenticated routes call `getAuthenticatedUser`. |
-| Server actions | `src/features/study/actions/*.ts`, `src/features/upload/analyze-content-action.ts` | Feature UI mutation entrypoints. They authenticate and delegate shared business work to `src/lib/<domain>`. |
-| Services | `src/lib/<domain>/**` | Business workflows, provider orchestration, DTO assembly, and persistence coordination behind routes/actions. |
-| Repositories | `src/lib/dictionary/**/repository.ts`, `src/lib/db/*-queries.ts` | Prisma/raw SQL data access. |
+| Server actions | `src/features/study/actions/*.ts`, `src/features/upload/analyze-content-action.ts` | Feature UI mutation entrypoints. They authenticate, call feature services for feature-specific work, and delegate shared domain work to `src/lib/<domain>`. |
+| Feature services | `src/features/<feature>/services/**` | Single-feature use-case workflows. |
+| Domain services | `src/lib/<domain>/services/**` or existing `src/lib/<domain>/**` service files | Reusable business workflows, provider orchestration, DTO assembly, and persistence coordination behind routes/actions. |
+| Repositories | `src/lib/<domain>/repositories/**`, `src/lib/dictionary/**/repository.ts`, legacy `src/lib/db/*-queries.ts` | Prisma/raw SQL data access. |
 
 ## Source Boundary Rules
 
 | Area | Use for | Examples |
 |------|---------|----------|
 | `src/app` | Framework routing boundary. | `src/app/api/study-questions/route.ts`, locale pages, layouts. |
-| `src/features` | Product-facing interaction shell. | Study workspace UI/hooks/actions, dictionary page UI, vocabulary UI. |
-| `src/lib` | Durable implementation layer. | `src/lib/dictionary`, `src/lib/study`, `src/lib/translation`, `src/lib/db`, `src/lib/auth`. |
+| `src/features` | Feature/use-case layer. | Study workspace UI/hooks/actions, upload use-case services, dictionary page UI, vocabulary UI. |
+| `src/lib` | Reusable domain implementation layer. | `src/lib/dictionary`, `src/lib/study`, `src/lib/passages`, `src/lib/translation`, `src/lib/db`, `src/lib/auth`. |
 | `src/components` | Shared presentation primitives. | `src/components/ui/button.tsx`, layout controls. |
 
-Placement rule: if code is React UI, browser state, or a feature-specific action wrapper, keep it in `src/features`. If client-side data access is more than a trivial one-off call, put it in a feature hook or client API helper instead of the component body. If code is called by an API route, reused by more than one feature, touches DB/provider/storage directly, or defines a stable API contract, put it in `src/lib`.
+Placement rule: if code is React UI, browser state, a feature-specific action wrapper, or a service used by only one feature/use case, keep it in `src/features`. If client-side data access is more than a trivial one-off call, put it in a feature hook or client API helper instead of the component body. If code is reused by more than one feature, touches repository/database access, performs reusable domain work, or defines a stable shared API contract, put it in `src/lib/<domain>`.
+
+Feature folder convention:
+
+```text
+src/features/<feature>
++-- ui        React components and page sections
++-- model     feature types, hooks, state machines, pure utilities
++-- api       client-side API wrappers and fetch helpers
++-- actions   server actions invoked by feature UI
++-- services  single-feature use-case services
+```
 
 ## Key Feature Modules
 

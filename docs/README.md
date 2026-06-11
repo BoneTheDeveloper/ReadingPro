@@ -8,15 +8,16 @@ Start here when onboarding to the English Reading Training App docs.
 2. [Codebase Summary](codebase-summary.md) - source layout, framework stack, and core modules.
 3. [System Architecture](Architecture/system-architecture.md) - high-level system map.
 4. [Runtime Architecture](Architecture/runtime-architecture.md) - Next.js App Router, RSC, route handlers, and server/client boundaries.
-5. [API Index](API/api-index.md) - route inventory and feature API docs.
-6. [Data Dictionary](database/data-dictionary.md) and [ERD](database/erd.md) - database shape and ownership fields.
-7. [Local Development](Operations/local-development.md) - setup, scripts, and common checks.
+5. [Frontend UI Architecture](Architecture/frontend-ui-architecture/README.md) - screen-level UI contracts and page descriptions.
+6. [API Index](API/api-index.md) - route inventory and feature API docs.
+7. [Data Dictionary](database/data-dictionary.md) and [ERD](database/erd.md) - database shape and ownership fields.
+8. [Local Development](Operations/local-development.md) - setup, scripts, and common checks.
 
 ## Main Sections
 
 | Section | Purpose |
 |---------|---------|
-| [Architecture](Architecture/system-architecture.md) | Runtime, auth, database, storage, API, observability, and deployment decisions. |
+| [Architecture](Architecture/system-architecture.md) | Runtime, frontend UI, auth, database, storage, API, observability, and deployment decisions. |
 | [Product](Product/feature-scope.md) | User flows, use cases, MVP boundaries, and product assumptions. |
 | [Flows](Flows/upload-flow.md) | End-to-end feature flows from UI to persistence. |
 | [API](API/api-index.md) | API conventions and per-feature route docs. |

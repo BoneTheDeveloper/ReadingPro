@@ -58,6 +58,7 @@ Dictionary tables are shared read data and are not user-owned.
 ## Architecture Docs
 
 - Runtime: [runtime-architecture.md](runtime-architecture.md)
+- Frontend UI: [frontend-ui-architecture](frontend-ui-architecture/README.md)
 - Auth: [auth-architecture.md](auth-architecture.md)
 - Database: [database-architecture.md](database-architecture.md)
 - Storage: [storage-architecture.md](storage-architecture.md)
