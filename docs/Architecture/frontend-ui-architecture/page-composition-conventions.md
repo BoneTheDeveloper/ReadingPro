@@ -57,10 +57,10 @@ Folder ownership:
 |--------|------|--------------|
 | `ui` | React components, feature page clients, panels, modals, rows, cards. | DB access, domain services, cross-feature state, route handlers. |
 | `model` | Types, Zod schemas, reducers, pure state logic, utility functions. | React hooks, server actions, fetch wrappers, repositories. |
-| `hooks` | React hooks composing api calls with state (`use-*.ts`). | Raw fetch logic (belongs in `api/`), components, server code. |
-| `api` | Client-side fetch wrappers, response parsing, request builders. | Server-only DB/provider logic, React state. |
+| `hooks` | React hooks composing api calls with state (`use-*.ts`). | Repeated raw fetch logic, components, server code. |
+| `api` | Optional client-side fetch wrappers, response parsing, request builders. | Server-only DB/provider logic, React state, route-handler logic. |
 | `actions` | Server actions called from feature UI. | React state, visual rendering, reusable domain repositories. |
-| `services` | Services used only by this feature/use case. | Reusable domain logic, repository/database access that should be shared outside the feature. |
+| `services` | Single-feature use-case workflows and orchestration. | Reusable domain logic, repository/database access that should be shared outside the feature. |
 | `index.ts` | Optional stable exports for external consumers. | A dumping ground for all internals. |
 
 Rules:
@@ -68,6 +68,8 @@ Rules:
 - Do not create empty folders just to match the template.
 - Keep small features flat until the split improves clarity.
 - Use subfolders once a feature has multiple files in that concern.
+- Do not add `api/` just because the feature calls the backend. Add it only when client fetch wrappers remove duplication or centralize parsing/error policy.
+- Do not add `services/` for every helper. Add it when there is a named feature workflow or use case.
 - Avoid feature-to-feature imports. Extract shared capability or shared domain logic first.
 
 ## Route Page Rules
@@ -184,48 +186,79 @@ Do not put durable domain behavior in UI hooks. Durable behavior belongs in `src
 
 Use `src/features/<feature>/services` for services that belong to a specific feature or use case.
 
-Use `src/lib/<domain>/services` for domain services that are shared across multiple features, API routes, server actions, or background jobs.
+Use `src/lib/<domain>` for domain services that are shared across multiple features, API routes, server actions, or background jobs. Group them by capability inside the domain, such as `src/lib/dictionary/lookup/lookup.service.ts` or `src/lib/upload/content-analysis/content-analysis.service.ts`.
 
 Do not put every service into a generic `src/lib/services` folder. Services should be grouped by domain so ownership is clear.
 
+Placement decision:
+
+```text
+Is it a browser fetch wrapper?
+  -> src/features/<feature>/api
+
+Is it a React/page-state workflow?
+  -> src/features/<feature>/hooks or ui
+
+Is it one feature's server-side use case or workflow?
+  -> src/features/<feature>/services
+
+Is it reusable domain/business logic?
+  -> src/lib/<domain>/...
+
+Does it perform database access?
+  -> src/lib/<domain>/repositories
+```
+
 Rules:
 
-- If a service is used by only one feature, keep it inside that feature.
-- If a service represents reusable domain/business logic, move it to `src/lib/<domain>/services`.
+- If a service is used by only one feature and describes that feature's workflow, keep it inside that feature.
+- If a service represents reusable domain/business logic, move it to `src/lib/<domain>`.
 - If a service depends on UI state, React hooks, or page-specific behavior, it must stay in `src/features`.
 - If a service performs database/domain operations that should be reused outside one feature, it belongs in `src/lib/<domain>`.
 - If a service only wraps a client-side API call, put it in `src/features/<feature>/api`, not in `src/lib`.
 - Repository/database access should live under `src/lib/<domain>/repositories`.
+- API routes may call a feature service only when the route exists solely to execute that feature workflow. If the same behavior is also needed by another route, server action, background job, or feature, extract the reusable part to `src/lib/<domain>`.
+
+Examples:
+
+- `src/features/study/api/study-questions-client.ts` is a feature API client because browser hooks call it and it wraps `/api/study-questions`.
+- `src/features/upload/services/upload-workflow.ts` is a feature service because it coordinates the upload-only workflow: validate file, store file, extract text, call content analysis, and clean up storage on failure.
+- `src/lib/upload/content-analysis/content-analysis.service.ts` is a lib service because content analysis is reusable by file upload, text upload, server actions, and tests.
+- `src/lib/dictionary/lookup/lookup.service.ts` is a lib service because dictionary lookup is domain logic used behind API routes and backed by dictionary repositories.
 
 ## API Boundary Rules
 
 Data flows strictly downward through these layers:
 
 ```text
-ui / hooks          →  api client (fetch wrappers)
+ui / hooks          →  api client (optional fetch wrappers)
                         →  /app/api route (route handlers)
                               →  service (domain logic)
                                     →  repository (DB access)
 ```
 
-Each layer may only call the layer directly below it. Never skip layers.
+Each layer may only call the layer directly below it when that layer exists. Do not create an empty or pass-through layer just to satisfy the diagram.
 
 ### Frontend data flow
 
 ```text
 ui/components
   → hooks/       (React hooks: compose api + state)
-    → api/       (fetch wrappers: call /app/api routes)
+    → api/       (optional fetch wrappers: call /app/api routes)
       → fetch("/api/...")
 ```
+
+Feature `api/` is for client-side code only. It should not contain route handlers, server-only provider calls, Prisma access, or business ownership rules.
 
 ### Backend data flow
 
 ```text
 /app/api route handler
-  → service      (domain logic, validation, orchestration)
+  → feature service or lib domain service
     → repository (Prisma queries, DB access)
 ```
+
+Backend routes do not call `src/features/<feature>/api`; that folder is for browser fetch wrappers. Backend routes call services directly.
 
 Component-local fetch is acceptable only when:
 
@@ -240,6 +273,8 @@ Move fetch logic into `api/` when:
 - It parses stable response schemas.
 - It has non-trivial URL construction.
 - It has user-visible error semantics.
+
+Do not move fetch logic into `api/` when a single hook has one simple page-specific call and the parsing/error handling is trivial. Revisit when duplication appears or the response contract becomes stable enough to centralize.
 
 Route handlers and server actions must keep ownership checks, persistence rules, and provider orchestration out of UI components.
 
@@ -300,7 +335,7 @@ Rules:
 - Do not share by importing a page client from another feature.
 - Do not make `src/features/upload` mean "the standalone upload page"; the standalone route is optional and should be a thin wrapper or disabled.
 - Upload-specific business behavior should live below UI surfaces in `features/upload/actions` and `features/upload/services`.
-- Reusable Passage domain behavior should live in `src/lib/passages/services` and `src/lib/passages/repositories`.
+- Reusable Passage domain behavior should live under a Passage domain area in `src/lib`, with database access kept in repository/query modules. Do not put reusable Passage behavior in feature services.
 
 If a capability is reused by two product features, extract the reusable part before importing across feature folders. Keep feature-specific composition in the consuming feature.
 
@@ -344,7 +379,8 @@ Before adding code, decide:
 - Which state belongs at page level?
 - Which state belongs inside one region?
 - Which behavior needs a hook?
-- Which API calls need a feature API helper?
+- Which browser API calls need a feature `api/` helper, and which can stay local?
+- Is a new service feature-specific, reusable domain logic, or database access?
 - Which components are feature-specific versus shared primitives?
 - What should be documented in the page doc after the change?
 
