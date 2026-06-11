@@ -27,7 +27,7 @@ import type {
   StudioResultType,
   StudioCardId,
   TranslationSelection,
-} from "@/features/study/study-types";
+} from "@/features/study/model/types";
 import { QuizContent } from "./quiz/quiz-content";
 import { StudyChatPanel } from "./chat/chat-panel";
 import { StudyTranslatePanel } from "./translate/translate-panel";

@@ -17,7 +17,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import type { StudyUploadModalProps } from "@/features/study/study-types"
+import type { StudyUploadModalProps } from "@/features/study/model/types"
 
 type InputMode = "file" | "text" | null
 

@@ -9,22 +9,10 @@ import { Card, CardContent } from "@/components/ui/card"
 import { calculateReadingTime } from "@/lib/shared/reading-utils"
 import { getCEFRLabel } from "@/lib/domain/cefr"
 import { getCEFRColor } from "@/lib/ui/cefr-style"
-
-interface PassageData {
-  id: string
-  title: string
-  content: string
-  simplifiedContent: string | null
-  originalLevel: string | null
-  simplifiedLevel: string | null
-  wordCount: number
-  displayContent: string
-  displayLevel: string
-  questionCount: number
-}
+import type { ReadingPassageData } from "@/features/reading/model/types"
 
 interface ReadingViewClientProps {
-  passage: PassageData
+  passage: ReadingPassageData
 }
 
 type ViewMode = "original" | "simplified"

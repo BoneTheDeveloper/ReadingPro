@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl"
 import { Trophy } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { completeQuizAttempt } from "@/features/study/study-api"
+import { completeQuizAttempt } from "@/features/study/api/study-api"
 
 interface QuizResultsProps {
   correctCount: number

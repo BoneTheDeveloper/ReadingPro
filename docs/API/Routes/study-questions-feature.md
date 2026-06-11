@@ -78,10 +78,10 @@ Error:
 - Route: `src/app/api/study-questions/route.ts`
 - Service: `src/lib/study/passage/passage-study.service.ts`
 - Shared schema: `src/lib/study/shared/study-response-schema.ts`
-- Client API helper: `src/features/study/study-api.ts`
+- Client API helper: `src/features/study/api/study-api.ts`
 
 ## Tests Or Verification Notes
 
 - Contract tests: `tests/vitest/integration/api/study-questions-route.test.ts`
 - Study page integration: `tests/vitest/integration/components/study/study-page-client.integration.test.tsx`
-- Hook behavior: `src/features/study/use-study-actions.test.ts`
+- Hook behavior: `src/features/study/model/use-study-actions.test.ts`

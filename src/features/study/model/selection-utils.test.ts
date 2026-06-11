@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   calculateCursorActionRect,
   calculateSelectionActionRect,
-} from "./study-selection-utils";
+} from "./selection-utils";
 
 describe("calculateCursorActionRect", () => {
   it("creates a zero-size action rect from the mouse-up cursor point", () => {

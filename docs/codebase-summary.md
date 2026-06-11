@@ -59,11 +59,11 @@ Placement rule: if code is React UI, browser state, or a feature-specific action
 | Feature | Primary files |
 |---------|---------------|
 | Upload | `src/features/upload/*`, `src/app/api/upload/*` |
-| Study workspace | `src/features/study/*`, `src/lib/study/*`, `src/app/[locale]/(dashboard)/study/page.tsx` |
+| Study workspace | `src/features/study/ui/*`, `src/features/study/model/*`, `src/features/study/api/*`, `src/lib/study/*`, `src/app/[locale]/(dashboard)/study/page.tsx` |
 | Quiz attempts | `src/lib/db/quiz-attempt-queries.ts`, `src/app/api/quiz-attempt/route.ts` |
 | Translation | `src/lib/translation/*`, `src/app/api/translate/route.ts` |
 | Dictionary | `src/lib/dictionary/*`, `src/app/api/dictionary/*` |
-| Study chat | `src/app/api/study-chat/route.ts`, `src/features/study/study-chat-panel.tsx` |
+| Study chat | `src/app/api/study-chat/route.ts`, `src/features/study/ui/studio/chat/chat-panel.tsx` |
 | Cards/progress | `src/lib/db/card-review-queries.ts`, `src/app/api/cards/*`, `src/app/api/progress/stats/route.ts` |
 | Auth | `src/proxy.ts`, `src/lib/auth/*`, Clerk pages under `(auth)` |
 

@@ -1,4 +1,4 @@
-import type { TranslationSelection } from "./study-types";
+import type { TranslationSelection } from "./types";
 import { countWords } from "@/lib/translation/translate-performance";
 
 type SelectionRect = TranslationSelection["selectionRect"];

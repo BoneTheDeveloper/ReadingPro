@@ -1,7 +1,7 @@
 import { screen } from "@testing-library/react";
 import { useRouter } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ReadingViewClient } from "@/features/reading/reading-view-client";
+import { ReadingViewClient } from "@/features/reading/ui/reading-view-client";
 import { createReadingPassage } from "../../../fixtures";
 import { renderWithUser } from "../../../helpers";
 

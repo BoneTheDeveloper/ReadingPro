@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { studyDeletePassageAction } from "@/features/study/actions/study-delete-passage-action";
-import type { DocumentItem, PassageData, StudyState } from "./study-types";
+import type { DocumentItem, PassageData, StudyState } from "./types";
 
 function getMostRecentPassageId(passages: PassageData[]): string | null {
   return passages.reduce<PassageData | null>((latest, passage) => {
@@ -103,8 +103,10 @@ export function useStudyWorkspaceState(initialPassages: PassageData[]) {
       }
       setState((prev) => {
         const remaining = prev.passages.filter((p) => p.id !== passageId);
-        const { [passageId]: _removedResults, ...restResultsByPassageId } = prev.resultsByPassageId;
-        const { [passageId]: _removedViewing, ...restViewingByPassageId } = prev.viewingResultByPassageId;
+        const restResultsByPassageId = { ...prev.resultsByPassageId };
+        const restViewingByPassageId = { ...prev.viewingResultByPassageId };
+        delete restResultsByPassageId[passageId];
+        delete restViewingByPassageId[passageId];
         if (prev.activePassageId === passageId) {
           const replacementId = getMostRecentPassageId(remaining);
           return {

@@ -1,6 +1,6 @@
 import * as Sentry from "@sentry/nextjs";
 import { db } from "@/lib/db/client";
-import type { StudioResult } from "@/features/study/study-types";
+import type { StudioResult } from "@/lib/study/shared/study-artifact-types";
 
 export interface StudyResultsData {
   results: StudioResult[];

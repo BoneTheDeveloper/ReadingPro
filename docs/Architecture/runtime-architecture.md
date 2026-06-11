@@ -41,8 +41,8 @@ Client components may keep trivial event glue, but should not own:
 
 Examples:
 
-- `src/features/study/study-page-client.tsx`
-- `src/features/study/study-chat-panel.tsx`
+- `src/features/study/ui/study-workspace-client.tsx`
+- `src/features/study/ui/studio/chat/chat-panel.tsx`
 - `src/features/upload/upload-page-client.tsx`
 - `src/features/dictionary/dictionary-page-client.tsx`
 

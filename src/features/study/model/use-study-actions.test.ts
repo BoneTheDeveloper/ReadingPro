@@ -2,11 +2,11 @@ import { act, renderHook } from "@testing-library/react";
 import { useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { studySimplifyAction } from "@/features/study/actions/study-simplify-action";
-import { generateStudyQuestions } from "@/features/study/study-api";
-import type { PassageData, QuestionData, StudyState } from "./study-types";
+import { generateStudyQuestions } from "@/features/study/api/study-api";
+import type { PassageData, QuestionData, StudyState } from "./types";
 import { useStudyActions } from "./use-study-actions";
 
-vi.mock("@/features/study/study-api", () => ({
+vi.mock("@/features/study/api/study-api", () => ({
   generateStudyQuestions: vi.fn(),
 }));
 

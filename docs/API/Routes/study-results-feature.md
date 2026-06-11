@@ -76,7 +76,7 @@ Error:
 
 - Route: `src/app/api/study-results/route.ts`
 - Service: `src/lib/study/passage/study-results-service.ts`
-- Types: `src/features/study/study-types.ts` (StudioResult)
+- Types: `src/lib/study/shared/study-artifact-types.ts` (StudioResult)
 
 ## Tests Or Verification Notes
 

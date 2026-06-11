@@ -5,8 +5,8 @@ import { useTranslations } from "next-intl"
 import { BookOpen, CheckCircle, XCircle, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/shared/utils"
 import { Button } from "@/components/ui/button"
-import type { QuestionData } from "@/features/study/study-types"
-import { createQuizAttemptForPassage } from "@/features/study/study-api"
+import type { QuestionData } from "@/features/study/model/types"
+import { createQuizAttemptForPassage } from "@/features/study/api/study-api"
 import { QuizResults } from "./quiz-results"
 
 interface QuizContentProps {
@@ -37,7 +37,6 @@ export function QuizContent({ questions, passageTitle, passageId, onReset }: Qui
   }, [])
 
   const currentQuestion = questions[currentIndex]
-  const progress = questions.length > 0 ? ((currentIndex + 1) / questions.length) * 100 : 0
 
   const handleSelectAnswer = useCallback((optionId: string) => {
     if (!showFeedback) setSelectedAnswer(optionId)
@@ -96,7 +95,7 @@ export function QuizContent({ questions, passageTitle, passageId, onReset }: Qui
     }
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [currentQuestion, showFeedback, selectedAnswer, handleSelectAnswer, handleCheckAnswer, handleNext])
+  }, [currentQuestion, showFeedback, selectedAnswer, handleSelectAnswer, handleCheckAnswer, handleNext, handlePrevious])
 
   if (questions.length === 0) {
     return (

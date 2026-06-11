@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
-import { db } from '@/lib/db/client';
 import { getAuthenticatedUser } from '@/lib/auth/auth-utils';
-import { ReadingViewClient } from '@/features/reading/reading-view-client';
+import { ReadingViewClient } from '@/features/reading/ui/reading-view-client';
+import { getReadingPassageForUser } from '@/lib/study/passage/reading-passage-service';
 
 interface ReadingPageProps {
   params: Promise<{ id: string }>;
@@ -12,32 +12,11 @@ export default async function ReadingPage({ params }: ReadingPageProps) {
   const passageId = decodeURIComponent(id);
   const user = await getAuthenticatedUser();
 
-  const passage = await db.passage.findUnique({
-    where: { id: passageId, userId: user.id, deletedAt: null },
-    include: { questions: true },
-  });
+  const passage = await getReadingPassageForUser(user.id, passageId);
 
   if (!passage) {
     notFound();
   }
 
-  const displayContent = passage.simplifiedContent || passage.content;
-  const displayLevel = passage.simplifiedLevel || passage.originalLevel || 'B2';
-
-  return (
-    <ReadingViewClient
-      passage={{
-        id: passage.id,
-        title: passage.title,
-        content: passage.content,
-        simplifiedContent: passage.simplifiedContent,
-        originalLevel: passage.originalLevel,
-        simplifiedLevel: passage.simplifiedLevel,
-        wordCount: passage.wordCount,
-        displayContent,
-        displayLevel,
-        questionCount: passage.questions.length,
-      }}
-    />
-  );
+  return <ReadingViewClient passage={passage} />;
 }

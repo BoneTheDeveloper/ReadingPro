@@ -4,7 +4,7 @@ import {
   quizAttemptResponseSchema,
   studySessionResponseSchema,
 } from "@/lib/study/shared/study-response-schema";
-import type { QuestionData } from "./study-types";
+import type { QuestionData } from "@/features/study/model/types";
 
 const STUDY_API_ROUTES = {
   questions: "/api/study-questions",

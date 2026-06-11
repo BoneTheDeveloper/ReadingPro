@@ -1,11 +1,11 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import * as Sentry from "@sentry/nextjs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { StudyPageClient } from "@/features/study/page/page-client";
-import { generateStudyQuestions } from "@/features/study/study-api";
+import { StudyPageClient } from "@/features/study/ui/study-workspace-client";
+import { generateStudyQuestions } from "@/features/study/api/study-api";
 import { studySimplifyAction } from "@/features/study/actions/study-simplify-action";
 import { studyUploadAction } from "@/features/study/actions/study-upload-action";
-import { extractSelectionInfo } from "@/features/study/study-selection-utils";
+import { extractSelectionInfo } from "@/features/study/model/selection-utils";
 
 import { createStudyPassage, createStudyQuestion } from "../../../fixtures";
 import { renderWithUser } from "../../../helpers";
@@ -93,7 +93,7 @@ vi.mock("react-dropzone", () => ({
   }),
 }));
 
-vi.mock("@/features/study/study-api", () => ({
+vi.mock("@/features/study/api/study-api", () => ({
   generateStudyQuestions: vi.fn(),
 }));
 
@@ -109,7 +109,7 @@ vi.mock("@/features/study/actions/study-delete-passage-action", () => ({
   studyDeletePassageAction: vi.fn(async () => ({ success: true })),
 }));
 
-vi.mock("@/features/study/study-selection-utils", () => ({
+vi.mock("@/features/study/model/selection-utils", () => ({
   extractSelectionInfo: vi.fn(),
 }));
 

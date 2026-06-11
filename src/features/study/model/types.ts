@@ -1,4 +1,11 @@
 import type { TranslationData } from "@/lib/translation/shared/translation-response-schema";
+import type { StudioResult } from "@/lib/study/shared/study-artifact-types";
+export type {
+  StudioResult,
+  StudioResultStatus,
+  StudioResultType,
+} from "@/lib/study/shared/study-artifact-types";
+export { RESULT_STALE_TIME } from "@/lib/study/shared/study-artifact-types";
 
 export type StudyStatus =
   | "idle"
@@ -48,19 +55,6 @@ export interface QuestionData {
   difficulty: number;
 }
 
-export type StudioResultType = "quiz" | "summary" | "chat" | "flashcard" | "mindmap";
-export type StudioResultStatus = "running" | "completed" | "error";
-
-export interface StudioResult {
-  id: string;
-  type: StudioResultType;
-  passageId: string;
-  title: string;
-  status: StudioResultStatus;
-  createdAt: string;
-  updatedAt?: string;
-}
-
 export type ResultsCacheStatus = "idle" | "loading" | "success" | "error";
 
 export interface ResultsCacheEntry {
@@ -80,8 +74,6 @@ export interface DetailCacheEntry {
   simplifiedContent?: string | null;
   simplifiedLevel?: string | null;
 }
-
-export const RESULT_STALE_TIME = 60_000;
 
 export interface StudyState {
   passages: PassageData[];

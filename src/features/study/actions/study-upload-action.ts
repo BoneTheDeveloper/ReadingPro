@@ -5,7 +5,7 @@ import * as Sentry from '@sentry/nextjs';
 import { db } from '@/lib/db/client';
 import { createModuleLogger } from '@/lib/core/logger';
 import { getHeuristicCEFR, type CEFRLevel } from '@/lib/domain/cefr';
-import type { PassageData } from '../study-types';
+import type { PassageData } from "@/features/study/model/types";
 import { getAuthenticatedUser } from './study-shared';
 
 const log = createModuleLogger('actions:study-upload');

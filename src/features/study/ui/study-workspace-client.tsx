@@ -9,16 +9,16 @@ import {
   vocabularyResponseSchema,
 } from "@/lib/translation/shared/translation-response-schema";
 import { clampTranslationContext, isTranslateTextWithinLimit } from "@/lib/translation/translation-limits";
-import type { PassageData, TranslationSelection, QuickTranslationData, StudioResult } from "@/features/study/study-types";
-import { RESULT_STALE_TIME } from "@/features/study/study-types";
-import { StudySourcesPanel } from "./left-panel";
-import { StudyContentPanel } from "../studio/content/content-panel";
-import { StudyStudioPanel } from "../studio/right-panel";
-import { StudyTranslationPopup } from "../studio/translate/translation-popup";
+import type { PassageData, TranslationSelection, QuickTranslationData, StudioResult } from "@/features/study/model/types";
+import { RESULT_STALE_TIME } from "@/features/study/model/types";
+import { StudySourcesPanel } from "./sources-panel";
+import { StudyContentPanel } from "./studio/content/content-panel";
+import { StudyStudioPanel } from "./studio/studio-panel";
+import { StudyTranslationPopup } from "./studio/translate/translation-popup";
 import { StudyUploadModal } from "./upload-modal";
-import { useStudyActions } from "@/features/study/use-study-actions";
-import { useStudyPanelLayout } from "@/features/study/use-study-panel-layout";
-import { useStudyWorkspaceState } from "@/features/study/use-study-workspace-state";
+import { useStudyActions } from "@/features/study/model/use-study-actions";
+import { useStudyPanelLayout } from "@/features/study/model/use-study-panel-layout";
+import { useStudyWorkspaceState } from "@/features/study/model/use-study-workspace-state";
 
 let quickTranslationRequestCounter = 0;
 

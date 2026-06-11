@@ -1,5 +1,5 @@
 import { generatedQuestionsFixture, passageFixture } from "./article";
-import type { PassageData, QuestionData, StudioResult, StudioResultType, StudioResultStatus } from "@/features/study/study-types";
+import type { PassageData, QuestionData, StudioResult } from "@/features/study/model/types";
 
 export const uiTimestamp = Date.UTC(2026, 4, 21, 8, 0, 0);
 
