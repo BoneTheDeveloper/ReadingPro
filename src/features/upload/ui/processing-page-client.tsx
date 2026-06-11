@@ -32,7 +32,7 @@ function ProcessingPageContent() {
         clearInterval(interval)
         setTimeout(() => {
           const id = contentId || filename || "demo"
-          router.push(`/reading/${encodeURIComponent(id)}`)
+          router.push(`/study`)
         }, 500)
       }
     }, 1500)

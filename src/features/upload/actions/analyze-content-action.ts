@@ -3,7 +3,7 @@
 import { headers } from 'next/headers';
 import * as Sentry from '@sentry/nextjs';
 import { getAuthenticatedUser } from '@/lib/auth/auth-utils';
-import { analyzeAndPersistContent } from './content-analysis-service';
+import { analyzeAndPersistContent } from '@/lib/upload/content-analysis/content-analysis.service';
 
 export async function analyzeContentAction(formData: FormData) {
   return Sentry.withServerActionInstrumentation('analyzeContent', {

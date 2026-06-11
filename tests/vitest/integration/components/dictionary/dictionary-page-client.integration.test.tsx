@@ -1,7 +1,7 @@
 import { screen, waitFor } from "@testing-library/react";
 import * as Sentry from "@sentry/nextjs";
 import { describe, expect, it, vi } from "vitest";
-import { DictionaryPageClient } from "@/features/dictionary/dictionary-page-client";
+import { DictionaryPageClient } from "@/features/dictionary/ui/dictionary-page-client";
 import { renderWithUser } from "../../../helpers";
 
 const dictionaryEntry = {

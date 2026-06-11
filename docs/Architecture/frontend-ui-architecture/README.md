@@ -84,7 +84,6 @@ Shared capability rule: reusable upload code belongs under `src/features/upload`
 
 ## Current Mismatches
 
-- Upload and processing clients currently navigate to `/reading/[id]`, but the reading route files are deleted in the current worktree. Until the route is restored or redirects are updated, treat upload-to-reading navigation as unresolved.
 - `src/features/upload` and Study upload modal currently overlap. Target direction: keep upload as a shared capability under `src/features/upload`, and keep Study-specific source creation UI under `src/features/study/ui/upload`.
 - Dashboard home uses mock data in `src/app/[locale]/page.tsx`; do not document it as live progress data until the page reads real user stats.
 - `/[locale]/progress` redirects to `/` and does not render `src/features/progress/progress-dashboard.tsx`.

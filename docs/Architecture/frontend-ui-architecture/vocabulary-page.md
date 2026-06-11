@@ -12,7 +12,7 @@ Route file:
 
 Root client:
 
-`src/features/vocabulary/vocabulary-page-client.tsx`
+`src/features/vocabulary/ui/vocabulary-page-client.tsx`
 
 ## Purpose
 

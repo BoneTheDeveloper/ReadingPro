@@ -12,7 +12,7 @@ Route file:
 
 Current root client:
 
-`src/features/upload/upload-page-client.tsx`
+`src/features/upload/ui/upload-page-client.tsx`
 
 ## Purpose
 
@@ -108,13 +108,13 @@ File upload:
 - Builds `FormData`.
 - Posts to `/api/upload`.
 - Parses with `uploadResponseSchema`.
-- On success, routes to `/reading/:passageId`.
+- On success, routes to `/study`.
 
 Text upload:
 
 - Posts JSON to `/api/upload/text`.
 - Parses with `uploadResponseSchema`.
-- On success, routes to `/reading/:passageId`.
+- On success, routes to `/study`.
 
 Both methods:
 
@@ -125,9 +125,7 @@ Both methods:
 
 ## Current Mismatch
 
-The success redirect targets `/reading/:passageId`, but the reading route files are deleted in the current worktree. Until fixed, prefer routing new entry points through `/study` or restore the reading route.
-
-The standalone page also duplicates upload concerns with `src/features/study/ui/upload-modal.tsx`. New work should move toward the target boundary above instead of adding more upload behavior to both places.
+The standalone page duplicates upload concerns with `src/features/study/ui/upload-modal.tsx`. New work should move toward the target boundary above instead of adding more upload behavior to both places.
 
 ## UI Rules
 

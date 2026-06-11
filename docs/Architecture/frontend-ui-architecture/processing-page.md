@@ -12,7 +12,7 @@ Route file:
 
 Root client:
 
-`src/features/upload/processing-page-client.tsx`
+`src/features/upload/ui/processing-page-client.tsx`
 
 ## Purpose
 
@@ -45,11 +45,7 @@ It advances through timed stages:
 - generating
 - complete
 
-After completion, it redirects to `/reading/${id}` where `id` is `contentId`, `filename`, or `demo`.
-
-## Current Mismatch
-
-The `/reading/[id]` route files are deleted in the current worktree. Treat the final redirect as unresolved until the reading route is restored or this page redirects to `/study`.
+After completion, it redirects to `/study`.
 
 ## UI Rules
 

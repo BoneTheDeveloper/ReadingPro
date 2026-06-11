@@ -1,6 +1,6 @@
 import * as Sentry from "@sentry/nextjs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { processFileUpload, UploadWorkflowError } from "@/features/upload/upload-workflow";
+import { processFileUpload, UploadWorkflowError } from "@/features/upload/services/upload-workflow";
 
 const storage = vi.hoisted(() => ({
   uploadFile: vi.fn(),
@@ -22,7 +22,7 @@ vi.mock("@/lib/parsers/pdf", () => ({
   parsePDF: parser.parsePDF,
 }));
 
-vi.mock("@/features/upload/content-analysis-service", () => ({
+vi.mock("@/lib/upload/content-analysis/content-analysis.service", () => ({
   analyzeAndPersistContent: analysis.analyzeAndPersistContent,
 }));
 

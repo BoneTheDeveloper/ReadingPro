@@ -12,7 +12,7 @@ Route file:
 
 Root client:
 
-`src/features/dictionary/dictionary-page-client.tsx`
+`src/features/dictionary/ui/dictionary-page-client.tsx`
 
 ## Purpose
 

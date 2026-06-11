@@ -5,7 +5,7 @@ import { validateTextContent } from '@/lib/validation/upload';
 import { getAuthenticatedUser } from '@/lib/auth/auth-utils';
 import { isAuthenticationRequiredError } from '@/lib/api/route-errors';
 import { createRequestLogContext, createRequestLogger } from '@/lib/core/logger';
-import { analyzeAndPersistContent } from '@/features/upload/content-analysis-service';
+import { analyzeAndPersistContent } from '@/lib/upload/content-analysis/content-analysis.service';
 
 const textUploadSchema = z.object({
   text: z.string().min(1),

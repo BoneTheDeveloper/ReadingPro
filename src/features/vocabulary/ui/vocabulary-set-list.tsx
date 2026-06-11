@@ -6,7 +6,7 @@ import { Loader2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { VocabularySetRow } from "./vocabulary-set-row";
-import type { VocabularySet } from "./vocabulary-types";
+import type { VocabularySet } from "../model/vocabulary-types";
 
 interface VocabularySetListProps {
   sets: VocabularySet[];

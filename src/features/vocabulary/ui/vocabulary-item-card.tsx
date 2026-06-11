@@ -29,7 +29,7 @@ import { cn } from "@/lib/shared/utils";
 import type {
   VocabularyItem,
   VocabularyStatus,
-} from "./vocabulary-types";
+} from "../model/vocabulary-types";
 
 interface VocabularyItemCardProps {
   item: VocabularyItem;

@@ -6,12 +6,12 @@ import { BookOpen, Library } from "lucide-react";
 import { VocabularyList } from "./vocabulary-list";
 import { VocabularySetList } from "./vocabulary-set-list";
 import { PageTabButton, PageErrorState } from "./vocabulary-page-ui";
-import { useVocabularyList } from "./use-vocabulary-list";
-import { useVocabularySets } from "./use-vocabulary-sets";
+import { useVocabularyList } from "../model/use-vocabulary-list";
+import { useVocabularySets } from "../model/use-vocabulary-sets";
 import type {
   VocabularyStatus,
   VocabularySet,
-} from "./vocabulary-types";
+} from "../model/vocabulary-types";
 
 type ViewTab = "words" | "sets";
 

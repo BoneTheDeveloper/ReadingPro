@@ -36,7 +36,7 @@ const studyService = vi.hoisted(() => {
 
 vi.mock("@/lib/auth/auth-utils", () => authUtils);
 vi.mock("@/features/study/actions/study-shared", () => studyShared);
-vi.mock("@/features/upload/content-analysis-service", () => analysisService);
+vi.mock("@/lib/upload/content-analysis/content-analysis.service", () => analysisService);
 vi.mock("@/lib/db/passage-queries", () => passageQueries);
 vi.mock("@/lib/study/passage/passage-study.service", () => studyService);
 
@@ -49,7 +49,7 @@ describe("server actions", () => {
   });
 
   it("analyzeContentAction validates short text before authentication", async () => {
-    const { analyzeContentAction } = await import("@/features/upload/analyze-content-action");
+    const { analyzeContentAction } = await import("@/features/upload/actions/analyze-content-action");
     const formData = new FormData();
     formData.set("text", "too short");
 
@@ -70,7 +70,7 @@ describe("server actions", () => {
       simplifiedLevel: null,
       questionCount: 0,
     });
-    const { analyzeContentAction } = await import("@/features/upload/analyze-content-action");
+    const { analyzeContentAction } = await import("@/features/upload/actions/analyze-content-action");
     const formData = new FormData();
     formData.set("text", enoughText);
     formData.set("title", "Action title");

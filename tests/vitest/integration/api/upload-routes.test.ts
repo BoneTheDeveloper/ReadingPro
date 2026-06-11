@@ -36,12 +36,12 @@ vi.mock("@/lib/auth/auth-utils", () => ({
   AuthenticationRequiredError: routeMocks.AuthenticationRequiredError,
 }));
 
-vi.mock("@/features/upload/upload-workflow", () => ({
+vi.mock("@/features/upload/services/upload-workflow", () => ({
   processFileUpload: routeMocks.processFileUpload,
   UploadWorkflowError: routeMocks.UploadWorkflowError,
 }));
 
-vi.mock("@/features/upload/content-analysis-service", () => ({
+vi.mock("@/lib/upload/content-analysis/content-analysis.service", () => ({
   analyzeAndPersistContent: routeMocks.analyzeAndPersistContent,
 }));
 

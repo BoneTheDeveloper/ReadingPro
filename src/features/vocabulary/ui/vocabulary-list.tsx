@@ -8,7 +8,7 @@ import { VocabularyItemCard } from "./vocabulary-item-card";
 import type {
   VocabularyItem,
   VocabularyStatus,
-} from "./vocabulary-types";
+} from "../model/vocabulary-types";
 
 interface VocabularyListProps {
   items: VocabularyItem[];
