@@ -6,7 +6,7 @@ import { BookOpen, CheckCircle, XCircle, ArrowRight, ChevronLeft, ChevronRight }
 import { cn } from "@/lib/shared/utils"
 import { Button } from "@/components/ui/button"
 import type { QuestionData } from "@/features/study/model/types"
-import { createQuizAttemptForPassage } from "@/features/study/api/study-api"
+import { createQuizAttemptForPassage } from "@/features/study/api/quiz-attempt-client"
 import { QuizResults } from "./quiz-results"
 
 interface QuizContentProps {

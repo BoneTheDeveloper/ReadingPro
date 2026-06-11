@@ -31,7 +31,6 @@ function ProcessingPageContent() {
       } else {
         clearInterval(interval)
         setTimeout(() => {
-          const id = contentId || filename || "demo"
           router.push(`/study`)
         }, 500)
       }

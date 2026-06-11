@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { studyDeletePassageAction } from "@/features/study/actions/study-delete-passage-action";
-import type { DocumentItem, PassageData, StudyState } from "./types";
+import type { DocumentItem, PassageData, StudyState } from "../model/types";
 
 function getMostRecentPassageId(passages: PassageData[]): string | null {
   return passages.reduce<PassageData | null>((latest, passage) => {

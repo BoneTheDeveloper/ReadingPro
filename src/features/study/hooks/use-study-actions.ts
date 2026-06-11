@@ -4,14 +4,14 @@ import { useCallback, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import type { Dispatch, SetStateAction } from "react";
 import { studySimplifyAction } from "@/features/study/actions/study-simplify-action";
-import { generateStudyQuestions } from "@/features/study/api/study-api";
+import { generateStudyQuestions } from "@/features/study/api/study-questions-client";
 import type {
   DetailCacheEntry,
   ResultsCacheEntry,
   StudioCardId,
   StudioResult,
   StudyState,
-} from "./types";
+} from "../model/types";
 
 interface UseStudyActionsInput {
   state: StudyState;

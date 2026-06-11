@@ -2,7 +2,7 @@
 
 ## Overview
 
-The frontend uses a server-first Next.js App Router shell with feature-owned Client Components for interactive screens. Product UI code lives under `src/features/<feature>/ui` or feature root client files, browser state and interaction hooks live under `src/features/<feature>/model` or `use-*` hooks, and reusable primitives live under `src/components/ui`.
+The frontend uses a server-first Next.js App Router shell with feature-owned Client Components for interactive screens. Product UI code lives under `src/features/<feature>/ui`, React hooks live under `src/features/<feature>/hooks`, types and state logic live under `src/features/<feature>/model`, client fetch wrappers live under `src/features/<feature>/api`, and reusable primitives live under `src/components/ui`.
 
 Use this folder as the screen-level UI architecture contract for agents changing pages. Use [../../Design/design-guidelines.md](../../Design/design-guidelines.md) for the broader visual language.
 

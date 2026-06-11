@@ -6,9 +6,9 @@ import { Input } from "@/components/ui/input"
 import { useTranslations } from "next-intl"
 import { DictionaryEntryCard } from "./dictionary-entry-card"
 import { DictionarySuggestDropdown } from "./dictionary-suggest-dropdown"
-import { useSaveDictionaryVocabulary } from "../model/use-save-dictionary-vocabulary"
-import { useDictionarySuggest } from "../model/use-dictionary-suggest"
-import { useDictionaryEntryDetail } from "../model/use-dictionary-entry-detail"
+import { useSaveDictionaryVocabulary } from "../hooks/use-save-dictionary-vocabulary"
+import { useDictionarySuggest } from "../hooks/use-dictionary-suggest"
+import { useDictionaryEntryDetail } from "../hooks/use-dictionary-entry-detail"
 
 export function DictionaryPageClient() {
   const t = useTranslations()

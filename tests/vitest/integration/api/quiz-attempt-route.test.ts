@@ -2,14 +2,12 @@ import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PATCH as completeAttempt, POST as createAttempt } from "@/app/api/quiz-attempt/route";
 import {
-  quizAttemptResponseSchema,
   quizAttemptSuccessResponseSchema,
   toQuizAttemptDto,
 } from "@/lib/study/shared/study-response-schema";
-import { apiErrorResponseSchema } from "@/lib/api/shared/api-response-schema";
 import { passageFixture, studySessionFixture, userProfileFixture } from "../../fixtures";
 import { createJsonRequest, parseJsonResponse } from "../../helpers/api";
-import { expectApiErrorPayload, expectApiSuccessPayload } from "../../helpers/assertions";
+import { expectApiSuccessPayload } from "../../helpers/assertions";
 
 const routeMocks = vi.hoisted(() => {
   class AuthenticationRequiredError extends Error {

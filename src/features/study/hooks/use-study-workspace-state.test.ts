@@ -1,7 +1,7 @@
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { studyDeletePassageAction } from "@/features/study/actions/study-delete-passage-action";
-import type { PassageData } from "./types";
+import type { PassageData } from "../model/types";
 import { useStudyWorkspaceState } from "./use-study-workspace-state";
 
 vi.mock("@/features/study/actions/study-delete-passage-action", () => ({

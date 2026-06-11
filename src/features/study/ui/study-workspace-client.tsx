@@ -16,9 +16,9 @@ import { StudyContentPanel } from "./studio/content/content-panel";
 import { StudyStudioPanel } from "./studio/studio-panel";
 import { StudyTranslationPopup } from "./studio/translate/translation-popup";
 import { StudyUploadModal } from "./upload-modal";
-import { useStudyActions } from "@/features/study/model/use-study-actions";
-import { useStudyPanelLayout } from "@/features/study/model/use-study-panel-layout";
-import { useStudyWorkspaceState } from "@/features/study/model/use-study-workspace-state";
+import { useStudyActions } from "@/features/study/hooks/use-study-actions";
+import { useStudyPanelLayout } from "@/features/study/hooks/use-study-panel-layout";
+import { useStudyWorkspaceState } from "@/features/study/hooks/use-study-workspace-state";
 
 let quickTranslationRequestCounter = 0;
 

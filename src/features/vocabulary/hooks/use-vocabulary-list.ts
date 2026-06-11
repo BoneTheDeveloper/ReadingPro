@@ -6,7 +6,7 @@ import type {
   VocabularyItem,
   VocabularyStatus,
   VocabularyListResponse,
-} from "./vocabulary-types";
+} from "../model/vocabulary-types";
 
 interface UseVocabularyListResult {
   items: VocabularyItem[];

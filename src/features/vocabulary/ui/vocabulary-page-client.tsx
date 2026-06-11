@@ -6,8 +6,8 @@ import { BookOpen, Library } from "lucide-react";
 import { VocabularyList } from "./vocabulary-list";
 import { VocabularySetList } from "./vocabulary-set-list";
 import { PageTabButton, PageErrorState } from "./vocabulary-page-ui";
-import { useVocabularyList } from "../model/use-vocabulary-list";
-import { useVocabularySets } from "../model/use-vocabulary-sets";
+import { useVocabularyList } from "../hooks/use-vocabulary-list";
+import { useVocabularySets } from "../hooks/use-vocabulary-sets";
 import type {
   VocabularyStatus,
   VocabularySet,

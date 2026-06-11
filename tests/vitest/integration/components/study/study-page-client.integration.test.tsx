@@ -2,7 +2,7 @@ import { fireEvent, screen, waitFor } from "@testing-library/react";
 import * as Sentry from "@sentry/nextjs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { StudyPageClient } from "@/features/study/ui/study-workspace-client";
-import { generateStudyQuestions } from "@/features/study/api/study-api";
+import { generateStudyQuestions } from "@/features/study/api/study-questions-client";
 import { studySimplifyAction } from "@/features/study/actions/study-simplify-action";
 import { studyUploadAction } from "@/features/study/actions/study-upload-action";
 import { extractSelectionInfo } from "@/features/study/model/selection-utils";
@@ -93,7 +93,7 @@ vi.mock("react-dropzone", () => ({
   }),
 }));
 
-vi.mock("@/features/study/api/study-api", () => ({
+vi.mock("@/features/study/api/study-questions-client", () => ({
   generateStudyQuestions: vi.fn(),
 }));
 

@@ -27,7 +27,7 @@ src/app/[locale]/(group)/feature/page.tsx
     +-- src/components/ui/*
 ```
 
-Feature folders may use a deeper `ui/`, `model/`, and `api/` split when the feature is large. The Study workspace is the reference example for a large feature.
+Feature folders may use a deeper split when the feature is large. The Study workspace is the reference example for a large feature.
 
 ## Feature Folder Convention
 
@@ -38,9 +38,11 @@ src/features/<feature>
 +-- ui
 |   +-- React components, panels, modals, rows, cards, page sections
 +-- model
-|   +-- feature types, state hooks, reducers, state machines, pure utilities
+|   +-- types, schemas, reducers, pure state logic (no React, no fetch)
++-- hooks
+|   +-- React hooks that combine api + state (use-*.ts)
 +-- api
-|   +-- client-side API wrappers and fetch helpers
+|   +-- client-side fetch wrappers / API client
 +-- actions
 |   +-- server actions invoked by feature UI
 +-- services
@@ -53,9 +55,10 @@ Folder ownership:
 
 | Folder | Owns | Must not own |
 |--------|------|--------------|
-| `ui` | React components, feature page clients, panels, modals, rows, cards, page sections. | DB access, domain services, cross-feature state, route handlers. |
-| `model` | Feature types, UI state hooks, reducers, client state machines, pure utilities. | React components, server actions, fetch wrappers, repositories. |
-| `api` | Client-side API wrappers, fetch helpers, browser response parsing, request builders. | Server-only DB/provider logic, reusable domain services. |
+| `ui` | React components, feature page clients, panels, modals, rows, cards. | DB access, domain services, cross-feature state, route handlers. |
+| `model` | Types, Zod schemas, reducers, pure state logic, utility functions. | React hooks, server actions, fetch wrappers, repositories. |
+| `hooks` | React hooks composing api calls with state (`use-*.ts`). | Raw fetch logic (belongs in `api/`), components, server code. |
+| `api` | Client-side fetch wrappers, response parsing, request builders. | Server-only DB/provider logic, React state. |
 | `actions` | Server actions called from feature UI. | React state, visual rendering, reusable domain repositories. |
 | `services` | Services used only by this feature/use case. | Reusable domain logic, repository/database access that should be shared outside the feature. |
 | `index.ts` | Optional stable exports for external consumers. | A dumping ground for all internals. |
@@ -64,7 +67,7 @@ Rules:
 
 - Do not create empty folders just to match the template.
 - Keep small features flat until the split improves clarity.
-- Use `ui/`, `model/`, `api/`, `actions/`, and `services/` once a feature has multiple files in that concern.
+- Use subfolders once a feature has multiple files in that concern.
 - Avoid feature-to-feature imports. Extract shared capability or shared domain logic first.
 
 ## Route Page Rules
@@ -196,14 +199,32 @@ Rules:
 
 ## API Boundary Rules
 
-Use this escalation path for client data access:
+Data flows strictly downward through these layers:
 
 ```text
-component-local fetch
-+-- feature hook
-    +-- feature client API helper
-        +-- route handler or server action
-            +-- feature service or src/lib domain service
+ui / hooks          →  api client (fetch wrappers)
+                        →  /app/api route (route handlers)
+                              →  service (domain logic)
+                                    →  repository (DB access)
+```
+
+Each layer may only call the layer directly below it. Never skip layers.
+
+### Frontend data flow
+
+```text
+ui/components
+  → hooks/       (React hooks: compose api + state)
+    → api/       (fetch wrappers: call /app/api routes)
+      → fetch("/api/...")
+```
+
+### Backend data flow
+
+```text
+/app/api route handler
+  → service      (domain logic, validation, orchestration)
+    → repository (Prisma queries, DB access)
 ```
 
 Component-local fetch is acceptable only when:
@@ -212,7 +233,7 @@ Component-local fetch is acceptable only when:
 - The response shape is simple.
 - The parsing and error policy are not reused.
 
-Move fetch logic into a hook or API helper when:
+Move fetch logic into `api/` when:
 
 - Multiple components need it.
 - It uses abort, debounce, cache, stale-time, retry, or dedupe policy.

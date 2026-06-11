@@ -5,7 +5,7 @@ import { UploadZone } from "./upload-zone"
 import { TextInputArea } from "./text-input-area"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/shared/utils"
-import { useUploadSubmit } from "./use-upload-submit"
+import { useUploadSubmit } from "../hooks/use-upload-submit"
 
 export function UploadPageClient() {
   const [uploadMethod, setUploadMethod] = useState<"file" | "text">("file")

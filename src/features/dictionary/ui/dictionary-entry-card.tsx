@@ -8,7 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/shared/utils";
 import type { DictionaryEntryDto, DictionarySenseDto } from "@/lib/dictionary/shared/dictionary-dtos";
 import { useTranslations } from "next-intl";
-import type { SaveStatus } from "../model/use-save-dictionary-vocabulary";
+import type { SaveStatus } from "../hooks/use-save-dictionary-vocabulary";
 
 interface DictionaryEntryCardProps {
   entry: DictionaryEntryDto;
