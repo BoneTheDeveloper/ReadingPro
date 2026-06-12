@@ -93,7 +93,11 @@ async function ensureDir() {
 }
 
 function localPath(pathname: string) {
-  const normalized = path.posix.normalize(`/${pathname}`).slice(1);
+  // Strip Windows drive letters and convert backslashes to prevent POSIX normalize bypasses
+  let safePath = pathname.replace(/^[a-zA-Z]:/, "");
+  safePath = safePath.replace(/\\/g, "/");
+
+  const normalized = path.posix.normalize(`/${safePath}`).slice(1);
   const fullPath = path.resolve(LOCAL_STORAGE_DIR, normalized);
   if (!fullPath.startsWith(`${LOCAL_STORAGE_DIR}${path.sep}`) && fullPath !== LOCAL_STORAGE_DIR) {
     throw new Error("Invalid storage pathname");
