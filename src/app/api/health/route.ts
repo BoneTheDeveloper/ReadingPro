@@ -5,11 +5,18 @@ export function GET() {
   // should normally rely on VERCEL_GIT_COMMIT_SHA, which is platform-provided.
   const commitSha = process.env.APP_COMMIT_SHA ?? process.env.VERCEL_GIT_COMMIT_SHA ?? null;
 
-  return NextResponse.json({
-    success: true,
-    data: {
-      status: "ok",
-      commitSha,
+  return NextResponse.json(
+    {
+      success: true,
+      data: {
+        status: "ok",
+        commitSha,
+      },
     },
-  });
+    {
+      headers: {
+        "Cache-Control": "no-store, max-age=0",
+      },
+    }
+  );
 }
