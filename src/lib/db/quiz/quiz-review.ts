@@ -1,5 +1,5 @@
 import { db } from '../client';
-import { sm2 } from '../../srs/scheduler';
+import { sm2 } from '../../spaced-repetition/scheduler';
 
 export function calculateSM2Interval(
   previousEaseFactor: number,

@@ -1,6 +1,6 @@
 import { Prisma } from "@/generated/prisma/client";
 import { db } from "./client";
-import { simpleSchedule } from "../srs/scheduler";
+import { simpleSchedule } from "../spaced-repetition/scheduler";
 import { findOrCreateDailySet, findOrCreateWeeklySet, addItemToSet } from "./vocabulary-set-queries";
 import type { VocabularyItem, VocabularyOccurrence } from "@/generated/prisma/client";
 

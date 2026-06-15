@@ -4,10 +4,10 @@
 
 ```text
 Generated Question
-  -> CardReview created or fetched for user
-  -> learner reviews due card
+  -> QuestionReview created or fetched for user
+  -> learner reviews due question
   -> POST /api/cards/review with qualityRating 0..5
-  -> calculateSM2Interval()
+  -> quiz-review.ts:calculateSM2Interval() -> scheduler.ts:sm2()
   -> update easeFactor, intervalDays, repetitions, nextReviewDate
   -> progress stats reflect due/mature/today/streak counts
 ```
@@ -49,11 +49,11 @@ Review scheduling:
 
 This is a fixed-interval MVP. Full SM-2 integration for vocabulary is deferred.
 
-### Why Separate from Card Review
+### Why Shared logic, Separate paths
 
-- Card review operates on auto-generated `CardReview` records tied to passage questions. It uses SM-2 with quality ratings 0-5 and tracks ease factor, interval days, and repetitions.
-- Vocabulary review operates on `VocabularyItem` records with a simpler 3-state model (NEW/LEARNING/MASTERED) and fixed intervals. No quality rating -- correct/incorrect only.
-- The two systems share no database tables or scheduling logic. They converge only in aggregate progress stats.
+- Card review operates on `QuestionReview` records tied to passage questions. It uses SM-2 with quality ratings 0-5.
+- Vocabulary review operates on `VocabularyItem` records with a simpler 3-state model (NEW/LEARNING/MASTERED).
+- Both utilize `src/lib/spaced-repetition/scheduler.ts` to ensure all "time-until-next" math is centralized, even if the algorithms differ.
 
 ## Routes
 
@@ -86,14 +86,8 @@ This is a fixed-interval MVP. Full SM-2 integration for vocabulary is deferred.
 
 ## Code Paths
 
-### Card Review
-- Algorithm: `src/lib/algorithms/sm2.ts`
-- Review queries: `src/lib/db/card-review-queries.ts`
-- Session queries: `src/lib/db/study-session-queries.ts`
+### Spaced Repetition (SRS)
+- Logic: `src/lib/spaced-repetition/scheduler.ts` (SM-2 + Simple)
+- Question reviews: `src/lib/db/quiz/quiz-review.ts`
+- Vocabulary reviews: `src/lib/db/vocabulary-queries.ts`
 - Progress UI: `src/features/progress/progress-dashboard.tsx`
-
-### Vocabulary
-- Item queries: `src/lib/db/vocabulary-queries.ts`
-- Set queries: `src/lib/db/vocabulary-set-queries.ts`
-- Save flow: `docs/Flows/vocabulary-flow.md`
-- Data model ADR: `docs/ADR/0005-vocabulary-review-mvp-path.md`

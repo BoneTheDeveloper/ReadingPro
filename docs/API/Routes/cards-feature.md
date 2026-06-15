@@ -22,7 +22,7 @@ with `404`.
 
 ```json
 {
-  "cardReviewId": "uuid",
+  "questionReviewId": "uuid",
   "qualityRating": 5
 }
 ```
@@ -43,5 +43,5 @@ with `404`.
 ## Implementation
 
 - Routes: `src/app/api/cards/due/route.ts`, `src/app/api/cards/review/route.ts`
-- Queries: `src/lib/db/card-review-queries.ts`
-- Algorithm: `src/lib/algorithms/sm2.ts`
+- Queries: `src/lib/db/quiz/quiz-review.ts`
+- Algorithm: `src/lib/spaced-repetition/scheduler.ts`

@@ -5,7 +5,7 @@ import react from "@vitejs/plugin-react";
 const appLogicCoverageInclude = [
   "src/lib/shared/reading-utils.ts",
   "src/lib/domain/cefr.ts",
-  "src/lib/srs/scheduler.ts",
+  "src/lib/spaced-repetition/scheduler.ts",
   "src/lib/validation/upload.ts",
   "src/lib/auth/sync-user.ts",
   "src/lib/auth/auth-utils.ts",
