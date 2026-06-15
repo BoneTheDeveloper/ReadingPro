@@ -53,13 +53,9 @@ erDiagram
     StudySession {
         uuid id PK "gen_random_uuid()"
         string userId FK
-        uuid passageId FK "nullable"
         datetime startedAt
-        int cardsReviewed
-        int newCards
-        int correctCount
-        int incorrectCount
-        float accuracyRate "nullable"
+        datetime completedAt "nullable"
+        datetime lastSeenAt
     }
 
     QuizAttempt {
@@ -165,7 +161,6 @@ erDiagram
 ## Identifier Notes
 
 - `UserProfile.id` is the Clerk user id and is intentionally text.
-- `StudySession.passageId` is a nullable UUID foreign key to `Passage`.
 - `DictionarySourceAudit.entityId` is a UUID entity reference. `entityType`
   identifies the referenced public entity type.
 - `Question.options` and `Question.correctOption` contain UI/result option IDs,

@@ -19,7 +19,7 @@
 | Dictionary | `GET /api/dictionary/lookup`, `search`, `suggest`, `entries/[entryId]` | [Routes/dictionary-feature.md](Routes/dictionary-feature.md) |
 | Vocabulary | `POST /api/vocabulary`, `GET /api/vocabulary/list`, `PATCH /api/vocabulary/[id]/status`, `DELETE /api/vocabulary/[id]`, `GET /api/vocabulary/sets`, `POST /api/vocabulary/sets`, `PATCH/DELETE /api/vocabulary/sets/[id]`, `POST /api/vocabulary/sets/[id]/items`, `DELETE /api/vocabulary/sets/[id]/items/[itemId]` | [Routes/vocabulary-feature.md](Routes/vocabulary-feature.md) |
 | Cards | `GET /api/cards/due`, `POST /api/cards/review` | [Routes/cards-feature.md](Routes/cards-feature.md) |
-| Progress/session | `GET /api/progress/stats`, `POST/PATCH /api/study-session` | [Routes/progress-feature.md](Routes/progress-feature.md) |
+| Progress/session | `GET /api/progress/stats`, `POST /api/study-session` | [Routes/progress-feature.md](Routes/progress-feature.md) |
 
 ## Utility Routes
 

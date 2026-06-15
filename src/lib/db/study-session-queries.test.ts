@@ -1,13 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ZodError } from "zod";
-import { passageFixture, studySessionFixture } from "../../../tests/vitest/fixtures";
 import { db } from "./client";
 import {
-  computeSessionAccuracy,
+  SESSION_IDLE_MS,
   createStudySession,
   createStudySessionSchema,
-  updateStudySession,
-  updateStudySessionSchema,
+  ensureActiveSession,
 } from "./study-session-queries";
 
 describe("study-session queries", () => {
@@ -20,123 +18,71 @@ describe("study-session queries", () => {
     vi.useRealTimers();
   });
 
-  it("validates create and update payload boundaries", () => {
+  it("validates session payload boundaries", () => {
     expect(() => createStudySessionSchema.parse({ userId: "" })).toThrow(ZodError);
-    expect(() =>
-      updateStudySessionSchema.parse({
-        correctCount: 1,
-        incorrectCount: 1,
-        accuracyRate: 50,
-      })
-    ).toThrow(ZodError);
-    expect(updateStudySessionSchema.parse({ cardsReviewed: 0 })).toEqual({ cardsReviewed: 0 });
   });
 
-  it("returns null accuracy for missing sessions or no reviews", async () => {
-    vi.mocked(db.studySession.findUnique).mockResolvedValueOnce(null);
-    await expect(computeSessionAccuracy("session-1", "user-1")).resolves.toBeNull();
+  it("creates sessions with study timestamps", async () => {
+    await createStudySession("user-1");
 
-    vi.mocked(db.studySession.findUnique).mockResolvedValueOnce({
-      ...studySessionFixture,
-      id: "session-1",
-      startedAt: new Date("2026-05-21T10:00:00.000Z"),
-    });
-    vi.mocked(db.cardReview.count).mockResolvedValueOnce(0);
-
-    await expect(computeSessionAccuracy("session-1", "user-1")).resolves.toBeNull();
-  });
-
-  it("computes rounded accuracy from completed reviews", async () => {
-    vi.mocked(db.studySession.findUnique).mockResolvedValue({
-      ...studySessionFixture,
-      id: "session-1",
-      startedAt: new Date("2026-05-21T10:00:00.000Z"),
-    });
-    vi.mocked(db.cardReview.count).mockResolvedValueOnce(3).mockResolvedValueOnce(2);
-
-    await expect(computeSessionAccuracy("session-1", "user-1")).resolves.toBe(66.67);
-
-    expect(db.cardReview.count).toHaveBeenNthCalledWith(1, {
-      where: {
-        userId: "user-1",
-        reviewedAt: { gte: new Date("2026-05-21T10:00:00.000Z") },
-      },
-    });
-    expect(db.cardReview.count).toHaveBeenNthCalledWith(2, {
-      where: {
-        userId: "user-1",
-        reviewedAt: { gte: new Date("2026-05-21T10:00:00.000Z") },
-        qualityRating: { gte: 3 },
-      },
-    });
-  });
-
-  it("creates sessions and verifies passage ownership when passageId is present", async () => {
-    const passageId = "11111111-1111-4111-8111-111111111111";
-    vi.mocked(db.passage.findUnique).mockResolvedValue({ ...passageFixture, id: passageId });
-
-    await createStudySession("user-1", passageId);
-
-    expect(db.passage.findUnique).toHaveBeenCalledWith({
-      where: { id: passageId, userId: "user-1", deletedAt: null },
-    });
     expect(db.studySession.create).toHaveBeenCalledWith({
       data: {
         userId: "user-1",
-        passageId,
         startedAt: new Date("2026-05-21T12:00:00.000Z"),
+        lastSeenAt: new Date("2026-05-21T12:00:00.000Z"),
       },
     });
   });
 
-  it("rejects session creation for an unowned passage", async () => {
-    vi.mocked(db.passage.findUnique).mockResolvedValue(null);
-
-    await expect(
-      createStudySession("user-1", "11111111-1111-4111-8111-111111111111")
-    ).rejects.toThrow("Passage not found or not owned by user");
-  });
-
-  it("updates sessions and computes accuracy when completing", async () => {
-    vi.mocked(db.studySession.findUnique).mockResolvedValue({
-      ...studySessionFixture,
+  it("reuses the newest open session and refreshes lastSeenAt", async () => {
+    vi.mocked(db.studySession.findFirst).mockResolvedValue({
       id: "session-1",
-      startedAt: new Date("2026-05-21T10:00:00.000Z"),
-    });
-    vi.mocked(db.cardReview.count).mockResolvedValueOnce(4).mockResolvedValueOnce(3);
-
-    await updateStudySession("user-1", "session-1", {
-      completedAt: new Date("2026-05-21T12:00:00.000Z"),
-      cardsReviewed: 4,
-      newCards: 1,
+      userId: "user-1",
+      startedAt: new Date("2026-05-21T11:30:00.000Z"),
+      completedAt: null,
+      lastSeenAt: new Date("2026-05-21T11:45:00.000Z"),
     });
 
+    await ensureActiveSession("user-1");
+
+    expect(db.$executeRaw).toHaveBeenCalledTimes(1);
+    expect(db.studySession.findFirst).toHaveBeenCalledWith({
+      where: { userId: "user-1", completedAt: null },
+      orderBy: [
+        { lastSeenAt: "desc" },
+        { startedAt: "desc" },
+      ],
+    });
     expect(db.studySession.update).toHaveBeenCalledWith({
       where: { id: "session-1" },
+      data: { lastSeenAt: new Date("2026-05-21T12:00:00.000Z") },
+    });
+  });
+
+  it("creates a fresh session when none is open", async () => {
+    vi.mocked(db.studySession.findFirst).mockResolvedValue(null);
+
+    await ensureActiveSession("user-1");
+
+    expect(db.$executeRaw).toHaveBeenCalledTimes(1);
+    expect(db.studySession.create).toHaveBeenCalledWith({
       data: {
-        completedAt: new Date("2026-05-21T12:00:00.000Z"),
-        cardsReviewed: 4,
-        newCards: 1,
-        correctCount: undefined,
-        incorrectCount: undefined,
-        accuracyRate: 75,
+        userId: "user-1",
+        startedAt: new Date("2026-05-21T12:00:00.000Z"),
+        lastSeenAt: new Date("2026-05-21T12:00:00.000Z"),
       },
     });
   });
 
-  it("rejects missing or unstarted sessions before update", async () => {
-    vi.mocked(db.studySession.findUnique).mockResolvedValueOnce(null);
-    await expect(updateStudySession("user-1", "missing", {})).rejects.toThrow(
-      "Session not found or not owned by user"
-    );
+  it("sweeps stale sessions using the idle cutoff", async () => {
+    vi.mocked(db.studySession.findFirst).mockResolvedValue(null);
 
-    vi.mocked(db.studySession.findUnique).mockResolvedValueOnce({
-      ...studySessionFixture,
-      id: "session-1",
-      startedAt: null as unknown as Date,
-    });
-    await expect(updateStudySession("user-1", "session-1", {})).rejects.toThrow(
-      "Session has not started"
-    );
+    await ensureActiveSession("user-1");
+
+    const rawQuery = vi.mocked(db.$executeRaw).mock.calls[0]?.[0];
+    expect(String(rawQuery)).toContain('UPDATE "study_sessions"');
+    expect(String(rawQuery)).toContain('completedAt');
+    expect(String(rawQuery)).toContain('lastSeenAt');
+    expect(Number(SESSION_IDLE_MS)).toBe(300000);
   });
 });

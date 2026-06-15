@@ -1,6 +1,3 @@
--- CreateSchema
-CREATE SCHEMA IF NOT EXISTS "public";
-
 -- CreateEnum
 CREATE TYPE "CEFRLevel" AS ENUM ('A1', 'A2', 'B1', 'B2', 'C1', 'C2');
 
@@ -12,6 +9,9 @@ CREATE TYPE "QuestionType" AS ENUM ('MULTIPLE_CHOICE', 'TRUE_FALSE');
 
 -- CreateEnum
 CREATE TYPE "Tier" AS ENUM ('FREE', 'PRO');
+
+-- CreateEnum
+CREATE TYPE "VocabularySetType" AS ENUM ('MANUAL', 'DAILY', 'WEEKLY');
 
 -- CreateTable
 CREATE TABLE "profiles" (
@@ -169,19 +169,60 @@ CREATE TABLE "translation_histories" (
 -- CreateTable
 CREATE TABLE "vocabulary_items" (
     "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "normalizedKey" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
-    "sourceId" UUID NOT NULL,
-    "selectedText" TEXT NOT NULL,
     "translation" TEXT NOT NULL,
-    "contextSentence" TEXT NOT NULL,
     "sourceLanguage" TEXT NOT NULL,
     "targetLanguage" TEXT NOT NULL,
-    "type" TEXT,
+    "type" TEXT NOT NULL DEFAULT 'WORD',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "normalizedText" TEXT NOT NULL DEFAULT '',
+    "displayText" TEXT NOT NULL DEFAULT '',
+    "status" TEXT NOT NULL DEFAULT 'NEW',
+    "source" TEXT NOT NULL DEFAULT 'TRANSLATE',
+    "savedCount" INTEGER NOT NULL DEFAULT 1,
+    "nextReviewAt" TIMESTAMP(3),
+    "lastReviewedAt" TIMESTAMP(3),
+    "dictionaryEntryId" UUID,
+    "dictionarySenseId" UUID,
+
+    CONSTRAINT "vocabulary_items_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "vocabulary_occurrences" (
+    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "vocabularyItemId" UUID NOT NULL,
+    "sourceId" UUID,
+    "selectedText" TEXT NOT NULL,
+    "contextSentence" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "vocabulary_occurrences_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "vocabulary_sets" (
+    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "userId" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "type" "VocabularySetType" NOT NULL,
+    "periodStart" TIMESTAMP(3),
+    "periodEnd" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "vocabulary_items_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "vocabulary_sets_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "vocabulary_set_items" (
+    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "vocabularySetId" UUID NOT NULL,
+    "vocabularyItemId" UUID NOT NULL,
+    "addedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "vocabulary_set_items_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -220,16 +261,27 @@ CREATE TABLE "card_reviews" (
 CREATE TABLE "study_sessions" (
     "id" UUID NOT NULL DEFAULT gen_random_uuid(),
     "userId" TEXT NOT NULL,
-    "passageId" UUID,
     "startedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "completedAt" TIMESTAMP(3),
-    "cardsReviewed" INTEGER NOT NULL DEFAULT 0,
-    "newCards" INTEGER NOT NULL DEFAULT 0,
-    "correctCount" INTEGER NOT NULL DEFAULT 0,
-    "incorrectCount" INTEGER NOT NULL DEFAULT 0,
-    "accuracyRate" DOUBLE PRECISION,
+    "lastSeenAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "study_sessions_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "quiz_attempts" (
+    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "studySessionId" UUID NOT NULL,
+    "userId" TEXT NOT NULL,
+    "passageId" UUID,
+    "correctCount" INTEGER NOT NULL DEFAULT 0,
+    "incorrectCount" INTEGER NOT NULL DEFAULT 0,
+    "totalQuestions" INTEGER NOT NULL DEFAULT 0,
+    "accuracyRate" DOUBLE PRECISION,
+    "startedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "completedAt" TIMESTAMP(3),
+
+    CONSTRAINT "quiz_attempts_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -301,10 +353,28 @@ CREATE INDEX "translation_caches_userId_createdAt_idx" ON "translation_caches"("
 CREATE INDEX "translation_histories_userId_sourceId_createdAt_idx" ON "translation_histories"("userId", "sourceId", "createdAt");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "vocabulary_items_normalizedKey_key" ON "vocabulary_items"("normalizedKey");
+CREATE INDEX "vocabulary_items_userId_nextReviewAt_idx" ON "vocabulary_items"("userId", "nextReviewAt");
 
 -- CreateIndex
-CREATE INDEX "vocabulary_items_userId_sourceId_createdAt_idx" ON "vocabulary_items"("userId", "sourceId", "createdAt");
+CREATE INDEX "vocabulary_items_userId_status_idx" ON "vocabulary_items"("userId", "status");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "vocabulary_items_userId_normalizedText_targetLanguage_trans_key" ON "vocabulary_items"("userId", "normalizedText", "targetLanguage", "translation");
+
+-- CreateIndex
+CREATE INDEX "vocabulary_occurrences_sourceId_idx" ON "vocabulary_occurrences"("sourceId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "vocabulary_occurrences_vocabularyItemId_sourceId_contextSen_key" ON "vocabulary_occurrences"("vocabularyItemId", "sourceId", "contextSentence");
+
+-- CreateIndex
+CREATE INDEX "vocabulary_sets_userId_type_idx" ON "vocabulary_sets"("userId", "type");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "vocabulary_sets_userId_type_periodStart_periodEnd_key" ON "vocabulary_sets"("userId", "type", "periodStart", "periodEnd");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "vocabulary_set_items_vocabularySetId_vocabularyItemId_key" ON "vocabulary_set_items"("vocabularySetId", "vocabularyItemId");
 
 -- CreateIndex
 CREATE INDEX "questions_passageId_idx" ON "questions"("passageId");
@@ -317,6 +387,15 @@ CREATE UNIQUE INDEX "card_reviews_questionId_userId_key" ON "card_reviews"("ques
 
 -- CreateIndex
 CREATE INDEX "study_sessions_userId_startedAt_idx" ON "study_sessions"("userId", "startedAt");
+
+-- CreateIndex
+CREATE INDEX "study_sessions_userId_completedAt_idx" ON "study_sessions"("userId", "completedAt");
+
+-- CreateIndex
+CREATE INDEX "study_sessions_userId_lastSeenAt_idx" ON "study_sessions"("userId", "lastSeenAt");
+
+-- CreateIndex
+CREATE INDEX "quiz_attempts_userId_startedAt_idx" ON "quiz_attempts"("userId", "startedAt");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "file_upload_intents_pathname_key" ON "file_upload_intents"("pathname");
@@ -361,7 +440,16 @@ ALTER TABLE "translation_histories" ADD CONSTRAINT "translation_histories_source
 ALTER TABLE "vocabulary_items" ADD CONSTRAINT "vocabulary_items_userId_fkey" FOREIGN KEY ("userId") REFERENCES "profiles"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "vocabulary_items" ADD CONSTRAINT "vocabulary_items_sourceId_fkey" FOREIGN KEY ("sourceId") REFERENCES "passages"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "vocabulary_occurrences" ADD CONSTRAINT "vocabulary_occurrences_vocabularyItemId_fkey" FOREIGN KEY ("vocabularyItemId") REFERENCES "vocabulary_items"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "vocabulary_sets" ADD CONSTRAINT "vocabulary_sets_userId_fkey" FOREIGN KEY ("userId") REFERENCES "profiles"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "vocabulary_set_items" ADD CONSTRAINT "vocabulary_set_items_vocabularySetId_fkey" FOREIGN KEY ("vocabularySetId") REFERENCES "vocabulary_sets"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "vocabulary_set_items" ADD CONSTRAINT "vocabulary_set_items_vocabularyItemId_fkey" FOREIGN KEY ("vocabularyItemId") REFERENCES "vocabulary_items"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "questions" ADD CONSTRAINT "questions_passageId_fkey" FOREIGN KEY ("passageId") REFERENCES "passages"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -376,7 +464,13 @@ ALTER TABLE "card_reviews" ADD CONSTRAINT "card_reviews_userId_fkey" FOREIGN KEY
 ALTER TABLE "study_sessions" ADD CONSTRAINT "study_sessions_userId_fkey" FOREIGN KEY ("userId") REFERENCES "profiles"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "study_sessions" ADD CONSTRAINT "study_sessions_passageId_fkey" FOREIGN KEY ("passageId") REFERENCES "passages"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "quiz_attempts" ADD CONSTRAINT "quiz_attempts_studySessionId_fkey" FOREIGN KEY ("studySessionId") REFERENCES "study_sessions"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "quiz_attempts" ADD CONSTRAINT "quiz_attempts_userId_fkey" FOREIGN KEY ("userId") REFERENCES "profiles"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "quiz_attempts" ADD CONSTRAINT "quiz_attempts_passageId_fkey" FOREIGN KEY ("passageId") REFERENCES "passages"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "file_upload_intents" ADD CONSTRAINT "file_upload_intents_userId_fkey" FOREIGN KEY ("userId") REFERENCES "profiles"("id") ON DELETE CASCADE ON UPDATE CASCADE;

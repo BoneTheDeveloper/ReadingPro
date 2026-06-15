@@ -95,14 +95,8 @@ export const quizAttemptResponseSchema = makeResponseSchema(quizAttemptSchema);
 
 export const studySessionSchema = z.object({
   id: z.string(),
-  passageId: z.string().nullable(),
   startedAt: z.string(),
   completedAt: nullableIsoDateSchema,
-  cardsReviewed: z.number(),
-  newCards: z.number(),
-  correctCount: z.number(),
-  incorrectCount: z.number(),
-  accuracyRate: z.number().nullable(),
 }).strict();
 
 export const studySessionSuccessResponseSchema = makeSuccessEnvelopeSchema(studySessionSchema);
@@ -165,14 +159,8 @@ type RawCardReview = {
 
 type RawStudySession = {
   id: string;
-  passageId: string | null;
   startedAt: Date | string;
   completedAt: Date | string | null;
-  cardsReviewed: number;
-  newCards: number;
-  correctCount: number;
-  incorrectCount: number;
-  accuracyRate: number | null;
 };
 
 type RawQuizAttempt = {
@@ -229,14 +217,8 @@ export function toCardReviewDto(card: RawCardReview): CardReviewDto {
 export function toStudySessionDto(session: RawStudySession): StudySessionDto {
   return {
     id: session.id,
-    passageId: session.passageId,
     startedAt: toIsoString(session.startedAt),
     completedAt: session.completedAt ? toIsoString(session.completedAt) : null,
-    cardsReviewed: session.cardsReviewed,
-    newCards: session.newCards,
-    correctCount: session.correctCount,
-    incorrectCount: session.incorrectCount,
-    accuracyRate: session.accuracyRate,
   };
 }
 

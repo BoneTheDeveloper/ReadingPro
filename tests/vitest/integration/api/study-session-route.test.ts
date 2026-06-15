@@ -1,10 +1,8 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import {
-  PATCH as updateStudySessionRoute,
-  POST as createStudySessionRoute,
-} from "@/app/api/study-session/route";
-import { studySessionResponseSchema } from "@/lib/study/shared/study-response-schema";
-import { passageFixture, studySessionFixture, userProfileFixture } from "../../fixtures";
+import { NextRequest } from "next/server";
+import { POST as createStudySessionRoute } from "@/app/api/study-session/route";
+import { studySessionResponseSchema, toStudySessionDto } from "@/lib/study/shared/study-response-schema";
+import { studySessionFixture, userProfileFixture } from "../../fixtures";
 import { createJsonRequest, parseJsonResponse } from "../../helpers/api";
 import { expectApiErrorPayload } from "../../helpers/assertions";
 
@@ -18,8 +16,7 @@ const routeMocks = vi.hoisted(() => {
 
   return {
     getAuthenticatedUser: vi.fn(),
-    createStudySession: vi.fn(),
-    updateStudySession: vi.fn(),
+    ensureActiveSession: vi.fn(),
     AuthenticationRequiredError,
   };
 });
@@ -30,8 +27,7 @@ vi.mock("@/lib/auth/auth-utils", () => ({
 }));
 
 vi.mock("@/lib/db/study-session-queries", () => ({
-  createStudySession: routeMocks.createStudySession,
-  updateStudySession: routeMocks.updateStudySession,
+  ensureActiveSession: routeMocks.ensureActiveSession,
 }));
 
 beforeEach(() => {
@@ -40,52 +36,46 @@ beforeEach(() => {
 });
 
 describe("study-session API contracts", () => {
-  it("returns 401 envelopes for unauthenticated create and update requests", async () => {
+  it("returns 401 for unauthenticated ensure requests", async () => {
     routeMocks.getAuthenticatedUser.mockRejectedValue(new routeMocks.AuthenticationRequiredError());
 
-    const created = await createStudySessionRoute(createJsonRequest({ passageId: passageFixture.id }));
+    const created = await createStudySessionRoute(createJsonRequest({}));
     expect(created.status).toBe(401);
     expectApiErrorPayload(
       await parseJsonResponse(created, studySessionResponseSchema),
       "Authentication required.",
     );
 
-    const updated = await updateStudySessionRoute(
-      createJsonRequest({ sessionId: studySessionFixture.id, cardsReviewed: 1 }),
-    );
-    expect(updated.status).toBe(401);
-    expectApiErrorPayload(
-      await parseJsonResponse(updated, studySessionResponseSchema),
-      "Authentication required.",
-    );
-
-    expect(routeMocks.createStudySession).not.toHaveBeenCalled();
-    expect(routeMocks.updateStudySession).not.toHaveBeenCalled();
+    expect(routeMocks.ensureActiveSession).not.toHaveBeenCalled();
   });
 
-  it("returns 404 for passage ownership misses when creating a session", async () => {
-    routeMocks.createStudySession.mockRejectedValue(new Error("Passage not found or not owned by user"));
+  it("ensures and returns an active study session", async () => {
+    routeMocks.ensureActiveSession.mockResolvedValue(studySessionFixture);
 
-    const response = await createStudySessionRoute(createJsonRequest({ passageId: passageFixture.id }));
+    const response = await createStudySessionRoute(createJsonRequest({}));
+    const payload = await parseJsonResponse(response, studySessionResponseSchema);
 
-    expect(response.status).toBe(404);
-    expectApiErrorPayload(
-      await parseJsonResponse(response, studySessionResponseSchema),
-      "Passage not found.",
-    );
+    expect(response.status).toBe(200);
+    expect(payload).toEqual({
+      success: true,
+      data: toStudySessionDto(studySessionFixture),
+    });
+    expect(routeMocks.ensureActiveSession).toHaveBeenCalledWith(userProfileFixture.id);
   });
 
-  it("returns 404 for session ownership misses when updating a session", async () => {
-    routeMocks.updateStudySession.mockRejectedValue(new Error("Session not found or not owned by user"));
+  it("returns 400 for unexpected body fields", async () => {
+    const response = await createStudySessionRoute(createJsonRequest({ passageId: "123" }));
 
-    const response = await updateStudySessionRoute(
-      createJsonRequest({ sessionId: studySessionFixture.id, cardsReviewed: 1 }),
-    );
+    expect(response.status).toBe(400);
+  });
 
-    expect(response.status).toBe(404);
-    expectApiErrorPayload(
-      await parseJsonResponse(response, studySessionResponseSchema),
-      "Session not found.",
-    );
+  it("returns 400 for invalid JSON", async () => {
+    const response = await createStudySessionRoute(new NextRequest("https://test/api/study-session", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: "not-json",
+    }));
+
+    expect(response.status).toBe(400);
   });
 });

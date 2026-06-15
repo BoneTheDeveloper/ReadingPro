@@ -5,6 +5,7 @@
 ```text
 Learner opens /[locale]/study
   -> server loads authenticated user data
+  -> client ensures active study session window
   -> study client renders three-panel workspace
   -> left panel selects passages/tools
   -> content panel renders original/simplified passage
@@ -33,3 +34,5 @@ Client workspace state is managed by:
 - Passages must be filtered by authenticated `userId`.
 - Deleted passages use `deletedAt`.
 - Generated questions are associated with `Passage`.
+- Study activity is tracked through `StudySession` windows and child
+  `QuizAttempt` records.

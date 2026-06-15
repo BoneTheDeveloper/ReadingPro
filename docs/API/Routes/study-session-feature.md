@@ -6,8 +6,9 @@
 
 #### 1. Purpose
 
-Create a study session for the authenticated user. The session may be tied to a
-passage when `passageId` is provided.
+Ensure there is an active study session for the authenticated user. The route
+reuses the newest open session when it is still fresh and otherwise creates a
+new session window.
 
 #### 2. Method + path
 
@@ -20,9 +21,7 @@ POST /api/study-session
 Request body:
 
 ```ts
-{
-  passageId?: string;  // Must be valid UUID if provided
-}
+{}
 ```
 
 #### 4. Success response
@@ -39,14 +38,8 @@ Request body:
 ```ts
 {
   id: string;
-  passageId: string | null;
   startedAt: string;        // ISO date string
   completedAt: string | null;
-  cardsReviewed: number;
-  newCards: number;
-  correctCount: number;
-  incorrectCount: number;
-  accuracyRate: number | null;
 }
 ```
 
@@ -58,86 +51,18 @@ Request body:
 
 | Status | Meaning |
 |--------|---------|
-| `400` | Invalid request body, malformed JSON, or invalid UUID format |
+| `400` | Invalid request body or malformed JSON |
 | `401` | Missing auth |
-| `404` | Passage not found or not owned by user |
-| `500` | Unexpected session creation failure |
+| `500` | Unexpected session lookup or creation failure |
 
 #### 6. Notes about cache / auth / boundaries
 
 - Route requires authenticated user.
 - No client or server cache is expected.
-- The route creates a new session with `startedAt`.
-
-### Complete Study Session API
-
-#### 1. Purpose
-
-Complete a study session and persist aggregate quiz/review counts.
-
-#### 2. Method + path
-
-```http
-PATCH /api/study-session
-```
-
-#### 3. Request input
-
-Request body:
-
-```ts
-{
-  sessionId: string;   // Must be valid UUID
-  cardsReviewed?: number;
-  correctCount?: number;
-  incorrectCount?: number;
-}
-```
-
-#### 4. Success response
-
-```ts
-{
-  success: true;
-  data: StudySession;
-}
-```
-
-`StudySession`:
-
-```ts
-{
-  id: string;
-  passageId: string | null;
-  startedAt: string;        // ISO date string
-  completedAt: string | null;
-  cardsReviewed: number;
-  newCards: number;
-  correctCount: number;
-  incorrectCount: number;
-  accuracyRate: number | null;
-}
-```
-
-#### 5. Error response
-
-```ts
-{ error: string }
-```
-
-| Status | Meaning |
-|--------|---------|
-| `400` | Invalid request body, malformed JSON, or invalid UUID format |
-| `401` | Missing auth |
-| `404` | Session not found or not owned by user |
-| `500` | Unexpected session update failure |
-
-#### 6. Notes about cache / auth / boundaries
-
-- Route requires authenticated user.
-- Only sessions owned by the authenticated user should be updated.
-- Missing count fields default to `0`.
-- Completion sets `completedAt` server-side.
+- The route closes stale open sessions lazily using the server clock and updates
+  `lastSeenAt` on the returned session row.
+- `StudySession` is a lifecycle record; child `QuizAttempt` rows carry quiz
+  scoring and passage context.
 
 ### Due Cards API
 

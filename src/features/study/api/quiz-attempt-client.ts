@@ -1,25 +1,25 @@
 import {
   quizAttemptResponseSchema,
-  studySessionResponseSchema,
 } from "@/lib/study/shared/study-response-schema";
 import { STUDY_API_ROUTES, postJson, patchJson, type StudyApiResult } from "./api-utils";
+import { ensureStudySession } from "./study-session-client";
 
 export async function createQuizAttemptForPassage(passageId: string): Promise<StudyApiResult<{
   sessionId: string;
   attemptId: string;
 }>> {
-  const sessionPayload = await postJson(STUDY_API_ROUTES.studySession, { passageId }, studySessionResponseSchema);
+  const sessionPayload = await ensureStudySession();
   if ("error" in sessionPayload) return { error: sessionPayload.error };
 
   const attemptPayload = await postJson(
     STUDY_API_ROUTES.quizAttempt,
-    { studySessionId: sessionPayload.data.id, passageId },
+    { studySessionId: sessionPayload.sessionId, passageId },
     quizAttemptResponseSchema,
   );
   if ("error" in attemptPayload) return { error: attemptPayload.error };
 
   return {
-    sessionId: sessionPayload.data.id,
+    sessionId: sessionPayload.sessionId,
     attemptId: attemptPayload.data.id,
   };
 }

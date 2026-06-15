@@ -59,7 +59,6 @@ model Passage {
   chatMessages         StudyChatMessage[]
   translationCaches    TranslationCache[]
   translationHistories TranslationHistory[]
-  studySessions        StudySession[]
   quizAttempts         QuizAttempt[]
 
   @@index([userId])
@@ -341,23 +340,13 @@ model CardReview {
 model StudySession {
   id        String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId    String
-  passageId String? @db.Uuid
 
   startedAt   DateTime  @default(now())
   completedAt DateTime?
 
-  cardsReviewed  Int    @default(0)
-  newCards       Int    @default(0)
-  correctCount   Int    @default(0)
-  incorrectCount Int    @default(0)
-  accuracyRate   Float?
-
   user         UserProfile   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  passage      Passage?      @relation(fields: [passageId], references: [id], onDelete: SetNull)
-  quizAttempts QuizAttempt[]
 
   @@index([userId, startedAt])
-  @@map("study_sessions")
 }
 
 // ============================================

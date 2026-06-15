@@ -139,7 +139,7 @@
 - `Sentry.startSpan()` performance monitoring in:
   - `src/app/actions/analyze.ts`: `ai:cefr-detect`, `ai:content-simplify`, `ai:question-gen`, `db:user-lookup`, `db:passage-create`
   - `src/app/api/upload/route.ts`: `file-write`, `pdf-parse`
-  - `src/app/api/study-session/route.ts`: `db:session-create`, `db:session-update`
+  - `src/app/api/study-session/route.ts`: `db:session-ensure-active`
   - `src/app/api/cards/review/route.ts`: `db:card-review-update`
 
 ### Changed

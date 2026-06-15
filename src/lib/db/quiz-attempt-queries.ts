@@ -77,27 +77,14 @@ export async function completeQuizAttempt(
       ? Math.round((data.correctCount / data.totalQuestions) * 100 * 100) / 100
       : 0;
 
-  const [completed] = await db.$transaction([
-    db.quizAttempt.update({
-      where: { id: attemptId },
-      data: {
-        correctCount: data.correctCount,
-        incorrectCount: data.incorrectCount,
-        totalQuestions: data.totalQuestions,
-        accuracyRate,
-        completedAt: new Date(),
-      },
-    }),
-    db.studySession.update({
-      where: { id: attempt.studySessionId },
-      data: {
-        correctCount: data.correctCount,
-        incorrectCount: data.incorrectCount,
-        accuracyRate,
-        completedAt: new Date(),
-      },
-    }),
-  ]);
-
-  return completed;
+  return db.quizAttempt.update({
+    where: { id: attemptId },
+    data: {
+      correctCount: data.correctCount,
+      incorrectCount: data.incorrectCount,
+      totalQuestions: data.totalQuestions,
+      accuracyRate,
+      completedAt: new Date(),
+    },
+  });
 }

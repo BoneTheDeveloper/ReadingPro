@@ -78,7 +78,6 @@ tables when query-count behavior becomes important for the route.
 | `POST /api/vocabulary` | not benchmarked |
 | `POST /api/study-chat` | not benchmarked |
 | `POST /api/study-session` | not benchmarked |
-| `PATCH /api/study-session` | not benchmarked |
 | `GET /api/cards/due` | not benchmarked |
 | `POST /api/cards/review` | not benchmarked |
 | `GET /api/progress/stats` | not benchmarked |

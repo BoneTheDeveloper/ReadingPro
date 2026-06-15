@@ -17,6 +17,7 @@ import { StudyStudioPanel } from "./studio/studio-panel";
 import { StudyTranslationPopup } from "./studio/translate/translation-popup";
 import { StudyUploadModal } from "./upload-modal";
 import { useStudyActions } from "@/features/study/hooks/use-study-actions";
+import { useStudySessionHeartbeat } from "@/features/study/hooks/use-study-session-heartbeat";
 import { useStudyPanelLayout } from "@/features/study/hooks/use-study-panel-layout";
 import { useStudyWorkspaceState } from "@/features/study/hooks/use-study-workspace-state";
 
@@ -53,6 +54,7 @@ export function StudyPageClient({
   } = useStudyWorkspaceState(initialPassages);
   const { handleSimplify, handleActionClick } = useStudyActions({ state, setState });
   const layout = useStudyPanelLayout();
+  useStudySessionHeartbeat(true);
 
   // Translation state (lifted from StudyContentPanel)
   const [contentViewMode, setContentViewMode] = useState<"original" | "simplified">("simplified");

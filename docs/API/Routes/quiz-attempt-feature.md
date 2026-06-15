@@ -2,7 +2,8 @@
 
 ## Purpose
 
-Create and complete quiz attempts for study sessions, tracking completion status and scoring metrics.
+Create and complete quiz attempts for study sessions, tracking completion status
+and scoring metrics. A quiz attempt is a child record of `StudySession`.
 
 ## Routes
 
@@ -75,6 +76,8 @@ Error:
 - Validates that correctCount + incorrectCount === totalQuestions.
 - Updates attempt completion status and scoring metrics.
 - Tracks timing data for performance analysis.
+- The client first ensures an active study session via `POST /api/study-session`
+  and then creates the attempt against that session id.
 
 ## Error Cases
 
