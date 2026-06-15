@@ -29,33 +29,46 @@ describe("study-session queries", () => {
       data: {
         userId: "user-1",
         startedAt: new Date("2026-05-21T12:00:00.000Z"),
-        lastSeenAt: new Date("2026-05-21T12:00:00.000Z"),
+        lastActivityAt: new Date("2026-05-21T12:00:00.000Z"),
       },
     });
   });
 
-  it("reuses the newest open session and refreshes lastSeenAt", async () => {
+  it("serializes ensure-calls with a per-user advisory lock before the sweep", async () => {
+    vi.mocked(db.studySession.findFirst).mockResolvedValue(null);
+
+    await ensureActiveSession("user-1");
+
+    const lockQuery = vi.mocked(db.$executeRaw).mock.calls[0]?.[0];
+    expect(String(lockQuery)).toContain("pg_advisory_xact_lock");
+    expect(vi.mocked(db.$executeRaw).mock.calls[0]?.slice(1)).toContain(
+      "study_session:user-1",
+    );
+  });
+
+  it("reuses the newest open session and refreshes lastActivityAt", async () => {
     vi.mocked(db.studySession.findFirst).mockResolvedValue({
       id: "session-1",
       userId: "user-1",
       startedAt: new Date("2026-05-21T11:30:00.000Z"),
       completedAt: null,
-      lastSeenAt: new Date("2026-05-21T11:45:00.000Z"),
+      lastActivityAt: new Date("2026-05-21T11:45:00.000Z"),
     });
 
     await ensureActiveSession("user-1");
 
-    expect(db.$executeRaw).toHaveBeenCalledTimes(1);
+    // advisory lock + stale sweep
+    expect(db.$executeRaw).toHaveBeenCalledTimes(2);
     expect(db.studySession.findFirst).toHaveBeenCalledWith({
       where: { userId: "user-1", completedAt: null },
       orderBy: [
-        { lastSeenAt: "desc" },
+        { lastActivityAt: "desc" },
         { startedAt: "desc" },
       ],
     });
     expect(db.studySession.update).toHaveBeenCalledWith({
       where: { id: "session-1" },
-      data: { lastSeenAt: new Date("2026-05-21T12:00:00.000Z") },
+      data: { lastActivityAt: new Date("2026-05-21T12:00:00.000Z") },
     });
   });
 
@@ -64,12 +77,13 @@ describe("study-session queries", () => {
 
     await ensureActiveSession("user-1");
 
-    expect(db.$executeRaw).toHaveBeenCalledTimes(1);
+    // advisory lock + stale sweep
+    expect(db.$executeRaw).toHaveBeenCalledTimes(2);
     expect(db.studySession.create).toHaveBeenCalledWith({
       data: {
         userId: "user-1",
         startedAt: new Date("2026-05-21T12:00:00.000Z"),
-        lastSeenAt: new Date("2026-05-21T12:00:00.000Z"),
+        lastActivityAt: new Date("2026-05-21T12:00:00.000Z"),
       },
     });
   });
@@ -79,10 +93,10 @@ describe("study-session queries", () => {
 
     await ensureActiveSession("user-1");
 
-    const rawQuery = vi.mocked(db.$executeRaw).mock.calls[0]?.[0];
-    expect(String(rawQuery)).toContain('UPDATE "study_sessions"');
-    expect(String(rawQuery)).toContain('completedAt');
-    expect(String(rawQuery)).toContain('lastSeenAt');
-    expect(Number(SESSION_IDLE_MS)).toBe(300000);
+    const sweepQuery = vi.mocked(db.$executeRaw).mock.calls[1]?.[0];
+    expect(String(sweepQuery)).toContain('UPDATE "study_sessions"');
+    expect(String(sweepQuery)).toContain('completedAt');
+    expect(String(sweepQuery)).toContain('lastActivityAt');
+    expect(Number(SESSION_IDLE_MS)).toBe(600000);
   });
 });

@@ -341,14 +341,15 @@ model StudySession {
   id        String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId    String
 
-  startedAt   DateTime  @default(now())
-  lastSeenAt  DateTime  @default(now())
-  completedAt DateTime?
+  startedAt      DateTime  @default(now())
+  lastActivityAt DateTime  @default(now())
+  completedAt    DateTime?
 
   user         UserProfile   @relation(fields: [userId], references: [id], onDelete: Cascade)
   quizAttempts QuizAttempt[]
 
   @@index([userId, startedAt])
+  @@map("study_sessions")
 }
 
 // ============================================

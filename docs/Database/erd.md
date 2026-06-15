@@ -55,7 +55,7 @@ erDiagram
         string userId FK
         datetime startedAt
         datetime completedAt "nullable"
-        datetime lastSeenAt
+        datetime lastActivityAt
     }
 
     QuizAttempt {

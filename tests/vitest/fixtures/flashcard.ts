@@ -28,7 +28,7 @@ export const studySessionFixture = {
   userId: "user_test_reader",
   startedAt: new Date("2026-05-21T00:00:00.000Z"),
   completedAt: null,
-  lastSeenAt: new Date("2026-05-21T00:05:00.000Z"),
+  lastActivityAt: new Date("2026-05-21T00:05:00.000Z"),
   createdAt: new Date("2026-05-21T00:00:00.000Z"),
   updatedAt: new Date("2026-05-21T00:00:00.000Z"),
 };

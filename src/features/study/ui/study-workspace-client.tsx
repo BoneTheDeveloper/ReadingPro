@@ -17,7 +17,6 @@ import { StudyStudioPanel } from "./studio/studio-panel";
 import { StudyTranslationPopup } from "./studio/translate/translation-popup";
 import { StudyUploadModal } from "./upload-modal";
 import { useStudyActions } from "@/features/study/hooks/use-study-actions";
-import { useStudySessionHeartbeat } from "@/features/study/hooks/use-study-session-heartbeat";
 import { useStudyPanelLayout } from "@/features/study/hooks/use-study-panel-layout";
 import { useStudyWorkspaceState } from "@/features/study/hooks/use-study-workspace-state";
 
@@ -54,7 +53,8 @@ export function StudyPageClient({
   } = useStudyWorkspaceState(initialPassages);
   const { handleSimplify, handleActionClick } = useStudyActions({ state, setState });
   const layout = useStudyPanelLayout();
-  useStudySessionHeartbeat(true);
+  // Presence heartbeat is mounted app-wide in DashboardSidebar; the study page is
+  // wrapped by it, so no per-page heartbeat is needed here.
 
   // Translation state (lifted from StudyContentPanel)
   const [contentViewMode, setContentViewMode] = useState<"original" | "simplified">("simplified");

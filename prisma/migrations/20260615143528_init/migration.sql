@@ -243,7 +243,7 @@ CREATE TABLE "questions" (
 );
 
 -- CreateTable
-CREATE TABLE "card_reviews" (
+CREATE TABLE "question_reviews" (
     "id" UUID NOT NULL DEFAULT gen_random_uuid(),
     "questionId" UUID NOT NULL,
     "userId" TEXT NOT NULL,
@@ -254,7 +254,7 @@ CREATE TABLE "card_reviews" (
     "nextReviewDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "reviewedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "card_reviews_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "question_reviews_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -262,8 +262,8 @@ CREATE TABLE "study_sessions" (
     "id" UUID NOT NULL DEFAULT gen_random_uuid(),
     "userId" TEXT NOT NULL,
     "startedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "lastActivityAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "completedAt" TIMESTAMP(3),
-    "lastSeenAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "study_sessions_pkey" PRIMARY KEY ("id")
 );
@@ -380,19 +380,18 @@ CREATE UNIQUE INDEX "vocabulary_set_items_vocabularySetId_vocabularyItemId_key" 
 CREATE INDEX "questions_passageId_idx" ON "questions"("passageId");
 
 -- CreateIndex
-CREATE INDEX "card_reviews_userId_nextReviewDate_idx" ON "card_reviews"("userId", "nextReviewDate");
+CREATE INDEX "question_reviews_userId_nextReviewDate_idx" ON "question_reviews"("userId", "nextReviewDate");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "card_reviews_questionId_userId_key" ON "card_reviews"("questionId", "userId");
+CREATE UNIQUE INDEX "question_reviews_questionId_userId_key" ON "question_reviews"("questionId", "userId");
 
 -- CreateIndex
 CREATE INDEX "study_sessions_userId_startedAt_idx" ON "study_sessions"("userId", "startedAt");
 
 -- CreateIndex
-CREATE INDEX "study_sessions_userId_completedAt_idx" ON "study_sessions"("userId", "completedAt");
-
--- CreateIndex
-CREATE INDEX "study_sessions_userId_lastSeenAt_idx" ON "study_sessions"("userId", "lastSeenAt");
+-- Backstop invariant: at most one open session per user. The advisory lock in
+-- ensureActiveSession prevents this from ever being hit under normal load.
+CREATE UNIQUE INDEX "study_sessions_one_open_per_user" ON "study_sessions"("userId") WHERE "completedAt" IS NULL;
 
 -- CreateIndex
 CREATE INDEX "quiz_attempts_userId_startedAt_idx" ON "quiz_attempts"("userId", "startedAt");
@@ -455,10 +454,10 @@ ALTER TABLE "vocabulary_set_items" ADD CONSTRAINT "vocabulary_set_items_vocabula
 ALTER TABLE "questions" ADD CONSTRAINT "questions_passageId_fkey" FOREIGN KEY ("passageId") REFERENCES "passages"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "card_reviews" ADD CONSTRAINT "card_reviews_questionId_fkey" FOREIGN KEY ("questionId") REFERENCES "questions"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "question_reviews" ADD CONSTRAINT "question_reviews_questionId_fkey" FOREIGN KEY ("questionId") REFERENCES "questions"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "card_reviews" ADD CONSTRAINT "card_reviews_userId_fkey" FOREIGN KEY ("userId") REFERENCES "profiles"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "question_reviews" ADD CONSTRAINT "question_reviews_userId_fkey" FOREIGN KEY ("userId") REFERENCES "profiles"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "study_sessions" ADD CONSTRAINT "study_sessions_userId_fkey" FOREIGN KEY ("userId") REFERENCES "profiles"("id") ON DELETE CASCADE ON UPDATE CASCADE;

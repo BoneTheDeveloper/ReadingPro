@@ -1,71 +1,108 @@
 ---
 phase: 1
-title: "Backend: lastSeenAt + ensureActiveSession()"
-status: pending
-priority: P2
+title: "Backend: @@map fix + lastActivityAt + advisory-lock ensure + backstop index"
+status: completed
+priority: P1
 effort: "4h"
 dependencies: []
 ---
 
-# Phase 1: Backend — lastSeenAt + ensureActiveSession()
+# Phase 1: Backend — `@@map` fix + advisory-lock one-open-session
+
+<!-- Updated: Validation Session 1 - advisory lock, 10-min idle, lastActivityAt rename -->
 
 ## Overview
-Add `lastSeenAt` to `StudySession` and implement `ensureActiveSession(userId)`: lazily
-close stale open sessions (idle > 5 min), then reuse the newest still-open session or
-create a new one. This is the core of the presence-window model.
+Fix the live 500 (`relation "study_sessions" does not exist`) via `@@map`, rename the
+activity timestamp to `lastActivityAt`, and make `ensureActiveSession` serialize per-user
+with a transaction-level **advisory lock** so exactly one open session exists per user. A
+partial unique index stands as a backstop. This makes Phase 3's daily time sums honest.
+
+## Key insight
+`ensureActiveSession` / `closeStaleStudySessions` / the idle constant already exist in the
+live code — this phase **reshapes** them (adds the advisory lock, renames the column, bumps
+idle to 10 min), it does not build them from scratch. The init migration is fresh +
+uncommitted, so it regenerates cleanly. There is an existing `P2002` precedent
+(`vocabulary-set-queries.ts:190`), but the hot path here uses the lock instead of catch/retry.
 
 ## Requirements
 - Functional:
-  - `ensureActiveSession(userId)` returns exactly one open session id.
-  - Before deciding, it closes every open session whose `lastSeenAt < now - 5min` by
-    setting `completedAt = lastSeenAt`.
-  - If a fresh open session remains, reuse it; else create a new one.
-  - A heartbeat (`touchSession`) updates `lastSeenAt = now` for the open session.
-- Non-functional: no background job; all close logic is lazy inside `ensureActiveSession`.
-  Concurrency-safe enough for multi-tab (idempotent reuse-newest).
+  - `study_sessions` table exists (snake_case) → raw SQL resolves; `POST /api/study-session`
+    returns 200.
+  - `ensureActiveSession(userId)` runs in one `db.$transaction`: advisory lock → sweep stale
+    (idle > 10 min) → reuse the open session, else create one. Returns exactly one open row.
+  - At most one `study_sessions` row per `userId` with `completedAt IS NULL` (backstop index).
+  - Concurrent ensure-calls (multi-tab/device) collapse to ONE open session via the lock — no
+    error surfaced, no retry.
+  - Heartbeat bumps `lastActivityAt = now` on the open session.
+- Non-functional: lazy close only (no cron); server `now()` for idle comparison; advisory
+  lock auto-releases on commit/rollback.
 
 ## Architecture
 ```
-const SESSION_IDLE_MS = 5 * 60 * 1000;
+schema: model StudySession {
+  ... startedAt, lastActivityAt DateTime @default(now()), completedAt DateTime?
+  @@index([userId, startedAt]) @@map("study_sessions")
+}
 
-ensureActiveSession(userId):
-  closeStaleOpenSessions(userId)          // completedAt = lastSeenAt where idle
-  open = newest StudySession where completedAt = null
-  return open ?? create({ userId, startedAt: now, lastSeenAt: now })
+migration (regenerated init), after table + indexes:
+  CREATE UNIQUE INDEX "study_sessions_one_open_per_user"
+    ON "study_sessions"("userId") WHERE "completedAt" IS NULL;   -- backstop
 
-touchSession(userId, sessionId):          // heartbeat
-  update lastSeenAt = now where id = sessionId, completedAt = null
+const SESSION_IDLE_MS = 10 * 60 * 1000;
+
+ensureActiveSession(userId):  // db.$transaction(async (tx) => { ... })
+  await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${'study_session:'+userId})::bigint)`
+  // sweep: close idle open sessions
+  await tx.$executeRaw`UPDATE "study_sessions"
+        SET "completedAt" = "lastActivityAt"
+        WHERE "userId" = ${userId} AND "completedAt" IS NULL
+          AND "lastActivityAt" < ${idleCutoff}`
+  open = tx.studySession.findFirst({ where: { userId, completedAt: null } })
+  if open -> tx.studySession.update({ where:{id:open.id}, data:{ lastActivityAt: now } })
+  else     -> tx.studySession.create({ data:{ userId, startedAt: now, lastActivityAt: now } })
 ```
-`lastSeenAt` indexed with `userId` for the stale sweep.
+Prisma can't express the partial unique index → raw SQL in the migration. No `P2002` catch in
+the normal path; the lock prevents the collision.
 
 ## Related Code Files
-- Modify: `prisma/schema.prisma` — add `lastSeenAt DateTime @default(now())` to
-  `StudySession`; add `@@index([userId, completedAt])` (open-session lookup).
-- Create: `prisma/migrations/<ts>_add_studysession_last_seen_at/migration.sql`.
-- Modify: `src/lib/db/study-session-queries.ts` — add `ensureActiveSession`,
-  `closeStaleOpenSessions`, `touchSession`, and `SESSION_IDLE_MS`.
-- Modify: `src/app/api/study-session/route.ts` — `POST` becomes "ensure active session"
-  (idempotent), not "always create"; optionally add a lightweight heartbeat handler.
-- Modify: `src/lib/study/shared/study-response-schema.ts` — include `lastSeenAt` if surfaced.
+- Modify: `prisma/schema.prisma` — add `@@map("study_sessions")`; rename `lastSeenAt` →
+  `lastActivityAt` on `StudySession`.
+- Regenerate: `prisma/migrations/<ts>_init/migration.sql` — table → `study_sessions`,
+  `lastActivityAt` column, `quiz_attempts` FK retargets, + append the partial unique index.
+- Modify: `src/lib/db/study-session-queries.ts` — `SESSION_IDLE_MS = 10*60*1000`; add the
+  advisory lock at tx top; rename `lastSeenAt` → `lastActivityAt` in `createStudySession`,
+  `closeStaleStudySessions`, `ensureActiveSession`.
+- Modify: `src/lib/study/shared/study-response-schema.ts` — rename `lastSeenAt` if surfaced
+  in the StudySession DTO.
+- Modify: `src/lib/db/study-session-queries.test.ts` — rename refs; add the advisory-lock
+  call assertion + the "concurrent ensure returns one open session" expectation; keep
+  reuse/create/close cases green.
 
 ## Implementation Steps
-1. Add `lastSeenAt` + index to `StudySession`; `pnpm prisma migrate dev --name add_studysession_last_seen_at`.
-2. Implement `closeStaleOpenSessions(userId)` (update many: open + idle → `completedAt = lastSeenAt`).
-3. Implement `ensureActiveSession(userId)` (sweep → reuse newest open → else create).
-4. Implement `touchSession(userId, sessionId)` heartbeat.
-5. Rework `POST /api/study-session` to call `ensureActiveSession` (returns existing or new).
-6. Add unit/integration tests: reuse-when-fresh, create-when-none, close-when-stale,
-   multi-call idempotency.
-7. Run verification.
+1. Rename `lastSeenAt` → `lastActivityAt` and add `@@map("study_sessions")` in `schema.prisma`.
+2. Regenerate init migration: `pnpm prisma migrate reset --force` then
+   `pnpm prisma migrate dev --name init`.
+3. Append the backstop partial unique index to the generated SQL and re-apply.
+4. Update `study-session-queries.ts`: bump idle to 10 min, add `pg_advisory_xact_lock` as the
+   first statement inside the existing `db.$transaction`, rename column refs in the raw SQL +
+   Prisma calls.
+5. Update the schema/DTO + tests for the rename; add lock + single-open-session tests.
+6. Run verification commands.
 
 ## Success Criteria
-- [ ] Two `ensureActiveSession` calls within the window return the same session id.
-- [ ] An open session idle > 5 min is closed with `completedAt = lastSeenAt` and a new
-      one is created on next call.
+- [ ] `POST /api/study-session` returns 200 (no `42P01`).
+- [ ] `ensureActiveSession` issues `pg_advisory_xact_lock` before the sweep/select.
+- [ ] Backstop index exists; DB rejects a 2nd open row for a user.
+- [ ] Idle > 10 min closes a session with `completedAt = lastActivityAt`.
+- [ ] No `lastSeenAt` references remain in code or tests.
 - [ ] `pnpm run typecheck`, `pnpm run lint`, `pnpm run test` pass.
 
 ## Risk Assessment
-- Multi-tab race: two simultaneous creates could yield two open sessions. Mitigate by
-  reuse-newest on read; an optional unique partial index on `(userId) where completedAt is null`
-  is a stronger guarantee — note as a follow-up, not required for MVP.
-- Clock/timezone: use server `now()` consistently for the idle comparison.
+- Regenerating init drops local data — acceptable (fresh, uncommitted, no prod). Confirm no
+  other uncommitted migration depends on the old table/column name before reset.
+- Manual SQL (index) in a Prisma-generated migration can be lost on a later regenerate —
+  document it in the migration; re-add if regenerated.
+- Advisory-lock key collisions: `hashtext` is 32-bit; cast to bigint is fine. Keying on
+  `'study_session:'||userId` namespaces it from any other advisory lock.
+- The lock is held for the duration of the (short) transaction — negligible contention for
+  per-user serialization; never lock across an external call.

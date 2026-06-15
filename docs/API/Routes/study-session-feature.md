@@ -60,7 +60,9 @@ Request body:
 - Route requires authenticated user.
 - No client or server cache is expected.
 - The route closes stale open sessions lazily using the server clock and updates
-  `lastSeenAt` on the returned session row.
+  `lastActivityAt` on the returned session row. `ensureActiveSession` serializes
+  per-user with a transaction-level advisory lock so concurrent tabs/devices
+  collapse to one open session.
 - `StudySession` is a lifecycle record; child `QuizAttempt` rows carry quiz
   scoring and passage context.
 

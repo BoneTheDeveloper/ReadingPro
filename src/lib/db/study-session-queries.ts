@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { db } from './client';
 
-export const SESSION_IDLE_MS = 5 * 60 * 1000;
+export const SESSION_IDLE_MS = 10 * 60 * 1000;
 
 const userIdSchema = z.string().min(1, 'userId is required');
 
@@ -17,7 +17,7 @@ export async function createStudySession(userId: string) {
     data: {
       userId: validated.userId,
       startedAt: now,
-      lastSeenAt: now,
+      lastActivityAt: now,
     },
   });
 }
@@ -27,10 +27,10 @@ export async function closeStaleStudySessions(userId: string, now = new Date()) 
 
   return db.$executeRaw`
     UPDATE "study_sessions"
-    SET "completedAt" = "lastSeenAt"
+    SET "completedAt" = "lastActivityAt"
     WHERE "userId" = ${userId}
       AND "completedAt" IS NULL
-      AND "lastSeenAt" < ${staleBefore}
+      AND "lastActivityAt" < ${staleBefore}
   `;
 }
 
@@ -38,18 +38,23 @@ export async function ensureActiveSession(userId: string) {
   const now = new Date();
 
   return db.$transaction(async (tx) => {
+    // Serialize ensure-calls per user so concurrent tabs/devices collapse to one
+    // open session. The lock auto-releases on commit/rollback; never held across
+    // an external call. The partial unique index is a backstop only.
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`study_session:${userId}`})::bigint)`;
+
     await tx.$executeRaw`
       UPDATE "study_sessions"
-      SET "completedAt" = "lastSeenAt"
+      SET "completedAt" = "lastActivityAt"
       WHERE "userId" = ${userId}
         AND "completedAt" IS NULL
-        AND "lastSeenAt" < ${new Date(now.getTime() - SESSION_IDLE_MS)}
+        AND "lastActivityAt" < ${new Date(now.getTime() - SESSION_IDLE_MS)}
     `;
 
     const openSession = await tx.studySession.findFirst({
       where: { userId, completedAt: null },
       orderBy: [
-        { lastSeenAt: 'desc' },
+        { lastActivityAt: 'desc' },
         { startedAt: 'desc' },
       ],
     });
@@ -57,7 +62,7 @@ export async function ensureActiveSession(userId: string) {
     if (openSession) {
       return tx.studySession.update({
         where: { id: openSession.id },
-        data: { lastSeenAt: now },
+        data: { lastActivityAt: now },
       });
     }
 
@@ -65,7 +70,7 @@ export async function ensureActiveSession(userId: string) {
       data: {
         userId,
         startedAt: now,
-        lastSeenAt: now,
+        lastActivityAt: now,
       },
     });
   });

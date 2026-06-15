@@ -52,7 +52,7 @@ describe("quiz-review queries", () => {
       easeFactor: 2.5,
       intervalDays: 6,
       repetitions: 2,
-    } as any);
+    });
 
     await updateQuestionReview("user-1", "review-1", 5);
 
@@ -87,13 +87,15 @@ describe("quiz-review queries", () => {
     });
   });
 
-  it("normalizes progress aggregate rows and calculates current streak", async () => {
+  it("computes a study-time streak from per-day session seconds and the >10min gate", async () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
     const twoDaysAgo = new Date(today);
     twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+    const threeDaysAgo = new Date(today);
+    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
 
     vi.mocked(db.$queryRaw)
       .mockResolvedValueOnce([
@@ -104,10 +106,13 @@ describe("quiz-review queries", () => {
           todayReviews: BigInt(4),
         },
       ])
+      // today + yesterday qualify (>600s); two-days-ago is sub-threshold and breaks
+      // the streak; three-days-ago qualifies but is no longer consecutive.
       .mockResolvedValueOnce([
-        { day: today },
-        { day: yesterday },
-        { day: twoDaysAgo },
+        { day: today, secs: 1500 },
+        { day: yesterday, secs: 900 },
+        { day: twoDaysAgo, secs: 120 },
+        { day: threeDaysAgo, secs: 1800 },
       ])
       .mockResolvedValueOnce([
         {
@@ -122,7 +127,12 @@ describe("quiz-review queries", () => {
       matureCards: 3,
       dueCards: 2,
       todayReviews: 4,
-      streakDays: 3,
+      streakDays: 2,
+      timeStudiedTodaySeconds: 1500,
+      // raw, ungated: 1500 + 900 + 120 + 1800 all fall within the last 7 days
+      timeStudiedWeekSeconds: 4320,
+      // qualifying days (>600s) within the last 7: today, yesterday, three-days-ago
+      activeDaysThisWeek: 3,
       totalQuizAttempts: 5,
       avgQuizAccuracy: 72.5,
       todayQuizAttempts: 1,
