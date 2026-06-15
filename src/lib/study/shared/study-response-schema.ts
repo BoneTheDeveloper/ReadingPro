@@ -47,7 +47,7 @@ export const studyCardQuestionSchema = z.object({
   passage: studyCardPassageSchema.optional(),
 }).strict();
 
-export const cardReviewSchema = z.object({
+export const questionReviewSchema = z.object({
   id: z.string(),
   questionId: z.string(),
   qualityRating: z.number(),
@@ -59,10 +59,10 @@ export const cardReviewSchema = z.object({
   question: studyCardQuestionSchema.optional(),
 }).strict();
 
-export const dueCardsSuccessResponseSchema = makeSuccessEnvelopeSchema(z.array(cardReviewSchema));
-export const dueCardsResponseSchema = makeResponseSchema(z.array(cardReviewSchema));
-export const cardReviewSuccessResponseSchema = makeSuccessEnvelopeSchema(cardReviewSchema);
-export const cardReviewResponseSchema = makeResponseSchema(cardReviewSchema);
+export const dueQuestionsSuccessResponseSchema = makeSuccessEnvelopeSchema(z.array(questionReviewSchema));
+export const dueQuestionsResponseSchema = makeResponseSchema(z.array(questionReviewSchema));
+export const questionReviewSuccessResponseSchema = makeSuccessEnvelopeSchema(questionReviewSchema);
+export const questionReviewResponseSchema = makeResponseSchema(questionReviewSchema);
 
 export const progressStatsSchema = z.object({
   totalCards: z.number(),
@@ -123,13 +123,13 @@ export type StudyQuestionOptionDto = z.infer<typeof studyQuestionOptionSchema>;
 export type GeneratedStudyQuestionDto = z.infer<typeof generatedStudyQuestionSchema>;
 export type GeneratedStudyQuestionsDto = z.infer<typeof generatedStudyQuestionsSchema>;
 export type StudyCardQuestionDto = z.infer<typeof studyCardQuestionSchema>;
-export type CardReviewDto = z.infer<typeof cardReviewSchema>;
+export type QuestionReviewDto = z.infer<typeof questionReviewSchema>;
 export type ProgressStatsDto = z.infer<typeof progressStatsSchema>;
 export type StudySessionDto = z.infer<typeof studySessionSchema>;
 export type QuizAttemptDto = z.infer<typeof quizAttemptSchema>;
 export type StudyChatHistoryResponse = z.infer<typeof studyChatHistoryResponseSchema>;
 
-type RawCardReview = {
+type RawQuestionReview = {
   id: string;
   questionId: string;
   qualityRating: number;
@@ -175,8 +175,8 @@ type RawQuizAttempt = {
   completedAt: Date | string | null;
 };
 
-export function toCardReviewDto(card: RawCardReview): CardReviewDto {
-  const dto: CardReviewDto = {
+export function toQuestionReviewDto(card: RawQuestionReview): QuestionReviewDto {
+  const dto: QuestionReviewDto = {
     id: card.id,
     questionId: card.questionId,
     qualityRating: card.qualityRating,

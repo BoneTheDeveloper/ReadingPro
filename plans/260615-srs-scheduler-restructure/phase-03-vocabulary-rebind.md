@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "Rebind vocabulary scheduling to simpleSchedule()"
-status: pending
+status: completed
 priority: P3
 effort: "2h"
 dependencies: [1]

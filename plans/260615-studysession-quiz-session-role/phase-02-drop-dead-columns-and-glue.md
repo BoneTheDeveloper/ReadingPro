@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Drop dead StudySession columns + SRS glue"
-status: pending
+status: completed
 priority: P2
 effort: "3h"
 dependencies: [1]

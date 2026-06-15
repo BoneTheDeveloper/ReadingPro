@@ -1,5 +1,5 @@
-import { db } from './client';
-import { calculateSM2 } from '../algorithms/sm2';
+import { db } from '../client';
+import { sm2 } from '../../srs/scheduler';
 
 export function calculateSM2Interval(
   previousEaseFactor: number,
@@ -11,7 +11,7 @@ export function calculateSM2Interval(
   intervalDays: number;
   repetitions: number;
 } {
-  const result = calculateSM2(
+  const result = sm2(
     { easeFactor: previousEaseFactor, intervalDays: previousInterval, repetitions },
     qualityRating
   );
@@ -22,8 +22,8 @@ export function calculateSM2Interval(
   };
 }
 
-export async function getDueCards(userId: string) {
-  return db.cardReview.findMany({
+export async function getDueQuestions(userId: string) {
+  return db.questionReview.findMany({
     where: {
       userId,
       nextReviewDate: { lte: new Date() },
@@ -36,16 +36,16 @@ export async function getDueCards(userId: string) {
   });
 }
 
-export async function updateCardReview(
+export async function updateQuestionReview(
   userId: string,
-  cardReviewId: string,
+  questionReviewId: string,
   qualityRating: number
 ) {
-  const existing = await db.cardReview.findUniqueOrThrow({
-    where: { id: cardReviewId, userId },
+  const existing = await db.questionReview.findUniqueOrThrow({
+    where: { id: questionReviewId, userId },
   });
 
-  const sm2 = calculateSM2Interval(
+  const sm2Result = calculateSM2Interval(
     existing.easeFactor,
     existing.intervalDays,
     existing.repetitions,
@@ -53,26 +53,26 @@ export async function updateCardReview(
   );
 
   const nextReviewDate = new Date();
-  nextReviewDate.setDate(nextReviewDate.getDate() + sm2.intervalDays);
+  nextReviewDate.setDate(nextReviewDate.getDate() + sm2Result.intervalDays);
 
-  return db.cardReview.update({
-    where: { id: cardReviewId },
+  return db.questionReview.update({
+    where: { id: questionReviewId },
     data: {
       qualityRating,
-      easeFactor: sm2.easeFactor,
-      intervalDays: sm2.intervalDays,
-      repetitions: sm2.repetitions,
+      easeFactor: sm2Result.easeFactor,
+      intervalDays: sm2Result.intervalDays,
+      repetitions: sm2Result.repetitions,
       nextReviewDate,
       reviewedAt: new Date(),
     },
   });
 }
 
-export async function createCardReview(
+export async function createQuestionReview(
   userId: string,
   questionId: string
 ) {
-  return db.cardReview.create({
+  return db.questionReview.create({
     data: {
       userId,
       questionId,
@@ -100,12 +100,12 @@ export async function getUserProgress(userId: string) {
         COUNT(*) FILTER (WHERE "intervalDays" >= 21)::bigint AS "matureCards",
         COUNT(*) FILTER (WHERE "nextReviewDate" <= ${new Date()})::bigint AS "dueCards",
         COUNT(*) FILTER (WHERE "reviewedAt" >= ${startOfToday})::bigint AS "todayReviews"
-      FROM "card_reviews"
+      FROM "question_reviews"
       WHERE "userId" = ${userId}
     `,
     db.$queryRaw<Array<{ day: Date | string }>>`
       SELECT DISTINCT DATE("reviewedAt") AS day
-      FROM "card_reviews"
+      FROM "question_reviews"
       WHERE "userId" = ${userId}
       ORDER BY day DESC
       LIMIT 30

@@ -1,6 +1,6 @@
 import { generatedQuestionsFixture, passageFixture } from "./article";
 
-export const cardReviewFixture = {
+export const questionReviewFixture = {
   id: "f1e2d3c4-b5a6-4978-8695-abcdef012345",
   userId: "user_test_reader",
   questionId: generatedQuestionsFixture[0].id,
@@ -14,8 +14,8 @@ export const cardReviewFixture = {
   updatedAt: new Date("2026-05-21T00:00:00.000Z"),
 };
 
-export const dueCardFixture = {
-  ...cardReviewFixture,
+export const dueQuestionFixture = {
+  ...questionReviewFixture,
   nextReviewDate: new Date("2026-05-20T00:00:00.000Z"),
   question: {
     ...generatedQuestionsFixture[0],

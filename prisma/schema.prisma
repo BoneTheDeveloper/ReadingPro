@@ -24,7 +24,7 @@ model UserProfile {
 
   passages             Passage[]
   studySessions        StudySession[]
-  cardReviews          CardReview[]
+  questionReviews      QuestionReview[]
   chatMessages         StudyChatMessage[]
   translationCaches    TranslationCache[]
   translationHistories TranslationHistory[]
@@ -303,17 +303,17 @@ model Question {
   difficulty    Int          @default(3)
   createdAt     DateTime     @default(now())
 
-  passage Passage      @relation(fields: [passageId], references: [id], onDelete: Cascade)
-  reviews CardReview[]
+  passage Passage          @relation(fields: [passageId], references: [id], onDelete: Cascade)
+  reviews QuestionReview[]
 
   @@index([passageId])
   @@map("questions")
 }
 
 // ============================================
-// CARD REVIEW MODEL (SM-2 Tracking)
+// QUESTION REVIEW MODEL (SM-2 Tracking)
 // ============================================
-model CardReview {
+model QuestionReview {
   id         String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   questionId String @db.Uuid
   userId     String
@@ -331,7 +331,7 @@ model CardReview {
 
   @@unique([questionId, userId])
   @@index([userId, nextReviewDate])
-  @@map("card_reviews")
+  @@map("question_reviews")
 }
 
 // ============================================
@@ -342,9 +342,11 @@ model StudySession {
   userId    String
 
   startedAt   DateTime  @default(now())
+  lastSeenAt  DateTime  @default(now())
   completedAt DateTime?
 
   user         UserProfile   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quizAttempts QuizAttempt[]
 
   @@index([userId, startedAt])
 }

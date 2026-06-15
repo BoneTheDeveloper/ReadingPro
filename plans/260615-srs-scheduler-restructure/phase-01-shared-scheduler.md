@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: "Create shared srs/scheduler.ts"
-status: pending
+status: completed
 priority: P2
 effort: "3h"
 dependencies: []

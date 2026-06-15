@@ -27,7 +27,7 @@ export const db = {
     if (typeof input === "function") return input(db);
     return Promise.all(input as Promise<unknown>[]);
   }),
-  cardReview: createModelMock(),
+  questionReview: createModelMock(),
   passage: createModelMock(),
   question: createModelMock(),
   studySession: createModelMock(),

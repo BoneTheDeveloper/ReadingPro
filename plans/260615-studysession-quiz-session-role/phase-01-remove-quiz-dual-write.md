@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: "Remove quiz dual-write"
-status: pending
+status: completed
 priority: P2
 effort: "1h"
 dependencies: []

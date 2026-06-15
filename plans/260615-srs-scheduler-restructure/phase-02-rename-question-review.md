@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Rename CardReview to QuestionReview"
-status: pending
+status: completed
 priority: P2
 effort: "4h"
 dependencies: [1]

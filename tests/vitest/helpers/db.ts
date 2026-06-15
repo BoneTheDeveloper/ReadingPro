@@ -14,8 +14,8 @@ export function seedCommonDbMocks() {
 }
 
 export function expectNoUnexpectedDbWrites() {
-  expect(db.cardReview.create).not.toHaveBeenCalled();
-  expect(db.cardReview.update).not.toHaveBeenCalled();
+  expect(db.questionReview.create).not.toHaveBeenCalled();
+  expect(db.questionReview.update).not.toHaveBeenCalled();
   expect(db.passage.create).not.toHaveBeenCalled();
   expect(db.passage.update).not.toHaveBeenCalled();
   expect(db.question.create).not.toHaveBeenCalled();

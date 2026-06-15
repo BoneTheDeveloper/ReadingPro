@@ -11,20 +11,20 @@ import { POST as createStudySessionRoute } from "@/app/api/study-session/route";
 import { POST as uploadFileRoute } from "@/app/api/upload/route";
 import { POST as uploadTextRoute } from "@/app/api/upload/text/route";
 import {
-  cardReviewSuccessResponseSchema,
-  dueCardsResponseSchema,
-  dueCardsSuccessResponseSchema,
+  questionReviewSuccessResponseSchema,
+  dueQuestionsResponseSchema,
+  dueQuestionsSuccessResponseSchema,
   progressStatsResponseSchema,
   progressStatsSuccessResponseSchema,
   studyChatHistoryResponseSchema,
   studyChatHistorySuccessResponseSchema,
   studySessionSuccessResponseSchema,
-  toCardReviewDto,
+  toQuestionReviewDto,
   toStudySessionDto,
 } from "@/lib/study/shared/study-response-schema";
 import { uploadSuccessResponseSchema } from "@/lib/upload/shared/upload-response-schema";
 import { apiErrorResponseSchema } from "@/lib/api/shared/api-response-schema";
-import { dueCardFixture, passageFixture, studySessionFixture, userProfileFixture } from "../../fixtures";
+import { dueQuestionFixture, passageFixture, studySessionFixture, userProfileFixture } from "../../fixtures";
 import { createFile, createGetRequest, createJsonRequest, parseJsonResponse, readJsonResponse } from "../../helpers/api";
 import { expectApiErrorPayload, expectApiSuccessPayload } from "../../helpers/assertions";
 import { db } from "../../mocks/db";
@@ -47,8 +47,8 @@ const routeMocks = vi.hoisted(() => {
 
   return {
     getAuthenticatedUser: vi.fn(),
-    getDueCards: vi.fn(),
-    updateCardReview: vi.fn(),
+    getDueQuestions: vi.fn(),
+    updateQuestionReview: vi.fn(),
     getUserProgress: vi.fn(),
     ensureActiveSession: vi.fn(),
     processFileUpload: vi.fn(),
@@ -64,9 +64,9 @@ vi.mock("@/lib/auth/auth-utils", () => ({
   AuthenticationRequiredError: routeMocks.AuthenticationRequiredError,
 }));
 
-vi.mock("@/lib/db/card-review-queries", () => ({
-  getDueCards: routeMocks.getDueCards,
-  updateCardReview: routeMocks.updateCardReview,
+vi.mock("@/lib/db/quiz/quiz-review", () => ({
+  getDueQuestions: routeMocks.getDueQuestions,
+  updateQuestionReview: routeMocks.updateQuestionReview,
   getUserProgress: routeMocks.getUserProgress,
 }));
 
@@ -113,24 +113,24 @@ afterEach(() => {
 });
 
 describe("GET /api/cards/due", () => {
-  it("returns due cards for the authenticated user", async () => {
-    const dueCardWithPersistedOptions = {
-      ...dueCardFixture,
+  it("returns due questions for the authenticated user", async () => {
+    const dueQuestionWithPersistedOptions = {
+      ...dueQuestionFixture,
       question: {
-        ...dueCardFixture.question,
-        options: JSON.stringify(dueCardFixture.question.options),
+        ...dueQuestionFixture.question,
+        options: JSON.stringify(dueQuestionFixture.question.options),
       },
     };
-    routeMocks.getDueCards.mockResolvedValue([dueCardWithPersistedOptions]);
+    routeMocks.getDueQuestions.mockResolvedValue([dueQuestionWithPersistedOptions]);
 
     const response = await getDueCardsRoute(createGetRequest());
-    const payload = await parseJsonResponse(response, dueCardsSuccessResponseSchema);
+    const payload = await parseJsonResponse(response, dueQuestionsSuccessResponseSchema);
 
     expect(response.status).toBe(200);
     expectApiSuccessPayload(payload);
-    expect(payload).toEqual({ success: true, data: [toCardReviewDto(dueCardWithPersistedOptions)] });
-    expect(payload.data[0].question?.options).toEqual(dueCardFixture.question.options);
-    expect(routeMocks.getDueCards).toHaveBeenCalledWith(userProfileFixture.id);
+    expect(payload).toEqual({ success: true, data: [toQuestionReviewDto(dueQuestionWithPersistedOptions)] });
+    expect(payload.data[0].question?.options).toEqual(dueQuestionFixture.question.options);
+    expect(routeMocks.getDueQuestions).toHaveBeenCalledWith(userProfileFixture.id);
   });
 
   it("returns a stable error payload when auth fails", async () => {
@@ -138,15 +138,15 @@ describe("GET /api/cards/due", () => {
 
     const response = await getDueCardsRoute(createGetRequest());
     expect(response.status).toBe(401);
-    expectApiErrorPayload(await parseJsonResponse(response, dueCardsResponseSchema), "Authentication required.");
+    expectApiErrorPayload(await parseJsonResponse(response, dueQuestionsResponseSchema), "Authentication required.");
   });
 
-  it("returns a stable error payload when the card query fails", async () => {
-    routeMocks.getDueCards.mockRejectedValue(apiError("db down"));
+  it("returns a stable error payload when the question query fails", async () => {
+    routeMocks.getDueQuestions.mockRejectedValue(apiError("db down"));
 
     const response = await getDueCardsRoute(createGetRequest());
     expect(response.status).toBe(500);
-    expectApiErrorPayload(await parseJsonResponse(response, dueCardsResponseSchema), "Failed to fetch due cards");
+    expectApiErrorPayload(await parseJsonResponse(response, dueQuestionsResponseSchema), "Failed to fetch due questions");
   });
 });
 
@@ -170,16 +170,16 @@ describe("GET /api/health", () => {
 
 describe("POST /api/cards/review", () => {
   it("updates a review for the authenticated user", async () => {
-    const updatedReview = { ...dueCardFixture, qualityRating: 5 };
-    routeMocks.updateCardReview.mockResolvedValue(updatedReview);
+    const updatedReview = { ...dueQuestionFixture, qualityRating: 5 };
+    routeMocks.updateQuestionReview.mockResolvedValue(updatedReview);
 
-    const response = await reviewCard(createJsonRequest({ cardReviewId: dueCardFixture.id, qualityRating: 5 }));
-    const payload = await parseJsonResponse(response, cardReviewSuccessResponseSchema);
+    const response = await reviewCard(createJsonRequest({ questionReviewId: dueQuestionFixture.id, qualityRating: 5 }));
+    const payload = await parseJsonResponse(response, questionReviewSuccessResponseSchema);
 
     expect(response.status).toBe(200);
     expectApiSuccessPayload(payload);
-    expect(payload).toEqual({ success: true, data: toCardReviewDto(updatedReview) });
-    expect(routeMocks.updateCardReview).toHaveBeenCalledWith(userProfileFixture.id, dueCardFixture.id, 5);
+    expect(payload).toEqual({ success: true, data: toQuestionReviewDto(updatedReview) });
+    expect(routeMocks.updateQuestionReview).toHaveBeenCalledWith(userProfileFixture.id, dueQuestionFixture.id, 5);
   });
 
   it("rejects missing IDs and invalid ratings before updating", async () => {
@@ -190,19 +190,19 @@ describe("POST /api/cards/review", () => {
     );
 
     await expectJsonError(
-      await reviewCard(createJsonRequest({ cardReviewId: dueCardFixture.id, qualityRating: 6 })),
+      await reviewCard(createJsonRequest({ questionReviewId: dueQuestionFixture.id, qualityRating: 6 })),
       400,
       "Invalid request",
     );
-    expect(routeMocks.updateCardReview).not.toHaveBeenCalled();
+    expect(routeMocks.updateQuestionReview).not.toHaveBeenCalled();
   });
 
   it("captures unexpected failures", async () => {
     const error = apiError("db down");
-    routeMocks.updateCardReview.mockRejectedValue(error);
+    routeMocks.updateQuestionReview.mockRejectedValue(error);
 
     await expectJsonError(
-      await reviewCard(createJsonRequest({ cardReviewId: dueCardFixture.id, qualityRating: 4 })),
+      await reviewCard(createJsonRequest({ questionReviewId: dueQuestionFixture.id, qualityRating: 4 })),
       500,
       "Failed to submit review",
     );
@@ -221,11 +221,11 @@ describe("POST /api/cards/review", () => {
 
   it("rejects non-UUID card review IDs", async () => {
     await expectJsonError(
-      await reviewCard(createJsonRequest({ cardReviewId: "not-a-uuid", qualityRating: 3 })),
+      await reviewCard(createJsonRequest({ questionReviewId: "not-a-uuid", qualityRating: 3 })),
       400,
       "Invalid request",
     );
-    expect(routeMocks.updateCardReview).not.toHaveBeenCalled();
+    expect(routeMocks.updateQuestionReview).not.toHaveBeenCalled();
   });
 });
 

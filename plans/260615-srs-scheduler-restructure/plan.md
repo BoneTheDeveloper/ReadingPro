@@ -1,7 +1,7 @@
 ---
 title: "Plan B — SRS scheduler restructure"
 description: "Promote SM-2 into a single content-agnostic srs/scheduler.ts (sm2() + simpleSchedule() — the only home of SRS logic). Rename CardReview→QuestionReview (question_reviews), bound to Question via quiz/quiz-review.ts. Vocabulary rebinds its scheduling to simpleSchedule(). Dictionary stays read-only reference."
-status: pending
+status: completed
 priority: P2
 branch: "feature/issue-69-study-quiz-flow"
 tags: [refactor, srs, data-model, scheduler]
@@ -34,14 +34,9 @@ source: skill
 
 ## Current state (verified)
 
-- SM-2 lives in `src/lib/algorithms/sm2.ts` (`calculateSM2`, `getSuggestedRating`,
-  `isCardDue`, `getCardStatus`), wrapped by `card-review-queries.ts:calculateSM2Interval`.
-- `CardReview` is keyed `@@unique([questionId, userId])`, overwritten each review
-  (no per-review history). `createCardReview` has no callers; `/api/cards/*` have no UI
-  caller — but `getUserProgress` (in `card-review-queries.ts`) **is live**: the progress
-  dashboard route `api/progress/stats` reads `card_reviews` through it.
-- Vocabulary scheduling today only sets `status` manually (`vocabulary-queries.ts`);
-  `nextReviewAt`/`lastReviewedAt` exist on the row but no scheduler computes them yet.
+- SM-2 lives in `src/lib/srs/scheduler.ts` (promoted).
+- `QuestionReview` renamed and moved to `quiz/quiz-review.ts`.
+- Vocabulary scheduling rebound to `simpleSchedule()` via `reviewVocabularyItem`.
 
 ## Target shape
 
@@ -65,9 +60,9 @@ dictionary -> read-only, untouched
 
 | Phase | Name | Migration | Depends on | Status |
 |-------|------|-----------|-----------|--------|
-| 1 | Create `srs/scheduler.ts` (promote `sm2()`, add `simpleSchedule()`); repoint imports | none | Plan A | Pending |
-| 2 | Rename `CardReview`→`QuestionReview` / `card_reviews`→`question_reviews`; move queries to `quiz/quiz-review.ts`; update routes, DTO, `getUserProgress`, tests | rename table/model | Phase 1 | Pending |
-| 3 | Rebind vocabulary scheduling to `simpleSchedule()` | none | Phase 1 | Pending |
+| 1 | Create `srs/scheduler.ts` (promote `sm2()`, add `simpleSchedule()`); repoint imports | none | Plan A | Completed |
+| 2 | Rename `CardReview`→`QuestionReview` / `card_reviews`→`question_reviews`; move queries to `quiz/quiz-review.ts`; update routes, DTO, `getUserProgress`, tests | rename table/model | Phase 1 | Completed |
+| 3 | Rebind vocabulary scheduling to `simpleSchedule()` | none | Phase 1 | Completed |
 
 ## Verification commands
 

@@ -1,15 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cardReviewFixture } from "../../../tests/vitest/fixtures";
-import { db } from "./client";
+import { questionReviewFixture } from "../../../../tests/vitest/fixtures";
+import { db } from "../client";
 import {
   calculateSM2Interval,
-  createCardReview,
-  getDueCards,
+  createQuestionReview,
+  getDueQuestions,
   getUserProgress,
-  updateCardReview,
-} from "./card-review-queries";
+  updateQuestionReview,
+} from "./quiz-review";
 
-describe("card-review queries", () => {
+describe("quiz-review queries", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-01-10T12:00:00.000Z"));
@@ -27,12 +27,12 @@ describe("card-review queries", () => {
     });
   });
 
-  it("queries due cards for a user in review order", async () => {
-    vi.mocked(db.cardReview.findMany).mockResolvedValue([{ ...cardReviewFixture, id: "review-1" }]);
+  it("queries due questions for a user in review order", async () => {
+    vi.mocked(db.questionReview.findMany).mockResolvedValue([{ ...questionReviewFixture, id: "review-1" }]);
 
-    await expect(getDueCards("user-1")).resolves.toEqual([{ ...cardReviewFixture, id: "review-1" }]);
+    await expect(getDueQuestions("user-1")).resolves.toEqual([{ ...questionReviewFixture, id: "review-1" }]);
 
-    expect(db.cardReview.findMany).toHaveBeenCalledWith({
+    expect(db.questionReview.findMany).toHaveBeenCalledWith({
       where: {
         userId: "user-1",
         nextReviewDate: { lte: new Date("2026-01-10T12:00:00.000Z") },
@@ -45,21 +45,21 @@ describe("card-review queries", () => {
     });
   });
 
-  it("updates a card review with new SM2 scheduling fields", async () => {
-    vi.mocked(db.cardReview.findUniqueOrThrow).mockResolvedValue({
-      ...cardReviewFixture,
+  it("updates a question review with new SM2 scheduling fields", async () => {
+    vi.mocked(db.questionReview.findUniqueOrThrow).mockResolvedValue({
+      ...questionReviewFixture,
       id: "review-1",
       easeFactor: 2.5,
       intervalDays: 6,
       repetitions: 2,
-    });
+    } as any);
 
-    await updateCardReview("user-1", "review-1", 5);
+    await updateQuestionReview("user-1", "review-1", 5);
 
-    expect(db.cardReview.findUniqueOrThrow).toHaveBeenCalledWith({
+    expect(db.questionReview.findUniqueOrThrow).toHaveBeenCalledWith({
       where: { id: "review-1", userId: "user-1" },
     });
-    expect(db.cardReview.update).toHaveBeenCalledWith({
+    expect(db.questionReview.update).toHaveBeenCalledWith({
       where: { id: "review-1" },
       data: {
         qualityRating: 5,
@@ -72,10 +72,10 @@ describe("card-review queries", () => {
     });
   });
 
-  it("creates a new card review with starter scheduling values", async () => {
-    await createCardReview("user-1", "question-1");
+  it("creates a new question review with starter scheduling values", async () => {
+    await createQuestionReview("user-1", "question-1");
 
-    expect(db.cardReview.create).toHaveBeenCalledWith({
+    expect(db.questionReview.create).toHaveBeenCalledWith({
       data: {
         userId: "user-1",
         questionId: "question-1",

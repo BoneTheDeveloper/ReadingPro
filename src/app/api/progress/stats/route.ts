@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
-import { getUserProgress } from '@/lib/db/card-review-queries';
+import { getUserProgress } from '@/lib/db/quiz/quiz-review';
 import { getAuthenticatedUser } from '@/lib/auth/auth-utils';
 import { isAuthenticationRequiredError } from '@/lib/api/route-errors';
 import { createRequestLogContext, createRequestLogger } from '@/lib/core/logger';

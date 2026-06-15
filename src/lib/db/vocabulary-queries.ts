@@ -1,5 +1,6 @@
 import { Prisma } from "@/generated/prisma/client";
 import { db } from "./client";
+import { simpleSchedule } from "../srs/scheduler";
 import { findOrCreateDailySet, findOrCreateWeeklySet, addItemToSet } from "./vocabulary-set-queries";
 import type { VocabularyItem, VocabularyOccurrence } from "@/generated/prisma/client";
 
@@ -166,6 +167,31 @@ export async function updateVocabularyStatus(params: {
   return db.vocabularyItem.update({
     where: { id: params.itemId },
     data: { status: params.status },
+  });
+}
+
+export async function reviewVocabularyItem(params: {
+  userId: string;
+  itemId: string;
+  isCorrect: boolean;
+}): Promise<VocabularyItem> {
+  const item = await db.vocabularyItem.findUniqueOrThrow({
+    where: { id: params.itemId },
+  });
+
+  if (item.userId !== params.userId) {
+    throw new Error(`No vocabulary item found for user`);
+  }
+
+  const { nextStatus, nextReviewDate } = simpleSchedule(item.status, params.isCorrect);
+
+  return db.vocabularyItem.update({
+    where: { id: params.itemId },
+    data: {
+      status: nextStatus,
+      nextReviewAt: nextReviewDate,
+      lastReviewedAt: new Date(),
+    },
   });
 }
 

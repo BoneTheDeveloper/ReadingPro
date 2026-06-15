@@ -1,7 +1,7 @@
 ---
 title: "Plan A — StudySession cleanup: remove dead quiz dual-write & dead columns"
 description: "Decision-independent cleanup. Delete the dead studySession quiz dual-write and drop the orphaned StudySession columns + dead SRS glue (computeSessionAccuracy, updateStudySession, PATCH route). Ships now. SRS restructure and the multi-attempt session model are split into Plans B and C."
-status: pending
+status: completed
 priority: P2
 branch: "feature/issue-69-study-quiz-flow"
 tags: [refactor, data-model, cleanup, session]
