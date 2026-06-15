@@ -40,8 +40,10 @@ renames `CardReview`.
   `createStudySession`/`createStudySessionSchema`.
 - Modify: `src/app/api/study-session/route.ts` — delete the `PATCH` handler and its
   Zod schema; drop the `passageId` plumbing from `POST` if no longer needed.
-- Modify: `src/lib/study/shared/study-response-schema.ts` — trim
-  `toStudySessionDto` to the surviving fields.
+- Modify: `src/lib/study/shared/study-response-schema.ts` — trim `toStudySessionDto`
+  AND the Zod `studySessionSchema` to `{id, userId, startedAt, completedAt}` only;
+  remove `passageId`, `cardsReviewed`, `newCards`, `correctCount`, `incorrectCount`,
+  `accuracyRate` from both the schema and the mapper.
 - Modify: `src/features/study/api/quiz-attempt-client.ts` — `createQuizAttemptForPassage`
   stops sending `passageId` in the session POST (passage stays on the attempt POST).
 - Modify/Delete: `tests/vitest/integration/api/study-session-route.test.ts` (remove
@@ -55,7 +57,9 @@ renames `CardReview`.
 3. Delete `computeSessionAccuracy`, `updateStudySession`, `updateStudySessionSchema`;
    simplify `createStudySession`/`createStudySessionSchema` to drop `passageId`.
 4. Remove the `PATCH` handler + schema from the study-session route.
-5. Trim `toStudySessionDto` and the response schema.
+5. Trim `toStudySessionDto` AND the Zod `studySessionSchema` to `{id, userId, startedAt,
+   completedAt}`. This is a response-shape change; safe because the only client reads
+   `data.id` and there is no external API consumer.
 6. Update `createQuizAttemptForPassage` to not POST `passageId` to the session endpoint.
 7. Update/remove the two affected test files.
 8. Run full verification.

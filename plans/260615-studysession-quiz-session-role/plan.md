@@ -69,8 +69,8 @@ Plan C wires session lifecycle (presence-window close).
 | 1 | Remove quiz dual-write (delete the `studySession.update` half of `completeQuizAttempt`) | none | Pending |
 | 2 | Drop dead StudySession columns + `passageId`; remove `PATCH /api/study-session`, `updateStudySession`, `computeSessionAccuracy` + schemas | drop columns (no backfill) | Pending |
 
-Phase 1 is code-only, zero migration — start here. Phase 2 drops columns; no
-backfill needed because no live reader depends on them.
+Phases 1 and 2 ship in **one PR**. Phase 1 has no migration (safe to bundle); Phase 2
+drops columns with no backfill needed because no live reader depends on them.
 
 ## Cross-plan ordering
 
@@ -97,3 +97,28 @@ pnpm run test
   `updateStudySession`/`computeSessionAccuracy`; both need updating in Phase 2.
 - Related in-flight plan: `plans/260615-issue-69-study-quiz-flow/` (quiz-attempt API
   hardening) — a sibling, not a dependency.
+
+## Validation Log
+
+*Validated 2026-06-15 — Light verification tier (2 phases).*
+
+### Verification Results
+- Claims checked: 10
+- Verified: 10 | Failed: 0 | Unverified: 0
+- Notable: `toStudySessionDto` + Zod `studySessionSchema` in `study-response-schema.ts`
+  serialize the dead columns into the `/api/study-session` response. No end consumer
+  reads those fields, but Phase 2 must trim **both** the mapper and the schema.
+- `Passage.studySessions` back-relation confirmed at `schema.prisma:62` — must be
+  removed alongside `passageId`.
+- Confirmed no client PATCH caller exists.
+- Both affected test files confirmed present.
+
+### Decisions
+| # | Question | Decision |
+|---|----------|----------|
+| 1 | API response contract for dead fields | Remove fully — trim `toStudySessionDto` AND `studySessionSchema` to `{id,userId,startedAt,completedAt}`. Safe: only client reads `data.id`. |
+| 2 | PR/migration split | One PR — bundle Phase 1 (code-only) + Phase 2 (column-drop migration) together. |
+
+### Whole-Plan Consistency Sweep
+Phase 2 updated to explicitly list trimming the Zod `studySessionSchema` alongside
+`toStudySessionDto`. No other contradictions found across `plan.md` and phase files.

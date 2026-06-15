@@ -20,7 +20,7 @@ create a new one. This is the core of the presence-window model.
   - Before deciding, it closes every open session whose `lastSeenAt < now - 5min` by
     setting `completedAt = lastSeenAt`.
   - If a fresh open session remains, reuse it; else create a new one.
-  - A `bumpالسession`/heartbeat updates `lastSeenAt = now` for the open session.
+  - A heartbeat (`touchSession`) updates `lastSeenAt = now` for the open session.
 - Non-functional: no background job; all close logic is lazy inside `ensureActiveSession`.
   Concurrency-safe enough for multi-tab (idempotent reuse-newest).
 
