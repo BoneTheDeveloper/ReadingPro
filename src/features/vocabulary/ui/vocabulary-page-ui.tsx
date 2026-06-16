@@ -2,7 +2,7 @@
 
 import { AlertCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/shared/utils";
+import { cn } from "@/shared/utils";
 
 export function PageTabButton({
   active,

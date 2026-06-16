@@ -5,8 +5,8 @@ import {
   dictionaryLookupPerformanceResponseSchema,
   dictionaryLookupResponseSchema,
   dictionaryLookupSuccessResponseSchema,
-} from "@/lib/dictionary/shared/dictionary-response-schema";
-import type { DictionaryEntryDto, DictionaryMissDto } from "@/lib/dictionary/shared/dictionary-dtos";
+} from "@/shared/dictionary/dictionary-response-schema";
+import type { DictionaryEntryDto, DictionaryMissDto } from "@/shared/dictionary/dictionary-dtos";
 import { userProfileFixture } from "../../fixtures";
 import { parseJsonResponse } from "../../helpers/api";
 import { expectApiErrorPayload, expectApiSuccessPayload } from "../../helpers/assertions";
@@ -16,11 +16,11 @@ const routeMocks = vi.hoisted(() => ({
   resolveDictionaryLookup: vi.fn(),
 }));
 
-vi.mock("@/lib/auth/auth-utils", () => ({
+vi.mock("@/server/auth/auth-utils", () => ({
   getAuthenticatedUser: routeMocks.getAuthenticatedUser,
 }));
 
-vi.mock("@/lib/dictionary/lookup/lookup.service", () => ({
+vi.mock("@/server/modules/dictionary/lookup/lookup.service", () => ({
   resolveDictionaryLookup: routeMocks.resolveDictionaryLookup,
 }));
 

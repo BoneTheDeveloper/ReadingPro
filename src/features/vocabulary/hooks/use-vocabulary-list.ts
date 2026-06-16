@@ -2,10 +2,10 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
+import { getVocabularyList } from "../api/vocabulary-client";
 import type {
   VocabularyItem,
   VocabularyStatus,
-  VocabularyListResponse,
 } from "../model/vocabulary-types";
 
 interface UseVocabularyListResult {
@@ -51,17 +51,12 @@ export function useVocabularyList(
     setError(null);
 
     try {
-      const params = new URLSearchParams();
-      params.set("page", String(pageArg));
-      params.set("pageSize", "20");
-      if (statusArg !== "ALL") params.set("status", statusArg);
-      if (searchArg.trim()) params.set("search", searchArg.trim());
-
-      const res = await fetch(`/api/vocabulary/list?${params}`, { signal: controller.signal });
-      if (!res.ok) throw new Error("Failed to load vocabulary");
-
-      const json: unknown = await res.json();
-      const data = json as VocabularyListResponse;
+      const data = await getVocabularyList({
+        page: pageArg,
+        status: statusArg,
+        search: searchArg,
+        signal: controller.signal,
+      });
 
       if (requestIdRef.current !== requestId || !mountedRef.current) return;
       setItems(data.data.items);

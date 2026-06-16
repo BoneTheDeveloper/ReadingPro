@@ -7,6 +7,7 @@
 ## [Unreleased]
 
 ### Added
+- Quiz generation reliability (issue #69): shared `StudioArtifactErrorCode` contract surfaced via the API `{ error, code }` envelope and shown as a localized card message; client + backend 45s generation timeout (`STUDIO_GENERATION_TIMEOUT_MS`) so a hung generation always settles and releases the studio action lock; Retry on a failed card.
 - Clerk auth integration for sign-in/sign-up, Google OAuth, route protection, and profile sync.
 - Neon PostgreSQL environment contract for local, preview, and production database branches.
 - Vercel Blob storage adapter for private preview/production uploads with local filesystem storage in development.
@@ -29,12 +30,42 @@
 - Moved CEFR domain helpers to `lib/domain/cefr.ts` and CEFR presentation classes to `lib/ui/cefr-style.ts`.
 - Reused the canonical `lib/algorithms/sm2.ts` implementation from card review queries.
 - Updated study-session API route to delegate to `lib/db/study-session-queries.ts`.
+- **Learning Domain Model Cleanup**: Consolidated quiz/review/vocab models.
+  - Replaced `QuizAttempt` with a 1:1 `QuizResult` child of `StudioArtifact`.
+  - Removed dead SM-2 spaced-repetition subsystem (`QuestionReview`, `/api/cards/*`).
+  - Trimmed progress dashboard to streak/time signals only.
+  - Updated quiz UI to reflect attempt state and allow retries.
+  - Added ADR 0006 to record the role-per-table model.
+- **Ephemeral quiz failures**: failed/orphaned quiz `StudioArtifact` rows are now deleted instead of kept as `failed` tombstones — the orphan reaper in `fetchStudioArtifacts` deletes stuck `generating` rows, and `studioFailArtifactAction`/`failStudioArtifact` were removed in favor of `studioDeleteArtifactAction`. A successful generation that completes after a passage switch is preserved on its originating passage instead of being discarded.
 
 ### Planned
 - YouTube transcription (Whisper API)
 - Scanned PDF OCR support
 - Advanced analytics dashboard
 - Verify production Vercel environment variables and scheduled cleanup behavior
+
+---
+
+## [2026-06-16] — StudioArtifact Model & Type-Specific Storage
+
+### Added
+- `StudioArtifact` model replacing `StudyArtifact` with type-specific relational storage.
+- `StudioArtifact` relational link to `Question` via `artifactId` (NOT NULL).
+- `/api/studio-artifacts` route for listing artifacts by `passageId`.
+- `studio-artifacts-service.ts` for managing artifact lifecycle and persistence.
+- `docs/API/Routes/studio-artifacts-feature.md` documentation.
+
+### Changed
+- **Schema**: Renamed `StudyArtifact` → `StudioArtifact`. Dropped `content` JSONB field.
+- **Questions**: Each question now belongs to exactly one `artifactId`. Existing questions were wiped in migration to satisfy NOT NULL constraint.
+- **Service**: `generateQuestionsForPassage` now requires `artifactId` and links questions to it.
+- **Actions**: Updated `study-artifact-actions.ts` to use new relational storage and corrected service imports.
+- **API**: `/api/studio-questions` now requires `artifactId` in POST body.
+- **Tests**: Updated integration tests for route, service, and queries to align with the new schema and validation rules.
+
+### Removed
+- `summary` artifact type (handled as inline passage simplification instead).
+- `study-generate-questions-action.ts` (dead code, route is the live path).
 
 ---
 ## [2026-05-07] — Phase 05-06: Auth UI Updates & Testing
@@ -139,7 +170,7 @@
 - `Sentry.startSpan()` performance monitoring in:
   - `src/app/actions/analyze.ts`: `ai:cefr-detect`, `ai:content-simplify`, `ai:question-gen`, `db:user-lookup`, `db:passage-create`
   - `src/app/api/upload/route.ts`: `file-write`, `pdf-parse`
-  - `src/app/api/study-session/route.ts`: `db:session-create`, `db:session-update`
+  - `src/app/api/study-session/route.ts`: `db:session-ensure-active`
   - `src/app/api/cards/review/route.ts`: `db:card-review-update`
 
 ### Changed

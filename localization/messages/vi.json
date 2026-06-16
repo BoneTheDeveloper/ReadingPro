@@ -203,7 +203,15 @@
     "chatNoMessages": "Bắt đầu trò chuyện về bài đọc này",
     "chatStop": "Dừng",
     "previous": "Trước",
-    "next": "Sau"
+    "next": "Sau",
+    "attemptSaveFailed": "Lưu tiến trình thất bại",
+    "retry": "Thử lại",
+    "source": "Nguồn:",
+    "genErrorNoQuestions": "Không thể tạo câu hỏi nào",
+    "genErrorValidation": "Câu hỏi được tạo không hợp lệ",
+    "genErrorTimeout": "Tạo nội dung quá thời gian — thử lại",
+    "genErrorUpstream": "Trình tạo hiện không khả dụng",
+    "genErrorGeneric": "Tạo nội dung thất bại"
   },
   "Reading": {
     "title": "Chế độ đọc",

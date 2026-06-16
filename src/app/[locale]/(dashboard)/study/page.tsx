@@ -1,5 +1,5 @@
-import { getAuthenticatedUser } from '@/lib/auth/auth-utils';
-import { getUserPassages } from '@/lib/db/passage-queries';
+import { getAuthenticatedUser } from '@/server/auth/auth-utils';
+import { getUserPassages } from '@/server/db/passage-queries';
 import { StudyPageClient } from '@/features/study/ui/study-workspace-client';
 import type { PassageData } from '@/features/study/model/types';
 

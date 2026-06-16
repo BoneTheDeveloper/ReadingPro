@@ -203,7 +203,15 @@
     "chatNoMessages": "Start a conversation about this passage",
     "chatStop": "Stop",
     "previous": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "attemptSaveFailed": "Failed to save progress",
+    "retry": "Retry",
+    "source": "Source:",
+    "genErrorNoQuestions": "No questions could be generated",
+    "genErrorValidation": "Generated questions were invalid",
+    "genErrorTimeout": "Generation timed out — try again",
+    "genErrorUpstream": "The generator is unavailable",
+    "genErrorGeneric": "Generation failed"
   },
   "Reading": {
     "title": "Reading View",

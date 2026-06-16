@@ -8,7 +8,7 @@ import {
   translateResponseSchema,
   translateSuccessResponseSchema,
   vocabularyResponseSchema,
-} from "@/lib/translation/shared/translation-response-schema";
+} from "@/shared/translation/translation-response-schema";
 import { createJsonRequest, parseJsonResponse } from "../../helpers/api";
 import { expectApiErrorPayload, expectApiSuccessPayload } from "../../helpers/assertions";
 import { expectJsonError as expectApiJsonError } from "../../helpers/api-test-helpers";
@@ -24,30 +24,30 @@ const routeMocks = vi.hoisted(() => ({
   getOwnedTranslationSource: vi.fn(),
 }));
 
-vi.mock("@/lib/auth/auth-utils", () => ({
+vi.mock("@/server/auth/auth-utils", () => ({
   getAuthenticatedUser: routeMocks.getAuthenticatedUser,
   AuthenticationRequiredError: class AuthenticationRequiredError extends Error {
     constructor() { super("Authentication required"); this.name = "AuthenticationRequiredError"; }
   },
 }));
 
-vi.mock("@/lib/translation/translation-provider", () => ({
+vi.mock("@/server/modules/translation/translation-provider", () => ({
   translateWithProvider: routeMocks.translateWithProvider,
 }));
 
-vi.mock("@/lib/db/vocabulary-queries", () => ({
+vi.mock("@/server/db/vocabulary-queries", () => ({
   upsertVocabularyItem: vi.fn(),
 }));
 
-vi.mock("@/lib/vocabulary/vocabulary.service", () => ({
+vi.mock("@/server/modules/vocabulary/vocabulary.service", () => ({
   saveVocabularyItem: routeMocks.saveVocabularyItem,
   VocabularyServiceError: class VocabularyServiceError extends Error {
     constructor(message: string) { super(message); this.name = "VocabularyServiceError"; }
   },
 }));
 
-vi.mock("@/lib/db/translation-queries", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/lib/db/translation-queries")>();
+vi.mock("@/server/db/translation-queries", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/server/db/translation-queries")>();
   return {
     ...actual,
     getOwnedTranslationSource: routeMocks.getOwnedTranslationSource,
@@ -518,7 +518,7 @@ describe("POST /api/vocabulary", () => {
       "Authentication required.",
     );
 
-    const { VocabularyServiceError } = await import("@/lib/vocabulary/vocabulary.service");
+    const { VocabularyServiceError } = await import("@/server/modules/vocabulary/vocabulary.service");
     routeMocks.saveVocabularyItem.mockRejectedValueOnce(new VocabularyServiceError("Source not found."));
     await expectVocabularyJsonError(
       await vocabularyRoute(createJsonRequest(vocabularyBody())),

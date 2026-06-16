@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
-import { addItemToSet, verifySetOwnership } from "@/lib/db/vocabulary-set-queries";
-import { getAuthenticatedUser } from "@/lib/auth/auth-utils";
-import { isAuthenticationRequiredError, isOwnershipMissError } from "@/lib/api/route-errors";
-import { createRequestLogContext, createRequestLogger } from "@/lib/core/logger";
+import { addItemToSet, verifySetOwnership } from "@/server/db/vocabulary-set-queries";
+import { getAuthenticatedUser } from "@/server/auth/auth-utils";
+import { isAuthenticationRequiredError, isOwnershipMissError } from "@/server/http/route-errors";
+import { createRequestLogContext, createRequestLogger } from "@/server/core/logger";
 
 const addItemsSchema = z.object({
   itemIds: z.array(z.string().uuid()).min(1).max(50),

@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { simplifyContent } from "@/lib/ai/content-simplifier";
-import { cn } from "@/lib/shared/utils";
+import { simplifyContent } from "@/server/ai/content-simplifier";
+import { cn } from "@/shared/utils";
 import { db } from "../mocks/db";
 import { createJsonRequest } from "../helpers/api";
 import { resetAllDbMocks } from "../helpers/db";

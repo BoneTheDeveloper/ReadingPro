@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { POST as uploadFileRoute } from "@/app/api/upload/route";
 import { POST as uploadTextRoute } from "@/app/api/upload/text/route";
-import { uploadResponseSchema } from "@/lib/upload/shared/upload-response-schema";
+import { uploadResponseSchema } from "@/shared/upload/upload-response-schema";
 import { userProfileFixture } from "../../fixtures";
 import { createFile, createJsonRequest, parseJsonResponse } from "../../helpers/api";
 import { expectApiErrorPayload } from "../../helpers/assertions";
@@ -31,7 +31,7 @@ const routeMocks = vi.hoisted(() => {
   };
 });
 
-vi.mock("@/lib/auth/auth-utils", () => ({
+vi.mock("@/server/auth/auth-utils", () => ({
   getAuthenticatedUser: routeMocks.getAuthenticatedUser,
   AuthenticationRequiredError: routeMocks.AuthenticationRequiredError,
 }));
@@ -41,7 +41,7 @@ vi.mock("@/features/upload/services/upload-workflow", () => ({
   UploadWorkflowError: routeMocks.UploadWorkflowError,
 }));
 
-vi.mock("@/lib/upload/content-analysis/content-analysis.service", () => ({
+vi.mock("@/server/modules/upload/content-analysis/content-analysis.service", () => ({
   analyzeAndPersistContent: routeMocks.analyzeAndPersistContent,
 }));
 

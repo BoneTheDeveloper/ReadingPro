@@ -5,8 +5,8 @@ import {
   dictionarySuggestPerformanceResponseSchema,
   dictionarySuggestResponseSchema,
   dictionarySuggestSuccessResponseSchema,
-} from "@/lib/dictionary/shared/dictionary-response-schema";
-import type { DictionarySuggestItemDto } from "@/lib/dictionary/shared/dictionary-dtos";
+} from "@/shared/dictionary/dictionary-response-schema";
+import type { DictionarySuggestItemDto } from "@/shared/dictionary/dictionary-dtos";
 import { userProfileFixture } from "../../fixtures";
 import { parseJsonResponse } from "../../helpers/api";
 import { expectApiErrorPayload, expectApiSuccessPayload } from "../../helpers/assertions";
@@ -16,11 +16,11 @@ const routeMocks = vi.hoisted(() => ({
   suggestDictionaryTerms: vi.fn(),
 }));
 
-vi.mock("@/lib/auth/auth-utils", () => ({
+vi.mock("@/server/auth/auth-utils", () => ({
   getAuthenticatedUser: routeMocks.getAuthenticatedUser,
 }));
 
-vi.mock("@/lib/dictionary/suggest/suggest.service", () => ({
+vi.mock("@/server/modules/dictionary/suggest/suggest.service", () => ({
   suggestDictionaryTerms: routeMocks.suggestDictionaryTerms,
 }));
 

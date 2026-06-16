@@ -1,19 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
-import { getAuthenticatedUser } from "@/lib/auth/auth-utils";
-import { createRequestLogContext, createRequestLogger } from "@/lib/core/logger";
+import { getAuthenticatedUser } from "@/server/auth/auth-utils";
+import { createRequestLogContext, createRequestLogger } from "@/server/core/logger";
 import {
   getPrismaQueryMetrics,
   runWithPrismaQueryMetrics,
-} from "@/lib/observability/prisma-query-metrics";
+} from "@/server/observability/prisma-query-metrics";
 import {
   createDictionaryPerformanceTracker,
   measureDictionaryStep,
   shouldIncludeDictionaryPerformanceMetrics,
-} from "@/lib/dictionary/shared/dictionary-performance";
-import { getDictionaryEntryDetail } from "@/lib/dictionary/entry-detail/entry-detail.service";
-import type { DictionaryEntryDto } from "@/lib/dictionary/shared/dictionary-dtos";
+} from "@/server/modules/dictionary/shared/dictionary-performance";
+import { getDictionaryEntryDetail } from "@/server/modules/dictionary/entry-detail/entry-detail.service";
+import type { DictionaryEntryDto } from "@/shared/dictionary/dictionary-dtos";
 
 const entryIdSchema = z.string().uuid();
 

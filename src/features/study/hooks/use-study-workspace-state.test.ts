@@ -1,11 +1,11 @@
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { studyDeletePassageAction } from "@/features/study/actions/study-delete-passage-action";
+import { deletePassage } from "@/features/study/api/passages-client";
 import type { PassageData } from "../model/types";
 import { useStudyWorkspaceState } from "./use-study-workspace-state";
 
-vi.mock("@/features/study/actions/study-delete-passage-action", () => ({
-  studyDeletePassageAction: vi.fn(),
+vi.mock("@/features/study/api/passages-client", () => ({
+  deletePassage: vi.fn(),
 }));
 
 const passageA: PassageData = {
@@ -47,9 +47,9 @@ describe("useStudyWorkspaceState", () => {
       error: null,
       simplifying: false,
       uploadModalOpen: false,
-      resultsByPassageId: {},
-      viewingResultByPassageId: {},
-      resultDetailById: {},
+      artifactsByPassageId: {},
+      viewingArtifactByPassageId: {},
+      artifactDetailById: {},
     });
     expect(result.current.activePassage).toEqual(passageB);
     expect(result.current.documents.map((document) => document.id)).toEqual(["passage-b", "passage-a"]);
@@ -131,7 +131,7 @@ describe("useStudyWorkspaceState", () => {
   });
 
   it("deletes active passage and falls back to the newest remaining passage", async () => {
-    vi.mocked(studyDeletePassageAction).mockResolvedValue({ success: true });
+    vi.mocked(deletePassage).mockResolvedValue(true);
     const { result } = renderHook(() => useStudyWorkspaceState([passageA, passageB]));
 
     act(() => {
@@ -145,15 +145,15 @@ describe("useStudyWorkspaceState", () => {
       await result.current.handleDeletePassage("passage-b");
     });
 
-    expect(studyDeletePassageAction).toHaveBeenCalledWith({ passageId: "passage-b" });
+    expect(deletePassage).toHaveBeenCalledWith("passage-b");
     expect(result.current.state.passages).toEqual([passageA]);
     expect(result.current.state.activePassageId).toBe("passage-a");
-    expect(result.current.state.resultsByPassageId).toEqual({});
+    expect(result.current.state.artifactsByPassageId).toEqual({});
     expect(result.current.state.status).toBe("ready");
   });
 
   it("deletes active passage and clears state when no passages remain", async () => {
-    vi.mocked(studyDeletePassageAction).mockResolvedValue({ success: true });
+    vi.mocked(deletePassage).mockResolvedValue(true);
     const { result } = renderHook(() => useStudyWorkspaceState([passageB]));
 
     await act(async () => {
@@ -166,7 +166,7 @@ describe("useStudyWorkspaceState", () => {
   });
 
   it("deletes non-active passage without changing active state", async () => {
-    vi.mocked(studyDeletePassageAction).mockResolvedValue({ success: true });
+    vi.mocked(deletePassage).mockResolvedValue(true);
     const { result } = renderHook(() => useStudyWorkspaceState([passageA, passageB]));
 
     act(() => {
@@ -186,7 +186,7 @@ describe("useStudyWorkspaceState", () => {
   });
 
   it("keeps local state and stores the server error when delete fails", async () => {
-    vi.mocked(studyDeletePassageAction).mockResolvedValue({ error: "Cannot delete passage" });
+    vi.mocked(deletePassage).mockRejectedValue(new Error("Cannot delete passage"));
     const { result } = renderHook(() => useStudyWorkspaceState([passageA, passageB]));
 
     await act(async () => {

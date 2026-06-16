@@ -221,7 +221,7 @@ Rules:
 
 Examples:
 
-- `src/features/study/api/study-questions-client.ts` is a feature API client because browser hooks call it and it wraps `/api/study-questions`.
+- `src/features/study/api/studio-questions-client.ts` is a feature API client because browser hooks call it and it wraps `/api/studio-questions`.
 - `src/features/upload/services/upload-workflow.ts` is a feature service because it coordinates the upload-only workflow: validate file, store file, extract text, call content analysis, and clean up storage on failure.
 - `src/lib/upload/content-analysis/content-analysis.service.ts` is a lib service because content analysis is reusable by file upload, text upload, server actions, and tests.
 - `src/lib/dictionary/lookup/lookup.service.ts` is a lib service because dictionary lookup is domain logic used behind API routes and backed by dictionary repositories.

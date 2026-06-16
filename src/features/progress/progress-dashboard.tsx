@@ -2,23 +2,19 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import * as Sentry from "@sentry/nextjs"
+import { getProgressStats } from "./api/progress-client"
 import {
-  BookOpen,
-  Target,
   TrendingUp,
   Clock,
   ChevronLeft,
   Loader2,
   Flame,
+  Calendar,
 } from "lucide-react"
-import { cn } from "@/lib/shared/utils"
+import { cn } from "@/shared/utils"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import {
-  progressStatsResponseSchema,
-  type ProgressStatsDto,
-} from "@/lib/study/shared/study-response-schema"
+import type { ProgressStatsDto } from "@/shared/study/study-response-schema"
 
 export function ProgressDashboard() {
   const router = useRouter()
@@ -28,19 +24,8 @@ export function ProgressDashboard() {
   useEffect(() => {
     async function fetchStats() {
       try {
-        const response = await fetch("/api/progress/stats")
-        const result: unknown = await response.json()
-        const parsed = progressStatsResponseSchema.safeParse(result)
-        if (!parsed.success || "error" in parsed.data) {
-          Sentry.addBreadcrumb({
-            category: "progress",
-            level: "error",
-            message: "progress-stats-schema-error",
-            data: { route: "/api/progress/stats" },
-          })
-          return
-        }
-        setStats(parsed.data.data)
+        const data = await getProgressStats()
+        setStats(data)
       } catch (error) {
         console.error("Error fetching stats:", error)
       } finally {
@@ -58,14 +43,41 @@ export function ProgressDashboard() {
     )
   }
 
+  const formatTime = (seconds?: number) => {
+    if (seconds == null) return "0m";
+    const mins = Math.floor(seconds / 60);
+    if (mins < 60) return `${mins}m`;
+    const hrs = Math.floor(mins / 60);
+    const remainingMins = mins % 60;
+    return `${hrs}h ${remainingMins}m`;
+  };
+
   const statCards = [
-    { icon: <BookOpen className="w-5 h-5" />, label: "Total Cards", value: stats?.totalCards ?? 0, color: "bg-primary/10 text-primary" },
-    { icon: <Target className="w-5 h-5" />, label: "Due for Review", value: stats?.dueCards ?? 0, color: "bg-gold-soft text-gold", highlight: (stats?.dueCards ?? 0) > 0 },
-    { icon: <TrendingUp className="w-5 h-5" />, label: "Mature Cards", value: stats?.matureCards ?? 0, color: "bg-success-soft text-success" },
-    { icon: <Clock className="w-5 h-5" />, label: "Today's Reviews", value: stats?.todayReviews ?? 0, color: "bg-primary/10 text-primary" },
-    { icon: <Target className="w-5 h-5" />, label: "Quizzes Completed", value: stats?.totalQuizAttempts ?? 0, color: "bg-success-soft text-success" },
-    { icon: <TrendingUp className="w-5 h-5" />, label: "Avg. Accuracy", value: stats?.avgQuizAccuracy != null ? `${stats.avgQuizAccuracy}%` : "—", color: "bg-primary/10 text-primary" },
-    { icon: <Clock className="w-5 h-5" />, label: "Today's Quizzes", value: stats?.todayQuizAttempts ?? 0, color: "bg-gold-soft text-gold" },
+    {
+      icon: <Flame className="w-5 h-5" />,
+      label: "Current Streak",
+      value: `${stats?.streakDays ?? 0} days`,
+      color: "bg-gold-soft text-gold",
+      highlight: (stats?.streakDays ?? 0) > 0
+    },
+    {
+      icon: <Clock className="w-5 h-5" />,
+      label: "Today's Study",
+      value: formatTime(stats?.timeStudiedTodaySeconds),
+      color: "bg-primary/10 text-primary"
+    },
+    {
+      icon: <TrendingUp className="w-5 h-5" />,
+      label: "Weekly Study",
+      value: formatTime(stats?.timeStudiedWeekSeconds),
+      color: "bg-success-soft text-success"
+    },
+    {
+      icon: <Calendar className="w-5 h-5" />,
+      label: "Active Days",
+      value: `${stats?.activeDaysThisWeek ?? 0}/7`,
+      color: "bg-primary/10 text-primary"
+    },
   ]
 
   return (
@@ -77,13 +89,13 @@ export function ProgressDashboard() {
           </Button>
           <div>
             <h1 className="text-2xl font-bold text-foreground">Your Progress</h1>
-            <p className="text-muted-foreground">Track your learning journey and review due cards</p>
+            <p className="text-muted-foreground">Track your learning journey and study habits</p>
           </div>
         </div>
       </header>
 
       <main className="max-w-4xl mx-auto px-6 py-8">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {statCards.map((card) => (
             <Card key={card.label} className={cn(card.highlight && "border-2 border-gold/40")}>
               <CardContent className="p-5">
@@ -97,41 +109,12 @@ export function ProgressDashboard() {
           ))}
         </div>
 
-        {(stats?.dueCards ?? 0) > 0 ? (
-          <Card className="border-2 border-gold/30 mb-6">
-            <CardContent className="p-6 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-gold-soft rounded-xl flex items-center justify-center">
-                  <Flame className="w-6 h-6 text-gold" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-foreground">{stats?.dueCards} cards due for review</h3>
-                  <p className="text-sm text-muted-foreground">Keep your streak alive!</p>
-                </div>
-              </div>
-              <Button onClick={() => router.push("/study")}>Start Review</Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card className="border-2 border-success/30 mb-6">
-            <CardContent className="p-6 flex items-center gap-3">
-              <div className="w-12 h-12 bg-success-soft rounded-xl flex items-center justify-center">
-                <TrendingUp className="w-6 h-6 text-success" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-foreground">All caught up!</h3>
-                <p className="text-sm text-muted-foreground">No cards due right now. Upload new content to continue learning.</p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Card className="hover:border-primary hover:shadow-md transition-all cursor-pointer" onClick={() => router.push("/study")}>
             <CardContent className="p-8 flex flex-col items-center justify-center gap-3">
-              <BookOpen className="w-8 h-8 text-primary" />
-              <span className="font-semibold text-foreground">Add New Content</span>
-              <span className="text-sm text-muted-foreground">Upload text or PDF</span>
+              <Clock className="w-8 h-8 text-primary" />
+              <span className="font-semibold text-foreground">Start Studying</span>
+              <span className="text-sm text-muted-foreground">Upload new content</span>
             </CardContent>
           </Card>
           <Card className="hover:border-primary hover:shadow-md transition-all cursor-pointer" onClick={() => router.push("/")}>

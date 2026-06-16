@@ -3,13 +3,15 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import type { Dispatch, SetStateAction } from "react";
-import { studySimplifyAction } from "@/features/study/actions/study-simplify-action";
-import { generateStudyQuestions } from "@/features/study/api/study-questions-client";
+import { simplifyPassage } from "@/features/study/api/passages-client";
+import { generateStudioQuestions } from "@/features/study/api/studio-questions-client";
+import { getArtifactDetail } from "@/features/study/api/studio-artifacts-client";
 import type {
-  DetailCacheEntry,
-  ResultsCacheEntry,
-  StudioCardId,
-  StudioResult,
+  ArtifactsCacheEntry,
+  ArtifactRef,
+  StudioActionId,
+  StudioArtifact,
+  StudioArtifactErrorCode,
   StudyState,
 } from "../model/types";
 
@@ -21,29 +23,32 @@ interface UseStudyActionsInput {
 export function useStudyActions({ state, setState }: UseStudyActionsInput) {
   const t = useTranslations("Study");
   const activePassageIdRef = useRef(state.activePassageId);
+  // Guards against re-entrant retries of the same artifact (e.g. a fast
+  // double-click), which would otherwise re-create the same id twice.
+  const retryingIdsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     activePassageIdRef.current = state.activePassageId;
   }, [state.activePassageId]);
 
   const updateCacheEntry = useCallback(
-    (passageId: string, updater: (entry: ResultsCacheEntry) => ResultsCacheEntry) => {
+    (passageId: string, updater: (entry: ArtifactsCacheEntry) => ArtifactsCacheEntry) => {
       setState((prev) => ({
         ...prev,
-        resultsByPassageId: {
-          ...prev.resultsByPassageId,
-          [passageId]: updater(prev.resultsByPassageId[passageId] ?? { status: "idle", data: [] }),
+        artifactsByPassageId: {
+          ...prev.artifactsByPassageId,
+          [passageId]: updater(prev.artifactsByPassageId[passageId] ?? { status: "idle", data: [] }),
         },
       }));
     },
     [setState],
   );
 
-  const updateResultStatus = useCallback(
-    (passageId: string, resultId: string, patch: Partial<StudioResult>) => {
+  const updateArtifactStatus = useCallback(
+    (passageId: string, artifactId: string, patch: Partial<StudioArtifact>) => {
       updateCacheEntry(passageId, (entry) => ({
         ...entry,
-        data: entry.data.map((r) => (r.id === resultId ? { ...r, ...patch } : r)),
+        data: entry.data.map((r) => (r.id === artifactId ? { ...r, ...patch } : r)),
       }));
     },
     [updateCacheEntry],
@@ -55,11 +60,7 @@ export function useStudyActions({ state, setState }: UseStudyActionsInput) {
 
     setState((prev) => ({ ...prev, simplifying: true, error: null }));
     try {
-      const result = await studySimplifyAction({ passageId });
-      if ("error" in result) {
-        setState((prev) => ({ ...prev, simplifying: false, error: result.error }));
-        return;
-      }
+      const result = await simplifyPassage(passageId);
       if ("skipped" in result) {
         setState((prev) => ({ ...prev, simplifying: false }));
         return;
@@ -86,116 +87,94 @@ export function useStudyActions({ state, setState }: UseStudyActionsInput) {
     }
   }, [setState, t]);
 
-  const generateQuizArtifact = useCallback(
-    async (passageId: string, resultId: string) => {
-      try {
-        const result = await generateStudyQuestions({ passageId });
-        if (activePassageIdRef.current !== passageId) {
-          updateResultStatus(passageId, resultId, { status: "error" });
-          return;
-        }
-        if ("error" in result) {
-          setState((prev) => ({ ...prev, error: result.error }));
-          updateResultStatus(passageId, resultId, { status: "error" });
-          return;
-        }
-        updateResultStatus(passageId, resultId, { status: "completed", updatedAt: new Date().toISOString() });
-        setState((prev) => ({
-          ...prev,
-          resultDetailById: {
-            ...prev.resultDetailById,
-            [resultId]: { questions: result.questions },
-          },
-        }));
-      } catch (err) {
-        setState((prev) => ({
-          ...prev,
-          error: err instanceof Error ? err.message : t("generationFailed"),
-        }));
-        updateResultStatus(passageId, resultId, { status: "error" });
+  // Marks the artifact failed in client state only — there is no persisted row to
+  // clean up since the atomic generation either committed or rolled back entirely.
+  const failQuizArtifact = useCallback(
+    (passageId: string, artifactId: string, errorCode: StudioArtifactErrorCode, errorDetail?: string) => {
+      if (activePassageIdRef.current === passageId) {
+        setState((prev) => ({ ...prev, error: errorDetail ?? t("generationFailed") }));
       }
+      updateArtifactStatus(passageId, artifactId, { status: "failed", errorCode, errorDetail });
     },
-    [setState, t, updateResultStatus],
+    [setState, t, updateArtifactStatus],
   );
 
-  const generateSummaryArtifact = useCallback(
-    async (
-      passageId: string,
-      resultId: string,
-      existingSimplifiedContent: string | null,
-      existingSimplifiedLevel: string | null,
-    ) => {
-      setState((prev) => ({ ...prev, simplifying: true, error: null }));
+  const generateQuizArtifact = useCallback(
+    async (passageId: string, artifactId: string) => {
       try {
-        const result = await studySimplifyAction({ passageId });
-        if (activePassageIdRef.current !== passageId) {
-          updateResultStatus(passageId, resultId, { status: "error" });
-          setState((prev) => ({ ...prev, simplifying: false }));
-          return;
-        }
+        const result = await generateStudioQuestions({ passageId, artifactId });
         if ("error" in result) {
-          setState((prev) => ({ ...prev, simplifying: false, error: result.error }));
-          updateResultStatus(passageId, resultId, { status: "error" });
+          failQuizArtifact(passageId, artifactId, result.code, result.error);
           return;
         }
-
-        const detail: DetailCacheEntry =
-          "skipped" in result
-            ? {
-                simplifiedContent: existingSimplifiedContent,
-                simplifiedLevel: existingSimplifiedLevel,
-              }
-            : {
-                simplifiedContent: result.simplifiedContent,
-                simplifiedLevel: result.simplifiedLevel,
-              };
-
-        updateResultStatus(passageId, resultId, { status: "completed", updatedAt: new Date().toISOString() });
+        // Success: swap optimistic card with the server's committed artifact and
+        // cache questions. Targets the originating passage so a valid quiz is
+        // never discarded when the user switches passages mid-generation.
+        updateArtifactStatus(passageId, artifactId, {
+          ...result.artifact,
+          errorCode: undefined,
+          errorDetail: undefined,
+        });
         setState((prev) => ({
           ...prev,
-          simplifying: false,
-          passages: prev.passages.map((passage) =>
-            passage.id === passageId && !("skipped" in result)
-              ? {
-                  ...passage,
-                  simplifiedContent: result.simplifiedContent,
-                  simplifiedLevel: result.simplifiedLevel,
-                }
-              : passage,
-          ),
-          resultDetailById: {
-            ...prev.resultDetailById,
-            [resultId]: detail,
+          artifactDetailById: {
+            ...prev.artifactDetailById,
+            [artifactId]: { questions: result.questions },
           },
         }));
       } catch (err) {
-        setState((prev) => ({
-          ...prev,
-          simplifying: false,
-          error: err instanceof Error ? err.message : t("simplificationFailed"),
-        }));
-        updateResultStatus(passageId, resultId, { status: "error" });
+        failQuizArtifact(passageId, artifactId, "UNKNOWN", err instanceof Error ? err.message : undefined);
       }
     },
-    [setState, t, updateResultStatus],
+    [failQuizArtifact, setState, updateArtifactStatus],
+  );
+
+  // Re-runs generation on a failed card. The optimistic card already has the right
+  // id; just reset it to generating and re-POST. The server's idempotency guard
+  // handles the case where the first attempt actually committed successfully.
+  const retryQuizArtifact = useCallback(
+    async (artifactId: string) => {
+      const passageId = activePassageIdRef.current;
+      if (!passageId) return;
+      if (!state.passages.find((item) => item.id === passageId)) return;
+      if (retryingIdsRef.current.has(artifactId)) return;
+      retryingIdsRef.current.add(artifactId);
+
+      updateArtifactStatus(passageId, artifactId, {
+        status: "generating",
+        errorCode: undefined,
+        errorDetail: undefined,
+      });
+
+      try {
+        await generateQuizArtifact(passageId, artifactId);
+      } finally {
+        retryingIdsRef.current.delete(artifactId);
+      }
+    },
+    [state.passages, updateArtifactStatus, generateQuizArtifact],
   );
 
   const handleActionClick = useCallback(
-    async (cardId: StudioCardId) => {
+    async (actionId: StudioActionId) => {
       const passageId = activePassageIdRef.current;
       if (!passageId) return;
       const passage = state.passages.find((item) => item.id === passageId);
       if (!passage) return;
 
-      const resultId = crypto.randomUUID();
-      const type: StudioResult["type"] = cardId === "quiz" ? "quiz" : "summary";
+      if (actionId !== "quiz") return;
 
-      const optimistic: StudioResult = {
-        id: resultId,
-        type,
+      const artifactId = crypto.randomUUID();
+
+      // Optimistic card lives in memory only — the server atomically creates the
+      // artifact + questions together on success. A reload before that shows nothing
+      // (correct: no partial DB state exists). A reload after shows the done quiz.
+      const optimistic: StudioArtifact = {
+        id: artifactId,
+        type: "quiz",
         passageId,
         title: passage.title,
-        status: "running",
+        status: "generating",
         createdAt: new Date().toISOString(),
       };
 
@@ -204,22 +183,72 @@ export function useStudyActions({ state, setState }: UseStudyActionsInput) {
         data: [optimistic, ...entry.data],
       }));
 
-      if (cardId === "quiz") {
-        await generateQuizArtifact(passageId, resultId);
-      } else if (cardId === "summary") {
-        await generateSummaryArtifact(
-          passageId,
-          resultId,
-          passage.simplifiedContent,
-          passage.simplifiedLevel,
-        );
+      await generateQuizArtifact(passageId, artifactId);
+    },
+    [generateQuizArtifact, state.passages, updateCacheEntry],
+  );
+
+  // Lazy-loads artifact detail when the user opens an artifact that isn't in state yet.
+  const handleViewArtifact = useCallback(
+    async (ref: ArtifactRef | null, passageId: string) => {
+      setState((prev) => ({
+        ...prev,
+        viewingArtifactByPassageId: {
+          ...prev.viewingArtifactByPassageId,
+          [passageId]: ref,
+        },
+      }));
+
+      if (!ref || state.artifactDetailById[ref.id]) return;
+
+      try {
+        const result = await getArtifactDetail(ref.id);
+
+        setState((prev) => ({
+          ...prev,
+          artifactDetailById: {
+            ...prev.artifactDetailById,
+            [ref.id]: result,
+          },
+        }));
+      } catch {
+        // Silently fail or handle error state
       }
     },
-    [generateQuizArtifact, generateSummaryArtifact, state.passages, updateCacheEntry],
+    [setState, state.artifactDetailById],
+  );
+
+  const handleRecordQuizResult = useCallback(
+    (passageId: string, artifactId: string, stats: { correctCount: number; totalQuestions: number }) => {
+      updateArtifactStatus(passageId, artifactId, {
+        quizResult: {
+          completedAt: new Date().toISOString(),
+          correctCount: stats.correctCount,
+          totalQuestions: stats.totalQuestions,
+          accuracyRate: stats.totalQuestions > 0
+            ? Math.round((stats.correctCount / stats.totalQuestions) * 100) / 100
+            : 0,
+        },
+      });
+    },
+    [updateArtifactStatus],
+  );
+
+  const handleResetQuizResult = useCallback(
+    (passageId: string, artifactId: string) => {
+      updateArtifactStatus(passageId, artifactId, {
+        quizResult: undefined,
+      });
+    },
+    [updateArtifactStatus],
   );
 
   return {
     handleSimplify,
     handleActionClick,
+    handleViewArtifact,
+    handleRecordQuizResult,
+    handleResetQuizResult,
+    retryQuizArtifact,
   };
 }

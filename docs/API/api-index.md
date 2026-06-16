@@ -12,14 +12,12 @@
 |---------|--------|-----|
 | Upload | `POST /api/upload`, `POST /api/upload/text` | [Routes/upload-feature.md](Routes/upload-feature.md) |
 | Translation | `POST /api/translate` | [Routes/translation-feature.md](Routes/translation-feature.md) |
-| Study questions | `POST /api/study-questions` | [Routes/study-questions-feature.md](Routes/study-questions-feature.md) |
+| Studio questions | `POST /api/studio-questions` | [Routes/studio-questions-feature.md](Routes/studio-questions-feature.md) |
+| Studio artifacts | `GET /api/studio-artifacts` | [Routes/studio-artifacts-feature.md](Routes/studio-artifacts-feature.md) |
 | Study chat | `GET/POST /api/study-chat` | [Routes/study-chat-feature.md](Routes/study-chat-feature.md) |
-| Quiz attempt | `POST /api/quiz-attempt`, `PATCH /api/quiz-attempt` | [Routes/quiz-attempt-feature.md](Routes/quiz-attempt-feature.md) |
-| Study results | `GET /api/study-results` | [Routes/study-results-feature.md](Routes/study-results-feature.md) |
 | Dictionary | `GET /api/dictionary/lookup`, `search`, `suggest`, `entries/[entryId]` | [Routes/dictionary-feature.md](Routes/dictionary-feature.md) |
 | Vocabulary | `POST /api/vocabulary`, `GET /api/vocabulary/list`, `PATCH /api/vocabulary/[id]/status`, `DELETE /api/vocabulary/[id]`, `GET /api/vocabulary/sets`, `POST /api/vocabulary/sets`, `PATCH/DELETE /api/vocabulary/sets/[id]`, `POST /api/vocabulary/sets/[id]/items`, `DELETE /api/vocabulary/sets/[id]/items/[itemId]` | [Routes/vocabulary-feature.md](Routes/vocabulary-feature.md) |
-| Cards | `GET /api/cards/due`, `POST /api/cards/review` | [Routes/cards-feature.md](Routes/cards-feature.md) |
-| Progress/session | `GET /api/progress/stats`, `POST/PATCH /api/study-session` | [Routes/progress-feature.md](Routes/progress-feature.md) |
+| Progress/session | `GET /api/progress/stats`, `POST /api/study-session` | [Routes/progress-feature.md](Routes/progress-feature.md) |
 
 ## Utility Routes
 

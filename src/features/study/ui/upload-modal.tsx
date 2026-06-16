@@ -4,9 +4,9 @@ import { useState, useCallback } from "react"
 import { useTranslations } from "next-intl"
 import { Upload, Type, Globe, Search, FileText } from "lucide-react"
 import { useDropzone, type FileRejection } from "react-dropzone"
-import { validateFile, formatFileSize } from "@/lib/validation/upload"
-import { cn } from "@/lib/shared/utils"
-import { studyUploadAction } from "@/features/study/actions/study-upload-action"
+import { validateFile, formatFileSize } from "@/shared/upload/upload-validation"
+import { cn } from "@/shared/utils"
+import { createPassage } from "@/features/study/api/passages-client"
 import {
   Dialog,
   DialogContent,
@@ -66,9 +66,8 @@ export function StudyUploadModal({
     setError(null)
     try {
       const text = await file.text()
-      const result = await studyUploadAction({ text, title: fileName, sourceType: fileType })
-      if ("error" in result) { onUploadError(result.error); return }
-      onUploadComplete(result.passage)
+      const passage = await createPassage({ text, title: fileName, sourceType: fileType })
+      onUploadComplete(passage)
     } catch (err) {
       onUploadError(err instanceof Error ? err.message : t("uploadFailed"))
     }
@@ -80,9 +79,8 @@ export function StudyUploadModal({
     onClose()
     setError(null)
     try {
-      const result = await studyUploadAction({ text: pastedText, title: t("pastedTextTitle") })
-      if ("error" in result) { onUploadError(result.error); return }
-      onUploadComplete(result.passage)
+      const passage = await createPassage({ text: pastedText, title: t("pastedTextTitle"), sourceType: "TEXT" })
+      onUploadComplete(passage)
     } catch (err) {
       onUploadError(err instanceof Error ? err.message : t("uploadFailed"))
     }

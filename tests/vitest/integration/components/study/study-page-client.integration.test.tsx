@@ -2,9 +2,9 @@ import { fireEvent, screen, waitFor } from "@testing-library/react";
 import * as Sentry from "@sentry/nextjs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { StudyPageClient } from "@/features/study/ui/study-workspace-client";
-import { generateStudyQuestions } from "@/features/study/api/study-questions-client";
-import { studySimplifyAction } from "@/features/study/actions/study-simplify-action";
-import { studyUploadAction } from "@/features/study/actions/study-upload-action";
+import { generateStudioQuestions } from "@/features/study/api/studio-questions-client";
+import { simplifyPassage, createPassage } from "@/features/study/api/passages-client";
+import { getArtifactDetail } from "@/features/study/api/studio-artifacts-client";
 import { extractSelectionInfo } from "@/features/study/model/selection-utils";
 
 import { createStudyPassage, createStudyQuestion } from "../../../fixtures";
@@ -93,20 +93,20 @@ vi.mock("react-dropzone", () => ({
   }),
 }));
 
-vi.mock("@/features/study/api/study-questions-client", () => ({
-  generateStudyQuestions: vi.fn(),
+vi.mock("@/features/study/api/studio-questions-client", () => ({
+  generateStudioQuestions: vi.fn(),
 }));
 
-vi.mock("@/features/study/actions/study-simplify-action", () => ({
-  studySimplifyAction: vi.fn(),
+vi.mock("@/features/study/api/passages-client", () => ({
+  simplifyPassage: vi.fn(),
+  createPassage: vi.fn(),
+  deletePassage: vi.fn(async () => true),
 }));
 
-vi.mock("@/features/study/actions/study-upload-action", () => ({
-  studyUploadAction: vi.fn(),
-}));
-
-vi.mock("@/features/study/actions/study-delete-passage-action", () => ({
-  studyDeletePassageAction: vi.fn(async () => ({ success: true })),
+vi.mock("@/features/study/api/studio-artifacts-client", () => ({
+  getArtifactDetail: vi.fn(),
+  recordQuizResult: vi.fn(),
+  resetQuizResult: vi.fn(),
 }));
 
 vi.mock("@/features/study/model/selection-utils", () => ({
@@ -166,8 +166,8 @@ describe("StudyPageClient", () => {
           });
         }
 
-        if (url.startsWith("/api/study-results")) {
-          return new Response(JSON.stringify({ results: [] }), {
+        if (url.startsWith("/api/studio-artifacts")) {
+          return new Response(JSON.stringify({ success: true, data: { artifacts: [] } }), {
             status: 200,
           });
         }
@@ -238,7 +238,7 @@ describe("StudyPageClient", () => {
       simplifiedLevel: null,
       createdAt: Date.UTC(2026, 4, 22),
     });
-    vi.mocked(studyUploadAction).mockResolvedValue({ passage: uploaded });
+    vi.mocked(createPassage).mockResolvedValue(uploaded);
     const { user } = renderWithUser(<StudyPageClient initialPassages={[]} />);
 
     await user.click(screen.getAllByRole("button", { name: "Add Source" })[0]);
@@ -254,9 +254,10 @@ describe("StudyPageClient", () => {
     await user.click(screen.getByRole("button", { name: "Continue" }));
 
     await waitFor(() => {
-      expect(studyUploadAction).toHaveBeenCalledWith({
+      expect(createPassage).toHaveBeenCalledWith({
         text: "A pasted source for the study workspace.",
         title: "Pasted Text",
+        sourceType: "TEXT",
       });
     });
     expect(
@@ -271,7 +272,7 @@ describe("StudyPageClient", () => {
       simplifiedLevel: null,
       originalLevel: "B2",
     });
-    vi.mocked(studySimplifyAction).mockResolvedValue({
+    vi.mocked(simplifyPassage).mockResolvedValue({
       simplifiedContent: "New simple version.",
       simplifiedLevel: "A2",
     });
@@ -283,9 +284,7 @@ describe("StudyPageClient", () => {
     await user.click(screen.getByRole("button", { name: "Simplify" }));
 
     await waitFor(() =>
-      expect(studySimplifyAction).toHaveBeenCalledWith({
-        passageId: eligible.id,
-      }),
+      expect(simplifyPassage).toHaveBeenCalledWith(eligible.id),
     );
     expect(await screen.findByText("New simple version.")).toBeInTheDocument();
 
@@ -310,7 +309,16 @@ describe("StudyPageClient", () => {
   it("generates quiz results and opens result detail", async () => {
     const passage = createStudyPassage();
     const question = createStudyQuestion();
-    vi.mocked(generateStudyQuestions).mockResolvedValue({
+    vi.mocked(generateStudioQuestions).mockResolvedValue({
+      artifact: {
+        id: "result-test-1",
+        type: "quiz" as const,
+        passageId: passage.id,
+        title: passage.title,
+        status: "done" as const,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
       questions: [question],
     });
     const { user } = renderWithUser(
@@ -321,8 +329,9 @@ describe("StudyPageClient", () => {
     await user.click(screen.getByRole("button", { name: "Quiz" }));
 
     await waitFor(() =>
-      expect(generateStudyQuestions).toHaveBeenCalledWith({
+      expect(generateStudioQuestions).toHaveBeenCalledWith({
         passageId: passage.id,
+        artifactId: expect.any(String),
       }),
     );
     expect(await screen.findByText("Results")).toBeInTheDocument();
@@ -331,6 +340,51 @@ describe("StudyPageClient", () => {
       screen.getByRole("button", { name: /Quiz: The Test Passage/ }),
     );
     expect(screen.getByText(question.questionText)).toBeInTheDocument();
+  });
+
+  it("lazy-loads questions when opening a persisted quiz artifact after reload", async () => {
+    // Simulates a page reload: the quiz artifact comes back from the API as
+    // metadata only (no questions in memory), so opening it must lazy-load the
+    // persisted questions via getArtifactDetail.
+    const passage = createStudyPassage();
+    const question = createStudyQuestion();
+    const persistedArtifact = {
+      id: "persisted-quiz-1",
+      type: "quiz",
+      passageId: passage.id,
+      title: passage.title,
+      status: "done",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    vi.mocked(fetch).mockImplementation(async (input: RequestInfo | URL) => {
+      if (String(input).startsWith("/api/studio-artifacts")) {
+        return new Response(
+          JSON.stringify({ success: true, data: { artifacts: [persistedArtifact] } }),
+          { status: 200 },
+        );
+      }
+      return new Response(JSON.stringify({ messages: [] }), { status: 200 });
+    });
+    vi.mocked(getArtifactDetail).mockResolvedValue({
+      questions: [question],
+    });
+
+    const { user } = renderWithUser(
+      <StudyPageClient initialPassages={[passage]} />,
+    );
+
+    await user.click(getSourceListItem(passage.title));
+
+    const card = await screen.findByRole("button", {
+      name: /Quiz: The Test Passage/,
+    });
+    await user.click(card);
+
+    await waitFor(() =>
+      expect(getArtifactDetail).toHaveBeenCalledWith(persistedArtifact.id),
+    );
+    expect(await screen.findByText(question.questionText)).toBeInTheDocument();
   });
 
   it("opens the chat view for the active passage", async () => {

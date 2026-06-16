@@ -99,7 +99,7 @@
    d. System calculates SM-2 interval (easeFactor, intervalDays, nextReviewDate)
    e. System upserts CardReview record
 7. User completes session
-8. System updates StudySession (completedAt, cardsReviewed, accuracyRate)
+8. System records quiz attempt completion separately from StudySession lifecycle
 
 ### Alternative Flows
 

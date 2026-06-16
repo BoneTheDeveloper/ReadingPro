@@ -63,8 +63,7 @@ Configured in `src/lib/core/sentry.ts`:
 |-----------|------|-----------------|
 | `db:user-lookup` | `src/app/actions/analyze.ts:89,196` | Find or create user |
 | `db:passage-create` | `src/app/actions/analyze.ts:96,203` | Create passage with questions |
-| `db:session-create` | `src/app/api/study-session/route.ts:21` | Create study session |
-| `db:session-update` | `src/app/api/study-session/route.ts:51` | Update study session completion |
+| `db:session-ensure-active` | `src/app/api/study-session/route.ts:21` | Ensure or create an active study session |
 | `db:card-review-update` | `src/app/api/cards/review/route.ts:26` | Upsert card review (SM-2) |
 
 ### File/Function Operations (`op: 'function'`)

@@ -2,10 +2,29 @@
 
 Start here when onboarding to the English Reading Training App docs.
 
+## Project Architecture
+
+### Source Layout
+
+```text
+src/
+  app/                  Next.js routing layer: thin pages + thin API route handlers (HTTP adapters)
+  server/               Backend layer (enforced server-only): db, ai, auth, http, modules
+  shared/               Contract layer (isomorphic/pure): Zod schemas, DTOs, pure utils
+  features/             Frontend feature layer (FSD-lite): ui, hooks, model, api
+  components/           Universal design system primitives (UI atoms)
+```
+
+### Core Invariants
+
+1.  **Strict Boundary:** `src/server/` is marked `server-only`. Backend logic never leaks to the client.
+2.  **Pure Contract:** `src/shared/` contains only Zod schemas and types. It never imports from `server/`.
+3.  **Frontend Logic:** Organized by feature in `src/features/`. Communicates with backend only via standard HTTP API routes.
+
 ## Reading Order
 
 1. [Project Overview PDR](project-overview-pdr.md) - product purpose, users, MVP scope, and current state.
-2. [Codebase Summary](codebase-summary.md) - source layout, framework stack, and core modules.
+2. [Codebase Summary](codebase-summary.md) - detailed source layout, framework stack, and feature map.
 3. [Code Standards](code-standards.md) - thin top-level convention for writing code and placing files.
 4. [System Architecture](Architecture/system-architecture.md) - high-level system map.
 5. [Runtime Architecture](Architecture/runtime-architecture.md) - Next.js App Router, RSC, route handlers, and server/client boundaries.
@@ -41,7 +60,7 @@ Do not duplicate detailed rules that belong beside executable assets:
 | Code and file placement | [`code-standards.md`](code-standards.md), [`codebase-summary.md`](codebase-summary.md) | Keep broad conventions and feature map only. |
 | Page and feature UI composition | [`Architecture/frontend-ui-architecture/page-composition-conventions.md`](Architecture/frontend-ui-architecture/page-composition-conventions.md) | Link and summarize only. |
 | API implementation and contracts | [`API/api-implementation-conventions.md`](API/api-implementation-conventions.md), [`API/api-index.md`](API/api-index.md) | Keep detailed route behavior in API docs. |
-| Prisma migration procedure | [`../prisma/migrations-flow.md`](../prisma/migrations-flow.md), [`../prisma/migrations-guide.md`](../prisma/migrations-guide.md), [`../prisma/SECURITY.md`](../prisma/SECURITY.md) | Link and summarize only. |
+| Prisma migration procedure | [`../prisma/migrations-guide.md`](../prisma/migrations-guide.md), [`../prisma/SECURITY.md`](../prisma/SECURITY.md) | Link and summarize only. |
 | Root configuration ownership | [`Operations/root-configuration.md`](Operations/root-configuration.md) | Record what belongs at root versus owning subdirectories. |
 | Test suite structure | [`../tests/README.md`](../tests/README.md) | Link and summarize only. |
 | Playwright local playground | [`../playwright/README.md`](../playwright/README.md) | Link and summarize only. |

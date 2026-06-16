@@ -71,7 +71,7 @@ tool-specific docs linked below.
 | `SCREENSHOT_PATH` | Screenshot helper only | Target path for authenticated screenshot helper. See `playwright/README.md`. |
 | `SCREENSHOT_NAME` | Screenshot helper only | Screenshot filename stem. See `playwright/README.md`. |
 | `SCREENSHOT_DIR` | Screenshot helper only | Screenshot output directory. See `playwright/README.md`. |
-| `RESET_CONFIRM` | Local destructive DB helper only | Must be `true` for reset helper; never set in production. See `prisma/migrations-flow.md`. |
+| `RESET_CONFIRM` | Local destructive DB helper only | Must be `true` for reset helper; never set in production. See `prisma/migrations-guide.md`. |
 | `PRODUCTION_URL` | Deploy verification only | Bare production host used by `scripts/database/verify-production-deploy-config.mjs`. See `docs/Operations/deployment-runbook.md`. |
 
 ## Platform-Provided

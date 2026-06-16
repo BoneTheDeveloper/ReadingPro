@@ -1,20 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
-import { getAuthenticatedUser } from "@/lib/auth/auth-utils";
-import { createRequestLogContext, createRequestLogger } from "@/lib/core/logger";
+import { getAuthenticatedUser } from "@/server/auth/auth-utils";
+import { createRequestLogContext, createRequestLogger } from "@/server/core/logger";
 import {
   getPrismaQueryMetrics,
   runWithPrismaQueryMetrics,
-} from "@/lib/observability/prisma-query-metrics";
+} from "@/server/observability/prisma-query-metrics";
 import {
   createDictionaryPerformanceTracker,
   measureDictionaryStep,
   shouldIncludeDictionaryPerformanceMetrics,
-} from "@/lib/dictionary/shared/dictionary-performance";
-import { normalizeDictionaryTerm } from "@/lib/dictionary/shared/normalize-dictionary-term";
-import { suggestDictionaryTerms } from "@/lib/dictionary/suggest/suggest.service";
-import type { DictionarySuggestItemDto } from "@/lib/dictionary/shared/dictionary-dtos";
+} from "@/server/modules/dictionary/shared/dictionary-performance";
+import { normalizeDictionaryTerm } from "@/shared/dictionary/normalize-dictionary-term";
+import { suggestDictionaryTerms } from "@/server/modules/dictionary/suggest/suggest.service";
+import type { DictionarySuggestItemDto } from "@/shared/dictionary/dictionary-dtos";
 
 const suggestQuerySchema = z.object({
   q: z.string().trim().min(1).max(200),

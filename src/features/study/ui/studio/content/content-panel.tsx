@@ -10,10 +10,10 @@ import {
   FileSearch,
   Plus,
 } from "lucide-react";
-import { cn } from "@/lib/shared/utils";
-import { calculateReadingTime } from "@/lib/shared/reading-utils";
-import { getCEFRLabel } from "@/lib/domain/cefr";
-import { getCEFRColor } from "@/lib/ui/cefr-style";
+import { cn } from "@/shared/utils";
+import { calculateReadingTime } from "@/shared/reading-utils";
+import { getCEFRLabel } from "@/shared/domain/cefr";
+import { getCEFRColor } from "@/shared/ui/cefr-style";
 import type { PassageData, TranslationSelection } from "@/features/study/model/types";
 import { extractSelectionInfo } from "@/features/study/model/selection-utils";
 

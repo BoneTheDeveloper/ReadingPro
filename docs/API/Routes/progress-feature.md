@@ -9,47 +9,32 @@ Track study session counters and expose aggregate progress stats.
 | Method | Path | Purpose |
 |--------|------|---------|
 | `GET` | `/api/progress/stats` | Return aggregate review stats for the authenticated user. |
-| `POST` | `/api/study-session` | Create a study session, optionally scoped to a passage. |
-| `PATCH` | `/api/study-session` | Complete/update study session counters. |
+| `POST` | `/api/study-session` | Ensure an active study session window for the authenticated user. |
 
 ## Auth And Ownership
 
 Requires authentication. All reads and writes use authenticated `userId`.
 Unauthenticated requests return `{ "error": "Authentication required." }` with
-`401`. Passage/session ownership misses on study-session writes return `404`.
+`401`.
 
 ## Study Session Create
 
 ```json
-{
-  "passageId": "optional uuid"
-}
-```
-
-## Study Session Patch
-
-```json
-{
-  "sessionId": "uuid",
-  "cardsReviewed": 10,
-  "correctCount": 8,
-  "incorrectCount": 2
-}
+{}
 ```
 
 ## Progress Response
 
 `GET /api/progress/stats` returns totals for:
 
-- `totalCards`
-- `matureCards`
-- `dueCards`
-- `todayReviews`
 - `streakDays`
+- `timeStudiedTodaySeconds`
+- `timeStudiedWeekSeconds`
+- `activeDaysThisWeek`
 
 ## Implementation
 
 - Progress route: `src/app/api/progress/stats/route.ts`
 - Session route: `src/app/api/study-session/route.ts`
-- Card stats: `src/lib/db/card-review-queries.ts`
+- Progress stats: `src/lib/db/quiz/quiz-review.ts`
 - Session queries: `src/lib/db/study-session-queries.ts`

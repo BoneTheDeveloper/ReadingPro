@@ -19,7 +19,7 @@ Runtime code must not use `DIRECT_URL`.
 |-------|--------|
 | Identity | `UserProfile` |
 | Reading content | `Passage`, `Question` |
-| Study/review | `StudySession`, `QuizAttempt`, `CardReview`, `StudyChatMessage` |
+| Study/review | `StudySession`, `StudioArtifact`, `QuizResult`, `CardReview`, `StudyChatMessage` |
 | Translation/vocabulary | `TranslationCache`, `TranslationHistory`, `VocabularyItem` |
 | Dictionary | `DictionaryEntry`, `DictionarySense`, `DictionaryTranslation`, `DictionaryAlias`, `DictionarySourceAudit` |
 | Storage intents | `FileUploadIntent` |

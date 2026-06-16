@@ -15,13 +15,14 @@ import {
   HelpCircle,
   Bell,
 } from "lucide-react";
-import { cn } from "@/lib/shared/utils";
+import { cn } from "@/shared/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AuthControls } from "./auth-controls";
 import { ThemeToggle } from "./theme-toggle";
 import { LanguageSwitcher } from "./language-switcher";
 import { useTranslations } from "next-intl";
+import { useStudySessionHeartbeat } from "@/features/study/hooks/use-study-session-heartbeat";
 
 const navItems = [
   { href: "/", labelKey: "Navigation.dashboard", icon: LayoutDashboard },
@@ -38,6 +39,11 @@ export function DashboardSidebar({
   const t = useTranslations();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Canonical app-wide presence heartbeat: the sidebar wraps every authenticated
+  // surface (landing dashboard + (dashboard) layout), so study time is tracked on
+  // every page after login, not just the reading workspace.
+  useStudySessionHeartbeat(true);
 
   const closeMobile = useCallback(() => setMobileOpen(false), []);
 

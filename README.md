@@ -111,6 +111,6 @@ pnpm db:check:dictionary-seed
 
 ## Source-Of-Truth Notes
 
-- Prisma migration procedure lives in [prisma/migrations-flow.md](prisma/migrations-flow.md).
+- Prisma migration procedure lives in [prisma/migrations-guide.md](prisma/migrations-guide.md).
 - Prisma/Neon security rules live in [prisma/SECURITY.md](prisma/SECURITY.md).
 - Test strategy lives in [docs/Testing/testing-strategy.md](docs/Testing/testing-strategy.md).

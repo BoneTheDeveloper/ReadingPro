@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { studyDeletePassageAction } from "@/features/study/actions/study-delete-passage-action";
+import { deletePassage } from "@/features/study/api/passages-client";
 import type { DocumentItem, PassageData, StudyState } from "../model/types";
 
 function getMostRecentPassageId(passages: PassageData[]): string | null {
@@ -22,9 +22,9 @@ export function useStudyWorkspaceState(initialPassages: PassageData[]) {
       error: null,
       simplifying: false,
       uploadModalOpen: false,
-      resultsByPassageId: {},
-      viewingResultByPassageId: {},
-      resultDetailById: {},
+      artifactsByPassageId: {},
+      viewingArtifactByPassageId: {},
+      artifactDetailById: {},
     };
   });
   const [isUploading, setIsUploading] = useState(false);
@@ -96,16 +96,12 @@ export function useStudyWorkspaceState(initialPassages: PassageData[]) {
 
   const handleDeletePassage = useCallback(async (passageId: string) => {
     try {
-      const result = await studyDeletePassageAction({ passageId });
-      if ("error" in result) {
-        setState((prev) => ({ ...prev, error: result.error }));
-        return;
-      }
+      await deletePassage(passageId);
       setState((prev) => {
         const remaining = prev.passages.filter((p) => p.id !== passageId);
-        const restResultsByPassageId = { ...prev.resultsByPassageId };
-        const restViewingByPassageId = { ...prev.viewingResultByPassageId };
-        delete restResultsByPassageId[passageId];
+        const restArtifactsByPassageId = { ...prev.artifactsByPassageId };
+        const restViewingByPassageId = { ...prev.viewingArtifactByPassageId };
+        delete restArtifactsByPassageId[passageId];
         delete restViewingByPassageId[passageId];
         if (prev.activePassageId === passageId) {
           const replacementId = getMostRecentPassageId(remaining);
@@ -113,13 +109,13 @@ export function useStudyWorkspaceState(initialPassages: PassageData[]) {
             ...prev,
             passages: remaining,
             activePassageId: replacementId,
-            resultsByPassageId: restResultsByPassageId,
-            viewingResultByPassageId: restViewingByPassageId,
+            artifactsByPassageId: restArtifactsByPassageId,
+            viewingArtifactByPassageId: restViewingByPassageId,
             status: replacementId ? "ready" : "idle",
             error: null,
           };
         }
-        return { ...prev, passages: remaining, resultsByPassageId: restResultsByPassageId, viewingResultByPassageId: restViewingByPassageId, error: null };
+        return { ...prev, passages: remaining, artifactsByPassageId: restArtifactsByPassageId, viewingArtifactByPassageId: restViewingByPassageId, error: null };
       });
     } catch (err) {
       setState((prev) => ({

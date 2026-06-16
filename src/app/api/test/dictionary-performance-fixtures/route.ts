@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { getAuthenticatedUser } from "@/lib/auth/auth-utils";
-import { db } from "@/lib/db/client";
+import { getAuthenticatedUser } from "@/server/auth/auth-utils";
+import { db } from "@/server/db/client";
 
 const cleanupSchema = z.object({
   dictionaryEntryIds: z.array(z.string()).default([]),

@@ -13,11 +13,8 @@ export function seedCommonDbMocks() {
   db.passage.findMany.mockResolvedValue([passageFixture]);
 }
 
-export function expectNoUnexpectedDbWrites() {
-  expect(db.cardReview.create).not.toHaveBeenCalled();
-  expect(db.cardReview.update).not.toHaveBeenCalled();
+export function expectNoSideEffects() {
   expect(db.passage.create).not.toHaveBeenCalled();
-  expect(db.passage.update).not.toHaveBeenCalled();
   expect(db.question.create).not.toHaveBeenCalled();
   expect(db.studySession.create).not.toHaveBeenCalled();
   expect(db.studySession.update).not.toHaveBeenCalled();

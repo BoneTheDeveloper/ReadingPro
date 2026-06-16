@@ -15,7 +15,9 @@ import {
 import { buttonVariants } from "@/components/ui/button";
 import { DashboardSidebar } from "@/components/layout/dashboard-sidebar";
 import { Link } from "@/i18n/navigation";
-import { cn } from "@/lib/shared/utils";
+import { cn } from "@/shared/utils";
+import { getCurrentUser } from "@/server/auth/auth-utils";
+import { getUserProgress } from "@/server/db/quiz/quiz-review";
 
 type UserProgress = {
   totalCards: number;
@@ -23,6 +25,9 @@ type UserProgress = {
   dueCards: number;
   todayReviews: number;
   streakDays: number;
+  timeStudiedTodaySeconds: number;
+  timeStudiedWeekSeconds: number;
+  activeDaysThisWeek: number;
 };
 
 type PassageOverview = {
@@ -48,6 +53,9 @@ const mockStats: UserProgress = {
   dueCards: 12,
   todayReviews: 18,
   streakDays: 9,
+  timeStudiedTodaySeconds: 0,
+  timeStudiedWeekSeconds: 0,
+  activeDaysThisWeek: 0,
 };
 
 const mockPassageOverview: PassageOverview = {
@@ -93,6 +101,14 @@ function formatDate(date: Date) {
 
 function pluralize(count: number, noun: string) {
   return `${count.toLocaleString()} ${count === 1 ? noun : `${noun}s`}`;
+}
+
+function formatStudyDuration(seconds: number) {
+  const totalMinutes = Math.round(seconds / 60);
+  if (totalMinutes < 60) return `${totalMinutes}m`;
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
 }
 
 function getNextAction(
@@ -186,6 +202,16 @@ function getProgressCards(stats: UserProgress, passages: PassageOverview, t: Awa
       tone: stats.streakDays > 0 ? "text-gold bg-gold-soft" : "text-muted-foreground bg-muted",
     },
     {
+      label: "Time studied",
+      value: stats.timeStudiedTodaySeconds > 0 ? formatStudyDuration(stats.timeStudiedTodaySeconds) : "—",
+      helper:
+        stats.timeStudiedWeekSeconds > 0
+          ? `${formatStudyDuration(stats.timeStudiedWeekSeconds)} this week · ${pluralize(stats.activeDaysThisWeek, "active day")}`
+          : "No study time today",
+      icon: Clock3,
+      tone: stats.timeStudiedTodaySeconds > 0 ? "text-primary bg-primary/10" : "text-muted-foreground bg-muted",
+    },
+    {
       label: t("today"),
       value: stats.todayReviews > 0 ? stats.todayReviews.toLocaleString() : "Ready",
       helper: stats.todayReviews > 0 ? "reviews logged" : "No session yet",
@@ -225,7 +251,19 @@ function getMomentumCopy(stats: UserProgress, passages: PassageOverview) {
 
 export default async function DashboardPage() {
   const t = await getTranslations("Dashboard");
-  const stats = mockStats;
+  const user = await getCurrentUser();
+  const progress = user ? await getUserProgress(user.id) : null;
+  // Only streak + study-time come from real data for now; the remaining cards
+  // intentionally stay on mockStats until they are wired in a later effort.
+  const stats: UserProgress = progress
+    ? {
+        ...mockStats,
+        streakDays: progress.streakDays,
+        timeStudiedTodaySeconds: progress.timeStudiedTodaySeconds,
+        timeStudiedWeekSeconds: progress.timeStudiedWeekSeconds,
+        activeDaysThisWeek: progress.activeDaysThisWeek,
+      }
+    : mockStats;
   const passageOverview = mockPassageOverview;
   const { recentPassages } = passageOverview;
   const displayName = mockDashboardProfile.firstName;

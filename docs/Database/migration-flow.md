@@ -4,8 +4,7 @@
 
 Detailed Prisma migration rules live beside the Prisma schema and migrations:
 
-- [../../prisma/migrations-flow.md](../../prisma/migrations-flow.md) - full production-safe migration flow.
-- [../../prisma/migrations-guide.md](../../prisma/migrations-guide.md) - practical guide for changing `prisma/schema.prisma`.
+- [../../prisma/migrations-guide.md](../../prisma/migrations-guide.md) - full migration flow and practical guide for changing `prisma/schema.prisma`.
 - [../../prisma/SECURITY.md](../../prisma/SECURITY.md) - Prisma/Neon security model.
 
 This `docs/` page is an architecture index only. Do not copy the full migration procedure here.
@@ -13,8 +12,8 @@ This `docs/` page is an architecture index only. Do not copy the full migration 
 ## Summary
 
 - Local schema changes use the Neon `development` branch.
-- CI validates migration files but does not apply production migrations.
-- Production migrations run only through the trusted GitHub Actions migration/deploy workflow.
+- CI runs lint, typecheck, and tests only; it does not validate or apply migrations.
+- Production migrations are applied manually from local using `pnpm db:migrate:deploy:prod` (`.env.prod`).
 - Runtime app code uses pooled `DATABASE_URL`.
 - Migration jobs use `DIRECT_URL` only in trusted contexts.
 - Destructive changes require expand/contract planning.

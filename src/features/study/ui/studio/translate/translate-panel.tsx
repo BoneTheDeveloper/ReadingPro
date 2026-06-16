@@ -7,7 +7,7 @@ import {
   MessageCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/shared/utils";
+import { cn } from "@/shared/utils";
 import type {
   TranslationSelection,
   QuickTranslationData,

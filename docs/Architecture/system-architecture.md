@@ -19,7 +19,7 @@ Next.js App Router
     +-- Sentry + Pino: errors, spans, logs, performance diagnostics
 ```
 
-The application is a server-first Next.js product. User-facing pages are locale-prefixed, authenticated dashboard routes. Mutations are implemented with route handlers and server actions that call feature services and repository modules.
+The application is a server-first Next.js product. User-facing pages are locale-prefixed, authenticated dashboard routes. Mutations are implemented with standard HTTP route handlers that call server-side domain modules.
 
 ## Main Boundaries
 
@@ -27,10 +27,11 @@ The application is a server-first Next.js product. User-facing pages are locale-
 |----------|-------|-------|
 | Routing/auth middleware | `src/proxy.ts` | Clerk route protection plus next-intl locale routing. |
 | User identity | Clerk + `UserProfile` | Clerk owns login; app DB owns profile row and data relationships. |
-| Product features | `src/features/*` | UI, hooks, workflows, server actions. |
-| Shared services | `src/lib/*` | Auth, DB, storage, AI, dictionary, translation, observability. |
-| Data model | `prisma/schema.prisma` | Source of truth for tables and relationships. |
-| API | `src/app/api/**/route.ts` | HTTP/streaming contracts. |
+| Product features | `src/features/*` | Frontend UI, hooks, and feature-specific API clients. |
+| Server logic | `src/server/*` | Backend modules: db, ai, auth, storage, and core domain services. |
+| API Contracts | `src/shared/*` | Shared Zod schemas and DTOs defining the frontend/backend interface. |
+| Data model | `prisma/schema/` (multi-file) | Source of truth for tables and relationships, split by domain. |
+| API | `src/app/api/**/route.ts` | HTTP/streaming adapters (delegates to `src/server/modules`). |
 
 ## Data Ownership
 
@@ -38,12 +39,13 @@ The application is a server-first Next.js product. User-facing pages are locale-
 
 - `Passage`
 - `StudySession`
-- `CardReview`
+- `QuestionReview`
 - `StudyChatMessage`
 - `TranslationCache`
 - `TranslationHistory`
 - `VocabularyItem`
 - `FileUploadIntent`
+- `StudioArtifact`
 
 Dictionary tables are shared read data and are not user-owned.
 

@@ -2,13 +2,11 @@
 
 import { useCallback, useRef, useState } from "react";
 import * as Sentry from "@sentry/nextjs";
-import {
-  vocabularyResponseSchema,
-} from "@/lib/translation/shared/translation-response-schema";
+import { saveDictionaryVocabulary } from "../api/dictionary-client";
 import type {
   DictionaryEntryDto,
   DictionarySenseDto,
-} from "@/lib/dictionary/shared/dictionary-dtos";
+} from "@/shared/dictionary/dictionary-dtos";
 
 export type SaveStatus = "idle" | "saving" | "saved" | "error";
 
@@ -30,25 +28,11 @@ export function useSaveDictionaryVocabulary() {
 
       if (savedSenses.has(key) || pendingRef.current) return;
 
-      const primary = sense.translations.find((t) => t.isPrimary) ?? sense.translations[0];
-      if (!primary) return;
-
       pendingRef.current = true;
       setSavingSenseId(sense.id);
       setErrorSenseId(null);
 
       try {
-        const payload = {
-          selectedText: entry.headword,
-          translation: primary.translation,
-          contextSentence: sense.example ?? undefined,
-          sourceLanguage: "en" as const,
-          targetLanguage: "vi" as const,
-          source: "DICTIONARY" as const,
-          dictionaryEntryId: entry.id,
-          dictionarySenseId: sense.id,
-        };
-
         Sentry.addBreadcrumb({
           category: "dictionary-vocabulary",
           level: "info",
@@ -56,35 +40,14 @@ export function useSaveDictionaryVocabulary() {
           data: { entryId: entry.id, senseId: sense.id },
         });
 
-        const res = await fetch("/api/vocabulary", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-
-        const json: unknown = await res.json();
-        const parsed = vocabularyResponseSchema.safeParse(json);
-
-        if (!parsed.success) {
-          Sentry.addBreadcrumb({
-            category: "dictionary-vocabulary",
-            level: "error",
-            message: "dictionary-vocabulary-schema-error",
-            data: { route: "/api/vocabulary" },
-          });
-          throw new Error("Vocabulary save failed");
-        }
-
-        if (!res.ok || "error" in parsed.data) {
-          throw new Error("Vocabulary save failed");
-        }
+        const data = await saveDictionaryVocabulary(entry, sense);
 
         setSavedSenses((prev) => new Set(prev).add(key));
         Sentry.addBreadcrumb({
           category: "dictionary-vocabulary",
           level: "info",
           message: "dictionary-vocabulary-save-success",
-          data: { vocabularyItemId: parsed.data.data.id },
+          data: { vocabularyItemId: data.id },
         });
       } catch {
         Sentry.addBreadcrumb({

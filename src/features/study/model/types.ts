@@ -1,11 +1,13 @@
-import type { TranslationData } from "@/lib/translation/shared/translation-response-schema";
-import type { StudioResult } from "@/lib/study/shared/study-artifact-types";
+import type { TranslationData } from "@/shared/translation/translation-response-schema";
+import type { StudioArtifact } from "@/shared/study/studio-artifact-types";
 export type {
-  StudioResult,
-  StudioResultStatus,
-  StudioResultType,
-} from "@/lib/study/shared/study-artifact-types";
-export { RESULT_STALE_TIME } from "@/lib/study/shared/study-artifact-types";
+  StudioArtifact,
+  StudioArtifactStatus,
+  StudioArtifactType,
+  StudioArtifactErrorCode,
+  QuizResult,
+} from "@/shared/study/studio-artifact-types";
+export { ARTIFACT_STALE_TIME, STUDIO_GENERATION_TIMEOUT_MS } from "@/shared/study/studio-artifact-types";
 
 export type StudyStatus =
   | "idle"
@@ -14,7 +16,7 @@ export type StudyStatus =
   | "ready"
   | "error";
 
-export type SourceType = "TEXT" | "PDF" | "YOUTUBE";
+export type SourceType = "TEXT" | "PDF" | "URL" | "YOUTUBE";
 
 export interface PassageData {
   id: string;
@@ -55,21 +57,21 @@ export interface QuestionData {
   difficulty: number;
 }
 
-export type ResultsCacheStatus = "idle" | "loading" | "success" | "error";
+export type ArtifactsCacheStatus = "idle" | "loading" | "success" | "error";
 
-export interface ResultsCacheEntry {
-  status: ResultsCacheStatus;
-  data: StudioResult[];
+export interface ArtifactsCacheEntry {
+  status: ArtifactsCacheStatus;
+  data: StudioArtifact[];
   fetchedAt?: number;
   error?: string;
 }
 
-export interface ResultRef {
-  type: StudioResult["type"];
+export interface ArtifactRef {
+  type: StudioArtifact["type"];
   id: string;
 }
 
-export interface DetailCacheEntry {
+export interface ArtifactDetailCacheEntry {
   questions?: QuestionData[];
   simplifiedContent?: string | null;
   simplifiedLevel?: string | null;
@@ -82,9 +84,9 @@ export interface StudyState {
   error: string | null;
   simplifying: boolean;
   uploadModalOpen: boolean;
-  resultsByPassageId: Record<string, ResultsCacheEntry>;
-  viewingResultByPassageId: Record<string, ResultRef | null>;
-  resultDetailById: Record<string, DetailCacheEntry>;
+  artifactsByPassageId: Record<string, ArtifactsCacheEntry>;
+  viewingArtifactByPassageId: Record<string, ArtifactRef | null>;
+  artifactDetailById: Record<string, ArtifactDetailCacheEntry>;
 }
 
 export interface StudyUploadModalProps {
@@ -95,16 +97,16 @@ export interface StudyUploadModalProps {
   onUploadError: (error: string) => void;
 }
 
-export type StudioCardId =
+export type StudioActionId =
   | "quiz"
-  | "flashcards"
+  | "flashcard"
   | "summary"
   | "chat"
   | "mindmap"
   | "translate";
 
-export interface StudioCard {
-  id: StudioCardId;
+export interface StudioAction {
+  id: StudioActionId;
   label: string;
   description: string;
   iconName: string;

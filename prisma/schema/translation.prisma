@@ -1,0 +1,61 @@
+// [Translation] Inline translation of selected passage text. Cache deduplicates
+// repeat lookups; history is the learner's translation log. Both surface inside
+// the studio translate panel/popup.
+
+/// Cached translation of a selection, keyed by `cacheKey` to avoid re-calling the
+/// provider. Client: instant result when the same selection is looked up again.
+model TranslationCache {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// Deterministic dedupe key (text + languages + mode); unique. Server-only.
+  cacheKey        String   @unique
+  userId          String
+  /// Passage the selection came from. FK -> passages.id.
+  sourceId        String   @db.Uuid
+  selectedText    String
+  /// Surrounding sentence used for context-aware translation.
+  contextSentence String
+  sourceLanguage  String
+  targetLanguage  String
+  /// Lookup mode (e.g. 'quick') — internal routing value.
+  mode            String
+  /// Backend that produced the response: 'cache' | 'dictionary' | 'fallback' |
+  /// 'google_translate' | 'ai'.
+  provider        String
+  response        Json
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user    UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  passage Passage     @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  @@index([userId, sourceId, targetLanguage])
+  @@index([userId, createdAt])
+  @@map("translation_caches")
+}
+
+/// Append-only log of translations the learner performed. Client: translation
+/// history list; unlike the cache, every lookup is recorded.
+model TranslationHistory {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String
+  /// Passage the selection came from. FK -> passages.id.
+  sourceId        String   @db.Uuid
+  selectedText    String
+  /// Surrounding sentence captured at lookup time.
+  contextSentence String
+  sourceLanguage  String
+  targetLanguage  String
+  /// Lookup mode (e.g. 'quick') — internal routing value.
+  mode            String
+  /// Backend that produced the result (see TranslationCache.provider values).
+  provider        String
+  translation     String
+  response        Json
+  createdAt       DateTime @default(now())
+
+  user    UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  passage Passage     @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  @@index([userId, sourceId, createdAt])
+  @@map("translation_histories")
+}

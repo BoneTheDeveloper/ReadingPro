@@ -1,0 +1,20 @@
+// [Upload] Short-lived records that authorize private file (PDF) uploads.
+
+/// A pending upload authorization: grants temporary, expiring access to a private
+/// Blob pathname before the file becomes a Passage. Server-only; consumed/expired
+/// after the upload completes. Client: backs the upload flow's signed access.
+model FileUploadIntent {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String
+  /// Reserved Blob pathname for the upload; unique. Server-only.
+  pathname  String   @unique
+  /// Deadline after which the intent (and its access) is no longer valid.
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+  @@index([userId, expiresAt])
+  @@map("file_upload_intents")
+}

@@ -51,7 +51,7 @@ const routeMocks = vi.hoisted(() => ({
   myQueryFunction: vi.fn(),
 }));
 
-vi.mock("@/lib/auth/auth-utils", () => ({
+vi.mock("@/server/auth/auth-utils", () => ({
   getAuthenticatedUser: routeMocks.getAuthenticatedUser,
   AuthenticationRequiredError: class AuthenticationRequiredError extends Error {
     constructor() { super("Authentication required"); this.name = "AuthenticationRequiredError"; }
@@ -89,8 +89,8 @@ await expectJsonError(response, 401, "Authentication required.");
 Use `importOriginal` when the test file also tests routes that depend on other exports from the same module:
 
 ```typescript
-vi.mock("@/lib/db/translation-queries", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/lib/db/translation-queries")>();
+vi.mock("@/server/db/translation-queries", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/server/db/translation-queries")>();
   return { ...actual, getOwnedTranslationSource: routeMocks.getOwnedTranslationSource };
 });
 ```

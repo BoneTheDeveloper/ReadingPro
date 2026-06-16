@@ -2,33 +2,23 @@ import { NextRequest } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { openai } from "@ai-sdk/openai";
-import { POST as reviewCard } from "@/app/api/cards/review/route";
-import { GET as getDueCardsRoute } from "@/app/api/cards/due/route";
 import { GET as getHealth } from "@/app/api/health/route";
 import { GET as getProgressStats } from "@/app/api/progress/stats/route";
 import { GET as getStudyChatHistory, POST as studyChat } from "@/app/api/study-chat/route";
-import {
-  PATCH as updateStudySessionRoute,
-  POST as createStudySessionRoute,
-} from "@/app/api/study-session/route";
+import { POST as createStudySessionRoute } from "@/app/api/study-session/route";
 import { POST as uploadFileRoute } from "@/app/api/upload/route";
 import { POST as uploadTextRoute } from "@/app/api/upload/text/route";
 import {
-  cardReviewSuccessResponseSchema,
-  dueCardsResponseSchema,
-  dueCardsSuccessResponseSchema,
   progressStatsResponseSchema,
   progressStatsSuccessResponseSchema,
   studyChatHistoryResponseSchema,
   studyChatHistorySuccessResponseSchema,
-  studySessionResponseSchema,
   studySessionSuccessResponseSchema,
-  toCardReviewDto,
   toStudySessionDto,
-} from "@/lib/study/shared/study-response-schema";
-import { uploadSuccessResponseSchema } from "@/lib/upload/shared/upload-response-schema";
-import { apiErrorResponseSchema } from "@/lib/api/shared/api-response-schema";
-import { dueCardFixture, passageFixture, studySessionFixture, userProfileFixture } from "../../fixtures";
+} from "@/shared/study/study-response-schema";
+import { uploadSuccessResponseSchema } from "@/shared/upload/upload-response-schema";
+import { apiErrorResponseSchema } from "@/shared/api/api-response-schema";
+import { passageFixture, studySessionFixture, userProfileFixture } from "../../fixtures";
 import { createFile, createGetRequest, createJsonRequest, parseJsonResponse, readJsonResponse } from "../../helpers/api";
 import { expectApiErrorPayload, expectApiSuccessPayload } from "../../helpers/assertions";
 import { db } from "../../mocks/db";
@@ -51,11 +41,8 @@ const routeMocks = vi.hoisted(() => {
 
   return {
     getAuthenticatedUser: vi.fn(),
-    getDueCards: vi.fn(),
-    updateCardReview: vi.fn(),
     getUserProgress: vi.fn(),
-    createStudySession: vi.fn(),
-    updateStudySession: vi.fn(),
+    ensureActiveSession: vi.fn(),
     processFileUpload: vi.fn(),
     analyzeAndPersistContent: vi.fn(),
     getStudyChatModelId: vi.fn(() => "gpt-4o-mini"),
@@ -64,20 +51,17 @@ const routeMocks = vi.hoisted(() => {
   };
 });
 
-vi.mock("@/lib/auth/auth-utils", () => ({
+vi.mock("@/server/auth/auth-utils", () => ({
   getAuthenticatedUser: routeMocks.getAuthenticatedUser,
   AuthenticationRequiredError: routeMocks.AuthenticationRequiredError,
 }));
 
-vi.mock("@/lib/db/card-review-queries", () => ({
-  getDueCards: routeMocks.getDueCards,
-  updateCardReview: routeMocks.updateCardReview,
+vi.mock("@/server/db/quiz/quiz-review", () => ({
   getUserProgress: routeMocks.getUserProgress,
 }));
 
-vi.mock("@/lib/db/study-session-queries", () => ({
-  createStudySession: routeMocks.createStudySession,
-  updateStudySession: routeMocks.updateStudySession,
+vi.mock("@/server/db/study-session-queries", () => ({
+  ensureActiveSession: routeMocks.ensureActiveSession,
 }));
 
 vi.mock("@/features/upload/services/upload-workflow", () => ({
@@ -85,11 +69,11 @@ vi.mock("@/features/upload/services/upload-workflow", () => ({
   UploadWorkflowError: routeMocks.UploadWorkflowError,
 }));
 
-vi.mock("@/lib/upload/content-analysis/content-analysis.service", () => ({
+vi.mock("@/server/modules/upload/content-analysis/content-analysis.service", () => ({
   analyzeAndPersistContent: routeMocks.analyzeAndPersistContent,
 }));
 
-vi.mock("@/lib/ai/model-config", () => ({
+vi.mock("@/server/ai/model-config", () => ({
   getStudyChatModelId: routeMocks.getStudyChatModelId,
 }));
 
@@ -118,44 +102,6 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-describe("GET /api/cards/due", () => {
-  it("returns due cards for the authenticated user", async () => {
-    const dueCardWithPersistedOptions = {
-      ...dueCardFixture,
-      question: {
-        ...dueCardFixture.question,
-        options: JSON.stringify(dueCardFixture.question.options),
-      },
-    };
-    routeMocks.getDueCards.mockResolvedValue([dueCardWithPersistedOptions]);
-
-    const response = await getDueCardsRoute(createGetRequest());
-    const payload = await parseJsonResponse(response, dueCardsSuccessResponseSchema);
-
-    expect(response.status).toBe(200);
-    expectApiSuccessPayload(payload);
-    expect(payload).toEqual({ success: true, data: [toCardReviewDto(dueCardWithPersistedOptions)] });
-    expect(payload.data[0].question?.options).toEqual(dueCardFixture.question.options);
-    expect(routeMocks.getDueCards).toHaveBeenCalledWith(userProfileFixture.id);
-  });
-
-  it("returns a stable error payload when auth fails", async () => {
-    routeMocks.getAuthenticatedUser.mockRejectedValue(apiError("Authentication required"));
-
-    const response = await getDueCardsRoute(createGetRequest());
-    expect(response.status).toBe(401);
-    expectApiErrorPayload(await parseJsonResponse(response, dueCardsResponseSchema), "Authentication required.");
-  });
-
-  it("returns a stable error payload when the card query fails", async () => {
-    routeMocks.getDueCards.mockRejectedValue(apiError("db down"));
-
-    const response = await getDueCardsRoute(createGetRequest());
-    expect(response.status).toBe(500);
-    expectApiErrorPayload(await parseJsonResponse(response, dueCardsResponseSchema), "Failed to fetch due cards");
-  });
-});
-
 describe("GET /api/health", () => {
   it("returns the current deployment commit SHA for deployment verification", async () => {
     vi.stubEnv("VERCEL_GIT_COMMIT_SHA", "commit_123");
@@ -174,70 +120,9 @@ describe("GET /api/health", () => {
   });
 });
 
-describe("POST /api/cards/review", () => {
-  it("updates a review for the authenticated user", async () => {
-    const updatedReview = { ...dueCardFixture, qualityRating: 5 };
-    routeMocks.updateCardReview.mockResolvedValue(updatedReview);
-
-    const response = await reviewCard(createJsonRequest({ cardReviewId: dueCardFixture.id, qualityRating: 5 }));
-    const payload = await parseJsonResponse(response, cardReviewSuccessResponseSchema);
-
-    expect(response.status).toBe(200);
-    expectApiSuccessPayload(payload);
-    expect(payload).toEqual({ success: true, data: toCardReviewDto(updatedReview) });
-    expect(routeMocks.updateCardReview).toHaveBeenCalledWith(userProfileFixture.id, dueCardFixture.id, 5);
-  });
-
-  it("rejects missing IDs and invalid ratings before updating", async () => {
-    await expectJsonError(
-      await reviewCard(createJsonRequest({ qualityRating: 3 })),
-      400,
-      "Invalid request",
-    );
-
-    await expectJsonError(
-      await reviewCard(createJsonRequest({ cardReviewId: dueCardFixture.id, qualityRating: 6 })),
-      400,
-      "Invalid request",
-    );
-    expect(routeMocks.updateCardReview).not.toHaveBeenCalled();
-  });
-
-  it("captures unexpected failures", async () => {
-    const error = apiError("db down");
-    routeMocks.updateCardReview.mockRejectedValue(error);
-
-    await expectJsonError(
-      await reviewCard(createJsonRequest({ cardReviewId: dueCardFixture.id, qualityRating: 4 })),
-      500,
-      "Failed to submit review",
-    );
-    expect(Sentry.captureException).toHaveBeenCalledWith(error, {
-      tags: { route: "api:cards:review", method: "POST" },
-    });
-  });
-
-  it("rejects malformed JSON with 400", async () => {
-    await expectJsonError(
-      await reviewCard(new NextRequest("https://english-reading.test/api/cards/review", { method: "POST", body: "{" })),
-      400,
-      "Invalid JSON payload.",
-    );
-  });
-
-  it("rejects non-UUID card review IDs", async () => {
-    await expectJsonError(
-      await reviewCard(createJsonRequest({ cardReviewId: "not-a-uuid", qualityRating: 3 })),
-      400,
-      "Invalid request",
-    );
-    expect(routeMocks.updateCardReview).not.toHaveBeenCalled();
-  });
-});
-
 describe("GET /api/progress/stats", () => {
   it("returns progress stats for the authenticated user", async () => {
-    const stats = { totalCards: 12, dueCards: 3, matureCards: 6, todayReviews: 4, streakDays: 2, totalQuizAttempts: 0, avgQuizAccuracy: null, todayQuizAttempts: 0 };
+    const stats = { streakDays: 2, timeStudiedTodaySeconds: 0, timeStudiedWeekSeconds: 0, activeDaysThisWeek: 0 };
     routeMocks.getUserProgress.mockResolvedValue(stats);
 
     const response = await getProgressStats(createGetRequest());
@@ -258,62 +143,29 @@ describe("GET /api/progress/stats", () => {
   });
 });
 
-describe("POST/PATCH /api/study-session", () => {
-  it("creates and updates study sessions", async () => {
-    routeMocks.createStudySession.mockResolvedValue(studySessionFixture);
-    routeMocks.updateStudySession.mockResolvedValue({ ...studySessionFixture, cardsReviewed: 2 });
+describe("POST /api/study-session", () => {
+  it("ensures study sessions", async () => {
+    routeMocks.ensureActiveSession.mockResolvedValue(studySessionFixture);
 
-    const createResponse = await createStudySessionRoute(createJsonRequest({ passageId: passageFixture.id }));
+    const createResponse = await createStudySessionRoute(createJsonRequest({}));
     expect(await parseJsonResponse(createResponse, studySessionSuccessResponseSchema)).toEqual({
       success: true,
       data: toStudySessionDto(studySessionFixture),
     });
-    expect(routeMocks.createStudySession).toHaveBeenCalledWith(userProfileFixture.id, passageFixture.id);
-
-    const updateResponse = await updateStudySessionRoute(
-      createJsonRequest({ sessionId: studySessionFixture.id, cardsReviewed: 2, correctCount: 1, incorrectCount: 1 }),
-    );
-    expect(await parseJsonResponse(updateResponse, studySessionSuccessResponseSchema)).toEqual({
-      success: true,
-      data: toStudySessionDto({ ...studySessionFixture, cardsReviewed: 2 }),
-    });
-    expect(routeMocks.updateStudySession).toHaveBeenCalledWith(userProfileFixture.id, studySessionFixture.id, {
-      completedAt: expect.any(Date),
-      cardsReviewed: 2,
-      correctCount: 1,
-      incorrectCount: 1,
-    });
+    expect(routeMocks.ensureActiveSession).toHaveBeenCalledWith(userProfileFixture.id);
   });
 
-  it("rejects invalid update bodies", async () => {
-    const response = await updateStudySessionRoute(createJsonRequest({ cardsReviewed: -1 }));
-
-    expect(response.status).toBe(400);
-    expectApiErrorPayload(await parseJsonResponse(response, studySessionResponseSchema));
-    expect(routeMocks.updateStudySession).not.toHaveBeenCalled();
-  });
-
-  it("captures create and update dependency failures", async () => {
+  it("captures create dependency failures", async () => {
     const createError = apiError("create failed");
-    const updateError = apiError("update failed");
-    routeMocks.createStudySession.mockRejectedValue(createError);
-    routeMocks.updateStudySession.mockRejectedValue(updateError);
+    routeMocks.ensureActiveSession.mockRejectedValue(createError);
 
     await expectJsonError(
-      await createStudySessionRoute(createJsonRequest({ passageId: passageFixture.id })),
+      await createStudySessionRoute(createJsonRequest({})),
       500,
-      "Failed to create session",
-    );
-    await expectJsonError(
-      await updateStudySessionRoute(createJsonRequest({ sessionId: studySessionFixture.id })),
-      500,
-      "Failed to update session",
+      "Failed to ensure active session",
     );
     expect(Sentry.captureException).toHaveBeenCalledWith(createError, {
       tags: { route: "api:study-session", method: "POST" },
-    });
-    expect(Sentry.captureException).toHaveBeenCalledWith(updateError, {
-      tags: { route: "api:study-session", method: "PATCH" },
     });
   });
 
@@ -325,14 +177,14 @@ describe("POST/PATCH /api/study-session", () => {
     );
   });
 
-  it("rejects non-UUID session IDs", async () => {
+  it("rejects unexpected fields with 400", async () => {
     await expectJsonError(
-      await updateStudySessionRoute(createJsonRequest({ sessionId: "not-a-uuid", cardsReviewed: 1 })),
+      await createStudySessionRoute(createJsonRequest({ passageId: passageFixture.id })),
       400,
-      "Invalid UUID",
+      'Unrecognized key: "passageId"',
     );
-    expect(routeMocks.updateStudySession).not.toHaveBeenCalled();
   });
+
 });
 
 describe("POST /api/study-chat", () => {

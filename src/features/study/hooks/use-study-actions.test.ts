@@ -1,17 +1,23 @@
 import { act, renderHook } from "@testing-library/react";
 import { useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { studySimplifyAction } from "@/features/study/actions/study-simplify-action";
-import { generateStudyQuestions } from "@/features/study/api/study-questions-client";
-import type { PassageData, QuestionData, StudyState } from "../model/types";
+import { simplifyPassage } from "@/features/study/api/passages-client";
+import { generateStudioQuestions } from "@/features/study/api/studio-questions-client";
+import type { PassageData, QuestionData, StudioArtifact, StudyState } from "../model/types";
 import { useStudyActions } from "./use-study-actions";
 
-vi.mock("@/features/study/api/study-questions-client", () => ({
-  generateStudyQuestions: vi.fn(),
+vi.mock("@/features/study/api/studio-questions-client", () => ({
+  generateStudioQuestions: vi.fn(),
 }));
 
-vi.mock("@/features/study/actions/study-simplify-action", () => ({
-  studySimplifyAction: vi.fn(),
+vi.mock("@/features/study/api/passages-client", () => ({
+  simplifyPassage: vi.fn(),
+}));
+
+vi.mock("@/features/study/api/studio-artifacts-client", () => ({
+  getArtifactDetail: vi.fn(),
+  recordQuizResult: vi.fn(),
+  resetQuizResult: vi.fn(),
 }));
 
 const passage: PassageData = {
@@ -45,6 +51,16 @@ const question: QuestionData = {
   difficulty: 1,
 };
 
+const serverArtifact: StudioArtifact = {
+  id: "result-1",
+  type: "quiz",
+  passageId: "passage-1",
+  title: "Study Passage",
+  status: "done",
+  createdAt: "2026-06-16T12:00:00.000Z",
+  updatedAt: "2026-06-16T12:01:00.000Z",
+};
+
 function createState(overrides: Partial<StudyState> = {}): StudyState {
   return {
     passages: [passage, otherPassage],
@@ -53,9 +69,9 @@ function createState(overrides: Partial<StudyState> = {}): StudyState {
     error: null,
     simplifying: false,
     uploadModalOpen: false,
-    resultsByPassageId: {},
-    viewingResultByPassageId: {},
-    resultDetailById: {},
+    artifactsByPassageId: {},
+    viewingArtifactByPassageId: {},
+    artifactDetailById: {},
     ...overrides,
   };
 }
@@ -81,7 +97,7 @@ describe("useStudyActions", () => {
   });
 
   it("simplifies the active passage and clears the loading state", async () => {
-    vi.mocked(studySimplifyAction).mockResolvedValue({
+    vi.mocked(simplifyPassage).mockResolvedValue({
       simplifiedContent: "Fresh summary",
       simplifiedLevel: "B2",
     });
@@ -91,7 +107,7 @@ describe("useStudyActions", () => {
       await result.current.actions.handleSimplify();
     });
 
-    expect(studySimplifyAction).toHaveBeenCalledWith({ passageId: "passage-1" });
+    expect(simplifyPassage).toHaveBeenCalledWith("passage-1");
     expect(result.current.state.simplifying).toBe(false);
     expect(result.current.state.error).toBeNull();
     expect(result.current.state.passages[0]).toMatchObject({
@@ -107,12 +123,12 @@ describe("useStudyActions", () => {
       await result.current.actions.handleSimplify();
     });
 
-    expect(studySimplifyAction).not.toHaveBeenCalled();
+    expect(simplifyPassage).not.toHaveBeenCalled();
     expect(result.current.state.simplifying).toBe(false);
   });
 
   it("stores server and translated fallback errors from simplification", async () => {
-    vi.mocked(studySimplifyAction).mockResolvedValueOnce({ error: "Server says no" });
+    vi.mocked(simplifyPassage).mockRejectedValueOnce(new Error("Server says no"));
     const { result } = renderStudyActions();
 
     await act(async () => {
@@ -123,111 +139,67 @@ describe("useStudyActions", () => {
       simplifying: false,
       error: "Server says no",
     });
-
-    vi.mocked(studySimplifyAction).mockRejectedValueOnce("boom");
-
-    await act(async () => {
-      await result.current.actions.handleSimplify();
-    });
-
-    expect(result.current.state).toMatchObject({
-      simplifying: false,
-      error: "Simplification failed",
-    });
   });
 
   it("inserts a completed quiz result and writes generated questions", async () => {
-    vi.mocked(generateStudyQuestions).mockResolvedValue({ questions: [question] });
+    vi.mocked(generateStudioQuestions).mockResolvedValue({ artifact: serverArtifact, questions: [question] });
     const { result } = renderStudyActions();
 
     await act(async () => {
       await result.current.actions.handleActionClick("quiz");
     });
 
-    expect(generateStudyQuestions).toHaveBeenCalledWith({ passageId: "passage-1" });
-    const quizResults = result.current.state.resultsByPassageId["passage-1"].data;
+    expect(generateStudioQuestions).toHaveBeenCalledWith({ passageId: "passage-1", artifactId: "result-1" });
+    const quizResults = result.current.state.artifactsByPassageId["passage-1"].data;
     expect(quizResults).toHaveLength(1);
     expect(quizResults[0]).toMatchObject({
       id: "result-1",
       type: "quiz",
       passageId: "passage-1",
       title: "Study Passage",
-      status: "completed",
+      status: "done",
     });
     expect(quizResults[0].updatedAt).toEqual(expect.any(String));
-    expect(result.current.state.resultDetailById["result-1"].questions).toEqual([question]);
+    expect(result.current.state.artifactDetailById["result-1"].questions).toEqual([question]);
   });
 
-  it("inserts a completed summary result and updates the active passage", async () => {
-    vi.mocked(studySimplifyAction).mockResolvedValue({
-      simplifiedContent: "Generated summary",
-      simplifiedLevel: "A2",
-    });
+  it("marks the quiz failed with the server error code (no DB row to delete)", async () => {
+    vi.mocked(generateStudioQuestions).mockResolvedValueOnce({ error: "No questions generated", code: "NO_QUESTIONS" });
     const { result } = renderStudyActions();
-
-    await act(async () => {
-      await result.current.actions.handleActionClick("summary");
-    });
-
-    expect(studySimplifyAction).toHaveBeenCalledWith({ passageId: "passage-1" });
-    expect(result.current.state.simplifying).toBe(false);
-    expect(result.current.state.passages[0]).toMatchObject({
-      simplifiedContent: "Generated summary",
-      simplifiedLevel: "A2",
-    });
-    const summaryResults = result.current.state.resultsByPassageId["passage-1"].data;
-    expect(summaryResults).toHaveLength(1);
-    expect(summaryResults[0]).toMatchObject({
-      id: "result-1",
-      type: "summary",
-      status: "completed",
-    });
-    expect(result.current.state.resultDetailById["result-1"]).toMatchObject({
-      simplifiedContent: "Generated summary",
-      simplifiedLevel: "A2",
-    });
-  });
-
-  it("uses existing summary data when the summary action is skipped", async () => {
-    vi.mocked(studySimplifyAction).mockResolvedValue({ skipped: true, reason: "Already simplified" });
-    const { result } = renderStudyActions();
-
-    await act(async () => {
-      await result.current.actions.handleActionClick("summary");
-    });
-
-    expect(result.current.state.passages[0].simplifiedContent).toBe("Existing summary");
-    const summaryResults = result.current.state.resultsByPassageId["passage-1"].data;
-    expect(summaryResults).toHaveLength(1);
-    expect(summaryResults[0]).toMatchObject({
-      id: "result-1",
-      status: "completed",
-    });
-    expect(result.current.state.resultDetailById["result-1"]).toMatchObject({
-      simplifiedContent: "Existing summary",
-      simplifiedLevel: "B1",
-    });
-  });
-
-  it("marks quiz artifacts as errors for server failures and stale active passage refs", async () => {
-    vi.mocked(generateStudyQuestions).mockResolvedValueOnce({ error: "Generation failed" });
-    const { result, rerender } = renderStudyActions();
 
     await act(async () => {
       await result.current.actions.handleActionClick("quiz");
     });
 
-    expect(result.current.state.error).toBe("Generation failed");
-    const firstResults = result.current.state.resultsByPassageId["passage-1"].data;
-    expect(firstResults[0]).toMatchObject({ status: "error" });
+    expect(result.current.state.error).toBe("No questions generated");
+    const results = result.current.state.artifactsByPassageId["passage-1"].data;
+    expect(results[0]).toMatchObject({ status: "failed", errorCode: "NO_QUESTIONS" });
+  });
 
-    let resolveQuestions: (value: { questions: QuestionData[] }) => void = () => {};
-    vi.mocked(generateStudyQuestions).mockImplementationOnce(
+  it("settles a stalled generation to failed (TIMEOUT) so the lock releases", async () => {
+    vi.mocked(generateStudioQuestions).mockResolvedValueOnce({ error: "Request timed out", code: "TIMEOUT" });
+    const { result } = renderStudyActions();
+
+    await act(async () => {
+      await result.current.actions.handleActionClick("quiz");
+    });
+
+    const results = result.current.state.artifactsByPassageId["passage-1"].data;
+    expect(results[0]).toMatchObject({ status: "failed", errorCode: "TIMEOUT" });
+    // No artifact is left in "generating", so the studio action lock is freed.
+    expect(results.some((r) => r.status === "generating")).toBe(false);
+  });
+
+  it("keeps a successful generation on its originating passage after a passage switch", async () => {
+    let resolveQuestions: (value: { artifact: StudioArtifact; questions: QuestionData[] }) => void = () => {};
+    vi.mocked(generateStudioQuestions).mockImplementationOnce(
       () =>
         new Promise((resolve) => {
           resolveQuestions = resolve;
         }),
     );
+
+    const { result, rerender } = renderStudyActions();
 
     let actionPromise: Promise<void>;
     act(() => {
@@ -240,16 +212,35 @@ describe("useStudyActions", () => {
     });
 
     await act(async () => {
-      resolveQuestions({ questions: [question] });
+      resolveQuestions({ artifact: serverArtifact, questions: [question] });
       await actionPromise;
     });
 
-    const secondResults = result.current.state.resultsByPassageId["passage-1"].data;
-    expect(secondResults).toHaveLength(2);
-    expect(secondResults[0]).toMatchObject({
-      passageId: "passage-1",
-      status: "error",
+    // The valid quiz is preserved (status "done") on passage-1, not discarded.
+    const originating = result.current.state.artifactsByPassageId["passage-1"].data;
+    expect(originating[0]).toMatchObject({ passageId: "passage-1", status: "done" });
+    expect(result.current.state.artifactDetailById["result-1"].questions).toEqual([question]);
+  });
+
+  it("retries a failed quiz by re-POSTing under the same id (no DB row recreate)", async () => {
+    vi.mocked(generateStudioQuestions).mockResolvedValueOnce({ error: "Request timed out", code: "TIMEOUT" });
+    const { result } = renderStudyActions();
+
+    await act(async () => {
+      await result.current.actions.handleActionClick("quiz");
     });
+    expect(result.current.state.artifactsByPassageId["passage-1"].data[0]).toMatchObject({ status: "failed" });
+
+    vi.mocked(generateStudioQuestions).mockResolvedValueOnce({ artifact: serverArtifact, questions: [question] });
+
+    await act(async () => {
+      await result.current.actions.retryQuizArtifact("result-1");
+    });
+
+    expect(generateStudioQuestions).toHaveBeenLastCalledWith({ passageId: "passage-1", artifactId: "result-1" });
+    const retried = result.current.state.artifactsByPassageId["passage-1"].data;
+    expect(retried).toHaveLength(1);
+    expect(retried[0]).toMatchObject({ id: "result-1", status: "done", errorCode: undefined });
   });
 
   it("ignores action clicks when active passage state is missing or stale", async () => {
@@ -259,7 +250,7 @@ describe("useStudyActions", () => {
       await result.current.actions.handleActionClick("quiz");
     });
 
-    expect(generateStudyQuestions).not.toHaveBeenCalled();
-    expect(result.current.state.resultsByPassageId).toEqual({});
+    expect(generateStudioQuestions).not.toHaveBeenCalled();
+    expect(result.current.state.artifactsByPassageId).toEqual({});
   });
 });

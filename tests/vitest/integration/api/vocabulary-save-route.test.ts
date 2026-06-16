@@ -11,14 +11,14 @@ const routeMocks = vi.hoisted(() => ({
   saveVocabularyItem: vi.fn(),
 }));
 
-vi.mock("@/lib/auth/auth-utils", () => ({
+vi.mock("@/server/auth/auth-utils", () => ({
   getAuthenticatedUser: routeMocks.getAuthenticatedUser,
   AuthenticationRequiredError: class AuthenticationRequiredError extends Error {
     constructor() { super("Authentication required"); this.name = "AuthenticationRequiredError"; }
   },
 }));
 
-vi.mock("@/lib/vocabulary/vocabulary.service", () => ({
+vi.mock("@/server/modules/vocabulary/vocabulary.service", () => ({
   saveVocabularyItem: routeMocks.saveVocabularyItem,
   VocabularyServiceError: class VocabularyServiceError extends Error {
     constructor(message: string) { super(message); this.name = "VocabularyServiceError"; }
@@ -73,7 +73,7 @@ describe("POST /api/vocabulary (save from translate)", () => {
   });
 
   it("returns 404 when source passage not found", async () => {
-    const { VocabularyServiceError } = await import("@/lib/vocabulary/vocabulary.service");
+    const { VocabularyServiceError } = await import("@/server/modules/vocabulary/vocabulary.service");
     routeMocks.saveVocabularyItem.mockRejectedValue(new VocabularyServiceError("Source not found."));
     const response = await vocabularyRoute(createJsonRequest(vocabularyBody()));
     await expectJsonError(response, 404, "Source not found.");

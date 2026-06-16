@@ -11,7 +11,7 @@ import {
   PanelLeft,
   Video,
 } from "lucide-react";
-import { cn } from "@/lib/shared/utils";
+import { cn } from "@/shared/utils";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
