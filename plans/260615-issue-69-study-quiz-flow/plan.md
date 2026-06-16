@@ -1,14 +1,15 @@
 ---
-title: "Issue #69 Study Quiz Flow"
-description: ""
+title: 'Issue #69 Study Quiz Flow'
+description: ''
 status: pending
 priority: P2
-branch: "feature/issue-69-study-quiz-flow"
+branch: feature/issue-69-study-quiz-flow
 tags: []
-blockedBy: [project:260616-1107-studio-artifact-model]
+blockedBy:
+  - 'project:260616-1107-studio-artifact-model'
 blocks: []
-created: "2026-06-15T04:02:55.129Z"
-createdBy: "ck:plan"
+created: '2026-06-15T04:02:55.129Z'
+createdBy: 'ck:plan'
 source: skill
 ---
 

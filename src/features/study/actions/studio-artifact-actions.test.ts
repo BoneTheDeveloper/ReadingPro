@@ -12,8 +12,13 @@ const artifactsService = vi.hoisted(() => ({
   resetQuizResult: vi.fn(),
 }));
 
+const dbClient = vi.hoisted(() => ({
+  db: { question: { findMany: vi.fn() } },
+}));
+
 vi.mock("@/features/study/actions/study-shared", () => studyShared);
 vi.mock("@/lib/study/passage/studio-artifacts-service", () => artifactsService);
+vi.mock("@/lib/db/client", () => dbClient);
 
 describe("studio-artifact actions", () => {
   beforeEach(() => {
@@ -55,6 +60,54 @@ describe("studio-artifact actions", () => {
       const result = await studioRecordQuizResultAction({ artifactId: "a1", correctCount: 4, totalQuestions: 5 });
 
       expect(result).toEqual({ error: "Failed to record quiz result" });
+    });
+  });
+
+  describe("studioLoadArtifactDetailAction", () => {
+    const baseRow = {
+      id: "q1",
+      questionText: "Q?",
+      correctOption: "a",
+      sourceText: "src",
+      sourceLine: 1,
+      explanation: "because",
+      questionType: "MULTIPLE_CHOICE",
+      difficulty: 3,
+    };
+    const optionsArray = [
+      { id: "a", text: "A" },
+      { id: "b", text: "B" },
+    ];
+
+    it("scopes the question query to the authenticated owner", async () => {
+      dbClient.db.question.findMany.mockResolvedValue([]);
+      const { studioLoadArtifactDetailAction } = await import("./studio-artifact-actions");
+
+      await studioLoadArtifactDetailAction({ artifactId: "art-1", type: "quiz", passageId: "p1" });
+
+      expect(dbClient.db.question.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { artifactId: "art-1", artifact: { userId: "user-1" } },
+        }),
+      );
+    });
+
+    it("returns options as an array when stored natively", async () => {
+      dbClient.db.question.findMany.mockResolvedValue([{ ...baseRow, options: optionsArray }]);
+      const { studioLoadArtifactDetailAction } = await import("./studio-artifact-actions");
+
+      const result = await studioLoadArtifactDetailAction({ artifactId: "art-1", type: "quiz", passageId: "p1" });
+
+      expect("questions" in result && result.questions?.[0].options).toEqual(optionsArray);
+    });
+
+    it("parses legacy stringified options back into an array", async () => {
+      dbClient.db.question.findMany.mockResolvedValue([{ ...baseRow, options: JSON.stringify(optionsArray) }]);
+      const { studioLoadArtifactDetailAction } = await import("./studio-artifact-actions");
+
+      const result = await studioLoadArtifactDetailAction({ artifactId: "art-1", type: "quiz", passageId: "p1" });
+
+      expect("questions" in result && result.questions?.[0].options).toEqual(optionsArray);
     });
   });
 

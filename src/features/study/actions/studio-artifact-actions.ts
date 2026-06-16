@@ -19,6 +19,20 @@ const log = createModuleLogger('actions:studio-artifact');
 
 type ActionResult<T> = T | { error: string };
 
+// `options` is a Json column. New rows store the array natively, but rows written
+// before that fix hold a JSON-encoded string — parse those so the UI always gets
+// an array and never calls `.map` on a string.
+function parseQuestionOptions(value: unknown): QuestionData['options'] {
+  if (typeof value === 'string') {
+    try {
+      return JSON.parse(value) as QuestionData['options'];
+    } catch {
+      return [];
+    }
+  }
+  return (value ?? []) as QuestionData['options'];
+}
+
 export async function studioCreateArtifactAction(input: {
   id: string;
   passageId: string;
@@ -101,7 +115,7 @@ export async function studioLoadArtifactDetailAction(input: {
           id: q.id,
           number: i + 1,
           questionText: q.questionText,
-          options: q.options as unknown as QuestionData['options'],
+          options: parseQuestionOptions(q.options),
           correctAnswer: q.correctOption,
           sourceText: q.sourceText,
           sourceLine: q.sourceLine,

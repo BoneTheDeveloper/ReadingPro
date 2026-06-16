@@ -149,7 +149,9 @@ function isValidGeneratedQuestion(question: GeneratedQuestion, artifactId: strin
 function toQuestionCreateInput(question: GeneratedQuestion) {
   return {
     questionText: question.questionText,
-    options: JSON.stringify(question.options),
+    // `options` is a Json column — store the array natively so reads get an array
+    // back. Stringifying here would persist a JSON string and break `.map` on load.
+    options: question.options,
     correctOption: question.correctAnswer,
     sourceText: question.sourceText,
     sourceLine: question.sourceLine,
