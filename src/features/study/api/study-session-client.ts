@@ -1,6 +1,6 @@
 import {
   studySessionResponseSchema,
-} from "@/lib/study/shared/study-response-schema";
+} from "@/shared/study/study-response-schema";
 import { STUDY_API_ROUTES, postJson, type StudyApiResult } from "./api-utils";
 
 export async function ensureStudySession(): Promise<StudyApiResult<{

@@ -25,7 +25,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/shared/utils";
+import { cn } from "@/shared/utils";
 import type {
   VocabularyItem,
   VocabularyStatus,

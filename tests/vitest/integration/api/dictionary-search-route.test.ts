@@ -5,8 +5,8 @@ import {
   dictionarySearchPerformanceResponseSchema,
   dictionarySearchResponseSchema,
   dictionarySearchSuccessResponseSchema,
-} from "@/lib/dictionary/shared/dictionary-response-schema";
-import type { DictionarySearchResultDto } from "@/lib/dictionary/shared/dictionary-dtos";
+} from "@/shared/dictionary/dictionary-response-schema";
+import type { DictionarySearchResultDto } from "@/shared/dictionary/dictionary-dtos";
 import { userProfileFixture } from "../../fixtures";
 import { parseJsonResponse } from "../../helpers/api";
 import { expectApiErrorPayload, expectApiSuccessPayload } from "../../helpers/assertions";
@@ -16,11 +16,11 @@ const routeMocks = vi.hoisted(() => ({
   searchDictionary: vi.fn(),
 }));
 
-vi.mock("@/lib/auth/auth-utils", () => ({
+vi.mock("@/server/auth/auth-utils", () => ({
   getAuthenticatedUser: routeMocks.getAuthenticatedUser,
 }));
 
-vi.mock("@/lib/dictionary/search/search.service", () => ({
+vi.mock("@/server/modules/dictionary/search/search.service", () => ({
   searchDictionary: routeMocks.searchDictionary,
 }));
 

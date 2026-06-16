@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
 import { POST as createStudySessionRoute } from "@/app/api/study-session/route";
-import { studySessionResponseSchema, toStudySessionDto } from "@/lib/study/shared/study-response-schema";
+import { studySessionResponseSchema, toStudySessionDto } from "@/shared/study/study-response-schema";
 import { studySessionFixture, userProfileFixture } from "../../fixtures";
 import { createJsonRequest, parseJsonResponse } from "../../helpers/api";
 import { expectApiErrorPayload } from "../../helpers/assertions";
@@ -21,12 +21,12 @@ const routeMocks = vi.hoisted(() => {
   };
 });
 
-vi.mock("@/lib/auth/auth-utils", () => ({
+vi.mock("@/server/auth/auth-utils", () => ({
   getAuthenticatedUser: routeMocks.getAuthenticatedUser,
   AuthenticationRequiredError: routeMocks.AuthenticationRequiredError,
 }));
 
-vi.mock("@/lib/db/study-session-queries", () => ({
+vi.mock("@/server/db/study-session-queries", () => ({
   ensureActiveSession: routeMocks.ensureActiveSession,
 }));
 

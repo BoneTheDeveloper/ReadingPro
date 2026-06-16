@@ -1,4 +1,4 @@
-import { getAuthenticatedUser } from "@/lib/auth/auth-utils";
+import { getAuthenticatedUser } from "@/server/auth/auth-utils";
 import { VocabularyPageClient } from "@/features/vocabulary/ui/vocabulary-page-client";
 
 export const dynamic = "force-dynamic";

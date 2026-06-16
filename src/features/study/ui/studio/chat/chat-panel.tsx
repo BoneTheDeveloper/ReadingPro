@@ -7,8 +7,8 @@ import { DefaultChatTransport } from "ai";
 import * as Sentry from "@sentry/nextjs";
 import { Send, Loader2, AlertCircle, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/shared/utils";
-import { studyChatHistoryResponseSchema } from "@/lib/study/shared/study-response-schema";
+import { cn } from "@/shared/utils";
+import { studyChatHistoryResponseSchema } from "@/shared/study/study-response-schema";
 
 interface StudyChatPanelProps {
   passageId: string;

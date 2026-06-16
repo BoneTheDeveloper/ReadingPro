@@ -2,8 +2,8 @@
 
 import { headers } from 'next/headers';
 import * as Sentry from '@sentry/nextjs';
-import { getAuthenticatedUser } from '@/lib/auth/auth-utils';
-import { analyzeAndPersistContent } from '@/lib/upload/content-analysis/content-analysis.service';
+import { getAuthenticatedUser } from '@/server/auth/auth-utils';
+import { analyzeAndPersistContent } from '@/server/modules/upload/content-analysis/content-analysis.service';
 
 export async function analyzeContentAction(formData: FormData) {
   return Sentry.withServerActionInstrumentation('analyzeContent', {

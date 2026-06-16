@@ -4,11 +4,11 @@ import { useCallback, useRef, useState } from "react";
 import * as Sentry from "@sentry/nextjs";
 import {
   vocabularyResponseSchema,
-} from "@/lib/translation/shared/translation-response-schema";
+} from "@/shared/translation/translation-response-schema";
 import type {
   DictionaryEntryDto,
   DictionarySenseDto,
-} from "@/lib/dictionary/shared/dictionary-dtos";
+} from "@/shared/dictionary/dictionary-dtos";
 
 export type SaveStatus = "idle" | "saving" | "saved" | "error";
 

@@ -4,7 +4,7 @@ import {
   generateQuestionsForPassage,
   PassageStudyServiceError,
   simplifyPassageForUser,
-} from "@/lib/study/passage/passage-study.service";
+} from "@/server/modules/study/passage/passage-study.service";
 import { db } from "../../mocks/db";
 import { mockGenerateObjectOnce } from "../../mocks/ai";
 

@@ -2,14 +2,14 @@
 
 import { headers } from 'next/headers';
 import * as Sentry from '@sentry/nextjs';
-import { createModuleLogger } from '@/lib/core/logger';
+import { createModuleLogger } from '@/server/core/logger';
 import {
   recordQuizResult,
   resetQuizResult,
-} from '@/lib/study/passage/studio-artifacts-service';
-import type { StudioArtifactType } from '@/lib/study/shared/studio-artifact-types';
+} from '@/server/modules/study/passage/studio-artifacts-service';
+import type { StudioArtifactType } from '@/shared/study/studio-artifact-types';
 import type { QuestionData } from '@/features/study/model/types';
-import { db } from '@/lib/db/client';
+import { db } from '@/server/db/client';
 import { getAuthenticatedUser } from './study-shared';
 
 const log = createModuleLogger('actions:studio-artifact');

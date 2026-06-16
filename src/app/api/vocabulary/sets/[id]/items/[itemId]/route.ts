@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { removeItemFromSet } from "@/lib/db/vocabulary-set-queries";
-import { getAuthenticatedUser } from "@/lib/auth/auth-utils";
-import { isAuthenticationRequiredError, isOwnershipMissError } from "@/lib/api/route-errors";
-import { createRequestLogContext, createRequestLogger } from "@/lib/core/logger";
+import { removeItemFromSet } from "@/server/db/vocabulary-set-queries";
+import { getAuthenticatedUser } from "@/server/auth/auth-utils";
+import { isAuthenticationRequiredError, isOwnershipMissError } from "@/server/http/route-errors";
+import { createRequestLogContext, createRequestLogger } from "@/server/core/logger";
 
 export async function DELETE(
   request: NextRequest,

@@ -1,20 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
-import { getAuthenticatedUser } from "@/lib/auth/auth-utils";
-import { createRequestLogContext, createRequestLogger } from "@/lib/core/logger";
+import { getAuthenticatedUser } from "@/server/auth/auth-utils";
+import { createRequestLogContext, createRequestLogger } from "@/server/core/logger";
 import {
   getPrismaQueryMetrics,
   runWithPrismaQueryMetrics,
-} from "@/lib/observability/prisma-query-metrics";
-import { MAX_TRANSLATE_CONTEXT_LENGTH, MAX_TRANSLATE_TEXT_LENGTH } from "@/lib/translation/translation-limits";
+} from "@/server/observability/prisma-query-metrics";
+import { MAX_TRANSLATE_CONTEXT_LENGTH, MAX_TRANSLATE_TEXT_LENGTH } from "@/shared/translation/translation-limits";
 import {
   createTranslatePerformanceTracker,
   shouldIncludeTranslatePerformanceMetrics,
   type TranslatePerformanceSnapshot,
-} from "@/lib/translation/translate-performance";
-import type { QuickTranslation } from "@/lib/ai/translator";
-import { executeTranslate } from "@/lib/translation/inline/inline-translate.service";
+} from "@/shared/translation/translate-performance";
+import type { QuickTranslation } from "@/server/ai/translator";
+import { executeTranslate } from "@/server/modules/translation/inline/inline-translate.service";
 
 const translateRequestSchema = z.object({
   text: z.string().trim().min(1).max(MAX_TRANSLATE_TEXT_LENGTH),

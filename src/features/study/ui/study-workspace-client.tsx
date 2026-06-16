@@ -7,8 +7,8 @@ import * as Sentry from "@sentry/nextjs";
 import {
   translateResponseSchema,
   vocabularyResponseSchema,
-} from "@/lib/translation/shared/translation-response-schema";
-import { clampTranslationContext, isTranslateTextWithinLimit } from "@/lib/translation/translation-limits";
+} from "@/shared/translation/translation-response-schema";
+import { clampTranslationContext, isTranslateTextWithinLimit } from "@/shared/translation/translation-limits";
 import type { PassageData, TranslationSelection, QuickTranslationData, StudioArtifact } from "@/features/study/model/types";
 import { ARTIFACT_STALE_TIME } from "@/features/study/model/types";
 import { StudySourcesPanel } from "./sources-panel";

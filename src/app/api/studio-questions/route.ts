@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
-import { getAuthenticatedUser } from "@/lib/auth/auth-utils";
-import { getZodErrorMessage, isAuthenticationRequiredError, isOwnershipMissError } from "@/lib/api/route-errors";
-import { createRequestLogContext, createRequestLogger } from "@/lib/core/logger";
-import { generateQuestionsForPassage, PassageStudyServiceError } from "@/lib/study/passage/passage-study.service";
-import type { GeneratedStudyQuestionDto } from "@/lib/study/shared/study-response-schema";
-import type { StudioArtifact } from "@/lib/study/shared/studio-artifact-types";
+import { getAuthenticatedUser } from "@/server/auth/auth-utils";
+import { getZodErrorMessage, isAuthenticationRequiredError, isOwnershipMissError } from "@/server/http/route-errors";
+import { createRequestLogContext, createRequestLogger } from "@/server/core/logger";
+import { generateQuestionsForPassage, PassageStudyServiceError } from "@/server/modules/study/passage/passage-study.service";
+import type { GeneratedStudyQuestionDto } from "@/shared/study/study-response-schema";
+import type { StudioArtifact } from "@/shared/study/studio-artifact-types";
 
 const studyQuestionsPostSchema = z.object({
   passageId: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, "Invalid UUID"),

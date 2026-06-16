@@ -1,11 +1,11 @@
 import { z } from 'zod';
 import { NextRequest, NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
-import { getAuthenticatedUser } from '@/lib/auth/auth-utils';
-import { getZodErrorMessage, isAuthenticationRequiredError } from '@/lib/api/route-errors';
-import { createRequestLogContext, createRequestLogger } from '@/lib/core/logger';
-import { ensureActiveSession } from '@/lib/db/study-session-queries';
-import { toStudySessionDto } from '@/lib/study/shared/study-response-schema';
+import { getAuthenticatedUser } from '@/server/auth/auth-utils';
+import { getZodErrorMessage, isAuthenticationRequiredError } from '@/server/http/route-errors';
+import { createRequestLogContext, createRequestLogger } from '@/server/core/logger';
+import { ensureActiveSession } from '@/server/db/study-session-queries';
+import { toStudySessionDto } from '@/shared/study/study-response-schema';
 
 const studySessionPostSchema = z.object({}).strict();
 

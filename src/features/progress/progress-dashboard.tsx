@@ -11,13 +11,13 @@ import {
   Flame,
   Calendar,
 } from "lucide-react"
-import { cn } from "@/lib/shared/utils"
+import { cn } from "@/shared/utils"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import {
   progressStatsResponseSchema,
   type ProgressStatsDto,
-} from "@/lib/study/shared/study-response-schema"
+} from "@/shared/study/study-response-schema"
 
 export function ProgressDashboard() {
   const router = useRouter()

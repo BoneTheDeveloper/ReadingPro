@@ -5,8 +5,8 @@ import {
   dictionaryEntryDetailPerformanceResponseSchema,
   dictionaryEntryDetailResponseSchema,
   dictionaryEntryDetailSuccessResponseSchema,
-} from "@/lib/dictionary/shared/dictionary-response-schema";
-import type { DictionaryEntryDto } from "@/lib/dictionary/shared/dictionary-dtos";
+} from "@/shared/dictionary/dictionary-response-schema";
+import type { DictionaryEntryDto } from "@/shared/dictionary/dictionary-dtos";
 import { userProfileFixture } from "../../fixtures/user";
 import { parseJsonResponse } from "../../helpers/api";
 import { expectApiErrorPayload, expectApiSuccessPayload } from "../../helpers/assertions";
@@ -16,11 +16,11 @@ const routeMocks = vi.hoisted(() => ({
   getDictionaryEntryDetail: vi.fn(),
 }));
 
-vi.mock("@/lib/auth/auth-utils", () => ({
+vi.mock("@/server/auth/auth-utils", () => ({
   getAuthenticatedUser: routeMocks.getAuthenticatedUser,
 }));
 
-vi.mock("@/lib/dictionary/entry-detail/entry-detail.service", () => ({
+vi.mock("@/server/modules/dictionary/entry-detail/entry-detail.service", () => ({
   getDictionaryEntryDetail: routeMocks.getDictionaryEntryDetail,
 }));
 

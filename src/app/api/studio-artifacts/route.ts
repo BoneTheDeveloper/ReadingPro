@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
-import { getAuthenticatedUser } from "@/lib/auth/auth-utils";
+import { getAuthenticatedUser } from "@/server/auth/auth-utils";
 import {
   isAuthenticationRequiredError,
   isOwnershipMissError,
-} from "@/lib/api/route-errors";
+} from "@/server/http/route-errors";
 import {
   createRequestLogContext,
   createRequestLogger,
-} from "@/lib/core/logger";
-import { fetchStudioArtifacts } from "@/lib/study/passage/studio-artifacts-service";
+} from "@/server/core/logger";
+import { fetchStudioArtifacts } from "@/server/modules/study/passage/studio-artifacts-service";
 
 const studyArtifactsQuerySchema = z.object({
   passageId: z.string().uuid(),

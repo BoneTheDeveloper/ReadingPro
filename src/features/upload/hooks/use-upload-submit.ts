@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import * as Sentry from "@sentry/nextjs"
-import { uploadResponseSchema } from "@/lib/upload/shared/upload-response-schema"
+import { uploadResponseSchema } from "@/shared/upload/upload-response-schema"
 
 export function useUploadSubmit() {
   const router = useRouter()

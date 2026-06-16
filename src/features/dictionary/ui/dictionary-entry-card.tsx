@@ -5,8 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { cn } from "@/lib/shared/utils";
-import type { DictionaryEntryDto, DictionarySenseDto } from "@/lib/dictionary/shared/dictionary-dtos";
+import { cn } from "@/shared/utils";
+import type { DictionaryEntryDto, DictionarySenseDto } from "@/shared/dictionary/dictionary-dtos";
 import { useTranslations } from "next-intl";
 import type { SaveStatus } from "../hooks/use-save-dictionary-vocabulary";
 

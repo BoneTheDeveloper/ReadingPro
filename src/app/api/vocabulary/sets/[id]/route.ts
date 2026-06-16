@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
-import { updateVocabularySet, deleteVocabularySet } from "@/lib/db/vocabulary-set-queries";
-import { getAuthenticatedUser } from "@/lib/auth/auth-utils";
-import { isAuthenticationRequiredError, isOwnershipMissError } from "@/lib/api/route-errors";
-import { createRequestLogContext, createRequestLogger } from "@/lib/core/logger";
+import { updateVocabularySet, deleteVocabularySet } from "@/server/db/vocabulary-set-queries";
+import { getAuthenticatedUser } from "@/server/auth/auth-utils";
+import { isAuthenticationRequiredError, isOwnershipMissError } from "@/server/http/route-errors";
+import { createRequestLogContext, createRequestLogger } from "@/server/core/logger";
 
 const renameSetSchema = z.object({
   name: z.string().trim().min(1).max(100),

@@ -1,4 +1,4 @@
-import type { CEFRLevel } from '@/lib/domain/cefr';
+import type { CEFRLevel } from '@/shared/domain/cefr';
 
 export function getCEFRColor(level: CEFRLevel): string {
   const colors: Record<CEFRLevel, string> = {

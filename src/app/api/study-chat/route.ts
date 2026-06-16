@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
-import { AuthenticationRequiredError, getAuthenticatedUser } from "@/lib/auth/auth-utils";
-import { createRequestLogContext, createRequestLogger } from "@/lib/core/logger";
+import { AuthenticationRequiredError, getAuthenticatedUser } from "@/server/auth/auth-utils";
+import { createRequestLogContext, createRequestLogger } from "@/server/core/logger";
 import {
   studyChatRequestSchema,
   studyChatQuerySchema,
   type UiMessage,
-} from "@/lib/study/chat/chat-schema";
-import { validateMessageSizeLimits } from "@/lib/study/chat/chat-utils";
+} from "@/shared/study/chat-schema";
+import { validateMessageSizeLimits } from "@/server/modules/study/chat/chat-utils";
 import {
   StudyChatServiceError,
   getOwnedPassageForChat,
@@ -16,7 +16,7 @@ import {
   persistUserMessage,
   streamStudyChat,
   getChatHistory,
-} from "@/lib/study/chat/chat-service";
+} from "@/server/modules/study/chat/chat-service";
 
 function isUnauthenticatedError(error: unknown) {
   return error instanceof AuthenticationRequiredError;

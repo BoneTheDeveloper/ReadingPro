@@ -1,23 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
-import { getAuthenticatedUser } from "@/lib/auth/auth-utils";
-import { createRequestLogContext, createRequestLogger } from "@/lib/core/logger";
+import { getAuthenticatedUser } from "@/server/auth/auth-utils";
+import { createRequestLogContext, createRequestLogger } from "@/server/core/logger";
 import {
   getPrismaQueryMetrics,
   runWithPrismaQueryMetrics,
-} from "@/lib/observability/prisma-query-metrics";
+} from "@/server/observability/prisma-query-metrics";
 import {
   createDictionaryPerformanceTracker,
   measureDictionaryStep,
   shouldIncludeDictionaryPerformanceMetrics,
-} from "@/lib/dictionary/shared/dictionary-performance";
-import { normalizeDictionaryTerm } from "@/lib/dictionary/shared/normalize-dictionary-term";
-import { resolveDictionaryLookup } from "@/lib/dictionary/lookup/lookup.service";
+} from "@/server/modules/dictionary/shared/dictionary-performance";
+import { normalizeDictionaryTerm } from "@/shared/dictionary/normalize-dictionary-term";
+import { resolveDictionaryLookup } from "@/server/modules/dictionary/lookup/lookup.service";
 import type {
   DictionaryEntryDto,
   DictionaryMissDto,
-} from "@/lib/dictionary/shared/dictionary-dtos";
+} from "@/shared/dictionary/dictionary-dtos";
 
 const dictionaryLookupQuerySchema = z.object({
   q: z.string().trim().min(1).max(200),

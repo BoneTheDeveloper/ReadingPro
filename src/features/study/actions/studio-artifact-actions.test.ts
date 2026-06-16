@@ -14,8 +14,8 @@ const dbClient = vi.hoisted(() => ({
 }));
 
 vi.mock("@/features/study/actions/study-shared", () => studyShared);
-vi.mock("@/lib/study/passage/studio-artifacts-service", () => artifactsService);
-vi.mock("@/lib/db/client", () => dbClient);
+vi.mock("@/server/modules/study/passage/studio-artifacts-service", () => artifactsService);
+vi.mock("@/server/db/client", () => dbClient);
 
 describe("studio-artifact actions", () => {
   beforeEach(() => {

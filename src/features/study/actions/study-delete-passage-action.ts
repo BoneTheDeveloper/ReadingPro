@@ -2,7 +2,7 @@
 
 import { headers } from 'next/headers';
 import * as Sentry from '@sentry/nextjs';
-import { deletePassage } from '@/lib/db/passage-queries';
+import { deletePassage } from '@/server/db/passage-queries';
 import { getAuthenticatedUser } from './study-shared';
 
 export type DeletePassageResult = { success: true } | { error: string };

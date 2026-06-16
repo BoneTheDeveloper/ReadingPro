@@ -13,14 +13,14 @@ const routeMocks = vi.hoisted(() => ({
   deleteVocabularyItem: vi.fn(),
 }));
 
-vi.mock("@/lib/auth/auth-utils", () => ({
+vi.mock("@/server/auth/auth-utils", () => ({
   getAuthenticatedUser: routeMocks.getAuthenticatedUser,
   AuthenticationRequiredError: class AuthenticationRequiredError extends Error {
     constructor() { super("Authentication required"); this.name = "AuthenticationRequiredError"; }
   },
 }));
 
-vi.mock("@/lib/db/vocabulary-queries", () => ({
+vi.mock("@/server/db/vocabulary-queries", () => ({
   updateVocabularyStatus: routeMocks.updateVocabularyStatus,
   deleteVocabularyItem: routeMocks.deleteVocabularyItem,
 }));

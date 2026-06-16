@@ -4,10 +4,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { POST as generateQuestionsRoute } from "@/app/api/studio-questions/route";
 import {
   generatedStudyQuestionsSuccessResponseSchema,
-} from "@/lib/study/shared/study-response-schema";
-import { apiErrorResponseSchema } from "@/lib/api/shared/api-response-schema";
+} from "@/shared/study/study-response-schema";
+import { apiErrorResponseSchema } from "@/shared/api/api-response-schema";
 import { generatedQuestionsFixture, passageFixture, userProfileFixture } from "../../fixtures";
-import type { StudioArtifact } from "@/lib/study/shared/studio-artifact-types";
+import type { StudioArtifact } from "@/shared/study/studio-artifact-types";
 import { createJsonRequest, parseJsonResponse } from "../../helpers/api";
 import { expectApiErrorPayload, expectApiSuccessPayload } from "../../helpers/assertions";
 
@@ -34,12 +34,12 @@ const routeMocks = vi.hoisted(() => {
   };
 });
 
-vi.mock("@/lib/auth/auth-utils", () => ({
+vi.mock("@/server/auth/auth-utils", () => ({
   getAuthenticatedUser: routeMocks.getAuthenticatedUser,
   AuthenticationRequiredError: routeMocks.AuthenticationRequiredError,
 }));
 
-vi.mock("@/lib/study/passage/passage-study.service", () => ({
+vi.mock("@/server/modules/study/passage/passage-study.service", () => ({
   generateQuestionsForPassage: routeMocks.generateQuestionsForPassage,
   PassageStudyServiceError: routeMocks.PassageStudyServiceError,
 }));

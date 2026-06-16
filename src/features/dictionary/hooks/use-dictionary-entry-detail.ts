@@ -4,11 +4,11 @@ import { useCallback, useRef, useState } from "react"
 import * as Sentry from "@sentry/nextjs"
 import {
   dictionaryEntryDetailResponseSchema,
-} from "@/lib/dictionary/shared/dictionary-response-schema"
+} from "@/shared/dictionary/dictionary-response-schema"
 import type {
   DictionaryEntryDto,
   DictionarySuggestItemDto,
-} from "@/lib/dictionary/shared/dictionary-dtos"
+} from "@/shared/dictionary/dictionary-dtos"
 
 export type DetailStatus = "idle" | "loading" | "found" | "not-found" | "error"
 

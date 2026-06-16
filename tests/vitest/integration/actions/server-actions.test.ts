@@ -37,12 +37,12 @@ const studyService = vi.hoisted(() => {
   };
 });
 
-vi.mock("@/lib/auth/auth-utils", () => authUtils);
+vi.mock("@/server/auth/auth-utils", () => authUtils);
 vi.mock("@/features/study/actions/study-shared", () => studyShared);
-vi.mock("@/lib/upload/content-analysis/content-analysis.service", () => analysisService);
-vi.mock("@/lib/db/passage-queries", () => passageQueries);
-vi.mock("@/lib/upload/passage-create/passage-create.service", () => passageCreateService);
-vi.mock("@/lib/study/passage/passage-study.service", () => studyService);
+vi.mock("@/server/modules/upload/content-analysis/content-analysis.service", () => analysisService);
+vi.mock("@/server/db/passage-queries", () => passageQueries);
+vi.mock("@/server/modules/upload/passage-create/passage-create.service", () => passageCreateService);
+vi.mock("@/server/modules/study/passage/passage-study.service", () => studyService);
 
 const enoughText = "This is enough text for a server action upload path because it is longer than fifty characters.";
 

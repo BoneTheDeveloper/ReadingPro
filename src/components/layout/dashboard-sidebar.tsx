@@ -15,7 +15,7 @@ import {
   HelpCircle,
   Bell,
 } from "lucide-react";
-import { cn } from "@/lib/shared/utils";
+import { cn } from "@/shared/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AuthControls } from "./auth-controls";

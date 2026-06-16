@@ -15,9 +15,9 @@ import {
   studyChatHistorySuccessResponseSchema,
   studySessionSuccessResponseSchema,
   toStudySessionDto,
-} from "@/lib/study/shared/study-response-schema";
-import { uploadSuccessResponseSchema } from "@/lib/upload/shared/upload-response-schema";
-import { apiErrorResponseSchema } from "@/lib/api/shared/api-response-schema";
+} from "@/shared/study/study-response-schema";
+import { uploadSuccessResponseSchema } from "@/shared/upload/upload-response-schema";
+import { apiErrorResponseSchema } from "@/shared/api/api-response-schema";
 import { passageFixture, studySessionFixture, userProfileFixture } from "../../fixtures";
 import { createFile, createGetRequest, createJsonRequest, parseJsonResponse, readJsonResponse } from "../../helpers/api";
 import { expectApiErrorPayload, expectApiSuccessPayload } from "../../helpers/assertions";
@@ -51,16 +51,16 @@ const routeMocks = vi.hoisted(() => {
   };
 });
 
-vi.mock("@/lib/auth/auth-utils", () => ({
+vi.mock("@/server/auth/auth-utils", () => ({
   getAuthenticatedUser: routeMocks.getAuthenticatedUser,
   AuthenticationRequiredError: routeMocks.AuthenticationRequiredError,
 }));
 
-vi.mock("@/lib/db/quiz/quiz-review", () => ({
+vi.mock("@/server/db/quiz/quiz-review", () => ({
   getUserProgress: routeMocks.getUserProgress,
 }));
 
-vi.mock("@/lib/db/study-session-queries", () => ({
+vi.mock("@/server/db/study-session-queries", () => ({
   ensureActiveSession: routeMocks.ensureActiveSession,
 }));
 
@@ -69,11 +69,11 @@ vi.mock("@/features/upload/services/upload-workflow", () => ({
   UploadWorkflowError: routeMocks.UploadWorkflowError,
 }));
 
-vi.mock("@/lib/upload/content-analysis/content-analysis.service", () => ({
+vi.mock("@/server/modules/upload/content-analysis/content-analysis.service", () => ({
   analyzeAndPersistContent: routeMocks.analyzeAndPersistContent,
 }));
 
-vi.mock("@/lib/ai/model-config", () => ({
+vi.mock("@/server/ai/model-config", () => ({
   getStudyChatModelId: routeMocks.getStudyChatModelId,
 }));
 

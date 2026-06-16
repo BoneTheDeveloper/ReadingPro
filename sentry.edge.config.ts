@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/nextjs";
-import { getSentryConfig, isSentryEnabled } from "@/lib/core/sentry";
+import { getSentryConfig, isSentryEnabled } from "@/shared/core/sentry";
 
 if (isSentryEnabled()) {
   Sentry.init(getSentryConfig());

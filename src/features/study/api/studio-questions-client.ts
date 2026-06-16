@@ -1,9 +1,9 @@
-import { generatedStudyQuestionsResponseSchema } from "@/lib/study/shared/study-response-schema";
+import { generatedStudyQuestionsResponseSchema } from "@/shared/study/study-response-schema";
 import {
   STUDIO_GENERATION_TIMEOUT_MS,
   type StudioArtifact,
   type StudioArtifactErrorCode,
-} from "@/lib/study/shared/studio-artifact-types";
+} from "@/shared/study/studio-artifact-types";
 import type { QuestionData } from "@/features/study/model/types";
 import { STUDY_API_ROUTES, postJson, RequestTimeoutError } from "./api-utils";
 

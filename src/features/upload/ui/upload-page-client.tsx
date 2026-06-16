@@ -4,7 +4,7 @@ import { useState } from "react"
 import { UploadZone } from "./upload-zone"
 import { TextInputArea } from "./text-input-area"
 import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/shared/utils"
+import { cn } from "@/shared/utils"
 import { useUploadSubmit } from "../hooks/use-upload-submit"
 
 export function UploadPageClient() {

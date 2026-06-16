@@ -15,9 +15,9 @@ import {
 import { buttonVariants } from "@/components/ui/button";
 import { DashboardSidebar } from "@/components/layout/dashboard-sidebar";
 import { Link } from "@/i18n/navigation";
-import { cn } from "@/lib/shared/utils";
-import { getCurrentUser } from "@/lib/auth/auth-utils";
-import { getUserProgress } from "@/lib/db/quiz/quiz-review";
+import { cn } from "@/shared/utils";
+import { getCurrentUser } from "@/server/auth/auth-utils";
+import { getUserProgress } from "@/server/db/quiz/quiz-review";
 
 type UserProgress = {
   totalCards: number;

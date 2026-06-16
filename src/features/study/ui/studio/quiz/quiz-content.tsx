@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from "react"
 import { useTranslations } from "next-intl"
 import { BookOpen, CheckCircle, XCircle, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react"
-import { cn } from "@/lib/shared/utils"
+import { cn } from "@/shared/utils"
 import { Button } from "@/components/ui/button"
 import type { QuestionData } from "@/features/study/model/types"
 import { QuizResults } from "./quiz-results"

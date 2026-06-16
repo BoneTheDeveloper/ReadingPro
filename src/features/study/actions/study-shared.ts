@@ -1,3 +1,3 @@
-import { getAuthenticatedUser } from '@/lib/auth/auth-utils';
+import { getAuthenticatedUser } from '@/server/auth/auth-utils';
 
 export { getAuthenticatedUser };

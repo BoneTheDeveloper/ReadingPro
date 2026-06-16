@@ -3,8 +3,8 @@
 import { useCallback, useState } from "react"
 import { useDropzone, type FileRejection } from "react-dropzone"
 import { Upload, FileText, AlertCircle, Loader2 } from "lucide-react"
-import { validateFile, formatFileSize } from "@/lib/validation/upload"
-import { cn } from "@/lib/shared/utils"
+import { validateFile, formatFileSize } from "@/shared/upload/upload-validation"
+import { cn } from "@/shared/utils"
 
 interface UploadZoneProps {
   onFileSelect: (file: File) => void

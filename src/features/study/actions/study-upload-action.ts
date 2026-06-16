@@ -2,8 +2,8 @@
 
 import { headers } from 'next/headers';
 import * as Sentry from '@sentry/nextjs';
-import { createModuleLogger } from '@/lib/core/logger';
-import { createPassageRecord } from '@/lib/upload/passage-create/passage-create.service';
+import { createModuleLogger } from '@/server/core/logger';
+import { createPassageRecord } from '@/server/modules/upload/passage-create/passage-create.service';
 import type { PassageData } from '@/features/study/model/types';
 import { getAuthenticatedUser } from './study-shared';
 

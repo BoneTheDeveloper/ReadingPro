@@ -4,11 +4,11 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import * as Sentry from "@sentry/nextjs"
 import {
   dictionarySuggestResponseSchema,
-} from "@/lib/dictionary/shared/dictionary-response-schema"
+} from "@/shared/dictionary/dictionary-response-schema"
 import type {
   DictionarySuggestItemDto,
-} from "@/lib/dictionary/shared/dictionary-dtos"
-import { normalizeDictionaryTerm } from "@/lib/dictionary/shared/normalize-dictionary-term"
+} from "@/shared/dictionary/dictionary-dtos"
+import { normalizeDictionaryTerm } from "@/shared/dictionary/normalize-dictionary-term"
 
 const DEBOUNCE_MS = 250
 const MIN_SUGGEST_LENGTH = 2

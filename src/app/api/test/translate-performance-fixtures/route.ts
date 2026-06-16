@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { getAuthenticatedUser } from "@/lib/auth/auth-utils";
-import { db } from "@/lib/db/client";
-import { countWords } from "@/lib/translation/translate-performance";
+import { getAuthenticatedUser } from "@/server/auth/auth-utils";
+import { db } from "@/server/db/client";
+import { countWords } from "@/shared/translation/translate-performance";
 
 const cleanupSchema = z.object({
   passageIds: z.array(z.string()).default([]),
