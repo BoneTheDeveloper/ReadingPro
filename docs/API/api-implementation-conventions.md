@@ -17,31 +17,28 @@ Route handlers live in `src/app/api/**/route.ts` and should stay thin:
 ## Layer Direction
 
 ```text
-route.ts
-  -> feature service or src/lib/<domain> service/workflow
-      -> query module or repository
-          -> db client / provider / storage adapter
+route.ts (HTTP Adapter)
+  -> src/server/modules/<domain>/service.ts (Business Logic)
+      -> src/server/db/repository.ts (Data Access)
+          -> prisma / raw sql
 ```
 
 Routes should not contain raw SQL, ranking logic, provider fallbacks, or complex DTO building.
-Reusable route-owned services and repositories should live in `src/lib/<domain>/**`. Feature-specific use-case services may live under `src/features/<feature>/services` when they are not reused outside that feature.
-
-Do not create `src/lib/services`. Group services by owning feature or domain.
+Reusable backend logic belongs in `src/server/modules/<domain>`. Shared contracts and types belong in `src/shared/<domain>`.
 
 ## File Roles
 
 | Pattern | Role |
 |---------|------|
 | `route.ts` | HTTP boundary, parsing, validation, auth, status codes. |
-| `src/features/<feature>/services/*` | Single-feature use-case services. |
-| `src/features/<feature>/api/*` | Client-side API wrappers and fetch helpers. |
-| `src/lib/<domain>/services/*` | Shared domain/business services. |
-| `src/lib/<domain>/repositories/*` | Prisma/raw SQL data access. |
-| `*-queries.ts` | App-domain Prisma query helpers. |
-| `*-dtos.ts` | Stable API types and DTO builders. |
-| `*-schema.ts` | Reused runtime schemas. |
+| `src/server/modules/<domain>/*` | Domain services owning business logic. |
+| `src/server/db/*-queries.ts` | Prisma/raw SQL data access repositories. |
+| `src/shared/<domain>/*-dtos.ts` | Stable API types and DTO builders. |
+| `src/shared/<domain>/*-schema.ts` | Reused isomorphic Zod schemas. |
+| `src/features/<feature>/api/*` | Frontend API clients and fetch helpers. |
+| `src/features/<feature>/hooks/*` | UI state and data orchestration hooks. |
 
-Feature folders may contain server actions, UI hooks, client API helpers, and feature-specific services. Shared API schemas, reusable backend domain services, and repository/database access belong in `src/lib/<domain>`.
+Shared API schemas, reusable backend domain services, and repository/database access belong in `src/server/` or `src/shared/`. Feature folders contain only frontend-specific logic (`ui`, `hooks`, `api`, `model`).
 
 ## Response Contract
 

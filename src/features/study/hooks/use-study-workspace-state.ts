@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { studyDeletePassageAction } from "@/features/study/actions/study-delete-passage-action";
+import { deletePassage } from "@/features/study/api/passages-client";
 import type { DocumentItem, PassageData, StudyState } from "../model/types";
 
 function getMostRecentPassageId(passages: PassageData[]): string | null {
@@ -96,11 +96,7 @@ export function useStudyWorkspaceState(initialPassages: PassageData[]) {
 
   const handleDeletePassage = useCallback(async (passageId: string) => {
     try {
-      const result = await studyDeletePassageAction({ passageId });
-      if ("error" in result) {
-        setState((prev) => ({ ...prev, error: result.error }));
-        return;
-      }
+      await deletePassage(passageId);
       setState((prev) => {
         const remaining = prev.passages.filter((p) => p.id !== passageId);
         const restArtifactsByPassageId = { ...prev.artifactsByPassageId };

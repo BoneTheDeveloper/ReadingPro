@@ -18,16 +18,17 @@
 
 ```text
 src/
-  app/                  Next.js pages, layouts, route handlers
-  components/           Shared UI and layout components
-  features/             Feature/use-case layer: UI, model, API helpers, actions, services
-  generated/prisma/     Generated Prisma client
+  app/                  Next.js routing layer: thin pages + thin API route handlers (HTTP adapters)
+  server/               Backend layer (enforced server-only): db, ai, auth, http, modules
+  shared/               Contract layer (isomorphic/pure): Zod schemas, DTOs, pure utils
+  features/             Frontend feature layer (FSD-lite): ui, hooks, model, api
+  components/           Universal design system primitives (UI atoms)
+  generated/            Generated code (e.g. Prisma client)
   i18n/                 next-intl routing/request helpers
-  lib/                  Backend/domain/runtime modules and shared contracts
   proxy.ts              Clerk + next-intl middleware boundary
 
 prisma/
-  schema.prisma         Data model source of truth
+  schema/               Modular Prisma schemas
   migrations/           SQL migrations
   data/dictionary/      Dictionary seed/import inputs
   seed.ts               Dictionary seed entrypoint
@@ -37,33 +38,32 @@ prisma/
 
 | Surface | Files | Notes |
 |---------|-------|-------|
-| Locale pages | `src/app/[locale]/**/page.tsx` | Dashboard, auth, upload, reading, study, dictionary, progress, test. |
-| Route handlers | `src/app/api/**/route.ts` | JSON/streaming APIs. Authenticated routes call `getAuthenticatedUser`. |
-| Server actions | `src/features/study/actions/*.ts`, `src/features/upload/analyze-content-action.ts` | Feature UI mutation entrypoints. They authenticate, call feature services for feature-specific work, and delegate shared domain work to `src/lib/<domain>`. |
-| Feature services | `src/features/<feature>/services/**` | Single-feature use-case workflows. |
-| Domain services | `src/lib/<domain>/services/**` or existing `src/lib/<domain>/**` service files | Reusable business workflows, provider orchestration, DTO assembly, and persistence coordination behind routes/actions. |
-| Repositories | `src/lib/<domain>/repositories/**`, `src/lib/dictionary/**/repository.ts`, legacy `src/lib/db/*-queries.ts` | Prisma/raw SQL data access. |
+| Locale pages | `src/app/[locale]/**/page.tsx` | Thin UI entrypoints. They fetch data via Server Components or render Client Features. |
+| Route handlers | `src/app/api/**/route.ts` | Thin HTTP adapters. They authenticate, validate inputs via `shared/`, and delegate to `server/modules`. |
+| Server Modules | `src/server/modules/<domain>/**` | Core business logic services. Used by API routes and Server Components. |
+| Feature Components | `src/features/<feature>/ui/**` | Rich frontend features. They use `hooks` for state/fetching and `api` for backend communication. |
+| Feature API | `src/features/<feature>/api/**` | Centralized frontend API clients. The only way frontend features talk to `/api/*`. |
 
 ## Source Boundary Rules
 
 | Area | Use for | Examples |
 |------|---------|----------|
-| `src/app` | Framework routing boundary. | `src/app/api/studio-questions/route.ts`, locale pages, layouts. |
-| `src/features` | Feature/use-case layer. | Study workspace UI/hooks/actions, upload use-case services, dictionary page UI, vocabulary UI. |
-| `src/lib` | Reusable domain implementation layer. | `src/lib/dictionary`, `src/lib/study`, `src/lib/passages`, `src/lib/translation`, `src/lib/db`, `src/lib/auth`. |
-| `src/components` | Shared presentation primitives. | `src/components/ui/button.tsx`, layout controls. |
+| `src/app` | Routing and delivery. | `src/app/api/study-session/route.ts`, locale pages. |
+| `src/server` | All backend-only logic. | `src/server/db/client.ts`, `src/server/modules/study`, `src/server/ai`. |
+| `src/shared` | Isomorphic contracts. | `src/shared/study/study-response-schema.ts`, `src/shared/api/api-client-utils.ts`. |
+| `src/features` | Frontend feature logic. | `src/features/study/ui`, `src/features/dictionary/hooks`. |
+| `src/components` | Shared UI atoms. | `src/components/ui/button.tsx`. |
 
-Placement rule: if code is React UI, browser state, a feature-specific action wrapper, or a service used by only one feature/use case, keep it in `src/features`. If client-side data access is more than a trivial one-off call, put it in a feature hook or client API helper instead of the component body. If code is reused by more than one feature, touches repository/database access, performs reusable domain work, or defines a stable shared API contract, put it in `src/lib/<domain>`.
+Placement rule: `src/server/` is for backend-only code (`server-only`). `src/shared/` is for code shared between client and server (must stay pure). `src/features/` is for frontend-specific logic organized by domain. Features communicate with the backend exclusively through their `api/` clients calling `/api/*` routes.
 
 Feature folder convention:
 
 ```text
 src/features/<feature>
 +-- ui        React components and page sections
-+-- model     feature types, hooks, state machines, pure utilities
-+-- api       client-side API wrappers and fetch helpers
-+-- actions   server actions invoked by feature UI
-+-- services  single-feature use-case services
++-- hooks     Data fetching and UI state (calls feature api)
++-- model     Feature-specific types and state management
++-- api       Frontend API clients (fetchers calling /api/*)
 ```
 
 ## Feature Cross-reference

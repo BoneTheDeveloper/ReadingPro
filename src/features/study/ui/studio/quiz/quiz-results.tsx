@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl"
 import { Trophy, AlertCircle, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { studioRecordQuizResultAction, studioResetQuizResultAction } from "@/features/study/actions/studio-artifact-actions"
+import { recordQuizResult, resetQuizResult } from "@/features/study/api/studio-artifacts-client"
 
 interface QuizResultsProps {
   correctCount: number
@@ -37,17 +37,12 @@ export function QuizResults({
     isSavingRef.current = true;
     
     try {
-      const result = await studioRecordQuizResultAction({
-        artifactId,
+      await recordQuizResult(artifactId, {
         correctCount,
         totalQuestions,
       })
-      if ("error" in result) {
-        setSaveError(result.error)
-      } else {
-        setSaveError(null)
-        onRecordResult({ correctCount, totalQuestions });
-      }
+      setSaveError(null)
+      onRecordResult({ correctCount, totalQuestions });
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : t("attemptSaveFailed"));
     } finally {
@@ -58,7 +53,7 @@ export function QuizResults({
   const handleRetry = useCallback(async () => {
     if (artifactId) {
       try {
-        await studioResetQuizResultAction({ artifactId });
+        await resetQuizResult(artifactId);
         onResetResult();
       } catch (err) {
         console.error("Failed to reset quiz result", err);

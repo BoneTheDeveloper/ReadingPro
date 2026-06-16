@@ -1,10 +1,11 @@
 ---
 phase: 3
-title: "HTTP-first transport (convert all server actions to API routes)"
-status: pending
+title: HTTP-first transport (convert all server actions to API routes)
+status: completed
 priority: P2
-effort: "1.5d"
-dependencies: [2]
+effort: 1.5d
+dependencies:
+  - 2
 ---
 
 # Phase 3: HTTP-first transport (convert all server actions to API routes)

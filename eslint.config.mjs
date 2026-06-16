@@ -16,6 +16,22 @@ const eslintConfig = defineConfig([
     "coverage/**",
     "next-env.d.ts",
   ]),
+  {
+    files: ["src/features/**/ui/**", "src/features/**/hooks/**", "src/shared/**"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@/server/**", "**/server/**"],
+              message: "Frontend features and shared contracts must not import from the server directory. Use standard API routes instead.",
+            },
+          ],
+        },
+      ],
+    },
+  },
 ]);
 
 export default eslintConfig;

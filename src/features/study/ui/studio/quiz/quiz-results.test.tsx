@@ -1,11 +1,11 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { studioRecordQuizResultAction } from "@/features/study/actions/studio-artifact-actions";
+import { recordQuizResult } from "@/features/study/api/studio-artifacts-client";
 import { QuizResults } from "./quiz-results";
 
-vi.mock("@/features/study/actions/studio-artifact-actions", () => ({
-  studioRecordQuizResultAction: vi.fn(),
-  studioResetQuizResultAction: vi.fn(),
+vi.mock("@/features/study/api/studio-artifacts-client", () => ({
+  recordQuizResult: vi.fn(),
+  resetQuizResult: vi.fn(),
 }));
 
 function renderResults(overrides: Partial<Parameters<typeof QuizResults>[0]> = {}) {
@@ -30,13 +30,12 @@ describe("QuizResults", () => {
   });
 
   it("records the result once on mount when an artifactId is present", async () => {
-    vi.mocked(studioRecordQuizResultAction).mockResolvedValue({ ok: true });
+    vi.mocked(recordQuizResult).mockResolvedValue(true);
     const onRecordResult = vi.fn();
     renderResults({ onRecordResult });
 
-    await waitFor(() => expect(studioRecordQuizResultAction).toHaveBeenCalledTimes(1));
-    expect(studioRecordQuizResultAction).toHaveBeenCalledWith({
-      artifactId: "artifact-1",
+    await waitFor(() => expect(recordQuizResult).toHaveBeenCalledTimes(1));
+    expect(recordQuizResult).toHaveBeenCalledWith("artifact-1", {
       correctCount: 3,
       totalQuestions: 5,
     });
@@ -44,7 +43,7 @@ describe("QuizResults", () => {
   });
 
   it("keeps the score visible and shows a recoverable banner when saving fails", async () => {
-    vi.mocked(studioRecordQuizResultAction).mockResolvedValue({ error: "save failed" });
+    vi.mocked(recordQuizResult).mockRejectedValue(new Error("save failed"));
     renderResults();
 
     // Banner + retry affordance.
@@ -56,6 +55,6 @@ describe("QuizResults", () => {
 
   it("does not attempt to save when there is no artifactId", async () => {
     renderResults({ artifactId: null });
-    await waitFor(() => expect(studioRecordQuizResultAction).not.toHaveBeenCalled());
+    await waitFor(() => expect(recordQuizResult).not.toHaveBeenCalled());
   });
 });

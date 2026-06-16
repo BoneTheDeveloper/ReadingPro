@@ -1,10 +1,11 @@
 ---
 phase: 4
-title: "Docs ADR and verification sweep"
-status: pending
+title: Docs ADR and verification sweep
+status: completed
 priority: P2
-effort: "0.5d"
-dependencies: [3]
+effort: 0.5d
+dependencies:
+  - 3
 ---
 
 # Phase 4: Docs ADR and verification sweep

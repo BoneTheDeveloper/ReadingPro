@@ -3,9 +3,9 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import type { Dispatch, SetStateAction } from "react";
-import { studySimplifyAction } from "@/features/study/actions/study-simplify-action";
+import { simplifyPassage } from "@/features/study/api/passages-client";
 import { generateStudioQuestions } from "@/features/study/api/studio-questions-client";
-import { studioLoadArtifactDetailAction } from "@/features/study/actions/studio-artifact-actions";
+import { getArtifactDetail } from "@/features/study/api/studio-artifacts-client";
 import type {
   ArtifactsCacheEntry,
   ArtifactRef,
@@ -60,11 +60,7 @@ export function useStudyActions({ state, setState }: UseStudyActionsInput) {
 
     setState((prev) => ({ ...prev, simplifying: true, error: null }));
     try {
-      const result = await studySimplifyAction({ passageId });
-      if ("error" in result) {
-        setState((prev) => ({ ...prev, simplifying: false, error: result.error }));
-        return;
-      }
+      const result = await simplifyPassage(passageId);
       if ("skipped" in result) {
         setState((prev) => ({ ...prev, simplifying: false }));
         return;
@@ -205,13 +201,9 @@ export function useStudyActions({ state, setState }: UseStudyActionsInput) {
 
       if (!ref || state.artifactDetailById[ref.id]) return;
 
-      const result = await studioLoadArtifactDetailAction({
-        artifactId: ref.id,
-        type: ref.type,
-        passageId,
-      });
+      try {
+        const result = await getArtifactDetail(ref.id);
 
-      if (!("error" in result)) {
         setState((prev) => ({
           ...prev,
           artifactDetailById: {
@@ -219,6 +211,8 @@ export function useStudyActions({ state, setState }: UseStudyActionsInput) {
             [ref.id]: result,
           },
         }));
+      } catch {
+        // Silently fail or handle error state
       }
     },
     [setState, state.artifactDetailById],

@@ -29,7 +29,7 @@ Examples:
 ## Client Components
 
 Client components own browser state, panels, selection, chat UI, upload drag/drop, and interactions.
-They should call feature hooks, server actions, or feature-level client API helpers for data operations.
+They should call feature hooks and feature-level client API helpers for data operations.
 
 Client components may keep trivial event glue, but should not own:
 
@@ -43,38 +43,31 @@ Examples:
 
 - `src/features/study/ui/study-workspace-client.tsx`
 - `src/features/study/ui/studio/chat/chat-panel.tsx`
-- `src/features/upload/upload-page-client.tsx`
-- `src/features/dictionary/dictionary-page-client.tsx`
+- `src/features/upload/ui/upload-page-client.tsx`
+- `src/features/dictionary/ui/dictionary-page-client.tsx`
 
 Preferred browser-side data path:
 
 ```text
 client component
-  -> src/features/<feature>/use-*.ts or <feature>-api.ts
-      -> /api route or server action
+  -> src/features/<feature>/hooks/use-*.ts
+      -> src/features/<feature>/api/<feature>-client.ts
+          -> /api route handler
 ```
 
 ## Route Handlers
 
-Route handlers live under `src/app/api/**/route.ts`. They parse external input, authenticate when needed, call services/repositories, and return JSON or streams.
+Route handlers live under `src/app/api/**/route.ts`. They parse external input, authenticate when needed, call server modules, and return JSON or streams.
 
 Streaming exception:
 
 - `POST /api/study-chat` returns an AI SDK UI message stream response.
 
-## Server Actions
-
-Server actions live with features:
-
-- `src/features/study/actions/*`
-- `src/features/upload/analyze-content-action.ts`
-
-Server actions must authenticate and enforce ownership before reads/writes.
-
 ## Runtime Boundary Rules
 
-- Browser code must not import Prisma, Clerk server APIs, filesystem, or server-only AI modules.
-- Browser fetch logic that is reused, contract-sensitive, or non-trivial should live in feature hooks/client API helpers rather than directly in components.
-- Route handlers and server actions must validate all external input with Zod or equivalent guards.
-- Shared logic belongs in `src/lib/` only when reused across features or route surfaces.
-- Use path aliases from `@/` consistently.
+- **Client Safety:** Browser code must not import Prisma, Clerk server APIs, filesystem, or server-only AI modules. This is enforced via `import 'server-only'` in `src/server/`.
+- **API Encapsulation:** Browser fetch logic must live in feature `api/` clients rather than directly in components or hooks.
+- **Validation:** Route handlers must validate all external input with Zod using schemas from `src/shared/`.
+- **Shared Contracts:** Shared logic and types belong in `src/shared/`.
+- **Backend Services:** Reusable backend logic belongs in `src/server/modules/`.
+- **Aliases:** Use path aliases `@/server/*`, `@/shared/*`, and `@/features/*` consistently.

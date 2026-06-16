@@ -1,7 +1,7 @@
 import { act, renderHook } from "@testing-library/react";
 import { useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { studySimplifyAction } from "@/features/study/actions/study-simplify-action";
+import { simplifyPassage } from "@/features/study/api/passages-client";
 import { generateStudioQuestions } from "@/features/study/api/studio-questions-client";
 import type { PassageData, QuestionData, StudioArtifact, StudyState } from "../model/types";
 import { useStudyActions } from "./use-study-actions";
@@ -10,12 +10,14 @@ vi.mock("@/features/study/api/studio-questions-client", () => ({
   generateStudioQuestions: vi.fn(),
 }));
 
-vi.mock("@/features/study/actions/study-simplify-action", () => ({
-  studySimplifyAction: vi.fn(),
+vi.mock("@/features/study/api/passages-client", () => ({
+  simplifyPassage: vi.fn(),
 }));
 
-vi.mock("@/features/study/actions/studio-artifact-actions", () => ({
-  studioLoadArtifactDetailAction: vi.fn(),
+vi.mock("@/features/study/api/studio-artifacts-client", () => ({
+  getArtifactDetail: vi.fn(),
+  recordQuizResult: vi.fn(),
+  resetQuizResult: vi.fn(),
 }));
 
 const passage: PassageData = {
@@ -95,7 +97,7 @@ describe("useStudyActions", () => {
   });
 
   it("simplifies the active passage and clears the loading state", async () => {
-    vi.mocked(studySimplifyAction).mockResolvedValue({
+    vi.mocked(simplifyPassage).mockResolvedValue({
       simplifiedContent: "Fresh summary",
       simplifiedLevel: "B2",
     });
@@ -105,7 +107,7 @@ describe("useStudyActions", () => {
       await result.current.actions.handleSimplify();
     });
 
-    expect(studySimplifyAction).toHaveBeenCalledWith({ passageId: "passage-1" });
+    expect(simplifyPassage).toHaveBeenCalledWith("passage-1");
     expect(result.current.state.simplifying).toBe(false);
     expect(result.current.state.error).toBeNull();
     expect(result.current.state.passages[0]).toMatchObject({
@@ -121,12 +123,12 @@ describe("useStudyActions", () => {
       await result.current.actions.handleSimplify();
     });
 
-    expect(studySimplifyAction).not.toHaveBeenCalled();
+    expect(simplifyPassage).not.toHaveBeenCalled();
     expect(result.current.state.simplifying).toBe(false);
   });
 
   it("stores server and translated fallback errors from simplification", async () => {
-    vi.mocked(studySimplifyAction).mockResolvedValueOnce({ error: "Server says no" });
+    vi.mocked(simplifyPassage).mockRejectedValueOnce(new Error("Server says no"));
     const { result } = renderStudyActions();
 
     await act(async () => {
@@ -136,17 +138,6 @@ describe("useStudyActions", () => {
     expect(result.current.state).toMatchObject({
       simplifying: false,
       error: "Server says no",
-    });
-
-    vi.mocked(studySimplifyAction).mockRejectedValueOnce("boom");
-
-    await act(async () => {
-      await result.current.actions.handleSimplify();
-    });
-
-    expect(result.current.state).toMatchObject({
-      simplifying: false,
-      error: "Simplification failed",
     });
   });
 

@@ -1,7 +1,7 @@
 ---
 title: 'Restructure app: enforced server/ + shared/ contract + HTTP-first'
 description: ''
-status: pending
+status: completed
 priority: P2
 branch: feature/issue-69-study-quiz-flow
 tags: []
@@ -43,8 +43,8 @@ Restructure the codebase so the frontend/backend boundary is explicit and compil
 |-------|------|--------|
 | 1 | [Enforce server-only boundary](./phase-01-enforce-server-only-boundary.md) | Completed |
 | 2 | [Relocate lib to server and schemas to shared](./phase-02-relocate-lib-to-server-and-schemas-to-shared.md) | Completed |
-| 3 | [HTTP-first transport (convert all server actions to API routes)](./phase-03-http-first-transport-convert-all-server-actions-to-api-route.md) | Pending |
-| 4 | [Docs ADR and verification sweep](./phase-04-docs-adr-and-verification-sweep.md) | Pending |
+| 3 | [HTTP-first transport (convert all server actions to API routes)](./phase-03-http-first-transport-convert-all-server-actions-to-api-route.md) | Completed |
+| 4 | [Docs ADR and verification sweep](./phase-04-docs-adr-and-verification-sweep.md) | Completed |
 
 ## Dependencies
 

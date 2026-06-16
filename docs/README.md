@@ -2,10 +2,29 @@
 
 Start here when onboarding to the English Reading Training App docs.
 
+## Project Architecture
+
+### Source Layout
+
+```text
+src/
+  app/                  Next.js routing layer: thin pages + thin API route handlers (HTTP adapters)
+  server/               Backend layer (enforced server-only): db, ai, auth, http, modules
+  shared/               Contract layer (isomorphic/pure): Zod schemas, DTOs, pure utils
+  features/             Frontend feature layer (FSD-lite): ui, hooks, model, api
+  components/           Universal design system primitives (UI atoms)
+```
+
+### Core Invariants
+
+1.  **Strict Boundary:** `src/server/` is marked `server-only`. Backend logic never leaks to the client.
+2.  **Pure Contract:** `src/shared/` contains only Zod schemas and types. It never imports from `server/`.
+3.  **Frontend Logic:** Organized by feature in `src/features/`. Communicates with backend only via standard HTTP API routes.
+
 ## Reading Order
 
 1. [Project Overview PDR](project-overview-pdr.md) - product purpose, users, MVP scope, and current state.
-2. [Codebase Summary](codebase-summary.md) - source layout, framework stack, and core modules.
+2. [Codebase Summary](codebase-summary.md) - detailed source layout, framework stack, and feature map.
 3. [Code Standards](code-standards.md) - thin top-level convention for writing code and placing files.
 4. [System Architecture](Architecture/system-architecture.md) - high-level system map.
 5. [Runtime Architecture](Architecture/runtime-architecture.md) - Next.js App Router, RSC, route handlers, and server/client boundaries.

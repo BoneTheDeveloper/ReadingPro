@@ -1,7 +1,6 @@
 "use client"
 
 import * as Sentry from "@sentry/nextjs"
-import { postJson } from "@/shared/api/api-client-utils"
 import { uploadResponseSchema } from "@/shared/upload/upload-response-schema"
 
 /**
@@ -23,10 +22,9 @@ export async function uploadFile(file: File) {
     Sentry.addBreadcrumb({
       category: "upload",
       level: "error",
-      message: "upload-file-api-error",
+      message: "upload-file-schema-error",
       data: {
         route: "/api/upload",
-        error: "schema_mismatch",
       },
     })
     throw new Error("Upload failed")
@@ -47,9 +45,34 @@ export async function uploadFile(file: File) {
  * Submit raw text to be processed.
  */
 export async function uploadText(text: string) {
-  const result = await postJson("/api/upload/text", { text, isText: true }, uploadResponseSchema)
-  if ("error" in result) {
-    throw new Error(result.error)
+  const response = await fetch("/api/upload/text", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text, isText: true }),
+  })
+
+  const json: unknown = await response.json()
+  const result = uploadResponseSchema.safeParse(json)
+
+  if (!result.success) {
+    Sentry.addBreadcrumb({
+      category: "upload",
+      level: "error",
+      message: "upload-text-schema-error",
+      data: {
+        route: "/api/upload/text",
+      },
+    })
+    throw new Error("Processing failed")
   }
-  return result.data
+
+  if ("error" in result.data) {
+    throw new Error(result.data.error)
+  }
+
+  if (!response.ok) {
+    throw new Error("Processing failed")
+  }
+
+  return result.data.data
 }

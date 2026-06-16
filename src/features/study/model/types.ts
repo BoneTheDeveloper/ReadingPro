@@ -16,7 +16,7 @@ export type StudyStatus =
   | "ready"
   | "error";
 
-export type SourceType = "TEXT" | "PDF" | "YOUTUBE";
+export type SourceType = "TEXT" | "PDF" | "URL" | "YOUTUBE";
 
 export interface PassageData {
   id: string;

@@ -32,7 +32,7 @@ Use ONLY these Tailwind classes (mapped from CSS variables):
 | Raw `<textarea>` | shadcn `Textarea` |
 | Inline SVGs (when Lucide has equivalent) | `import { Icon } from "lucide-react"` |
 | `onMouseEnter`/`onMouseLeave` | Tailwind `hover:` classes |
-| String concatenation for classes | `cn()` from `@/lib/shared/utils` |
+| String concatenation for classes | `cn()` from `@/shared/utils` |
 
 ## shadcn/ui Primitives
 

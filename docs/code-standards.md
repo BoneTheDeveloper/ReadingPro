@@ -21,8 +21,8 @@ Use these docs as the source of truth for details:
 
 - Keep boundaries explicit: UI, feature orchestration, API boundaries, domain logic, persistence, and operations should live in their owning layers.
 - Prefer the existing project pattern over inventing a new shape.
-- Move shared behavior down into `src/lib/<domain>` before importing across feature folders.
-- Keep framework boundary files thin: pages compose screens, routes expose HTTP, server actions bridge UI mutations.
+- Move shared contracts into `src/shared/<domain>` and backend logic into `src/server/modules/<domain>`.
+- Keep framework boundary files thin: pages compose features, routes expose HTTP, features communicate via standard API calls.
 - Keep generated code, migrations, tests, scripts, and documentation in their existing owning directories.
 - Do not duplicate detailed contracts or procedures in this file. Link to the canonical doc instead.
 
@@ -30,11 +30,12 @@ Use these docs as the source of truth for details:
 
 | Area | Use for |
 |------|---------|
-| `src/app` | Next.js route boundaries: pages, layouts, route handlers, loading/error boundaries. |
-| `src/features/<feature>` | Product feature code: UI, hooks, client state, client API helpers, server actions, and feature-only workflows. |
-| `src/lib/<domain>` | Reusable domain/runtime code: services, repositories, shared schemas, DTO builders, provider orchestration, auth, storage, AI, algorithms, observability. |
-| `src/components` | Shared presentation primitives and layout components. |
-| `prisma` | Prisma schema, migrations, seed data, and database procedures. |
+| `src/app` | Next.js route boundaries: pages, layouts, thin API route handlers (HTTP adapters). |
+| `src/server` | Backend layer (enforced `server-only`): database access, AI orchestration, auth logic, and core business services (`modules`). |
+| `src/shared` | Contract layer (pure): Zod schemas, DTOs, and isomorphic utilities used by both client and server. |
+| `src/features/<feature>` | Frontend feature layer (FSD-lite): UI, hooks, model, and feature-specific API clients. |
+| `src/components` | Shared presentation primitives (UI atoms) and layout components. |
+| `prisma` | Modular Prisma schemas, migrations, and seed data. |
 | `tests`, `playwright` | Test suites and runner-owned helpers/config. |
 | `docs` | Current human and agent-readable source-of-truth docs. |
 | `plans`, `docs/journals` | Historical planning and implementation records, not current source-of-truth docs. |
@@ -43,16 +44,17 @@ Use these docs as the source of truth for details:
 
 - Put code where its owner is clearest, not where it is first needed.
 - Keep small features flat until splitting improves readability.
-- Use feature subfolders such as `ui`, `model`, `hooks`, `api`, `actions`, and `services` only when that concern has enough code to justify the split.
-- Do not create generic catch-all folders like `src/lib/services`.
-- Put reusable persistence and domain work under `src/lib/<domain>`, not in route handlers or visual components.
-- Put client-side fetch wrappers under the owning feature when they centralize parsing, errors, or repeated calls.
+- Use feature subfolders `ui`, `hooks`, `model`, and `api` to organize feature-specific frontend logic.
+- Do not create generic catch-all folders like `src/server/services`.
+- Put reusable persistence and backend domain work under `src/server/modules/<domain>`.
+- Put shared API contracts and DTO types under `src/shared/<domain>`.
+- Put client-side fetch wrappers under the owning feature's `api/` directory.
 - Keep tool-specific config beside the owning tool unless the tool requires root discovery.
 
 ## Code Style
 
 - Use strict TypeScript and avoid `any`; prefer `unknown` plus narrowing at external boundaries.
-- Prefer explicit input and output types at service, action, route, and shared helper boundaries.
+- Prefer explicit input and output types at service, route, and shared helper boundaries.
 - Use Zod for untrusted input and generated structured output.
 - Keep functions small enough that ownership, side effects, and failure paths are obvious.
 - Name code by product role or domain responsibility, not by layout position or implementation trivia.
@@ -60,13 +62,13 @@ Use these docs as the source of truth for details:
 
 ## Boundary Rules
 
-- UI components render UI and own browser interaction state.
-- Feature hooks coordinate feature state, client API calls, and page-level interactions.
-- Server actions authenticate, validate, and call feature or domain services for mutations invoked by UI.
-- API route handlers parse, validate, authenticate, call services/repositories, and map responses.
-- Domain services own reusable business workflows and provider orchestration.
-- Repositories/query modules own database access.
-- Shared schemas and DTO builders live with the domain or route family that owns the contract.
+- **UI Components:** Render UI and own browser interaction state.
+- **Feature Hooks:** Coordinate feature state, client API calls, and page-level interactions.
+- **Feature API:** Frontend fetch clients that centralize calls to `/api/*` routes.
+- **API Route Handlers:** Thin HTTP adapters that parse, validate, authenticate, and delegate to server modules.
+- **Server Modules:** Own reusable business workflows, provider orchestration, and persistence.
+- **Repositories:** Own database access (Prisma/raw SQL).
+- **Shared Schemas:** Define the contracts between frontend and backend.
 
 ## Naming
 
