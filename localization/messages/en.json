@@ -203,7 +203,10 @@
     "chatNoMessages": "Start a conversation about this passage",
     "chatStop": "Stop",
     "previous": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "attemptSaveFailed": "Failed to save progress",
+    "retry": "Retry",
+    "source": "Source:"
   },
   "Reading": {
     "title": "Reading View",

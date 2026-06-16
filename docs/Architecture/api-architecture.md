@@ -51,7 +51,7 @@ src/app/api/dictionary/lookup/route.ts
   -> src/lib/dictionary/lookup/lookup.repository.ts
   -> src/lib/dictionary/shared/dictionary-response-schema.ts
 
-src/app/api/study-questions/route.ts
+src/app/api/studio-questions/route.ts
   -> src/lib/study/passage/passage-study.service.ts
   -> src/lib/study/shared/study-response-schema.ts
 

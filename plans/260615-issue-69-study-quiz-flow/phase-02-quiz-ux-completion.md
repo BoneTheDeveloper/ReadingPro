@@ -14,6 +14,7 @@ dependencies: []
 Close the three real UX gaps issue #69 requires that are NOT yet in code: render the source
 quote in the quiz, make persistence failures visible/recoverable instead of silently swallowed,
 and fix the passage-switch race so a successfully generated quiz is not thrown away.
+Additionally, update the `QuizContent` to use the new `artifactId` instead of `passageId` for tracking quiz attempts.
 
 ## Requirements
 
@@ -23,6 +24,7 @@ and fix the passage-switch race so a successfully generated quiz is not thrown a
     quiz remains fully usable and the final score still renders.
   - Switching passage mid-generation must not attach a result to the wrong passage AND must not
     silently discard a valid generation (current code marks it `error`).
+  - `QuizContent` uses `artifactId` to create attempts via `createQuizAttemptForArtifact(artifactId)`.
 - Non-functional: keep existing keyboard flow and per-passage caching intact; no regressions to
   generation states already working in `studio-panel.tsx`.
 
@@ -50,13 +52,17 @@ and fix the passage-switch race so a successfully generated quiz is not thrown a
   `quiz-results.tsx` (attempt-complete failure). Render a small inline banner with a retry action.
   Failure must never block answering or hide the score (graceful degradation preserved).
 - Race fix: in `generateQuizArtifact`, on the `activePassageIdRef.current !== passageId` branch,
-  instead of `status:"error"`, store the questions in `resultDetailById[resultId]` and set
+  instead of `status:"error"`, store the questions in `resultDetailById[artifactId]` (updated from passage to artifact logic) and set
   `status:"completed"` for that passage's cache. Do not touch global `error`/active view. Confirm
   `studio-panel` renders cached completed results when the user returns to that passage.
+- Attempt Tracking: `QuizContent` receives `artifactId` as a prop (passed down from `studio-panel.tsx`) and calls `createQuizAttemptForArtifact(artifactId)` instead of passing `passageId`.
 
 ## Related Code Files
 
+- Modify: `src/features/study/ui/studio/studio-panel.tsx`
+  - Pass `artifactId={viewingArtifact.id}` to `QuizContent`.
 - Modify: `src/features/study/ui/studio/quiz/quiz-content.tsx`
+  - Accept `artifactId` prop instead of `passageId`.
   - Render `sourceText` + `sourceLine` in feedback.
   - Add attempt-create failure state + recoverable inline message + retry.
 - Modify: `src/features/study/ui/studio/quiz/quiz-results.tsx`
@@ -71,17 +77,19 @@ and fix the passage-switch race so a successfully generated quiz is not thrown a
 ## Implementation Steps
 
 1. Add new `Study` i18n keys to every locale file (source label, persistence-failed message, retry).
-2. `quiz-content.tsx`: render source quote in the feedback area using `currentQuestion.sourceText`
+2. `studio-panel.tsx`: pass `artifactId={viewingArtifact.id}` down to `QuizContent`.
+3. `quiz-content.tsx`: update props to receive `artifactId` and call `createQuizAttemptForArtifact(artifactId)` when checking an answer.
+4. `quiz-content.tsx`: render source quote in the feedback area using `currentQuestion.sourceText`
    and `currentQuestion.sourceLine`.
-3. `quiz-content.tsx`: introduce `attemptError` state; set it when `createQuizAttemptForPassage`
+5. `quiz-content.tsx`: introduce `attemptError` state; set it when `createQuizAttemptForArtifact`
    returns `{error}` or throws; render a dismissible/retry inline banner; never block feedback.
-4. `quiz-results.tsx`: capture the `completeQuizAttempt` rejection into state; render inline
+6. `quiz-results.tsx`: capture the `completeQuizAttempt` rejection into state; render inline
    recoverable message + retry button; keep the score card always visible.
-5. `use-study-actions.ts`: change the passage-switch branch to complete the result into its own
+7. `use-study-actions.ts`: change the passage-switch branch to complete the result into its own
    passage cache (store questions + `status:"completed"`) rather than marking `error`.
-6. Manual check in app: generate quiz, switch passage mid-generation, switch back -> result
+8. Manual check in app: generate quiz, switch passage mid-generation, switch back -> result
    present; force a persistence failure (e.g. offline) -> message shown, quiz still usable.
-7. typecheck + lint.
+9. typecheck + lint.
 
 ## Success Criteria
 
@@ -89,6 +97,7 @@ and fix the passage-switch race so a successfully generated quiz is not thrown a
 - [ ] Attempt create/complete failure shows a recoverable message; quiz stays usable; score shows.
 - [ ] Switching passage mid-generation keeps the generated quiz available on its own passage.
 - [ ] Keyboard flow and existing generation states unchanged.
+- [ ] `QuizContent` calls the API with `artifactId`.
 - [ ] typecheck + lint pass.
 
 ## Risk Assessment

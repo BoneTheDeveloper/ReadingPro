@@ -3,27 +3,27 @@ import { useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { studySimplifyAction } from "@/features/study/actions/study-simplify-action";
 import {
-  studyCreateArtifactAction,
-  studyCompleteArtifactAction,
-  studyFailArtifactAction,
-} from "@/features/study/actions/study-artifact-actions";
-import { generateStudyQuestions } from "@/features/study/api/study-questions-client";
+  studioCreateArtifactAction,
+  studioCompleteArtifactAction,
+  studioFailArtifactAction,
+} from "@/features/study/actions/studio-artifact-actions";
+import { generateStudioQuestions } from "@/features/study/api/studio-questions-client";
 import type { PassageData, QuestionData, StudyState } from "../model/types";
 import { useStudyActions } from "./use-study-actions";
 
-vi.mock("@/features/study/api/study-questions-client", () => ({
-  generateStudyQuestions: vi.fn(),
+vi.mock("@/features/study/api/studio-questions-client", () => ({
+  generateStudioQuestions: vi.fn(),
 }));
 
 vi.mock("@/features/study/actions/study-simplify-action", () => ({
   studySimplifyAction: vi.fn(),
 }));
 
-vi.mock("@/features/study/actions/study-artifact-actions", () => ({
-  studyCreateArtifactAction: vi.fn(),
-  studyCompleteArtifactAction: vi.fn(),
-  studyFailArtifactAction: vi.fn(),
-  studyLoadArtifactDetailAction: vi.fn(),
+vi.mock("@/features/study/actions/studio-artifact-actions", () => ({
+  studioCreateArtifactAction: vi.fn(),
+  studioCompleteArtifactAction: vi.fn(),
+  studioFailArtifactAction: vi.fn(),
+  studioLoadArtifactDetailAction: vi.fn(),
 }));
 
 const passage: PassageData = {
@@ -90,7 +90,7 @@ describe("useStudyActions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.spyOn(crypto, "randomUUID").mockReturnValue("result-1");
-    vi.mocked(studyCreateArtifactAction).mockResolvedValue({
+    vi.mocked(studioCreateArtifactAction).mockResolvedValue({
       id: "result-1",
       type: "quiz",
       passageId: "passage-1",
@@ -98,8 +98,8 @@ describe("useStudyActions", () => {
       status: "generating",
       createdAt: new Date().toISOString(),
     });
-    vi.mocked(studyCompleteArtifactAction).mockResolvedValue({ ok: true });
-    vi.mocked(studyFailArtifactAction).mockResolvedValue({ ok: true });
+    vi.mocked(studioCompleteArtifactAction).mockResolvedValue({ ok: true });
+    vi.mocked(studioFailArtifactAction).mockResolvedValue({ ok: true });
   });
 
   it("simplifies the active passage and clears the loading state", async () => {
@@ -159,14 +159,14 @@ describe("useStudyActions", () => {
   });
 
   it("inserts a completed quiz result and writes generated questions", async () => {
-    vi.mocked(generateStudyQuestions).mockResolvedValue({ questions: [question] });
+    vi.mocked(generateStudioQuestions).mockResolvedValue({ questions: [question] });
     const { result } = renderStudyActions();
 
     await act(async () => {
       await result.current.actions.handleActionClick("quiz");
     });
 
-    expect(generateStudyQuestions).toHaveBeenCalledWith({ passageId: "passage-1", artifactId: "result-1" });
+    expect(generateStudioQuestions).toHaveBeenCalledWith({ passageId: "passage-1", artifactId: "result-1" });
     const quizResults = result.current.state.artifactsByPassageId["passage-1"].data;
     expect(quizResults).toHaveLength(1);
     expect(quizResults[0]).toMatchObject({
@@ -181,7 +181,7 @@ describe("useStudyActions", () => {
   });
 
   it("marks quiz artifacts as errors for server failures and stale active passage refs", async () => {
-    vi.mocked(generateStudyQuestions).mockResolvedValueOnce({ error: "Generation failed" });
+    vi.mocked(generateStudioQuestions).mockResolvedValueOnce({ error: "Generation failed" });
     const { result, rerender } = renderStudyActions();
 
     await act(async () => {
@@ -193,7 +193,7 @@ describe("useStudyActions", () => {
     expect(firstResults[0]).toMatchObject({ status: "failed" });
 
     let resolveQuestions: (value: { questions: QuestionData[] }) => void = () => {};
-    vi.mocked(generateStudyQuestions).mockImplementationOnce(
+    vi.mocked(generateStudioQuestions).mockImplementationOnce(
       () =>
         new Promise((resolve) => {
           resolveQuestions = resolve;
@@ -230,7 +230,7 @@ describe("useStudyActions", () => {
       await result.current.actions.handleActionClick("quiz");
     });
 
-    expect(generateStudyQuestions).not.toHaveBeenCalled();
+    expect(generateStudioQuestions).not.toHaveBeenCalled();
     expect(result.current.state.artifactsByPassageId).toEqual({});
   });
 });

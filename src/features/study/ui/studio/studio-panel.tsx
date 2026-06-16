@@ -221,7 +221,7 @@ export function StudyStudioPanel({
               <QuizContent
                 questions={detail.questions}
                 passageTitle={viewingArtifact.title}
-                passageId={viewingArtifact.passageId}
+                artifactId={viewingArtifact.id}
                 onReset={() => onSetViewingArtifact(null)}
               />
             )}

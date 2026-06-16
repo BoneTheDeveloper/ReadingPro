@@ -203,7 +203,10 @@
     "chatNoMessages": "Bắt đầu trò chuyện về bài đọc này",
     "chatStop": "Dừng",
     "previous": "Trước",
-    "next": "Sau"
+    "next": "Sau",
+    "attemptSaveFailed": "Lưu tiến trình thất bại",
+    "retry": "Thử lại",
+    "source": "Nguồn:"
   },
   "Reading": {
     "title": "Chế độ đọc",

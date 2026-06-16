@@ -52,7 +52,7 @@
 - **Questions**: Each question now belongs to exactly one `artifactId`. Existing questions were wiped in migration to satisfy NOT NULL constraint.
 - **Service**: `generateQuestionsForPassage` now requires `artifactId` and links questions to it.
 - **Actions**: Updated `study-artifact-actions.ts` to use new relational storage and corrected service imports.
-- **API**: `/api/study-questions` now requires `artifactId` in POST body.
+- **API**: `/api/studio-questions` now requires `artifactId` in POST body.
 - **Tests**: Updated integration tests for route, service, and queries to align with the new schema and validation rules.
 
 ### Removed

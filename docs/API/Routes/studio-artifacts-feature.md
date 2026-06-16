@@ -66,10 +66,10 @@ An artifact moves through `generating → done` (success) or `generating → fai
 (error). The transition out of `generating` is driven **entirely by the client
 that started the generation**:
 
-1. Client calls `studyCreateArtifactAction` → row persisted with `status: "generating"`.
-2. Client calls `POST /api/study-questions` to run the AI generation.
-3. On resolve, client calls `studyCompleteArtifactAction` (`done`) or
-   `studyFailArtifactAction` (`failed`).
+1. Client calls `studioCreateArtifactAction` → row persisted with `status: "generating"`.
+2. Client calls `POST /api/studio-questions` to run the AI generation.
+3. On resolve, client calls `studioCompleteArtifactAction` (`done`) or
+   `studioFailArtifactAction` (`failed`).
 
 ## Orphaned Generation Recovery (Exception Flow)
 

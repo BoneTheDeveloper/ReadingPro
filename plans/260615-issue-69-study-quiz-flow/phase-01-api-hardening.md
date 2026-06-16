@@ -13,16 +13,20 @@ dependencies: []
 
 Bring the `quiz-attempt` route to parity with the sibling `study-session` route: map auth
 failures to 401, ownership/not-owned misses to 404, keep validation errors at 400, and make
-request schemas strict. Source of truth for behavior: existing code, not the note.
+request schemas strict. In addition, migrate the `QuizAttempt` schema and API to use `artifactId`
+instead of `passageId` to properly align with the new `StudioArtifact` model, ensuring we can track
+which specific quiz an attempt belongs to.
 
 ## Requirements
 
 - Functional:
+  - `QuizAttempt` table drops `passageId` and adds `artifactId` (UUID, nullable, FK to `StudioArtifact`).
   - Unauthenticated `POST`/`PATCH` return `401`, not `500`.
-  - Missing/not-owned study session, passage, or attempt return `404`.
+  - Missing/not-owned study session, artifact, or attempt return `404`.
   - Malformed JSON, invalid UUID, negative/mismatched counts return `400`.
   - Unexpected failures stay `500` + Sentry.
   - Extra body fields rejected (`.strict()`), consistent with other study contracts.
+  - POST request body uses `artifactId` instead of `passageId`.
 - Non-functional: no behavior change for existing happy-path callers; reuse shared helpers.
 
 ## Architecture
@@ -32,11 +36,12 @@ The query layer (`quiz-attempt-queries.ts`) throws `z.ZodError` with messages li
 `"Study session not found or not owned by user"` / `"Passage not found..."` /
 `"Quiz attempt not found..."`. The shared helper `isOwnershipMissError(error, labels)`
 (`src/lib/api/route-errors.ts:15`) already matches those messages by resource label + "not found"
-/"not owned", so the 404 mapping needs no query-layer changes — only route-layer catch ordering.
+/"not owned". The `isOwnershipMissError` must be updated to look for `'artifact'` instead of `'passage'`
+where appropriate for quiz attempts.
 
 Catch-block order (mirror `study-session/route.ts`):
 1. `isAuthenticationRequiredError(error)` -> 401
-2. `isOwnershipMissError(error, ['study session','passage','quiz attempt'])` -> 404
+2. `isOwnershipMissError(error, ['study session','artifact','quiz attempt'])` -> 404
 3. `error instanceof z.ZodError` -> 400 via `getZodErrorMessage(error)`
 4. else -> log + Sentry + 500
 
@@ -46,28 +51,32 @@ reach the catch, so step 2 must precede step 3.
 
 ## Related Code Files
 
+- Modify: `prisma/schema.prisma`
+  - Update `QuizAttempt` model: replace `passageId` with `artifactId` (FK to `StudioArtifact`).
+- Modify: `src/lib/db/quiz-attempt-queries.ts`
+  - Update `createQuizAttempt` to take `artifactId` and check `StudioArtifact` instead of `Passage`.
 - Modify: `src/app/api/quiz-attempt/route.ts`
   - Import `isAuthenticationRequiredError, isOwnershipMissError, getZodErrorMessage` from `@/lib/api/route-errors`.
+  - Change `passageId` to `artifactId` in `quizAttemptPostSchema`.
   - Add the 4-step catch ordering above to both `POST` and `PATCH`.
   - Add `.strict()` to `quizAttemptPostSchema` and `quizAttemptPatchSchema` (apply `.strict()`
     on the base object before `.refine()` for the PATCH schema).
-- Read for pattern: `src/app/api/study-session/route.ts`, `src/lib/api/route-errors.ts`.
-- No change expected: `src/lib/db/quiz-attempt-queries.ts` (messages already match the helper).
+- Modify: `src/features/study/api/quiz-attempt-client.ts`
+  - Rename `createQuizAttemptForPassage` to `createQuizAttemptForArtifact` and accept `artifactId`.
 
 ## Implementation Steps
 
-1. Add the three helper imports to `route.ts`.
-2. Apply `.strict()` to both request schemas (PATCH: `z.object({...}).strict().refine(...)`).
-3. Replace each catch block (POST + PATCH) with the 401 -> 404 -> 400 -> 500 ordering.
-4. Run typecheck. Update existing route tests that assert `400` for ownership misses to expect
-   `404` (see Phase 3 — keep code and tests in the same logical change set to avoid red CI).
-5. Verify no other caller depends on the old `400`-for-ownership behavior (`rg` for quiz-attempt
-   route usage; client only reads `success`/`data`/`error`, so status change is safe).
+1. Update `prisma/schema.prisma` to replace `passageId` with `artifactId` in `QuizAttempt`. Run `pnpm run db:migrate:dev` to create the migration.
+2. Update `src/lib/db/quiz-attempt-queries.ts` to query `StudioArtifact` instead of `Passage` and save `artifactId`.
+3. Update `src/app/api/quiz-attempt/route.ts` request schemas (`artifactId`, `.strict()`) and the catch ordering.
+4. Update `src/features/study/api/quiz-attempt-client.ts` to use `artifactId`.
+5. Run typecheck. Update existing route tests that assert `400` for ownership misses to expect `404`, and change `passageId` to `artifactId` in tests.
 
 ## Success Criteria
 
+- [ ] `QuizAttempt` is successfully migrated to `artifactId`.
 - [ ] Unauthenticated `POST` and `PATCH` return `401`.
-- [ ] Not-owned/missing session, passage, attempt return `404`.
+- [ ] Not-owned/missing session, artifact, attempt return `404`.
 - [ ] Invalid JSON / UUID / count math still return `400`.
 - [ ] Both schemas reject unknown keys.
 - [ ] `pnpm run typecheck` and the quiz-attempt route test file pass.

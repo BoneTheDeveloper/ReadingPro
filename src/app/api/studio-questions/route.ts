@@ -13,13 +13,13 @@ const studyQuestionsPostSchema = z.object({
 }).strict();
 
 export async function POST(request: NextRequest) {
-  return handleStudyQuestionsPost(request);
+  return handleStudioQuestionsPost(request);
 }
 
-async function handleStudyQuestionsPost(request: NextRequest) {
+async function handleStudioQuestionsPost(request: NextRequest) {
   const requestLog = createRequestLogger(
-    "api:study-questions",
-    createRequestLogContext(request, "POST", "/api/study-questions"),
+    "api:studio-questions",
+    createRequestLogContext(request, "POST", "/api/studio-questions"),
   );
 
   try {
@@ -27,11 +27,11 @@ async function handleStudyQuestionsPost(request: NextRequest) {
     try {
       body = await Sentry.startSpan(
         {
-          name: "api:study-questions-parse-body",
+          name: "api:studio-questions-parse-body",
           op: "http.server",
           attributes: {
             "http.request.method": "POST",
-            "url.path": "/api/study-questions",
+            "url.path": "/api/studio-questions",
           },
         },
         () => request.json(),
@@ -53,7 +53,7 @@ async function handleStudyQuestionsPost(request: NextRequest) {
     const { passageId, artifactId } = parsed.data;
     const user = await Sentry.startSpan(
       {
-        name: "api:study-questions-authenticate",
+        name: "api:studio-questions-authenticate",
         op: "auth",
         attributes: { "study.passage_id": passageId },
       },
@@ -61,7 +61,7 @@ async function handleStudyQuestionsPost(request: NextRequest) {
     );
 
     const questions = await generateQuestionsForPassage(user.id, passageId, artifactId);
-    return createStudyQuestionsSuccessResponse({ questions });
+    return createStudioQuestionsSuccessResponse({ questions });
   } catch (error) {
     if (isAuthenticationRequiredError(error)) {
       return NextResponse.json({ error: "Authentication required." }, { status: 401 });
@@ -82,7 +82,7 @@ async function handleStudyQuestionsPost(request: NextRequest) {
 
     requestLog.error({ err: error }, "Failed to generate study questions");
     Sentry.captureException(error, {
-      tags: { route: "api:study-questions", method: "POST" },
+      tags: { route: "api:studio-questions", method: "POST" },
     });
     return NextResponse.json(
       { error: "Question generation failed — try again" },
@@ -91,6 +91,6 @@ async function handleStudyQuestionsPost(request: NextRequest) {
   }
 }
 
-function createStudyQuestionsSuccessResponse(data: { questions: GeneratedStudyQuestionDto[] }) {
+function createStudioQuestionsSuccessResponse(data: { questions: GeneratedStudyQuestionDto[] }) {
   return NextResponse.json({ success: true, data });
 }

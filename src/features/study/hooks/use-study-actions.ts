@@ -4,13 +4,13 @@ import { useCallback, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import type { Dispatch, SetStateAction } from "react";
 import { studySimplifyAction } from "@/features/study/actions/study-simplify-action";
-import { generateStudyQuestions } from "@/features/study/api/study-questions-client";
+import { generateStudioQuestions } from "@/features/study/api/studio-questions-client";
 import {
-  studyCreateArtifactAction,
-  studyCompleteArtifactAction,
-  studyFailArtifactAction,
-  studyLoadArtifactDetailAction,
-} from "@/features/study/actions/study-artifact-actions";
+  studioCreateArtifactAction,
+  studioCompleteArtifactAction,
+  studioFailArtifactAction,
+  studioLoadArtifactDetailAction,
+} from "@/features/study/actions/studio-artifact-actions";
 import type {
   ArtifactsCacheEntry,
   ArtifactRef,
@@ -95,19 +95,19 @@ export function useStudyActions({ state, setState }: UseStudyActionsInput) {
   const generateQuizArtifact = useCallback(
     async (passageId: string, artifactId: string) => {
       try {
-        const result = await generateStudyQuestions({ passageId, artifactId });
+        const result = await generateStudioQuestions({ passageId, artifactId });
         if (activePassageIdRef.current !== passageId) {
           updateArtifactStatus(passageId, artifactId, { status: "failed" });
-          await studyFailArtifactAction({ artifactId });
+          await studioFailArtifactAction({ artifactId });
           return;
         }
         if ("error" in result) {
           setState((prev) => ({ ...prev, error: result.error }));
           updateArtifactStatus(passageId, artifactId, { status: "failed" });
-          await studyFailArtifactAction({ artifactId });
+          await studioFailArtifactAction({ artifactId });
           return;
         }
-        await studyCompleteArtifactAction({ artifactId });
+        await studioCompleteArtifactAction({ artifactId });
         updateArtifactStatus(passageId, artifactId, { status: "done", updatedAt: new Date().toISOString() });
         setState((prev) => ({
           ...prev,
@@ -122,7 +122,7 @@ export function useStudyActions({ state, setState }: UseStudyActionsInput) {
           error: err instanceof Error ? err.message : t("generationFailed"),
         }));
         updateArtifactStatus(passageId, artifactId, { status: "failed" });
-        await studyFailArtifactAction({ artifactId });
+        await studioFailArtifactAction({ artifactId });
       }
     },
     [setState, t, updateArtifactStatus],
@@ -140,7 +140,7 @@ export function useStudyActions({ state, setState }: UseStudyActionsInput) {
       const artifactId = crypto.randomUUID();
 
       // Persist artifact row immediately so it survives page refreshes
-      const createResult = await studyCreateArtifactAction({ id: artifactId, passageId, type: "quiz", title: passage.title });
+      const createResult = await studioCreateArtifactAction({ id: artifactId, passageId, type: "quiz", title: passage.title });
       if ("error" in createResult) {
         setState((prev) => ({ ...prev, error: createResult.error }));
         return;
@@ -178,7 +178,7 @@ export function useStudyActions({ state, setState }: UseStudyActionsInput) {
 
       if (!ref || state.artifactDetailById[ref.id]) return;
 
-      const result = await studyLoadArtifactDetailAction({
+      const result = await studioLoadArtifactDetailAction({
         artifactId: ref.id,
         type: ref.type,
         passageId,

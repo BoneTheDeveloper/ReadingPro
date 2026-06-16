@@ -7,15 +7,15 @@ Route `/api/quiz-attempt` tracks one learner quiz attempt for a study session.
 Expected `POST /api/quiz-attempt`:
 
 - Requires authenticated user.
-- Accepts JSON body:
+- Accepts strictly typed JSON body (`.strict()`):
   ```ts
   {
     studySessionId: string; // UUID, must belong to current user
-    passageId?: string; // UUID, optional, must belong to current user when provided
+    artifactId?: string; // UUID, optional, must belong to current user when provided
   }
   ```
 - Creates a quiz attempt linked to the owned study session.
-- Stores `passageId` when provided, otherwise stores `null`.
+- Stores `artifactId` when provided, otherwise stores `null`.
 - Returns success envelope:
   ```ts
   {
@@ -24,15 +24,15 @@ Expected `POST /api/quiz-attempt`:
   }
   ```
 - Returns clear errors:
-  - `400` for malformed JSON or invalid request body.
+  - `400` for malformed JSON, invalid request body, or extra fields.
   - `401` for unauthenticated request.
-  - `404` or `400` for missing/not-owned session or passage, depending on project convention.
+  - `404` for missing/not-owned session or artifact.
   - `500` only for unexpected server failures.
 
 Expected `PATCH /api/quiz-attempt`:
 
 - Requires authenticated user.
-- Accepts JSON body:
+- Accepts strictly typed JSON body (`.strict()`):
   ```ts
   {
     attemptId: string; // UUID, must belong to current user
@@ -55,16 +55,18 @@ Expected `PATCH /api/quiz-attempt`:
   }
   ```
 - Returns clear errors:
-  - `400` for malformed JSON, invalid counts, invalid UUIDs, already completed attempt.
+  - `400` for malformed JSON, invalid counts, invalid UUIDs, extra fields, or already completed attempt.
   - `401` for unauthenticated request.
-  - `404` or `400` for missing/not-owned attempt, depending on project convention.
+  - `404` for missing/not-owned attempt.
   - `500` only for unexpected server failures.
 
 Expected client behavior in Study quiz flow:
 
 - First answer creates a study session, then creates a quiz attempt.
 - Final results complete the attempt once.
-- UI should not lose quiz-taking ability when persistence fails, but should expose persistence failure somewhere recoverable if progress tracking matters.
+- UI should not lose quiz-taking ability when persistence fails.
+- Persistence failures must be visible via a non-blocking inline banner with a retry action, allowing the learner to see the error but continue taking the quiz or view their final score.
+- Mid-generation passage switches must retain the generated quiz results in the originating passage's cache instead of discarding them.
 
 ## 2. Current implementation
 
@@ -84,10 +86,10 @@ Current tests:
 
 - `tests/vitest/integration/api/quiz-attempt-route.test.ts`
 
-What `POST /api/quiz-attempt` really does now:
+What `POST /api/quiz-attempt` really does now (OUTDATED - currently uses `passageId`):
 
 - Parses JSON manually.
-- Validates:
+- Validates (not strictly):
   - `studySessionId` is UUID and required.
   - `passageId` is UUID and optional.
 - Calls `getAuthenticatedUser()`.
@@ -107,7 +109,7 @@ What `POST /api/quiz-attempt` really does now:
 What `PATCH /api/quiz-attempt` really does now:
 
 - Parses JSON manually.
-- Validates:
+- Validates (not strictly):
   - `attemptId` is UUID.
   - `correctCount` is nonnegative integer.
   - `incorrectCount` is nonnegative integer.
@@ -136,110 +138,100 @@ What Study UI really does now:
 - If attempt creation fails, `QuizContent` swallows the failure and still shows quiz feedback.
 - `QuizResults` calls `completeQuizAttempt` on mount when `attemptId` exists.
 - If completion fails, `QuizResults` swallows the failure.
+- Switching passage mid-generation discards a valid generation and marks it as an error instead of saving it to the original passage's cache.
+- The `sourceText` and `sourceLine` are included in `QuestionData` but are not rendered in `quiz-content.tsx`.
 
 Current test coverage:
 
-- `POST` success with passage.
-- `POST` success without passage.
+- `POST` success with passage (needs update to artifact).
+- `POST` success without passage (needs update to artifact).
 - `POST` invalid body.
 - `POST` invalid JSON.
-- `POST` missing/not-owned session from query layer.
+- `POST` missing/not-owned session from query layer (currently expecting 400).
 - `PATCH` success with computed accuracy.
 - `PATCH` missing fields.
 - `PATCH` already completed attempt.
-- `PATCH` missing/not-owned attempt.
+- `PATCH` missing/not-owned attempt (currently expecting 400).
 
 ## 3. Gaps
 
 Route-level gaps:
 
 - Authentication errors are not explicitly mapped to `401`.
-  - Current route catches only `z.ZodError` specially.
-  - If `getAuthenticatedUser()` throws auth-required error, current route likely falls into generic `500`.
-- Missing/not-owned resources are returned as `400` because query layer throws `z.ZodError`.
-  - This matches current tests, but it is less precise than `404`.
-  - Keep as-is only if project convention accepts ownership misses as validation errors here.
-- Request schemas are not `.strict()`.
-  - Extra body fields are silently stripped by Zod.
-  - Other routes in this repo often use strict route contracts.
-- Error payload shape is `{ error: string }`, while success is `{ success: true, data }`.
-  - This matches several existing route patterns, but it is not a full success/error envelope symmetry.
+- Missing/not-owned resources are currently returned as `400`. Must be mapped to `404` to match project conventions (e.g., `study-session` route).
+- Request schemas are not `.strict()`. Extra body fields are silently stripped.
+- Data model still uses `passageId` instead of `artifactId`, which is incompatible with the new `StudioArtifact` model where multiple quizzes can exist per passage.
 - No explicit test for unauthenticated `POST` or unauthenticated `PATCH`.
 - No explicit test for invalid count sum on `PATCH`.
-- No explicit test for invalid optional `passageId` ownership on `POST`.
+- No explicit test for invalid optional `artifactId` ownership on `POST`.
 - No explicit test that `PATCH` updates the linked `StudySession`.
-  - Unit/integration route mock only checks `completeQuizAttempt` call.
-  - Query-level behavior should be covered separately if not already.
 
 Study UI integration gaps related to this route:
 
-- Quiz attempt creation failure is invisible to learner.
-  - The quiz still works locally, but progress may not persist.
-- Quiz attempt completion failure is invisible to learner.
-  - Final score is visible locally, but progress dashboard may not update.
-- Completion effect can run twice in React Strict Mode if remounted with same `attemptId`.
-  - The server rejects already-completed attempts.
-  - Current UI swallows the second failure, so user probably does not see it.
-  - This is acceptable for learner UX but noisy for logs if it happens often.
-- No UI/component tests prove:
-  - First answer creates attempt.
-  - Final results complete attempt.
-  - Persistence failures keep quiz usable.
-  - Persistence failures are surfaced if we decide they should be visible.
+- Quiz attempt creation uses `passageId` instead of `artifactId`.
+- Quiz attempt creation failure is invisible to the learner (swallowed in `QuizContent`).
+- Quiz attempt completion failure is invisible to the learner (swallowed in `QuizResults`).
+- Double-invocation of the complete effect in React Strict Mode sends already-completed errors. The UI needs to gracefully handle this without showing error banners for benign second calls.
+- Valid quiz generations are lost if the learner switches passages during generation.
+- Missing test coverage for the React components using `NextIntlClientProvider` + real `en.json` messages.
 
 ## 4. Implementation plan
 
-Minimal route hardening:
+Route hardening and Schema Migration (Phase 1):
 
-1. Add explicit auth-error handling in `src/app/api/quiz-attempt/route.ts`.
-   - Use the same project helper/pattern as other routes: `isAuthenticationRequiredError`.
+1. **Migrate Database:** Update `QuizAttempt` to use `artifactId` instead of `passageId`. Add a migration to drop `passageId` and add `artifactId` (UUID, nullable) as an FK to `StudioArtifact`. Update the ERD and Data Dictionary.
+2. Add explicit auth-error handling in `src/app/api/quiz-attempt/route.ts`.
+   - Use `isAuthenticationRequiredError`.
    - Return `401` with `{ error: "Authentication required." }`.
-
-2. Decide resource-miss status convention.
-   - Conservative option: keep current `400` behavior because tests already expect it.
-   - Cleaner option: introduce typed ownership/resource errors and return `404`.
-   - For issue #69, keep `400` unless there is a broader API contract cleanup.
-
-3. Make request schemas strict.
-   - `quizAttemptPostSchema.strict()`
-   - `quizAttemptPatchSchema.strict()`
-   - Update tests if error messages change.
-
-4. Add missing route tests.
-   - Unauthenticated `POST` returns `401`.
-   - Unauthenticated `PATCH` returns `401`.
-   - `PATCH` rejects mismatched counts.
-   - `POST` rejects not-owned passage.
-
-5. Add query tests for DB side effects if not already present.
+3. Introduce typed ownership/resource error mapping.
+   - Use `isOwnershipMissError` to catch missing/not-owned resources and map them to `404`. Update to use `artifact` instead of `passage`.
+4. Make request schemas strict and update fields.
+   - Change `passageId` to `artifactId` in `quizAttemptPostSchema`.
+   - Apply `.strict()` to `quizAttemptPostSchema` and `quizAttemptPatchSchema`.
+5. Add and update route tests.
+   - Assert `404` for missing/not-owned resources instead of `400`.
+   - Test unauthenticated `POST` and `PATCH` return `401`.
+   - Test `PATCH` rejects mismatched counts.
+   - Test `POST` rejects not-owned artifact.
+6. Add query tests for DB side effects if not already present.
+   - `createQuizAttempt` requires owned study session and optionally an owned artifact.
    - `completeQuizAttempt` updates `QuizAttempt`.
    - `completeQuizAttempt` updates linked `StudySession`.
    - Already-completed attempt is rejected.
    - Not-owned attempt is rejected.
 
-Study UI follow-up for issue #69:
+Study UI UX completion (Phase 2):
 
-6. Decide whether persistence failures should be visible.
-   - If yes: add local persistence error state in `QuizContent` / `QuizResults`.
-   - If no: document as graceful degradation and keep route tests as proof.
+7. Render the source quote (`sourceText`, `sourceLine`) in `quiz-content.tsx` inside the feedback block.
+8. Surface persistence failures.
+   - Update `QuizContent` to use `artifactId` in the client call: `createQuizAttemptForArtifact(artifactId)`.
+   - Add inline banner + Retry button in `QuizContent` for attempt-create failures.
+   - Add inline banner + Retry button in `QuizResults` for attempt-complete failures.
+   - Ensure the UI remains non-blocking (quiz stays usable, score card stays visible).
+   - Ignore benign React Strict Mode double-invoke "already completed" errors.
+9. Fix the passage-switch race condition.
+   - In `use-study-actions.ts`, keep the generated quiz result in its originating passage's cache instead of changing its status to `"error"`.
 
-7. Add component tests around the current client helper usage.
-   - First checked answer calls `createQuizAttemptForPassage(passageId)`.
-   - Completed quiz calls `completeQuizAttempt`.
-   - Failure does not block answer feedback or final score.
+Test coverage (Phase 3):
+
+10. Add component tests around the current client helper usage.
+    - First checked answer calls `createQuizAttemptForArtifact`.
+    - Completed quiz calls `completeQuizAttempt`.
+    - Failure shows banner but does not block answer feedback or final score.
+    - Use a reusable test render helper with `NextIntlClientProvider` and `en.json` messages.
 
 ## 5. Test plan
 
 Route tests:
 
 - `POST /api/quiz-attempt`
-  - Creates attempt with `studySessionId` and `passageId`.
-  - Creates attempt with `studySessionId` only and returns `passageId: null`.
+  - Creates attempt with `studySessionId` and `artifactId`.
+  - Creates attempt with `studySessionId` only and returns `artifactId: null`.
   - Rejects invalid JSON with `400`.
   - Rejects invalid `studySessionId` with `400`.
-  - Rejects invalid `passageId` with `400`.
-  - Rejects not-owned/missing study session.
-  - Rejects not-owned/missing passage.
+  - Rejects invalid `artifactId` with `400`.
+  - Rejects not-owned/missing study session with `404`.
+  - Rejects not-owned/missing artifact with `404`.
   - Rejects unauthenticated request with `401`.
 
 - `PATCH /api/quiz-attempt`
@@ -250,15 +242,15 @@ Route tests:
   - Rejects negative counts with `400`.
   - Rejects `correctCount + incorrectCount !== totalQuestions` with `400`.
   - Rejects already-completed attempt.
-  - Rejects not-owned/missing attempt.
+  - Rejects not-owned/missing attempt with `404`.
   - Rejects unauthenticated request with `401`.
 
 Query tests:
 
 - `createQuizAttempt`
   - Requires owned study session.
-  - Requires owned passage when `passageId` is provided.
-  - Stores `passageId: null` when omitted.
+  - Requires owned artifact when `artifactId` is provided.
+  - Stores `artifactId: null` when omitted.
 
 - `completeQuizAttempt`
   - Updates quiz attempt counts, accuracy, and `completedAt`.
@@ -268,29 +260,35 @@ Query tests:
 
 Study UI tests:
 
-- First answer creates a study session and quiz attempt through `createQuizAttemptForPassage`.
+- Component test infrastructure leverages `NextIntlClientProvider` + `en.json` messages.
+- First answer creates a study session and quiz attempt.
 - Final score renders after all questions answered.
-- `QuizResults` calls `completeQuizAttempt` once per completed attempt in the expected render path.
-- Attempt creation failure still allows answer feedback.
-- Attempt completion failure still leaves final score visible.
+- `QuizResults` calls `completeQuizAttempt` once per completed attempt.
+- Attempt creation failure shows an inline retry banner but allows continuing.
+- Attempt completion failure shows an inline retry banner but leaves the score visible.
+- Race conditions during generation correctly populate the original passage cache.
 
 Suggested commands:
 
 ```bash
+pnpm run db:generate
+pnpm run typecheck
+pnpm run lint
 pnpm exec vitest tests/vitest/integration/api/quiz-attempt-route.test.ts --config tests/vitest/vitest.config.ts
 pnpm run test
-pnpm run typecheck
 ```
 
 ## 6. Acceptance criteria
 
+- `QuizAttempt` database schema migrated to use `artifactId` (FK to `StudioArtifact`) instead of `passageId`.
 - `POST /api/quiz-attempt` creates attempts only for authenticated users and owned study sessions.
-- `POST /api/quiz-attempt` rejects malformed JSON, invalid UUIDs, missing/not-owned study sessions, and missing/not-owned passages.
+- `POST /api/quiz-attempt` rejects malformed JSON, invalid UUIDs, missing/not-owned study sessions (`404`), and missing/not-owned artifacts (`404`).
 - `PATCH /api/quiz-attempt` completes attempts only for authenticated users and owned attempts.
 - `PATCH /api/quiz-attempt` validates count math before writing.
 - `PATCH /api/quiz-attempt` updates both `QuizAttempt` and linked `StudySession`.
 - Already-completed attempts cannot be completed again as a successful write.
 - Auth failures return `401`, not `500`.
-- Tests cover success, validation errors, auth errors, ownership misses, and already-completed attempts.
-- Study quiz UI can still show learner results even if attempt persistence fails.
-- If persistence failure visibility is in scope for issue #69, the learner sees a recoverable message instead of silent failure.
+- Ownership/not-owned resource errors map to `404` using `isOwnershipMissError`.
+- Persistence failures display inline banners with Retry without blocking UI interactions.
+- Passage switching during quiz generation does not throw away valid artifacts.
+- Tests cover success, validation errors, auth errors, ownership misses, already-completed attempts, and React UI components.

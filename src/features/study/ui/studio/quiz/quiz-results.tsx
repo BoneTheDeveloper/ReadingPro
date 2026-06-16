@@ -1,8 +1,8 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
 import { useTranslations } from "next-intl"
-import { Trophy } from "lucide-react"
+import { Trophy, AlertCircle, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { completeQuizAttempt } from "@/features/study/api/quiz-attempt-client"
@@ -25,16 +25,38 @@ export function QuizResults({
   onNewPassage,
 }: QuizResultsProps) {
   const t = useTranslations("Study")
+  const [attemptError, setAttemptError] = useState<string | null>(null)
+  const isCompletingRef = useRef(false)
+
+  const completeAttempt = useCallback(async () => {
+    if (!attemptId || isCompletingRef.current) return
+    isCompletingRef.current = true;
+    
+    try {
+      const result = await completeQuizAttempt({
+        attemptId,
+        correctCount,
+        incorrectCount: totalQuestions - correctCount,
+        totalQuestions,
+      })
+      if ("error" in result) {
+         if (!result.error.toLowerCase().includes("already completed")) {
+           setAttemptError(result.error)
+         }
+      } else {
+        setAttemptError(null)
+      }
+    } catch (err) {
+      setAttemptError(err instanceof Error ? err.message : t("attemptSaveFailed"));
+    } finally {
+      isCompletingRef.current = false;
+    }
+  }, [attemptId, correctCount, totalQuestions, t])
 
   useEffect(() => {
-    if (!attemptId) return
-    completeQuizAttempt({
-      attemptId,
-      correctCount,
-      incorrectCount: totalQuestions - correctCount,
-      totalQuestions,
-    }).catch(() => {})
-  }, [attemptId]) // eslint-disable-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    completeAttempt();
+  }, [completeAttempt])
 
   const accuracy = Math.round((correctCount / totalQuestions) * 100)
   const message =
@@ -45,8 +67,20 @@ export function QuizResults({
         : t("keepPracticing")
 
   return (
-    <div className="bg-surface rounded-xl shadow-sm border border-border p-6 flex items-center justify-center flex-1 min-h-75">
-      <div className="text-center max-w-sm">
+    <div className="bg-surface rounded-xl shadow-sm border border-border flex items-center justify-center flex-1 min-h-75 relative overflow-hidden">
+       {attemptError && (
+        <div className="absolute top-0 left-0 right-0 bg-danger-soft/90 border-b border-danger/20 p-2.5 px-4 flex items-center justify-between z-10 animate-in slide-in-from-top-2">
+          <div className="flex items-center gap-2 text-danger text-sm font-medium">
+            <AlertCircle className="w-4 h-4" />
+            <span>{t("attemptSaveFailed")}</span>
+          </div>
+          <Button variant="ghost" size="sm" onClick={completeAttempt} className="h-7 px-2.5 text-xs text-danger hover:bg-danger/10 hover:text-danger">
+            <RefreshCw className="w-3.5 h-3.5 mr-1" />
+            {t("retry")}
+          </Button>
+        </div>
+      )}
+      <div className="text-center max-w-sm p-6 pt-12 pb-6">
         <div className="w-16 h-16 bg-gold-soft rounded-2xl flex items-center justify-center mx-auto mb-5">
           <Trophy className="w-8 h-8 text-gold" />
         </div>

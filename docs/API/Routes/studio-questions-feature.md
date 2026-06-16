@@ -1,4 +1,4 @@
-# Study Questions API Feature
+# Studio Questions API Feature
 
 ## Purpose
 
@@ -8,7 +8,7 @@ Generate and persist comprehension questions for a passage owned by the authenti
 
 | Method | Path | Purpose |
 |--------|------|---------|
-| `POST` | `/api/study-questions` | Generate a fresh quiz question set for a passage. |
+| `POST` | `/api/studio-questions` | Generate a fresh quiz question set for a passage. |
 
 ## Auth And Ownership Rules
 
@@ -77,13 +77,13 @@ Error:
 
 ## Implementation References
 
-- Route: `src/app/api/study-questions/route.ts`
+- Route: `src/app/api/studio-questions/route.ts`
 - Service: `src/lib/study/passage/passage-study.service.ts`
 - Shared schema: `src/lib/study/shared/study-response-schema.ts`
-- Client API helper: `src/features/study/api/study-api.ts`
+- Client API helper: `src/features/study/api/studio-questions-client.ts`
 
 ## Tests Or Verification Notes
 
-- Contract tests: `tests/vitest/integration/api/study-questions-route.test.ts`
+- Contract tests: `tests/vitest/integration/api/studio-questions-route.test.ts`
 - Study page integration: `tests/vitest/integration/components/study/study-page-client.integration.test.tsx`
-- Hook behavior: `src/features/study/model/use-study-actions.test.ts`
+- Hook behavior: `src/features/study/hooks/use-study-actions.test.ts`

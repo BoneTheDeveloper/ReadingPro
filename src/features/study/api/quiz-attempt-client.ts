@@ -4,7 +4,7 @@ import {
 import { STUDY_API_ROUTES, postJson, patchJson, type StudyApiResult } from "./api-utils";
 import { ensureStudySession } from "./study-session-client";
 
-export async function createQuizAttemptForPassage(passageId: string): Promise<StudyApiResult<{
+export async function createQuizAttemptForArtifact(artifactId: string): Promise<StudyApiResult<{
   sessionId: string;
   attemptId: string;
 }>> {
@@ -13,7 +13,7 @@ export async function createQuizAttemptForPassage(passageId: string): Promise<St
 
   const attemptPayload = await postJson(
     STUDY_API_ROUTES.quizAttempt,
-    { studySessionId: sessionPayload.sessionId, passageId },
+    { studySessionId: sessionPayload.sessionId, artifactId },
     quizAttemptResponseSchema,
   );
   if ("error" in attemptPayload) return { error: attemptPayload.error };

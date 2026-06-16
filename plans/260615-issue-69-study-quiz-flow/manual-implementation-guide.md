@@ -18,7 +18,7 @@ then move on. Line anchors are approximate; confirm before editing.
 
 [Answer questions]                              ui/studio/quiz/quiz-content.tsx        <-- FOCUS 2 + 3
    -> first checked answer: handleCheckAnswer   quiz-content.tsx:45
-   -> createQuizAttemptForPassage(passageId)    api/quiz-attempt-client.ts:7
+   -> createQuizAttemptForArtifact(artifactId)    api/quiz-attempt-client.ts:7
        -> POST /api/study-session               app/api/study-session/route.ts
        -> POST /api/quiz-attempt                 app/api/quiz-attempt/route.ts          <-- FOCUS 1
            -> createQuizAttempt()                lib/db/quiz-attempt-queries.ts:4
@@ -81,7 +81,7 @@ Decision: **inline banner + Retry** (non-blocking; quiz stays usable; score stay
 | 3c | `localization/messages/en.json` + `vi.json` | add `Study` keys: e.g. `attemptSaveFailed`, `retry`, `source` |
 
 - 3a: add `attemptError` state; set on `{error}` / throw; render dismissible inline banner with a
-  Retry that re-calls `createQuizAttemptForPassage`. Never block answer feedback.
+  Retry that re-calls `createQuizAttemptForArtifact`. Never block answer feedback.
 - 3b: capture the rejection into state; show inline recoverable message + Retry; **keep the score
   card always visible**. Ignore the benign "already completed" rejection (Strict-Mode double-call).
 **Verify:** simulate offline → message appears, quiz/score still work; Retry succeeds when back online.

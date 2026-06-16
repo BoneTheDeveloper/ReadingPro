@@ -20,17 +20,16 @@ Complete GitHub issue #69 (Core Study Loop, P1): make quiz generation and quiz-t
 reliable learner action in the Study workspace. Much of #69 already exists in code
 (generation running/completed/failed states, duplicate-generation lock, keyboard answer flow,
 per-passage result caching). This plan closes the **real remaining gaps**: (1) harden the
-`quiz-attempt` persistence API to match the sibling `study-session` route, (2) surface
+`quiz-attempt` persistence API and migrate it to use `artifactId` instead of `passageId` to align with the new `StudioArtifact` model, (2) surface
 persistence failures and render the source quote in the quiz UI, fix the passage-switch
 race so a valid generation is not discarded, and (3) add the missing test coverage.
 
 Scope decisions (confirmed with user):
 - Full issue #69 scope (not just the route slice the existing note covers).
 - Ownership/not-owned misses on the quiz-attempt route return **404**, matching `study-session`.
+- `QuizAttempt` schema must be migrated from `passageId` to `artifactId` to correctly track which artifact the attempt corresponds to.
 
-Reference note: `implement-notes/260612-2038-implement-quiz-attempt-route.md` — accurate for the
-API slice (~Phase 1) but silent on UX gaps and downgrades the issue's mandatory error visibility
-to an open question. Use it as input to Phase 1 only.
+Reference note: `implement-notes/260612-2038-implement-quiz-attempt-route.md` — updated to reflect the `artifactId` migration.
 
 ## Already implemented (verify, do not rebuild)
 

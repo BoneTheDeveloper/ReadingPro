@@ -2,12 +2,12 @@ import { fireEvent, screen, waitFor } from "@testing-library/react";
 import * as Sentry from "@sentry/nextjs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { StudyPageClient } from "@/features/study/ui/study-workspace-client";
-import { generateStudyQuestions } from "@/features/study/api/study-questions-client";
+import { generateStudioQuestions } from "@/features/study/api/studio-questions-client";
 import { studySimplifyAction } from "@/features/study/actions/study-simplify-action";
 import {
-  studyCreateArtifactAction,
-  studyCompleteArtifactAction,
-} from "@/features/study/actions/study-artifact-actions";
+  studioCreateArtifactAction,
+  studioCompleteArtifactAction,
+} from "@/features/study/actions/studio-artifact-actions";
 import { studyUploadAction } from "@/features/study/actions/study-upload-action";
 import { extractSelectionInfo } from "@/features/study/model/selection-utils";
 
@@ -97,19 +97,19 @@ vi.mock("react-dropzone", () => ({
   }),
 }));
 
-vi.mock("@/features/study/api/study-questions-client", () => ({
-  generateStudyQuestions: vi.fn(),
+vi.mock("@/features/study/api/studio-questions-client", () => ({
+  generateStudioQuestions: vi.fn(),
 }));
 
 vi.mock("@/features/study/actions/study-simplify-action", () => ({
   studySimplifyAction: vi.fn(),
 }));
 
-vi.mock("@/features/study/actions/study-artifact-actions", () => ({
-  studyCreateArtifactAction: vi.fn(),
-  studyCompleteArtifactAction: vi.fn(),
-  studyFailArtifactAction: vi.fn(),
-  studyLoadArtifactDetailAction: vi.fn(),
+vi.mock("@/features/study/actions/studio-artifact-actions", () => ({
+  studioCreateArtifactAction: vi.fn(),
+  studioCompleteArtifactAction: vi.fn(),
+  studioFailArtifactAction: vi.fn(),
+  studioLoadArtifactDetailAction: vi.fn(),
 }));
 
 vi.mock("@/features/study/actions/study-upload-action", () => ({
@@ -147,7 +147,7 @@ describe("StudyPageClient", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.spyOn(crypto, "randomUUID").mockReturnValue("result-test-1");
-    vi.mocked(studyCreateArtifactAction).mockImplementation(async (input) => ({
+    vi.mocked(studioCreateArtifactAction).mockImplementation(async (input) => ({
       id: input.id,
       type: input.type,
       passageId: input.passageId,
@@ -155,7 +155,7 @@ describe("StudyPageClient", () => {
       status: "generating",
       createdAt: new Date().toISOString(),
     }));
-    vi.mocked(studyCompleteArtifactAction).mockResolvedValue({ ok: true });
+    vi.mocked(studioCompleteArtifactAction).mockResolvedValue({ ok: true });
     useChatState.messages = [];
     vi.stubGlobal(
       "fetch",
@@ -330,7 +330,7 @@ describe("StudyPageClient", () => {
   it("generates quiz results and opens result detail", async () => {
     const passage = createStudyPassage();
     const question = createStudyQuestion();
-    vi.mocked(generateStudyQuestions).mockResolvedValue({
+    vi.mocked(generateStudioQuestions).mockResolvedValue({
       questions: [question],
     });
     const { user } = renderWithUser(
@@ -341,7 +341,7 @@ describe("StudyPageClient", () => {
     await user.click(screen.getByRole("button", { name: "Quiz" }));
 
     await waitFor(() =>
-      expect(generateStudyQuestions).toHaveBeenCalledWith({
+      expect(generateStudioQuestions).toHaveBeenCalledWith({
         passageId: passage.id,
         artifactId: expect.any(String),
       }),

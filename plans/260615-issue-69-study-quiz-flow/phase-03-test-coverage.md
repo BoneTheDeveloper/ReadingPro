@@ -26,7 +26,7 @@ graceful degradation. Tests verify the FINAL Phase 1 + Phase 2 code.
 
 - Route + query tests: extend existing `tests/vitest/integration/api/quiz-attempt-route.test.ts`
   (already mocks `getAuthenticatedUser`, `createQuizAttempt`, `completeQuizAttempt`, and defines an
-  `AuthenticationRequiredError`). Use the established fixtures/helpers.
+  `AuthenticationRequiredError`). Use the established fixtures/helpers. Update the tests to use `artifactId` instead of `passageId`.
 - UI tests: component tests for `quiz-content` / `quiz-results` and a hook test for
   `use-study-actions` (co-locate next to existing `*.test.ts` in `src/features/study/...`).
 - These are the repo's FIRST `.test.tsx` component tests. <!-- Updated: Validation Session 1 -->
@@ -39,14 +39,14 @@ graceful degradation. Tests verify the FINAL Phase 1 + Phase 2 code.
 - Modify: `tests/vitest/integration/api/quiz-attempt-route.test.ts`
   - Update ownership-miss expectations from `400` to `404` (Phase 1).
   - Add: unauthenticated `POST` -> 401, unauthenticated `PATCH` -> 401, count-mismatch `PATCH` -> 400,
-    not-owned `passageId` on `POST` -> 404, unknown-key rejection (strict) -> 400.
+    not-owned `artifactId` on `POST` -> 404, unknown-key rejection (strict) -> 400.
 - Create/extend: query tests for `createQuizAttempt` / `completeQuizAttempt`
-  - `createQuizAttempt` requires owned session, requires owned passage when provided, stores
-    `passageId:null` when omitted.
+  - `createQuizAttempt` requires owned session, requires owned artifact when provided, stores
+    `artifactId:null` when omitted.
   - `completeQuizAttempt` updates `QuizAttempt` AND linked `StudySession`, computes accuracy,
     rejects already-completed, rejects not-owned.
 - Create: `src/features/study/ui/studio/quiz/quiz-content.test.tsx`
-  - First checked answer triggers `createQuizAttemptForPassage(passageId)`.
+  - First checked answer triggers `createQuizAttemptForArtifact(artifactId)`.
   - Keyboard: keys 1-4 select, Enter checks then advances, Backspace goes back.
   - Source quote renders after answering.
   - Attempt-create failure still allows feedback + reaching results; failure message shown.
@@ -62,17 +62,17 @@ graceful degradation. Tests verify the FINAL Phase 1 + Phase 2 code.
 
 0. Add `tests/vitest/helpers/render-with-intl.tsx` wrapping RTL `render` in `NextIntlClientProvider`
    with `en.json` messages (reusable for all component tests).
-1. Update route test ownership expectations to 404; add the new route cases listed above.
+1. Update route test ownership expectations to 404; add the new route cases listed above and change `passageId` to `artifactId`.
 2. Add query-layer tests for DB side effects (mock `db` / Prisma client per existing patterns).
 3. Write `quiz-content.test.tsx` (mock `quiz-attempt-client`); cover answer, keyboard, source quote,
-   failure-still-usable.
+   failure-still-usable. Use `artifactId`.
 4. Write `quiz-results.test.tsx`; cover complete-once and failure-visible-score.
 5. Extend `use-study-actions.test.ts` with the three generation scenarios incl. the race.
 6. Run targeted file, then full suite + typecheck + lint; fix until green.
 
 ## Success Criteria
 
-- [ ] Route tests cover success, 400, 401, 404, already-completed, strict-key rejection.
+- [ ] Route tests cover success, 400, 401, 404, already-completed, strict-key rejection with `artifactId`.
 - [ ] Query tests prove `StudySession` is updated alongside `QuizAttempt`.
 - [ ] Component tests prove keyboard flow, source quote, and persistence-failure graceful degradation.
 - [ ] Hook test proves generation success/error and passage-switch race behavior.

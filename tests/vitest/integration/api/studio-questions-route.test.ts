@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { POST as generateQuestionsRoute } from "@/app/api/study-questions/route";
+import { POST as generateQuestionsRoute } from "@/app/api/studio-questions/route";
 import {
   generatedStudyQuestionsSuccessResponseSchema,
 } from "@/lib/study/shared/study-response-schema";
@@ -66,7 +66,7 @@ beforeEach(() => {
   routeMocks.getAuthenticatedUser.mockResolvedValue(userProfileFixture);
 });
 
-describe("POST /api/study-questions", () => {
+describe("POST /api/studio-questions", () => {
   it("generates questions for the authenticated user's passage", async () => {
     routeMocks.generateQuestionsForPassage.mockResolvedValue([generatedQuestion]);
 
@@ -91,7 +91,7 @@ describe("POST /api/study-questions", () => {
   it("rejects malformed and invalid bodies before generation", async () => {
     await expectJsonError(
       await generateQuestionsRoute(
-        new NextRequest("https://english-reading.test/api/study-questions", {
+        new NextRequest("https://english-reading.test/api/studio-questions", {
           method: "POST",
           body: "{",
         }),
@@ -176,7 +176,7 @@ describe("POST /api/study-questions", () => {
       "Question generation failed — try again",
     );
     expect(Sentry.captureException).toHaveBeenCalledWith(error, {
-      tags: { route: "api:study-questions", method: "POST" },
+      tags: { route: "api:studio-questions", method: "POST" },
     });
   });
 });

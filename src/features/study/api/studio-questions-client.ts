@@ -2,7 +2,7 @@ import { generatedStudyQuestionsResponseSchema } from "@/lib/study/shared/study-
 import type { QuestionData } from "@/features/study/model/types";
 import { STUDY_API_ROUTES, postJson, type StudyApiResult } from "./api-utils";
 
-export async function generateStudyQuestions(input: {
+export async function generateStudioQuestions(input: {
   passageId: string;
   artifactId: string;
 }): Promise<StudyApiResult<{ questions: QuestionData[] }>> {

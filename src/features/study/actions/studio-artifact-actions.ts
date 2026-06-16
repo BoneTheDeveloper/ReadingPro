@@ -13,17 +13,17 @@ import type { QuestionData } from '@/features/study/model/types';
 import { db } from '@/lib/db/client';
 import { getAuthenticatedUser } from './study-shared';
 
-const log = createModuleLogger('actions:study-artifact');
+const log = createModuleLogger('actions:studio-artifact');
 
 type ActionResult<T> = T | { error: string };
 
-export async function studyCreateArtifactAction(input: {
+export async function studioCreateArtifactAction(input: {
   id: string;
   passageId: string;
   type: StudioArtifactType;
   title: string;
 }): Promise<ActionResult<StudioArtifact>> {
-  return Sentry.withServerActionInstrumentation('studyCreateArtifact', { headers: await headers() }, async () => {
+  return Sentry.withServerActionInstrumentation('studioCreateArtifact', { headers: await headers() }, async () => {
     const user = await getAuthenticatedUser();
     try {
       const artifact = await createStudioArtifact({ ...input, userId: user.id });
@@ -36,10 +36,10 @@ export async function studyCreateArtifactAction(input: {
   });
 }
 
-export async function studyCompleteArtifactAction(input: {
+export async function studioCompleteArtifactAction(input: {
   artifactId: string;
 }): Promise<ActionResult<{ ok: true }>> {
-  return Sentry.withServerActionInstrumentation('studyCompleteArtifact', { headers: await headers() }, async () => {
+  return Sentry.withServerActionInstrumentation('studioCompleteArtifact', { headers: await headers() }, async () => {
     const user = await getAuthenticatedUser();
     try {
       await completeStudioArtifact(input.artifactId, user.id);
@@ -51,10 +51,10 @@ export async function studyCompleteArtifactAction(input: {
   });
 }
 
-export async function studyFailArtifactAction(input: {
+export async function studioFailArtifactAction(input: {
   artifactId: string;
 }): Promise<ActionResult<{ ok: true }>> {
-  return Sentry.withServerActionInstrumentation('studyFailArtifact', { headers: await headers() }, async () => {
+  return Sentry.withServerActionInstrumentation('studioFailArtifact', { headers: await headers() }, async () => {
     const user = await getAuthenticatedUser();
     try {
       await failStudioArtifact(input.artifactId, user.id);
@@ -67,12 +67,12 @@ export async function studyFailArtifactAction(input: {
 }
 
 // Loads artifact detail for lazy viewing. Returns content shaped for ArtifactDetailCacheEntry.
-export async function studyLoadArtifactDetailAction(input: {
+export async function studioLoadArtifactDetailAction(input: {
   artifactId: string;
   type: StudioArtifactType;
   passageId: string;
 }): Promise<ActionResult<{ questions?: QuestionData[]; simplifiedContent?: string | null; simplifiedLevel?: string | null }>> {
-  return Sentry.withServerActionInstrumentation('studyLoadArtifactDetail', { headers: await headers() }, async () => {
+  return Sentry.withServerActionInstrumentation('studioLoadArtifactDetail', { headers: await headers() }, async () => {
     try {
       if (input.type === 'quiz') {
         const questions = await db.question.findMany({
