@@ -11,7 +11,6 @@ import {
 } from "@/shared/translation/translation-response-schema"
 import type {
   DictionaryEntryDto,
-  DictionarySuggestItemDto,
   DictionarySenseDto,
 } from "@/shared/dictionary/dictionary-dtos"
 
