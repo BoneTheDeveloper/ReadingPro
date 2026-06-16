@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { Prisma } from '@/generated/prisma/client';
 import type { CEFRLevel } from '../domain/cefr';
 import { db } from './client';
 
@@ -97,7 +98,7 @@ export async function createQuestion(
   if (!result.success) {
     throw new Error(`Invalid question data: ${result.error.issues.map(i => i.message).join(', ')}`);
   }
-  return db.question.create({ data: data as any });
+  return db.question.create({ data: data as unknown as Prisma.QuestionUncheckedCreateInput });
 }
 
 export async function deletePassage(passageId: string, userId: string) {
