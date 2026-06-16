@@ -13,6 +13,12 @@ function toStudioArtifact(row: {
   status: string;
   createdAt: Date;
   updatedAt: Date;
+  quizResult?: {
+    completedAt: Date;
+    correctCount: number;
+    totalQuestions: number;
+    accuracyRate: number;
+  } | null;
 }): StudioArtifact {
   return {
     id: row.id,
@@ -22,6 +28,12 @@ function toStudioArtifact(row: {
     status: row.status as StudioArtifact["status"],
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
+    quizResult: row.quizResult ? {
+      completedAt: row.quizResult.completedAt.toISOString(),
+      correctCount: row.quizResult.correctCount,
+      totalQuestions: row.quizResult.totalQuestions,
+      accuracyRate: row.quizResult.accuracyRate,
+    } : undefined,
   };
 }
 
@@ -32,7 +44,7 @@ export async function fetchStudioArtifacts(
   const rows = await db.studioArtifact.findMany({
     where: { passageId, userId },
     orderBy: { createdAt: "desc" },
-    select: { id: true, type: true, passageId: true, title: true, status: true, createdAt: true, updatedAt: true },
+    include: { quizResult: true },
   });
 
   // Reconcile orphaned generations: a "generating" row only leaves that state via
@@ -74,7 +86,7 @@ export async function createStudioArtifact(input: {
       title: input.title,
       status: "generating",
     },
-    select: { id: true, type: true, passageId: true, title: true, status: true, createdAt: true, updatedAt: true },
+    include: { quizResult: true },
   });
   return toStudioArtifact(row);
 }
@@ -93,5 +105,61 @@ export async function failStudioArtifact(artifactId: string, userId: string): Pr
   await db.studioArtifact.updateMany({
     where: { id: artifactId, userId },
     data: { status: "failed" },
+  });
+}
+
+export async function recordQuizResult(
+  artifactId: string,
+  userId: string,
+  stats: { correctCount: number; totalQuestions: number },
+): Promise<void> {
+  // Accuracy Rate: round to 2 decimal places (e.g. 0.85)
+  const accuracyRate = stats.totalQuestions > 0
+    ? Math.round((stats.correctCount / stats.totalQuestions) * 100) / 100
+    : 0;
+
+  // We enforce ownership via the parent StudioArtifact.
+  const artifact = await db.studioArtifact.findUnique({
+    where: { id: artifactId, userId },
+    select: { id: true },
+  });
+
+  if (!artifact) {
+    throw new Error("Artifact not found or access denied");
+  }
+
+  await db.quizResult.upsert({
+    where: { artifactId },
+    create: {
+      artifactId,
+      correctCount: stats.correctCount,
+      totalQuestions: stats.totalQuestions,
+      accuracyRate,
+    },
+    update: {
+      correctCount: stats.correctCount,
+      totalQuestions: stats.totalQuestions,
+      accuracyRate,
+      completedAt: new Date(),
+    },
+  });
+}
+
+export async function resetQuizResult(
+  artifactId: string,
+  userId: string,
+): Promise<void> {
+  // We enforce ownership via the parent StudioArtifact.
+  const artifact = await db.studioArtifact.findUnique({
+    where: { id: artifactId, userId },
+    select: { id: true },
+  });
+
+  if (!artifact) {
+    throw new Error("Artifact not found or access denied");
+  }
+
+  await db.quizResult.deleteMany({
+    where: { artifactId },
   });
 }

@@ -12,6 +12,7 @@ import {
   Layers,
   HelpCircle,
   PanelRight,
+  RefreshCw,
 } from "lucide-react";
 import { cn } from "@/lib/shared/utils";
 import { Card, CardContent } from "@/components/ui/card";
@@ -29,6 +30,7 @@ import type {
 import { QuizContent } from "./quiz/quiz-content";
 import { StudyChatPanel } from "./chat/chat-panel";
 import { StudyTranslatePanel } from "./translate/translate-panel";
+import { studioResetQuizResultAction } from "@/features/study/actions/studio-artifact-actions";
 
 interface StudyStudioPanelProps {
   artifactsCache: ArtifactsCacheEntry;
@@ -46,6 +48,8 @@ interface StudyStudioPanelProps {
   onSetViewingTranslate: (viewing: boolean) => void;
   onSaveVocabulary: () => void;
   vocabularySaved: boolean;
+  onRecordQuizResult: (artifactId: string, stats: { correctCount: number; totalQuestions: number }) => void;
+  onResetQuizResult: (artifactId: string) => void;
 }
 
 const studioActions: {
@@ -116,6 +120,8 @@ export function StudyStudioPanel({
   onSetViewingTranslate,
   onSaveVocabulary,
   vocabularySaved,
+  onRecordQuizResult,
+  onResetQuizResult,
 }: StudyStudioPanelProps) {
   const t = useTranslations("Study");
   const [viewingChat, setViewingChat] = useState(false);
@@ -223,6 +229,8 @@ export function StudyStudioPanel({
                 passageTitle={viewingArtifact.title}
                 artifactId={viewingArtifact.id}
                 onReset={() => onSetViewingArtifact(null)}
+                onRecordResult={(stats) => onRecordQuizResult(viewingArtifact.id, stats)}
+                onResetResult={() => onResetQuizResult(viewingArtifact.id)}
               />
             )}
           </div>
@@ -425,45 +433,77 @@ export function StudyStudioPanel({
                 };
                 const Icon = meta.icon;
                 const label = t(meta.labelKey);
+                const hasResult = artifact.type === "quiz" && artifact.quizResult;
+
                 return (
-                  <Button
-                    key={artifact.id}
-                    variant="ghost"
-                    onClick={() =>
-                      artifact.status === "done" && onSetViewingArtifact({ type: artifact.type, id: artifact.id })
-                    }
-                    disabled={artifact.status !== "done"}
-                    className={cn(
-                      "w-full flex items-center gap-3 px-3 py-2.5 h-auto text-left",
-                      artifact.status === "generating" &&
-                        "bg-primary/5 border border-primary/15",
-                      artifact.status === "done" &&
-                        "hover:bg-muted cursor-pointer",
-                      artifact.status === "failed" &&
-                        "bg-destructive/5 border border-destructive/15 opacity-60",
+                  <div key={artifact.id} className="group relative">
+                    <Button
+                      variant="ghost"
+                      onClick={() =>
+                        artifact.status === "done" && onSetViewingArtifact({ type: artifact.type, id: artifact.id })
+                      }
+                      disabled={artifact.status !== "done"}
+                      className={cn(
+                        "w-full flex items-center gap-3 px-3 py-2.5 h-auto text-left",
+                        artifact.status === "generating" &&
+                          "bg-primary/5 border border-primary/15",
+                        artifact.status === "done" &&
+                          "hover:bg-muted cursor-pointer",
+                        artifact.status === "failed" &&
+                          "bg-destructive/5 border border-destructive/15 opacity-60",
+                      )}
+                    >
+                      {artifact.status === "generating" ? (
+                        <Loader2 className="w-4 h-4 text-primary animate-spin shrink-0" />
+                      ) : (
+                        <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[13px] font-medium text-foreground truncate">
+                          {t("resultTitle", { type: label, title: artifact.title })}
+                        </p>
+                        <div className="flex items-center justify-between">
+                          <p className="text-[11px] text-muted-foreground">
+                            {artifact.status === "generating"
+                              ? t("generating")
+                              : artifact.status === "failed"
+                                ? t("failed")
+                                : formatRelativeTime(
+                                    artifact.updatedAt ?? artifact.createdAt,
+                                    t,
+                                  )}
+                          </p>
+                          {hasResult && (
+                            <span className="text-[11px] font-semibold text-success bg-success-soft px-1.5 py-0.5 rounded">
+                              {artifact.quizResult!.correctCount}/{artifact.quizResult!.totalQuestions} · {Math.round(artifact.quizResult!.accuracyRate * 100)}%
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </Button>
+                    
+                    {hasResult && artifact.status === "done" && (
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 bg-surface shadow-sm border border-border"
+                          title={t("retry")}
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            try {
+                              await studioResetQuizResultAction({ artifactId: artifact.id });
+                              onResetQuizResult(artifact.id);
+                            } catch (err) {
+                              console.error("Failed to reset quiz result", err);
+                            }
+                          }}
+                        >
+                          <RefreshCw className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
                     )}
-                  >
-                    {artifact.status === "generating" ? (
-                      <Loader2 className="w-4 h-4 text-primary animate-spin shrink-0" />
-                    ) : (
-                      <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[13px] font-medium text-foreground truncate">
-                        {t("resultTitle", { type: label, title: artifact.title })}
-                      </p>
-                      <p className="text-[11px] text-muted-foreground">
-                        {artifact.status === "generating"
-                          ? t("generating")
-                          : artifact.status === "failed"
-                            ? t("failed")
-                            : formatRelativeTime(
-                                artifact.updatedAt ?? artifact.createdAt,
-                                t,
-                              )}
-                      </p>
-                    </div>
-                  </Button>
+                  </div>
                 );
               })}
             </div>

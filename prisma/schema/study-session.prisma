@@ -9,31 +9,8 @@ model StudySession {
   lastActivityAt DateTime  @default(now())
   completedAt    DateTime?
 
-  user         UserProfile   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  quizAttempts QuizAttempt[]
+  user UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, startedAt])
   @@map("study_sessions")
-}
-
-model QuizAttempt {
-  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  studySessionId  String    @db.Uuid
-  userId          String
-  passageId       String?   @db.Uuid
-
-  correctCount    Int       @default(0)
-  incorrectCount  Int       @default(0)
-  totalQuestions  Int       @default(0)
-  accuracyRate    Float?
-
-  startedAt       DateTime  @default(now())
-  completedAt     DateTime?
-
-  studySession StudySession @relation(fields: [studySessionId], references: [id], onDelete: Cascade)
-  user         UserProfile  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  passage      Passage?     @relation(fields: [passageId], references: [id], onDelete: SetNull)
-
-  @@index([userId, startedAt])
-  @@map("quiz_attempts")
 }

@@ -1,5 +1,5 @@
 export * from "./article";
-export * from "./flashcard";
+export * from "./study";
 export * from "./user";
 export * from "./ui";
 export * from "./vocabulary";

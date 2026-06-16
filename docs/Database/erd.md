@@ -44,13 +44,6 @@ erDiagram
         string correctOption "UI option ID"
     }
 
-    QuestionReview {
-        uuid id PK "gen_random_uuid()"
-        uuid questionId FK
-        string userId FK
-        int qualityRating
-    }
-
     StudioArtifact {
         uuid id PK "supplied by client"
         uuid passageId FK
@@ -68,17 +61,13 @@ erDiagram
         datetime lastActivityAt
     }
 
-    QuizAttempt {
+    QuizResult {
         uuid id PK "gen_random_uuid()"
-        uuid studySessionId FK
-        string userId FK
-        uuid passageId FK "nullable"
+        uuid artifactId FK "unique"
         int correctCount
-        int incorrectCount
         int totalQuestions
-        float accuracyRate "nullable"
-        datetime startedAt
-        datetime completedAt "nullable"
+        float accuracyRate
+        datetime completedAt
     }
 
     TranslationCache {
@@ -156,23 +145,19 @@ erDiagram
     UserProfile ||--o{ Passage : owns
     UserProfile ||--o{ StudyChatMessage : sends
     UserProfile ||--o{ StudySession : creates
-    UserProfile ||--o{ QuizAttempt : attempts
-    UserProfile ||--o{ QuestionReview : reviews
     UserProfile ||--o{ TranslationCache : caches
     UserProfile ||--o{ TranslationHistory : records
     UserProfile ||--o{ VocabularyItem : saves
     UserProfile ||--o{ FileUploadIntent : authorizes
     UserProfile ||--o{ StudioArtifact : owns
     Passage ||--o{ StudyChatMessage : contains
-    Passage ||--o{ QuizAttempt : has
     Passage ||--o{ Question : contains
     Passage ||--o{ StudioArtifact : contains
     Passage ||--o{ TranslationCache : scopes
     Passage ||--o{ TranslationHistory : scopes
     Passage ||--o{ VocabularyOccurrence : sources
-    StudySession ||--o{ QuizAttempt : contains
-    Question ||--o{ QuestionReview : tracked-by
     StudioArtifact ||--o{ Question : contains
+    StudioArtifact ||--|| QuizResult : has
     VocabularyItem ||--o{ VocabularyOccurrence : occurs-in
     DictionaryEntry ||--o{ DictionarySense : defines
     DictionaryEntry ||--o{ DictionaryAlias : aliases
@@ -193,11 +178,9 @@ erDiagram
 
 | Parent | Children with `ON DELETE CASCADE` |
 |--------|------------------------------------|
-| UserProfile | Passage, StudyChatMessage, QuestionReview, StudySession, QuizAttempt, TranslationCache, TranslationHistory, VocabularyItem, FileUploadIntent, StudioArtifact |
-| Passage | StudyChatMessage, QuizAttempt, Question, TranslationCache, TranslationHistory, StudioArtifact |
-| StudySession | QuizAttempt |
-| Question | QuestionReview |
-| StudioArtifact | Question |
+| UserProfile | Passage, StudyChatMessage, StudySession, TranslationCache, TranslationHistory, VocabularyItem, FileUploadIntent, StudioArtifact |
+| Passage | StudyChatMessage, Question, TranslationCache, TranslationHistory, StudioArtifact |
+| StudioArtifact | Question, QuizResult |
 | VocabularyItem | VocabularyOccurrence |
 | DictionaryEntry | DictionarySense, DictionaryAlias |
 | DictionarySense | DictionaryTranslation |

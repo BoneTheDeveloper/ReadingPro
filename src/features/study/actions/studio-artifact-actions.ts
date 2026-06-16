@@ -7,6 +7,8 @@ import {
   createStudioArtifact,
   completeStudioArtifact,
   failStudioArtifact,
+  recordQuizResult,
+  resetQuizResult,
 } from '@/lib/study/passage/studio-artifacts-service';
 import type { StudioArtifact, StudioArtifactType } from '@/lib/study/shared/studio-artifact-types';
 import type { QuestionData } from '@/features/study/model/types';
@@ -109,6 +111,45 @@ export async function studioLoadArtifactDetailAction(input: {
     } catch (err) {
       log.error({ err, input }, 'Failed to load artifact detail');
       return { error: 'Failed to load artifact detail' };
+    }
+  });
+}
+
+export async function studioRecordQuizResultAction(input: {
+  artifactId: string;
+  correctCount: number;
+  totalQuestions: number;
+}): Promise<ActionResult<{ ok: true }>> {
+  return Sentry.withServerActionInstrumentation('studioRecordQuizResult', { headers: await headers() }, async () => {
+    const user = await getAuthenticatedUser();
+    try {
+      if (input.correctCount < 0 || input.totalQuestions <= 0 || input.correctCount > input.totalQuestions) {
+        return { error: 'Invalid quiz result data' };
+      }
+
+      await recordQuizResult(input.artifactId, user.id, {
+        correctCount: input.correctCount,
+        totalQuestions: input.totalQuestions,
+      });
+      return { ok: true as const };
+    } catch (err) {
+      log.error({ err, artifactId: input.artifactId }, 'Failed to record quiz result');
+      return { error: 'Failed to record quiz result' };
+    }
+  });
+}
+
+export async function studioResetQuizResultAction(input: {
+  artifactId: string;
+}): Promise<ActionResult<{ ok: true }>> {
+  return Sentry.withServerActionInstrumentation('studioResetQuizResult', { headers: await headers() }, async () => {
+    const user = await getAuthenticatedUser();
+    try {
+      await resetQuizResult(input.artifactId, user.id);
+      return { ok: true as const };
+    } catch (err) {
+      log.error({ err, artifactId: input.artifactId }, 'Failed to reset quiz result');
+      return { error: 'Failed to reset quiz result' };
     }
   });
 }

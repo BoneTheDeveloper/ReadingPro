@@ -3,7 +3,7 @@
 ## Overview
 
 - Priority: P1
-- Status: Not started
+- Status: Completed
 - Depends on: Phase 02, 03
 - Reduce the progress dashboard to streak + study time only. Remove all card stats
   (backed by the now-deleted `question_reviews`) and all quiz stats (backed by the

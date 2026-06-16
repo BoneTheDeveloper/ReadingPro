@@ -2,7 +2,6 @@ import type { z } from "zod";
 
 export const STUDY_API_ROUTES = {
   questions: "/api/studio-questions",
-  quizAttempt: "/api/quiz-attempt",
   studySession: "/api/study-session",
 } as const;
 

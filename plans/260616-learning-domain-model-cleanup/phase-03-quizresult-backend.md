@@ -3,7 +3,7 @@
 ## Overview
 
 - Priority: P0
-- Status: Not started
+- Status: Completed
 - Depends on: Phase 01
 - Persist/clear the quiz result on the artifact's `QuizResult` child via server
   actions; remove the `/api/quiz-attempt` route, queries, client, and DTOs.

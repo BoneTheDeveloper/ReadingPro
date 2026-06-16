@@ -3,7 +3,7 @@
 ## Overview
 
 - Priority: P0 (foundation)
-- Status: Not started
+- Status: Completed
 - In the multi-file schema (`prisma/schema/`): drop `QuizAttempt`, drop
   `QuestionReview`, add `QuizResult` (1:1 child of `StudioArtifact`). Regenerate +
   migrate.

@@ -3,7 +3,7 @@
 ## Overview
 
 - Priority: P0
-- Status: Not started
+- Status: Completed
 - Depends on: Phase 01
 - Delete the unwired SM-2 "cards" subsystem end to end. Verified dead:
   `createQuestionReview` never called, `/api/cards/*` no UI consumer, card stats always 0.

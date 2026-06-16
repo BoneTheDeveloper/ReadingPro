@@ -18,7 +18,6 @@ model Passage {
   chatMessages         StudyChatMessage[]
   translationCaches    TranslationCache[]
   translationHistories TranslationHistory[]
-  quizAttempts         QuizAttempt[]
   studioArtifacts      StudioArtifact[]
 
   @@index([userId])

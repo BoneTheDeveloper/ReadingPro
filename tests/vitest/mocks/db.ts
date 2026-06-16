@@ -27,7 +27,6 @@ export const db = {
     if (typeof input === "function") return input(db);
     return Promise.all(input as Promise<unknown>[]);
   }),
-  questionReview: createModelMock(),
   passage: createModelMock(),
   question: createModelMock(),
   studySession: createModelMock(),
@@ -43,10 +42,10 @@ export const db = {
   vocabularyOccurrence: createModelMock(),
   vocabularySet: createModelMock(),
   vocabularySetItem: createModelMock(),
-  quizAttempt: createModelMock(),
   fileUploadIntent: createModelMock(),
   userProfile: createModelMock(),
   studioArtifact: createModelMock(),
+  quizResult: createModelMock(),
 };
 
 export function resetDbMock() {

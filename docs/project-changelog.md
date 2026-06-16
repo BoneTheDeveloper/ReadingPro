@@ -29,6 +29,12 @@
 - Moved CEFR domain helpers to `lib/domain/cefr.ts` and CEFR presentation classes to `lib/ui/cefr-style.ts`.
 - Reused the canonical `lib/algorithms/sm2.ts` implementation from card review queries.
 - Updated study-session API route to delegate to `lib/db/study-session-queries.ts`.
+- **Learning Domain Model Cleanup**: Consolidated quiz/review/vocab models.
+  - Replaced `QuizAttempt` with a 1:1 `QuizResult` child of `StudioArtifact`.
+  - Removed dead SM-2 spaced-repetition subsystem (`QuestionReview`, `/api/cards/*`).
+  - Trimmed progress dashboard to streak/time signals only.
+  - Updated quiz UI to reflect attempt state and allow retries.
+  - Added ADR 0006 to record the role-per-table model.
 
 ### Planned
 - YouTube transcription (Whisper API)

@@ -2,8 +2,6 @@ import { NextRequest } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { openai } from "@ai-sdk/openai";
-import { POST as reviewCard } from "@/app/api/cards/review/route";
-import { GET as getDueCardsRoute } from "@/app/api/cards/due/route";
 import { GET as getHealth } from "@/app/api/health/route";
 import { GET as getProgressStats } from "@/app/api/progress/stats/route";
 import { GET as getStudyChatHistory, POST as studyChat } from "@/app/api/study-chat/route";
@@ -11,20 +9,16 @@ import { POST as createStudySessionRoute } from "@/app/api/study-session/route";
 import { POST as uploadFileRoute } from "@/app/api/upload/route";
 import { POST as uploadTextRoute } from "@/app/api/upload/text/route";
 import {
-  questionReviewSuccessResponseSchema,
-  dueQuestionsResponseSchema,
-  dueQuestionsSuccessResponseSchema,
   progressStatsResponseSchema,
   progressStatsSuccessResponseSchema,
   studyChatHistoryResponseSchema,
   studyChatHistorySuccessResponseSchema,
   studySessionSuccessResponseSchema,
-  toQuestionReviewDto,
   toStudySessionDto,
 } from "@/lib/study/shared/study-response-schema";
 import { uploadSuccessResponseSchema } from "@/lib/upload/shared/upload-response-schema";
 import { apiErrorResponseSchema } from "@/lib/api/shared/api-response-schema";
-import { dueQuestionFixture, passageFixture, studySessionFixture, userProfileFixture } from "../../fixtures";
+import { passageFixture, studySessionFixture, userProfileFixture } from "../../fixtures";
 import { createFile, createGetRequest, createJsonRequest, parseJsonResponse, readJsonResponse } from "../../helpers/api";
 import { expectApiErrorPayload, expectApiSuccessPayload } from "../../helpers/assertions";
 import { db } from "../../mocks/db";
@@ -47,8 +41,6 @@ const routeMocks = vi.hoisted(() => {
 
   return {
     getAuthenticatedUser: vi.fn(),
-    getDueQuestions: vi.fn(),
-    updateQuestionReview: vi.fn(),
     getUserProgress: vi.fn(),
     ensureActiveSession: vi.fn(),
     processFileUpload: vi.fn(),
@@ -65,8 +57,6 @@ vi.mock("@/lib/auth/auth-utils", () => ({
 }));
 
 vi.mock("@/lib/db/quiz/quiz-review", () => ({
-  getDueQuestions: routeMocks.getDueQuestions,
-  updateQuestionReview: routeMocks.updateQuestionReview,
   getUserProgress: routeMocks.getUserProgress,
 }));
 
@@ -112,44 +102,6 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-describe("GET /api/cards/due", () => {
-  it("returns due questions for the authenticated user", async () => {
-    const dueQuestionWithPersistedOptions = {
-      ...dueQuestionFixture,
-      question: {
-        ...dueQuestionFixture.question,
-        options: JSON.stringify(dueQuestionFixture.question.options),
-      },
-    };
-    routeMocks.getDueQuestions.mockResolvedValue([dueQuestionWithPersistedOptions]);
-
-    const response = await getDueCardsRoute(createGetRequest());
-    const payload = await parseJsonResponse(response, dueQuestionsSuccessResponseSchema);
-
-    expect(response.status).toBe(200);
-    expectApiSuccessPayload(payload);
-    expect(payload).toEqual({ success: true, data: [toQuestionReviewDto(dueQuestionWithPersistedOptions)] });
-    expect(payload.data[0].question?.options).toEqual(dueQuestionFixture.question.options);
-    expect(routeMocks.getDueQuestions).toHaveBeenCalledWith(userProfileFixture.id);
-  });
-
-  it("returns a stable error payload when auth fails", async () => {
-    routeMocks.getAuthenticatedUser.mockRejectedValue(apiError("Authentication required"));
-
-    const response = await getDueCardsRoute(createGetRequest());
-    expect(response.status).toBe(401);
-    expectApiErrorPayload(await parseJsonResponse(response, dueQuestionsResponseSchema), "Authentication required.");
-  });
-
-  it("returns a stable error payload when the question query fails", async () => {
-    routeMocks.getDueQuestions.mockRejectedValue(apiError("db down"));
-
-    const response = await getDueCardsRoute(createGetRequest());
-    expect(response.status).toBe(500);
-    expectApiErrorPayload(await parseJsonResponse(response, dueQuestionsResponseSchema), "Failed to fetch due questions");
-  });
-});
-
 describe("GET /api/health", () => {
   it("returns the current deployment commit SHA for deployment verification", async () => {
     vi.stubEnv("VERCEL_GIT_COMMIT_SHA", "commit_123");
@@ -168,70 +120,9 @@ describe("GET /api/health", () => {
   });
 });
 
-describe("POST /api/cards/review", () => {
-  it("updates a review for the authenticated user", async () => {
-    const updatedReview = { ...dueQuestionFixture, qualityRating: 5 };
-    routeMocks.updateQuestionReview.mockResolvedValue(updatedReview);
-
-    const response = await reviewCard(createJsonRequest({ questionReviewId: dueQuestionFixture.id, qualityRating: 5 }));
-    const payload = await parseJsonResponse(response, questionReviewSuccessResponseSchema);
-
-    expect(response.status).toBe(200);
-    expectApiSuccessPayload(payload);
-    expect(payload).toEqual({ success: true, data: toQuestionReviewDto(updatedReview) });
-    expect(routeMocks.updateQuestionReview).toHaveBeenCalledWith(userProfileFixture.id, dueQuestionFixture.id, 5);
-  });
-
-  it("rejects missing IDs and invalid ratings before updating", async () => {
-    await expectJsonError(
-      await reviewCard(createJsonRequest({ qualityRating: 3 })),
-      400,
-      "Invalid request",
-    );
-
-    await expectJsonError(
-      await reviewCard(createJsonRequest({ questionReviewId: dueQuestionFixture.id, qualityRating: 6 })),
-      400,
-      "Invalid request",
-    );
-    expect(routeMocks.updateQuestionReview).not.toHaveBeenCalled();
-  });
-
-  it("captures unexpected failures", async () => {
-    const error = apiError("db down");
-    routeMocks.updateQuestionReview.mockRejectedValue(error);
-
-    await expectJsonError(
-      await reviewCard(createJsonRequest({ questionReviewId: dueQuestionFixture.id, qualityRating: 4 })),
-      500,
-      "Failed to submit review",
-    );
-    expect(Sentry.captureException).toHaveBeenCalledWith(error, {
-      tags: { route: "api:cards:review", method: "POST" },
-    });
-  });
-
-  it("rejects malformed JSON with 400", async () => {
-    await expectJsonError(
-      await reviewCard(new NextRequest("https://english-reading.test/api/cards/review", { method: "POST", body: "{" })),
-      400,
-      "Invalid JSON payload.",
-    );
-  });
-
-  it("rejects non-UUID card review IDs", async () => {
-    await expectJsonError(
-      await reviewCard(createJsonRequest({ questionReviewId: "not-a-uuid", qualityRating: 3 })),
-      400,
-      "Invalid request",
-    );
-    expect(routeMocks.updateQuestionReview).not.toHaveBeenCalled();
-  });
-});
-
 describe("GET /api/progress/stats", () => {
   it("returns progress stats for the authenticated user", async () => {
-    const stats = { totalCards: 12, dueCards: 3, matureCards: 6, todayReviews: 4, streakDays: 2, totalQuizAttempts: 0, avgQuizAccuracy: null, todayQuizAttempts: 0 };
+    const stats = { streakDays: 2, timeStudiedTodaySeconds: 0, timeStudiedWeekSeconds: 0, activeDaysThisWeek: 0 };
     routeMocks.getUserProgress.mockResolvedValue(stats);
 
     const response = await getProgressStats(createGetRequest());

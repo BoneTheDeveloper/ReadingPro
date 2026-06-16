@@ -29,50 +29,29 @@ describe("ProgressDashboard", () => {
     });
   });
 
-  it("loads and renders progress stats with a due-review CTA", async () => {
+  it("loads and renders progress stats", async () => {
     mockProgressFetch({
-      totalCards: 12,
-      dueCards: 3,
-      matureCards: 5,
-      todayReviews: 4,
-      totalQuizAttempts: 7,
-      avgQuizAccuracy: 85.5,
-      todayQuizAttempts: 2,
+      streakDays: 3,
+      timeStudiedTodaySeconds: 125, // 2m
+      timeStudiedWeekSeconds: 3665, // 1h 1m
+      activeDaysThisWeek: 4,
     });
 
     renderWithUser(<ProgressDashboard />);
 
     expect(document.querySelector(".animate-spin")).toBeInTheDocument();
     expect(await screen.findByText("Your Progress")).toBeInTheDocument();
-    expect(screen.getByText("Total Cards")).toBeInTheDocument();
-    expect(screen.getByText("Due for Review")).toBeInTheDocument();
-    expect(screen.getByText("Mature Cards")).toBeInTheDocument();
-    expect(screen.getByText("Today's Reviews")).toBeInTheDocument();
-    expect(screen.getByText("Quizzes Completed")).toBeInTheDocument();
-    expect(screen.getByText("Avg. Accuracy")).toBeInTheDocument();
-    expect(screen.getByText("Today's Quizzes")).toBeInTheDocument();
-    expect(screen.getByText("3 cards due for review")).toBeInTheDocument();
-    expect(screen.getAllByText("12")[0]).toBeInTheDocument();
+    expect(screen.getByText("Current Streak")).toBeInTheDocument();
+    expect(screen.getByText("Today's Study")).toBeInTheDocument();
+    expect(screen.getByText("Weekly Study")).toBeInTheDocument();
+    expect(screen.getByText("Active Days")).toBeInTheDocument();
+    expect(screen.getByText("3 days")).toBeInTheDocument();
+    expect(screen.getByText("2m")).toBeInTheDocument();
+    expect(screen.getByText("1h 1m")).toBeInTheDocument();
+    expect(screen.getByText("4/7")).toBeInTheDocument();
   });
 
-  it("renders the caught-up branch when no cards are due", async () => {
-    mockProgressFetch({
-      totalCards: 2,
-      dueCards: 0,
-      matureCards: 2,
-      todayReviews: 1,
-      totalQuizAttempts: 3,
-      avgQuizAccuracy: null,
-      todayQuizAttempts: 0,
-    });
-
-    renderWithUser(<ProgressDashboard />);
-
-    expect(await screen.findByText("All caught up!")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Start Review" })).not.toBeInTheDocument();
-  });
-
-  it("falls back to zero stats after a fetch failure", async () => {
+  it("falls back to default stats after a fetch failure", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => {
       throw new Error("network down");
     }));
@@ -80,20 +59,21 @@ describe("ProgressDashboard", () => {
 
     renderWithUser(<ProgressDashboard />);
 
-    expect(await screen.findByText("All caught up!")).toBeInTheDocument();
-    await waitFor(() => expect(screen.getAllByText("0")).toHaveLength(6));
+    expect(await screen.findByText("Your Progress")).toBeInTheDocument();
+    // In case of error, stats remains null and fallback values (?? 0) are used
+    await waitFor(() => expect(screen.getAllByText("0 days")).toHaveLength(1));
+    expect(screen.getAllByText("0m")).toHaveLength(2);
+    expect(screen.getAllByText("0/7")).toHaveLength(1);
   });
 
   it("rejects malformed progress success payloads", async () => {
     mockProgressFetch({
-      totalCards: 12,
-      dueToday: 3,
-      reviewedToday: 4,
+      streakDays: "invalid",
     });
 
     renderWithUser(<ProgressDashboard />);
 
-    expect(await screen.findByText("All caught up!")).toBeInTheDocument();
+    expect(await screen.findByText("Your Progress")).toBeInTheDocument();
     await waitFor(() => {
       expect(Sentry.addBreadcrumb).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -104,31 +84,26 @@ describe("ProgressDashboard", () => {
         }),
       );
     });
-    expect(screen.getAllByText("0")).toHaveLength(6);
+    expect(screen.getAllByText("0 days")).toHaveLength(1);
   });
 
   it("navigates from header and progress actions", async () => {
     mockProgressFetch({
-      totalCards: 12,
-      dueCards: 2,
-      matureCards: 5,
-      todayReviews: 4,
-      totalQuizAttempts: 7,
-      avgQuizAccuracy: 85.5,
-      todayQuizAttempts: 2,
+      streakDays: 0,
+      timeStudiedTodaySeconds: 0,
+      timeStudiedWeekSeconds: 0,
+      activeDaysThisWeek: 0,
     });
     const { user } = renderWithUser(<ProgressDashboard />);
 
     await screen.findByText("Your Progress");
-    await user.click(screen.getByRole("button", { name: "Start Review" }));
-    expect(push).toHaveBeenLastCalledWith("/study");
 
-    await user.click(screen.getByText("Add New Content"));
+    await user.click(screen.getByText("Start Studying"));
     expect(push).toHaveBeenLastCalledWith("/study");
 
     await user.click(screen.getByText("Back to Home"));
     expect(push).toHaveBeenLastCalledWith("/");
 
-    expect(push).toHaveBeenCalledTimes(3);
+    expect(push).toHaveBeenCalledTimes(2);
   });
 });

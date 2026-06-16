@@ -12,14 +12,12 @@ model UserProfile {
 
   passages             Passage[]
   studySessions        StudySession[]
-  questionReviews      QuestionReview[]
   chatMessages         StudyChatMessage[]
   translationCaches    TranslationCache[]
   translationHistories TranslationHistory[]
   vocabularyItems      VocabularyItem[]
   vocabularySets       VocabularySet[]
   fileUploadIntents    FileUploadIntent[]
-  quizAttempts         QuizAttempt[]
   studioArtifacts      StudioArtifact[]
 
   @@map("profiles")

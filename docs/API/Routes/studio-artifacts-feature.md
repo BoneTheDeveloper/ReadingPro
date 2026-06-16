@@ -40,6 +40,12 @@ Success:
       status: "generating" | "done" | "failed";
       createdAt: string; // ISO Date
       updatedAt: string; // ISO Date
+      quizResult?: {
+        completedAt: string; // ISO Date
+        correctCount: number;
+        totalQuestions: number;
+        accuracyRate: number;
+      };
     }>
   }
 }
@@ -102,6 +108,14 @@ is durable across clients and sessions because it lives at the read boundary.
 | `generating` | Generation actively in progress (within the orphan timeout). |
 | `done` | Generation completed and questions persisted. |
 | `failed` | Client reported failure, OR generation was orphaned and reconciled on read. |
+
+## Quiz Attempt and Result Lifecycle
+
+A quiz artifact also tracks user attempts via the 1:1 `QuizResult` child.
+
+1. **Not Attempted:** When an artifact is `done` but has no `quizResult`, it represents a fresh quiz.
+2. **Finished:** Once the user completes the quiz, the client calls `studioRecordQuizResultAction` which upserts the `QuizResult` row with the final score.
+3. **Retry:** If the user wants to retry the quiz, the client calls `studioResetQuizResultAction` to delete the `QuizResult` row, reverting the artifact to the "Not Attempted" state.
 
 ## Implementation References
 

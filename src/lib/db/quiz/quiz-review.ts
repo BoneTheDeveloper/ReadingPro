@@ -1,112 +1,11 @@
 import { db } from '../client';
-import { sm2 } from '../../spaced-repetition/scheduler';
 
 // A day counts toward the streak only when total study time that day exceeds this.
 export const STREAK_MIN_DAILY_MS = 10 * 60 * 1000;
 const STREAK_MIN_DAILY_SECONDS = STREAK_MIN_DAILY_MS / 1000;
 
-export function calculateSM2Interval(
-  previousEaseFactor: number,
-  previousInterval: number,
-  repetitions: number,
-  qualityRating: number
-): {
-  easeFactor: number;
-  intervalDays: number;
-  repetitions: number;
-} {
-  const result = sm2(
-    { easeFactor: previousEaseFactor, intervalDays: previousInterval, repetitions },
-    qualityRating
-  );
-  return {
-    easeFactor: result.easeFactor,
-    intervalDays: result.intervalDays,
-    repetitions: result.repetitions,
-  };
-}
-
-export async function getDueQuestions(userId: string) {
-  return db.questionReview.findMany({
-    where: {
-      userId,
-      nextReviewDate: { lte: new Date() },
-    },
-    include: {
-      question: { include: { passage: true } },
-    },
-    orderBy: { nextReviewDate: 'asc' },
-    take: 20,
-  });
-}
-
-export async function updateQuestionReview(
-  userId: string,
-  questionReviewId: string,
-  qualityRating: number
-) {
-  const existing = await db.questionReview.findUniqueOrThrow({
-    where: { id: questionReviewId, userId },
-  });
-
-  const sm2Result = calculateSM2Interval(
-    existing.easeFactor,
-    existing.intervalDays,
-    existing.repetitions,
-    qualityRating
-  );
-
-  const nextReviewDate = new Date();
-  nextReviewDate.setDate(nextReviewDate.getDate() + sm2Result.intervalDays);
-
-  return db.questionReview.update({
-    where: { id: questionReviewId },
-    data: {
-      qualityRating,
-      easeFactor: sm2Result.easeFactor,
-      intervalDays: sm2Result.intervalDays,
-      repetitions: sm2Result.repetitions,
-      nextReviewDate,
-      reviewedAt: new Date(),
-    },
-  });
-}
-
-export async function createQuestionReview(
-  userId: string,
-  questionId: string
-) {
-  return db.questionReview.create({
-    data: {
-      userId,
-      questionId,
-      qualityRating: 0,
-      easeFactor: 2.5,
-      intervalDays: 1,
-      repetitions: 0,
-    },
-  });
-}
-
 export async function getUserProgress(userId: string) {
-  const startOfToday = new Date();
-  startOfToday.setHours(0, 0, 0, 0);
-
-  const [rows, sessionDays, quizRows] = await Promise.all([
-    db.$queryRaw<Array<{
-      totalCards: bigint;
-      matureCards: bigint;
-      dueCards: bigint;
-      todayReviews: bigint;
-    }>>`
-      SELECT
-        COUNT(*)::bigint AS "totalCards",
-        COUNT(*) FILTER (WHERE "intervalDays" >= 21)::bigint AS "matureCards",
-        COUNT(*) FILTER (WHERE "nextReviewDate" <= ${new Date()})::bigint AS "dueCards",
-        COUNT(*) FILTER (WHERE "reviewedAt" >= ${startOfToday})::bigint AS "todayReviews"
-      FROM "question_reviews"
-      WHERE "userId" = ${userId}
-    `,
+  const [sessionDays] = await Promise.all([
     // Per-day study time. Open sessions contribute time via lastActivityAt. Raw
     // seconds are returned for every day (ungated); the >threshold gate is applied
     // in JS so today/week totals stay honest while the streak stays gated.
@@ -119,22 +18,7 @@ export async function getUserProgress(userId: string) {
       ORDER BY day DESC
       LIMIT 60
     `,
-    db.$queryRaw<Array<{
-      totalQuizAttempts: bigint;
-      avgQuizAccuracy: number | null;
-      todayQuizAttempts: bigint;
-    }>>`
-      SELECT
-        COUNT(*) FILTER (WHERE "completedAt" IS NOT NULL)::bigint AS "totalQuizAttempts",
-        AVG("accuracyRate") FILTER (WHERE "completedAt" IS NOT NULL AND "accuracyRate" IS NOT NULL) AS "avgQuizAccuracy",
-        COUNT(*) FILTER (WHERE "completedAt" >= ${startOfToday})::bigint AS "todayQuizAttempts"
-      FROM "quiz_attempts"
-      WHERE "userId" = ${userId}
-    `,
   ]);
-
-  const row = rows[0];
-  const quizRow = quizRows[0];
 
   const secondsByDay = new Map<string, number>();
   for (const { day, secs } of sessionDays) {
@@ -158,17 +42,10 @@ export async function getUserProgress(userId: string) {
   const activeDaysThisWeek = weekDayKeys.filter((key) => qualifyingDayKeys.has(key)).length;
 
   return {
-    totalCards: Number(row?.totalCards ?? 0),
-    matureCards: Number(row?.matureCards ?? 0),
-    dueCards: Number(row?.dueCards ?? 0),
-    todayReviews: Number(row?.todayReviews ?? 0),
     streakDays,
     timeStudiedTodaySeconds,
     timeStudiedWeekSeconds,
     activeDaysThisWeek,
-    totalQuizAttempts: Number(quizRow?.totalQuizAttempts ?? 0),
-    avgQuizAccuracy: quizRow?.avgQuizAccuracy != null ? Math.round(Number(quizRow.avgQuizAccuracy) * 100) / 100 : null,
-    todayQuizAttempts: Number(quizRow?.todayQuizAttempts ?? 0),
   };
 }
 

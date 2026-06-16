@@ -36,12 +36,12 @@ Rationale + full current-state map captured in this conversation and in the new 
 
 | # | Phase | Status |
 |---|-------|--------|
-| 01 | [Schema + migration](phase-01-schema-and-migration.md) | Not started |
-| 02 | [Remove dead question-SRS + SM-2](phase-02-remove-dead-question-srs.md) | Not started |
-| 03 | [QuizResult backend + drop quiz-attempt](phase-03-quizresult-backend.md) | Not started |
-| 04 | [Progress dashboard trim](phase-04-progress-dashboard-trim.md) | Not started |
-| 05 | [Quiz UI: result + Retry](phase-05-quiz-ui-result-retry.md) | Not started |
-| 06 | [Tests + docs + ADR](phase-06-tests-docs-adr.md) | Not started |
+| 01 | [Schema + migration](phase-01-schema-and-migration.md) | Completed |
+| 02 | [Remove dead question-SRS + SM-2](phase-02-remove-dead-question-srs.md) | Completed |
+| 03 | [QuizResult backend + drop quiz-attempt](phase-03-quizresult-backend.md) | Completed |
+| 04 | [Progress dashboard trim](phase-04-progress-dashboard-trim.md) | Completed |
+| 05 | [Quiz UI: result + Retry](phase-05-quiz-ui-result-retry.md) | Completed |
+| 06 | [Tests + docs + ADR](phase-06-tests-docs-adr.md) | Completed |
 
 ## Dependencies
 

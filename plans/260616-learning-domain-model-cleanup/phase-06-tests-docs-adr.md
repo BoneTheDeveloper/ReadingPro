@@ -3,7 +3,7 @@
 ## Overview
 
 - Priority: P0 (gate)
-- Status: Not started
+- Status: Completed
 - Depends on: Phases 01–05
 - Make all suites green, add coverage for `QuizResult`, and document the consolidated
   model (including an ADR recording the role-per-table decision).

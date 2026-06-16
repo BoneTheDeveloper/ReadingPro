@@ -3,7 +3,7 @@
 ## Overview
 
 - Priority: P0
-- Status: Not started
+- Status: Completed
 - Depends on: Phase 01, 03
 - Show attempt state + score on the quiz artifact in the studio panel, add Retry, and
   rewire the quiz UI to the `QuizResult` server actions.

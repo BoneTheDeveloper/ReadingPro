@@ -4,6 +4,7 @@ export type {
   StudioArtifact,
   StudioArtifactStatus,
   StudioArtifactType,
+  QuizResult,
 } from "@/lib/study/shared/studio-artifact-types";
 export { ARTIFACT_STALE_TIME } from "@/lib/study/shared/studio-artifact-types";
 

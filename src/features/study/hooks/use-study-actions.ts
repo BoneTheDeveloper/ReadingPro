@@ -197,9 +197,36 @@ export function useStudyActions({ state, setState }: UseStudyActionsInput) {
     [setState, state.artifactDetailById],
   );
 
+  const handleRecordQuizResult = useCallback(
+    (passageId: string, artifactId: string, stats: { correctCount: number; totalQuestions: number }) => {
+      updateArtifactStatus(passageId, artifactId, {
+        quizResult: {
+          completedAt: new Date().toISOString(),
+          correctCount: stats.correctCount,
+          totalQuestions: stats.totalQuestions,
+          accuracyRate: stats.totalQuestions > 0
+            ? Math.round((stats.correctCount / stats.totalQuestions) * 100) / 100
+            : 0,
+        },
+      });
+    },
+    [updateArtifactStatus],
+  );
+
+  const handleResetQuizResult = useCallback(
+    (passageId: string, artifactId: string) => {
+      updateArtifactStatus(passageId, artifactId, {
+        quizResult: undefined,
+      });
+    },
+    [updateArtifactStatus],
+  );
+
   return {
     handleSimplify,
     handleActionClick,
     handleViewArtifact,
+    handleRecordQuizResult,
+    handleResetQuizResult,
   };
 }

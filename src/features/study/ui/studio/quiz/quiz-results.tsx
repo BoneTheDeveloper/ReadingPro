@@ -5,58 +5,72 @@ import { useTranslations } from "next-intl"
 import { Trophy, AlertCircle, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { completeQuizAttempt } from "@/features/study/api/quiz-attempt-client"
+import { studioRecordQuizResultAction, studioResetQuizResultAction } from "@/features/study/actions/studio-artifact-actions"
 
 interface QuizResultsProps {
   correctCount: number
   totalQuestions: number
   passageTitle: string
-  attemptId: string | null
+  artifactId: string | null
   onReset: () => void
   onNewPassage: () => void
+  onRecordResult: (stats: { correctCount: number; totalQuestions: number }) => void
+  onResetResult: () => void
 }
 
 export function QuizResults({
   correctCount,
   totalQuestions,
   passageTitle,
-  attemptId,
+  artifactId,
   onReset,
   onNewPassage,
+  onRecordResult,
+  onResetResult,
 }: QuizResultsProps) {
   const t = useTranslations("Study")
-  const [attemptError, setAttemptError] = useState<string | null>(null)
-  const isCompletingRef = useRef(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const isSavingRef = useRef(false)
 
-  const completeAttempt = useCallback(async () => {
-    if (!attemptId || isCompletingRef.current) return
-    isCompletingRef.current = true;
+  const recordResult = useCallback(async () => {
+    if (!artifactId || isSavingRef.current) return
+    isSavingRef.current = true;
     
     try {
-      const result = await completeQuizAttempt({
-        attemptId,
+      const result = await studioRecordQuizResultAction({
+        artifactId,
         correctCount,
-        incorrectCount: totalQuestions - correctCount,
         totalQuestions,
       })
       if ("error" in result) {
-         if (!result.error.toLowerCase().includes("already completed")) {
-           setAttemptError(result.error)
-         }
+        setSaveError(result.error)
       } else {
-        setAttemptError(null)
+        setSaveError(null)
+        onRecordResult({ correctCount, totalQuestions });
       }
     } catch (err) {
-      setAttemptError(err instanceof Error ? err.message : t("attemptSaveFailed"));
+      setSaveError(err instanceof Error ? err.message : t("attemptSaveFailed"));
     } finally {
-      isCompletingRef.current = false;
+      isSavingRef.current = false;
     }
-  }, [attemptId, correctCount, totalQuestions, t])
+  }, [artifactId, correctCount, totalQuestions, t, onRecordResult])
+
+  const handleRetry = useCallback(async () => {
+    if (artifactId) {
+      try {
+        await studioResetQuizResultAction({ artifactId });
+        onResetResult();
+      } catch (err) {
+        console.error("Failed to reset quiz result", err);
+      }
+    }
+    onReset();
+  }, [artifactId, onReset, onResetResult]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    completeAttempt();
-  }, [completeAttempt])
+    recordResult();
+  }, [recordResult])
 
   const accuracy = Math.round((correctCount / totalQuestions) * 100)
   const message =
@@ -68,13 +82,13 @@ export function QuizResults({
 
   return (
     <div className="bg-surface rounded-xl shadow-sm border border-border flex items-center justify-center flex-1 min-h-75 relative overflow-hidden">
-       {attemptError && (
+       {saveError && (
         <div className="absolute top-0 left-0 right-0 bg-danger-soft/90 border-b border-danger/20 p-2.5 px-4 flex items-center justify-between z-10 animate-in slide-in-from-top-2">
           <div className="flex items-center gap-2 text-danger text-sm font-medium">
             <AlertCircle className="w-4 h-4" />
             <span>{t("attemptSaveFailed")}</span>
           </div>
-          <Button variant="ghost" size="sm" onClick={completeAttempt} className="h-7 px-2.5 text-xs text-danger hover:bg-danger/10 hover:text-danger">
+          <Button variant="ghost" size="sm" onClick={recordResult} className="h-7 px-2.5 text-xs text-danger hover:bg-danger/10 hover:text-danger">
             <RefreshCw className="w-3.5 h-3.5 mr-1" />
             {t("retry")}
           </Button>
@@ -107,7 +121,7 @@ export function QuizResults({
         </p>
 
         <div className="flex gap-4">
-          <Button variant="outline" onClick={onReset} className="flex-1">{t("tryAgain")}</Button>
+          <Button variant="outline" onClick={handleRetry} className="flex-1">{t("tryAgain")}</Button>
           <Button onClick={onNewPassage} className="flex-1">{t("newPassage")}</Button>
         </div>
       </div>

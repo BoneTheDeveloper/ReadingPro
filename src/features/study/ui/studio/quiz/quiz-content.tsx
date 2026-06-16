@@ -2,11 +2,10 @@
 
 import { useState, useCallback, useEffect } from "react"
 import { useTranslations } from "next-intl"
-import { BookOpen, CheckCircle, XCircle, ArrowRight, ChevronLeft, ChevronRight, AlertCircle, RefreshCw } from "lucide-react"
+import { BookOpen, CheckCircle, XCircle, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/shared/utils"
 import { Button } from "@/components/ui/button"
 import type { QuestionData } from "@/features/study/model/types"
-import { createQuizAttemptForArtifact } from "@/features/study/api/quiz-attempt-client"
 import { QuizResults } from "./quiz-results"
 
 interface QuizContentProps {
@@ -14,18 +13,17 @@ interface QuizContentProps {
   passageTitle: string
   artifactId: string | null
   onReset: () => void
+  onRecordResult: (stats: { correctCount: number; totalQuestions: number }) => void
+  onResetResult: () => void
 }
 
-export function QuizContent({ questions, passageTitle, artifactId, onReset }: QuizContentProps) {
+export function QuizContent({ questions, passageTitle, artifactId, onReset, onRecordResult, onResetResult }: QuizContentProps) {
   const t = useTranslations("Study")
   const [currentIndex, setCurrentIndex] = useState(0)
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
   const [showFeedback, setShowFeedback] = useState(false)
   const [answers, setAnswers] = useState<Record<string, boolean>>({})
   const [isComplete, setIsComplete] = useState(false)
-  const [sessionId, setSessionId] = useState<string | null>(null)
-  const [attemptId, setAttemptId] = useState<string | null>(null)
-  const [attemptError, setAttemptError] = useState<string | null>(null)
 
   const resetTest = useCallback(() => {
     setCurrentIndex(0)
@@ -33,9 +31,6 @@ export function QuizContent({ questions, passageTitle, artifactId, onReset }: Qu
     setShowFeedback(false)
     setAnswers({})
     setIsComplete(false)
-    setSessionId(null)
-    setAttemptId(null)
-    setAttemptError(null)
   }, [])
 
   const currentQuestion = questions[currentIndex]
@@ -45,36 +40,13 @@ export function QuizContent({ questions, passageTitle, artifactId, onReset }: Qu
     if (!showFeedback) setSelectedAnswer(optionId)
   }, [showFeedback])
 
-  const createAttempt = useCallback(async () => {
-    if (!artifactId) return false;
-    try {
-      setAttemptError(null);
-      const result = await createQuizAttemptForArtifact(artifactId)
-      if (!("error" in result)) {
-        setSessionId(result.sessionId)
-        setAttemptId(result.attemptId)
-        return true;
-      } else {
-        setAttemptError(result.error);
-        return false;
-      }
-    } catch (err) {
-      setAttemptError(err instanceof Error ? err.message : t("attemptSaveFailed"));
-      return false;
-    }
-  }, [artifactId, t]);
-
   const handleCheckAnswer = useCallback(async () => {
     if (!selectedAnswer || !currentQuestion) return
-
-    if (!sessionId && artifactId) {
-      await createAttempt();
-    }
 
     const isCorrect = selectedAnswer === currentQuestion.correctAnswer
     setAnswers((prev) => ({ ...prev, [currentQuestion.id]: isCorrect }))
     setShowFeedback(true)
-  }, [selectedAnswer, currentQuestion, sessionId, artifactId, createAttempt])
+  }, [selectedAnswer, currentQuestion])
 
   const handleNext = useCallback(() => {
     if (currentIndex < questions.length - 1) {
@@ -132,28 +104,18 @@ export function QuizContent({ questions, passageTitle, artifactId, onReset }: Qu
         correctCount={correctCount}
         totalQuestions={questions.length}
         passageTitle={passageTitle}
-        attemptId={attemptId}
+        artifactId={artifactId}
         onReset={resetTest}
         onNewPassage={onReset}
+        onRecordResult={onRecordResult}
+        onResetResult={onResetResult}
       />
     )
   }
 
   return (
     <div className="bg-surface rounded-xl shadow-sm border border-border p-6 flex flex-col relative overflow-hidden flex-1">
-      {attemptError && (
-        <div className="absolute top-0 left-0 right-0 bg-danger-soft/90 border-b border-danger/20 p-2.5 px-4 flex items-center justify-between z-10 animate-in slide-in-from-top-2">
-          <div className="flex items-center gap-2 text-danger text-sm font-medium">
-            <AlertCircle className="w-4 h-4" />
-            <span>{t("attemptSaveFailed")}</span>
-          </div>
-          <Button variant="ghost" size="sm" onClick={createAttempt} className="h-7 px-2.5 text-xs text-danger hover:bg-danger/10 hover:text-danger">
-            <RefreshCw className="w-3.5 h-3.5 mr-1" />
-            {t("retry")}
-          </Button>
-        </div>
-      )}
-      <div className={cn("w-full flex flex-col h-full", attemptError && "pt-6")}>
+      <div className="w-full flex flex-col h-full">
         <div className="flex items-center justify-between mb-6">
           <span className="text-xs font-semibold text-primary uppercase tracking-[0.02em]">{t("multipleChoice")}</span>
           <div className="flex items-center gap-2">
@@ -262,4 +224,3 @@ export function QuizContent({ questions, passageTitle, artifactId, onReset }: Qu
     </div>
   )
 }
-

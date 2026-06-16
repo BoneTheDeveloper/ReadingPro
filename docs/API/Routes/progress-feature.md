@@ -27,15 +27,14 @@ Unauthenticated requests return `{ "error": "Authentication required." }` with
 
 `GET /api/progress/stats` returns totals for:
 
-- `totalCards`
-- `matureCards`
-- `dueCards`
-- `todayReviews`
 - `streakDays`
+- `timeStudiedTodaySeconds`
+- `timeStudiedWeekSeconds`
+- `activeDaysThisWeek`
 
 ## Implementation
 
 - Progress route: `src/app/api/progress/stats/route.ts`
 - Session route: `src/app/api/study-session/route.ts`
-- Card stats: `src/lib/db/card-review-queries.ts`
+- Progress stats: `src/lib/db/quiz/quiz-review.ts`
 - Session queries: `src/lib/db/study-session-queries.ts`

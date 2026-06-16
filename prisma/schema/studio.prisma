@@ -12,9 +12,10 @@ model StudioArtifact {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  passage   Passage     @relation(fields: [passageId], references: [id], onDelete: Cascade)
-  user      UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
-  questions Question[]
+  passage    Passage     @relation(fields: [passageId], references: [id], onDelete: Cascade)
+  user       UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questions  Question[]
+  quizResult QuizResult?
 
   @@index([passageId, createdAt(sort: Desc)])
   @@index([userId])
@@ -37,31 +38,22 @@ model Question {
 
   passage  Passage          @relation(fields: [passageId], references: [id], onDelete: Cascade)
   artifact StudioArtifact   @relation(fields: [artifactId], references: [id], onDelete: Cascade)
-  reviews  QuestionReview[]
 
   @@index([passageId])
   @@index([artifactId])
   @@map("questions")
 }
 
-// SM-2 spaced-repetition tracking per question.
-model QuestionReview {
-  id         String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  questionId String @db.Uuid
-  userId     String
+// Result of a quiz run, coupled 1:1 to the StudioArtifact (the quiz itself).
+model QuizResult {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  artifactId     String   @unique @db.Uuid
+  completedAt    DateTime @default(now())
+  correctCount   Int
+  totalQuestions Int
+  accuracyRate   Float
 
-  qualityRating Int
-  easeFactor    Float @default(2.5)
-  intervalDays  Int   @default(1)
-  repetitions   Int   @default(0)
+  artifact StudioArtifact @relation(fields: [artifactId], references: [id], onDelete: Cascade)
 
-  nextReviewDate DateTime @default(now())
-  reviewedAt     DateTime @default(now())
-
-  question Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  user     UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([questionId, userId])
-  @@index([userId, nextReviewDate])
-  @@map("question_reviews")
+  @@map("quiz_results")
 }

@@ -1,6 +1,13 @@
 export type StudioArtifactType = "quiz" | "flashcard";
 export type StudioArtifactStatus = "generating" | "done" | "failed";
 
+export interface QuizResult {
+  completedAt: string;
+  correctCount: number;
+  totalQuestions: number;
+  accuracyRate: number;
+}
+
 export interface StudioArtifact {
   id: string;
   type: StudioArtifactType;
@@ -9,6 +16,7 @@ export interface StudioArtifact {
   status: StudioArtifactStatus;
   createdAt: string;
   updatedAt?: string;
+  quizResult?: QuizResult;
 }
 
 export const ARTIFACT_STALE_TIME = 60_000;

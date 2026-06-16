@@ -51,7 +51,7 @@ export function StudyPageClient({
     handleUploadError,
     handleDeletePassage,
   } = useStudyWorkspaceState(initialPassages);
-  const { handleSimplify, handleActionClick } = useStudyActions({ state, setState });
+  const { handleSimplify, handleActionClick, handleRecordQuizResult, handleResetQuizResult } = useStudyActions({ state, setState });
   const layout = useStudyPanelLayout();
   // Presence heartbeat is mounted app-wide in DashboardSidebar; the study page is
   // wrapped by it, so no per-page heartbeat is needed here.
@@ -443,6 +443,12 @@ export function StudyPageClient({
               onSetViewingTranslate={setViewingTranslate}
               onSaveVocabulary={handleSaveVocabulary}
               vocabularySaved={isVocabularySaved}
+              onRecordQuizResult={(artifactId, stats) => {
+                if (state.activePassageId) handleRecordQuizResult(state.activePassageId, artifactId, stats);
+              }}
+              onResetQuizResult={(artifactId) => {
+                if (state.activePassageId) handleResetQuizResult(state.activePassageId, artifactId);
+              }}
             />
           </Panel>
         </Group>
