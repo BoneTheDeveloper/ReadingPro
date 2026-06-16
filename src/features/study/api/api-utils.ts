@@ -1,5 +1,3 @@
-import type { z } from "zod";
-
 export const STUDY_API_ROUTES = {
   questions: "/api/studio-questions",
   studySession: "/api/study-session",
@@ -7,58 +5,4 @@ export const STUDY_API_ROUTES = {
 
 export type StudyApiResult<T> = T | { error: string };
 
-// Thrown when a request is aborted by its timeout budget. Callers map this to a
-// domain-specific outcome (e.g. a TIMEOUT generation error) so a hung request can
-// never leave the caller's promise pending.
-export class RequestTimeoutError extends Error {
-  constructor(message = "Request timed out") {
-    super(message);
-    this.name = "RequestTimeoutError";
-  }
-}
-
-async function requestJson<TSchema extends z.ZodType>(
-  method: "POST" | "PATCH",
-  route: string,
-  body: unknown,
-  schema: TSchema,
-  timeoutMs?: number,
-): Promise<z.infer<TSchema>> {
-  const controller = timeoutMs !== undefined ? new AbortController() : undefined;
-  const timer = controller ? setTimeout(() => controller.abort(), timeoutMs) : undefined;
-  try {
-    const response = await fetch(route, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-      signal: controller?.signal,
-    });
-    const payload = await response.json().catch(() => ({ error: "Invalid server response." }));
-    return schema.parse(payload);
-  } catch (err) {
-    if (err instanceof DOMException && err.name === "AbortError") {
-      throw new RequestTimeoutError();
-    }
-    throw err;
-  } finally {
-    if (timer) clearTimeout(timer);
-  }
-}
-
-export function postJson<TSchema extends z.ZodType>(
-  route: string,
-  body: unknown,
-  schema: TSchema,
-  timeoutMs?: number,
-): Promise<z.infer<TSchema>> {
-  return requestJson("POST", route, body, schema, timeoutMs);
-}
-
-export function patchJson<TSchema extends z.ZodType>(
-  route: string,
-  body: unknown,
-  schema: TSchema,
-  timeoutMs?: number,
-): Promise<z.infer<TSchema>> {
-  return requestJson("PATCH", route, body, schema, timeoutMs);
-}
+export { RequestTimeoutError } from "@/shared/api/api-client-utils";

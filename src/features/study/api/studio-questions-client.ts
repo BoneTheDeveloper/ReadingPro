@@ -5,7 +5,8 @@ import {
   type StudioArtifactErrorCode,
 } from "@/shared/study/studio-artifact-types";
 import type { QuestionData } from "@/features/study/model/types";
-import { STUDY_API_ROUTES, postJson, RequestTimeoutError } from "./api-utils";
+import { postJson, RequestTimeoutError } from "@/shared/api/api-client-utils";
+import { STUDY_API_ROUTES } from "./api-utils";
 
 export type GenerateStudioQuestionsResult =
   | { artifact: StudioArtifact; questions: QuestionData[] }

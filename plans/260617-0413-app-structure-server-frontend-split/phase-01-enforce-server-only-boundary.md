@@ -1,9 +1,9 @@
 ---
 phase: 1
-title: "Enforce server-only boundary"
-status: pending
+title: Enforce server-only boundary
+status: completed
 priority: P1
-effort: "0.5d"
+effort: 0.5d
 dependencies: []
 ---
 

@@ -2,7 +2,8 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
-import type { VocabularySet, VocabularySetsResponse } from "../model/vocabulary-types";
+import { getVocabularySets } from "../api/vocabulary-client";
+import type { VocabularySet } from "../model/vocabulary-types";
 
 interface UseVocabularySetsResult {
   sets: VocabularySet[];
@@ -31,11 +32,7 @@ export function useVocabularySets(enabled: boolean = false): UseVocabularySetsRe
     setError(null);
 
     try {
-      const res = await fetch("/api/vocabulary/sets");
-      if (!res.ok) throw new Error("Failed to load sets");
-
-      const json: unknown = await res.json();
-      const data = json as VocabularySetsResponse;
+      const data = await getVocabularySets();
 
       if (requestIdRef.current !== requestId || !mountedRef.current) return;
       setSets(data.data);

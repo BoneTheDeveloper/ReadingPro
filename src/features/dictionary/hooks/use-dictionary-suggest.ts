@@ -1,10 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import * as Sentry from "@sentry/nextjs"
-import {
-  dictionarySuggestResponseSchema,
-} from "@/shared/dictionary/dictionary-response-schema"
+import { getDictionarySuggestions } from "../api/dictionary-client"
 import type {
   DictionarySuggestItemDto,
 } from "@/shared/dictionary/dictionary-dtos"
@@ -60,40 +57,17 @@ export function useDictionarySuggest() {
 
       const thisRequestId = requestIdRef.current
       try {
-        const params = new URLSearchParams({
-          q: trimmed,
-          sourceLanguage: "en",
-          targetLanguage: "vi",
-        })
-        const res = await fetch(`/api/dictionary/suggest?${params}`)
-        const json: unknown = await res.json()
-        const parsed = dictionarySuggestResponseSchema.safeParse(json)
-
-        if (!parsed.success || "error" in parsed.data) {
-          Sentry.addBreadcrumb({
-            category: "dictionary",
-            level: "error",
-            message: "dictionary-suggest-schema-error",
-            data: { route: "/api/dictionary/suggest" },
-          })
-        }
-
-        if (!parsed.success || "error" in parsed.data) {
-          if (requestIdRef.current === thisRequestId) {
-            setSuggestions([])
-            setDropdownVisible(false)
-          }
-          return
-        }
+        const data = await getDictionarySuggestions(trimmed)
 
         if (requestIdRef.current === thisRequestId) {
-          setSuggestions(parsed.data.data)
+          setSuggestions(data)
           setDropdownVisible(true)
-          suggestCacheRef.current.set(normalized, parsed.data.data)
+          suggestCacheRef.current.set(normalized, data)
         }
       } catch {
         if (requestIdRef.current === thisRequestId) {
           setSuggestions([])
+          setDropdownVisible(false)
         }
       } finally {
         if (requestIdRef.current === thisRequestId) {

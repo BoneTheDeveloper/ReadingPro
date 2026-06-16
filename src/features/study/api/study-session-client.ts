@@ -1,7 +1,8 @@
 import {
   studySessionResponseSchema,
 } from "@/shared/study/study-response-schema";
-import { STUDY_API_ROUTES, postJson, type StudyApiResult } from "./api-utils";
+import { postJson } from "@/shared/api/api-client-utils";
+import { STUDY_API_ROUTES, type StudyApiResult } from "./api-utils";
 
 export async function ensureStudySession(): Promise<StudyApiResult<{
   sessionId: string;

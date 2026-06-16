@@ -1,10 +1,11 @@
 ---
 phase: 2
-title: "Relocate lib to server and schemas to shared"
-status: pending
+title: Relocate lib to server and schemas to shared
+status: completed
 priority: P1
-effort: "1d"
-dependencies: [1]
+effort: 1d
+dependencies:
+  - 1
 ---
 
 # Phase 2: Relocate lib to server and schemas to shared

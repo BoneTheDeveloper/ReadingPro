@@ -1,14 +1,14 @@
 ---
-title: "Restructure app: enforced server/ + shared/ contract + HTTP-first"
-description: ""
+title: 'Restructure app: enforced server/ + shared/ contract + HTTP-first'
+description: ''
 status: pending
 priority: P2
-branch: "feature/issue-69-study-quiz-flow"
+branch: feature/issue-69-study-quiz-flow
 tags: []
 blockedBy: []
 blocks: []
-created: "2026-06-16T21:18:37.235Z"
-createdBy: "ck:plan"
+created: '2026-06-16T21:18:37.235Z'
+createdBy: 'ck:plan'
 source: skill
 ---
 
@@ -41,8 +41,8 @@ Restructure the codebase so the frontend/backend boundary is explicit and compil
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 1 | [Enforce server-only boundary](./phase-01-enforce-server-only-boundary.md) | Pending |
-| 2 | [Relocate lib to server and schemas to shared](./phase-02-relocate-lib-to-server-and-schemas-to-shared.md) | Pending |
+| 1 | [Enforce server-only boundary](./phase-01-enforce-server-only-boundary.md) | Completed |
+| 2 | [Relocate lib to server and schemas to shared](./phase-02-relocate-lib-to-server-and-schemas-to-shared.md) | Completed |
 | 3 | [HTTP-first transport (convert all server actions to API routes)](./phase-03-http-first-transport-convert-all-server-actions-to-api-route.md) | Pending |
 | 4 | [Docs ADR and verification sweep](./phase-04-docs-adr-and-verification-sweep.md) | Pending |
 

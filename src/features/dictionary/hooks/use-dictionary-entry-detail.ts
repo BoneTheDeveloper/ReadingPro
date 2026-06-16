@@ -1,10 +1,7 @@
 "use client"
 
 import { useCallback, useRef, useState } from "react"
-import * as Sentry from "@sentry/nextjs"
-import {
-  dictionaryEntryDetailResponseSchema,
-} from "@/shared/dictionary/dictionary-response-schema"
+import { getDictionaryEntryDetail } from "../api/dictionary-client"
 import type {
   DictionaryEntryDto,
   DictionarySuggestItemDto,
@@ -23,36 +20,19 @@ export function useDictionaryEntryDetail() {
     setSelectedEntry(null)
 
     try {
-      const params = new URLSearchParams({
-        sourceLanguage: "en",
-        targetLanguage: "vi",
-      })
-      const res = await fetch(`/api/dictionary/entries/${item.id}?${params}`)
+      const data = await getDictionaryEntryDetail(item.id)
 
       if (detailRequestIdRef.current !== thisRequestId) return
 
-      if (res.ok) {
-        const json: unknown = await res.json()
-        const parsed = dictionaryEntryDetailResponseSchema.safeParse(json)
-        if (detailRequestIdRef.current !== thisRequestId) return
-        if (!parsed.success || "error" in parsed.data) {
-          Sentry.addBreadcrumb({
-            category: "dictionary",
-            level: "error",
-            message: "dictionary-entry-detail-schema-error",
-            data: { route: "/api/dictionary/entries/:entryId" },
-          })
-          setStatus("error")
-          return
-        }
-        setSelectedEntry(parsed.data.data)
-        setStatus("found")
-      } else {
+      setSelectedEntry(data)
+      setStatus("found")
+    } catch (err) {
+      if (detailRequestIdRef.current !== thisRequestId) return
+      if (err instanceof Error && err.message.includes("Entry not found")) {
         setStatus("not-found")
+      } else {
+        setStatus("error")
       }
-    } catch {
-      if (detailRequestIdRef.current !== thisRequestId) return
-      setStatus("error")
     }
   }, [])
 

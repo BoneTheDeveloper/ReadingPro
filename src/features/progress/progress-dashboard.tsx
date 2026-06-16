@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import * as Sentry from "@sentry/nextjs"
+import { getProgressStats } from "./api/progress-client"
 import {
   TrendingUp,
   Clock,
@@ -14,10 +14,7 @@ import {
 import { cn } from "@/shared/utils"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import {
-  progressStatsResponseSchema,
-  type ProgressStatsDto,
-} from "@/shared/study/study-response-schema"
+import type { ProgressStatsDto } from "@/shared/study/study-response-schema"
 
 export function ProgressDashboard() {
   const router = useRouter()
@@ -27,19 +24,8 @@ export function ProgressDashboard() {
   useEffect(() => {
     async function fetchStats() {
       try {
-        const response = await fetch("/api/progress/stats")
-        const result: unknown = await response.json()
-        const parsed = progressStatsResponseSchema.safeParse(result)
-        if (!parsed.success || "error" in parsed.data) {
-          Sentry.addBreadcrumb({
-            category: "progress",
-            level: "error",
-            message: "progress-stats-schema-error",
-            data: { route: "/api/progress/stats" },
-          })
-          return
-        }
-        setStats(parsed.data.data)
+        const data = await getProgressStats()
+        setStats(data)
       } catch (error) {
         console.error("Error fetching stats:", error)
       } finally {
