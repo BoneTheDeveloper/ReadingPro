@@ -86,9 +86,9 @@ Deploy 3 — contract: remove the old column/table once code no longer reference
 ### Create the migration without applying, to review SQL first
 
 ```bash
-pnpm exec prisma migrate dev --name <descriptive_name> --create-only
+pnpm db:migrate:dev --name <descriptive_name> --create-only
 # review/adjust SQL, then:
-pnpm exec prisma migrate dev
+pnpm db:migrate:dev
 ```
 
 ### Dry-run against a temporary Neon branch
