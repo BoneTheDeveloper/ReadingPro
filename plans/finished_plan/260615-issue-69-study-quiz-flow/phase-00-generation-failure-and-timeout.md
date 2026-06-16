@@ -1,7 +1,7 @@
 ---
 phase: 0
 title: "Generation failure contract + timeout"
-status: pending
+status: complete
 priority: P0
 effort: "5h"
 dependencies: []
