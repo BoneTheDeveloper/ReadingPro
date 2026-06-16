@@ -64,6 +64,10 @@ Error:
 - Calls the configured AI question generator.
 - Persists generated valid questions associated with the provided `artifactId`.
 - Does NOT replace existing questions for the passage; allows multiple artifact-scoped question sets.
+- Returned questions are cached client-side for the originating session only. On a
+  later reload they are reloaded lazily by `artifactId` when the artifact is
+  opened — see "Question Loading Strategy (Lazy Detail)" in
+  [Studio artifacts API](studio-artifacts-feature.md).
 
 ## Error Cases
 

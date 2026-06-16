@@ -51,7 +51,7 @@ export function StudyPageClient({
     handleUploadError,
     handleDeletePassage,
   } = useStudyWorkspaceState(initialPassages);
-  const { handleSimplify, handleActionClick, handleRecordQuizResult, handleResetQuizResult, retryQuizArtifact } = useStudyActions({ state, setState });
+  const { handleSimplify, handleActionClick, handleViewArtifact, handleRecordQuizResult, handleResetQuizResult, retryQuizArtifact } = useStudyActions({ state, setState });
   const layout = useStudyPanelLayout();
   // Presence heartbeat is mounted app-wide in DashboardSidebar; the study page is
   // wrapped by it, so no per-page heartbeat is needed here.
@@ -425,13 +425,10 @@ export function StudyPageClient({
               viewingArtifactRef={state.activePassageId ? state.viewingArtifactByPassageId[state.activePassageId] ?? null : null}
               onSetViewingArtifact={(ref) => {
                 if (!state.activePassageId) return;
-                setState((prev) => ({
-                  ...prev,
-                  viewingArtifactByPassageId: {
-                    ...prev.viewingArtifactByPassageId,
-                    [prev.activePassageId!]: ref,
-                  },
-                }));
+                // Routes through the hook so opening a persisted artifact lazy-loads
+                // its detail (e.g. quiz questions) when it isn't already in memory —
+                // without this, a card opened after a page reload has no questions.
+                void handleViewArtifact(ref, state.activePassageId);
               }}
               artifactDetailById={state.artifactDetailById}
               onActionClick={handleActionClick}

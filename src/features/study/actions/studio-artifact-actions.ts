@@ -77,10 +77,13 @@ export async function studioLoadArtifactDetailAction(input: {
   passageId: string;
 }): Promise<ActionResult<{ questions?: QuestionData[]; simplifiedContent?: string | null; simplifiedLevel?: string | null }>> {
   return Sentry.withServerActionInstrumentation('studioLoadArtifactDetail', { headers: await headers() }, async () => {
+    const user = await getAuthenticatedUser();
     try {
       if (input.type === 'quiz') {
+        // Scope through the parent artifact's owner so a user can only read
+        // questions for artifacts they own (prevents cross-user id probing).
         const questions = await db.question.findMany({
-          where: { artifactId: input.artifactId },
+          where: { artifactId: input.artifactId, artifact: { userId: user.id } },
           orderBy: { createdAt: 'asc' },
           select: {
             id: true,

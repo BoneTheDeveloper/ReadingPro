@@ -7,6 +7,7 @@ import { studySimplifyAction } from "@/features/study/actions/study-simplify-act
 import {
   studioCreateArtifactAction,
   studioCompleteArtifactAction,
+  studioLoadArtifactDetailAction,
 } from "@/features/study/actions/studio-artifact-actions";
 import { studyUploadAction } from "@/features/study/actions/study-upload-action";
 import { extractSelectionInfo } from "@/features/study/model/selection-utils";
@@ -352,6 +353,55 @@ describe("StudyPageClient", () => {
       screen.getByRole("button", { name: /Quiz: The Test Passage/ }),
     );
     expect(screen.getByText(question.questionText)).toBeInTheDocument();
+  });
+
+  it("lazy-loads questions when opening a persisted quiz artifact after reload", async () => {
+    // Simulates a page reload: the quiz artifact comes back from the API as
+    // metadata only (no questions in memory), so opening it must lazy-load the
+    // persisted questions via studioLoadArtifactDetailAction.
+    const passage = createStudyPassage();
+    const question = createStudyQuestion();
+    const persistedArtifact = {
+      id: "persisted-quiz-1",
+      type: "quiz",
+      passageId: passage.id,
+      title: passage.title,
+      status: "done",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    vi.mocked(fetch).mockImplementation(async (input: RequestInfo | URL) => {
+      if (String(input).startsWith("/api/studio-artifacts")) {
+        return new Response(
+          JSON.stringify({ success: true, data: { artifacts: [persistedArtifact] } }),
+          { status: 200 },
+        );
+      }
+      return new Response(JSON.stringify({ messages: [] }), { status: 200 });
+    });
+    vi.mocked(studioLoadArtifactDetailAction).mockResolvedValue({
+      questions: [question],
+    });
+
+    const { user } = renderWithUser(
+      <StudyPageClient initialPassages={[passage]} />,
+    );
+
+    await user.click(getSourceListItem(passage.title));
+
+    const card = await screen.findByRole("button", {
+      name: /Quiz: The Test Passage/,
+    });
+    await user.click(card);
+
+    await waitFor(() =>
+      expect(studioLoadArtifactDetailAction).toHaveBeenCalledWith({
+        artifactId: persistedArtifact.id,
+        type: "quiz",
+        passageId: passage.id,
+      }),
+    );
+    expect(await screen.findByText(question.questionText)).toBeInTheDocument();
   });
 
   it("opens the chat view for the active passage", async () => {
