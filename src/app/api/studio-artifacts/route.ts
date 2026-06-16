@@ -18,8 +18,8 @@ const studyArtifactsQuerySchema = z.object({
 
 export async function GET(request: NextRequest) {
   const requestLog = createRequestLogger(
-    "api:study-artifacts",
-    createRequestLogContext(request, "GET", "/api/study-artifacts"),
+    "api:studio-artifacts",
+    createRequestLogContext(request, "GET", "/api/studio-artifacts"),
   );
 
   try {
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
 
     requestLog.info(
       { passageId, artifactCount: artifacts.length },
-      "Study artifacts fetched",
+      "Studio artifacts fetched",
     );
 
     return NextResponse.json({
@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     if (isAuthenticationRequiredError(error)) {
-      requestLog.warn("Unauthenticated study-artifacts request rejected");
+      requestLog.warn("Unauthenticated studio-artifacts request rejected");
       return NextResponse.json(
         { error: "Authentication required." },
         { status: 401 },
@@ -68,12 +68,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    requestLog.error({ err: error }, "Failed to fetch study artifacts");
+    requestLog.error({ err: error }, "Failed to fetch studio artifacts");
     Sentry.captureException(error, {
-      tags: { route: "api:study-artifacts", method: "GET" },
+      tags: { route: "api:studio-artifacts", method: "GET" },
     });
     return NextResponse.json(
-      { error: "Failed to fetch study artifacts." },
+      { error: "Failed to fetch studio artifacts." },
       { status: 500 },
     );
   }

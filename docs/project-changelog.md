@@ -43,9 +43,9 @@
 ### Added
 - `StudioArtifact` model replacing `StudyArtifact` with type-specific relational storage.
 - `StudioArtifact` relational link to `Question` via `artifactId` (NOT NULL).
-- `/api/study-artifacts` route for listing artifacts by `passageId`.
+- `/api/studio-artifacts` route for listing artifacts by `passageId`.
 - `studio-artifacts-service.ts` for managing artifact lifecycle and persistence.
-- `docs/API/Routes/study-artifacts-feature.md` documentation.
+- `docs/API/Routes/studio-artifacts-feature.md` documentation.
 
 ### Changed
 - **Schema**: Renamed `StudyArtifact` → `StudioArtifact`. Dropped `content` JSONB field.

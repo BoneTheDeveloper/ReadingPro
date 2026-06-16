@@ -1,5 +1,9 @@
 import { db } from "@/lib/db/client";
-import type { StudioArtifact, StudioArtifactType } from "@/lib/study/shared/studio-artifact-types";
+import {
+  GENERATING_ARTIFACT_ORPHAN_TIMEOUT_MS,
+  type StudioArtifact,
+  type StudioArtifactType,
+} from "@/lib/study/shared/studio-artifact-types";
 
 function toStudioArtifact(row: {
   id: string;
@@ -30,7 +34,28 @@ export async function fetchStudioArtifacts(
     orderBy: { createdAt: "desc" },
     select: { id: true, type: true, passageId: true, title: true, status: true, createdAt: true, updatedAt: true },
   });
-  return { artifacts: rows.map(toStudioArtifact) };
+
+  // Reconcile orphaned generations: a "generating" row only leaves that state via
+  // the client that started it, so one that has outlived the orphan timeout is
+  // stranded (interrupted client) and would otherwise lock the action forever.
+  const cutoff = Date.now() - GENERATING_ARTIFACT_ORPHAN_TIMEOUT_MS;
+  const orphanedIds = rows
+    .filter((row) => row.status === "generating" && row.updatedAt.getTime() < cutoff)
+    .map((row) => row.id);
+
+  if (orphanedIds.length > 0) {
+    await db.studioArtifact.updateMany({
+      where: { id: { in: orphanedIds }, userId, status: "generating" },
+      data: { status: "failed" },
+    });
+  }
+
+  const orphanedIdSet = new Set(orphanedIds);
+  return {
+    artifacts: rows.map((row) =>
+      orphanedIdSet.has(row.id) ? toStudioArtifact({ ...row, status: "failed" }) : toStudioArtifact(row),
+    ),
+  };
 }
 
 export async function createStudioArtifact(input: {

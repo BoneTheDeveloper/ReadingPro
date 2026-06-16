@@ -186,7 +186,7 @@ describe("StudyPageClient", () => {
           });
         }
 
-        if (url.startsWith("/api/study-artifacts")) {
+        if (url.startsWith("/api/studio-artifacts")) {
           return new Response(JSON.stringify({ success: true, data: { artifacts: [] } }), {
             status: 200,
           });

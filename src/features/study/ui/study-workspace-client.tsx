@@ -282,7 +282,7 @@ export function StudyPageClient({
       },
     }));
 
-    fetch(`/api/study-artifacts?passageId=${passageId}`, { signal: controller.signal })
+    fetch(`/api/studio-artifacts?passageId=${passageId}`, { signal: controller.signal })
       .then(async (r) => {
         if (!r.ok) {
           throw new Error(`Failed to fetch study artifacts (${r.status})`);
