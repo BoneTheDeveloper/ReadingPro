@@ -12,8 +12,8 @@ This `docs/` page is an architecture index only. Do not copy the full migration 
 ## Summary
 
 - Local schema changes use the Neon `development` branch.
-- CI validates migration files but does not apply production migrations.
-- Production migrations run only through the trusted GitHub Actions migration/deploy workflow.
+- CI runs lint, typecheck, and tests only; it does not validate or apply migrations.
+- Production migrations are applied manually from local using `pnpm db:migrate:deploy:prod` (`.env.prod`).
 - Runtime app code uses pooled `DATABASE_URL`.
 - Migration jobs use `DIRECT_URL` only in trusted contexts.
 - Destructive changes require expand/contract planning.

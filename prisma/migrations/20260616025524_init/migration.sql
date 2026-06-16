@@ -389,11 +389,6 @@ CREATE UNIQUE INDEX "question_reviews_questionId_userId_key" ON "question_review
 CREATE INDEX "study_sessions_userId_startedAt_idx" ON "study_sessions"("userId", "startedAt");
 
 -- CreateIndex
--- Backstop invariant: at most one open session per user. The advisory lock in
--- ensureActiveSession prevents this from ever being hit under normal load.
-CREATE UNIQUE INDEX "study_sessions_one_open_per_user" ON "study_sessions"("userId") WHERE "completedAt" IS NULL;
-
--- CreateIndex
 CREATE INDEX "quiz_attempts_userId_startedAt_idx" ON "quiz_attempts"("userId", "startedAt");
 
 -- CreateIndex

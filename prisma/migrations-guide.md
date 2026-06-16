@@ -1,8 +1,9 @@
 # Prisma Migration Guide
 
 Single source of truth for changing the database schema. Solo-dev flow on Neon +
-Prisma 7. CI validates migration files but never touches a database. You apply
-migrations to `development` and to `production` yourself, from your laptop.
+Prisma 7. CI runs lint, typecheck, and tests only — it does not validate or
+apply migrations. You apply migrations to `development` and to `production`
+yourself, from your laptop.
 
 ## Mental Model
 
@@ -10,7 +11,7 @@ migrations to `development` and to `production` yourself, from your laptop.
 |---|---|---|---|---|
 | Local dev | `development` | `.env.local` | `pnpm db:migrate:dev` | You |
 | Production | `production` | `.env.prod` | `pnpm db:migrate:deploy:prod` | You (manual) |
-| CI | none | none | validate only | No DB writes |
+| CI | none | none | lint / typecheck / test | No migration checks or DB writes |
 
 `prisma.config.ts` loads `.env.local` by default. The `:prod` scripts set
 `PRISMA_ENV_FILE=.env.prod` so the same CLI points at the production branch.
@@ -56,8 +57,6 @@ Rules:
 
 ## 2. Update Production From Local
 
-CI does **not** migrate. You apply to production yourself with the `:prod`
-scripts. Treat every run as destructive until `\conninfo` proves the target.
 
 1. Populate `.env.prod` (never commit it) from the Vercel/Neon console:
 
@@ -66,21 +65,14 @@ scripts. Treat every run as destructive until `\conninfo` proves the target.
    DIRECT_URL=...     # direct, production branch
    ```
 
-2. **Confirm the target branch before writing anything:**
-
-   ```bash
-   set -a; . ./.env.prod; set +a
-   psql "$DIRECT_URL" -c "\conninfo"   # must show the production endpoint/host
-   ```
-
-3. Apply and verify:
+2. Apply and verify:
 
    ```bash
    pnpm db:migrate:deploy:prod
    pnpm db:migrate:status:prod         # expect "Database schema is up to date!"
    ```
 
-4. Deploy the matching app version (Vercel) so code and schema move together.
+3. Deploy the matching app version (Vercel) so code and schema move together.
    Production migrations must be backward-compatible with the currently deployed
    app: new code must not require an unapplied change, and old code must keep
    working against the new schema.
