@@ -1,14 +1,27 @@
+// [Study · Sources] Reading material the learner studies, plus the chat thread
+// attached to a passage. A passage is the root entity the study workspace loads;
+// studio artifacts, translations, and chat all hang off it.
+
+/// A reading passage: the source text a learner studies, created by paste (TEXT)
+/// or PDF extraction. Client: rows in the study sources panel; opening one loads
+/// the study workspace (content + studio).
 model Passage {
   id                String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId            String
   title             String
   content           String
+  /// AI-simplified rewrite of `content`; null until the learner simplifies.
   simplifiedContent String?
+  /// CEFR level of `content`; null until analyzed.
   originalLevel     CEFRLevel?
+  /// CEFR level of `simplifiedContent`; null until simplified.
   simplifiedLevel   CEFRLevel?
+  /// Word count of original `content`.
   wordCount         Int
   sourceType        SourceType
+  /// Blob pathname of the source PDF (PDF sources only); unique. Server-only.
   filePath          String?    @unique
+  /// Soft-delete timestamp; non-null rows are hidden from the sources list.
   deletedAt         DateTime?
   createdAt         DateTime   @default(now())
   updatedAt         DateTime   @updatedAt
@@ -26,10 +39,12 @@ model Passage {
   @@map("passages")
 }
 
+/// One message in the per-passage AI chat thread. Client: studio chat panel.
 model StudyChatMessage {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId    String
   passageId String   @db.Uuid
+  /// Author role: 'user' or 'assistant'.
   role      String
   content   String
   createdAt DateTime @default(now())

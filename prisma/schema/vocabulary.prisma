@@ -1,25 +1,41 @@
-model VocabularyItem {
-  id                 String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId             String
-  translation        String
-  sourceLanguage     String
-  targetLanguage     String
-  type               String              @default("WORD")
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
-  normalizedText     String              @default("")
-  displayText        String              @default("")
-  status             String              @default("NEW")
-  source             String              @default("TRANSLATE")
-  savedCount         Int                 @default(1)
-  nextReviewAt       DateTime?
-  lastReviewedAt     DateTime?
-  dictionaryEntryId  String?             @db.Uuid
-  dictionarySenseId  String?             @db.Uuid
+// [Vocabulary] Words/phrases the learner saved, where they were encountered, and
+// the sets/SRS that organize review. Surfaces in the vocabulary list, the SRS
+// review queue, and vocabulary sets.
 
-  user            UserProfile           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  occurrences     VocabularyOccurrence[]
-  setItems        VocabularySetItem[]
+/// A saved vocabulary entry the learner collected (from translate or dictionary),
+/// carrying spaced-repetition state. Client: vocabulary list rows + SRS review.
+model VocabularyItem {
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId            String
+  /// Saved meaning/translation of the term.
+  translation       String
+  sourceLanguage    String
+  targetLanguage    String
+  /// 'WORD' (single token) or 'PHRASE' (contains a space) — auto-detected.
+  type              String    @default("WORD")
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  /// Lowercased/normalized term for dedupe + lookup (part of the unique key).
+  normalizedText    String    @default("")
+  /// Original-cased term as displayed.
+  displayText       String    @default("")
+  /// SRS bucket: 'NEW' | 'LEARNING' | 'MASTERED'.
+  status            String    @default("NEW")
+  /// Origin of the save: 'TRANSLATE' | 'DICTIONARY'.
+  source            String    @default("TRANSLATE")
+  /// Times the learner re-saved this term.
+  savedCount        Int       @default(1)
+  /// Next SRS review due time; null when not scheduled.
+  nextReviewAt      DateTime?
+  lastReviewedAt    DateTime?
+  /// Linked dictionary entry when sourced from the dictionary. FK (nullable).
+  dictionaryEntryId String?   @db.Uuid
+  /// Linked dictionary sense when sourced from the dictionary. FK (nullable).
+  dictionarySenseId String?   @db.Uuid
+
+  user        UserProfile            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  occurrences VocabularyOccurrence[]
+  setItems    VocabularySetItem[]
 
   @@unique([userId, normalizedText, targetLanguage, translation])
   @@index([userId, nextReviewAt])
@@ -27,13 +43,16 @@ model VocabularyItem {
   @@map("vocabulary_items")
 }
 
+/// A specific place a vocabulary item was encountered (passage + sentence). One
+/// item can have many occurrences. Client: "seen in" context on a word.
 model VocabularyOccurrence {
-  id               String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  vocabularyItemId String         @db.Uuid
-  sourceId         String?        @db.Uuid
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  vocabularyItemId String   @db.Uuid
+  /// Passage where it was seen; null if not tied to a passage. FK -> passages.id.
+  sourceId         String?  @db.Uuid
   selectedText     String
   contextSentence  String?
-  createdAt        DateTime       @default(now())
+  createdAt        DateTime @default(now())
 
   vocabularyItem VocabularyItem @relation(fields: [vocabularyItemId], references: [id], onDelete: Cascade)
 
@@ -42,29 +61,34 @@ model VocabularyOccurrence {
   @@map("vocabulary_occurrences")
 }
 
+/// A named collection of vocabulary items. MANUAL = user list; DAILY/WEEKLY =
+/// auto-built review batches bounded by periodStart/periodEnd. Client: sets tabs.
 model VocabularySet {
-  id          String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id          String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId      String
   name        String
   type        VocabularySetType
+  /// Period start for DAILY/WEEKLY sets; null for MANUAL (part of the unique key).
   periodStart DateTime?
+  /// Period end for DAILY/WEEKLY sets; null for MANUAL (part of the unique key).
   periodEnd   DateTime?
-  createdAt   DateTime           @default(now())
-  updatedAt   DateTime           @updatedAt
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
 
-  user      UserProfile         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  setItems  VocabularySetItem[]
+  user     UserProfile         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  setItems VocabularySetItem[]
 
   @@unique([userId, type, periodStart, periodEnd])
   @@index([userId, type])
   @@map("vocabulary_sets")
 }
 
+/// Join row placing a vocabulary item into a set. Client: set membership.
 model VocabularySetItem {
-  id               String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  vocabularySetId  String        @db.Uuid
-  vocabularyItemId String        @db.Uuid
-  addedAt          DateTime      @default(now())
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  vocabularySetId  String   @db.Uuid
+  vocabularyItemId String   @db.Uuid
+  addedAt          DateTime @default(now())
 
   vocabularySet  VocabularySet  @relation(fields: [vocabularySetId], references: [id], onDelete: Cascade)
   vocabularyItem VocabularyItem @relation(fields: [vocabularyItemId], references: [id], onDelete: Cascade)

@@ -1,3 +1,7 @@
+// [Shared] Enumerations referenced across modules.
+
+/// CEFR proficiency level. Drives passage difficulty analysis and the learner's
+/// target level. Client: level badges on passages, target-level picker in profile.
 enum CEFRLevel {
   A1
   A2
@@ -7,21 +11,28 @@ enum CEFRLevel {
   C2
 }
 
+/// How a passage entered the app. Client: upload flow chooses TEXT (pasted) or
+/// PDF (extracted), shown as a source-type icon in the sources panel.
 enum SourceType {
   TEXT
   PDF
 }
 
+/// Quiz question format. Client: studio quiz renders multiple-choice options or a
+/// true/false toggle accordingly.
 enum QuestionType {
   MULTIPLE_CHOICE
   TRUE_FALSE
 }
 
+/// Billing tier. Gates studio quotas / pro features. Client: profile + upgrade UI.
 enum Tier {
   FREE
   PRO
 }
 
+/// Kind of vocabulary set. MANUAL = user-curated list; DAILY/WEEKLY = auto-built
+/// review batches bounded by periodStart/periodEnd. Client: vocabulary sets tabs.
 enum VocabularySetType {
   MANUAL
   DAILY

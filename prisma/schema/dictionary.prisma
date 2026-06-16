@@ -1,8 +1,16 @@
+// [Dictionary] Shared, app-wide dictionary (not per-user): headwords, their
+// senses, translations, lookup aliases, and import provenance. Powers the
+// dictionary lookup panel and seeds vocabulary saves.
+
+/// A dictionary headword (one term), shared across all users. Client: lookup
+/// result header; entries rank by frequency for suggestions.
 model DictionaryEntry {
   id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   headword           String
+  /// Normalized form for lookup/dedupe (part of the unique key).
   normalizedHeadword String
   sourceLanguage     String   @default("en")
+  /// Frequency rank (higher = more common); orders suggestions.
   frequencyRank      Int      @default(0)
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
@@ -15,6 +23,7 @@ model DictionaryEntry {
   @@map("dictionary_entries")
 }
 
+/// One sense (meaning) of an entry. Client: each definition block under a result.
 model DictionarySense {
   id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   entryId      String   @db.Uuid
@@ -22,6 +31,7 @@ model DictionarySense {
   definition   String?
   example      String?
   tags         String[]
+  /// Ordering weight among senses (higher first).
   usageRank    Int      @default(0)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -33,15 +43,22 @@ model DictionarySense {
   @@map("dictionary_senses")
 }
 
+/// A translation of a sense into a target language, with provenance + ranking.
+/// Client: translated meaning(s) under a sense (the primary one highlighted).
 model DictionaryTranslation {
   id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   senseId        String    @db.Uuid
   targetLanguage String    @default("vi")
   translation    String
+  /// Preferred translation for the sense.
   isPrimary      Boolean   @default(false)
+  /// Ordering weight among translations (lower = higher priority).
   rank           Int
+  /// Optional confidence score (0-1) from the source.
   confidence     Float?
+  /// Review state: 'draft' by default, promoted after review. Server/admin.
   status         String    @default("draft")
+  /// Origin pipeline kind (provenance).
   sourceType     String
   sourceName     String?
   reviewedAt     DateTime?
@@ -55,10 +72,14 @@ model DictionaryTranslation {
   @@map("dictionary_translations")
 }
 
+/// An alternate lookup form (inflection/variant/misspelling) mapping to an entry.
+/// Server-side: lets lookups resolve non-headword inputs to the right entry.
 model DictionaryAlias {
   id              String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   entryId         String @db.Uuid
+  /// Normalized alias used for lookup (part of the unique key).
   normalizedAlias String
+  /// Alias kind, e.g. 'variant' (default), inflection, spelling.
   aliasType       String @default("variant")
 
   entry DictionaryEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
@@ -68,10 +89,14 @@ model DictionaryAlias {
   @@map("dictionary_aliases")
 }
 
+/// Audit trail for dictionary seed/import batches. Server/admin only; records
+/// which batch produced which entity for traceability.
 model DictionarySourceAudit {
   id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   batchName  String
+  /// Kind of entity referenced (e.g. entry/sense/translation).
   entityType String
+  /// Public id of the referenced entity.
   entityId   String   @db.Uuid
   note       String?
   createdAt  DateTime @default(now())

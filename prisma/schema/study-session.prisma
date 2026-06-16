@@ -1,12 +1,18 @@
-// Study activity records: a session buckets time/presence; a quiz attempt records
-// a graded run during a session.
+// [Study · Sessions & Progress] Engagement records. A session buckets a span of
+// study presence via a heartbeat; the progress module aggregates sessions (and
+// QuizResult) into study stats.
 
+/// One study session: tracks who is studying and a presence window updated by a
+/// client heartbeat. Open while completedAt is null. Client: drives the active-
+/// session indicator and feeds time-studied stats on the progress dashboard.
 model StudySession {
-  id        String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId    String
+  id     String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId String
 
   startedAt      DateTime  @default(now())
+  /// Last heartbeat; advanced while the learner is active (idle/expiry signal).
   lastActivityAt DateTime  @default(now())
+  /// Session close time; null means the session is still open.
   completedAt    DateTime?
 
   user UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)

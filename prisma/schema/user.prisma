@@ -1,10 +1,18 @@
+// [Identity & Account] The signed-in learner.
+
+/// Learner account, keyed by the Clerk user id (text, not a generated UUID).
+/// Owns every user-scoped record. Client: profile/account page, tier gating, and
+/// the implicit owner of study, vocabulary, and upload data.
 model UserProfile {
+  /// Clerk user id, supplied at sign-up — NOT a database-generated UUID.
   id               String    @id
   email            String?
   name             String?
   avatarUrl        String?
   bio              String?
+  /// Goal proficiency; default target for passage simplification.
   targetLevel      CEFRLevel @default(B2)
+  /// Billing tier; gates pro features/quotas.
   tier             Tier      @default(FREE)
   stripeCustomerId String?   @unique
   createdAt        DateTime  @default(now())
