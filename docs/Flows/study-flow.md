@@ -45,13 +45,18 @@ A quiz is a `StudioArtifact` whose `status` is `generating` -> `done` | `failed`
 - **Failure reason is client-only.** Failures carry a shared `StudioArtifactErrorCode`
   (`src/lib/study/shared/studio-artifact-types.ts`) returned as `{ error, code }` and shown
   as a localized card message. It is **not** persisted — the reason is gone after reload by design.
-- **Failures are ephemeral.** On any failure the artifact row is **deleted**
-  (`studioDeleteArtifactAction`); the client keeps a transient failed card with a Retry
-  button. The orphan reaper in `fetchStudioArtifacts` likewise **deletes** stuck `generating`
-  rows (interrupted clients) instead of leaving `failed` tombstones, freeing the lock. Net:
-  reload shows only `generating` and `done` artifacts.
-- **Retry** re-creates the artifact under the same id and regenerates (guarded against
-  re-entrant double-fire).
+- **Atomic generation.** `POST /api/studio-questions` creates the `StudioArtifact`
+  (`status: "done"`) + its `Question` rows in a single DB transaction. On any failure
+  nothing is persisted. The DB only ever holds completed quizzes.
+- **Failures are in-memory only.** A failed generation leaves no DB row. The client
+  keeps a transient failed card with a Retry button; it is gone after reload. Net:
+  reload shows only `done` artifacts (never `generating` or `failed` from the DB).
+- **Interrupt safety.** If the app closes mid-generation: if the server committed,
+  the quiz appears `done` on reload; if not, nothing is in the DB and the user can
+  re-click Quiz. No orphan-recovery or reaper needed.
+- **Retry** re-POSTs under the same `artifactId` (guarded against re-entrant
+  double-fire). The server's idempotency guard returns the existing quiz if the
+  first attempt actually committed.
 - **Passage-switch race.** A generation that completes after the user switched passages is
   kept on its originating passage's cache (not discarded).
 

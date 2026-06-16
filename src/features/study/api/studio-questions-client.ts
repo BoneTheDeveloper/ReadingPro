@@ -1,13 +1,14 @@
 import { generatedStudyQuestionsResponseSchema } from "@/lib/study/shared/study-response-schema";
 import {
   STUDIO_GENERATION_TIMEOUT_MS,
+  type StudioArtifact,
   type StudioArtifactErrorCode,
 } from "@/lib/study/shared/studio-artifact-types";
 import type { QuestionData } from "@/features/study/model/types";
 import { STUDY_API_ROUTES, postJson, RequestTimeoutError } from "./api-utils";
 
 export type GenerateStudioQuestionsResult =
-  | { questions: QuestionData[] }
+  | { artifact: StudioArtifact; questions: QuestionData[] }
   | { error: string; code: StudioArtifactErrorCode };
 
 export async function generateStudioQuestions(input: {
@@ -24,7 +25,7 @@ export async function generateStudioQuestions(input: {
     if ("error" in payload) {
       return { error: payload.error, code: (payload.code as StudioArtifactErrorCode | undefined) ?? "UNKNOWN" };
     }
-    return { questions: payload.data.questions };
+    return { artifact: payload.data.artifact as StudioArtifact, questions: payload.data.questions };
   } catch (err) {
     // A client abort (timeout) always settles here so the caller never hangs.
     if (err instanceof RequestTimeoutError) {

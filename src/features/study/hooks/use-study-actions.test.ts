@@ -2,13 +2,8 @@ import { act, renderHook } from "@testing-library/react";
 import { useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { studySimplifyAction } from "@/features/study/actions/study-simplify-action";
-import {
-  studioCreateArtifactAction,
-  studioCompleteArtifactAction,
-  studioDeleteArtifactAction,
-} from "@/features/study/actions/studio-artifact-actions";
 import { generateStudioQuestions } from "@/features/study/api/studio-questions-client";
-import type { PassageData, QuestionData, StudyState } from "../model/types";
+import type { PassageData, QuestionData, StudioArtifact, StudyState } from "../model/types";
 import { useStudyActions } from "./use-study-actions";
 
 vi.mock("@/features/study/api/studio-questions-client", () => ({
@@ -20,9 +15,6 @@ vi.mock("@/features/study/actions/study-simplify-action", () => ({
 }));
 
 vi.mock("@/features/study/actions/studio-artifact-actions", () => ({
-  studioCreateArtifactAction: vi.fn(),
-  studioCompleteArtifactAction: vi.fn(),
-  studioDeleteArtifactAction: vi.fn(),
   studioLoadArtifactDetailAction: vi.fn(),
 }));
 
@@ -55,6 +47,16 @@ const question: QuestionData = {
   sourceLine: 1,
   questionType: "main_idea",
   difficulty: 1,
+};
+
+const serverArtifact: StudioArtifact = {
+  id: "result-1",
+  type: "quiz",
+  passageId: "passage-1",
+  title: "Study Passage",
+  status: "done",
+  createdAt: "2026-06-16T12:00:00.000Z",
+  updatedAt: "2026-06-16T12:01:00.000Z",
 };
 
 function createState(overrides: Partial<StudyState> = {}): StudyState {
@@ -90,16 +92,6 @@ describe("useStudyActions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.spyOn(crypto, "randomUUID").mockReturnValue("result-1");
-    vi.mocked(studioCreateArtifactAction).mockResolvedValue({
-      id: "result-1",
-      type: "quiz",
-      passageId: "passage-1",
-      title: "Study Passage",
-      status: "generating",
-      createdAt: new Date().toISOString(),
-    });
-    vi.mocked(studioCompleteArtifactAction).mockResolvedValue({ ok: true });
-    vi.mocked(studioDeleteArtifactAction).mockResolvedValue({ ok: true });
   });
 
   it("simplifies the active passage and clears the loading state", async () => {
@@ -159,7 +151,7 @@ describe("useStudyActions", () => {
   });
 
   it("inserts a completed quiz result and writes generated questions", async () => {
-    vi.mocked(generateStudioQuestions).mockResolvedValue({ questions: [question] });
+    vi.mocked(generateStudioQuestions).mockResolvedValue({ artifact: serverArtifact, questions: [question] });
     const { result } = renderStudyActions();
 
     await act(async () => {
@@ -180,7 +172,7 @@ describe("useStudyActions", () => {
     expect(result.current.state.artifactDetailById["result-1"].questions).toEqual([question]);
   });
 
-  it("marks the quiz failed with the server error code and deletes the abandoned row", async () => {
+  it("marks the quiz failed with the server error code (no DB row to delete)", async () => {
     vi.mocked(generateStudioQuestions).mockResolvedValueOnce({ error: "No questions generated", code: "NO_QUESTIONS" });
     const { result } = renderStudyActions();
 
@@ -191,7 +183,6 @@ describe("useStudyActions", () => {
     expect(result.current.state.error).toBe("No questions generated");
     const results = result.current.state.artifactsByPassageId["passage-1"].data;
     expect(results[0]).toMatchObject({ status: "failed", errorCode: "NO_QUESTIONS" });
-    expect(studioDeleteArtifactAction).toHaveBeenCalledWith({ artifactId: "result-1" });
   });
 
   it("settles a stalled generation to failed (TIMEOUT) so the lock releases", async () => {
@@ -209,7 +200,7 @@ describe("useStudyActions", () => {
   });
 
   it("keeps a successful generation on its originating passage after a passage switch", async () => {
-    let resolveQuestions: (value: { questions: QuestionData[] }) => void = () => {};
+    let resolveQuestions: (value: { artifact: StudioArtifact; questions: QuestionData[] }) => void = () => {};
     vi.mocked(generateStudioQuestions).mockImplementationOnce(
       () =>
         new Promise((resolve) => {
@@ -230,7 +221,7 @@ describe("useStudyActions", () => {
     });
 
     await act(async () => {
-      resolveQuestions({ questions: [question] });
+      resolveQuestions({ artifact: serverArtifact, questions: [question] });
       await actionPromise;
     });
 
@@ -238,10 +229,9 @@ describe("useStudyActions", () => {
     const originating = result.current.state.artifactsByPassageId["passage-1"].data;
     expect(originating[0]).toMatchObject({ passageId: "passage-1", status: "done" });
     expect(result.current.state.artifactDetailById["result-1"].questions).toEqual([question]);
-    expect(studioDeleteArtifactAction).not.toHaveBeenCalled();
   });
 
-  it("retries a failed quiz by recreating the row under the same id and regenerating", async () => {
+  it("retries a failed quiz by re-POSTing under the same id (no DB row recreate)", async () => {
     vi.mocked(generateStudioQuestions).mockResolvedValueOnce({ error: "Request timed out", code: "TIMEOUT" });
     const { result } = renderStudyActions();
 
@@ -250,18 +240,13 @@ describe("useStudyActions", () => {
     });
     expect(result.current.state.artifactsByPassageId["passage-1"].data[0]).toMatchObject({ status: "failed" });
 
-    vi.mocked(generateStudioQuestions).mockResolvedValueOnce({ questions: [question] });
+    vi.mocked(generateStudioQuestions).mockResolvedValueOnce({ artifact: serverArtifact, questions: [question] });
 
     await act(async () => {
       await result.current.actions.retryQuizArtifact("result-1");
     });
 
-    expect(studioCreateArtifactAction).toHaveBeenLastCalledWith({
-      id: "result-1",
-      passageId: "passage-1",
-      type: "quiz",
-      title: "Study Passage",
-    });
+    expect(generateStudioQuestions).toHaveBeenLastCalledWith({ passageId: "passage-1", artifactId: "result-1" });
     const retried = result.current.state.artifactsByPassageId["passage-1"].data;
     expect(retried).toHaveLength(1);
     expect(retried[0]).toMatchObject({ id: "result-1", status: "done", errorCode: undefined });

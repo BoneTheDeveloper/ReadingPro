@@ -1,7 +1,7 @@
 ---
 title: "Atomic Quiz Generation (no persisted generating state)"
 description: "Make quiz generation crash-safe by removing persisted 'generating' state and the read-time orphan reaper; the DB only ever holds completed quizzes."
-status: pending
+status: done
 priority: P1
 branch: "feature/issue-69-study-quiz-flow"
 tags: [study, quiz, reliability, refactor]
@@ -71,10 +71,10 @@ babysit — more moving parts for a strictly worse outcome. Not chosen.
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 1 | [Server-authoritative atomic generation](./phase-01-server-authoritative-atomic-generation.md) | Pending |
-| 2 | [Client flow simplification](./phase-02-client-flow-simplification.md) | Pending |
-| 3 | [Remove reaper + legacy cleanup](./phase-03-remove-reaper-legacy-cleanup.md) | Pending |
-| 4 | [Tests and docs](./phase-04-tests-and-docs.md) | Pending |
+| 1 | [Server-authoritative atomic generation](./phase-01-server-authoritative-atomic-generation.md) | Done |
+| 2 | [Client flow simplification](./phase-02-client-flow-simplification.md) | Done |
+| 3 | [Remove reaper + legacy cleanup](./phase-03-remove-reaper-legacy-cleanup.md) | Done |
+| 4 | [Tests and docs](./phase-04-tests-and-docs.md) | Done |
 
 Key ordering: Phase 1 (server) ships first — it is the new contract. Phase 2
 (client) depends on Phase 1's response shape. Phase 3 removes the now-dead reaper

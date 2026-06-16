@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "Test coverage"
-status: pending
+status: complete
 priority: P1
 effort: "4h"
 dependencies: [0, 2]

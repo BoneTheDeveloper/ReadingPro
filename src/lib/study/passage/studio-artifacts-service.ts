@@ -1,6 +1,5 @@
 import { db } from "@/lib/db/client";
 import {
-  GENERATING_ARTIFACT_ORPHAN_TIMEOUT_MS,
   type StudioArtifact,
   type StudioArtifactType,
 } from "@/lib/study/shared/studio-artifact-types";
@@ -47,67 +46,7 @@ export async function fetchStudioArtifacts(
     include: { quizResult: true },
   });
 
-  // Reconcile orphaned generations: a "generating" row only leaves that state via
-  // the client that started it, so one that has outlived the orphan timeout is
-  // stranded (interrupted client) and would otherwise lock the action forever.
-  // Failures are ephemeral, so we delete the orphan rather than leave a tombstone:
-  // it disappears on this read and the action lock is freed.
-  const cutoff = Date.now() - GENERATING_ARTIFACT_ORPHAN_TIMEOUT_MS;
-  const orphanedIds = rows
-    .filter((row) => row.status === "generating" && row.updatedAt.getTime() < cutoff)
-    .map((row) => row.id);
-
-  if (orphanedIds.length > 0) {
-    await db.studioArtifact.deleteMany({
-      where: { id: { in: orphanedIds }, userId, status: "generating" },
-    });
-  }
-
-  const orphanedIdSet = new Set(orphanedIds);
-  return {
-    artifacts: rows
-      .filter((row) => !orphanedIdSet.has(row.id))
-      .map((row) => toStudioArtifact(row)),
-  };
-}
-
-export async function createStudioArtifact(input: {
-  id: string;
-  passageId: string;
-  userId: string;
-  type: StudioArtifactType;
-  title: string;
-}): Promise<StudioArtifact> {
-  const row = await db.studioArtifact.create({
-    data: {
-      id: input.id,
-      passageId: input.passageId,
-      userId: input.userId,
-      type: input.type,
-      title: input.title,
-      status: "generating",
-    },
-    include: { quizResult: true },
-  });
-  return toStudioArtifact(row);
-}
-
-export async function completeStudioArtifact(
-  artifactId: string,
-  userId: string,
-): Promise<void> {
-  await db.studioArtifact.updateMany({
-    where: { id: artifactId, userId },
-    data: { status: "done" },
-  });
-}
-
-// A failed generation leaves no trace: we delete the artifact (cascade removes any
-// partial Question rows) so a reload shows a clean slate instead of a dead card.
-export async function deleteStudioArtifact(artifactId: string, userId: string): Promise<void> {
-  await db.studioArtifact.deleteMany({
-    where: { id: artifactId, userId },
-  });
+  return { artifacts: rows.map((row) => toStudioArtifact(row)) };
 }
 
 export async function recordQuizResult(

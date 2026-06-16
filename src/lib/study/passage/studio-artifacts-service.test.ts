@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/lib/db/client";
-import { GENERATING_ARTIFACT_ORPHAN_TIMEOUT_MS } from "@/lib/study/shared/studio-artifact-types";
 import { fetchStudioArtifacts, recordQuizResult, resetQuizResult } from "./studio-artifacts-service";
 
 const NOW = new Date("2026-06-16T12:00:00.000Z");
@@ -37,46 +36,15 @@ describe("studio-artifacts-service", () => {
     vi.clearAllMocks();
   });
 
-  describe("fetchStudioArtifacts orphan reconciliation", () => {
-    beforeEach(() => {
-      vi.mocked(db.studioArtifact.deleteMany).mockResolvedValue({ count: 1 } as never);
-    });
-
-    it("deletes a stale generating row and omits it from the result", async () => {
-      const staleUpdatedAt = new Date(NOW.getTime() - GENERATING_ARTIFACT_ORPHAN_TIMEOUT_MS - 1_000);
+  describe("fetchStudioArtifacts", () => {
+    it("returns done artifacts without mutating the DB", async () => {
       vi.mocked(db.studioArtifact.findMany).mockResolvedValue([
-        artifactRow({ id: "orphan-1", status: "generating", createdAt: staleUpdatedAt, updatedAt: staleUpdatedAt }),
         artifactRow({ id: "done-1", status: "done" }),
       ] as never);
 
       const { artifacts } = await fetchStudioArtifacts("user-1", "passage-1");
 
       expect(artifacts.map((a) => a.id)).toEqual(["done-1"]);
-      expect(db.studioArtifact.deleteMany).toHaveBeenCalledWith({
-        where: { id: { in: ["orphan-1"] }, userId: "user-1", status: "generating" },
-      });
-    });
-
-    it("leaves a recent generating row untouched", async () => {
-      const freshUpdatedAt = new Date(NOW.getTime() - 10_000);
-      vi.mocked(db.studioArtifact.findMany).mockResolvedValue([
-        artifactRow({ id: "live-1", status: "generating", createdAt: freshUpdatedAt, updatedAt: freshUpdatedAt }),
-      ] as never);
-
-      const { artifacts } = await fetchStudioArtifacts("user-1", "passage-1");
-
-      expect(artifacts[0].status).toBe("generating");
-      expect(db.studioArtifact.deleteMany).not.toHaveBeenCalled();
-    });
-
-    it("does not write when there are no orphaned rows", async () => {
-      vi.mocked(db.studioArtifact.findMany).mockResolvedValue([
-        artifactRow({ id: "done-1", status: "done" }),
-      ] as never);
-
-      const { artifacts } = await fetchStudioArtifacts("user-1", "passage-1");
-
-      expect(artifacts[0].status).toBe("done");
       expect(db.studioArtifact.deleteMany).not.toHaveBeenCalled();
     });
   });

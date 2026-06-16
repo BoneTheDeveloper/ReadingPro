@@ -5,9 +5,6 @@ const studyShared = vi.hoisted(() => ({
 }));
 
 const artifactsService = vi.hoisted(() => ({
-  createStudioArtifact: vi.fn(),
-  completeStudioArtifact: vi.fn(),
-  deleteStudioArtifact: vi.fn(),
   recordQuizResult: vi.fn(),
   resetQuizResult: vi.fn(),
 }));
@@ -108,18 +105,6 @@ describe("studio-artifact actions", () => {
       const result = await studioLoadArtifactDetailAction({ artifactId: "art-1", type: "quiz", passageId: "p1" });
 
       expect("questions" in result && result.questions?.[0].options).toEqual(optionsArray);
-    });
-  });
-
-  describe("studioDeleteArtifactAction", () => {
-    it("deletes the artifact for the authenticated user", async () => {
-      artifactsService.deleteStudioArtifact.mockResolvedValue(undefined);
-      const { studioDeleteArtifactAction } = await import("./studio-artifact-actions");
-
-      const result = await studioDeleteArtifactAction({ artifactId: "a1" });
-
-      expect(result).toEqual({ ok: true });
-      expect(artifactsService.deleteStudioArtifact).toHaveBeenCalledWith("a1", "user-1");
     });
   });
 });

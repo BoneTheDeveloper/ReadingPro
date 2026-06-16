@@ -49,9 +49,16 @@ export const db = {
 };
 
 export function resetDbMock() {
-  for (const value of Object.values(db)) {
+  for (const [key, value] of Object.entries(db)) {
     if (typeof value === "function" && "mockReset" in value) {
       value.mockReset();
+      // Restore default transaction implementation so tests using $transaction work.
+      if (key === "$transaction") {
+        (value as ReturnType<typeof vi.fn>).mockImplementation(async (input: unknown) => {
+          if (typeof input === "function") return input(db);
+          return Promise.all(input as Promise<unknown>[]);
+        });
+      }
       continue;
     }
 

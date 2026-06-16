@@ -21,7 +21,18 @@ export const generatedStudyQuestionSchema = z.object({
   difficulty: z.number(),
 }).strict();
 
+export const studioArtifactResponseSchema = z.object({
+  id: z.string(),
+  type: z.enum(["quiz", "flashcard"]),
+  passageId: z.string(),
+  title: z.string(),
+  status: z.enum(["generating", "done", "failed"]),
+  createdAt: z.string(),
+  updatedAt: z.string().optional(),
+}).strict();
+
 export const generatedStudyQuestionsSchema = z.object({
+  artifact: studioArtifactResponseSchema,
   questions: z.array(generatedStudyQuestionSchema),
 }).strict();
 
@@ -86,6 +97,7 @@ export const studyChatHistoryResponseSchema = z.union([
 export type StudyQuestionOptionDto = z.infer<typeof studyQuestionOptionSchema>;
 export type GeneratedStudyQuestionDto = z.infer<typeof generatedStudyQuestionSchema>;
 export type GeneratedStudyQuestionsDto = z.infer<typeof generatedStudyQuestionsSchema>;
+export type StudioArtifactResponseDto = z.infer<typeof studioArtifactResponseSchema>;
 export type StudyCardQuestionDto = z.infer<typeof studyCardQuestionSchema>;
 export type ProgressStatsDto = z.infer<typeof progressStatsSchema>;
 export type StudySessionDto = z.infer<typeof studySessionSchema>;

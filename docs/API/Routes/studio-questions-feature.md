@@ -36,6 +36,15 @@ Success:
 {
   success: true;
   data: {
+    artifact: {
+      id: string;
+      type: "quiz" | "flashcard";
+      passageId: string;
+      title: string;
+      status: "done";          // always "done" — atomic commit or nothing
+      createdAt: string;       // ISO
+      updatedAt: string;       // ISO
+    };
     questions: Array<{
       id: string;
       number: number;
@@ -60,13 +69,16 @@ Error:
 
 ## Side Effects
 
-- Uses the passage's simplified content when available; otherwise uses original content.
-- Calls the configured AI question generator.
-- Persists generated valid questions associated with the provided `artifactId`.
-- Does NOT replace existing questions for the passage; allows multiple artifact-scoped question sets.
-- Returned questions are cached client-side for the originating session only. On a
-  later reload they are reloaded lazily by `artifactId` when the artifact is
-  opened — see "Question Loading Strategy (Lazy Detail)" in
+- Uses the passage's simplified content when available; otherwise uses original.
+- Calls the configured AI question generator (outside the DB transaction).
+- **Atomic commit:** on success, creates the `StudioArtifact` row (`status: "done"`)
+  and all `Question` rows in a single `$transaction`. On any failure, nothing is
+  persisted.
+- **Idempotent on `artifactId`:** if a row with that id already exists and belongs
+  to the authenticated user, the existing artifact + questions are returned without
+  re-generating. Safe for retries and double-submits.
+- Returned questions are cached client-side for the originating session. On a later
+  reload they are reloaded lazily — see "Question Loading Strategy (Lazy Detail)" in
   [Studio artifacts API](studio-artifacts-feature.md).
 
 ## Error Cases

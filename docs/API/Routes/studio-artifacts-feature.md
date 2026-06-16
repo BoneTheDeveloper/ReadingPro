@@ -68,49 +68,34 @@ Error:
 
 ## Artifact Lifecycle
 
-An artifact moves through `generating → done` (success) or `generating → failed`
-(error). The transition out of `generating` is driven **entirely by the client
-that started the generation**:
+The DB only ever holds **completed** (`done`) artifacts. `generating` and `failed`
+are **in-memory client states only** — no persisted row ever carries these statuses.
 
-1. Client calls `studioCreateArtifactAction` → row persisted with `status: "generating"`.
-2. Client calls `POST /api/studio-questions` to run the AI generation.
-3. On resolve, client calls `studioCompleteArtifactAction` (`done`). On failure the
-   client marks the card `failed` in memory and calls `studioDeleteArtifactAction`,
-   which removes the row (cascade drops any partial `questions`) — failures are
-   ephemeral, so a reload shows a clean slate rather than a dead card.
+1. Client generates a UUID (`artifactId`) and adds an optimistic `generating` card
+   in memory.
+2. Client calls `POST /api/studio-questions` with `{ passageId, artifactId }`.
+3. The server runs the LLM, then in a **single DB transaction** creates the
+   `StudioArtifact` row (`status: "done"`) + all `Question` rows together.
+4. On success the route returns `{ artifact, questions }`. The client replaces the
+   optimistic card with the server artifact and caches the questions.
+5. On failure (LLM error, timeout, validation) the transaction never runs — nothing
+   is persisted. The client card transitions to `failed` in memory only (ephemeral;
+   gone on reload). Retry re-POSTs under the same `artifactId`.
 
-## Orphaned Generation Recovery (Exception Flow)
+**Interrupt safety.** If the app closes mid-generation:
+- If the server committed: the quiz appears as `done` on next reload (the client
+  finds it from `GET /api/studio-artifacts`).
+- If the server did not commit (or the request never reached it): nothing is in the
+  DB. The reload shows no card, and the user can re-click Quiz.
 
-**Problem.** If the client dies between steps 1 and 3 — tab/app closed, navigation
-away, network drop, or crash mid-generation — steps 3 never runs. The row stays
-`status: "generating"` permanently. On the next visit the studio panel locks the
-quiz action (`isActionLocked("quiz")` is true for any `generating` quiz row, and
-the row counts toward `maxConcurrent`), so the user can never start a new quiz for
-that passage and sees a perpetual spinner. There is no server-side generation job
-to recover the state, so the orphan never self-clears.
-
-**Resolution.** `GET /api/studio-artifacts` (via `fetchStudioArtifacts`) reconciles
-orphaned rows on read:
-
-- Any row with `status: "generating"` whose age (`now - updatedAt`) exceeds
-  `GENERATING_ARTIFACT_ORPHAN_TIMEOUT_MS` is considered orphaned.
-- Orphaned rows are **deleted** (best-effort `deleteMany`, scoped by `userId` and
-  `status: "generating"` to avoid racing a live job) and filtered out of the
-  returned list — failures are ephemeral, so the orphan disappears on this read
-  rather than lingering as a tombstone.
-- The timeout is set well beyond the worst-case generation time so a genuinely
-  in-flight job is never falsely reaped. A refetch only fires on passage switch or
-  cache expiry, so it cannot interrupt the originating client's active request.
-
-**Effect.** The action unlocks immediately, the orphaned artifact vanishes from the
-list (the user can start a fresh quiz), and the recovery is durable across clients
-and sessions because it lives at the read boundary.
+In both cases the DB is consistent; no orphan-recovery or background reconciler is
+needed.
 
 | Status returned | Cause |
 |-----------------|-------|
-| `generating` | Generation actively in progress (within the orphan timeout). |
-| `done` | Generation completed and questions persisted. |
-| `failed` | Client reported failure (in-memory only; the row is deleted, not persisted as `failed`). |
+| `done` | Generation committed atomically. |
+| `generating` | In-memory only — active request in the current session. |
+| `failed` | In-memory only — transient error; gone after reload. |
 
 ## Question Loading Strategy (Lazy Detail)
 
@@ -149,7 +134,7 @@ A quiz artifact also tracks user attempts via the 1:1 `QuizResult` child.
 
 - Route: `src/app/api/studio-artifacts/route.ts`
 - Service: `src/lib/study/passage/studio-artifacts-service.ts`
-- Shared types: `src/lib/study/shared/studio-artifact-types.ts` (`GENERATING_ARTIFACT_ORPHAN_TIMEOUT_MS`)
+- Shared types: `src/lib/study/shared/studio-artifact-types.ts`
 - Client generation flow: `src/features/study/hooks/use-study-actions.ts`
 - Lazy detail load: `studioLoadArtifactDetailAction` in `src/features/study/actions/studio-artifact-actions.ts`
 - View wiring: `onSetViewingArtifact` → `handleViewArtifact` in `src/features/study/ui/study-workspace-client.tsx`

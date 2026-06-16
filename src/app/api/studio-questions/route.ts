@@ -6,6 +6,7 @@ import { getZodErrorMessage, isAuthenticationRequiredError, isOwnershipMissError
 import { createRequestLogContext, createRequestLogger } from "@/lib/core/logger";
 import { generateQuestionsForPassage, PassageStudyServiceError } from "@/lib/study/passage/passage-study.service";
 import type { GeneratedStudyQuestionDto } from "@/lib/study/shared/study-response-schema";
+import type { StudioArtifact } from "@/lib/study/shared/studio-artifact-types";
 
 const studyQuestionsPostSchema = z.object({
   passageId: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, "Invalid UUID"),
@@ -60,8 +61,8 @@ async function handleStudioQuestionsPost(request: NextRequest) {
       () => getAuthenticatedUser(),
     );
 
-    const questions = await generateQuestionsForPassage(user.id, passageId, artifactId);
-    return createStudioQuestionsSuccessResponse({ questions });
+    const { artifact, questions } = await generateQuestionsForPassage(user.id, passageId, artifactId);
+    return createStudioQuestionsSuccessResponse({ artifact, questions });
   } catch (error) {
     if (isAuthenticationRequiredError(error)) {
       return NextResponse.json({ error: "Authentication required." }, { status: 401 });
@@ -91,6 +92,6 @@ async function handleStudioQuestionsPost(request: NextRequest) {
   }
 }
 
-function createStudioQuestionsSuccessResponse(data: { questions: GeneratedStudyQuestionDto[] }) {
+function createStudioQuestionsSuccessResponse(data: { artifact: StudioArtifact; questions: GeneratedStudyQuestionDto[] }) {
   return NextResponse.json({ success: true, data });
 }

@@ -7,6 +7,7 @@ import {
 } from "@/lib/study/shared/study-response-schema";
 import { apiErrorResponseSchema } from "@/lib/api/shared/api-response-schema";
 import { generatedQuestionsFixture, passageFixture, userProfileFixture } from "../../fixtures";
+import type { StudioArtifact } from "@/lib/study/shared/studio-artifact-types";
 import { createJsonRequest, parseJsonResponse } from "../../helpers/api";
 import { expectApiErrorPayload, expectApiSuccessPayload } from "../../helpers/assertions";
 
@@ -43,6 +44,8 @@ vi.mock("@/lib/study/passage/passage-study.service", () => ({
   PassageStudyServiceError: routeMocks.PassageStudyServiceError,
 }));
 
+const ARTIFACT_ID = "11111111-1111-1111-1111-111111111111";
+
 const generatedQuestion = {
   id: "pending-0",
   number: 1,
@@ -54,6 +57,16 @@ const generatedQuestion = {
   sourceLine: generatedQuestionsFixture[0].sourceLine,
   questionType: generatedQuestionsFixture[0].questionType,
   difficulty: generatedQuestionsFixture[0].difficulty,
+};
+
+const generatedArtifact: StudioArtifact = {
+  id: ARTIFACT_ID,
+  type: "quiz",
+  passageId: passageFixture.id,
+  title: passageFixture.title,
+  status: "done",
+  createdAt: "2026-06-16T12:00:00.000Z",
+  updatedAt: "2026-06-16T12:00:00.000Z",
 };
 
 async function expectJsonError(response: Response, status: number, message: string) {
@@ -68,23 +81,29 @@ beforeEach(() => {
 
 describe("POST /api/studio-questions", () => {
   it("generates questions for the authenticated user's passage", async () => {
-    routeMocks.generateQuestionsForPassage.mockResolvedValue([generatedQuestion]);
+    routeMocks.generateQuestionsForPassage.mockResolvedValue({ artifact: generatedArtifact, questions: [generatedQuestion] });
 
     const response = await generateQuestionsRoute(
       createJsonRequest({
         passageId: passageFixture.id,
-        artifactId: "11111111-1111-1111-1111-111111111111",
+        artifactId: ARTIFACT_ID,
       }),
     );
     const payload = await parseJsonResponse(response, generatedStudyQuestionsSuccessResponseSchema);
 
     expect(response.status).toBe(200);
     expectApiSuccessPayload(payload);
-    expect(payload).toEqual({ success: true, data: { questions: [generatedQuestion] } });
+    expect(payload).toEqual({
+      success: true,
+      data: {
+        artifact: expect.objectContaining({ id: ARTIFACT_ID, status: "done" }),
+        questions: [generatedQuestion],
+      },
+    });
     expect(routeMocks.generateQuestionsForPassage).toHaveBeenCalledWith(
       userProfileFixture.id,
       passageFixture.id,
-      "11111111-1111-1111-1111-111111111111",
+      ARTIFACT_ID,
     );
   });
 
@@ -103,7 +122,7 @@ describe("POST /api/studio-questions", () => {
     const response = await generateQuestionsRoute(
       createJsonRequest({
         passageId: "not-a-uuid",
-        artifactId: "11111111-1111-1111-1111-111111111111",
+        artifactId: ARTIFACT_ID,
       }),
     );
 
@@ -121,7 +140,7 @@ describe("POST /api/studio-questions", () => {
       await generateQuestionsRoute(
         createJsonRequest({
           passageId: passageFixture.id,
-          artifactId: "11111111-1111-1111-1111-111111111111",
+          artifactId: ARTIFACT_ID,
         }),
       ),
       401,
@@ -135,7 +154,7 @@ describe("POST /api/studio-questions", () => {
       await generateQuestionsRoute(
         createJsonRequest({
           passageId: passageFixture.id,
-          artifactId: "11111111-1111-1111-1111-111111111111",
+          artifactId: ARTIFACT_ID,
         }),
       ),
       404,
@@ -152,7 +171,7 @@ describe("POST /api/studio-questions", () => {
       await generateQuestionsRoute(
         createJsonRequest({
           passageId: passageFixture.id,
-          artifactId: "11111111-1111-1111-1111-111111111111",
+          artifactId: ARTIFACT_ID,
         }),
       ),
       502,
@@ -169,7 +188,7 @@ describe("POST /api/studio-questions", () => {
       await generateQuestionsRoute(
         createJsonRequest({
           passageId: passageFixture.id,
-          artifactId: "11111111-1111-1111-1111-111111111111",
+          artifactId: ARTIFACT_ID,
         }),
       ),
       500,

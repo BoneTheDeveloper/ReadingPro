@@ -8,7 +8,10 @@ import { getTargetCEFRLevel, isSimplifiableCEFRLevel, type CEFRLevel } from "@/l
 import type { GeneratedStudyQuestionDto } from "@/lib/study/shared/study-response-schema";
 import {
   STUDIO_GENERATION_TIMEOUT_MS,
+  type StudioArtifact,
   type StudioArtifactErrorCode,
+  type StudioArtifactStatus,
+  type StudioArtifactType,
 } from "@/lib/study/shared/studio-artifact-types";
 
 const log = createModuleLogger("lib:study:passage-service");
@@ -55,8 +58,22 @@ export async function generateQuestionsForPassage(
   userId: string,
   passageId: string,
   artifactId: string,
-): Promise<GeneratedStudyQuestionDto[]> {
+): Promise<{ artifact: StudioArtifact; questions: GeneratedStudyQuestionDto[] }> {
   const passage = await getOwnedPassage(userId, passageId);
+
+  // Idempotency: if this artifact was already committed (e.g. double-submit or
+  // retry after a lost response), return the existing data without re-generating.
+  const existing = await db.studioArtifact.findUnique({
+    where: { id: artifactId, userId },
+    include: { quizResult: true, questions: { orderBy: { createdAt: "asc" } } },
+  });
+  if (existing) {
+    return {
+      artifact: rowToArtifact(existing),
+      questions: existing.questions.map(rowToExistingQuestionDto),
+    };
+  }
+
   const contentToAnalyze = passage.simplifiedContent || passage.content;
 
   Sentry.addBreadcrumb({ category: "ai", message: "Generating comprehension questions", level: "info" });
@@ -80,17 +97,37 @@ export async function generateQuestionsForPassage(
     throw new PassageStudyServiceError("All generated questions failed validation — try again", "VALIDATION_FAILED");
   }
 
-  await Sentry.startSpan({ name: "db:questions-create", op: "db" }, async () => {
-    await db.question.createMany({
-      data: validQuestions.map((question) => ({
-        passageId,
-        artifactId,
-        ...toQuestionCreateInput(question),
-      })),
-    });
-  });
+  // Atomic: create artifact (status "done") + questions in one transaction so no
+  // partial state can be persisted. LLM ran before this — the transaction is
+  // insert-only and short, no long-running DB connection.
+  const { artifact } = await Sentry.startSpan({ name: "db:artifact-and-questions-create", op: "db" }, () =>
+    db.$transaction(async (tx) => {
+      const artifact = await tx.studioArtifact.create({
+        data: {
+          id: artifactId,
+          passageId,
+          userId,
+          type: "quiz",
+          title: passage.title,
+          status: "done",
+        },
+        include: { quizResult: true },
+      });
+      await tx.question.createMany({
+        data: validQuestions.map((question) => ({
+          passageId,
+          artifactId,
+          ...toQuestionCreateInput(question),
+        })),
+      });
+      return { artifact };
+    }),
+  );
 
-  return validQuestions.map(toQuestionData);
+  return {
+    artifact: rowToArtifact(artifact),
+    questions: validQuestions.map(toQuestionData),
+  };
 }
 
 async function getOwnedPassage(userId: string, passageId: string) {
@@ -173,6 +210,54 @@ function toQuestionData(question: GeneratedQuestion, index: number): GeneratedSt
     sourceLine: question.sourceLine,
     questionType: question.questionType,
     difficulty: question.difficulty,
+  };
+}
+
+function rowToArtifact(row: {
+  id: string;
+  type: string;
+  passageId: string;
+  title: string;
+  status: string;
+  createdAt: Date;
+  updatedAt: Date;
+  quizResult?: { completedAt: Date; correctCount: number; totalQuestions: number; accuracyRate: number } | null;
+}): StudioArtifact {
+  return {
+    id: row.id,
+    type: row.type as StudioArtifactType,
+    passageId: row.passageId,
+    title: row.title,
+    status: row.status as StudioArtifactStatus,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
+    quizResult: row.quizResult ? {
+      completedAt: row.quizResult.completedAt.toISOString(),
+      correctCount: row.quizResult.correctCount,
+      totalQuestions: row.quizResult.totalQuestions,
+      accuracyRate: row.quizResult.accuracyRate,
+    } : undefined,
+  };
+}
+
+function rowToExistingQuestionDto(
+  q: { id: string; questionText: string; options: unknown; correctOption: string; sourceText: string; sourceLine: number; explanation: string; questionType: string; difficulty: number },
+  index: number,
+): GeneratedStudyQuestionDto {
+  const options = typeof q.options === "string"
+    ? (() => { try { return JSON.parse(q.options as string); } catch { return []; } })()
+    : (q.options ?? []) as { id: string; text: string }[];
+  return {
+    id: q.id,
+    number: index + 1,
+    questionText: q.questionText,
+    options,
+    correctAnswer: q.correctOption,
+    explanation: q.explanation,
+    sourceText: q.sourceText,
+    sourceLine: q.sourceLine,
+    questionType: q.questionType,
+    difficulty: q.difficulty,
   };
 }
 

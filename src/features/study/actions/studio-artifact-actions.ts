@@ -4,13 +4,10 @@ import { headers } from 'next/headers';
 import * as Sentry from '@sentry/nextjs';
 import { createModuleLogger } from '@/lib/core/logger';
 import {
-  createStudioArtifact,
-  completeStudioArtifact,
-  deleteStudioArtifact,
   recordQuizResult,
   resetQuizResult,
 } from '@/lib/study/passage/studio-artifacts-service';
-import type { StudioArtifact, StudioArtifactType } from '@/lib/study/shared/studio-artifact-types';
+import type { StudioArtifactType } from '@/lib/study/shared/studio-artifact-types';
 import type { QuestionData } from '@/features/study/model/types';
 import { db } from '@/lib/db/client';
 import { getAuthenticatedUser } from './study-shared';
@@ -31,57 +28,6 @@ function parseQuestionOptions(value: unknown): QuestionData['options'] {
     }
   }
   return (value ?? []) as QuestionData['options'];
-}
-
-export async function studioCreateArtifactAction(input: {
-  id: string;
-  passageId: string;
-  type: StudioArtifactType;
-  title: string;
-}): Promise<ActionResult<StudioArtifact>> {
-  return Sentry.withServerActionInstrumentation('studioCreateArtifact', { headers: await headers() }, async () => {
-    const user = await getAuthenticatedUser();
-    try {
-      const artifact = await createStudioArtifact({ ...input, userId: user.id });
-      log.info({ artifactId: input.id, type: input.type, passageId: input.passageId }, 'Artifact created');
-      return artifact;
-    } catch (err) {
-      log.error({ err, input }, 'Failed to create artifact');
-      return { error: 'Failed to create artifact' };
-    }
-  });
-}
-
-export async function studioCompleteArtifactAction(input: {
-  artifactId: string;
-}): Promise<ActionResult<{ ok: true }>> {
-  return Sentry.withServerActionInstrumentation('studioCompleteArtifact', { headers: await headers() }, async () => {
-    const user = await getAuthenticatedUser();
-    try {
-      await completeStudioArtifact(input.artifactId, user.id);
-      return { ok: true as const };
-    } catch (err) {
-      log.error({ err, artifactId: input.artifactId }, 'Failed to complete artifact');
-      return { error: 'Failed to save artifact' };
-    }
-  });
-}
-
-// Removes a failed/abandoned generation. Failures are ephemeral — the row is
-// deleted so it does not linger as a dead card after reload.
-export async function studioDeleteArtifactAction(input: {
-  artifactId: string;
-}): Promise<ActionResult<{ ok: true }>> {
-  return Sentry.withServerActionInstrumentation('studioDeleteArtifact', { headers: await headers() }, async () => {
-    const user = await getAuthenticatedUser();
-    try {
-      await deleteStudioArtifact(input.artifactId, user.id);
-      return { ok: true as const };
-    } catch (err) {
-      log.error({ err, artifactId: input.artifactId }, 'Failed to delete artifact');
-      return { error: 'Failed to update artifact' };
-    }
-  });
 }
 
 // Loads artifact detail for lazy viewing. Returns content shaped for ArtifactDetailCacheEntry.

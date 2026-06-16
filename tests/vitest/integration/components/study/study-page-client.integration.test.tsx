@@ -4,11 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { StudyPageClient } from "@/features/study/ui/study-workspace-client";
 import { generateStudioQuestions } from "@/features/study/api/studio-questions-client";
 import { studySimplifyAction } from "@/features/study/actions/study-simplify-action";
-import {
-  studioCreateArtifactAction,
-  studioCompleteArtifactAction,
-  studioLoadArtifactDetailAction,
-} from "@/features/study/actions/studio-artifact-actions";
+import { studioLoadArtifactDetailAction } from "@/features/study/actions/studio-artifact-actions";
 import { studyUploadAction } from "@/features/study/actions/study-upload-action";
 import { extractSelectionInfo } from "@/features/study/model/selection-utils";
 
@@ -107,9 +103,6 @@ vi.mock("@/features/study/actions/study-simplify-action", () => ({
 }));
 
 vi.mock("@/features/study/actions/studio-artifact-actions", () => ({
-  studioCreateArtifactAction: vi.fn(),
-  studioCompleteArtifactAction: vi.fn(),
-  studioFailArtifactAction: vi.fn(),
   studioLoadArtifactDetailAction: vi.fn(),
 }));
 
@@ -148,15 +141,6 @@ describe("StudyPageClient", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.spyOn(crypto, "randomUUID").mockReturnValue("result-test-1");
-    vi.mocked(studioCreateArtifactAction).mockImplementation(async (input) => ({
-      id: input.id,
-      type: input.type,
-      passageId: input.passageId,
-      title: input.title,
-      status: "generating",
-      createdAt: new Date().toISOString(),
-    }));
-    vi.mocked(studioCompleteArtifactAction).mockResolvedValue({ ok: true });
     useChatState.messages = [];
     vi.stubGlobal(
       "fetch",
@@ -332,6 +316,15 @@ describe("StudyPageClient", () => {
     const passage = createStudyPassage();
     const question = createStudyQuestion();
     vi.mocked(generateStudioQuestions).mockResolvedValue({
+      artifact: {
+        id: "result-test-1",
+        type: "quiz" as const,
+        passageId: passage.id,
+        title: passage.title,
+        status: "done" as const,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
       questions: [question],
     });
     const { user } = renderWithUser(
