@@ -7,9 +7,8 @@ import {
   createStudioArtifact,
   completeStudioArtifact,
   failStudioArtifact,
-  loadStudioArtifactContent,
-} from '@/lib/study/passage/study-artifacts-service';
-import type { StudioArtifact, StudioArtifactContent, StudioArtifactType } from '@/lib/study/shared/studio-artifact-types';
+} from '@/lib/study/passage/studio-artifacts-service';
+import type { StudioArtifact, StudioArtifactType } from '@/lib/study/shared/studio-artifact-types';
 import type { QuestionData } from '@/features/study/model/types';
 import { db } from '@/lib/db/client';
 import { getAuthenticatedUser } from './study-shared';
@@ -39,12 +38,11 @@ export async function studyCreateArtifactAction(input: {
 
 export async function studyCompleteArtifactAction(input: {
   artifactId: string;
-  content: StudioArtifactContent;
 }): Promise<ActionResult<{ ok: true }>> {
   return Sentry.withServerActionInstrumentation('studyCompleteArtifact', { headers: await headers() }, async () => {
     const user = await getAuthenticatedUser();
     try {
-      await completeStudioArtifact(input.artifactId, user.id, input.content);
+      await completeStudioArtifact(input.artifactId, user.id);
       return { ok: true as const };
     } catch (err) {
       log.error({ err, artifactId: input.artifactId }, 'Failed to complete artifact');
@@ -75,11 +73,10 @@ export async function studyLoadArtifactDetailAction(input: {
   passageId: string;
 }): Promise<ActionResult<{ questions?: QuestionData[]; simplifiedContent?: string | null; simplifiedLevel?: string | null }>> {
   return Sentry.withServerActionInstrumentation('studyLoadArtifactDetail', { headers: await headers() }, async () => {
-    const user = await getAuthenticatedUser();
     try {
       if (input.type === 'quiz') {
         const questions = await db.question.findMany({
-          where: { passageId: input.passageId },
+          where: { artifactId: input.artifactId },
           orderBy: { createdAt: 'asc' },
           select: {
             id: true,
@@ -106,12 +103,6 @@ export async function studyLoadArtifactDetailAction(input: {
           difficulty: q.difficulty,
         }));
         return { questions: mapped };
-      }
-
-      if (input.type === 'summary') {
-        const content = await loadStudioArtifactContent(input.artifactId, user.id);
-        if (!content) return { error: 'Summary content not found' };
-        return { simplifiedContent: content.simplifiedContent, simplifiedLevel: content.simplifiedLevel };
       }
 
       return { error: `Detail loading not supported for type: ${input.type}` };

@@ -229,6 +229,7 @@ CREATE TABLE "vocabulary_set_items" (
 CREATE TABLE "questions" (
     "id" UUID NOT NULL DEFAULT gen_random_uuid(),
     "passageId" UUID NOT NULL,
+    "artifactId" UUID NOT NULL,
     "questionText" TEXT NOT NULL,
     "options" JSONB NOT NULL,
     "correctOption" TEXT NOT NULL,
@@ -282,6 +283,20 @@ CREATE TABLE "quiz_attempts" (
     "completedAt" TIMESTAMP(3),
 
     CONSTRAINT "quiz_attempts_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "studio_artifacts" (
+    "id" UUID NOT NULL,
+    "passageId" UUID NOT NULL,
+    "userId" TEXT NOT NULL,
+    "type" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
+    "status" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "studio_artifacts_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -380,6 +395,9 @@ CREATE UNIQUE INDEX "vocabulary_set_items_vocabularySetId_vocabularyItemId_key" 
 CREATE INDEX "questions_passageId_idx" ON "questions"("passageId");
 
 -- CreateIndex
+CREATE INDEX "questions_artifactId_idx" ON "questions"("artifactId");
+
+-- CreateIndex
 CREATE INDEX "question_reviews_userId_nextReviewDate_idx" ON "question_reviews"("userId", "nextReviewDate");
 
 -- CreateIndex
@@ -390,6 +408,12 @@ CREATE INDEX "study_sessions_userId_startedAt_idx" ON "study_sessions"("userId",
 
 -- CreateIndex
 CREATE INDEX "quiz_attempts_userId_startedAt_idx" ON "quiz_attempts"("userId", "startedAt");
+
+-- CreateIndex
+CREATE INDEX "studio_artifacts_passageId_createdAt_idx" ON "studio_artifacts"("passageId", "createdAt" DESC);
+
+-- CreateIndex
+CREATE INDEX "studio_artifacts_userId_idx" ON "studio_artifacts"("userId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "file_upload_intents_pathname_key" ON "file_upload_intents"("pathname");
@@ -449,6 +473,9 @@ ALTER TABLE "vocabulary_set_items" ADD CONSTRAINT "vocabulary_set_items_vocabula
 ALTER TABLE "questions" ADD CONSTRAINT "questions_passageId_fkey" FOREIGN KEY ("passageId") REFERENCES "passages"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "questions" ADD CONSTRAINT "questions_artifactId_fkey" FOREIGN KEY ("artifactId") REFERENCES "studio_artifacts"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "question_reviews" ADD CONSTRAINT "question_reviews_questionId_fkey" FOREIGN KEY ("questionId") REFERENCES "questions"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -465,6 +492,12 @@ ALTER TABLE "quiz_attempts" ADD CONSTRAINT "quiz_attempts_userId_fkey" FOREIGN K
 
 -- AddForeignKey
 ALTER TABLE "quiz_attempts" ADD CONSTRAINT "quiz_attempts_passageId_fkey" FOREIGN KEY ("passageId") REFERENCES "passages"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "studio_artifacts" ADD CONSTRAINT "studio_artifacts_passageId_fkey" FOREIGN KEY ("passageId") REFERENCES "passages"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "studio_artifacts" ADD CONSTRAINT "studio_artifacts_userId_fkey" FOREIGN KEY ("userId") REFERENCES "profiles"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "file_upload_intents" ADD CONSTRAINT "file_upload_intents_userId_fkey" FOREIGN KEY ("userId") REFERENCES "profiles"("id") ON DELETE CASCADE ON UPDATE CASCADE;

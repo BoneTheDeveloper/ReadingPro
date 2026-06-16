@@ -121,11 +121,13 @@ describe("passage queries", () => {
     };
 
     await createQuestion(question);
-    await expect(createQuestion({ ...question, artifactId: "invalid-uuid" })).rejects.toThrow(
+    await expect(createQuestion({ ...question, artifactId: "00000000-0000-0000-0000-00000000000x" })).rejects.toThrow(
       "Invalid question data"
     );
 
-    expect(db.question.create).toHaveBeenCalledWith({ data: question });
+    expect(db.question.create).toHaveBeenCalledWith({
+      data: question,
+    });
   });
 
   it("fetches new cards for a passage with no user review", async () => {

@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/nextjs";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { analyzeAndPersistContent } from "@/lib/upload/content-analysis/content-analysis.service";
 import { db } from "../../mocks/db";
 import { generateObject, mockGenerateObjectOnce } from "../../mocks/ai";

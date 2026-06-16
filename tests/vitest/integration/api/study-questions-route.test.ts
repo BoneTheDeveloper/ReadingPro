@@ -3,7 +3,6 @@ import * as Sentry from "@sentry/nextjs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { POST as generateQuestionsRoute } from "@/app/api/study-questions/route";
 import {
-  generatedStudyQuestionsResponseSchema,
   generatedStudyQuestionsSuccessResponseSchema,
 } from "@/lib/study/shared/study-response-schema";
 import { apiErrorResponseSchema } from "@/lib/api/shared/api-response-schema";

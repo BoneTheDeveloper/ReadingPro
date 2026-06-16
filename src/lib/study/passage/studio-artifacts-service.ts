@@ -1,5 +1,5 @@
 import { db } from "@/lib/db/client";
-import type { StudioArtifact, StudioArtifactContent, StudioArtifactType } from "@/lib/study/shared/studio-artifact-types";
+import type { StudioArtifact, StudioArtifactType } from "@/lib/study/shared/studio-artifact-types";
 
 function toStudioArtifact(row: {
   id: string;
@@ -25,7 +25,7 @@ export async function fetchStudioArtifacts(
   userId: string,
   passageId: string,
 ): Promise<{ artifacts: StudioArtifact[] }> {
-  const rows = await db.studyArtifact.findMany({
+  const rows = await db.studioArtifact.findMany({
     where: { passageId, userId },
     orderBy: { createdAt: "desc" },
     select: { id: true, type: true, passageId: true, title: true, status: true, createdAt: true, updatedAt: true },
@@ -40,7 +40,7 @@ export async function createStudioArtifact(input: {
   type: StudioArtifactType;
   title: string;
 }): Promise<StudioArtifact> {
-  const row = await db.studyArtifact.create({
+  const row = await db.studioArtifact.create({
     data: {
       id: input.id,
       passageId: input.passageId,
@@ -57,28 +57,16 @@ export async function createStudioArtifact(input: {
 export async function completeStudioArtifact(
   artifactId: string,
   userId: string,
-  content: StudioArtifactContent,
 ): Promise<void> {
-  await db.studyArtifact.updateMany({
+  await db.studioArtifact.updateMany({
     where: { id: artifactId, userId },
-    data: { status: "done", content: content ?? undefined },
+    data: { status: "done" },
   });
 }
 
 export async function failStudioArtifact(artifactId: string, userId: string): Promise<void> {
-  await db.studyArtifact.updateMany({
+  await db.studioArtifact.updateMany({
     where: { id: artifactId, userId },
     data: { status: "failed" },
   });
-}
-
-export async function loadStudioArtifactContent(
-  artifactId: string,
-  userId: string,
-): Promise<StudioArtifactContent> {
-  const row = await db.studyArtifact.findFirst({
-    where: { id: artifactId, userId },
-    select: { content: true },
-  });
-  return (row?.content ?? null) as StudioArtifactContent;
 }

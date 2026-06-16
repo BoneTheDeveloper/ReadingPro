@@ -8,7 +8,7 @@ export const questionOptionSchema = z.object({
 });
 
 export const questionDataSchema = z.object({
-  artifactId: z.string().uuid(),
+  artifactId: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, "Invalid UUID"),
   questionText: z.string(),
   options: z.array(questionOptionSchema).min(2),
   correctOption: z.string(),
@@ -97,7 +97,7 @@ export async function createQuestion(
   if (!result.success) {
     throw new Error(`Invalid question data: ${result.error.issues.map(i => i.message).join(', ')}`);
   }
-  return db.question.create({ data });
+  return db.question.create({ data: data as any });
 }
 
 export async function deletePassage(passageId: string, userId: string) {

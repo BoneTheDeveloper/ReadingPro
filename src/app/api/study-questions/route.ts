@@ -8,8 +8,8 @@ import { generateQuestionsForPassage, PassageStudyServiceError } from "@/lib/stu
 import type { GeneratedStudyQuestionDto } from "@/lib/study/shared/study-response-schema";
 
 const studyQuestionsPostSchema = z.object({
-  passageId: z.string().uuid(),
-  artifactId: z.string().uuid(),
+  passageId: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, "Invalid UUID"),
+  artifactId: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, "Invalid UUID"),
 }).strict();
 
 export async function POST(request: NextRequest) {
