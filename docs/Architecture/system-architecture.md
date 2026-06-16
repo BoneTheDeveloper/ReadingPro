@@ -38,12 +38,13 @@ The application is a server-first Next.js product. User-facing pages are locale-
 
 - `Passage`
 - `StudySession`
-- `CardReview`
+- `QuestionReview`
 - `StudyChatMessage`
 - `TranslationCache`
 - `TranslationHistory`
 - `VocabularyItem`
 - `FileUploadIntent`
+- `StudioArtifact`
 
 Dictionary tables are shared read data and are not user-owned.
 

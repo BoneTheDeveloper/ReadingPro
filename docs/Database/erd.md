@@ -38,16 +38,26 @@ erDiagram
     Question {
         uuid id PK "gen_random_uuid()"
         uuid passageId FK
+        uuid artifactId FK
         string questionText
         json options
         string correctOption "UI option ID"
     }
 
-    CardReview {
+    QuestionReview {
         uuid id PK "gen_random_uuid()"
         uuid questionId FK
         string userId FK
         int qualityRating
+    }
+
+    StudioArtifact {
+        uuid id PK "supplied by client"
+        uuid passageId FK
+        string userId FK
+        string type
+        string title
+        string status
     }
 
     StudySession {
@@ -89,10 +99,17 @@ erDiagram
 
     VocabularyItem {
         uuid id PK "gen_random_uuid()"
-        string normalizedKey UK
+        string normalizedText UK
         string userId FK
-        uuid sourceId FK
         string translation
+    }
+
+    VocabularyOccurrence {
+        uuid id PK "gen_random_uuid()"
+        uuid vocabularyItemId FK
+        uuid sourceId FK "nullable"
+        string selectedText
+        string contextSentence
     }
 
     FileUploadIntent {
@@ -140,19 +157,23 @@ erDiagram
     UserProfile ||--o{ StudyChatMessage : sends
     UserProfile ||--o{ StudySession : creates
     UserProfile ||--o{ QuizAttempt : attempts
-    UserProfile ||--o{ CardReview : reviews
+    UserProfile ||--o{ QuestionReview : reviews
     UserProfile ||--o{ TranslationCache : caches
     UserProfile ||--o{ TranslationHistory : records
     UserProfile ||--o{ VocabularyItem : saves
     UserProfile ||--o{ FileUploadIntent : authorizes
+    UserProfile ||--o{ StudioArtifact : owns
     Passage ||--o{ StudyChatMessage : contains
     Passage ||--o{ QuizAttempt : has
     Passage ||--o{ Question : contains
+    Passage ||--o{ StudioArtifact : contains
     Passage ||--o{ TranslationCache : scopes
     Passage ||--o{ TranslationHistory : scopes
-    Passage ||--o{ VocabularyItem : sources
+    Passage ||--o{ VocabularyOccurrence : sources
     StudySession ||--o{ QuizAttempt : contains
-    Question ||--o{ CardReview : tracked-by
+    Question ||--o{ QuestionReview : tracked-by
+    StudioArtifact ||--o{ Question : contains
+    VocabularyItem ||--o{ VocabularyOccurrence : occurs-in
     DictionaryEntry ||--o{ DictionarySense : defines
     DictionaryEntry ||--o{ DictionaryAlias : aliases
     DictionarySense ||--o{ DictionaryTranslation : translates
@@ -172,11 +193,13 @@ erDiagram
 
 | Parent | Children with `ON DELETE CASCADE` |
 |--------|------------------------------------|
-| UserProfile | Passage, StudyChatMessage, CardReview, StudySession, QuizAttempt, TranslationCache, TranslationHistory, VocabularyItem, FileUploadIntent |
-| Passage | StudyChatMessage, QuizAttempt, Question, TranslationCache, TranslationHistory, VocabularyItem |
+| UserProfile | Passage, StudyChatMessage, QuestionReview, StudySession, QuizAttempt, TranslationCache, TranslationHistory, VocabularyItem, FileUploadIntent, StudioArtifact |
+| Passage | StudyChatMessage, QuizAttempt, Question, TranslationCache, TranslationHistory, StudioArtifact |
 | StudySession | QuizAttempt |
-| Question | CardReview |
+| Question | QuestionReview |
+| StudioArtifact | Question |
+| VocabularyItem | VocabularyOccurrence |
 | DictionaryEntry | DictionarySense, DictionaryAlias |
 | DictionarySense | DictionaryTranslation |
 
-**Last Updated:** 2026-06-08
+**Last Updated:** 2026-06-16

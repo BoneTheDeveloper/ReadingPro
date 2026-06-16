@@ -22,6 +22,7 @@ Generate and persist comprehension questions for a passage owned by the authenti
 ```ts
 {
   passageId: string; // UUID
+  artifactId: string; // UUID
 }
 ```
 
@@ -61,7 +62,8 @@ Error:
 
 - Uses the passage's simplified content when available; otherwise uses original content.
 - Calls the configured AI question generator.
-- Replaces existing persisted questions for the passage with the generated valid questions.
+- Persists generated valid questions associated with the provided `artifactId`.
+- Does NOT replace existing questions for the passage; allows multiple artifact-scoped question sets.
 
 ## Error Cases
 

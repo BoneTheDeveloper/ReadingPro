@@ -37,6 +37,29 @@
 - Verify production Vercel environment variables and scheduled cleanup behavior
 
 ---
+
+## [2026-06-16] — StudioArtifact Model & Type-Specific Storage
+
+### Added
+- `StudioArtifact` model replacing `StudyArtifact` with type-specific relational storage.
+- `StudioArtifact` relational link to `Question` via `artifactId` (NOT NULL).
+- `/api/study-artifacts` route for listing artifacts by `passageId`.
+- `studio-artifacts-service.ts` for managing artifact lifecycle and persistence.
+- `docs/API/Routes/study-artifacts-feature.md` documentation.
+
+### Changed
+- **Schema**: Renamed `StudyArtifact` → `StudioArtifact`. Dropped `content` JSONB field.
+- **Questions**: Each question now belongs to exactly one `artifactId`. Existing questions were wiped in migration to satisfy NOT NULL constraint.
+- **Service**: `generateQuestionsForPassage` now requires `artifactId` and links questions to it.
+- **Actions**: Updated `study-artifact-actions.ts` to use new relational storage and corrected service imports.
+- **API**: `/api/study-questions` now requires `artifactId` in POST body.
+- **Tests**: Updated integration tests for route, service, and queries to align with the new schema and validation rules.
+
+### Removed
+- `summary` artifact type (handled as inline passage simplification instead).
+- `study-generate-questions-action.ts` (dead code, route is the live path).
+
+---
 ## [2026-05-07] — Phase 05-06: Auth UI Updates & Testing
 
 ### Added

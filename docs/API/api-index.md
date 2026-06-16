@@ -13,6 +13,7 @@
 | Upload | `POST /api/upload`, `POST /api/upload/text` | [Routes/upload-feature.md](Routes/upload-feature.md) |
 | Translation | `POST /api/translate` | [Routes/translation-feature.md](Routes/translation-feature.md) |
 | Study questions | `POST /api/study-questions` | [Routes/study-questions-feature.md](Routes/study-questions-feature.md) |
+| Study artifacts | `GET /api/study-artifacts` | [Routes/study-artifacts-feature.md](Routes/study-artifacts-feature.md) |
 | Study chat | `GET/POST /api/study-chat` | [Routes/study-chat-feature.md](Routes/study-chat-feature.md) |
 | Quiz attempt | `POST /api/quiz-attempt`, `PATCH /api/quiz-attempt` | [Routes/quiz-attempt-feature.md](Routes/quiz-attempt-feature.md) |
 | Study results | `GET /api/study-results` | [Routes/study-results-feature.md](Routes/study-results-feature.md) |
