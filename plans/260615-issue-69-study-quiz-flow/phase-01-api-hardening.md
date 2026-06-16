@@ -1,13 +1,25 @@
 ---
 phase: 1
 title: "API hardening"
-status: pending
+status: superseded
 priority: P1
 effort: "3h"
 dependencies: []
 ---
 
 # Phase 1: API hardening
+
+> ⚠️ **SUPERSEDED 2026-06-16 (gkg-verified).** This phase targeted the
+> `/api/quiz-attempt` POST/PATCH route and the `QuizAttempt` table — **both removed**.
+> Quiz outcomes now persist as a `QuizResult` (1:1 with the quiz `StudioArtifact`) via
+> the server actions `studioRecordQuizResultAction` / `studioResetQuizResultAction`
+> (`src/features/study/actions/studio-artifact-actions.ts`). Those actions already
+> enforce auth (`getAuthenticatedUser`), ownership-via-parent-artifact
+> (`recordQuizResult`/`resetQuizResult` in `studio-artifacts-service.ts`), and count
+> validation — so this phase's intent (harden quiz persistence) is met by current code.
+> No `passageId→artifactId` migration is needed (the `QuizAttempt` table is gone).
+> The remaining persistence-hardening concern moved to **Phase 0** (generation failure
+> contract + timeout). Content below is kept for history only.
 
 ## Overview
 

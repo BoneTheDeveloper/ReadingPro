@@ -67,8 +67,8 @@
 | ID | Requirement |
 |----|-------------|
 | FR-07.1 | Create session with startedAt timestamp |
-| FR-07.2 | Keep StudySession as a lifecycle record with `lastActivityAt`; quiz performance lives in QuizAttempt |
-| FR-07.3 | Record quiz correctness and accuracy on QuizAttempt completion |
+| FR-07.2 | Keep StudySession as a presence/heartbeat record with `lastActivityAt`; quiz performance lives in `QuizResult` (1:1 with the quiz `StudioArtifact`) |
+| FR-07.3 | Record quiz correctness and accuracy on `QuizResult` (via `studioRecordQuizResultAction`) |
 
 ### FR-08: Progress Dashboard
 

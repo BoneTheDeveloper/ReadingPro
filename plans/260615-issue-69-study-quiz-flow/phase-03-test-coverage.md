@@ -3,17 +3,45 @@ phase: 3
 title: "Test coverage"
 status: pending
 priority: P1
-effort: "5h"
-dependencies: [1, 2]
+effort: "4h"
+dependencies: [0, 2]
 ---
 
 # Phase 3: Test coverage
 
+> 🔄 **Retargeted 2026-06-16 (gkg-verified).** The deleted `/api/quiz-attempt` route and
+> `QuizAttempt` query tests are dropped. Tests now cover the **current** surfaces:
+> server-action persistence, the Phase 0 generation failure/timeout contract, the
+> Phase 2 passage-switch race, and the already-shipped quiz UI (keyboard, source quote,
+> save-failure banner). The route/query subsections below are superseded — read the
+> "Retargeted Related Code Files" list.
+
 ## Overview
 
-Add the tests issue #69 requires and the gaps the note flagged: route status changes, query-layer
-side effects, generation success/error/passage-switch race, keyboard flow, and persistence-failure
-graceful degradation. Tests verify the FINAL Phase 1 + Phase 2 code.
+Add the tests issue #69 requires against current code: server-action quiz-result persistence,
+generation failure/timeout + Retry (Phase 0), the passage-switch race (Phase 2), keyboard flow,
+source quote, and save-failure graceful degradation. Tests verify the FINAL Phase 0 + Phase 2 code.
+
+## Retargeted Related Code Files (current surfaces)
+
+- Create: `src/features/study/actions/studio-artifact-actions.test.ts`
+  - `studioRecordQuizResultAction` rejects invalid counts; persists on valid input;
+    enforces ownership via parent artifact (mock `db`/Prisma per existing patterns).
+  - `studioResetQuizResultAction` clears the `QuizResult` row.
+- Create: `src/features/study/ui/studio/quiz/quiz-content.test.tsx`
+  - Keys 1-4 select, Enter checks then advances, Backspace goes back.
+  - Source quote renders after answering.
+- Create: `src/features/study/ui/studio/quiz/quiz-results.test.tsx`
+  - Records the result once on mount (Strict-Mode double-invoke guard holds).
+  - Save failure keeps the score visible and shows the banner + Retry.
+- Create/extend: `src/features/study/hooks/use-study-actions.test.ts`
+  - Generation success → artifact `done` + questions cached.
+  - Generation failure → artifact `failed` with the expected `errorCode` persisted (Phase 0).
+  - Stalled generation → settles to `failed (TIMEOUT)` within the budget, lock releases (Phase 0).
+  - Passage-switch mid-generation → result kept on its originating passage, not discarded (Phase 2).
+- Create: `tests/vitest/helpers/render-with-intl.tsx` — RTL `render` wrapped in
+  `NextIntlClientProvider` with real `localization/messages/en.json` (`Study` namespace);
+  the repo's first `.test.tsx` precedent, reused by the component tests above.
 
 ## Requirements
 

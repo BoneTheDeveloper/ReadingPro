@@ -18,7 +18,7 @@ const appLogicCoverageInclude = [
   "src/features/study/hooks/use-study-actions.ts",
   "src/features/study/hooks/use-study-panel-layout.ts",
   "src/features/study/api/studio-questions-client.ts",
-  "src/features/study/api/quiz-attempt-client.ts",
+  "src/features/study/api/study-session-client.ts",
   "src/lib/upload/content-analysis/content-analysis.service.ts",
   "src/features/upload/services/upload-workflow.ts",
   "src/features/upload/actions/analyze-content-action.ts",

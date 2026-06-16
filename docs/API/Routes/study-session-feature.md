@@ -63,8 +63,8 @@ Request body:
   `lastActivityAt` on the returned session row. `ensureActiveSession` serializes
   per-user with a transaction-level advisory lock so concurrent tabs/devices
   collapse to one open session.
-- `StudySession` is a lifecycle record; child `QuizAttempt` rows carry quiz
-  scoring and passage context.
+- `StudySession` is a presence/heartbeat lifecycle record only; quiz scoring lives
+  in a `QuizResult` (1:1 with the quiz `StudioArtifact`), not in the session.
 
 ### Due Cards API
 

@@ -58,9 +58,9 @@ src/app/api/studio-questions/route.ts
 src/app/api/study-results/route.ts
   -> src/lib/study/passage/study-results-service.ts
 
-src/app/api/quiz-attempt/route.ts
-  -> src/lib/db/quiz-attempt-queries.ts
-  -> src/lib/study/shared/study-response-schema.ts
+src/app/api/studio-artifacts/route.ts
+  -> src/lib/study/passage/studio-artifacts-service.ts
+  -> src/lib/study/shared/studio-artifact-types.ts
 
 src/features/study/actions/study-generate-questions-action.ts
   -> src/lib/study/passage/passage-study.service.ts
@@ -79,7 +79,7 @@ src/features/study/ui/upload/study-upload-modal.tsx
 - Dictionary: `/api/dictionary/*`
 - Study chat/session: `/api/study-chat`, `/api/study-session`
 - Study results: `/api/study-results`
-- Quiz attempts: `/api/quiz-attempt`
+- Studio artifacts: `/api/studio-artifacts` (quiz outcomes persist as a `QuizResult` child of a `StudioArtifact` via server actions, not a dedicated route)
 - Cards/progress: `/api/cards/*`, `/api/progress/stats`
 - Health/dev/test: `/api/health`, `/api/local-blob/[pathname]`, `/api/test/*`
 

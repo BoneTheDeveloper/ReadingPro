@@ -1,13 +1,27 @@
 ---
 phase: 2
 title: "Quiz UX completion"
-status: pending
+status: mostly-shipped
 priority: P1
 effort: "5h"
 dependencies: []
 ---
 
 # Phase 2: Quiz UX completion
+
+> ✅ **Mostly shipped — reconciled 2026-06-16 (gkg-verified).** Already in code, do not
+> rebuild:
+> - Source quote (`sourceText` + `sourceLine`) rendered in feedback — `quiz-content.tsx:207-214`.
+> - Attempt-save failure → non-blocking inline banner + Retry, score stays visible,
+>   Strict-Mode double-invoke guarded by `isSavingRef` — `quiz-results.tsx:32-96`.
+> - `artifactId` threaded through `QuizContent` / `QuizResults`. Persistence is now the
+>   server action `studioRecordQuizResultAction` (not `createQuizAttemptForArtifact`).
+>
+> **Only remaining item: the passage-switch race** — `use-study-actions.ts:99-102` still
+> marks a completed generation `failed` when the active passage changed, discarding a
+> valid result. Fix: complete it into its originating passage's cache instead (and apply
+> the Phase 0 error-code treatment to genuine failures). Ignore the route/`passageId`
+> migration notes below — superseded with Phase 1.
 
 ## Overview
 

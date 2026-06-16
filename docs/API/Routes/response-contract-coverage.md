@@ -19,8 +19,7 @@ API DTOs unless they are mapped into the documented response schema first.
 | `GET /api/progress/stats` | JSON contracted | `progressStatsResponseSchema` |
 | `POST /api/studio-questions` | JSON contracted | `generatedStudyQuestionsResponseSchema` |
 | `POST /api/study-session` | JSON contracted | `studySessionResponseSchema` |
-| `POST /api/quiz-attempt` | JSON contracted | `quizAttemptResponseSchema` |
-| `PATCH /api/quiz-attempt` | JSON contracted | `quizAttemptResponseSchema` |
+| `GET /api/studio-artifacts` | JSON, inline response (no named schema) | request: `studyArtifactsQuerySchema` (query) |
 | `GET /api/study-results` | JSON contracted | (inline Zod query schema, StudioResult type) |
 | `POST /api/upload` | JSON contracted | `uploadResponseSchema` |
 | `POST /api/upload/text` | JSON contracted | `uploadResponseSchema` |

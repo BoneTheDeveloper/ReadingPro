@@ -7,11 +7,11 @@ yourself, from your laptop.
 
 ## Mental Model
 
-| Context | Neon branch | Env file | Command | Who applies |
-|---|---|---|---|---|
-| Local dev | `development` | `.env.local` | `pnpm db:migrate:dev` | You |
-| Production | `production` | `.env.prod` | `pnpm db:migrate:deploy:prod` | You (manual) |
-| CI | none | none | lint / typecheck / test | No migration checks or DB writes |
+| Context | Neon branch | Env file | Command 
+|---|---|---|---|
+| Local dev | `development` | `.env.local` | `pnpm db:migrate:dev` 
+| Production | `production` | `.env.prod` | `pnpm db:migrate:deploy:prod` 
+
 
 `prisma.config.ts` loads `.env.local` by default. The `:prod` scripts set
 `PRISMA_ENV_FILE=.env.prod` so the same CLI points at the production branch.
@@ -19,24 +19,22 @@ There is no staging database and no per-PR database branch.
 
 ## 1. Dev Schema Change
 
-1. Point `.env.local` at the Neon `development` branch (`DATABASE_URL` pooled,
-   `DIRECT_URL` direct).
-2. Edit the relevant domain file under `prisma/schema/` (multi-file schema).
-3. Format and validate:
+1. Edit the relevant domain file under `prisma/schema/` (multi-file schema).
+2. Format and validate:
 
    ```bash
    pnpm exec prisma format
    pnpm exec prisma validate
    ```
 
-4. Create and apply the migration to `development`:
+3. Create and apply the migration to `development`:
 
    ```bash
    pnpm db:migrate:dev --name <verb>_<noun>   # e.g. add_reading_goal
    ```
 
-5. Review the generated SQL in `prisma/migrations/`.
-6. Run local checks:
+4. Review the generated SQL in `prisma/migrations/`.
+5. Run local checks:
 
    ```bash
    pnpm run db:generate
@@ -45,7 +43,7 @@ There is no staging database and no per-PR database branch.
    pnpm run test
    ```
 
-7. Commit the changed `prisma/schema/*.prisma` file(s) and the new `prisma/migrations/*` folder.
+6. Commit the changed `prisma/schema/*.prisma` file(s) and the new `prisma/migrations/*` folder.
 
 Rules:
 
@@ -58,21 +56,14 @@ Rules:
 ## 2. Update Production From Local
 
 
-1. Populate `.env.prod` (never commit it) from the Vercel/Neon console:
-
-   ```
-   DATABASE_URL=...   # pooled, production branch
-   DIRECT_URL=...     # direct, production branch
-   ```
-
-2. Apply and verify:
+1. Apply and verify:
 
    ```bash
    pnpm db:migrate:deploy:prod
    pnpm db:migrate:status:prod         # expect "Database schema is up to date!"
    ```
 
-3. Deploy the matching app version (Vercel) so code and schema move together.
+2. Deploy the matching app version (Vercel) so code and schema move together.
    Production migrations must be backward-compatible with the currently deployed
    app: new code must not require an unapplied change, and old code must keep
    working against the new schema.

@@ -19,10 +19,24 @@ source: skill
 Complete GitHub issue #69 (Core Study Loop, P1): make quiz generation and quiz-taking a
 reliable learner action in the Study workspace. Much of #69 already exists in code
 (generation running/completed/failed states, duplicate-generation lock, keyboard answer flow,
-per-passage result caching). This plan closes the **real remaining gaps**: (1) harden the
-`quiz-attempt` persistence API and migrate it to use `artifactId` instead of `passageId` to align with the new `StudioArtifact` model, (2) surface
-persistence failures and render the source quote in the quiz UI, fix the passage-switch
-race so a valid generation is not discarded, and (3) add the missing test coverage.
+per-passage result caching). This plan closes the **real remaining gaps**, in priority order:
+(0, **priority**) make generation failures self-explaining and stop the "progress hell loop" —
+persist a structured failure reason across DB/BE/FE and add a generation timeout + Retry so a
+hung generation can never lock the action; (1) harden the `quiz-attempt` persistence API and
+migrate it to use `artifactId` instead of `passageId` to align with the new `StudioArtifact`
+model; (2) surface attempt-persistence failures and render the source quote in the quiz UI, fix
+the passage-switch race so a valid generation is not discarded; and (3) add the missing test
+coverage.
+
+Two live reliability bugs drive Phase 0:
+- **Opaque generation failure** — a failed card shows only a generic "failed" label; the
+  backend's real reason is thrown, returned once, then lost (`StudioArtifact` keeps only
+  `status`). User and developer both lose the "why". Fix: a single shared `errorCode` (+
+  optional `errorDetail`) persisted on the row and rendered as a localized message.
+- **Progress hell loop** — the client generation fetch has no timeout, so a hung request leaves
+  the artifact stuck `generating`, and the action lock then blocks the 2nd generation forever.
+  Fix: client + backend timeout that always settles the artifact to `failed` (`TIMEOUT`),
+  releasing the lock, plus a Retry button on the failed card.
 
 Scope decisions (confirmed with user):
 - Full issue #69 scope (not just the route slice the existing note covers).
@@ -48,12 +62,30 @@ annotated end-to-end flow map.
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 1 | [API hardening](./phase-01-api-hardening.md) | Pending |
-| 2 | [Quiz UX completion](./phase-02-quiz-ux-completion.md) | Pending |
-| 3 | [Test coverage](./phase-03-test-coverage.md) | Pending |
+| 0 (priority) | [Generation failure contract + timeout](./phase-00-generation-failure-and-timeout.md) | Pending |
+| 1 | [API hardening](./phase-01-api-hardening.md) | Superseded — route/model removed |
+| 2 | [Quiz UX completion](./phase-02-quiz-ux-completion.md) | Mostly shipped — only passage-switch race remains |
+| 3 | [Test coverage](./phase-03-test-coverage.md) | Pending — retargeted to current surfaces |
 
-Key dependencies: Phase 3 depends on Phases 1 + 2 (tests verify final code). Phase 2 is
-independent of Phase 1 and can run in parallel if desired.
+> **Reconciled 2026-06-16 (gkg-verified against current code).** The codebase moved off the
+> `QuizAttempt`/`/api/quiz-attempt` model the plan was written against. Quiz outcomes now persist
+> as a `QuizResult` (1:1 with the quiz `StudioArtifact`) via **server actions**
+> (`studioRecordQuizResultAction` / `studioResetQuizResultAction`), and `StudySession` is a
+> heartbeat-only record. See `implement-notes/260616-1946-quiz-result-persistence-and-generation-reliability.md`.
+> - **Phase 1** (quiz-attempt route 401/404/`.strict()` + `passageId→artifactId` migration) is
+>   **superseded** — that route/table no longer exists; the server-action persistence path already
+>   enforces auth + ownership-via-parent-artifact + count validation.
+> - **Phase 2** items are **already in code**: source quote (`quiz-content.tsx:207-214`),
+>   save-failure banner + Retry (`quiz-results.tsx:85-96`), `artifactId` prop, Strict-Mode
+>   double-invoke guard (`isSavingRef`). Only the **passage-switch race**
+>   (`use-study-actions.ts:99-102`, still marks a valid generation `failed`) remains.
+> - **Phase 3** is retargeted: server-action persistence tests, component tests
+>   (`NextIntlClientProvider` + real `en.json`), generation failure/timeout tests, and the
+>   passage-switch race — not the deleted route tests.
+
+Key dependencies: **Phase 0 ships first** — it fixes the two live generation reliability bugs and
+is independent of the rest (it touches the generation path). The Phase 2 remainder (race fix) is
+independent and small. Phase 3 verifies the final Phase 0 + Phase 2 code.
 
 ## Verification commands
 

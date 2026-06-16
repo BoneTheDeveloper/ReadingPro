@@ -34,5 +34,5 @@ Client workspace state is managed by:
 - Passages must be filtered by authenticated `userId`.
 - Deleted passages use `deletedAt`.
 - Generated questions are associated with `Passage`.
-- Study activity is tracked through `StudySession` windows and child
-  `QuizAttempt` records.
+- Study presence is tracked through `StudySession` heartbeat windows; quiz outcomes
+  persist as a `QuizResult` (1:1 with the quiz `StudioArtifact`).
