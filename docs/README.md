@@ -41,7 +41,7 @@ Do not duplicate detailed rules that belong beside executable assets:
 | Code and file placement | [`code-standards.md`](code-standards.md), [`codebase-summary.md`](codebase-summary.md) | Keep broad conventions and feature map only. |
 | Page and feature UI composition | [`Architecture/frontend-ui-architecture/page-composition-conventions.md`](Architecture/frontend-ui-architecture/page-composition-conventions.md) | Link and summarize only. |
 | API implementation and contracts | [`API/api-implementation-conventions.md`](API/api-implementation-conventions.md), [`API/api-index.md`](API/api-index.md) | Keep detailed route behavior in API docs. |
-| Prisma migration procedure | [`../prisma/migrations-flow.md`](../prisma/migrations-flow.md), [`../prisma/migrations-guide.md`](../prisma/migrations-guide.md), [`../prisma/SECURITY.md`](../prisma/SECURITY.md) | Link and summarize only. |
+| Prisma migration procedure | [`../prisma/migrations-guide.md`](../prisma/migrations-guide.md), [`../prisma/SECURITY.md`](../prisma/SECURITY.md) | Link and summarize only. |
 | Root configuration ownership | [`Operations/root-configuration.md`](Operations/root-configuration.md) | Record what belongs at root versus owning subdirectories. |
 | Test suite structure | [`../tests/README.md`](../tests/README.md) | Link and summarize only. |
 | Playwright local playground | [`../playwright/README.md`](../playwright/README.md) | Link and summarize only. |

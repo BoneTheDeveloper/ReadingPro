@@ -4,7 +4,6 @@
 
 Use the Prisma-owned docs for detailed migration procedure:
 
-- [../../prisma/migrations-flow.md](../../prisma/migrations-flow.md)
 - [../../prisma/migrations-guide.md](../../prisma/migrations-guide.md)
 - [../../prisma/SECURITY.md](../../prisma/SECURITY.md)
 
