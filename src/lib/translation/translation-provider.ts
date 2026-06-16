@@ -1,3 +1,4 @@
+import 'server-only';
 import { createModuleLogger } from "@/lib/core/logger";
 
 const log = createModuleLogger("translation:provider");

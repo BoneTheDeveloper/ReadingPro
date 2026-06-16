@@ -1,3 +1,4 @@
+import 'server-only';
 import * as Sentry from "@sentry/nextjs";
 import { generateComprehensionQuestions, type GeneratedQuestion } from "@/lib/ai/question-generator";
 import { simplifyContent } from "@/lib/ai/content-simplifier";

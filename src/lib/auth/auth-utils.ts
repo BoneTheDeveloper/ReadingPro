@@ -1,3 +1,4 @@
+import 'server-only';
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { cache } from "react";
 import { createModuleLogger } from "@/lib/core/logger";

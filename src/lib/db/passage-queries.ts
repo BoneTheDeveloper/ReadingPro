@@ -1,3 +1,4 @@
+import 'server-only';
 import { z } from 'zod';
 import { Prisma } from '@/generated/prisma/client';
 import type { CEFRLevel } from '../domain/cefr';

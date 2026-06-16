@@ -1,3 +1,4 @@
+import 'server-only';
 import { runWithPrismaQueryStep } from "@/lib/observability/prisma-query-metrics";
 import { normalizeDictionaryTerm } from "../shared/normalize-dictionary-term";
 import {

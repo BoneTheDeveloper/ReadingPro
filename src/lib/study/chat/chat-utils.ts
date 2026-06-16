@@ -1,3 +1,4 @@
+import 'server-only';
 import type { UiMessage } from "./chat-schema";
 import { MAX_HISTORY_MESSAGES, MAX_USER_TEXT_PART_CHARS } from "./chat-schema";
 

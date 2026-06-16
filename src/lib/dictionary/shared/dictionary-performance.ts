@@ -1,3 +1,4 @@
+import 'server-only';
 import { runWithPrismaQueryStep, type PrismaQueryMetrics } from "@/lib/observability/prisma-query-metrics";
 
 export const DICTIONARY_PERFORMANCE_HEADER = "x-dictionary-perf-metrics";

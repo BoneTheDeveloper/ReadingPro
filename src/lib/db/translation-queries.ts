@@ -1,3 +1,4 @@
+import 'server-only';
 import { createHash } from "node:crypto";
 import { Prisma } from "@/generated/prisma/client";
 import { db } from "./client";

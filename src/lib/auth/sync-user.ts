@@ -1,3 +1,4 @@
+import 'server-only';
 import { db } from '@/lib/db/client'
 
 export async function syncUser(authId: string, email?: string, name?: string, avatarUrl?: string) {

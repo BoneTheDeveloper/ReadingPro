@@ -1,3 +1,4 @@
+import 'server-only';
 import { z } from "zod";
 import { AuthenticationRequiredError } from "@/lib/auth/auth-utils";
 

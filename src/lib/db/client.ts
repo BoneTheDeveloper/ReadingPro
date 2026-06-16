@@ -1,3 +1,4 @@
+import 'server-only';
 import { createPrismaClient, type AppPrismaClient, type QueryMetricsPrismaClient } from './create-prisma-client';
 import { recordPrismaQueryDuration } from '@/lib/observability/prisma-query-metrics';
 

@@ -1,3 +1,4 @@
+import 'server-only';
 import { findEntryByIdRaw } from "./entry-detail.repository";
 import { buildEntryDto } from "../shared/dictionary-dto-builders";
 import { RUNTIME_STATUSES } from "../shared/dictionary-dtos";

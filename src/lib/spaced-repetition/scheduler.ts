@@ -1,3 +1,4 @@
+import 'server-only';
 /**
  * Simple interval schedule for lightweight content (Vocabulary).
  * Per ADR 0005.

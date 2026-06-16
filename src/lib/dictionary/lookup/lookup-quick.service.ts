@@ -1,3 +1,4 @@
+import 'server-only';
 import { createModuleLogger } from "@/lib/core/logger";
 import { normalizeDictionaryTerm } from "../shared/normalize-dictionary-term";
 import { resolveQuickDictionaryLookupSql } from "./lookup.service";

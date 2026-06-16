@@ -1,3 +1,4 @@
+import 'server-only';
 import { openai } from "@ai-sdk/openai";
 import { convertToModelMessages, streamText } from "ai";
 import * as Sentry from "@sentry/nextjs";

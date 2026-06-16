@@ -1,3 +1,4 @@
+import 'server-only';
 import {
   getSourceLabel,
   type DictionarySearchResultDto,

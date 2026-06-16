@@ -1,3 +1,4 @@
+import 'server-only';
 import { normalizeDictionaryTerm } from "../shared/normalize-dictionary-term";
 import { getSourceLabel, type DictionarySuggestItemDto } from "../shared/dictionary-dtos";
 import { findSuggestCandidates, type SuggestCandidateRow } from "./suggest.repository";

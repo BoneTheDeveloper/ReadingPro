@@ -1,3 +1,4 @@
+import 'server-only';
 import * as Sentry from "@sentry/nextjs";
 import { db } from "@/lib/db/client";
 import type { LookupRawRow } from "../lookup/lookup.repository";

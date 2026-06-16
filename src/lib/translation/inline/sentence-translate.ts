@@ -1,3 +1,4 @@
+import 'server-only';
 import * as Sentry from "@sentry/nextjs";
 import type { QuickTranslation } from "@/lib/ai/translator";
 import { translateWithProvider } from "@/lib/translation/translation-provider";

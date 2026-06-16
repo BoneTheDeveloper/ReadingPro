@@ -1,3 +1,4 @@
+import 'server-only';
 import * as Sentry from "@sentry/nextjs";
 import { createModuleLogger } from "@/lib/core/logger";
 import { upsertVocabularyItem } from "@/lib/db/vocabulary-queries";

@@ -1,3 +1,4 @@
+import 'server-only';
 export type QuickSelectionScope = "dictionary" | "machine";
 
 const SENTENCE_END_RE = /[.!?]$/;

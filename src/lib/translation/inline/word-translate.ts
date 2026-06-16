@@ -1,3 +1,4 @@
+import 'server-only';
 import * as Sentry from "@sentry/nextjs";
 import type { QuickTranslation } from "@/lib/ai/translator";
 import { resolveQuickDictionaryTranslation } from "@/lib/dictionary/lookup/lookup-quick.service";

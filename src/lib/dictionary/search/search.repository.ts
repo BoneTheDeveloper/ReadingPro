@@ -1,3 +1,4 @@
+import 'server-only';
 import * as Sentry from "@sentry/nextjs";
 import { Prisma } from "@/generated/prisma/client";
 import { db } from "@/lib/db/client";

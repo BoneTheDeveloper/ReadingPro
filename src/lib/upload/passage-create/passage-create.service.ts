@@ -1,3 +1,4 @@
+import 'server-only';
 import * as Sentry from '@sentry/nextjs';
 import { createModuleLogger } from '@/lib/core/logger';
 import { getHeuristicCEFR } from '@/lib/domain/cefr';

@@ -1,3 +1,4 @@
+import 'server-only';
 import { db } from '../client';
 
 // A day counts toward the streak only when total study time that day exceeds this.

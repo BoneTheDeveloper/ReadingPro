@@ -1,3 +1,4 @@
+import 'server-only';
 import type { Prisma } from "@/generated/prisma/client";
 import * as Sentry from "@sentry/nextjs";
 import type { QuickTranslation } from "@/lib/ai/translator";

@@ -1,3 +1,4 @@
+import 'server-only';
 import { PDFParse } from 'pdf-parse';
 
 export interface ParsedPDF {
