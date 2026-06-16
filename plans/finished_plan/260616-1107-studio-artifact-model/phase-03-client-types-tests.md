@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "Client types & tests"
-status: pending
+status: Complete
 priority: P2
 effort: "1.5h"
 dependencies: [2]
