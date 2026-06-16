@@ -1,0 +1,67 @@
+// Studio-generated artifacts and their content. StudioArtifact is the generic
+// card produced by a studio action; type-specific content (e.g. Question) hangs
+// off it relationally so the card stays generic across artifact types.
+
+model StudioArtifact {
+  id        String   @id @db.Uuid
+  passageId String   @db.Uuid
+  userId    String
+  type      String   // 'quiz' | 'flashcard'
+  title     String
+  status    String   // 'generating' | 'done' | 'failed'
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  passage   Passage     @relation(fields: [passageId], references: [id], onDelete: Cascade)
+  user      UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questions Question[]
+
+  @@index([passageId, createdAt(sort: Desc)])
+  @@index([userId])
+  @@map("studio_artifacts")
+}
+
+model Question {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  passageId     String       @db.Uuid
+  artifactId    String       @db.Uuid
+  questionText  String
+  options       Json
+  correctOption String
+  sourceText    String
+  sourceLine    Int
+  explanation   String
+  questionType  QuestionType @default(MULTIPLE_CHOICE)
+  difficulty    Int          @default(3)
+  createdAt     DateTime     @default(now())
+
+  passage  Passage          @relation(fields: [passageId], references: [id], onDelete: Cascade)
+  artifact StudioArtifact   @relation(fields: [artifactId], references: [id], onDelete: Cascade)
+  reviews  QuestionReview[]
+
+  @@index([passageId])
+  @@index([artifactId])
+  @@map("questions")
+}
+
+// SM-2 spaced-repetition tracking per question.
+model QuestionReview {
+  id         String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  questionId String @db.Uuid
+  userId     String
+
+  qualityRating Int
+  easeFactor    Float @default(2.5)
+  intervalDays  Int   @default(1)
+  repetitions   Int   @default(0)
+
+  nextReviewDate DateTime @default(now())
+  reviewedAt     DateTime @default(now())
+
+  question Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  user     UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([questionId, userId])
+  @@index([userId, nextReviewDate])
+  @@map("question_reviews")
+}

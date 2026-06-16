@@ -1,0 +1,43 @@
+model TranslationCache {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  cacheKey        String   @unique
+  userId          String
+  sourceId        String   @db.Uuid
+  selectedText    String
+  contextSentence String
+  sourceLanguage  String
+  targetLanguage  String
+  mode            String
+  provider        String
+  response        Json
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user    UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  passage Passage     @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  @@index([userId, sourceId, targetLanguage])
+  @@index([userId, createdAt])
+  @@map("translation_caches")
+}
+
+model TranslationHistory {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String
+  sourceId        String   @db.Uuid
+  selectedText    String
+  contextSentence String
+  sourceLanguage  String
+  targetLanguage  String
+  mode            String
+  provider        String
+  translation     String
+  response        Json
+  createdAt       DateTime @default(now())
+
+  user    UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  passage Passage     @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  @@index([userId, sourceId, createdAt])
+  @@map("translation_histories")
+}

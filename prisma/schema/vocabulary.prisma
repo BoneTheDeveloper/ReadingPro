@@ -1,0 +1,74 @@
+model VocabularyItem {
+  id                 String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId             String
+  translation        String
+  sourceLanguage     String
+  targetLanguage     String
+  type               String              @default("WORD")
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  normalizedText     String              @default("")
+  displayText        String              @default("")
+  status             String              @default("NEW")
+  source             String              @default("TRANSLATE")
+  savedCount         Int                 @default(1)
+  nextReviewAt       DateTime?
+  lastReviewedAt     DateTime?
+  dictionaryEntryId  String?             @db.Uuid
+  dictionarySenseId  String?             @db.Uuid
+
+  user            UserProfile           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  occurrences     VocabularyOccurrence[]
+  setItems        VocabularySetItem[]
+
+  @@unique([userId, normalizedText, targetLanguage, translation])
+  @@index([userId, nextReviewAt])
+  @@index([userId, status])
+  @@map("vocabulary_items")
+}
+
+model VocabularyOccurrence {
+  id               String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  vocabularyItemId String         @db.Uuid
+  sourceId         String?        @db.Uuid
+  selectedText     String
+  contextSentence  String?
+  createdAt        DateTime       @default(now())
+
+  vocabularyItem VocabularyItem @relation(fields: [vocabularyItemId], references: [id], onDelete: Cascade)
+
+  @@unique([vocabularyItemId, sourceId, contextSentence])
+  @@index([sourceId])
+  @@map("vocabulary_occurrences")
+}
+
+model VocabularySet {
+  id          String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String
+  name        String
+  type        VocabularySetType
+  periodStart DateTime?
+  periodEnd   DateTime?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  user      UserProfile         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  setItems  VocabularySetItem[]
+
+  @@unique([userId, type, periodStart, periodEnd])
+  @@index([userId, type])
+  @@map("vocabulary_sets")
+}
+
+model VocabularySetItem {
+  id               String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  vocabularySetId  String        @db.Uuid
+  vocabularyItemId String        @db.Uuid
+  addedAt          DateTime      @default(now())
+
+  vocabularySet  VocabularySet  @relation(fields: [vocabularySetId], references: [id], onDelete: Cascade)
+  vocabularyItem VocabularyItem @relation(fields: [vocabularyItemId], references: [id], onDelete: Cascade)
+
+  @@unique([vocabularySetId, vocabularyItemId])
+  @@map("vocabulary_set_items")
+}

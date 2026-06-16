@@ -1,0 +1,26 @@
+model UserProfile {
+  id               String    @id
+  email            String?
+  name             String?
+  avatarUrl        String?
+  bio              String?
+  targetLevel      CEFRLevel @default(B2)
+  tier             Tier      @default(FREE)
+  stripeCustomerId String?   @unique
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  passages             Passage[]
+  studySessions        StudySession[]
+  questionReviews      QuestionReview[]
+  chatMessages         StudyChatMessage[]
+  translationCaches    TranslationCache[]
+  translationHistories TranslationHistory[]
+  vocabularyItems      VocabularyItem[]
+  vocabularySets       VocabularySet[]
+  fileUploadIntents    FileUploadIntent[]
+  quizAttempts         QuizAttempt[]
+  studioArtifacts      StudioArtifact[]
+
+  @@map("profiles")
+}

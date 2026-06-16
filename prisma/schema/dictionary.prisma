@@ -1,0 +1,82 @@
+model DictionaryEntry {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  headword           String
+  normalizedHeadword String
+  sourceLanguage     String   @default("en")
+  frequencyRank      Int      @default(0)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  senses  DictionarySense[]
+  aliases DictionaryAlias[]
+
+  @@unique([normalizedHeadword, sourceLanguage])
+  @@index([sourceLanguage, frequencyRank])
+  @@map("dictionary_entries")
+}
+
+model DictionarySense {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  entryId      String   @db.Uuid
+  partOfSpeech String?
+  definition   String?
+  example      String?
+  tags         String[]
+  usageRank    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  entry        DictionaryEntry         @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  translations DictionaryTranslation[]
+
+  @@index([entryId, usageRank])
+  @@map("dictionary_senses")
+}
+
+model DictionaryTranslation {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  senseId        String    @db.Uuid
+  targetLanguage String    @default("vi")
+  translation    String
+  isPrimary      Boolean   @default(false)
+  rank           Int
+  confidence     Float?
+  status         String    @default("draft")
+  sourceType     String
+  sourceName     String?
+  reviewedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  sense DictionarySense @relation(fields: [senseId], references: [id], onDelete: Cascade)
+
+  @@index([senseId, targetLanguage, status, isPrimary])
+  @@index([targetLanguage, status, rank])
+  @@map("dictionary_translations")
+}
+
+model DictionaryAlias {
+  id              String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  entryId         String @db.Uuid
+  normalizedAlias String
+  aliasType       String @default("variant")
+
+  entry DictionaryEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+
+  @@unique([normalizedAlias, entryId])
+  @@index([normalizedAlias])
+  @@map("dictionary_aliases")
+}
+
+model DictionarySourceAudit {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  batchName  String
+  entityType String
+  entityId   String   @db.Uuid
+  note       String?
+  createdAt  DateTime @default(now())
+
+  @@index([batchName])
+  @@index([entityType, entityId])
+  @@map("dictionary_source_audits")
+}

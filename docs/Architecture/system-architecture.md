@@ -29,7 +29,7 @@ The application is a server-first Next.js product. User-facing pages are locale-
 | User identity | Clerk + `UserProfile` | Clerk owns login; app DB owns profile row and data relationships. |
 | Product features | `src/features/*` | UI, hooks, workflows, server actions. |
 | Shared services | `src/lib/*` | Auth, DB, storage, AI, dictionary, translation, observability. |
-| Data model | `prisma/schema.prisma` | Source of truth for tables and relationships. |
+| Data model | `prisma/schema/` (multi-file) | Source of truth for tables and relationships, split by domain. |
 | API | `src/app/api/**/route.ts` | HTTP/streaming contracts. |
 
 ## Data Ownership

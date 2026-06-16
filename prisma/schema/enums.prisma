@@ -1,0 +1,29 @@
+enum CEFRLevel {
+  A1
+  A2
+  B1
+  B2
+  C1
+  C2
+}
+
+enum SourceType {
+  TEXT
+  PDF
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+}
+
+enum Tier {
+  FREE
+  PRO
+}
+
+enum VocabularySetType {
+  MANUAL
+  DAILY
+  WEEKLY
+}

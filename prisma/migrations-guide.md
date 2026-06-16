@@ -21,7 +21,7 @@ There is no staging database and no per-PR database branch.
 
 1. Point `.env.local` at the Neon `development` branch (`DATABASE_URL` pooled,
    `DIRECT_URL` direct).
-2. Edit `prisma/schema.prisma`.
+2. Edit the relevant domain file under `prisma/schema/` (multi-file schema).
 3. Format and validate:
 
    ```bash
@@ -45,7 +45,7 @@ There is no staging database and no per-PR database branch.
    pnpm run test
    ```
 
-7. Commit `prisma/schema.prisma` and the new `prisma/migrations/*` folder.
+7. Commit the changed `prisma/schema/*.prisma` file(s) and the new `prisma/migrations/*` folder.
 
 Rules:
 

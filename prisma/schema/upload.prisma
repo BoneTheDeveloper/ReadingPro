@@ -1,0 +1,13 @@
+model FileUploadIntent {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String
+  pathname  String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+  @@index([userId, expiresAt])
+  @@map("file_upload_intents")
+}

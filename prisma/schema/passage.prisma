@@ -1,0 +1,43 @@
+model Passage {
+  id                String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId            String
+  title             String
+  content           String
+  simplifiedContent String?
+  originalLevel     CEFRLevel?
+  simplifiedLevel   CEFRLevel?
+  wordCount         Int
+  sourceType        SourceType
+  filePath          String?    @unique
+  deletedAt         DateTime?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  user                 UserProfile          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questions            Question[]
+  chatMessages         StudyChatMessage[]
+  translationCaches    TranslationCache[]
+  translationHistories TranslationHistory[]
+  quizAttempts         QuizAttempt[]
+  studioArtifacts      StudioArtifact[]
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([userId, deletedAt])
+  @@map("passages")
+}
+
+model StudyChatMessage {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String
+  passageId String   @db.Uuid
+  role      String
+  content   String
+  createdAt DateTime @default(now())
+
+  user    UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  passage Passage     @relation(fields: [passageId], references: [id], onDelete: Cascade)
+
+  @@index([userId, passageId, createdAt])
+  @@map("study_chat_messages")
+}
