@@ -50,23 +50,24 @@ export async function fetchStudioArtifacts(
   // Reconcile orphaned generations: a "generating" row only leaves that state via
   // the client that started it, so one that has outlived the orphan timeout is
   // stranded (interrupted client) and would otherwise lock the action forever.
+  // Failures are ephemeral, so we delete the orphan rather than leave a tombstone:
+  // it disappears on this read and the action lock is freed.
   const cutoff = Date.now() - GENERATING_ARTIFACT_ORPHAN_TIMEOUT_MS;
   const orphanedIds = rows
     .filter((row) => row.status === "generating" && row.updatedAt.getTime() < cutoff)
     .map((row) => row.id);
 
   if (orphanedIds.length > 0) {
-    await db.studioArtifact.updateMany({
+    await db.studioArtifact.deleteMany({
       where: { id: { in: orphanedIds }, userId, status: "generating" },
-      data: { status: "failed" },
     });
   }
 
   const orphanedIdSet = new Set(orphanedIds);
   return {
-    artifacts: rows.map((row) =>
-      orphanedIdSet.has(row.id) ? toStudioArtifact({ ...row, status: "failed" }) : toStudioArtifact(row),
-    ),
+    artifacts: rows
+      .filter((row) => !orphanedIdSet.has(row.id))
+      .map((row) => toStudioArtifact(row)),
   };
 }
 
@@ -101,10 +102,11 @@ export async function completeStudioArtifact(
   });
 }
 
-export async function failStudioArtifact(artifactId: string, userId: string): Promise<void> {
-  await db.studioArtifact.updateMany({
+// A failed generation leaves no trace: we delete the artifact (cascade removes any
+// partial Question rows) so a reload shows a clean slate instead of a dead card.
+export async function deleteStudioArtifact(artifactId: string, userId: string): Promise<void> {
+  await db.studioArtifact.deleteMany({
     where: { id: artifactId, userId },
-    data: { status: "failed" },
   });
 }
 

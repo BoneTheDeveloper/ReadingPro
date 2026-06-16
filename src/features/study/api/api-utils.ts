@@ -7,30 +7,58 @@ export const STUDY_API_ROUTES = {
 
 export type StudyApiResult<T> = T | { error: string };
 
-export async function postJson<TSchema extends z.ZodType>(
-  route: string,
-  body: unknown,
-  schema: TSchema,
-): Promise<z.infer<TSchema>> {
-  const response = await fetch(route, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  const payload = await response.json().catch(() => ({ error: "Invalid server response." }));
-  return schema.parse(payload);
+// Thrown when a request is aborted by its timeout budget. Callers map this to a
+// domain-specific outcome (e.g. a TIMEOUT generation error) so a hung request can
+// never leave the caller's promise pending.
+export class RequestTimeoutError extends Error {
+  constructor(message = "Request timed out") {
+    super(message);
+    this.name = "RequestTimeoutError";
+  }
 }
 
-export async function patchJson<TSchema extends z.ZodType>(
+async function requestJson<TSchema extends z.ZodType>(
+  method: "POST" | "PATCH",
   route: string,
   body: unknown,
   schema: TSchema,
+  timeoutMs?: number,
 ): Promise<z.infer<TSchema>> {
-  const response = await fetch(route, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  const payload = await response.json().catch(() => ({ error: "Invalid server response." }));
-  return schema.parse(payload);
+  const controller = timeoutMs !== undefined ? new AbortController() : undefined;
+  const timer = controller ? setTimeout(() => controller.abort(), timeoutMs) : undefined;
+  try {
+    const response = await fetch(route, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal: controller?.signal,
+    });
+    const payload = await response.json().catch(() => ({ error: "Invalid server response." }));
+    return schema.parse(payload);
+  } catch (err) {
+    if (err instanceof DOMException && err.name === "AbortError") {
+      throw new RequestTimeoutError();
+    }
+    throw err;
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+export function postJson<TSchema extends z.ZodType>(
+  route: string,
+  body: unknown,
+  schema: TSchema,
+  timeoutMs?: number,
+): Promise<z.infer<TSchema>> {
+  return requestJson("POST", route, body, schema, timeoutMs);
+}
+
+export function patchJson<TSchema extends z.ZodType>(
+  route: string,
+  body: unknown,
+  schema: TSchema,
+  timeoutMs?: number,
+): Promise<z.infer<TSchema>> {
+  return requestJson("PATCH", route, body, schema, timeoutMs);
 }

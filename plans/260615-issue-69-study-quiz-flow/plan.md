@@ -62,10 +62,17 @@ annotated end-to-end flow map.
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 0 (priority) | [Generation failure contract + timeout](./phase-00-generation-failure-and-timeout.md) | Pending |
+| 0 (priority) | [Generation failure contract + timeout](./phase-00-generation-failure-and-timeout.md) | Done — **client-only + ephemeral** (see as-built note) |
 | 1 | [API hardening](./phase-01-api-hardening.md) | Superseded — route/model removed |
-| 2 | [Quiz UX completion](./phase-02-quiz-ux-completion.md) | Mostly shipped — only passage-switch race remains |
-| 3 | [Test coverage](./phase-03-test-coverage.md) | Pending — retargeted to current surfaces |
+| 2 | [Quiz UX completion](./phase-02-quiz-ux-completion.md) | Done — passage-switch race fixed |
+| 3 | [Test coverage](./phase-03-test-coverage.md) | Done — retargeted to current surfaces |
+
+> **As-built 2026-06-16.** Phase 0 shipped with a user-confirmed design change: the failure
+> reason is **client-only** (not a persisted DB column) and a failed/orphaned artifact is
+> **deleted** (ephemeral) rather than kept as a `failed` tombstone. The shared `errorCode`
+> contract, client+backend 45s timeout, Retry, and the Phase 2 race fix are all in. See
+> `implement-notes/260616-1946-quiz-result-persistence-and-generation-reliability.md` for the
+> full as-built lifecycle and four flagged pre-existing oddities.
 
 > **Reconciled 2026-06-16 (gkg-verified against current code).** The codebase moved off the
 > `QuizAttempt`/`/api/quiz-attempt` model the plan was written against. Quiz outcomes now persist

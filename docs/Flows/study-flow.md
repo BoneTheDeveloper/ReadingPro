@@ -18,21 +18,48 @@ Learner opens /[locale]/study
 |--------|------|
 | Upload from study modal | `src/features/study/actions/study-upload-action.ts` |
 | Simplify active passage | `src/features/study/actions/study-simplify-action.ts` |
-| Generate questions | `src/features/study/actions/study-generate-questions-action.ts` |
+| Generate quiz questions | `POST /api/studio-questions` via `src/features/study/api/studio-questions-client.ts` |
+| Create / complete / delete artifact | `src/features/study/actions/studio-artifact-actions.ts` |
+| Record / reset quiz result | `src/features/study/actions/studio-artifact-actions.ts` |
 | Delete passage | `src/features/study/actions/study-delete-passage-action.ts` |
 
 ## State
 
 Client workspace state is managed by:
 
-- `src/features/study/model/use-study-workspace-state.ts`
-- `src/features/study/model/use-study-panel-layout.ts`
-- `src/features/study/model/use-study-actions.ts`
+- `src/features/study/hooks/use-study-workspace-state.ts`
+- `src/features/study/hooks/use-study-panel-layout.ts`
+- `src/features/study/hooks/use-study-actions.ts` (quiz generation, retry, result caching)
+
+## Quiz Generation Reliability
+
+A quiz is a `StudioArtifact` whose `status` is `generating` -> `done` | `failed`.
+
+- **Optimistic create.** Clicking Quiz creates the artifact row (`generating`) so an
+  in-flight generation survives reload as a spinner. The studio action is locked while
+  any quiz artifact is `generating`.
+- **Timeout.** Generation is bounded by `STUDIO_GENERATION_TIMEOUT_MS` (45s) on both
+  sides: the client uses an `AbortController` in `postJson` (primary fix — always settles
+  the request so the action lock releases), and `passage-study.service.ts` races the LLM
+  call with the same budget. A timeout surfaces as error code `TIMEOUT`.
+- **Failure reason is client-only.** Failures carry a shared `StudioArtifactErrorCode`
+  (`src/lib/study/shared/studio-artifact-types.ts`) returned as `{ error, code }` and shown
+  as a localized card message. It is **not** persisted — the reason is gone after reload by design.
+- **Failures are ephemeral.** On any failure the artifact row is **deleted**
+  (`studioDeleteArtifactAction`); the client keeps a transient failed card with a Retry
+  button. The orphan reaper in `fetchStudioArtifacts` likewise **deletes** stuck `generating`
+  rows (interrupted clients) instead of leaving `failed` tombstones, freeing the lock. Net:
+  reload shows only `generating` and `done` artifacts.
+- **Retry** re-creates the artifact under the same id and regenerates (guarded against
+  re-entrant double-fire).
+- **Passage-switch race.** A generation that completes after the user switched passages is
+  kept on its originating passage's cache (not discarded).
 
 ## Data Rules
 
 - Passages must be filtered by authenticated `userId`.
 - Deleted passages use `deletedAt`.
-- Generated questions are associated with `Passage`.
+- Generated questions are associated with `Passage` and the parent quiz `StudioArtifact`
+  (cascade-deleted with the artifact).
 - Study presence is tracked through `StudySession` heartbeat windows; quiz outcomes
   persist as a `QuizResult` (1:1 with the quiz `StudioArtifact`).

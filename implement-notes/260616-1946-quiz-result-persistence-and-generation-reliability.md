@@ -57,3 +57,45 @@ Presence (not score) StudySession  — heartbeat only (startedAt / lastActivityA
 
 `plans/260615-issue-69-study-quiz-flow/` — Phase 0 (priority: items 1+2), Phase 2 remainder (item 3),
 Phase 3 (item 4). Phase 1 is superseded (the quiz-attempt route it targeted is gone).
+
+## Update 2026-06-16 — implemented (items 1–4 done)
+
+Design decision (user, supersedes plan Phase 0 "persist to DB"): generation failures are
+**client-only + ephemeral**, NOT persisted as a structured DB column.
+
+- **Failure reason**: `StudioArtifactErrorCode` (`studio-artifact-types.ts`) flows
+  service → route `{ error, code }` → client → client state only. Shown as a localized card
+  message (`studio-panel.tsx` `generationErrorMessage`). On reload the reason is gone (generic).
+- **Failed artifact lifecycle = ephemeral delete.** On any generation failure the client keeps a
+  transient failed card (reason + Retry) and **deletes** the DB row
+  (`studioDeleteArtifactAction` → `deleteStudioArtifact`). The orphan reaper in
+  `fetchStudioArtifacts` now **deletes** stuck `generating` rows instead of flipping to `failed`.
+  Result: reload = clean slate, no dead "Failed" cards accumulate. `studioFailArtifactAction` /
+  `failStudioArtifact` were removed (dead).
+- **Timeout (progress-hell fix)**: client `AbortController` budget (`STUDIO_GENERATION_TIMEOUT_MS`,
+  45s) in `postJson`/`patchJson` → `RequestTimeoutError` → client maps to `code: "TIMEOUT"`; the
+  promise always settles so the action lock releases. Backend mirrors the budget with a
+  `Promise.race` in `passage-study.service.ts`.
+- **Retry**: `retryQuizArtifact` recreates the row under the **same id** (stable card) and regenerates.
+- **Passage-switch race (Phase 2)**: fixed — a successful generation now completes into its
+  originating passage's cache regardless of the active passage (no longer discarded as failed).
+- Tests: `use-study-actions.test.ts` (errorCode/TIMEOUT/race/retry), `studio-artifacts-service.test.ts`
+  (orphan delete), `quiz-content.test.tsx`, `quiz-results.test.tsx`, `studio-artifact-actions.test.ts`.
+  Full suite green (353), typecheck + lint clean.
+
+## ⚠️ Strange / wrong old implementations found (not all fixed — flagged per request)
+
+1. **`render-with-intl` helper was unnecessary** (plan Phase 3 interview Q1 assumed no intl test
+   infra). The repo **already** has a global `next-intl` mock in `tests/vitest/setup/vitest.setup.ts`
+   that resolves real `en.json` messages, so component tests just use `render`/`renderWithUser`.
+   Resolved: no helper created.
+2. **`studio-panel.tsx` "Results" heading is hardcoded** (`<h3>Results</h3>`) instead of
+   `t("results")` — the `results` i18n key already exists. Not fixed (out of scope, untranslated string).
+3. **Double "Source" label in `quiz-content.tsx`** source quote: renders `t("source")` ("Source:")
+   and, when a line exists, also `t("sourceLine")` ("Source (Line {n}):") → "Source: Source (Line 3):".
+   Redundant. Not fixed (cosmetic, out of scope).
+4. **`getOwnedPassage` 404 vs 502 mismatch**: `passage-study.service.ts` throws
+   `PassageStudyServiceError("Passage not found")` for an ownership miss, but the studio-questions
+   route maps every `PassageStudyServiceError` to **502** (its `isOwnershipMissError` check only
+   inspects ZodErrors, not this class). So a not-owned/missing passage returns 502, while the plan's
+   stated convention is 404. Pre-existing; not fixed (out of scope for this change).

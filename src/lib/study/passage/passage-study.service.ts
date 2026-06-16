@@ -6,6 +6,10 @@ import { db } from "@/lib/db/client";
 import { questionDataSchema } from "@/lib/db/passage-queries";
 import { getTargetCEFRLevel, isSimplifiableCEFRLevel, type CEFRLevel } from "@/lib/domain/cefr";
 import type { GeneratedStudyQuestionDto } from "@/lib/study/shared/study-response-schema";
+import {
+  STUDIO_GENERATION_TIMEOUT_MS,
+  type StudioArtifactErrorCode,
+} from "@/lib/study/shared/studio-artifact-types";
 
 const log = createModuleLogger("lib:study:passage-service");
 
@@ -28,7 +32,7 @@ export async function simplifyPassageForUser(userId: string, passageId: string):
   });
 
   if (!simplified) {
-    throw new PassageStudyServiceError("Simplification failed — try again");
+    throw new PassageStudyServiceError("Simplification failed — try again", "GENERATION_FAILED");
   }
 
   await Sentry.startSpan({ name: "db:passage-update", op: "db" }, async () => {
@@ -57,21 +61,23 @@ export async function generateQuestionsForPassage(
 
   Sentry.addBreadcrumb({ category: "ai", message: "Generating comprehension questions", level: "info" });
   const questionResult = await Sentry.startSpan({ name: "ai:question-gen", op: "ai" }, async () => {
-    return generateComprehensionQuestions(contentToAnalyze.slice(0, 10000), 5);
+    // Bound the LLM call so a hung upstream cannot hold the serverless invocation
+    // open. Mirrors the client AbortController budget; surfaces as a TIMEOUT code.
+    return withGenerationTimeout(generateComprehensionQuestions(contentToAnalyze.slice(0, 10000), 5));
   });
 
   if (!questionResult) {
-    throw new PassageStudyServiceError("Question generation failed — try again");
+    throw new PassageStudyServiceError("Question generation failed — try again", "GENERATION_FAILED");
   }
 
   const validQuestions = questionResult.questions.filter((q) =>
     isValidGeneratedQuestion(q, artifactId),
   );
   if (questionResult.questions.length === 0) {
-    throw new PassageStudyServiceError("No questions generated — try again");
+    throw new PassageStudyServiceError("No questions generated — try again", "NO_QUESTIONS");
   }
   if (validQuestions.length === 0) {
-    throw new PassageStudyServiceError("All generated questions failed validation — try again");
+    throw new PassageStudyServiceError("All generated questions failed validation — try again", "VALIDATION_FAILED");
   }
 
   await Sentry.startSpan({ name: "db:questions-create", op: "db" }, async () => {
@@ -96,6 +102,28 @@ async function getOwnedPassage(userId: string, passageId: string) {
     throw new PassageStudyServiceError("Passage not found");
   }
   return passage;
+}
+
+// Races a generation promise against the shared timeout budget. On timeout the
+// pending work is abandoned (we cannot cancel the underlying SDK call) and a
+// TIMEOUT-coded error is thrown so the route/client always settle.
+async function withGenerationTimeout<T>(work: Promise<T>): Promise<T> {
+  // If the timeout wins, `work` is left pending; swallow a late rejection so the
+  // abandoned LLM call cannot surface as an unhandled promise rejection.
+  work.catch((err) => log.warn({ err }, "Question generation settled after timeout"));
+
+  let timer: ReturnType<typeof setTimeout>;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(
+      () => reject(new PassageStudyServiceError("Question generation timed out — try again", "TIMEOUT")),
+      STUDIO_GENERATION_TIMEOUT_MS,
+    );
+  });
+  try {
+    return await Promise.race([work, timeout]);
+  } finally {
+    clearTimeout(timer!);
+  }
 }
 
 function isValidGeneratedQuestion(question: GeneratedQuestion, artifactId: string) {
@@ -147,8 +175,11 @@ function toQuestionData(question: GeneratedQuestion, index: number): GeneratedSt
 }
 
 export class PassageStudyServiceError extends Error {
-  constructor(message: string) {
+  readonly code: StudioArtifactErrorCode;
+
+  constructor(message: string, code: StudioArtifactErrorCode = "UPSTREAM_ERROR") {
     super(message);
     this.name = "PassageStudyServiceError";
+    this.code = code;
   }
 }

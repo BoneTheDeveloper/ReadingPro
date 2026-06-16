@@ -4,9 +4,10 @@ export type {
   StudioArtifact,
   StudioArtifactStatus,
   StudioArtifactType,
+  StudioArtifactErrorCode,
   QuizResult,
 } from "@/lib/study/shared/studio-artifact-types";
-export { ARTIFACT_STALE_TIME } from "@/lib/study/shared/studio-artifact-types";
+export { ARTIFACT_STALE_TIME, STUDIO_GENERATION_TIMEOUT_MS } from "@/lib/study/shared/studio-artifact-types";
 
 export type StudyStatus =
   | "idle"

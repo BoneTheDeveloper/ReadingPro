@@ -6,7 +6,7 @@ import { createModuleLogger } from '@/lib/core/logger';
 import {
   createStudioArtifact,
   completeStudioArtifact,
-  failStudioArtifact,
+  deleteStudioArtifact,
   recordQuizResult,
   resetQuizResult,
 } from '@/lib/study/passage/studio-artifacts-service';
@@ -53,16 +53,18 @@ export async function studioCompleteArtifactAction(input: {
   });
 }
 
-export async function studioFailArtifactAction(input: {
+// Removes a failed/abandoned generation. Failures are ephemeral — the row is
+// deleted so it does not linger as a dead card after reload.
+export async function studioDeleteArtifactAction(input: {
   artifactId: string;
 }): Promise<ActionResult<{ ok: true }>> {
-  return Sentry.withServerActionInstrumentation('studioFailArtifact', { headers: await headers() }, async () => {
+  return Sentry.withServerActionInstrumentation('studioDeleteArtifact', { headers: await headers() }, async () => {
     const user = await getAuthenticatedUser();
     try {
-      await failStudioArtifact(input.artifactId, user.id);
+      await deleteStudioArtifact(input.artifactId, user.id);
       return { ok: true as const };
     } catch (err) {
-      log.error({ err, artifactId: input.artifactId }, 'Failed to mark artifact as failed');
+      log.error({ err, artifactId: input.artifactId }, 'Failed to delete artifact');
       return { error: 'Failed to update artifact' };
     }
   });

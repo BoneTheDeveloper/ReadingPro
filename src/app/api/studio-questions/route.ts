@@ -77,7 +77,7 @@ async function handleStudioQuestionsPost(request: NextRequest) {
 
     if (error instanceof PassageStudyServiceError) {
       requestLog.warn({ err: error }, "Question generation rejected by study service");
-      return NextResponse.json({ error: error.message }, { status: 502 });
+      return NextResponse.json({ error: error.message, code: error.code }, { status: 502 });
     }
 
     requestLog.error({ err: error }, "Failed to generate study questions");
@@ -85,7 +85,7 @@ async function handleStudioQuestionsPost(request: NextRequest) {
       tags: { route: "api:studio-questions", method: "POST" },
     });
     return NextResponse.json(
-      { error: "Question generation failed — try again" },
+      { error: "Question generation failed — try again", code: "UNKNOWN" },
       { status: 500 },
     );
   }

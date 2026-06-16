@@ -2,6 +2,9 @@ import { z } from "zod";
 
 export const apiErrorResponseSchema = z.object({
   error: z.string(),
+  // Optional structured failure reason (StudioArtifactErrorCode). Additive and
+  // optional so existing { error } responses and callers stay valid.
+  code: z.string().optional(),
 }).strict();
 
 export type ApiErrorResponse = z.infer<typeof apiErrorResponseSchema>;

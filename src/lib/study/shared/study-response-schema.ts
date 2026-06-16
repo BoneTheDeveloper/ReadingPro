@@ -108,12 +108,3 @@ export function toStudySessionDto(session: RawStudySession): StudySessionDto {
 function toIsoString(value: Date | string) {
   return value instanceof Date ? value.toISOString() : value;
 }
-
-function normalizeQuestionOptions(value: unknown) {
-  if (typeof value !== "string") return value;
-  try {
-    return JSON.parse(value) as unknown;
-  } catch {
-    return value;
-  }
-}

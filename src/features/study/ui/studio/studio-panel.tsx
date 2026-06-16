@@ -24,6 +24,7 @@ import type {
   ArtifactRef,
   ArtifactDetailCacheEntry,
   StudioArtifactType,
+  StudioArtifactErrorCode,
   StudioActionId,
   TranslationSelection,
 } from "@/features/study/model/types";
@@ -50,6 +51,27 @@ interface StudyStudioPanelProps {
   vocabularySaved: boolean;
   onRecordQuizResult: (artifactId: string, stats: { correctCount: number; totalQuestions: number }) => void;
   onResetQuizResult: (artifactId: string) => void;
+  onRetryArtifact: (artifactId: string) => void;
+}
+
+// Localized, human reason for a failed generation. The code is the shared
+// StudioArtifactErrorCode; unmapped/missing codes fall back to a generic message.
+function generationErrorMessage(
+  errorCode: StudioArtifactErrorCode | undefined,
+  t: ReturnType<typeof useTranslations<"Study">>,
+): string {
+  switch (errorCode) {
+    case "NO_QUESTIONS":
+      return t("genErrorNoQuestions");
+    case "VALIDATION_FAILED":
+      return t("genErrorValidation");
+    case "TIMEOUT":
+      return t("genErrorTimeout");
+    case "UPSTREAM_ERROR":
+      return t("genErrorUpstream");
+    default:
+      return t("genErrorGeneric");
+  }
 }
 
 const studioActions: {
@@ -122,6 +144,7 @@ export function StudyStudioPanel({
   vocabularySaved,
   onRecordQuizResult,
   onResetQuizResult,
+  onRetryArtifact,
 }: StudyStudioPanelProps) {
   const t = useTranslations("Study");
   const [viewingChat, setViewingChat] = useState(false);
@@ -467,7 +490,7 @@ export function StudyStudioPanel({
                             {artifact.status === "generating"
                               ? t("generating")
                               : artifact.status === "failed"
-                                ? t("failed")
+                                ? generationErrorMessage(artifact.errorCode, t)
                                 : formatRelativeTime(
                                     artifact.updatedAt ?? artifact.createdAt,
                                     t,
@@ -497,6 +520,24 @@ export function StudyStudioPanel({
                             } catch (err) {
                               console.error("Failed to reset quiz result", err);
                             }
+                          }}
+                        >
+                          <RefreshCw className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    )}
+
+                    {artifact.status === "failed" && (
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 bg-surface shadow-sm border border-border"
+                          title={t("retry")}
+                          disabled={isActionLocked("quiz")}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onRetryArtifact(artifact.id);
                           }}
                         >
                           <RefreshCw className="w-3.5 h-3.5" />

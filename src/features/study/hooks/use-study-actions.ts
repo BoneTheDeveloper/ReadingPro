@@ -8,7 +8,7 @@ import { generateStudioQuestions } from "@/features/study/api/studio-questions-c
 import {
   studioCreateArtifactAction,
   studioCompleteArtifactAction,
-  studioFailArtifactAction,
+  studioDeleteArtifactAction,
   studioLoadArtifactDetailAction,
 } from "@/features/study/actions/studio-artifact-actions";
 import type {
@@ -16,6 +16,7 @@ import type {
   ArtifactRef,
   StudioActionId,
   StudioArtifact,
+  StudioArtifactErrorCode,
   StudyState,
 } from "../model/types";
 
@@ -27,6 +28,9 @@ interface UseStudyActionsInput {
 export function useStudyActions({ state, setState }: UseStudyActionsInput) {
   const t = useTranslations("Study");
   const activePassageIdRef = useRef(state.activePassageId);
+  // Guards against re-entrant retries of the same artifact (e.g. a fast
+  // double-click), which would otherwise re-create the same id twice.
+  const retryingIdsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     activePassageIdRef.current = state.activePassageId;
@@ -92,23 +96,39 @@ export function useStudyActions({ state, setState }: UseStudyActionsInput) {
     }
   }, [setState, t]);
 
+  // Marks the artifact failed in client state (with the structured reason for the
+  // localized card message) and deletes the DB row — failures are ephemeral, so a
+  // reload shows a clean slate. The global error banner is only set when the
+  // failed generation belongs to the passage the user is currently viewing.
+  const failQuizArtifact = useCallback(
+    async (passageId: string, artifactId: string, errorCode: StudioArtifactErrorCode, errorDetail?: string) => {
+      if (activePassageIdRef.current === passageId) {
+        setState((prev) => ({ ...prev, error: errorDetail ?? t("generationFailed") }));
+      }
+      updateArtifactStatus(passageId, artifactId, { status: "failed", errorCode, errorDetail });
+      await studioDeleteArtifactAction({ artifactId });
+    },
+    [setState, t, updateArtifactStatus],
+  );
+
   const generateQuizArtifact = useCallback(
     async (passageId: string, artifactId: string) => {
       try {
         const result = await generateStudioQuestions({ passageId, artifactId });
-        if (activePassageIdRef.current !== passageId) {
-          updateArtifactStatus(passageId, artifactId, { status: "failed" });
-          await studioFailArtifactAction({ artifactId });
-          return;
-        }
         if ("error" in result) {
-          setState((prev) => ({ ...prev, error: result.error }));
-          updateArtifactStatus(passageId, artifactId, { status: "failed" });
-          await studioFailArtifactAction({ artifactId });
+          await failQuizArtifact(passageId, artifactId, result.code, result.error);
           return;
         }
+        // Success: complete into the originating passage's cache regardless of
+        // whether the user has since switched passages, so a valid quiz is never
+        // discarded — it is waiting when they return to that passage.
         await studioCompleteArtifactAction({ artifactId });
-        updateArtifactStatus(passageId, artifactId, { status: "done", updatedAt: new Date().toISOString() });
+        updateArtifactStatus(passageId, artifactId, {
+          status: "done",
+          errorCode: undefined,
+          errorDetail: undefined,
+          updatedAt: new Date().toISOString(),
+        });
         setState((prev) => ({
           ...prev,
           artifactDetailById: {
@@ -117,15 +137,41 @@ export function useStudyActions({ state, setState }: UseStudyActionsInput) {
           },
         }));
       } catch (err) {
-        setState((prev) => ({
-          ...prev,
-          error: err instanceof Error ? err.message : t("generationFailed"),
-        }));
-        updateArtifactStatus(passageId, artifactId, { status: "failed" });
-        await studioFailArtifactAction({ artifactId });
+        await failQuizArtifact(passageId, artifactId, "UNKNOWN", err instanceof Error ? err.message : undefined);
       }
     },
-    [setState, t, updateArtifactStatus],
+    [failQuizArtifact, setState, updateArtifactStatus],
+  );
+
+  // Re-runs generation on a failed card. The row was deleted on failure, so we
+  // re-create it under the same id (keeps the card stable) and regenerate.
+  const retryQuizArtifact = useCallback(
+    async (artifactId: string) => {
+      const passageId = activePassageIdRef.current;
+      if (!passageId) return;
+      const passage = state.passages.find((item) => item.id === passageId);
+      if (!passage) return;
+      if (retryingIdsRef.current.has(artifactId)) return;
+      retryingIdsRef.current.add(artifactId);
+
+      updateArtifactStatus(passageId, artifactId, {
+        status: "generating",
+        errorCode: undefined,
+        errorDetail: undefined,
+      });
+
+      try {
+        const createResult = await studioCreateArtifactAction({ id: artifactId, passageId, type: "quiz", title: passage.title });
+        if ("error" in createResult) {
+          await failQuizArtifact(passageId, artifactId, "UNKNOWN", createResult.error);
+          return;
+        }
+        await generateQuizArtifact(passageId, artifactId);
+      } finally {
+        retryingIdsRef.current.delete(artifactId);
+      }
+    },
+    [state.passages, updateArtifactStatus, failQuizArtifact, generateQuizArtifact],
   );
 
   const handleActionClick = useCallback(
@@ -228,5 +274,6 @@ export function useStudyActions({ state, setState }: UseStudyActionsInput) {
     handleViewArtifact,
     handleRecordQuizResult,
     handleResetQuizResult,
+    retryQuizArtifact,
   };
 }

@@ -7,6 +7,7 @@
 ## [Unreleased]
 
 ### Added
+- Quiz generation reliability (issue #69): shared `StudioArtifactErrorCode` contract surfaced via the API `{ error, code }` envelope and shown as a localized card message; client + backend 45s generation timeout (`STUDIO_GENERATION_TIMEOUT_MS`) so a hung generation always settles and releases the studio action lock; Retry on a failed card.
 - Clerk auth integration for sign-in/sign-up, Google OAuth, route protection, and profile sync.
 - Neon PostgreSQL environment contract for local, preview, and production database branches.
 - Vercel Blob storage adapter for private preview/production uploads with local filesystem storage in development.
@@ -35,6 +36,7 @@
   - Trimmed progress dashboard to streak/time signals only.
   - Updated quiz UI to reflect attempt state and allow retries.
   - Added ADR 0006 to record the role-per-table model.
+- **Ephemeral quiz failures**: failed/orphaned quiz `StudioArtifact` rows are now deleted instead of kept as `failed` tombstones — the orphan reaper in `fetchStudioArtifacts` deletes stuck `generating` rows, and `studioFailArtifactAction`/`failStudioArtifact` were removed in favor of `studioDeleteArtifactAction`. A successful generation that completes after a passage switch is preserved on its originating passage instead of being discarded.
 
 ### Planned
 - YouTube transcription (Whisper API)
