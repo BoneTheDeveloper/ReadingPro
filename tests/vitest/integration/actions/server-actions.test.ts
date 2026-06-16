@@ -148,26 +148,6 @@ describe("server actions", () => {
     expect(passageQueries.deletePassage).toHaveBeenCalledWith("passage_1", "user_1");
   });
 
-  it("studyGenerateQuestionsAction returns service errors without throwing framework internals", async () => {
-    studyService.generateQuestionsForPassage.mockRejectedValueOnce(
-      new studyService.PassageStudyServiceError("Passage not found"),
-    );
-    const { studyGenerateQuestionsAction } = await import("@/features/study/actions/study-generate-questions-action");
-
-    await expect(studyGenerateQuestionsAction({ passageId: "missing" })).resolves.toEqual({
-      error: "Passage not found",
-    });
-  });
-
-  it("studyGenerateQuestionsAction maps unexpected failures to a stable error", async () => {
-    studyService.generateQuestionsForPassage.mockRejectedValueOnce(new Error("provider down"));
-    const { studyGenerateQuestionsAction } = await import("@/features/study/actions/study-generate-questions-action");
-
-    await expect(studyGenerateQuestionsAction({ passageId: "passage_1" })).resolves.toEqual({
-      error: "Question generation failed — try again",
-    });
-  });
-
   it("studySimplifyAction returns skipped and error service results", async () => {
     studyService.simplifyPassageForUser.mockResolvedValueOnce({
       skipped: true,

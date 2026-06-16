@@ -9,8 +9,8 @@ import {
   vocabularyResponseSchema,
 } from "@/lib/translation/shared/translation-response-schema";
 import { clampTranslationContext, isTranslateTextWithinLimit } from "@/lib/translation/translation-limits";
-import type { PassageData, TranslationSelection, QuickTranslationData, StudioResult } from "@/features/study/model/types";
-import { RESULT_STALE_TIME } from "@/features/study/model/types";
+import type { PassageData, TranslationSelection, QuickTranslationData, StudioArtifact } from "@/features/study/model/types";
+import { ARTIFACT_STALE_TIME } from "@/features/study/model/types";
 import { StudySourcesPanel } from "./sources-panel";
 import { StudyContentPanel } from "./studio/content/content-panel";
 import { StudyStudioPanel } from "./studio/studio-panel";
@@ -270,41 +270,50 @@ export function StudyPageClient({
   useEffect(() => {
     if (!state.activePassageId) return;
     const passageId = state.activePassageId;
-    const cached = state.resultsByPassageId[passageId];
-    if (cached?.status === "success" && cached.fetchedAt && Date.now() - cached.fetchedAt < RESULT_STALE_TIME) return;
+    const cached = state.artifactsByPassageId[passageId];
+    if (cached?.status === "success" && cached.fetchedAt && Date.now() - cached.fetchedAt < ARTIFACT_STALE_TIME) return;
 
     const controller = new AbortController();
     setState((prev) => ({
       ...prev,
-      resultsByPassageId: {
-        ...prev.resultsByPassageId,
+      artifactsByPassageId: {
+        ...prev.artifactsByPassageId,
         [passageId]: { status: "loading", data: cached?.data ?? [] },
       },
     }));
 
-    fetch(`/api/study-results?passageId=${passageId}`, { signal: controller.signal })
-      .then((r) => r.json())
-      .then((json: { results: StudioResult[] }) => {
+    fetch(`/api/study-artifacts?passageId=${passageId}`, { signal: controller.signal })
+      .then(async (r) => {
+        if (!r.ok) {
+          throw new Error(`Failed to fetch study artifacts (${r.status})`);
+        }
+        return (await r.json()) as { data?: { artifacts?: StudioArtifact[] } };
+      })
+      .then((json) => {
         setState((prev) => {
           if (prev.activePassageId !== passageId) return prev;
           return {
             ...prev,
-            resultsByPassageId: {
-              ...prev.resultsByPassageId,
-              [passageId]: { status: "success", data: json.results, fetchedAt: Date.now() },
+            artifactsByPassageId: {
+              ...prev.artifactsByPassageId,
+              [passageId]: { status: "success", data: json.data?.artifacts ?? [], fetchedAt: Date.now() },
             },
           };
         });
       })
       .catch((err) => {
         if (controller.signal.aborted) return;
+        Sentry.captureException(err, {
+          tags: { feature: "study", action: "fetch-artifacts" },
+          extra: { passageId },
+        });
         setState((prev) => {
           if (prev.activePassageId !== passageId) return prev;
           return {
             ...prev,
-            resultsByPassageId: {
-              ...prev.resultsByPassageId,
-              [passageId]: { status: "error", data: cached?.data ?? [], error: err instanceof Error ? err.message : "Failed to fetch results" },
+            artifactsByPassageId: {
+              ...prev.artifactsByPassageId,
+              [passageId]: { status: "error", data: cached?.data ?? [], error: err instanceof Error ? err.message : "Failed to fetch artifacts" },
             },
           };
         });
@@ -410,22 +419,21 @@ export function StudyPageClient({
             minSize="200px"
           >
             <StudyStudioPanel
-              resultsCache={state.resultsByPassageId[state.activePassageId ?? ""] ?? { status: "idle", data: [] }}
+              artifactsCache={state.artifactsByPassageId[state.activePassageId ?? ""] ?? { status: "idle", data: [] }}
               activePassage={activePassage}
               hasActivePassage={!!state.activePassageId}
-              simplifying={state.simplifying}
-              viewingResult={state.activePassageId ? state.viewingResultByPassageId[state.activePassageId] ?? null : null}
-              onSetViewingResult={(ref) => {
+              viewingArtifactRef={state.activePassageId ? state.viewingArtifactByPassageId[state.activePassageId] ?? null : null}
+              onSetViewingArtifact={(ref) => {
                 if (!state.activePassageId) return;
                 setState((prev) => ({
                   ...prev,
-                  viewingResultByPassageId: {
-                    ...prev.viewingResultByPassageId,
+                  viewingArtifactByPassageId: {
+                    ...prev.viewingArtifactByPassageId,
                     [prev.activePassageId!]: ref,
                   },
                 }));
               }}
-              resultDetailById={state.resultDetailById}
+              artifactDetailById={state.artifactDetailById}
               onActionClick={handleActionClick}
               collapsed={layout.rightPanelCollapsed}
               onToggleCollapse={layout.toggleRight}

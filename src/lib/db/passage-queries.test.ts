@@ -15,6 +15,7 @@ import {
 describe("passage queries", () => {
   it("validates question data against option IDs", () => {
     const result = questionDataSchema.safeParse({
+      artifactId: "00000000-0000-0000-0000-000000000000",
       questionText: "What happened?",
       options: [
         { id: "a", text: "One" },
@@ -107,6 +108,7 @@ describe("passage queries", () => {
   it("creates valid questions and rejects invalid question payloads", async () => {
     const question = {
       passageId: "passage-1",
+      artifactId: "11111111-1111-1111-1111-111111111111",
       questionText: "What is the main point?",
       options: [
         { id: "a", text: "Main point" },
@@ -119,7 +121,7 @@ describe("passage queries", () => {
     };
 
     await createQuestion(question);
-    await expect(createQuestion({ ...question, correctOption: "z" })).rejects.toThrow(
+    await expect(createQuestion({ ...question, artifactId: "invalid-uuid" })).rejects.toThrow(
       "Invalid question data"
     );
 

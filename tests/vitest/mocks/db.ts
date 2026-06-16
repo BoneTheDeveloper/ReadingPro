@@ -46,6 +46,7 @@ export const db = {
   quizAttempt: createModelMock(),
   fileUploadIntent: createModelMock(),
   userProfile: createModelMock(),
+  studioArtifact: createModelMock(),
 };
 
 export function resetDbMock() {

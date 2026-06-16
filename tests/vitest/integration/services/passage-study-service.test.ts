@@ -73,7 +73,7 @@ describe("passage study service", () => {
     });
   });
 
-  it("filters invalid generated questions, replaces stored questions, and maps pending ids", async () => {
+  it("filters invalid generated questions, creates questions with artifactId, and maps pending ids", async () => {
     db.passage.findUnique.mockResolvedValueOnce({ ...passage, simplifiedContent: "Simpler passage text." });
     mockGenerateObjectOnce({
       questions: [
@@ -84,7 +84,8 @@ describe("passage study service", () => {
       estimatedTime: 1,
     });
 
-    const result = await generateQuestionsForPassage("user_1", "passage_1");
+    const artifactId = "11111111-1111-1111-1111-111111111111";
+    const result = await generateQuestionsForPassage("user_1", "passage_1", artifactId);
 
     expect(result).toEqual([
       expect.objectContaining({
@@ -94,18 +95,19 @@ describe("passage study service", () => {
         correctAnswer: "A",
       }),
     ]);
-    expect(db.question.deleteMany).toHaveBeenCalledWith({ where: { passageId: "passage_1" } });
+    expect(db.question.deleteMany).not.toHaveBeenCalled();
     expect(db.question.createMany).toHaveBeenCalledWith({
       data: [
         expect.objectContaining({
           passageId: "passage_1",
+          artifactId,
           questionText: validQuestion.questionText,
           options: JSON.stringify(validQuestion.options),
         }),
       ],
     });
     expect(Sentry.startSpan).toHaveBeenCalledWith(
-      expect.objectContaining({ name: "db:questions-replace" }),
+      expect.objectContaining({ name: "db:questions-create" }),
       expect.any(Function),
     );
   });
@@ -118,7 +120,8 @@ describe("passage study service", () => {
       estimatedTime: 1,
     });
 
-    await expect(generateQuestionsForPassage("user_1", "passage_1")).rejects.toThrow(
+    const artifactId = "11111111-1111-1111-1111-111111111111";
+    await expect(generateQuestionsForPassage("user_1", "passage_1", artifactId)).rejects.toThrow(
       "All generated questions failed validation",
     );
   });

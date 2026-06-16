@@ -59,12 +59,20 @@ describe("analyzeAndPersistContent", () => {
         originalLevel: "C1",
         simplifiedLevel: "B2",
         sourceType: "TEXT",
+        studioArtifacts: {
+          create: expect.objectContaining({
+            userId: "user_1",
+            type: "quiz",
+            status: "done",
+          }),
+        },
         questions: {
           create: [
             expect.objectContaining({
               questionText: generatedQuestion.questionText,
               options: JSON.stringify(generatedQuestion.options),
               correctOption: "A",
+              artifactId: expect.any(String),
             }),
           ],
         },
@@ -106,9 +114,11 @@ describe("analyzeAndPersistContent", () => {
     expect(db.passage.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         filePath: "https://cdn.test/file.pdf",
-        questions: { create: [] },
       }),
     });
+    const createData = vi.mocked(db.passage.create).mock.calls[0][0].data;
+    expect(createData).not.toHaveProperty("questions");
+    expect(createData).not.toHaveProperty("studioArtifacts");
   });
 
   it("propagates DB failures after adding the DB breadcrumb", async () => {

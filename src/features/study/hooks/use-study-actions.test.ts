@@ -2,6 +2,11 @@ import { act, renderHook } from "@testing-library/react";
 import { useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { studySimplifyAction } from "@/features/study/actions/study-simplify-action";
+import {
+  studyCreateArtifactAction,
+  studyCompleteArtifactAction,
+  studyFailArtifactAction,
+} from "@/features/study/actions/study-artifact-actions";
 import { generateStudyQuestions } from "@/features/study/api/study-questions-client";
 import type { PassageData, QuestionData, StudyState } from "../model/types";
 import { useStudyActions } from "./use-study-actions";
@@ -12,6 +17,13 @@ vi.mock("@/features/study/api/study-questions-client", () => ({
 
 vi.mock("@/features/study/actions/study-simplify-action", () => ({
   studySimplifyAction: vi.fn(),
+}));
+
+vi.mock("@/features/study/actions/study-artifact-actions", () => ({
+  studyCreateArtifactAction: vi.fn(),
+  studyCompleteArtifactAction: vi.fn(),
+  studyFailArtifactAction: vi.fn(),
+  studyLoadArtifactDetailAction: vi.fn(),
 }));
 
 const passage: PassageData = {
@@ -53,9 +65,9 @@ function createState(overrides: Partial<StudyState> = {}): StudyState {
     error: null,
     simplifying: false,
     uploadModalOpen: false,
-    resultsByPassageId: {},
-    viewingResultByPassageId: {},
-    resultDetailById: {},
+    artifactsByPassageId: {},
+    viewingArtifactByPassageId: {},
+    artifactDetailById: {},
     ...overrides,
   };
 }
@@ -78,6 +90,16 @@ describe("useStudyActions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.spyOn(crypto, "randomUUID").mockReturnValue("result-1");
+    vi.mocked(studyCreateArtifactAction).mockResolvedValue({
+      id: "result-1",
+      type: "quiz",
+      passageId: "passage-1",
+      title: "Study Passage",
+      status: "generating",
+      createdAt: new Date().toISOString(),
+    });
+    vi.mocked(studyCompleteArtifactAction).mockResolvedValue({ ok: true });
+    vi.mocked(studyFailArtifactAction).mockResolvedValue({ ok: true });
   });
 
   it("simplifies the active passage and clears the loading state", async () => {
@@ -144,69 +166,18 @@ describe("useStudyActions", () => {
       await result.current.actions.handleActionClick("quiz");
     });
 
-    expect(generateStudyQuestions).toHaveBeenCalledWith({ passageId: "passage-1" });
-    const quizResults = result.current.state.resultsByPassageId["passage-1"].data;
+    expect(generateStudyQuestions).toHaveBeenCalledWith({ passageId: "passage-1", artifactId: "result-1" });
+    const quizResults = result.current.state.artifactsByPassageId["passage-1"].data;
     expect(quizResults).toHaveLength(1);
     expect(quizResults[0]).toMatchObject({
       id: "result-1",
       type: "quiz",
       passageId: "passage-1",
       title: "Study Passage",
-      status: "completed",
+      status: "done",
     });
     expect(quizResults[0].updatedAt).toEqual(expect.any(String));
-    expect(result.current.state.resultDetailById["result-1"].questions).toEqual([question]);
-  });
-
-  it("inserts a completed summary result and updates the active passage", async () => {
-    vi.mocked(studySimplifyAction).mockResolvedValue({
-      simplifiedContent: "Generated summary",
-      simplifiedLevel: "A2",
-    });
-    const { result } = renderStudyActions();
-
-    await act(async () => {
-      await result.current.actions.handleActionClick("summary");
-    });
-
-    expect(studySimplifyAction).toHaveBeenCalledWith({ passageId: "passage-1" });
-    expect(result.current.state.simplifying).toBe(false);
-    expect(result.current.state.passages[0]).toMatchObject({
-      simplifiedContent: "Generated summary",
-      simplifiedLevel: "A2",
-    });
-    const summaryResults = result.current.state.resultsByPassageId["passage-1"].data;
-    expect(summaryResults).toHaveLength(1);
-    expect(summaryResults[0]).toMatchObject({
-      id: "result-1",
-      type: "summary",
-      status: "completed",
-    });
-    expect(result.current.state.resultDetailById["result-1"]).toMatchObject({
-      simplifiedContent: "Generated summary",
-      simplifiedLevel: "A2",
-    });
-  });
-
-  it("uses existing summary data when the summary action is skipped", async () => {
-    vi.mocked(studySimplifyAction).mockResolvedValue({ skipped: true, reason: "Already simplified" });
-    const { result } = renderStudyActions();
-
-    await act(async () => {
-      await result.current.actions.handleActionClick("summary");
-    });
-
-    expect(result.current.state.passages[0].simplifiedContent).toBe("Existing summary");
-    const summaryResults = result.current.state.resultsByPassageId["passage-1"].data;
-    expect(summaryResults).toHaveLength(1);
-    expect(summaryResults[0]).toMatchObject({
-      id: "result-1",
-      status: "completed",
-    });
-    expect(result.current.state.resultDetailById["result-1"]).toMatchObject({
-      simplifiedContent: "Existing summary",
-      simplifiedLevel: "B1",
-    });
+    expect(result.current.state.artifactDetailById["result-1"].questions).toEqual([question]);
   });
 
   it("marks quiz artifacts as errors for server failures and stale active passage refs", async () => {
@@ -218,8 +189,8 @@ describe("useStudyActions", () => {
     });
 
     expect(result.current.state.error).toBe("Generation failed");
-    const firstResults = result.current.state.resultsByPassageId["passage-1"].data;
-    expect(firstResults[0]).toMatchObject({ status: "error" });
+    const firstResults = result.current.state.artifactsByPassageId["passage-1"].data;
+    expect(firstResults[0]).toMatchObject({ status: "failed" });
 
     let resolveQuestions: (value: { questions: QuestionData[] }) => void = () => {};
     vi.mocked(generateStudyQuestions).mockImplementationOnce(
@@ -244,11 +215,11 @@ describe("useStudyActions", () => {
       await actionPromise;
     });
 
-    const secondResults = result.current.state.resultsByPassageId["passage-1"].data;
+    const secondResults = result.current.state.artifactsByPassageId["passage-1"].data;
     expect(secondResults).toHaveLength(2);
     expect(secondResults[0]).toMatchObject({
       passageId: "passage-1",
-      status: "error",
+      status: "failed",
     });
   });
 
@@ -260,6 +231,6 @@ describe("useStudyActions", () => {
     });
 
     expect(generateStudyQuestions).not.toHaveBeenCalled();
-    expect(result.current.state.resultsByPassageId).toEqual({});
+    expect(result.current.state.artifactsByPassageId).toEqual({});
   });
 });

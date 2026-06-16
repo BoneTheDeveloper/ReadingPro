@@ -50,6 +50,7 @@ export async function simplifyPassageForUser(userId: string, passageId: string):
 export async function generateQuestionsForPassage(
   userId: string,
   passageId: string,
+  artifactId: string,
 ): Promise<GeneratedStudyQuestionDto[]> {
   const passage = await getOwnedPassage(userId, passageId);
   const contentToAnalyze = passage.simplifiedContent || passage.content;
@@ -63,7 +64,9 @@ export async function generateQuestionsForPassage(
     throw new PassageStudyServiceError("Question generation failed — try again");
   }
 
-  const validQuestions = questionResult.questions.filter(isValidGeneratedQuestion);
+  const validQuestions = questionResult.questions.filter((q) =>
+    isValidGeneratedQuestion(q, artifactId),
+  );
   if (questionResult.questions.length === 0) {
     throw new PassageStudyServiceError("No questions generated — try again");
   }
@@ -71,16 +74,14 @@ export async function generateQuestionsForPassage(
     throw new PassageStudyServiceError("All generated questions failed validation — try again");
   }
 
-  await Sentry.startSpan({ name: "db:questions-replace", op: "db" }, async () => {
-    await db.$transaction([
-      db.question.deleteMany({ where: { passageId } }),
-      db.question.createMany({
-        data: validQuestions.map((question) => ({
-          passageId,
-          ...toQuestionCreateInput(question),
-        })),
-      }),
-    ]);
+  await Sentry.startSpan({ name: "db:questions-create", op: "db" }, async () => {
+    await db.question.createMany({
+      data: validQuestions.map((question) => ({
+        passageId,
+        artifactId,
+        ...toQuestionCreateInput(question),
+      })),
+    });
   });
 
   return validQuestions.map(toQuestionData);
@@ -97,8 +98,9 @@ async function getOwnedPassage(userId: string, passageId: string) {
   return passage;
 }
 
-function isValidGeneratedQuestion(question: GeneratedQuestion) {
+function isValidGeneratedQuestion(question: GeneratedQuestion, artifactId: string) {
   const result = questionDataSchema.safeParse({
+    artifactId,
     questionText: question.questionText,
     options: question.options,
     correctOption: question.correctAnswer,

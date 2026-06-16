@@ -71,33 +71,60 @@ describe("POST /api/study-questions", () => {
   it("generates questions for the authenticated user's passage", async () => {
     routeMocks.generateQuestionsForPassage.mockResolvedValue([generatedQuestion]);
 
-    const response = await generateQuestionsRoute(createJsonRequest({ passageId: passageFixture.id }));
+    const response = await generateQuestionsRoute(
+      createJsonRequest({
+        passageId: passageFixture.id,
+        artifactId: "11111111-1111-1111-1111-111111111111",
+      }),
+    );
     const payload = await parseJsonResponse(response, generatedStudyQuestionsSuccessResponseSchema);
 
     expect(response.status).toBe(200);
     expectApiSuccessPayload(payload);
     expect(payload).toEqual({ success: true, data: { questions: [generatedQuestion] } });
-    expect(routeMocks.generateQuestionsForPassage).toHaveBeenCalledWith(userProfileFixture.id, passageFixture.id);
+    expect(routeMocks.generateQuestionsForPassage).toHaveBeenCalledWith(
+      userProfileFixture.id,
+      passageFixture.id,
+      "11111111-1111-1111-1111-111111111111",
+    );
   });
 
   it("rejects malformed and invalid bodies before generation", async () => {
     await expectJsonError(
-      await generateQuestionsRoute(new NextRequest("https://english-reading.test/api/study-questions", { method: "POST", body: "{" })),
+      await generateQuestionsRoute(
+        new NextRequest("https://english-reading.test/api/study-questions", {
+          method: "POST",
+          body: "{",
+        }),
+      ),
       400,
       "Invalid JSON payload.",
     );
 
-    const response = await generateQuestionsRoute(createJsonRequest({ passageId: "not-a-uuid" }));
+    const response = await generateQuestionsRoute(
+      createJsonRequest({
+        passageId: "not-a-uuid",
+        artifactId: "11111111-1111-1111-1111-111111111111",
+      }),
+    );
 
     expect(response.status).toBe(400);
-    expectApiErrorPayload(await parseJsonResponse(response, generatedStudyQuestionsResponseSchema), "Invalid UUID");
+    expectApiErrorPayload(
+      await parseJsonResponse(response, apiErrorResponseSchema),
+      "Invalid UUID",
+    );
     expect(routeMocks.generateQuestionsForPassage).not.toHaveBeenCalled();
   });
 
   it("returns stable auth and missing-passage errors", async () => {
     routeMocks.getAuthenticatedUser.mockRejectedValueOnce(new routeMocks.AuthenticationRequiredError());
     await expectJsonError(
-      await generateQuestionsRoute(createJsonRequest({ passageId: passageFixture.id })),
+      await generateQuestionsRoute(
+        createJsonRequest({
+          passageId: passageFixture.id,
+          artifactId: "11111111-1111-1111-1111-111111111111",
+        }),
+      ),
       401,
       "Authentication required.",
     );
@@ -106,7 +133,12 @@ describe("POST /api/study-questions", () => {
       new routeMocks.PassageStudyServiceError("Passage not found"),
     );
     await expectJsonError(
-      await generateQuestionsRoute(createJsonRequest({ passageId: passageFixture.id })),
+      await generateQuestionsRoute(
+        createJsonRequest({
+          passageId: passageFixture.id,
+          artifactId: "11111111-1111-1111-1111-111111111111",
+        }),
+      ),
       404,
       "Passage not found.",
     );
@@ -118,7 +150,12 @@ describe("POST /api/study-questions", () => {
     );
 
     await expectJsonError(
-      await generateQuestionsRoute(createJsonRequest({ passageId: passageFixture.id })),
+      await generateQuestionsRoute(
+        createJsonRequest({
+          passageId: passageFixture.id,
+          artifactId: "11111111-1111-1111-1111-111111111111",
+        }),
+      ),
       502,
       "No questions generated — try again",
     );
@@ -130,7 +167,12 @@ describe("POST /api/study-questions", () => {
     routeMocks.generateQuestionsForPassage.mockRejectedValueOnce(error);
 
     await expectJsonError(
-      await generateQuestionsRoute(createJsonRequest({ passageId: passageFixture.id })),
+      await generateQuestionsRoute(
+        createJsonRequest({
+          passageId: passageFixture.id,
+          artifactId: "11111111-1111-1111-1111-111111111111",
+        }),
+      ),
       500,
       "Question generation failed — try again",
     );

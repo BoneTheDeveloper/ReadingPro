@@ -10,21 +10,21 @@ import {
   createRequestLogContext,
   createRequestLogger,
 } from "@/lib/core/logger";
-import { fetchStudyResults } from "@/lib/study/passage/study-results-service";
+import { fetchStudioArtifacts } from "@/lib/study/passage/studio-artifacts-service";
 
-const studyResultsQuerySchema = z.object({
+const studyArtifactsQuerySchema = z.object({
   passageId: z.string().uuid(),
 });
 
 export async function GET(request: NextRequest) {
   const requestLog = createRequestLogger(
-    "api:study-results",
-    createRequestLogContext(request, "GET", "/api/study-results"),
+    "api:study-artifacts",
+    createRequestLogContext(request, "GET", "/api/study-artifacts"),
   );
 
   try {
     const { searchParams } = request.nextUrl;
-    const parsed = studyResultsQuerySchema.safeParse(
+    const parsed = studyArtifactsQuerySchema.safeParse(
       Object.fromEntries(searchParams.entries()),
     );
 
@@ -38,23 +38,23 @@ export async function GET(request: NextRequest) {
     const { passageId } = parsed.data;
     const user = await getAuthenticatedUser();
 
-    const { results } = await Sentry.startSpan(
-      { name: "study:fetch-results", op: "db" },
-      async () => fetchStudyResults(user.id, passageId),
+    const { artifacts } = await Sentry.startSpan(
+      { name: "study:fetch-artifacts", op: "db" },
+      async () => fetchStudioArtifacts(user.id, passageId),
     );
 
     requestLog.info(
-      { passageId, resultCount: results.length },
-      "Study results fetched",
+      { passageId, artifactCount: artifacts.length },
+      "Study artifacts fetched",
     );
 
     return NextResponse.json({
       success: true,
-      data: { results },
+      data: { artifacts },
     });
   } catch (error) {
     if (isAuthenticationRequiredError(error)) {
-      requestLog.warn("Unauthenticated study-results request rejected");
+      requestLog.warn("Unauthenticated study-artifacts request rejected");
       return NextResponse.json(
         { error: "Authentication required." },
         { status: 401 },
@@ -68,12 +68,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    requestLog.error({ err: error }, "Failed to fetch study results");
+    requestLog.error({ err: error }, "Failed to fetch study artifacts");
     Sentry.captureException(error, {
-      tags: { route: "api:study-results", method: "GET" },
+      tags: { route: "api:study-artifacts", method: "GET" },
     });
     return NextResponse.json(
-      { error: "Failed to fetch study results." },
+      { error: "Failed to fetch study artifacts." },
       { status: 500 },
     );
   }

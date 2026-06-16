@@ -9,6 +9,7 @@ import type { GeneratedStudyQuestionDto } from "@/lib/study/shared/study-respons
 
 const studyQuestionsPostSchema = z.object({
   passageId: z.string().uuid(),
+  artifactId: z.string().uuid(),
 }).strict();
 
 export async function POST(request: NextRequest) {
@@ -49,7 +50,7 @@ async function handleStudyQuestionsPost(request: NextRequest) {
       return NextResponse.json({ error: getZodErrorMessage(parsed.error) }, { status: 400 });
     }
 
-    const { passageId } = parsed.data;
+    const { passageId, artifactId } = parsed.data;
     const user = await Sentry.startSpan(
       {
         name: "api:study-questions-authenticate",
@@ -59,7 +60,7 @@ async function handleStudyQuestionsPost(request: NextRequest) {
       () => getAuthenticatedUser(),
     );
 
-    const questions = await generateQuestionsForPassage(user.id, passageId);
+    const questions = await generateQuestionsForPassage(user.id, passageId, artifactId);
     return createStudyQuestionsSuccessResponse({ questions });
   } catch (error) {
     if (isAuthenticationRequiredError(error)) {

@@ -22,9 +22,9 @@ export function useStudyWorkspaceState(initialPassages: PassageData[]) {
       error: null,
       simplifying: false,
       uploadModalOpen: false,
-      resultsByPassageId: {},
-      viewingResultByPassageId: {},
-      resultDetailById: {},
+      artifactsByPassageId: {},
+      viewingArtifactByPassageId: {},
+      artifactDetailById: {},
     };
   });
   const [isUploading, setIsUploading] = useState(false);
@@ -103,9 +103,9 @@ export function useStudyWorkspaceState(initialPassages: PassageData[]) {
       }
       setState((prev) => {
         const remaining = prev.passages.filter((p) => p.id !== passageId);
-        const restResultsByPassageId = { ...prev.resultsByPassageId };
-        const restViewingByPassageId = { ...prev.viewingResultByPassageId };
-        delete restResultsByPassageId[passageId];
+        const restArtifactsByPassageId = { ...prev.artifactsByPassageId };
+        const restViewingByPassageId = { ...prev.viewingArtifactByPassageId };
+        delete restArtifactsByPassageId[passageId];
         delete restViewingByPassageId[passageId];
         if (prev.activePassageId === passageId) {
           const replacementId = getMostRecentPassageId(remaining);
@@ -113,13 +113,13 @@ export function useStudyWorkspaceState(initialPassages: PassageData[]) {
             ...prev,
             passages: remaining,
             activePassageId: replacementId,
-            resultsByPassageId: restResultsByPassageId,
-            viewingResultByPassageId: restViewingByPassageId,
+            artifactsByPassageId: restArtifactsByPassageId,
+            viewingArtifactByPassageId: restViewingByPassageId,
             status: replacementId ? "ready" : "idle",
             error: null,
           };
         }
-        return { ...prev, passages: remaining, resultsByPassageId: restResultsByPassageId, viewingResultByPassageId: restViewingByPassageId, error: null };
+        return { ...prev, passages: remaining, artifactsByPassageId: restArtifactsByPassageId, viewingArtifactByPassageId: restViewingByPassageId, error: null };
       });
     } catch (err) {
       setState((prev) => ({

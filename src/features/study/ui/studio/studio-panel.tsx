@@ -6,12 +6,10 @@ import {
   Sparkles,
   MessageCircle,
   Loader2,
-  FileText,
   Languages,
   BookOpen,
   ArrowLeft,
   Layers,
-  GitBranch,
   HelpCircle,
   PanelRight,
 } from "lucide-react";
@@ -21,11 +19,11 @@ import { Button } from "@/components/ui/button";
 import type {
   PassageData,
   QuickTranslationData,
-  ResultsCacheEntry,
-  ResultRef,
-  DetailCacheEntry,
-  StudioResultType,
-  StudioCardId,
+  ArtifactsCacheEntry,
+  ArtifactRef,
+  ArtifactDetailCacheEntry,
+  StudioArtifactType,
+  StudioActionId,
   TranslationSelection,
 } from "@/features/study/model/types";
 import { QuizContent } from "./quiz/quiz-content";
@@ -33,14 +31,13 @@ import { StudyChatPanel } from "./chat/chat-panel";
 import { StudyTranslatePanel } from "./translate/translate-panel";
 
 interface StudyStudioPanelProps {
-  resultsCache: ResultsCacheEntry;
+  artifactsCache: ArtifactsCacheEntry;
   activePassage: PassageData | null;
   hasActivePassage: boolean;
-  simplifying: boolean;
-  viewingResult: ResultRef | null;
-  onSetViewingResult: (ref: ResultRef | null) => void;
-  resultDetailById: Record<string, DetailCacheEntry>;
-  onActionClick: (cardId: StudioCardId) => void;
+  viewingArtifactRef: ArtifactRef | null;
+  onSetViewingArtifact: (ref: ArtifactRef | null) => void;
+  artifactDetailById: Record<string, ArtifactDetailCacheEntry>;
+  onActionClick: (actionId: StudioActionId) => void;
   collapsed?: boolean;
   onToggleCollapse: () => void;
   translationSelection: TranslationSelection | null;
@@ -51,8 +48,8 @@ interface StudyStudioPanelProps {
   vocabularySaved: boolean;
 }
 
-const studioCards: {
-  id: StudioCardId;
+const studioActions: {
+  id: StudioActionId;
   labelKey: string;
   descriptionKey: string;
   icon: typeof BookOpen;
@@ -65,30 +62,17 @@ const studioCards: {
     icon: HelpCircle,
   },
   {
-    id: "flashcards",
+    id: "flashcard",
     labelKey: "flashcards",
     descriptionKey: "keyVocabulary",
     icon: Layers,
     disabled: true,
   },
   {
-    id: "summary",
-    labelKey: "summary",
-    descriptionKey: "simplifiedText",
-    icon: FileText,
-  },
-  {
     id: "chat",
     labelKey: "chat",
     descriptionKey: "askQuestions",
     icon: MessageCircle,
-  },
-  {
-    id: "mindmap",
-    labelKey: "mindMap",
-    descriptionKey: "visualOverview",
-    icon: GitBranch,
-    disabled: true,
   },
   {
     id: "translate",
@@ -98,15 +82,12 @@ const studioCards: {
   },
 ];
 
-const resultMeta: Record<
-  StudioResultType,
+const artifactMeta: Record<
+  StudioArtifactType,
   { icon: typeof HelpCircle; labelKey: string }
 > = {
   quiz: { icon: HelpCircle, labelKey: "quiz" },
-  summary: { icon: FileText, labelKey: "summary" },
-  chat: { icon: MessageCircle, labelKey: "chat" },
   flashcard: { icon: Layers, labelKey: "flashcards" },
-  mindmap: { icon: GitBranch, labelKey: "mindMap" },
 };
 
 function formatRelativeTime(timestamp: string, t: ReturnType<typeof useTranslations<"Study">>): string {
@@ -120,13 +101,12 @@ function formatRelativeTime(timestamp: string, t: ReturnType<typeof useTranslati
 }
 
 export function StudyStudioPanel({
-  resultsCache,
+  artifactsCache,
   activePassage,
   hasActivePassage,
-  simplifying,
-  viewingResult,
-  onSetViewingResult,
-  resultDetailById,
+  viewingArtifactRef,
+  onSetViewingArtifact,
+  artifactDetailById,
   onActionClick,
   collapsed = false,
   onToggleCollapse,
@@ -141,9 +121,9 @@ export function StudyStudioPanel({
   const [viewingChat, setViewingChat] = useState(false);
   const [chatPrefill, setChatPrefill] = useState<string | null>(null);
 
-  const results = resultsCache.data ?? [];
-  const viewingArtifact = viewingResult
-    ? results.find((r) => r.id === viewingResult.id) ?? null
+  const artifacts = artifactsCache.data ?? [];
+  const viewingArtifact = viewingArtifactRef
+    ? artifacts.find((r) => r.id === viewingArtifactRef.id) ?? null
     : null;
 
   if (viewingChat && activePassage) {
@@ -211,13 +191,13 @@ export function StudyStudioPanel({
   }
 
   if (viewingArtifact) {
-    const meta = resultMeta[viewingArtifact.type] ?? {
+    const meta = artifactMeta[viewingArtifact.type] ?? {
       icon: HelpCircle,
       labelKey: viewingArtifact.type,
     };
     const Icon = meta.icon;
     const label = t(meta.labelKey);
-    const detail = resultDetailById[viewingArtifact.id];
+    const detail = artifactDetailById[viewingArtifact.id];
 
     return (
       <Card className="h-full flex flex-col overflow-hidden">
@@ -227,7 +207,7 @@ export function StudyStudioPanel({
               variant="ghost"
               size="icon"
               className="shrink-0"
-              onClick={() => onSetViewingResult(null)}
+              onClick={() => onSetViewingArtifact(null)}
             >
               <ArrowLeft className="w-4 h-4 text-muted-foreground" />
             </Button>
@@ -242,22 +222,9 @@ export function StudyStudioPanel({
                 questions={detail.questions}
                 passageTitle={viewingArtifact.title}
                 passageId={viewingArtifact.passageId}
-                onReset={() => onSetViewingResult(null)}
+                onReset={() => onSetViewingArtifact(null)}
               />
             )}
-            {viewingArtifact.type === "summary" &&
-              detail?.simplifiedContent && (
-                <div>
-                  {detail.simplifiedLevel && (
-                    <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded">
-                      {detail.simplifiedLevel}
-                    </span>
-                  )}
-                  <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap mt-3">
-                    {detail.simplifiedContent}
-                  </p>
-                </div>
-              )}
           </div>
         </CardContent>
       </Card>
@@ -282,34 +249,34 @@ export function StudyStudioPanel({
 
           {/* Icon-only action cards */}
           <div className="w-full px-2 py-2 flex flex-col items-center gap-1">
-            {studioCards.map((card) => (
+            {studioActions.map((action) => (
               <button
-                key={card.id}
+                key={action.id}
                 onClick={() => {
-                  if (card.disabled || !hasActivePassage) return;
-                  if (card.id === "chat") setViewingChat(true);
-                  else if (card.id === "translate") onSetViewingTranslate(true);
-                  else onActionClick(card.id);
+                  if (action.disabled || !hasActivePassage) return;
+                  if (action.id === "chat") setViewingChat(true);
+                  else if (action.id === "translate") onSetViewingTranslate(true);
+                  else onActionClick(action.id);
                 }}
-                disabled={card.disabled || !hasActivePassage}
-                title={t(card.labelKey)}
+                disabled={action.disabled || !hasActivePassage}
+                title={t(action.labelKey)}
                 className={cn(
                   "w-11 h-11 rounded-lg flex items-center justify-center transition-colors cursor-pointer",
-                  card.disabled
+                  action.disabled
                     ? "text-muted-foreground/30 cursor-not-allowed"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground",
                 )}
               >
-                <card.icon className="w-5 h-5" />
+                <action.icon className="w-5 h-5" />
               </button>
             ))}
           </div>
 
           {/* Running indicators */}
-          {results.filter((r) => r.status === "running").length > 0 && (
+          {artifacts.filter((r) => r.status === "generating").length > 0 && (
             <div className="w-full px-2 py-1 flex flex-col items-center gap-1">
-              {results
-                .filter((r) => r.status === "running")
+              {artifacts
+                .filter((r) => r.status === "generating")
                 .map((r) => (
                   <div
                     key={r.id}
@@ -324,10 +291,10 @@ export function StudyStudioPanel({
           {/* Completed artifacts as icons */}
           <div className="flex-1 overflow-y-auto panel-scroll w-full px-2 py-1">
             <div className="flex flex-col items-center gap-1">
-              {results
-                .filter((r) => r.status === "completed")
+              {artifacts
+                .filter((r) => r.status === "done")
                 .map((artifact) => {
-                  const meta = resultMeta[artifact.type] ?? {
+                  const meta = artifactMeta[artifact.type] ?? {
                     icon: HelpCircle,
                     labelKey: artifact.type,
                   };
@@ -336,7 +303,7 @@ export function StudyStudioPanel({
                   return (
                     <button
                       key={artifact.id}
-                      onClick={() => onSetViewingResult({ type: artifact.type, id: artifact.id })}
+                      onClick={() => onSetViewingArtifact({ type: artifact.type, id: artifact.id })}
                       title={t("resultTitle", { type: label, title: artifact.title })}
                       className="w-11 h-11 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
                     >
@@ -350,16 +317,11 @@ export function StudyStudioPanel({
       </Card>
     );
   }
-  const runningCount = results.filter((r) => r.status === "running").length;
+  const runningCount = artifacts.filter((r) => r.status === "generating").length;
   const maxConcurrent = 3;
-  const isCardLocked = (cardId: StudioCardId) => {
-    if (cardId === "summary")
-      return (
-        simplifying ||
-        results.some((r) => r.status === "running" && r.type === "summary")
-      );
-    if (cardId === "quiz")
-      return results.some((r) => r.status === "running" && r.type === "quiz");
+  const isActionLocked = (actionId: StudioActionId) => {
+    if (actionId === "quiz")
+      return artifacts.some((r) => r.status === "generating" && r.type === "quiz");
     return false;
   };
 
@@ -381,35 +343,35 @@ export function StudyStudioPanel({
         </div>
 
         <div className="px-3 pb-3 grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] gap-2">
-          {studioCards.map((card) => {
+          {studioActions.map((action) => {
             const locked =
-              !card.disabled && hasActivePassage && isCardLocked(card.id);
+              !action.disabled && hasActivePassage && isActionLocked(action.id);
             const disabled =
-              card.disabled ||
+              action.disabled ||
               !hasActivePassage ||
-              (card.id !== "chat" && runningCount >= maxConcurrent) ||
+              (action.id !== "chat" && runningCount >= maxConcurrent) ||
               locked;
 
             return (
               <Button
-                key={card.id}
+                key={action.id}
                 variant="outline"
                 onClick={() => {
                   if (disabled) return;
-                  if (card.id === "chat") setViewingChat(true);
-                  else if (card.id === "translate") onSetViewingTranslate(true);
-                  else onActionClick(card.id);
+                  if (action.id === "chat") setViewingChat(true);
+                  else if (action.id === "translate") onSetViewingTranslate(true);
+                  else onActionClick(action.id);
                 }}
                 disabled={disabled}
                 className={cn(
                   "h-auto flex flex-col items-start gap-2 p-3 relative overflow-hidden",
-                  card.disabled && "opacity-40 cursor-not-allowed bg-muted",
-                  !card.disabled &&
+                  action.disabled && "opacity-40 cursor-not-allowed bg-muted",
+                  !action.disabled &&
                     !hasActivePassage &&
                     "opacity-50 cursor-not-allowed",
-                  !card.disabled &&
-                    card.id !== "chat" &&
-                    card.id !== "translate" &&
+                  !action.disabled &&
+                    action.id !== "chat" &&
+                    action.id !== "translate" &&
                     hasActivePassage &&
                     runningCount >= maxConcurrent &&
                     !locked &&
@@ -426,24 +388,24 @@ export function StudyStudioPanel({
                 <div
                   className={cn(
                     "w-8 h-8 rounded-md flex items-center justify-center relative z-10",
-                    card.disabled
+                    action.disabled
                       ? "bg-muted text-muted-foreground/50"
                       : locked
                         ? "bg-accent text-primary"
                         : "bg-primary/10 text-primary",
                   )}
                 >
-                  <card.icon className="w-4 h-4" />
+                  <action.icon className="w-4 h-4" />
                 </div>
                 <p
                   className={cn(
                     "text-xs font-semibold leading-tight relative z-10",
-                    card.disabled
+                    action.disabled
                       ? "text-muted-foreground/50"
                       : "text-foreground",
                   )}
                 >
-                    {t(card.labelKey)}
+                    {t(action.labelKey)}
                   </p>
               </Button>
             );
@@ -451,13 +413,13 @@ export function StudyStudioPanel({
         </div>
 
         <div className="flex-1 overflow-y-auto panel-scroll px-4 pb-4">
-          {results.length > 0 && (
+          {artifacts.length > 0 && (
             <div className="space-y-1">
               <h3 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-1 mb-2">
                 Results
               </h3>
-              {results.map((artifact) => {
-                const meta = resultMeta[artifact.type] ?? {
+              {artifacts.map((artifact) => {
+                const meta = artifactMeta[artifact.type] ?? {
                   icon: HelpCircle,
                   labelKey: artifact.type,
                 };
@@ -468,20 +430,20 @@ export function StudyStudioPanel({
                     key={artifact.id}
                     variant="ghost"
                     onClick={() =>
-                      artifact.status === "completed" && onSetViewingResult({ type: artifact.type, id: artifact.id })
+                      artifact.status === "done" && onSetViewingArtifact({ type: artifact.type, id: artifact.id })
                     }
-                    disabled={artifact.status !== "completed"}
+                    disabled={artifact.status !== "done"}
                     className={cn(
                       "w-full flex items-center gap-3 px-3 py-2.5 h-auto text-left",
-                      artifact.status === "running" &&
+                      artifact.status === "generating" &&
                         "bg-primary/5 border border-primary/15",
-                      artifact.status === "completed" &&
+                      artifact.status === "done" &&
                         "hover:bg-muted cursor-pointer",
-                      artifact.status === "error" &&
+                      artifact.status === "failed" &&
                         "bg-destructive/5 border border-destructive/15 opacity-60",
                     )}
                   >
-                    {artifact.status === "running" ? (
+                    {artifact.status === "generating" ? (
                       <Loader2 className="w-4 h-4 text-primary animate-spin shrink-0" />
                     ) : (
                       <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
@@ -491,9 +453,9 @@ export function StudyStudioPanel({
                         {t("resultTitle", { type: label, title: artifact.title })}
                       </p>
                       <p className="text-[11px] text-muted-foreground">
-                        {artifact.status === "running"
+                        {artifact.status === "generating"
                           ? t("generating")
-                          : artifact.status === "error"
+                          : artifact.status === "failed"
                             ? t("failed")
                             : formatRelativeTime(
                                 artifact.updatedAt ?? artifact.createdAt,
@@ -507,7 +469,7 @@ export function StudyStudioPanel({
             </div>
           )}
 
-          {results.length === 0 && hasActivePassage && (
+          {artifacts.length === 0 && hasActivePassage && (
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <Sparkles className="w-8 h-8 text-muted-foreground/30 mb-3" />
               <p className="text-[13px] text-muted-foreground/60">

@@ -8,6 +8,7 @@ export const questionOptionSchema = z.object({
 });
 
 export const questionDataSchema = z.object({
+  artifactId: z.string().uuid(),
   questionText: z.string(),
   options: z.array(questionOptionSchema).min(2),
   correctOption: z.string(),
@@ -83,6 +84,7 @@ export async function createPassage(
 export async function createQuestion(
   data: {
     passageId: string;
+    artifactId: string;
     questionText: string;
     options: { id: string; text: string }[];
     correctOption: string;

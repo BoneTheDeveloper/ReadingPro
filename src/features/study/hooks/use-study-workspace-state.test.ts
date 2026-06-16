@@ -47,9 +47,9 @@ describe("useStudyWorkspaceState", () => {
       error: null,
       simplifying: false,
       uploadModalOpen: false,
-      resultsByPassageId: {},
-      viewingResultByPassageId: {},
-      resultDetailById: {},
+      artifactsByPassageId: {},
+      viewingArtifactByPassageId: {},
+      artifactDetailById: {},
     });
     expect(result.current.activePassage).toEqual(passageB);
     expect(result.current.documents.map((document) => document.id)).toEqual(["passage-b", "passage-a"]);
@@ -148,7 +148,7 @@ describe("useStudyWorkspaceState", () => {
     expect(studyDeletePassageAction).toHaveBeenCalledWith({ passageId: "passage-b" });
     expect(result.current.state.passages).toEqual([passageA]);
     expect(result.current.state.activePassageId).toBe("passage-a");
-    expect(result.current.state.resultsByPassageId).toEqual({});
+    expect(result.current.state.artifactsByPassageId).toEqual({});
     expect(result.current.state.status).toBe("ready");
   });
 

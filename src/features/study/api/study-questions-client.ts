@@ -4,6 +4,7 @@ import { STUDY_API_ROUTES, postJson, type StudyApiResult } from "./api-utils";
 
 export async function generateStudyQuestions(input: {
   passageId: string;
+  artifactId: string;
 }): Promise<StudyApiResult<{ questions: QuestionData[] }>> {
   const payload = await postJson(STUDY_API_ROUTES.questions, input, generatedStudyQuestionsResponseSchema);
   if ("error" in payload) return { error: payload.error };

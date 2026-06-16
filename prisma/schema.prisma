@@ -32,6 +32,7 @@ model UserProfile {
   vocabularySets       VocabularySet[]
   fileUploadIntents    FileUploadIntent[]
   quizAttempts         QuizAttempt[]
+  studioArtifacts      StudioArtifact[]
 
   @@map("profiles")
 }
@@ -60,6 +61,7 @@ model Passage {
   translationCaches    TranslationCache[]
   translationHistories TranslationHistory[]
   quizAttempts         QuizAttempt[]
+  studioArtifacts      StudioArtifact[]
 
   @@index([userId])
   @@index([createdAt])
@@ -293,6 +295,7 @@ model VocabularySetItem {
 model Question {
   id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   passageId     String       @db.Uuid
+  artifactId    String       @db.Uuid
   questionText  String
   options       Json
   correctOption String
@@ -303,10 +306,12 @@ model Question {
   difficulty    Int          @default(3)
   createdAt     DateTime     @default(now())
 
-  passage Passage          @relation(fields: [passageId], references: [id], onDelete: Cascade)
-  reviews QuestionReview[]
+  passage  Passage          @relation(fields: [passageId], references: [id], onDelete: Cascade)
+  artifact StudioArtifact   @relation(fields: [artifactId], references: [id], onDelete: Cascade)
+  reviews  QuestionReview[]
 
   @@index([passageId])
+  @@index([artifactId])
   @@map("questions")
 }
 
@@ -375,6 +380,28 @@ model QuizAttempt {
 
   @@index([userId, startedAt])
   @@map("quiz_attempts")
+}
+
+// ============================================
+// STUDIO ARTIFACT MODEL
+// ============================================
+model StudioArtifact {
+  id        String   @id @db.Uuid
+  passageId String   @db.Uuid
+  userId    String
+  type      String   // 'quiz' | 'flashcard'
+  title     String
+  status    String   // 'generating' | 'done' | 'failed'
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  passage   Passage     @relation(fields: [passageId], references: [id], onDelete: Cascade)
+  user      UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questions Question[]
+
+  @@index([passageId, createdAt(sort: Desc)])
+  @@index([userId])
+  @@map("studio_artifacts")
 }
 
 // ============================================

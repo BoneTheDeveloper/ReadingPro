@@ -4,6 +4,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { StudyPageClient } from "@/features/study/ui/study-workspace-client";
 import { generateStudyQuestions } from "@/features/study/api/study-questions-client";
 import { studySimplifyAction } from "@/features/study/actions/study-simplify-action";
+import {
+  studyCreateArtifactAction,
+  studyCompleteArtifactAction,
+} from "@/features/study/actions/study-artifact-actions";
 import { studyUploadAction } from "@/features/study/actions/study-upload-action";
 import { extractSelectionInfo } from "@/features/study/model/selection-utils";
 
@@ -101,6 +105,13 @@ vi.mock("@/features/study/actions/study-simplify-action", () => ({
   studySimplifyAction: vi.fn(),
 }));
 
+vi.mock("@/features/study/actions/study-artifact-actions", () => ({
+  studyCreateArtifactAction: vi.fn(),
+  studyCompleteArtifactAction: vi.fn(),
+  studyFailArtifactAction: vi.fn(),
+  studyLoadArtifactDetailAction: vi.fn(),
+}));
+
 vi.mock("@/features/study/actions/study-upload-action", () => ({
   studyUploadAction: vi.fn(),
 }));
@@ -136,6 +147,15 @@ describe("StudyPageClient", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.spyOn(crypto, "randomUUID").mockReturnValue("result-test-1");
+    vi.mocked(studyCreateArtifactAction).mockImplementation(async (input) => ({
+      id: input.id,
+      type: input.type,
+      passageId: input.passageId,
+      title: input.title,
+      status: "generating",
+      createdAt: new Date().toISOString(),
+    }));
+    vi.mocked(studyCompleteArtifactAction).mockResolvedValue({ ok: true });
     useChatState.messages = [];
     vi.stubGlobal(
       "fetch",
@@ -166,8 +186,8 @@ describe("StudyPageClient", () => {
           });
         }
 
-        if (url.startsWith("/api/study-results")) {
-          return new Response(JSON.stringify({ results: [] }), {
+        if (url.startsWith("/api/study-artifacts")) {
+          return new Response(JSON.stringify({ success: true, data: { artifacts: [] } }), {
             status: 200,
           });
         }
@@ -323,6 +343,7 @@ describe("StudyPageClient", () => {
     await waitFor(() =>
       expect(generateStudyQuestions).toHaveBeenCalledWith({
         passageId: passage.id,
+        artifactId: expect.any(String),
       }),
     );
     expect(await screen.findByText("Results")).toBeInTheDocument();
