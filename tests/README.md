@@ -26,4 +26,3 @@ The repository uses `tests/` for Vitest suites, Vitest config, performance bench
 - Move helpers to `tests/shared/` when they are imported by Playwright plus another suite, such as performance benchmarks.
 - Keep benchmark scenarios and reports separate from Vitest and Playwright.
 - Keep reusable upload files under `tests/fixtures/upload-files/`, not under docs.
-- Keep manual and operational QA documentation under `docs/quality-assurance/`.

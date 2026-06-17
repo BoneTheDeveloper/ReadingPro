@@ -8,7 +8,12 @@ import { cn } from "@/contracts/utils";
 import type { TranslationSelection } from "@/features/study/model/types";
 import type { QuickTranslationData } from "@/features/study/model/types";
 
-type QuickTranslationStatus = "idle" | "ready" | "loading" | "success" | "error";
+type QuickTranslationStatus =
+  | "idle"
+  | "ready"
+  | "loading"
+  | "success"
+  | "error";
 
 interface StudyTranslationPopupProps {
   selection: TranslationSelection;
@@ -48,7 +53,10 @@ export function calculateStudyTranslationPopupPosition(input: {
   const unclampedTop = showAbove
     ? selectionRect.top - popupHeight - offsetY
     : selectionRect.top + selectionRect.height + offsetY;
-  const maxTop = Math.max(VIEWPORT_MARGIN, viewportHeight - popupHeight - VIEWPORT_MARGIN);
+  const maxTop = Math.max(
+    VIEWPORT_MARGIN,
+    viewportHeight - popupHeight - VIEWPORT_MARGIN,
+  );
 
   return {
     top: Math.max(VIEWPORT_MARGIN, Math.min(unclampedTop, maxTop)),
@@ -135,7 +143,13 @@ export function StudyTranslationPopup({
     if (nextHeight && Math.abs(nextHeight - panelHeight) > 1) {
       setPanelHeight(nextHeight);
     }
-  }, [panelHeight, selection.selectedText, status, translation?.translation, translation?.type]);
+  }, [
+    panelHeight,
+    selection.selectedText,
+    status,
+    translation?.translation,
+    translation?.type,
+  ]);
 
   // Compact icon mode: positioned near the user's selection release point.
   if (status === "ready") {
@@ -178,7 +192,7 @@ export function StudyTranslationPopup({
       ref={panelRef}
       className={cn(
         "fixed z-50 bg-popover border border-border rounded-lg shadow-lg",
-        "w-[280px]",
+        "w-70",
       )}
       style={{ top, left }}
     >
@@ -213,7 +227,9 @@ export function StudyTranslationPopup({
 
         {status === "error" && (
           <div>
-            <p className="text-sm text-destructive py-1">{t("translationError")}</p>
+            <p className="text-sm text-destructive py-1">
+              {t("translationError")}
+            </p>
             <button
               type="button"
               className="text-xs text-primary hover:underline"
@@ -227,7 +243,7 @@ export function StudyTranslationPopup({
         {status === "success" && translation && (
           <div>
             {/* Main translation with speaker on the left */}
-            <div className="flex items-start gap-1.5">
+            <div className="flex items-start gap-5.5">
               <button
                 type="button"
                 className="p-0.5 mt-0.5 rounded hover:bg-muted text-muted-foreground shrink-0"
@@ -236,13 +252,15 @@ export function StudyTranslationPopup({
                 <Volume2 className="w-3.5 h-3.5" />
               </button>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground">{translation.translation}</p>
+                <p className="text-sm font-medium text-foreground">
+                  {translation.translation}
+                </p>
               </div>
             </div>
 
             {/* Type badge */}
             {translation.type && (
-              <div className="mt-1 ml-[22px]">
+              <div className="mt-1 ml-5.5">
                 <span className="text-[11px] italic text-muted-foreground">
                   {translation.type}
                 </span>

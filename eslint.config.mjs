@@ -32,6 +32,29 @@ const eslintConfig = defineConfig([
       ],
     },
   },
+  {
+    files: ["src/**"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: [
+                "../../app/*",
+                "../../server/*",
+                "../../contracts/*",
+                "../../features/*",
+                "../../ui/*",
+                "../../../**",
+              ],
+              message: "Cross-layer imports must use the @/ alias, not relative paths.",
+            },
+          ],
+        },
+      ],
+    },
+  },
 ]);
 
 export default eslintConfig;

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { userProfileFixture } from "../../../tests/vitest/fixtures/user";
+import { userProfileFixture } from "@tests/vitest/fixtures/user";
 import { db } from "../db/client";
 
 const clerkMocks = vi.hoisted(() => ({

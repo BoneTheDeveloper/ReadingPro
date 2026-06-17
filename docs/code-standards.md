@@ -82,6 +82,10 @@ Use these docs as the source of truth for details:
 | Docs | Kebab-case for new evergreen docs. |
 | Plans and journals | Timestamped historical records in their existing folders. |
 
+## Import Paths
+
+Use the `@/` alias when an import crosses a module, feature, or layer boundary (e.g. `features → contracts`, `server → contracts`, `ui → features`). Use a relative path (`./` or `../`) only within the same module or feature folder. This keeps renames cheap and makes cross-layer dependencies visible at a glance.
+
 ## Change Checklist
 
 Before adding or moving code:

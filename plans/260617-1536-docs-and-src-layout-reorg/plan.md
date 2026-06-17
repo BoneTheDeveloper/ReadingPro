@@ -1,7 +1,7 @@
 ---
 title: "Docs SSOT Reorg + Src Layer Re-naming"
 description: ""
-status: pending
+status: completed
 priority: P2
 branch: "feature/issue-69-study-quiz-flow"
 tags: []
@@ -39,9 +39,9 @@ independent of 4-5; 5 depends on 4.
 |-------|------|--------|
 | 1 | [Docs SSOT Reorg](./phase-01-docs-ssot-reorg.md) | Completed |
 | 2 | [New Requirement Docs](./phase-02-new-requirement-docs.md) | Completed |
-| 3 | [Convention Hub + Import Rule](./phase-03-convention-hub-import-rule.md) | Pending |
+| 3 | [Convention Hub + Import Rule](./phase-03-convention-hub-import-rule.md) | Completed |
 | 4 | [Src Layer Rename](./phase-04-src-layer-rename.md) | Completed |
-| 5 | [ESLint Enforcement](./phase-05-eslint-enforcement.md) | Pending |
+| 5 | [ESLint Enforcement](./phase-05-eslint-enforcement.md) | Completed |
 
 ## Dependencies
 
