@@ -1,23 +1,3 @@
-# Prisma & Neon Security Model
-
-## Key Fact
-
-Prisma connects server-side to Neon PostgreSQL using `@prisma/adapter-pg`.
-Authorization is enforced explicitly in application service/repository queries.
-
-## Connection Setup
-
-| Purpose | Env Var | Description |
-|---------|---------|-------------|
-| App queries | `DATABASE_URL` | Pooled Neon runtime connection |
-| Migrations | `DIRECT_URL` | Direct Neon connection, configured in `prisma.config.ts` |
-
-Prisma 7 removed the built-in PostgreSQL driver. `@prisma/adapter-pg` is mandatory — no standalone `PrismaClient()` possible.
-
-Migration and reset procedures are documented in
-[`prisma/MIGRATIONS.md`](./MIGRATIONS.md). Review that runbook before changing
-or resetting a database.
-
 ## Security Model
 
 | Layer | Mechanism | Protects |

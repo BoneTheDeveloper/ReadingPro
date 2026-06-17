@@ -53,17 +53,6 @@ prisma/
 | `src/shared` | Isomorphic contracts. | `src/shared/study/study-response-schema.ts`, `src/shared/api/api-client-utils.ts`. |
 | `src/features` | Frontend feature logic. | `src/features/study/ui`, `src/features/dictionary/hooks`. |
 | `src/components` | Shared UI atoms. | `src/components/ui/button.tsx`. |
-
-Placement rule: `src/server/` is for backend-only code (`server-only`). `src/shared/` is for code shared between client and server (must stay pure). `src/features/` is for frontend-specific logic organized by domain. Features communicate with the backend exclusively through their `api/` clients calling `/api/*` routes.
-
-Feature folder convention:
-
-```text
-src/features/<feature>
-+-- ui        React components and page sections
-+-- hooks     Data fetching and UI state (calls feature api)
-+-- model     Feature-specific types and state management
-+-- api       Frontend API clients (fetchers calling /api/*)
 ```
 
 ## Feature Cross-reference
@@ -83,13 +72,6 @@ src/features/<feature>
 ## API Inventory
 
 See [API/api-index.md](API/api-index.md). Implemented production feature routes include upload, translate, dictionary, vocabulary, cards, progress, study session, study chat, health, and local development blob access.
-
-## Known Gaps
-
-- Processing is still a transition UI, not a durable background-job status system.
-- Production readiness depends on environment separation for Clerk, Neon, Blob, Sentry, and Vercel.
-- OCR, YouTube transcription, billing, and native mobile are not in the current product scope.
-- Some docs in `docs/Design/` and `docs/Sentry/` are supplemental and not part of the primary docs tree.
 
 **Status:** Active
 **Last Updated:** 2026-06-11

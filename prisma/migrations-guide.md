@@ -129,28 +129,3 @@ PRISMA_ENV_FILE=.env.prod pnpm exec prisma migrate resolve --applied <migration_
 ```
 
 For a clean/empty database, use `db:migrate:deploy:prod` instead.
-
-## 5. Environment Variables
-
-### Vercel runtime app
-
-Only the pooled `DATABASE_URL`. Never put `DIRECT_URL` or Neon/Vercel tokens in
-runtime app env.
-
-### Local `.env.local` (development) and `.env.prod` (production)
-
-| Variable | Notes |
-|---|---|
-| `DATABASE_URL` | Pooled connection to the target branch |
-| `DIRECT_URL` | Direct connection, used by migrations |
-
-## Hard Rules
-
-- `development`: `pnpm db:migrate:dev --name <verb>_<noun>` (`.env.local`).
-- `production`: `pnpm db:migrate:deploy:prod` (`.env.prod`), only after
-  `\conninfo` confirms the production branch.
-- Never run `migrate dev`, `migrate reset`, or `db push` against production.
-- Never commit `.env.prod`.
-- Commit every generated migration folder; never edit applied migration SQL.
-- Production migrations must be backward-compatible; use expand/contract for
-  destructive changes.

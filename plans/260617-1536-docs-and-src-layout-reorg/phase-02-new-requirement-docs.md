@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "New Requirement Docs"
-status: pending
+status: completed
 priority: P2
 effort: "4h"
 dependencies: [1]
@@ -38,10 +38,10 @@ Source material: `docs/Requirements/use-cases.md` (Phase 1), `docs/Product/featu
 4. Add the three docs to `docs/README.md` Requirements navigation.
 
 ## Success Criteria
-- [ ] `user-stories.md`, `test-scenarios.md`, `traceability-matrix.md` exist and cross-link
-- [ ] Every use-case maps to >=1 user story and >=1 test scenario
-- [ ] Traceability matrix lists every API route from `api-index.md` and marks untested rows GAP
-- [ ] All three are linked from `docs/README.md`
+- [x] `user-stories.md`, `test-scenarios.md`, `traceability-matrix.md` exist and cross-link
+- [x] Every use-case maps to >=1 user story and >=1 test scenario
+- [x] Traceability matrix lists every API route from `api-index.md` and marks untested rows GAP
+- [x] All three are linked from `docs/README.md`
 
 ## Risk Assessment
 Low-medium. Risk = matrix drifting from reality / inventing coverage. Mitigation: every test

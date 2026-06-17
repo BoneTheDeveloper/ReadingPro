@@ -1,6 +1,9 @@
-# Use Case Document
+# Use Cases
 
 **English Reading Training App**
+
+Single source of truth for application use cases. Each use case lists its actor,
+preconditions, main flow, and—where it maps to an HTTP endpoint—the primary route(s).
 
 ---
 
@@ -10,11 +13,13 @@
 
 **Preconditions:** User is signed in, on `/study` or `/upload` page
 
+**Primary routes:** `POST /api/upload/text` (text paste), `POST /api/upload` (PDF file)
+
 ### Main Flow
 
-1. User selects file upload (drag-and-drop or click) or text paste
+1. User selects file upload (drag-and-drop or click) or text paste, with an optional title
 2. System validates input (file type, size 10MB, text length 50-100k chars)
-3. System extracts text if PDF
+3. System extracts text if PDF (stores the file first)
 4. System runs CEFR detection (AI → heuristic fallback)
 5. System simplifies content to one CEFR level below
 6. System generates 5 comprehension questions with source citations
@@ -84,6 +89,8 @@
 **Actor:** Authenticated User
 
 **Preconditions:** User has cards with nextReviewDate <= now
+
+**Primary routes:** `GET /api/cards/due`, `POST /api/cards/review`, `GET /api/progress/stats`
 
 ### Main Flow
 
@@ -161,6 +168,8 @@
 
 **Preconditions:** User has at least one study session
 
+**Primary route:** `GET /api/progress/stats`
+
 ### Main Flow
 
 1. User navigates to Progress Dashboard
@@ -181,6 +190,8 @@
 
 **Preconditions:** User is signed in
 
+**Primary page:** `/[locale]/study`
+
 ### Main Flow
 
 1. User navigates to `/study`
@@ -190,8 +201,100 @@
 5. User clicks upload button in sources panel
 6. System shows upload modal (file/text toggle)
 7. User uploads content → UC-01 flow continues
-8. Content appears in content panel, quiz in studio panel
+8. Content appears in content panel, quiz in studio panel; user can study original or
+   simplified content, open generated questions, translate selections (UC-09), and chat
+   about the passage (UC-12)
 
 ---
 
-**Last Updated:** 2026-06-05
+## UC-09: Translate Selection
+
+**Actor:** Authenticated User
+
+**Preconditions:** User owns the passage containing the selection
+
+**Primary route:** `POST /api/translate`
+
+### Main Flow
+
+1. User selects English text from an owned passage
+2. System validates selection limits and checks passage ownership
+3. System returns a translation
+4. System records translation cache and history
+
+### Alternative Flows
+
+| Step | Alternative |
+|------|------------|
+| 2a | Selection exceeds limits or passage not owned → reject with error |
+| 3a | Cache hit → return cached translation without re-calling the model |
+
+---
+
+## UC-10: Save Vocabulary
+
+**Actor:** Authenticated User
+
+**Preconditions:** User is signed in with a selected term
+
+**Primary route:** `POST /api/vocabulary`
+
+### Main Flow
+
+1. User saves a selected term and its translation for later use
+2. System upserts the entry by a stable user/source/selection/context key
+
+### Alternative Flows
+
+| Step | Alternative |
+|------|------------|
+| 2a | Entry with same key exists → update in place rather than duplicate |
+
+---
+
+## UC-11: Search Dictionary
+
+**Actor:** Authenticated User
+
+**Preconditions:** Seeded English-Vietnamese dictionary exists
+
+**Primary routes:** `GET /api/dictionary/lookup`, `GET /api/dictionary/search`,
+`GET /api/dictionary/suggest`, `GET /api/dictionary/entries/[entryId]`
+
+### Main Flow
+
+1. User searches dictionary entries by headword, alias, or normalized query
+2. System returns matching entries grouped by headword
+
+### Alternative Flows
+
+| Step | Alternative |
+|------|------------|
+| 2a | No match → return empty result with suggestions |
+
+---
+
+## UC-12: Ask Study Chat
+
+**Actor:** Authenticated User
+
+**Preconditions:** User owns the selected passage
+
+**Primary route:** `POST /api/study-chat`
+
+### Main Flow
+
+1. User asks a tutor question about the selected passage
+2. System loads recent persisted messages and the passage context
+3. System streams a response
+4. System persists the assistant answer
+
+### Alternative Flows
+
+| Step | Alternative |
+|------|------------|
+| 1a | Passage not owned → reject request |
+
+---
+
+**Last Updated:** 2026-06-17

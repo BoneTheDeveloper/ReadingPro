@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: "Docs SSOT Reorg"
-status: pending
+status: completed
 priority: P2
 effort: "3h"
 dependencies: []
@@ -45,11 +45,11 @@ the `POST /api/...` route references.
 5. Grep all docs for links to moved files and repair: `rg -n "brd\.md|srs\.md|Database/use-case|Product/use-cases" docs`.
 
 ## Success Criteria
-- [ ] `docs/Requirements/` has business-requirements, software-requirements, use-cases
-- [ ] No `use-case`/`use-cases` duplication anywhere under `docs/`
-- [ ] `docs/Database/` contains only DB docs; `docs/Product/` only scope/assumptions
-- [ ] `rg -n "Database/brd|Database/srs|Database/use-case|Product/use-cases" docs` returns nothing
-- [ ] Markdown link check across `docs/` reports no new broken links
+- [x] `docs/Requirements/` has business-requirements, software-requirements, use-cases
+- [x] No `use-case`/`use-cases` duplication anywhere under `docs/`
+- [x] `docs/Database/` contains only DB docs; `docs/Product/` only scope/assumptions
+- [x] `rg -n "Database/brd|Database/srs|Database/use-case|Product/use-cases" docs` returns nothing
+- [x] Markdown link check across `docs/` reports no new broken links
 
 ## Risk Assessment
 Low. Risk = stale links after move. Mitigation: grep-based link sweep in step 5. No code

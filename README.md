@@ -102,7 +102,7 @@ pnpm db:check:dictionary-seed
 ## Documentation
 
 - Docs index: [docs/README.md](docs/README.md)
-- Product overview: [docs/project-overview-pdr.md](docs/project-overview-pdr.md)
+- Product overview: [docs/Product/overview-pdr.md](docs/Product/overview-pdr.md)
 - Codebase summary: [docs/codebase-summary.md](docs/codebase-summary.md)
 - System architecture: [docs/Architecture/system-architecture.md](docs/Architecture/system-architecture.md)
 - API index: [docs/API/api-index.md](docs/API/api-index.md)

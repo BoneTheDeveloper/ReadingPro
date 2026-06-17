@@ -13,9 +13,9 @@ Use these docs as the source of truth for details:
 | Page and feature UI composition | [Architecture/frontend-ui-architecture/page-composition-conventions.md](Architecture/frontend-ui-architecture/page-composition-conventions.md) |
 | API route implementation | [API/api-implementation-conventions.md](API/api-implementation-conventions.md) |
 | API route docs and contracts | [API/api-index.md](API/api-index.md) |
-| Database and migrations | [Architecture/database-architecture.md](Architecture/database-architecture.md), [Database/migration-flow.md](Database/migration-flow.md) |
+| Database and migrations | [Architecture/database-architecture.md](Architecture/database-architecture.md), [../prisma/migrations-guide.md](../prisma/migrations-guide.md) |
 | Testing | [Testing/testing-strategy.md](Testing/testing-strategy.md) |
-| Root/config file placement | [Operations/root-configuration.md](Operations/root-configuration.md) |
+| Root/config file placement | repo root, next to `package.json` |
 
 ## General Principles
 

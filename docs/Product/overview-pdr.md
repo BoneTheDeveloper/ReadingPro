@@ -66,10 +66,10 @@ Out of scope for the current MVP:
 
 ## References
 
-- Product flows: [Product/user-flows.md](Product/user-flows.md)
-- Feature scope: [Product/feature-scope.md](Product/feature-scope.md)
-- System architecture: [Architecture/system-architecture.md](Architecture/system-architecture.md)
-- Roadmap: [project-roadmap.md](project-roadmap.md)
+- Use cases: [../Requirements/use-cases.md](../Requirements/use-cases.md)
+- Feature scope: [feature-scope.md](feature-scope.md)
+- System architecture: [../Architecture/system-architecture.md](../Architecture/system-architecture.md)
+- Roadmap: [roadmap.md](roadmap.md)
 
 **Status:** Active
 **Last Updated:** 2026-06-06

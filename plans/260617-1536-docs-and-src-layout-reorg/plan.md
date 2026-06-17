@@ -37,8 +37,8 @@ independent of 4-5; 5 depends on 4.
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 1 | [Docs SSOT Reorg](./phase-01-docs-ssot-reorg.md) | Pending |
-| 2 | [New Requirement Docs](./phase-02-new-requirement-docs.md) | Pending |
+| 1 | [Docs SSOT Reorg](./phase-01-docs-ssot-reorg.md) | Completed |
+| 2 | [New Requirement Docs](./phase-02-new-requirement-docs.md) | Completed |
 | 3 | [Convention Hub + Import Rule](./phase-03-convention-hub-import-rule.md) | Pending |
 | 4 | [Src Layer Rename](./phase-04-src-layer-rename.md) | Pending |
 | 5 | [ESLint Enforcement](./phase-05-eslint-enforcement.md) | Pending |
