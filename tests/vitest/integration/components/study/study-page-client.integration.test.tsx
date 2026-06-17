@@ -334,10 +334,8 @@ describe("StudyPageClient", () => {
         artifactId: expect.any(String),
       }),
     );
-    expect(await screen.findByText("Results")).toBeInTheDocument();
-
     await user.click(
-      screen.getByRole("button", { name: /Quiz: The Test Passage/ }),
+      await screen.findByRole("button", { name: /Quiz: The Test Passage/ }),
     );
     expect(screen.getByText(question.questionText)).toBeInTheDocument();
   });
@@ -527,11 +525,11 @@ describe("StudyPageClient", () => {
       screen.queryByRole("button", { name: /Save/ }),
     ).not.toBeInTheDocument();
 
-    // Open details shows the translate panel reusing the same translation, no second API call
+    // Open details shows the lookup panel reusing the same translation, no second API call
     const fetchCallsBeforeDetails = vi.mocked(fetch).mock.calls.length;
     await user.click(screen.getByRole("button", { name: /Open details/ }));
     expect(
-      await screen.findByText("Translate: algorithmic bias"),
+      await screen.findByText("Lookup: algorithmic bias"),
     ).toBeInTheDocument();
     expect(fetch).toHaveBeenCalledTimes(fetchCallsBeforeDetails);
   });

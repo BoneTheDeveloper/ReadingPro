@@ -13,7 +13,7 @@ import type {
   QuickTranslationData,
 } from "@/features/study/model/types";
 
-interface StudyTranslatePanelProps {
+interface StudyLookupPanelProps {
   selection: TranslationSelection;
   quickTranslation: QuickTranslationData | null;
   saved: boolean;
@@ -21,13 +21,13 @@ interface StudyTranslatePanelProps {
   onAskAi: (prefilledQuestion: string) => void;
 }
 
-export function StudyTranslatePanel({
+export function StudyLookupPanel({
   selection,
   quickTranslation,
   saved,
   onSave,
   onAskAi,
-}: StudyTranslatePanelProps) {
+}: StudyLookupPanelProps) {
   const t = useTranslations("Study");
 
   const handleAskAi = () => {

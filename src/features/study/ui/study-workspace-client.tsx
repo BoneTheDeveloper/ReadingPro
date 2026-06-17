@@ -66,7 +66,7 @@ export function StudyPageClient({
     status: "idle",
   });
   const [savedVocabularyIds, setSavedVocabularyIds] = useState<Set<string>>(new Set());
-  const [viewingTranslate, setViewingTranslate] = useState(false);
+  const [viewingLookup, setViewingLookup] = useState(false);
 
   // Clear stale selection on passage/mode change (adjust during rendering, not in effect)
   const [prevPassageId, setPrevPassageId] = useState(state.activePassageId);
@@ -392,7 +392,7 @@ export function StudyPageClient({
                   status={quickTranslationState.status}
                   onTranslate={handleQuickTranslate}
                   onOpenDetails={() => {
-                    setViewingTranslate(true);
+                    setViewingLookup(true);
                     Sentry.addBreadcrumb({
                       category: "study-translation",
                       level: "info",
@@ -437,8 +437,8 @@ export function StudyPageClient({
               onToggleCollapse={layout.toggleRight}
               translationSelection={selection}
               quickTranslation={quickTranslationState.data}
-              viewingTranslate={viewingTranslate}
-              onSetViewingTranslate={setViewingTranslate}
+              viewingLookup={viewingLookup}
+              onSetViewingLookup={setViewingLookup}
               onSaveVocabulary={handleSaveVocabulary}
               vocabularySaved={isVocabularySaved}
               onRecordQuizResult={(artifactId, stats) => {

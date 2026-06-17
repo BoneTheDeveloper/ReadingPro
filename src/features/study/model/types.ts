@@ -103,7 +103,7 @@ export type StudioActionId =
   | "summary"
   | "chat"
   | "mindmap"
-  | "translate";
+  | "lookup";
 
 export interface StudioAction {
   id: StudioActionId;
