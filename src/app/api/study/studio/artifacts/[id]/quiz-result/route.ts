@@ -9,7 +9,7 @@ import { isAuthenticationRequiredError } from "@/server/http/route-errors";
 import { createModuleLogger } from "@/server/observability/logger";
 import { z } from "zod";
 
-const log = createModuleLogger("api:studio-artifacts:quiz-result");
+const log = createModuleLogger("api:study:studio:artifacts:quiz-result");
 
 const recordQuizResultSchema = z.object({
   correctCount: z.number().int().nonnegative(),

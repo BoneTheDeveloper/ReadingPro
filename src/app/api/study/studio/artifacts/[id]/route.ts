@@ -6,7 +6,7 @@ import { isAuthenticationRequiredError } from "@/server/http/route-errors";
 import { createModuleLogger } from "@/server/observability/logger";
 import type { QuestionData } from "@/features/study/model/types";
 
-const log = createModuleLogger("api:studio-artifacts:detail");
+const log = createModuleLogger("api:study:studio:artifacts:detail");
 
 function parseQuestionOptions(value: unknown): QuestionData["options"] {
   if (typeof value === "string") {

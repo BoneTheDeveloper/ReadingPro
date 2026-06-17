@@ -24,8 +24,8 @@ function isUnauthenticatedError(error: unknown) {
 
 export async function POST(request: NextRequest) {
   let requestLog = createRequestLogger(
-    "api:study-chat",
-    createRequestLogContext(request, "POST", "/api/study-chat"),
+    "api:study:studio:chat",
+    createRequestLogContext(request, "POST", "/api/study/studio/chat"),
   );
 
   try {
@@ -33,9 +33,9 @@ export async function POST(request: NextRequest) {
     try {
       body = await Sentry.startSpan(
         {
-          name: "api:study-chat-parse-body",
+          name: "api:study:studio:chat-parse-body",
           op: "http.server",
-          attributes: { "http.request.method": "POST", "url.path": "/api/study-chat" },
+          attributes: { "http.request.method": "POST", "url.path": "/api/study/studio/chat" },
         },
         () => request.json(),
       );
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
 
     const user = await Sentry.startSpan(
       {
-        name: "api:study-chat-authenticate",
+        name: "api:study:studio:chat-authenticate",
         op: "auth",
         attributes: { "study.passage_id": passageId, "study.message_count": messages.length },
       },
@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
       onFinishPersistError: (error) => {
         requestLog.error({ err: error }, "Failed to persist study chat assistant message");
         Sentry.captureException(error, {
-          tags: { route: "api:study-chat", method: "POST", operation: "assistant-message-create" },
+          tags: { route: "api:study:studio:chat", method: "POST", operation: "assistant-message-create" },
           extra: { userId: user.id, passageId },
         });
       },
@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
 
     requestLog.error({ err: error }, "Study chat streaming failed");
     Sentry.captureException(error, {
-      tags: { route: "api:study-chat", method: "POST" },
+      tags: { route: "api:study:studio:chat", method: "POST" },
     });
     return NextResponse.json(
       { error: "Unable to start the study chat stream." },
@@ -133,8 +133,8 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   let requestLog = createRequestLogger(
-    "api:study-chat",
-    createRequestLogContext(request, "GET", "/api/study-chat"),
+    "api:study:studio:chat",
+    createRequestLogContext(request, "GET", "/api/study/studio/chat"),
   );
 
   try {
@@ -150,7 +150,7 @@ export async function GET(request: NextRequest) {
 
     const user = await Sentry.startSpan(
       {
-        name: "api:study-chat-history-authenticate",
+        name: "api:study:studio:chat-history-authenticate",
         op: "auth",
         attributes: { "study.passage_id": parsed.data.passageId },
       },
@@ -184,7 +184,7 @@ export async function GET(request: NextRequest) {
 
     requestLog.error({ err: error }, "Study chat history fetch failed");
     Sentry.captureException(error, {
-      tags: { route: "api:study-chat", method: "GET" },
+      tags: { route: "api:study:studio:chat", method: "GET" },
     });
     return NextResponse.json(
       { error: "Unable to load study chat history." },

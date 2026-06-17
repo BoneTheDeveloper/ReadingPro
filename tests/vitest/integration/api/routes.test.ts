@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { openai } from "@ai-sdk/openai";
 import { GET as getHealth } from "@/app/api/health/route";
 import { GET as getProgressStats } from "@/app/api/progress/stats/route";
-import { GET as getStudyChatHistory, POST as studyChat } from "@/app/api/study/chat/route";
+import { GET as getStudyChatHistory, POST as studyChat } from "@/app/api/study/studio/chat/route";
 import { POST as createStudySessionRoute } from "@/app/api/study/sessions/route";
 import { POST as uploadFileRoute } from "@/app/api/upload/route";
 import { POST as uploadTextRoute } from "@/app/api/upload/text/route";
@@ -165,7 +165,7 @@ describe("POST /api/study/sessions", () => {
       "Failed to ensure active session",
     );
     expect(Sentry.captureException).toHaveBeenCalledWith(createError, {
-      tags: { route: "api:study-session", method: "POST" },
+      tags: { route: "api:study:sessions", method: "POST" },
     });
   });
 
@@ -187,7 +187,7 @@ describe("POST /api/study/sessions", () => {
 
 });
 
-describe("POST /api/study/chat", () => {
+describe("POST /api/study/studio/chat", () => {
   it("streams a passage-grounded chat response", async () => {
     db.passage.findUnique.mockResolvedValue(passageFixture);
     db.studyChatMessage.findMany.mockResolvedValue([]);
@@ -316,7 +316,7 @@ describe("POST /api/study/chat", () => {
       { id: "chat-1", role: "user", content: "History A" },
     ]);
     const history = await getStudyChatHistory(
-      new NextRequest(`https://english-reading.test/api/study/chat?passageId=${passageFixture.id}`),
+      new NextRequest(`https://english-reading.test/api/study/studio/chat?passageId=${passageFixture.id}`),
     );
     expect(await parseJsonResponse(history, studyChatHistorySuccessResponseSchema)).toEqual({
       messages: [{ id: "chat-1", role: "user", parts: [{ type: "text", text: "History A" }] }],
@@ -334,7 +334,7 @@ describe("POST /api/study/chat", () => {
     );
 
     await getStudyChatHistory(
-      new NextRequest("https://english-reading.test/api/study/chat?passageId=another-passage"),
+      new NextRequest("https://english-reading.test/api/study/studio/chat?passageId=another-passage"),
     );
     expect(db.studyChatMessage.findMany).toHaveBeenLastCalledWith(
       expect.objectContaining({ where: { userId: userProfileFixture.id, passageId: "another-passage" } }),
@@ -343,7 +343,7 @@ describe("POST /api/study/chat", () => {
 
   it("returns stable history error payloads", async () => {
     const missingPassage = await getStudyChatHistory(
-      new NextRequest("https://english-reading.test/api/study/chat"),
+      new NextRequest("https://english-reading.test/api/study/studio/chat"),
     );
     expect(missingPassage.status).toBe(400);
     expectApiErrorPayload(
@@ -353,7 +353,7 @@ describe("POST /api/study/chat", () => {
 
     routeMocks.getAuthenticatedUser.mockRejectedValueOnce(new routeMocks.AuthenticationRequiredError());
     const unauthenticated = await getStudyChatHistory(
-      new NextRequest(`https://english-reading.test/api/study/chat?passageId=${passageFixture.id}`),
+      new NextRequest(`https://english-reading.test/api/study/studio/chat?passageId=${passageFixture.id}`),
     );
     expect(unauthenticated.status).toBe(401);
     expectApiErrorPayload(
@@ -364,7 +364,7 @@ describe("POST /api/study/chat", () => {
     const error = apiError("history db down");
     db.studyChatMessage.findMany.mockRejectedValueOnce(error);
     const failed = await getStudyChatHistory(
-      new NextRequest(`https://english-reading.test/api/study/chat?passageId=${passageFixture.id}`),
+      new NextRequest(`https://english-reading.test/api/study/studio/chat?passageId=${passageFixture.id}`),
     );
     expect(failed.status).toBe(500);
     expectApiErrorPayload(
@@ -372,13 +372,13 @@ describe("POST /api/study/chat", () => {
       "Unable to load study chat history.",
     );
     expect(Sentry.captureException).toHaveBeenCalledWith(error, {
-      tags: { route: "api:study-chat", method: "GET" },
+      tags: { route: "api:study:studio:chat", method: "GET" },
     });
   });
 
   it("handles malformed chat bodies, unauthenticated users, missing passages, and stream failures", async () => {
     await expectJsonError(
-      await studyChat(new NextRequest("https://english-reading.test/api/study/chat", { method: "POST", body: "{" })),
+      await studyChat(new NextRequest("https://english-reading.test/api/study/studio/chat", { method: "POST", body: "{" })),
       400,
       "Invalid JSON payload.",
     );
@@ -413,7 +413,7 @@ describe("POST /api/study/chat", () => {
       "Unable to start the study chat stream.",
     );
     expect(Sentry.captureException).toHaveBeenCalledWith(streamError, {
-      tags: { route: "api:study-chat", method: "POST" },
+      tags: { route: "api:study:studio:chat", method: "POST" },
     });
   });
 

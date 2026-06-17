@@ -19,8 +19,8 @@ export async function POST(request: NextRequest) {
 
 async function handleStudioQuestionsPost(request: NextRequest) {
   const requestLog = createRequestLogger(
-    "api:studio-questions",
-    createRequestLogContext(request, "POST", "/api/studio-questions"),
+    "api:study:studio:questions",
+    createRequestLogContext(request, "POST", "/api/study/studio/questions"),
   );
 
   try {
@@ -28,11 +28,11 @@ async function handleStudioQuestionsPost(request: NextRequest) {
     try {
       body = await Sentry.startSpan(
         {
-          name: "api:studio-questions-parse-body",
+          name: "api:study:studio:questions-parse-body",
           op: "http.server",
           attributes: {
             "http.request.method": "POST",
-            "url.path": "/api/studio-questions",
+            "url.path": "/api/study/studio/questions",
           },
         },
         () => request.json(),
@@ -54,7 +54,7 @@ async function handleStudioQuestionsPost(request: NextRequest) {
     const { passageId, artifactId } = parsed.data;
     const user = await Sentry.startSpan(
       {
-        name: "api:studio-questions-authenticate",
+        name: "api:study:studio:questions-authenticate",
         op: "auth",
         attributes: { "study.passage_id": passageId },
       },
@@ -83,7 +83,7 @@ async function handleStudioQuestionsPost(request: NextRequest) {
 
     requestLog.error({ err: error }, "Failed to generate study questions");
     Sentry.captureException(error, {
-      tags: { route: "api:studio-questions", method: "POST" },
+      tags: { route: "api:study:studio:questions", method: "POST" },
     });
     return NextResponse.json(
       { error: "Question generation failed — try again", code: "UNKNOWN" },

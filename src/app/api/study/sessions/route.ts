@@ -11,8 +11,8 @@ const studySessionPostSchema = z.object({}).strict();
 
 export async function POST(request: NextRequest) {
   const requestLog = createRequestLogger(
-    'api:study-session',
-    createRequestLogContext(request, 'POST', '/api/study-session'),
+    'api:study:sessions',
+    createRequestLogContext(request, 'POST', '/api/study/sessions'),
   );
 
   try {
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     }
     requestLog.error({ err: error }, 'Failed to ensure active session');
     Sentry.captureException(error, {
-      tags: { route: 'api:study-session', method: 'POST' },
+      tags: { route: 'api:study:sessions', method: 'POST' },
     });
     return NextResponse.json(
       { error: 'Failed to ensure active session' },
