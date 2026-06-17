@@ -13,9 +13,9 @@ covering test cell is **GAP** has no real automated test and must not be claimed
 | US-01 | UC-01 | `POST /api/upload/text` | TS-01, TS-02, TS-03 | `tests/vitest/integration/api/upload-routes.test.ts` |
 | US-02 | UC-01 | `POST /api/upload` | TS-04 | `tests/vitest/integration/api/upload-routes.test.ts` |
 | US-10 | UC-09 | `POST /api/translate` | TS-14, TS-15 | `tests/vitest/integration/api/translation-vocabulary-routes.test.ts` |
-| US-04 | UC-03 | `POST /api/study/questions` | TS-22 | `tests/vitest/integration/api/studio-questions-route.test.ts` |
-| US-09 | UC-08 | `GET /api/study/artifacts` | TS-13 | `src/server/modules/study/passage/studio-artifacts-service.test.ts` |
-| US-14 | UC-12 | `GET/POST /api/study/chat` | TS-21 | `tests/vitest/integration/api/study-chat-route.test.ts` |
+| US-04 | UC-03 | `POST /api/study/studio/questions` | TS-22 | `tests/vitest/integration/api/studio-questions-route.test.ts` |
+| US-09 | UC-08 | `GET /api/study/studio/artifacts` | TS-13 | `src/server/modules/study/passage/studio-artifacts-service.test.ts` |
+| US-14 | UC-12 | `GET/POST /api/study/studio/chat` | TS-21 | `tests/vitest/integration/api/study-chat-route.test.ts` |
 | US-13 | UC-11 | `GET /api/dictionary/lookup` | TS-19, TS-20 | `tests/vitest/integration/api/dictionary-lookup-route.test.ts` |
 | US-13 | UC-11 | `GET /api/dictionary/search` | TS-19, TS-20 | `tests/vitest/integration/api/dictionary-search-route.test.ts` |
 | US-13 | UC-11 | `GET /api/dictionary/suggest` | TS-19, TS-20 | `tests/vitest/integration/api/dictionary-suggest-route.test.ts` |

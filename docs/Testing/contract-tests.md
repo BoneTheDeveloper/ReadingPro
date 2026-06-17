@@ -14,7 +14,7 @@ Contract tests protect stable API request and response shapes, especially routes
 - `GET /api/dictionary/search`
 - `GET /api/dictionary/suggest`
 - `GET /api/dictionary/entries/[entryId]`
-- `GET/POST /api/study/chat`
+- `GET/POST /api/study/studio/chat`
 - `GET /api/cards/due`
 - `POST /api/cards/review`
 - `GET /api/progress/stats`

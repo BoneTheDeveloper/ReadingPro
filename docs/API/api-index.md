@@ -28,12 +28,12 @@ The largest domain — see the [Study domain index](Routes/study/README.md).
 | `POST` | `/api/study/passages` | [passages.md](Routes/study/passages.md) |
 | `DELETE` | `/api/study/passages/[id]` | [passages.md](Routes/study/passages.md) |
 | `POST` | `/api/study/passages/[id]/simplify` | [passages.md](Routes/study/passages.md) |
-| `POST`/`GET` | `/api/study/chat` | [chat.md](Routes/study/chat.md) |
 | `POST` | `/api/study/sessions` | [sessions.md](Routes/study/sessions.md) |
-| `GET` | `/api/study/artifacts` | [artifacts.md](Routes/study/artifacts.md) |
-| `GET` | `/api/study/artifacts/[id]` | [artifacts.md](Routes/study/artifacts.md) |
-| `POST`/`DELETE` | `/api/study/artifacts/[id]/quiz-result` | [artifacts.md](Routes/study/artifacts.md) |
-| `POST` | `/api/study/questions` | [questions.md](Routes/study/questions.md) |
+| `POST`/`GET` | `/api/study/studio/chat` | [studio/chat.md](Routes/study/studio/chat.md) |
+| `GET` | `/api/study/studio/artifacts` | [studio/artifacts.md](Routes/study/studio/artifacts.md) |
+| `GET` | `/api/study/studio/artifacts/[id]` | [studio/artifacts.md](Routes/study/studio/artifacts.md) |
+| `POST`/`DELETE` | `/api/study/studio/artifacts/[id]/quiz-result` | [studio/artifacts.md](Routes/study/studio/artifacts.md) |
+| `POST` | `/api/study/studio/questions` | [studio/questions.md](Routes/study/studio/questions.md) |
 
 ### Translation
 

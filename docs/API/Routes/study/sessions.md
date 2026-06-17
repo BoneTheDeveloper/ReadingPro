@@ -70,6 +70,12 @@ otherwise creates a new session window.
   in a `QuizResult` (1:1 with the quiz `StudioArtifact`), not in the session.
 - No client or server cache is expected.
 
+## Observability
+
+- Request logger / Sentry route tag: `api:study:sessions`
+- Span: `db:session-ensure-active`
+- Logged request path: `POST /api/study/sessions`
+
 ## Implementation References
 
 - Route: `src/app/api/study/sessions/route.ts`

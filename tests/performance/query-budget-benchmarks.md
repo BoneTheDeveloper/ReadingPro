@@ -76,7 +76,7 @@ tables when query-count behavior becomes important for the route.
 | Route | Current budget status |
 |-------|-----------------------|
 | `POST /api/vocabulary` | not benchmarked |
-| `POST /api/study/chat` | not benchmarked |
+| `POST /api/study/studio/chat` | not benchmarked |
 | `POST /api/study/sessions` | not benchmarked |
 | `GET /api/cards/due` | not benchmarked |
 | `POST /api/cards/review` | not benchmarked |

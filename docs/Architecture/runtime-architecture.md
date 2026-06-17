@@ -61,7 +61,7 @@ Route handlers live under `src/app/api/**/route.ts`. They parse external input, 
 
 Streaming exception:
 
-- `POST /api/study/chat` returns an AI SDK UI message stream response.
+- `POST /api/study/studio/chat` returns an AI SDK UI message stream response.
 
 ## Runtime Boundary Rules
 

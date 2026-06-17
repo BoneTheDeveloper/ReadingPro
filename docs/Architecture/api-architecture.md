@@ -51,14 +51,14 @@ src/app/api/dictionary/lookup/route.ts
   -> src/server/modules/dictionary/lookup/lookup.repository.ts
   -> src/server/modules/dictionary/shared/dictionary-response-schema.ts
 
-src/app/api/study/questions/route.ts
+src/app/api/study/studio/questions/route.ts
   -> src/server/modules/study/passage/passage-study.service.ts
   -> src/contracts/study/study-response-schema.ts
 
 src/app/api/study-results/route.ts
   -> src/server/modules/study/passage/study-results-service.ts
 
-src/app/api/study/artifacts/route.ts
+src/app/api/study/studio/artifacts/route.ts
   -> src/server/modules/study/passage/studio-artifacts-service.ts
   -> src/contracts/study/studio-artifact-types.ts
 
@@ -77,9 +77,9 @@ src/features/study/ui/upload/study-upload-modal.tsx
 - Upload: `/api/upload`, `/api/upload/text`
 - Translation/vocabulary: `/api/translate`, `/api/vocabulary`
 - Dictionary: `/api/dictionary/*`
-- Study chat/session: `/api/study/chat`, `/api/study/sessions`
+- Study chat/session: `/api/study/studio/chat`, `/api/study/sessions`
 - Study results: `/api/study-results`
-- Studio artifacts: `/api/study/artifacts` (quiz outcomes persist as a `QuizResult` child of a `StudioArtifact` via server actions, not a dedicated route)
+- Studio artifacts: `/api/study/studio/artifacts` (quiz outcomes persist as a `QuizResult` child of a `StudioArtifact` via server actions, not a dedicated route)
 - Cards/progress: `/api/cards/*`, `/api/progress/stats`
 - Health/dev/test: `/api/health`, `/api/local-blob/[pathname]`, `/api/test/*`
 

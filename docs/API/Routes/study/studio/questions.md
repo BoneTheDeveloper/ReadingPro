@@ -1,6 +1,6 @@
 # Study Questions API
 
-Part of the **Study** domain. See [Study domain index](README.md).
+Part of the **Study** domain. See [Study domain index](../README.md).
 
 ## Purpose
 
@@ -11,7 +11,7 @@ authenticated user.
 
 | Method | Path | Purpose |
 |--------|------|---------|
-| `POST` | `/api/study/questions` | Generate a fresh quiz question set for a passage. |
+| `POST` | `/api/study/studio/questions` | Generate a fresh quiz question set for a passage. |
 
 ## Auth And Ownership
 
@@ -94,9 +94,15 @@ Error:
 | `502` | AI/service generation completed without a usable question set. |
 | `500` | Unexpected generation failure. |
 
+## Observability
+
+- Request logger / Sentry route tag: `api:study:studio:questions`
+- Spans: `api:study:studio:questions-parse-body`, `api:study:studio:questions-authenticate`
+- Logged request path: `POST /api/study/studio/questions`
+
 ## Implementation References
 
-- Route: `src/app/api/study/questions/route.ts`
+- Route: `src/app/api/study/studio/questions/route.ts`
 - Service: `src/server/modules/study/passage/passage-study.service.ts`
 - Shared schema: `src/contracts/study/study-response-schema.ts`
 - Client API helper: `src/features/study/api-client/studio-questions-client.ts`

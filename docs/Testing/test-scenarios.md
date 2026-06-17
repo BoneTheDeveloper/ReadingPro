@@ -30,8 +30,8 @@ with no real covering file is marked **GAP** and must not be claimed as covered.
 | TS-18 | vocabulary status/delete operations | `PATCH /status` or `DELETE /[id]` is called | item status updates or the item is removed | US-12 / UC-10 | `tests/vitest/integration/api/vocabulary-status-and-delete-routes.test.ts` |
 | TS-19 | a seeded dictionary | lookup/search/suggest/entry-detail routes are queried | matching entries return, grouped by headword | US-13 / UC-11 | `tests/vitest/integration/api/dictionary-lookup-route.test.ts`, `dictionary-search-route.test.ts`, `dictionary-suggest-route.test.ts`, `dictionary-entry-detail-route.test.ts` |
 | TS-20 | dictionary service queries | lookup/search/suggest/entry-detail services run | normalized matching and grouping behave correctly | US-13 / UC-11 | `src/server/modules/dictionary/lookup/lookup.service.test.ts`, `search/search.service.test.ts`, `suggest/suggest.service.test.ts`, `entry-detail/entry-detail.service.test.ts` |
-| TS-21 | an owned passage and a tutor question | `POST /api/study/chat` is called | recent messages + context load, a response streams, answer persists | US-14 / UC-12 | `tests/vitest/integration/api/study-chat-route.test.ts`, `tests/vitest/integration/components/study/study-chat-panel.integration.test.tsx` |
-| TS-22 | generated studio questions | `POST /api/study/questions` is called | questions generate against the passage | US-04 / UC-03 | `tests/vitest/integration/api/studio-questions-route.test.ts` |
+| TS-21 | an owned passage and a tutor question | `POST /api/study/studio/chat` is called | recent messages + context load, a response streams, answer persists | US-14 / UC-12 | `tests/vitest/integration/api/study-chat-route.test.ts`, `tests/vitest/integration/components/study/study-chat-panel.integration.test.tsx` |
+| TS-22 | generated studio questions | `POST /api/study/studio/questions` is called | questions generate against the passage | US-04 / UC-03 | `tests/vitest/integration/api/studio-questions-route.test.ts` |
 
 ## Notes
 
