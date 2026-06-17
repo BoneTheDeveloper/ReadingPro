@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
-import { POST as createStudySessionRoute } from "@/app/api/study-session/route";
+import { POST as createStudySessionRoute } from "@/app/api/study/sessions/route";
 import { studySessionResponseSchema, toStudySessionDto } from "@/contracts/study/study-response-schema";
 import { studySessionFixture, userProfileFixture } from "../../fixtures";
 import { createJsonRequest, parseJsonResponse } from "../../helpers/api";
@@ -70,7 +70,7 @@ describe("study-session API contracts", () => {
   });
 
   it("returns 400 for invalid JSON", async () => {
-    const response = await createStudySessionRoute(new NextRequest("https://test/api/study-session", {
+    const response = await createStudySessionRoute(new NextRequest("https://test/api/study/sessions", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: "not-json",

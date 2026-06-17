@@ -1,12 +1,13 @@
 "use client"
 
 import type { QuestionData } from "@/features/study/model/types"
+import { STUDY_API_ROUTES } from "./api-utils"
 
 /**
  * Load artifact detail (e.g. quiz questions).
  */
 export async function getArtifactDetail(artifactId: string) {
-  const res = await fetch(`/api/studio-artifacts/${artifactId}`)
+  const res = await fetch(STUDY_API_ROUTES.artifact(artifactId))
   const json = await res.json()
   
   if (!res.ok) {
@@ -20,7 +21,7 @@ export async function getArtifactDetail(artifactId: string) {
  * Record a quiz result for an artifact.
  */
 export async function recordQuizResult(artifactId: string, stats: { correctCount: number; totalQuestions: number }) {
-  const res = await fetch(`/api/studio-artifacts/${artifactId}/quiz-result`, {
+  const res = await fetch(STUDY_API_ROUTES.quizResult(artifactId), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(stats),
@@ -38,7 +39,7 @@ export async function recordQuizResult(artifactId: string, stats: { correctCount
  * Reset a quiz result for an artifact.
  */
 export async function resetQuizResult(artifactId: string) {
-  const res = await fetch(`/api/studio-artifacts/${artifactId}/quiz-result`, {
+  const res = await fetch(STUDY_API_ROUTES.quizResult(artifactId), {
     method: "DELETE",
   })
   

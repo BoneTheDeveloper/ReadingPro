@@ -121,7 +121,7 @@ describe("StudyChatPanel", () => {
     renderWithUser(<StudyChatPanel passageId="passage-one" />);
 
     await waitFor(() => {
-      expect(fetch).toHaveBeenCalledWith("/api/study-chat?passageId=passage-one");
+      expect(fetch).toHaveBeenCalledWith("/api/study/chat?passageId=passage-one");
       expect(useChatState.setMessages).toHaveBeenCalledWith([
         {
           id: "msg-1",
@@ -135,7 +135,7 @@ describe("StudyChatPanel", () => {
           op: "http.client",
           attributes: expect.objectContaining({
             "study.passage_id": "passage-one",
-            "url.path": "/api/study-chat",
+            "url.path": "/api/study/chat",
           }),
         }),
         expect.any(Function),
@@ -158,7 +158,7 @@ describe("StudyChatPanel", () => {
     rerender(<StudyChatPanel passageId="passage-two" />);
 
     await waitFor(() => {
-      expect(fetch).toHaveBeenCalledWith("/api/study-chat?passageId=passage-two");
+      expect(fetch).toHaveBeenCalledWith("/api/study/chat?passageId=passage-two");
       expect(useChatState.setMessages).toHaveBeenLastCalledWith([]);
     });
 
@@ -186,7 +186,7 @@ describe("StudyChatPanel", () => {
           message: "Study chat history schema error",
           data: expect.objectContaining({
             passageId: "passage-one",
-            route: "/api/study-chat",
+            route: "/api/study/chat",
           }),
         }),
       );

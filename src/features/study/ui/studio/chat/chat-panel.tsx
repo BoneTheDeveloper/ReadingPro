@@ -9,6 +9,7 @@ import { Send, Loader2, AlertCircle, RotateCw } from "lucide-react";
 import { Button } from "@/ui/primitives/button";
 import { cn } from "@/contracts/utils";
 import { studyChatHistoryResponseSchema } from "@/contracts/study/study-response-schema";
+import { STUDY_API_ROUTES } from "@/features/study/api-client/api-utils";
 
 interface StudyChatPanelProps {
   passageId: string;
@@ -23,7 +24,7 @@ export function StudyChatPanel({ passageId, prefilledQuestion }: StudyChatPanelP
   const transport = useMemo(
     () =>
       new DefaultChatTransport({
-        api: "/api/study-chat",
+        api: STUDY_API_ROUTES.chat,
         body: { passageId },
       }),
     [passageId],
@@ -50,12 +51,12 @@ export function StudyChatPanel({ passageId, prefilledQuestion }: StudyChatPanelP
             attributes: {
               "study.passage_id": passageId,
               "http.request.method": "GET",
-              "url.path": "/api/study-chat",
+              "url.path": STUDY_API_ROUTES.chat,
             },
           },
           () =>
             fetch(
-              `/api/study-chat?passageId=${encodeURIComponent(passageId)}`,
+              `${STUDY_API_ROUTES.chat}?passageId=${encodeURIComponent(passageId)}`,
             ),
         );
         if (!response.ok) {
@@ -80,7 +81,7 @@ export function StudyChatPanel({ passageId, prefilledQuestion }: StudyChatPanelP
             message: "Study chat history schema error",
             data: {
               passageId,
-              route: "/api/study-chat",
+              route: STUDY_API_ROUTES.chat,
             },
           });
           if (isMounted) setMessages([]);

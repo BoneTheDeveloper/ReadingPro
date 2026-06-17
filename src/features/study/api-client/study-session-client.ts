@@ -7,7 +7,7 @@ import { STUDY_API_ROUTES, type StudyApiResult } from "./api-utils";
 export async function ensureStudySession(): Promise<StudyApiResult<{
   sessionId: string;
 }>> {
-  const payload = await postJson(STUDY_API_ROUTES.studySession, {}, studySessionResponseSchema);
+  const payload = await postJson(STUDY_API_ROUTES.sessions, {}, studySessionResponseSchema);
   if ("error" in payload) return { error: payload.error };
   return { sessionId: payload.data.id };
 }

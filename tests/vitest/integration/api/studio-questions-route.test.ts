@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { POST as generateQuestionsRoute } from "@/app/api/studio-questions/route";
+import { POST as generateQuestionsRoute } from "@/app/api/study/questions/route";
 import {
   generatedStudyQuestionsSuccessResponseSchema,
 } from "@/contracts/study/study-response-schema";
@@ -79,7 +79,7 @@ beforeEach(() => {
   routeMocks.getAuthenticatedUser.mockResolvedValue(userProfileFixture);
 });
 
-describe("POST /api/studio-questions", () => {
+describe("POST /api/study/questions", () => {
   it("generates questions for the authenticated user's passage", async () => {
     routeMocks.generateQuestionsForPassage.mockResolvedValue({ artifact: generatedArtifact, questions: [generatedQuestion] });
 
@@ -110,7 +110,7 @@ describe("POST /api/studio-questions", () => {
   it("rejects malformed and invalid bodies before generation", async () => {
     await expectJsonError(
       await generateQuestionsRoute(
-        new NextRequest("https://english-reading.test/api/studio-questions", {
+        new NextRequest("https://english-reading.test/api/study/questions", {
           method: "POST",
           body: "{",
         }),

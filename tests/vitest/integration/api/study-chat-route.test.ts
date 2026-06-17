@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { GET as getStudyChatHistory, POST as studyChatRoute } from "@/app/api/study-chat/route";
+import { GET as getStudyChatHistory, POST as studyChatRoute } from "@/app/api/study/chat/route";
 import { streamText } from "ai";
 import { studyChatHistoryResponseSchema } from "@/contracts/study/study-response-schema";
 import { passageFixture, userProfileFixture } from "../../fixtures";
@@ -40,7 +40,7 @@ beforeEach(() => {
 
 describe("study-chat API contracts", () => {
   it("returns a stable 400 history error when passageId is missing", async () => {
-    const response = await getStudyChatHistory(new NextRequest("https://english-reading.test/api/study-chat"));
+    const response = await getStudyChatHistory(new NextRequest("https://english-reading.test/api/study/chat"));
 
     expect(response.status).toBe(400);
     expectApiErrorPayload(
@@ -62,7 +62,7 @@ describe("study-chat API contracts", () => {
     expectApiErrorPayload(await stream.json(), "Authentication required.");
 
     const history = await getStudyChatHistory(
-      new NextRequest(`https://english-reading.test/api/study-chat?passageId=${passageFixture.id}`),
+      new NextRequest(`https://english-reading.test/api/study/chat?passageId=${passageFixture.id}`),
     );
     expect(history.status).toBe(401);
     expectApiErrorPayload(
@@ -86,7 +86,7 @@ describe("study-chat API contracts", () => {
   });
 
   it("returns 400 for malformed JSON body", async () => {
-    const request = new NextRequest("https://english-reading.test/api/study-chat", {
+    const request = new NextRequest("https://english-reading.test/api/study/chat", {
       method: "POST",
       headers: { "content-type": "text/plain" },
       body: "this is not json {{{",

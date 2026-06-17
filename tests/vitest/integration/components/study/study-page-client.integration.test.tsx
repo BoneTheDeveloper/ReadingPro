@@ -160,13 +160,13 @@ describe("StudyPageClient", () => {
           return vocabularySaveResponse();
         }
 
-        if (url.startsWith("/api/study-chat")) {
+        if (url.startsWith("/api/study/chat")) {
           return new Response(JSON.stringify({ messages: [] }), {
             status: 200,
           });
         }
 
-        if (url.startsWith("/api/studio-artifacts")) {
+        if (url.startsWith("/api/study/artifacts")) {
           return new Response(JSON.stringify({ success: true, data: { artifacts: [] } }), {
             status: 200,
           });
@@ -358,7 +358,7 @@ describe("StudyPageClient", () => {
       updatedAt: new Date().toISOString(),
     };
     vi.mocked(fetch).mockImplementation(async (input: RequestInfo | URL) => {
-      if (String(input).startsWith("/api/studio-artifacts")) {
+      if (String(input).startsWith("/api/study/artifacts")) {
         return new Response(
           JSON.stringify({ success: true, data: { artifacts: [persistedArtifact] } }),
           { status: 200 },

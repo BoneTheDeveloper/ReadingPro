@@ -17,6 +17,7 @@ import { StudyStudioPanel } from "./studio/studio-panel";
 import { StudyTranslationPopup } from "./studio/translate/translation-popup";
 import { StudyUploadModal } from "./upload-modal";
 import { useStudyActions } from "@/features/study/hooks/use-study-actions";
+import { STUDY_API_ROUTES } from "@/features/study/api-client/api-utils";
 import { useStudyPanelLayout } from "@/features/study/hooks/use-study-panel-layout";
 import { useStudyWorkspaceState } from "@/features/study/hooks/use-study-workspace-state";
 
@@ -282,7 +283,7 @@ export function StudyPageClient({
       },
     }));
 
-    fetch(`/api/studio-artifacts?passageId=${passageId}`, { signal: controller.signal })
+    fetch(`${STUDY_API_ROUTES.artifacts}?passageId=${passageId}`, { signal: controller.signal })
       .then(async (r) => {
         if (!r.ok) {
           throw new Error(`Failed to fetch study artifacts (${r.status})`);
