@@ -1,5 +1,5 @@
 import type { TranslationSelection } from "./types";
-import { countWords } from "@/shared/translation/translate-performance";
+import { countWords } from "@/contracts/translation/translate-performance";
 
 type SelectionRect = TranslationSelection["selectionRect"];
 type SelectionPoint = { x: number; y: number };

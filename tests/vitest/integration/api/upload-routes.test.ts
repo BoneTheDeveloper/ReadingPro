@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { POST as uploadFileRoute } from "@/app/api/upload/route";
 import { POST as uploadTextRoute } from "@/app/api/upload/text/route";
-import { uploadResponseSchema } from "@/shared/upload/upload-response-schema";
+import { uploadResponseSchema } from "@/contracts/upload/upload-response-schema";
 import { userProfileFixture } from "../../fixtures";
 import { createFile, createJsonRequest, parseJsonResponse } from "../../helpers/api";
 import { expectApiErrorPayload } from "../../helpers/assertions";

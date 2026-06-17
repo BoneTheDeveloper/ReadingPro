@@ -42,7 +42,7 @@ prisma/
 | Route handlers | `src/app/api/**/route.ts` | Thin HTTP adapters. They authenticate, validate inputs via `shared/`, and delegate to `server/modules`. |
 | Server Modules | `src/server/modules/<domain>/**` | Core business logic services. Used by API routes and Server Components. |
 | Feature Components | `src/features/<feature>/ui/**` | Rich frontend features. They use `hooks` for state/fetching and `api` for backend communication. |
-| Feature API | `src/features/<feature>/api/**` | Centralized frontend API clients. The only way frontend features talk to `/api/*`. |
+| Feature API | `src/features/<feature>/api-client/**` | Centralized frontend API clients. The only way frontend features talk to `/api/*`. |
 
 ## Source Boundary Rules
 
@@ -50,9 +50,9 @@ prisma/
 |------|---------|----------|
 | `src/app` | Routing and delivery. | `src/app/api/study-session/route.ts`, locale pages. |
 | `src/server` | All backend-only logic. | `src/server/db/client.ts`, `src/server/modules/study`, `src/server/ai`. |
-| `src/shared` | Isomorphic contracts. | `src/shared/study/study-response-schema.ts`, `src/shared/api/api-client-utils.ts`. |
+| `src/contracts` | Isomorphic contracts. | `src/contracts/study/study-response-schema.ts`, `src/contracts/http/api-client-utils.ts`. |
 | `src/features` | Frontend feature logic. | `src/features/study/ui`, `src/features/dictionary/hooks`. |
-| `src/components` | Shared UI atoms. | `src/components/ui/button.tsx`. |
+| `src/ui` | Shared UI atoms. | `src/ui/primitives/button.tsx`. |
 ```
 
 ## Feature Cross-reference

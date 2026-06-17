@@ -1,6 +1,6 @@
 import 'server-only';
 import * as Sentry from "@sentry/nextjs";
-import { createModuleLogger } from "@/server/core/logger";
+import { createModuleLogger } from "@/server/observability/logger";
 import { upsertVocabularyItem } from "@/server/db/vocabulary-queries";
 import { getOwnedTranslationSource } from "@/server/db/translation-queries";
 

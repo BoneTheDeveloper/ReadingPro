@@ -2,14 +2,14 @@ import 'server-only';
 import * as Sentry from '@sentry/nextjs';
 import { generateComprehensionQuestions, type GeneratedQuestion } from '@/server/ai/question-generator';
 import { simplifyContent } from '@/server/ai/content-simplifier';
-import { createModuleLogger } from '@/server/core/logger';
+import { createModuleLogger } from '@/server/observability/logger';
 import { db } from '@/server/db/client';
 import {
   getHeuristicCEFR,
   getTargetCEFRLevel,
   isSimplifiableCEFRLevel,
   type CEFRLevel,
-} from '@/shared/domain/cefr';
+} from '@/contracts/domain/cefr';
 
 const log = createModuleLogger('features:upload:content-analysis');
 

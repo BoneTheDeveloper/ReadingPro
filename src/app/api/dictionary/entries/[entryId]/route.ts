@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 import { getAuthenticatedUser } from "@/server/auth/auth-utils";
-import { createRequestLogContext, createRequestLogger } from "@/server/core/logger";
+import { createRequestLogContext, createRequestLogger } from "@/server/observability/logger";
 import {
   getPrismaQueryMetrics,
   runWithPrismaQueryMetrics,
@@ -13,7 +13,7 @@ import {
   shouldIncludeDictionaryPerformanceMetrics,
 } from "@/server/modules/dictionary/shared/dictionary-performance";
 import { getDictionaryEntryDetail } from "@/server/modules/dictionary/entry-detail/entry-detail.service";
-import type { DictionaryEntryDto } from "@/shared/dictionary/dictionary-dtos";
+import type { DictionaryEntryDto } from "@/contracts/dictionary/dictionary-dtos";
 
 const entryIdSchema = z.string().uuid();
 

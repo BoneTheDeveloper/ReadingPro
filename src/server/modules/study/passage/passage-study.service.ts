@@ -2,18 +2,18 @@ import 'server-only';
 import * as Sentry from "@sentry/nextjs";
 import { generateComprehensionQuestions, type GeneratedQuestion } from "@/server/ai/question-generator";
 import { simplifyContent } from "@/server/ai/content-simplifier";
-import { createModuleLogger } from "@/server/core/logger";
+import { createModuleLogger } from "@/server/observability/logger";
 import { db } from "@/server/db/client";
 import { questionDataSchema } from "@/server/db/passage-queries";
-import { getTargetCEFRLevel, isSimplifiableCEFRLevel, type CEFRLevel } from "@/shared/domain/cefr";
-import type { GeneratedStudyQuestionDto } from "@/shared/study/study-response-schema";
+import { getTargetCEFRLevel, isSimplifiableCEFRLevel, type CEFRLevel } from "@/contracts/domain/cefr";
+import type { GeneratedStudyQuestionDto } from "@/contracts/study/study-response-schema";
 import {
   STUDIO_GENERATION_TIMEOUT_MS,
   type StudioArtifact,
   type StudioArtifactErrorCode,
   type StudioArtifactStatus,
   type StudioArtifactType,
-} from "@/shared/study/studio-artifact-types";
+} from "@/contracts/study/studio-artifact-types";
 
 const log = createModuleLogger("lib:study:passage-service");
 

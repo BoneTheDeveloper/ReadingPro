@@ -3,9 +3,9 @@
 import { useEffect, useState, useCallback, useRef } from "react"
 import { useTranslations } from "next-intl"
 import { Trophy, AlertCircle, RefreshCw } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { recordQuizResult, resetQuizResult } from "@/features/study/api/studio-artifacts-client"
+import { Button } from "@/ui/primitives/button"
+import { Card, CardContent } from "@/ui/primitives/card"
+import { recordQuizResult, resetQuizResult } from "@/features/study/api-client/studio-artifacts-client"
 
 interface QuizResultsProps {
   correctCount: number

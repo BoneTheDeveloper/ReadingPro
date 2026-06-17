@@ -36,5 +36,5 @@ GET /api/study-chat?passageId=...
 
 - Route: `src/app/api/study-chat/route.ts`
 - UI: `src/features/study/ui/studio/chat/chat-panel.tsx`
-- Prompt helper: `src/lib/ai/prompt-utils.ts`
-- Model config: `src/lib/ai/model-config.ts`
+- Prompt helper: `src/server/ai/prompt-utils.ts`
+- Model config: `src/server/ai/model-config.ts`

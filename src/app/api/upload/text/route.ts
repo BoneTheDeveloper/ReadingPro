@@ -1,10 +1,10 @@
 import { z } from 'zod';
 import { NextRequest, NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
-import { validateTextContent } from '@/shared/upload/upload-validation';
+import { validateTextContent } from '@/contracts/upload/upload-validation';
 import { getAuthenticatedUser } from '@/server/auth/auth-utils';
 import { isAuthenticationRequiredError } from '@/server/http/route-errors';
-import { createRequestLogContext, createRequestLogger } from '@/server/core/logger';
+import { createRequestLogContext, createRequestLogger } from '@/server/observability/logger';
 import { analyzeAndPersistContent } from '@/server/modules/upload/content-analysis/content-analysis.service';
 
 const textUploadSchema = z.object({

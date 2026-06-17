@@ -79,7 +79,7 @@ Any status can be manually overridden from the vocabulary page.
 ## Code Paths
 
 - Route: `src/app/api/vocabulary/route.ts`
-- DB queries: `src/lib/db/vocabulary-queries.ts` (new)
-- Set queries: `src/lib/db/vocabulary-set-queries.ts` (new)
+- DB queries: `src/server/db/vocabulary-queries.ts` (new)
+- Set queries: `src/server/db/vocabulary-set-queries.ts` (new)
 - UI: `src/features/vocabulary/` (new)
-- Dictionary enrichment: `src/lib/dictionary/` (existing)
+- Dictionary enrichment: `src/server/modules/dictionary/` (existing)

@@ -4,7 +4,7 @@ import { z } from "zod";
 import { reviewVocabularyItem } from "@/server/db/vocabulary-queries";
 import { getAuthenticatedUser } from "@/server/auth/auth-utils";
 import { isAuthenticationRequiredError, isOwnershipMissError } from "@/server/http/route-errors";
-import { createRequestLogContext, createRequestLogger } from "@/server/core/logger";
+import { createRequestLogContext, createRequestLogger } from "@/server/observability/logger";
 
 const reviewSchema = z.object({
   isCorrect: z.boolean(),

@@ -4,7 +4,7 @@ import { z } from "zod";
 import { addItemToSet, verifySetOwnership } from "@/server/db/vocabulary-set-queries";
 import { getAuthenticatedUser } from "@/server/auth/auth-utils";
 import { isAuthenticationRequiredError, isOwnershipMissError } from "@/server/http/route-errors";
-import { createRequestLogContext, createRequestLogger } from "@/server/core/logger";
+import { createRequestLogContext, createRequestLogger } from "@/server/observability/logger";
 
 const addItemsSchema = z.object({
   itemIds: z.array(z.string().uuid()).min(1).max(50),

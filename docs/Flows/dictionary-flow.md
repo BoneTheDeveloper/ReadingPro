@@ -46,6 +46,6 @@ Dictionary data is shared seed data:
 ## Code Paths
 
 - Routes: `src/app/api/dictionary/**/route.ts`
-- Services: `src/lib/dictionary/**/service.ts`
-- Repositories: `src/lib/dictionary/**/repository.ts`
-- DTO builders: `src/lib/dictionary/shared/*`
+- Services: `src/server/modules/dictionary/**/service.ts`
+- Repositories: `src/server/modules/dictionary/**/repository.ts`
+- DTO builders: `src/server/modules/dictionary/shared/*`

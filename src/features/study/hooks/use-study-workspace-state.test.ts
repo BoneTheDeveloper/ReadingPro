@@ -1,10 +1,10 @@
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { deletePassage } from "@/features/study/api/passages-client";
+import { deletePassage } from "@/features/study/api-client/passages-client";
 import type { PassageData } from "../model/types";
 import { useStudyWorkspaceState } from "./use-study-workspace-state";
 
-vi.mock("@/features/study/api/passages-client", () => ({
+vi.mock("@/features/study/api-client/passages-client", () => ({
   deletePassage: vi.fn(),
 }));
 

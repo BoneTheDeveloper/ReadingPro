@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { GET as getStudyChatHistory, POST as studyChatRoute } from "@/app/api/study-chat/route";
 import { streamText } from "ai";
-import { studyChatHistoryResponseSchema } from "@/shared/study/study-response-schema";
+import { studyChatHistoryResponseSchema } from "@/contracts/study/study-response-schema";
 import { passageFixture, userProfileFixture } from "../../fixtures";
 import { createJsonRequest, parseJsonResponse } from "../../helpers/api";
 import { expectApiErrorPayload } from "../../helpers/assertions";

@@ -5,7 +5,7 @@ import { getAuthenticatedUser } from "@/server/auth/auth-utils";
 import {
   createRequestLogContext,
   createRequestLogger,
-} from "@/server/core/logger";
+} from "@/server/observability/logger";
 import { listVocabularyItems } from "@/server/db/vocabulary-queries";
 import { isAuthenticationRequiredError } from "@/server/http/route-errors";
 

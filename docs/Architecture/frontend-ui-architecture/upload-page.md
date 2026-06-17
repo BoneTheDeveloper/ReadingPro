@@ -62,8 +62,8 @@ Boundary rules:
 - `features/upload/model` owns upload schemas and types.
 - `features/upload/services` owns upload-specific workflow, including `createUploadedPassageService`.
 - `features/study/ui/upload` owns the modal shell and Study workspace callbacks only.
-- `src/lib/passages/services` owns reusable Passage domain services, including `createPassageService`.
-- `src/lib/passages/repositories` owns passage repository/database access.
+- `src/server/modules` owns reusable Passage domain services, including `createPassageService`.
+- `src/server/db` owns passage repository/database access.
 - `features/upload` must not import Study workspace UI or Study panel state.
 
 Recommended flow:
@@ -79,8 +79,8 @@ StudyUploadModal
 Service placement:
 
 - Keep upload input validation, file/text normalization, and upload-specific workflow in `features/upload`.
-- Move reusable passage creation, reads, ownership checks, and repository access to `src/lib/passages`.
-- If a service only wraps a client-side API call, put it in `features/upload/api`, not in `src/lib`.
+- Move reusable passage creation, reads, ownership checks, and repository access to `src/server/modules`.
+- If a service only wraps a client-side API call, put it in `features/upload/api-client`, not in `src/server/modules`.
 
 ## Layout
 

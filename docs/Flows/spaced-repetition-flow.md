@@ -53,7 +53,7 @@ This is a fixed-interval MVP. Full SM-2 integration for vocabulary is deferred.
 
 - Card review operates on `QuestionReview` records tied to passage questions. It uses SM-2 with quality ratings 0-5.
 - Vocabulary review operates on `VocabularyItem` records with a simpler 3-state model (NEW/LEARNING/MASTERED).
-- Both utilize `src/lib/spaced-repetition/scheduler.ts` to ensure all "time-until-next" math is centralized, even if the algorithms differ.
+- Both utilize `src/server/modules/spaced-repetition/scheduler.ts` to ensure all "time-until-next" math is centralized, even if the algorithms differ.
 
 ## Routes
 
@@ -87,7 +87,7 @@ This is a fixed-interval MVP. Full SM-2 integration for vocabulary is deferred.
 ## Code Paths
 
 ### Spaced Repetition (SRS)
-- Logic: `src/lib/spaced-repetition/scheduler.ts` (SM-2 + Simple)
-- Question reviews: `src/lib/db/quiz/quiz-review.ts`
-- Vocabulary reviews: `src/lib/db/vocabulary-queries.ts`
+- Logic: `src/server/modules/spaced-repetition/scheduler.ts` (SM-2 + Simple)
+- Question reviews: `src/server/db/quiz/quiz-review.ts`
+- Vocabulary reviews: `src/server/db/vocabulary-queries.ts`
 - Progress UI: `src/features/progress/progress-dashboard.tsx`

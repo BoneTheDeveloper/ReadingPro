@@ -36,5 +36,5 @@ Unauthenticated requests return `{ "error": "Authentication required." }` with
 
 - Progress route: `src/app/api/progress/stats/route.ts`
 - Session route: `src/app/api/study-session/route.ts`
-- Progress stats: `src/lib/db/quiz/quiz-review.ts`
-- Session queries: `src/lib/db/study-session-queries.ts`
+- Progress stats: `src/server/db/quiz/quiz-review.ts`
+- Session queries: `src/server/db/study-session-queries.ts`

@@ -13,7 +13,7 @@ Use these docs as the source of truth for details:
 | Page and feature UI composition | [Architecture/frontend-ui-architecture/page-composition-conventions.md](Architecture/frontend-ui-architecture/page-composition-conventions.md) |
 | API route implementation | [API/api-implementation-conventions.md](API/api-implementation-conventions.md) |
 | API route docs and contracts | [API/api-index.md](API/api-index.md) |
-| Database and migrations | [Architecture/database-architecture.md](Architecture/database-architecture.md), [../prisma/migrations-guide.md](../prisma/migrations-guide.md) |
+| Database and migrations | [../prisma/schema/](../prisma/schema/), [../prisma/migrations-guide.md](../prisma/migrations-guide.md) |
 | Testing | [Testing/testing-strategy.md](Testing/testing-strategy.md) |
 | Root/config file placement | repo root, next to `package.json` |
 
@@ -21,7 +21,7 @@ Use these docs as the source of truth for details:
 
 - Keep boundaries explicit: UI, feature orchestration, API boundaries, domain logic, persistence, and operations should live in their owning layers.
 - Prefer the existing project pattern over inventing a new shape.
-- Move shared contracts into `src/shared/<domain>` and backend logic into `src/server/modules/<domain>`.
+- Move shared contracts into `src/contracts/<domain>` and backend logic into `src/server/modules/<domain>`.
 - Keep framework boundary files thin: pages compose features, routes expose HTTP, features communicate via standard API calls.
 - Keep generated code, migrations, tests, scripts, and documentation in their existing owning directories.
 - Do not duplicate detailed contracts or procedures in this file. Link to the canonical doc instead.
@@ -32,9 +32,9 @@ Use these docs as the source of truth for details:
 |------|---------|
 | `src/app` | Next.js route boundaries: pages, layouts, thin API route handlers (HTTP adapters). |
 | `src/server` | Backend layer (enforced `server-only`): database access, AI orchestration, auth logic, and core business services (`modules`). |
-| `src/shared` | Contract layer (pure): Zod schemas, DTOs, and isomorphic utilities used by both client and server. |
+| `src/contracts` | Contract layer (pure): Zod schemas, DTOs, and isomorphic utilities used by both client and server. |
 | `src/features/<feature>` | Frontend feature layer (FSD-lite): UI, hooks, model, and feature-specific API clients. |
-| `src/components` | Shared presentation primitives (UI atoms) and layout components. |
+| `src/ui` | Shared presentation primitives (UI atoms) and layout components. |
 | `prisma` | Modular Prisma schemas, migrations, and seed data. |
 | `tests`, `playwright` | Test suites and runner-owned helpers/config. |
 | `docs` | Current human and agent-readable source-of-truth docs. |
@@ -47,7 +47,7 @@ Use these docs as the source of truth for details:
 - Use feature subfolders `ui`, `hooks`, `model`, and `api` to organize feature-specific frontend logic.
 - Do not create generic catch-all folders like `src/server/services`.
 - Put reusable persistence and backend domain work under `src/server/modules/<domain>`.
-- Put shared API contracts and DTO types under `src/shared/<domain>`.
+- Put shared API contracts and DTO types under `src/contracts/<domain>`.
 - Put client-side fetch wrappers under the owning feature's `api/` directory.
 - Keep tool-specific config beside the owning tool unless the tool requires root discovery.
 

@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
-import { getVocabularySets } from "../api/vocabulary-client";
+import { getVocabularySets } from "../api-client/vocabulary-client";
 import type { VocabularySet } from "../model/vocabulary-types";
 
 interface UseVocabularySetsResult {

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
 import { POST as createStudySessionRoute } from "@/app/api/study-session/route";
-import { studySessionResponseSchema, toStudySessionDto } from "@/shared/study/study-response-schema";
+import { studySessionResponseSchema, toStudySessionDto } from "@/contracts/study/study-response-schema";
 import { studySessionFixture, userProfileFixture } from "../../fixtures";
 import { createJsonRequest, parseJsonResponse } from "../../helpers/api";
 import { expectApiErrorPayload } from "../../helpers/assertions";

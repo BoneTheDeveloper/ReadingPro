@@ -9,7 +9,7 @@
 
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { normalizeDictionaryTerm } from "../../src/shared/dictionary/normalize-dictionary-term";
+import { normalizeDictionaryTerm } from "../../src/contracts/dictionary/normalize-dictionary-term";
 
 interface NormalizedEntry {
   entryKey: string;

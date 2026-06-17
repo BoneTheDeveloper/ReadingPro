@@ -2,9 +2,9 @@
 
 import { useState } from "react"
 import { FileText, AlertCircle, Loader2 } from "lucide-react"
-import { validateTextContent } from "@/shared/upload/upload-validation"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
+import { validateTextContent } from "@/contracts/upload/upload-validation"
+import { Button } from "@/ui/primitives/button"
+import { Textarea } from "@/ui/primitives/textarea"
 
 interface TextInputAreaProps {
   onSubmit: (text: string) => void

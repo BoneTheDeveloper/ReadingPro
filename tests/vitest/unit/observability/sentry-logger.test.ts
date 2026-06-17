@@ -7,7 +7,7 @@ async function importActualSentryCore(dsn: string, nodeEnv = "production") {
   vi.resetModules();
   vi.stubEnv("NEXT_PUBLIC_SENTRY_DSN", dsn);
   vi.stubEnv("NODE_ENV", nodeEnv);
-  return import("@/shared/core/sentry");
+  return import("@/contracts/observability/sentry");
 }
 
 describe("Sentry and logger configuration", () => {
@@ -104,11 +104,11 @@ describe("Sentry and logger configuration", () => {
 
   it("configures the real pino logger with module children in production", async () => {
     vi.resetModules();
-    vi.doUnmock("@/server/core/logger");
+    vi.doUnmock("@/server/observability/logger");
     vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("LOG_LEVEL", "warn");
 
-    const { logger, createModuleLogger } = await import("@/server/core/logger");
+    const { logger, createModuleLogger } = await import("@/server/observability/logger");
     const child = createModuleLogger("observability:test", {
       requestId: "req-1",
       userId: "user-1",
@@ -125,10 +125,10 @@ describe("Sentry and logger configuration", () => {
 
   it("creates request loggers that merge request and event context", async () => {
     vi.resetModules();
-    vi.doUnmock("@/server/core/logger");
+    vi.doUnmock("@/server/observability/logger");
     vi.stubEnv("NODE_ENV", "production");
 
-    const { createRequestLogger } = await import("@/server/core/logger");
+    const { createRequestLogger } = await import("@/server/observability/logger");
     const requestLogger = createRequestLogger("observability:test", {
       requestId: "req-1",
       path: "/api/test",
@@ -162,9 +162,9 @@ describe("Sentry and logger configuration", () => {
     });
 
     vi.resetModules();
-    vi.doUnmock("@/server/core/logger");
+    vi.doUnmock("@/server/observability/logger");
     vi.stubEnv("NODE_ENV", "production");
-    const productionLogger = await import("@/server/core/logger");
+    const productionLogger = await import("@/server/observability/logger");
     const productionError = productionLogger.serializeErrorForLog(prismaError) as Record<string, unknown>;
 
     expect(productionError.message).toBe(
@@ -175,9 +175,9 @@ describe("Sentry and logger configuration", () => {
     expect(productionError.code).toBe("P2021");
 
     vi.resetModules();
-    vi.doUnmock("@/server/core/logger");
+    vi.doUnmock("@/server/observability/logger");
     vi.stubEnv("NODE_ENV", "development");
-    const developmentLogger = await import("@/server/core/logger");
+    const developmentLogger = await import("@/server/observability/logger");
     const developmentError = developmentLogger.serializeErrorForLog(prismaError) as Record<string, unknown>;
 
     expect(developmentError.stack).toEqual(expect.any(String));
@@ -211,10 +211,10 @@ describe("Sentry and logger configuration", () => {
     });
 
     vi.resetModules();
-    vi.doUnmock("@/server/core/logger");
+    vi.doUnmock("@/server/observability/logger");
     vi.stubEnv("NODE_ENV", "production");
 
-    const { compactError, serializeError, serializeErrorForLog } = await import("@/server/core/logger");
+    const { compactError, serializeError, serializeErrorForLog } = await import("@/server/observability/logger");
     const compacted = compactError(prismaError) as Record<string, unknown>;
 
     expect(compacted.type).toBe("PrismaClientValidationError");
@@ -226,10 +226,10 @@ describe("Sentry and logger configuration", () => {
 
   it("keeps non-Prisma error messages unchanged", async () => {
     vi.resetModules();
-    vi.doUnmock("@/server/core/logger");
+    vi.doUnmock("@/server/observability/logger");
     vi.stubEnv("NODE_ENV", "production");
 
-    const { serializeError } = await import("@/server/core/logger");
+    const { serializeError } = await import("@/server/observability/logger");
     const message = [
       "Invalid `input` value",
       "The table `not_a_prisma_hint` is part of user content",

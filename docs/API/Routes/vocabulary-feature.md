@@ -514,7 +514,6 @@ Path params: `id` (set UUID), `itemId` (vocabulary item UUID).
 ## Implementation
 
 - Routes: `src/app/api/vocabulary/route.ts`, `src/app/api/vocabulary/list/route.ts`, `src/app/api/vocabulary/[id]/route.ts`, `src/app/api/vocabulary/[id]/status/route.ts`, `src/app/api/vocabulary/sets/route.ts`, `src/app/api/vocabulary/sets/[id]/route.ts`, `src/app/api/vocabulary/sets/[id]/items/route.ts`, `src/app/api/vocabulary/sets/[id]/items/[itemId]/route.ts`
-- Item queries: `src/lib/db/vocabulary-queries.ts`
-- Set queries: `src/lib/db/vocabulary-set-queries.ts`
+- Item queries: `src/server/db/vocabulary-queries.ts`
+- Set queries: `src/server/db/vocabulary-set-queries.ts`
 - Save flow: `docs/Flows/vocabulary-flow.md`
-- Data model ADR: `docs/ADR/0005-vocabulary-review-mvp-path.md`

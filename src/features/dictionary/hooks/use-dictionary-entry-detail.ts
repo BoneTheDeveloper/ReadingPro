@@ -1,11 +1,11 @@
 "use client"
 
 import { useCallback, useRef, useState } from "react"
-import { getDictionaryEntryDetail } from "../api/dictionary-client"
+import { getDictionaryEntryDetail } from "../api-client/dictionary-client"
 import type {
   DictionaryEntryDto,
   DictionarySuggestItemDto,
-} from "@/shared/dictionary/dictionary-dtos"
+} from "@/contracts/dictionary/dictionary-dtos"
 
 export type DetailStatus = "idle" | "loading" | "found" | "not-found" | "error"
 

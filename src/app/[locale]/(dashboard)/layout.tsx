@@ -1,4 +1,4 @@
-import { DashboardSidebar } from "@/components/layout/dashboard-sidebar";
+import { DashboardSidebar } from "@/ui/layout/dashboard-sidebar";
 
 export default async function DashboardLayout({
   children,

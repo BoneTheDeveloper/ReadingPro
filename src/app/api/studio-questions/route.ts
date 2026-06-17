@@ -3,10 +3,10 @@ import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 import { getAuthenticatedUser } from "@/server/auth/auth-utils";
 import { getZodErrorMessage, isAuthenticationRequiredError, isOwnershipMissError } from "@/server/http/route-errors";
-import { createRequestLogContext, createRequestLogger } from "@/server/core/logger";
+import { createRequestLogContext, createRequestLogger } from "@/server/observability/logger";
 import { generateQuestionsForPassage, PassageStudyServiceError } from "@/server/modules/study/passage/passage-study.service";
-import type { GeneratedStudyQuestionDto } from "@/shared/study/study-response-schema";
-import type { StudioArtifact } from "@/shared/study/studio-artifact-types";
+import type { GeneratedStudyQuestionDto } from "@/contracts/study/study-response-schema";
+import type { StudioArtifact } from "@/contracts/study/studio-artifact-types";
 
 const studyQuestionsPostSchema = z.object({
   passageId: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, "Invalid UUID"),

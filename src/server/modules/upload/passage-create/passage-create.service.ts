@@ -1,7 +1,7 @@
 import 'server-only';
 import * as Sentry from '@sentry/nextjs';
-import { createModuleLogger } from '@/server/core/logger';
-import { getHeuristicCEFR } from '@/shared/domain/cefr';
+import { createModuleLogger } from '@/server/observability/logger';
+import { getHeuristicCEFR } from '@/contracts/domain/cefr';
 import { createPassage } from '@/server/db/passage-queries';
 import type { PassageData } from '@/features/study/model/types';
 

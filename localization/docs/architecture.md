@@ -77,7 +77,7 @@ Both catalogs currently contain the same 212 flattened keys. Top-level namespace
 
 ## Locale-Aware UI Boundaries
 
-- App chrome: `src/components/layout/dashboard-sidebar.tsx`, `language-switcher.tsx`, `user-menu.tsx`, `sign-out-button.tsx`.
+- App chrome: `src/ui/layout/dashboard-sidebar.tsx`, `language-switcher.tsx`, `user-menu.tsx`, `sign-out-button.tsx`.
 - Auth screens: `src/app/[locale]/(auth)/sign-in/page.tsx`, `sign-up/page.tsx`, and `(auth)/layout.tsx`.
 - Dashboard: `src/app/[locale]/page.tsx`.
 - Study workspace: `src/features/study/*`.

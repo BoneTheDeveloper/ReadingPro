@@ -15,9 +15,9 @@ import {
   studyChatHistorySuccessResponseSchema,
   studySessionSuccessResponseSchema,
   toStudySessionDto,
-} from "@/shared/study/study-response-schema";
-import { uploadSuccessResponseSchema } from "@/shared/upload/upload-response-schema";
-import { apiErrorResponseSchema } from "@/shared/api/api-response-schema";
+} from "@/contracts/study/study-response-schema";
+import { uploadSuccessResponseSchema } from "@/contracts/upload/upload-response-schema";
+import { apiErrorResponseSchema } from "@/contracts/http/api-response-schema";
 import { passageFixture, studySessionFixture, userProfileFixture } from "../../fixtures";
 import { createFile, createGetRequest, createJsonRequest, parseJsonResponse, readJsonResponse } from "../../helpers/api";
 import { expectApiErrorPayload, expectApiSuccessPayload } from "../../helpers/assertions";

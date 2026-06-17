@@ -3,7 +3,7 @@ import * as Sentry from "@sentry/nextjs";
 import { getAuthenticatedUser } from "@/server/auth/auth-utils";
 import { deletePassage } from "@/server/db/passage-queries";
 import { isAuthenticationRequiredError } from "@/server/http/route-errors";
-import { createModuleLogger } from "@/server/core/logger";
+import { createModuleLogger } from "@/server/observability/logger";
 
 const log = createModuleLogger("api:study:passages:delete");
 

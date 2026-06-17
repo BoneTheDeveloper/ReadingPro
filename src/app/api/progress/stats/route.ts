@@ -3,7 +3,7 @@ import * as Sentry from '@sentry/nextjs';
 import { getUserProgress } from '@/server/db/quiz/quiz-review';
 import { getAuthenticatedUser } from '@/server/auth/auth-utils';
 import { isAuthenticationRequiredError } from '@/server/http/route-errors';
-import { createRequestLogContext, createRequestLogger } from '@/server/core/logger';
+import { createRequestLogContext, createRequestLogger } from '@/server/observability/logger';
 
 export async function GET(request: NextRequest) {
   const requestLog = createRequestLogger(

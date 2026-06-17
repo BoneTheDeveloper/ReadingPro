@@ -3,8 +3,8 @@ import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Inter, JetBrains_Mono, Literata } from "next/font/google";
-import { VercelSpeedInsights } from "@/components/vercel-speed-insights";
-import { ThemeProvider } from "@/components/theme-provider";
+import { VercelSpeedInsights } from "@/ui/vercel-speed-insights";
+import { ThemeProvider } from "@/ui/theme-provider";
 import { routing } from "@/i18n/routing";
 import "../globals.css";
 

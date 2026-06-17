@@ -2,9 +2,9 @@ import { fireEvent, screen, waitFor } from "@testing-library/react";
 import * as Sentry from "@sentry/nextjs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { StudyPageClient } from "@/features/study/ui/study-workspace-client";
-import { generateStudioQuestions } from "@/features/study/api/studio-questions-client";
-import { simplifyPassage, createPassage } from "@/features/study/api/passages-client";
-import { getArtifactDetail } from "@/features/study/api/studio-artifacts-client";
+import { generateStudioQuestions } from "@/features/study/api-client/studio-questions-client";
+import { simplifyPassage, createPassage } from "@/features/study/api-client/passages-client";
+import { getArtifactDetail } from "@/features/study/api-client/studio-artifacts-client";
 import { extractSelectionInfo } from "@/features/study/model/selection-utils";
 
 import { createStudyPassage, createStudyQuestion } from "../../../fixtures";
@@ -93,17 +93,17 @@ vi.mock("react-dropzone", () => ({
   }),
 }));
 
-vi.mock("@/features/study/api/studio-questions-client", () => ({
+vi.mock("@/features/study/api-client/studio-questions-client", () => ({
   generateStudioQuestions: vi.fn(),
 }));
 
-vi.mock("@/features/study/api/passages-client", () => ({
+vi.mock("@/features/study/api-client/passages-client", () => ({
   simplifyPassage: vi.fn(),
   createPassage: vi.fn(),
   deletePassage: vi.fn(async () => true),
 }));
 
-vi.mock("@/features/study/api/studio-artifacts-client", () => ({
+vi.mock("@/features/study/api-client/studio-artifacts-client", () => ({
   getArtifactDetail: vi.fn(),
   recordQuizResult: vi.fn(),
   resetQuizResult: vi.fn(),

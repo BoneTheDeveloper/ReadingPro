@@ -17,7 +17,7 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
   ]),
   {
-    files: ["src/features/**/ui/**", "src/features/**/hooks/**", "src/shared/**"],
+    files: ["src/features/**/ui/**", "src/features/**/hooks/**", "src/contracts/**"],
     rules: {
       "no-restricted-imports": [
         "error",

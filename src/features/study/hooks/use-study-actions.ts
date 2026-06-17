@@ -3,9 +3,9 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import type { Dispatch, SetStateAction } from "react";
-import { simplifyPassage } from "@/features/study/api/passages-client";
-import { generateStudioQuestions } from "@/features/study/api/studio-questions-client";
-import { getArtifactDetail } from "@/features/study/api/studio-artifacts-client";
+import { simplifyPassage } from "@/features/study/api-client/passages-client";
+import { generateStudioQuestions } from "@/features/study/api-client/studio-questions-client";
+import { getArtifactDetail } from "@/features/study/api-client/studio-artifacts-client";
 import type {
   ArtifactsCacheEntry,
   ArtifactRef,

@@ -6,7 +6,7 @@ import {
   PassageStudyServiceError 
 } from "@/server/modules/study/passage/passage-study.service";
 import { isAuthenticationRequiredError } from "@/server/http/route-errors";
-import { createModuleLogger } from "@/server/core/logger";
+import { createModuleLogger } from "@/server/observability/logger";
 
 const log = createModuleLogger("api:study:passages:simplify");
 

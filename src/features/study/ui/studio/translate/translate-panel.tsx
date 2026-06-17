@@ -6,8 +6,8 @@ import {
   Bookmark,
   MessageCircle,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/shared/utils";
+import { Button } from "@/ui/primitives/button";
+import { cn } from "@/contracts/utils";
 import type {
   TranslationSelection,
   QuickTranslationData,

@@ -133,8 +133,8 @@ A quiz artifact also tracks user attempts via the 1:1 `QuizResult` child.
 ## Implementation References
 
 - Route: `src/app/api/studio-artifacts/route.ts`
-- Service: `src/lib/study/passage/studio-artifacts-service.ts`
-- Shared types: `src/lib/study/shared/studio-artifact-types.ts`
+- Service: `src/server/modules/study/passage/studio-artifacts-service.ts`
+- Shared types: `src/contracts/study/studio-artifact-types.ts`
 - Client generation flow: `src/features/study/hooks/use-study-actions.ts`
 - Lazy detail load: `studioLoadArtifactDetailAction` in `src/features/study/actions/studio-artifact-actions.ts`
 - View wiring: `onSetViewingArtifact` → `handleViewArtifact` in `src/features/study/ui/study-workspace-client.tsx`

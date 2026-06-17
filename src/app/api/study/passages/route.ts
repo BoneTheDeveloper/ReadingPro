@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { getAuthenticatedUser } from "@/server/auth/auth-utils";
 import { createPassageRecord } from "@/server/modules/upload/passage-create/passage-create.service";
-import { createPassageRequestSchema } from "@/shared/study/passage-schema";
+import { createPassageRequestSchema } from "@/contracts/study/passage-schema";
 import { isAuthenticationRequiredError, getZodErrorMessage } from "@/server/http/route-errors";
-import { createModuleLogger } from "@/server/core/logger";
+import { createModuleLogger } from "@/server/observability/logger";
 
 const log = createModuleLogger("api:study:passages");
 

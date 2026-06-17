@@ -3,7 +3,7 @@ import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 import { getAuthenticatedUser } from "@/server/auth/auth-utils";
 import { isAuthenticationRequiredError } from "@/server/http/route-errors";
-import { createRequestLogContext, createRequestLogger } from "@/server/core/logger";
+import { createRequestLogContext, createRequestLogger } from "@/server/observability/logger";
 import { listVocabularySets, createManualSet } from "@/server/db/vocabulary-set-queries";
 
 const createSetSchema = z.object({

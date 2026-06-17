@@ -3,9 +3,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
 import { getAuthenticatedUser } from '@/server/auth/auth-utils';
 import { getZodErrorMessage, isAuthenticationRequiredError } from '@/server/http/route-errors';
-import { createRequestLogContext, createRequestLogger } from '@/server/core/logger';
+import { createRequestLogContext, createRequestLogger } from '@/server/observability/logger';
 import { ensureActiveSession } from '@/server/db/study-session-queries';
-import { toStudySessionDto } from '@/shared/study/study-response-schema';
+import { toStudySessionDto } from '@/contracts/study/study-response-schema';
 
 const studySessionPostSchema = z.object({}).strict();
 

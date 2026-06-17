@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { deleteVocabularyItem } from "@/server/db/vocabulary-queries";
 import { getAuthenticatedUser } from "@/server/auth/auth-utils";
 import { isAuthenticationRequiredError, isOwnershipMissError } from "@/server/http/route-errors";
-import { createRequestLogContext, createRequestLogger } from "@/server/core/logger";
+import { createRequestLogContext, createRequestLogger } from "@/server/observability/logger";
 
 export async function DELETE(
   request: NextRequest,

@@ -5,8 +5,8 @@ import {
   dictionaryLookupPerformanceResponseSchema,
   dictionaryLookupResponseSchema,
   dictionaryLookupSuccessResponseSchema,
-} from "@/shared/dictionary/dictionary-response-schema";
-import type { DictionaryEntryDto, DictionaryMissDto } from "@/shared/dictionary/dictionary-dtos";
+} from "@/contracts/dictionary/dictionary-response-schema";
+import type { DictionaryEntryDto, DictionaryMissDto } from "@/contracts/dictionary/dictionary-dtos";
 import { userProfileFixture } from "../../fixtures";
 import { parseJsonResponse } from "../../helpers/api";
 import { expectApiErrorPayload, expectApiSuccessPayload } from "../../helpers/assertions";

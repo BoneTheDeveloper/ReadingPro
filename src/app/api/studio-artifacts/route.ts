@@ -9,7 +9,7 @@ import {
 import {
   createRequestLogContext,
   createRequestLogger,
-} from "@/server/core/logger";
+} from "@/server/observability/logger";
 import { fetchStudioArtifacts } from "@/server/modules/study/passage/studio-artifacts-service";
 
 const studyArtifactsQuerySchema = z.object({

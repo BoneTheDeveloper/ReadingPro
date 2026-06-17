@@ -1,9 +1,9 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { recordQuizResult } from "@/features/study/api/studio-artifacts-client";
+import { recordQuizResult } from "@/features/study/api-client/studio-artifacts-client";
 import { QuizResults } from "./quiz-results";
 
-vi.mock("@/features/study/api/studio-artifacts-client", () => ({
+vi.mock("@/features/study/api-client/studio-artifacts-client", () => ({
   recordQuizResult: vi.fn(),
   resetQuizResult: vi.fn(),
 }));

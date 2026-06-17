@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { uploadFile, uploadText } from "../api/upload-client"
+import { uploadFile, uploadText } from "../api-client/upload-client"
 
 export function useUploadSubmit() {
   const router = useRouter()

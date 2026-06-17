@@ -76,7 +76,7 @@ Locale selection for auth redirects is derived from the current path:
 
 ## Language Switcher
 
-`src/components/layout/language-switcher.tsx` reads the current locale with `useLocale()`, reads the logical pathname with `usePathname()`, and replaces the route with the selected locale:
+`src/ui/layout/language-switcher.tsx` reads the current locale with `useLocale()`, reads the logical pathname with `usePathname()`, and replaces the route with the selected locale:
 
 ```tsx
 router.replace(pathname, { locale: newLocale });
@@ -88,7 +88,7 @@ The switcher uses `routing.locales`, so adding a locale to `routing.ts` automati
 
 1. Add the locale code to `src/i18n/routing.ts`.
 2. Add `localization/messages/{locale}.json` with the same key structure as `localization/messages/en.json`.
-3. Add a label to `localeLabels` in `src/components/layout/language-switcher.tsx`.
+3. Add a label to `localeLabels` in `src/ui/layout/language-switcher.tsx`.
 4. Update the locale extraction in `src/proxy.ts` if it still uses a manual regex.
 5. Confirm fonts in `src/app/[locale]/layout.tsx` support the new language's script.
 6. Run a key parity check between all message catalogs.
@@ -109,4 +109,4 @@ The switcher uses `routing.locales`, so adding a locale to `routing.ts` automati
 - `src/i18n/navigation.ts`
 - `src/proxy.ts`
 - `src/app/[locale]/layout.tsx`
-- `src/components/layout/language-switcher.tsx`
+- `src/ui/layout/language-switcher.tsx`

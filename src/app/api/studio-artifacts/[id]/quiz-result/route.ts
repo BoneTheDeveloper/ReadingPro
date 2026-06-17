@@ -6,7 +6,7 @@ import {
   resetQuizResult 
 } from "@/server/modules/study/passage/studio-artifacts-service";
 import { isAuthenticationRequiredError } from "@/server/http/route-errors";
-import { createModuleLogger } from "@/server/core/logger";
+import { createModuleLogger } from "@/server/observability/logger";
 import { z } from "zod";
 
 const log = createModuleLogger("api:studio-artifacts:quiz-result");

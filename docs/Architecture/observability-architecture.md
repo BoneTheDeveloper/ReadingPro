@@ -5,9 +5,9 @@
 | Component | Files | Purpose |
 |-----------|-------|---------|
 | Sentry | `sentry.server.config.ts`, `sentry.edge.config.ts`, `src/instrumentation*.ts` | Error capture, spans, source maps. |
-| Pino | `src/lib/core/logger.ts` | Structured server logs with request context. |
-| Prisma metrics | `src/lib/observability/prisma-query-metrics.ts` | Optional query count/duration diagnostics. |
-| Feature performance headers | `src/lib/translation/translate-performance.ts`, `src/lib/dictionary/shared/dictionary-performance.ts` | Benchmark-only route diagnostics. |
+| Pino | `src/server/observability/logger.ts` | Structured server logs with request context. |
+| Prisma metrics | `src/server/observability/prisma-query-metrics.ts` | Optional query count/duration diagnostics. |
+| Feature performance headers | `src/contracts/translation/translate-performance.ts`, `src/server/modules/dictionary/shared/dictionary-performance.ts` | Benchmark-only route diagnostics. |
 
 ## Logging
 

@@ -2,11 +2,11 @@
 
 import { useCallback, useRef, useState } from "react";
 import * as Sentry from "@sentry/nextjs";
-import { saveDictionaryVocabulary } from "../api/dictionary-client";
+import { saveDictionaryVocabulary } from "../api-client/dictionary-client";
 import type {
   DictionaryEntryDto,
   DictionarySenseDto,
-} from "@/shared/dictionary/dictionary-dtos";
+} from "@/contracts/dictionary/dictionary-dtos";
 
 export type SaveStatus = "idle" | "saving" | "saved" | "error";
 

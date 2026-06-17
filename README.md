@@ -106,8 +106,6 @@ pnpm db:check:dictionary-seed
 - Codebase summary: [docs/codebase-summary.md](docs/codebase-summary.md)
 - System architecture: [docs/Architecture/system-architecture.md](docs/Architecture/system-architecture.md)
 - API index: [docs/API/api-index.md](docs/API/api-index.md)
-- Local development: [docs/Operations/local-development.md](docs/Operations/local-development.md)
-- Environment variables: [docs/Operations/env-vars.md](docs/Operations/env-vars.md)
 
 ## Source-Of-Truth Notes
 

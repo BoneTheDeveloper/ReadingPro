@@ -45,7 +45,6 @@ As of 2026-06-06, the product is in MVP hardening. Core study, auth, database, s
 ## References
 
 - Feature scope: [feature-scope.md](feature-scope.md)
-- Deployment architecture: [../Architecture/deployment-architecture.md](../Architecture/deployment-architecture.md)
 - Testing strategy: [../Testing/testing-strategy.md](../Testing/testing-strategy.md)
 
 **Status:** Active

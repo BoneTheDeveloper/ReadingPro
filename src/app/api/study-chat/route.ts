@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { AuthenticationRequiredError, getAuthenticatedUser } from "@/server/auth/auth-utils";
-import { createRequestLogContext, createRequestLogger } from "@/server/core/logger";
+import { createRequestLogContext, createRequestLogger } from "@/server/observability/logger";
 import {
   studyChatRequestSchema,
   studyChatQuerySchema,
   type UiMessage,
-} from "@/shared/study/chat-schema";
+} from "@/contracts/study/chat-schema";
 import { validateMessageSizeLimits } from "@/server/modules/study/chat/chat-utils";
 import {
   StudyChatServiceError,

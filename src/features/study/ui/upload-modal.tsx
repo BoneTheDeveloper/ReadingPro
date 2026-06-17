@@ -4,19 +4,19 @@ import { useState, useCallback } from "react"
 import { useTranslations } from "next-intl"
 import { Upload, Type, Globe, Search, FileText } from "lucide-react"
 import { useDropzone, type FileRejection } from "react-dropzone"
-import { validateFile, formatFileSize } from "@/shared/upload/upload-validation"
-import { cn } from "@/shared/utils"
-import { createPassage } from "@/features/study/api/passages-client"
+import { validateFile, formatFileSize } from "@/contracts/upload/upload-validation"
+import { cn } from "@/contracts/utils"
+import { createPassage } from "@/features/study/api-client/passages-client"
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+} from "@/ui/primitives/dialog"
+import { Button } from "@/ui/primitives/button"
+import { Input } from "@/ui/primitives/input"
+import { Textarea } from "@/ui/primitives/textarea"
 import type { StudyUploadModalProps } from "@/features/study/model/types"
 
 type InputMode = "file" | "text" | null

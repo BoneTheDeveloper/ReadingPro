@@ -5,8 +5,8 @@ import * as Sentry from "@sentry/nextjs";
 import { db } from "@/server/db/client";
 import { wrapUserText } from "@/server/ai/prompt-utils";
 import { getStudyChatModelId } from "@/server/ai/model-config";
-import { createModuleLogger } from "@/server/core/logger";
-import { MAX_PASSAGE_CHARS, type UiMessage } from "@/shared/study/chat-schema";
+import { createModuleLogger } from "@/server/observability/logger";
+import { MAX_PASSAGE_CHARS, type UiMessage } from "@/contracts/study/chat-schema";
 import { truncateToRecentTurns, extractTextContent } from "./chat-utils";
 
 const log = createModuleLogger("lib:study:chat-service");

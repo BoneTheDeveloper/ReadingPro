@@ -2,8 +2,8 @@ import 'server-only';
 import * as Sentry from "@sentry/nextjs";
 import { Prisma } from "@/generated/prisma/client";
 import { db } from "@/server/db/client";
-import { RUNTIME_STATUSES } from "@/shared/dictionary/dictionary-dtos";
-import { escapeLikeWildcards } from "@/shared/dictionary/normalize-dictionary-term";
+import { RUNTIME_STATUSES } from "@/contracts/dictionary/dictionary-dtos";
+import { escapeLikeWildcards } from "@/contracts/dictionary/normalize-dictionary-term";
 
 export interface DictionarySearchCandidateRow {
   id: string;

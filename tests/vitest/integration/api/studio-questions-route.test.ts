@@ -4,10 +4,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { POST as generateQuestionsRoute } from "@/app/api/studio-questions/route";
 import {
   generatedStudyQuestionsSuccessResponseSchema,
-} from "@/shared/study/study-response-schema";
-import { apiErrorResponseSchema } from "@/shared/api/api-response-schema";
+} from "@/contracts/study/study-response-schema";
+import { apiErrorResponseSchema } from "@/contracts/http/api-response-schema";
 import { generatedQuestionsFixture, passageFixture, userProfileFixture } from "../../fixtures";
-import type { StudioArtifact } from "@/shared/study/studio-artifact-types";
+import type { StudioArtifact } from "@/contracts/study/studio-artifact-types";
 import { createJsonRequest, parseJsonResponse } from "../../helpers/api";
 import { expectApiErrorPayload, expectApiSuccessPayload } from "../../helpers/assertions";
 

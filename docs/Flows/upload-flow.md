@@ -36,9 +36,9 @@ Client
 | File route | `src/app/api/upload/route.ts` |
 | File workflow | `src/features/upload/upload-workflow.ts` |
 | Analysis/persistence | `src/features/upload/content-analysis-service.ts` |
-| Validation | `src/lib/validation/upload.ts` |
-| Storage | `src/lib/storage/blob-storage.ts` |
-| PDF parsing | `src/lib/parsers/pdf.ts` |
+| Validation | `src/contracts/upload/upload-validation.ts` |
+| Storage | `src/server/storage/blob-storage.ts` |
+| PDF parsing | `src/server/parsers/pdf.ts` |
 
 ## Persistence
 

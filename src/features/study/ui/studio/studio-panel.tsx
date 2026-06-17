@@ -14,9 +14,9 @@ import {
   PanelRight,
   RefreshCw,
 } from "lucide-react";
-import { cn } from "@/shared/utils";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { cn } from "@/contracts/utils";
+import { Card, CardContent } from "@/ui/primitives/card";
+import { Button } from "@/ui/primitives/button";
 import type {
   PassageData,
   QuickTranslationData,
@@ -31,7 +31,7 @@ import type {
 import { QuizContent } from "./quiz/quiz-content";
 import { StudyChatPanel } from "./chat/chat-panel";
 import { StudyTranslatePanel } from "./translate/translate-panel";
-import { resetQuizResult } from "@/features/study/api/studio-artifacts-client";
+import { resetQuizResult } from "@/features/study/api-client/studio-artifacts-client";
 
 interface StudyStudioPanelProps {
   artifactsCache: ArtifactsCacheEntry;

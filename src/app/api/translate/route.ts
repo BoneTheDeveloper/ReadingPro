@@ -2,17 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 import { getAuthenticatedUser } from "@/server/auth/auth-utils";
-import { createRequestLogContext, createRequestLogger } from "@/server/core/logger";
+import { createRequestLogContext, createRequestLogger } from "@/server/observability/logger";
 import {
   getPrismaQueryMetrics,
   runWithPrismaQueryMetrics,
 } from "@/server/observability/prisma-query-metrics";
-import { MAX_TRANSLATE_CONTEXT_LENGTH, MAX_TRANSLATE_TEXT_LENGTH } from "@/shared/translation/translation-limits";
+import { MAX_TRANSLATE_CONTEXT_LENGTH, MAX_TRANSLATE_TEXT_LENGTH } from "@/contracts/translation/translation-limits";
 import {
   createTranslatePerformanceTracker,
   shouldIncludeTranslatePerformanceMetrics,
   type TranslatePerformanceSnapshot,
-} from "@/shared/translation/translate-performance";
+} from "@/contracts/translation/translate-performance";
 import type { QuickTranslation } from "@/server/ai/translator";
 import { executeTranslate } from "@/server/modules/translation/inline/inline-translate.service";
 

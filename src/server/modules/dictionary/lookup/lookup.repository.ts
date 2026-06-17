@@ -2,7 +2,7 @@ import 'server-only';
 import * as Sentry from "@sentry/nextjs";
 import { Prisma } from "@/generated/prisma/client";
 import { db } from "@/server/db/client";
-import { RUNTIME_STATUSES } from "@/shared/dictionary/dictionary-dtos";
+import { RUNTIME_STATUSES } from "@/contracts/dictionary/dictionary-dtos";
 
 export interface LookupRawRow {
   entryId: string;

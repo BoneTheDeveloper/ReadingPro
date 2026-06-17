@@ -4,7 +4,7 @@ import { z } from "zod";
 import { updateVocabularyStatus } from "@/server/db/vocabulary-queries";
 import { getAuthenticatedUser } from "@/server/auth/auth-utils";
 import { isAuthenticationRequiredError, isOwnershipMissError } from "@/server/http/route-errors";
-import { createRequestLogContext, createRequestLogger } from "@/server/core/logger";
+import { createRequestLogContext, createRequestLogger } from "@/server/observability/logger";
 
 const statusUpdateSchema = z.object({
   status: z.enum(["NEW", "LEARNING", "MASTERED"]),

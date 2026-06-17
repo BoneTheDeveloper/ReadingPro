@@ -4,7 +4,7 @@ import { z } from "zod";
 import { updateVocabularySet, deleteVocabularySet } from "@/server/db/vocabulary-set-queries";
 import { getAuthenticatedUser } from "@/server/auth/auth-utils";
 import { isAuthenticationRequiredError, isOwnershipMissError } from "@/server/http/route-errors";
-import { createRequestLogContext, createRequestLogger } from "@/server/core/logger";
+import { createRequestLogContext, createRequestLogger } from "@/server/observability/logger";
 
 const renameSetSchema = z.object({
   name: z.string().trim().min(1).max(100),

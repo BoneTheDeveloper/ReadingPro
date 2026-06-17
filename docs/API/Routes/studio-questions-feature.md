@@ -94,9 +94,9 @@ Error:
 ## Implementation References
 
 - Route: `src/app/api/studio-questions/route.ts`
-- Service: `src/lib/study/passage/passage-study.service.ts`
-- Shared schema: `src/lib/study/shared/study-response-schema.ts`
-- Client API helper: `src/features/study/api/studio-questions-client.ts`
+- Service: `src/server/modules/study/passage/passage-study.service.ts`
+- Shared schema: `src/contracts/study/study-response-schema.ts`
+- Client API helper: `src/features/study/api-client/studio-questions-client.ts`
 
 ## Tests Or Verification Notes
 

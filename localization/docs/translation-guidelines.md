@@ -115,5 +115,5 @@ import { Link, useRouter } from "@/i18n/navigation";
 - `localization/messages/en.json`
 - `localization/messages/vi.json`
 - `src/i18n/navigation.ts`
-- `src/components/layout/dashboard-sidebar.tsx`
+- `src/ui/layout/dashboard-sidebar.tsx`
 - `src/app/[locale]/page.tsx`

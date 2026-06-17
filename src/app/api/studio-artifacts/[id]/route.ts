@@ -3,7 +3,7 @@ import * as Sentry from "@sentry/nextjs";
 import { getAuthenticatedUser } from "@/server/auth/auth-utils";
 import { db } from "@/server/db/client";
 import { isAuthenticationRequiredError } from "@/server/http/route-errors";
-import { createModuleLogger } from "@/server/core/logger";
+import { createModuleLogger } from "@/server/observability/logger";
 import type { QuestionData } from "@/features/study/model/types";
 
 const log = createModuleLogger("api:studio-artifacts:detail");

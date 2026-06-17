@@ -14,15 +14,15 @@ exact spec → how it's built → contracts → behavior → how we verify → h
 src/
   app/                  Next.js routing layer: thin pages + thin API route handlers (HTTP adapters)
   server/               Backend layer (enforced server-only): db, ai, auth, http, modules
-  shared/               Contract layer (isomorphic/pure): Zod schemas, DTOs, pure utils
-  features/             Frontend feature layer (FSD-lite): ui, hooks, model, api
-  components/           Universal design system primitives (UI atoms)
+  contracts/            Contract layer (isomorphic/pure): Zod schemas, DTOs, pure utils
+  features/             Frontend feature layer (FSD-lite): ui, hooks, model, api-client
+  ui/                   Universal design system: primitives (UI atoms) + layout
 ```
 
 ### Core Invariants
 
 1.  **Strict Boundary:** `src/server/` is marked `server-only`. Backend logic never leaks to the client.
-2.  **Pure Contract:** `src/shared/` contains only Zod schemas and types. It never imports from `server/`.
+2.  **Pure Contract:** `src/contracts/` contains only Zod schemas and types. It never imports from `server/`.
 3.  **Frontend Logic:** Organized by feature in `src/features/`. Communicates with backend only via standard HTTP API routes.
 
 ## Reading Order
@@ -51,8 +51,6 @@ Each folder owns exactly one question. Nothing is duplicated across folders.
 | [Database](Database/data-dictionary.md) | Data contracts | Identifier policy + string-enum catalogs. Schema, columns, and relations are the [`prisma/schema/`](../prisma/schema/) source of truth; migration procedure in [`../prisma/`](../prisma/migrations-guide.md). |
 | [Flows](Flows/upload-flow.md) | How features behave end-to-end | UI-to-persistence flow per feature. |
 | [Testing](Testing/testing-strategy.md) | How we verify it | [Strategy](Testing/testing-strategy.md), [test scenarios](Testing/test-scenarios.md), [traceability matrix](Testing/traceability-matrix.md), [contract tests](Testing/contract-tests.md), [performance benchmarks](Testing/performance-benchmarks.md). |
-| [Operations](Operations/env-vars.md) | How we run it | Env vars, incident debugging, security checklist. |
-| [ADR](ADR/0001-use-clerk.md) | Why we decided X | Architecture decision records. |
 | [Design](Design/design-guidelines.md) | Visual system | Design guidelines, styling guide, dark-mode color design. |
 
 `code-standards.md` and `codebase-summary.md` stay at the `docs/` root as the two
