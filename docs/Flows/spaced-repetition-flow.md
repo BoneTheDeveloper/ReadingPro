@@ -81,7 +81,7 @@ This is a fixed-interval MVP. Full SM-2 integration for vocabulary is deferred.
 
 | Route | Purpose |
 |-------|---------|
-| `POST /api/study-session` | Ensure an active study session window. |
+| `POST /api/study/sessions` | Ensure an active study session window. |
 | `GET /api/progress/stats` | Return aggregate user progress. |
 
 ## Code Paths

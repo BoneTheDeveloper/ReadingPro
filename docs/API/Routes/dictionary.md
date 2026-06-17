@@ -4,7 +4,7 @@ Dictionary search is independent from quick translation. It owns autocomplete su
 
 Quick translation can share the same database tables internally for exact word
 or short phrase lookup, but quick translation must not own dictionary
-search/suggest behavior. See [translation-feature.md](./translation-feature.md).
+search/suggest behavior. See [translation.md](./translation.md).
 
 ## Scope
 

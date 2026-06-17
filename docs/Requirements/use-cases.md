@@ -280,7 +280,7 @@ preconditions, main flow, and—where it maps to an HTTP endpoint—the primary 
 
 **Preconditions:** User owns the selected passage
 
-**Primary route:** `POST /api/study-chat`
+**Primary route:** `POST /api/study/chat`
 
 ### Main Flow
 

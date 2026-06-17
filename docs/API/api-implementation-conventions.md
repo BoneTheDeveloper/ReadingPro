@@ -30,7 +30,7 @@ modules and shared contracts/types into the contract layer — see
 
 - Success: `{ success: true, data }`
 - Error: `{ error: string }`
-- Streaming exception: `POST /api/study-chat`
+- Streaming exception: `POST /api/study/chat`
 
 ## Validation
 
@@ -56,6 +56,6 @@ modules and shared contracts/types into the contract layer — see
 ## Reference Routes
 
 - `src/app/api/translate/route.ts`
-- `src/app/api/study-chat/route.ts`
+- `src/app/api/study/chat/route.ts`
 - `src/app/api/dictionary/lookup/route.ts`
 - `src/app/api/upload/route.ts`

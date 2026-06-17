@@ -1,36 +1,36 @@
-# Studio Artifacts API Feature
+# Study Artifacts API
+
+Part of the **Study** domain. See [Study domain index](README.md).
 
 ## Purpose
 
-Fetch list of generated artifacts (quizzes, etc.) for a specific passage owned by the authenticated user.
+Fetch generated artifacts (quizzes, etc.) for a passage owned by the
+authenticated user, and manage a quiz's attempt result.
 
 ## Routes
 
 | Method | Path | Purpose |
 |--------|------|---------|
-| `GET` | `/api/studio-artifacts` | List all artifacts for a passage. |
+| `GET` | `/api/study/artifacts` | List all artifacts for a passage. |
+| `GET` | `/api/study/artifacts/[id]` | Fetch a single artifact (with detail). |
+| `POST` | `/api/study/artifacts/[id]/quiz-result` | Record a quiz attempt result. |
+| `DELETE` | `/api/study/artifacts/[id]/quiz-result` | Reset (delete) a quiz result for retry. |
 
-## Auth And Ownership Rules
+## Auth And Ownership
 
-- Authenticated user-owned read.
+- Authenticated user-owned read/write.
 - The route authenticates with `getAuthenticatedUser()`.
-- Passage ownership check is performed implicitly or explicitly by the query.
+- Passage ownership is enforced by the query.
 
-## Request Contract
+## List Artifacts
 
-Query Parameters:
+`GET /api/study/artifacts?passageId=<uuid>`
 
-| Name | Type | Purpose |
-|------|------|---------|
-| `passageId` | UUID | The passage to fetch artifacts for. |
-
-## Response Contract
-
-Success:
+### Success response
 
 ```ts
 {
-  success: true,
+  success: true;
   data: {
     artifacts: Array<{
       id: string;
@@ -38,26 +38,24 @@ Success:
       passageId: string;
       title: string;
       status: "generating" | "done" | "failed";
-      createdAt: string; // ISO Date
-      updatedAt: string; // ISO Date
+      createdAt: string; // ISO
+      updatedAt: string; // ISO
       quizResult?: {
-        completedAt: string; // ISO Date
+        completedAt: string;   // ISO
         correctCount: number;
         totalQuestions: number;
         accuracyRate: number;
       };
-    }>
-  }
+    }>;
+  };
 }
 ```
 
-Error:
+### Error cases
 
 ```ts
 { error: string }
 ```
-
-## Error Cases
 
 | Status | Meaning |
 |--------|---------|
@@ -73,7 +71,7 @@ are **in-memory client states only** — no persisted row ever carries these sta
 
 1. Client generates a UUID (`artifactId`) and adds an optimistic `generating` card
    in memory.
-2. Client calls `POST /api/studio-questions` with `{ passageId, artifactId }`.
+2. Client calls `POST /api/study/questions` with `{ passageId, artifactId }`.
 3. The server runs the LLM, then in a **single DB transaction** creates the
    `StudioArtifact` row (`status: "done"`) + all `Question` rows together.
 4. On success the route returns `{ artifact, questions }`. The client replaces the
@@ -84,7 +82,7 @@ are **in-memory client states only** — no persisted row ever carries these sta
 
 **Interrupt safety.** If the app closes mid-generation:
 - If the server committed: the quiz appears as `done` on next reload (the client
-  finds it from `GET /api/studio-artifacts`).
+  finds it from `GET /api/study/artifacts`).
 - If the server did not commit (or the request never reached it): nothing is in the
   DB. The reload shows no card, and the user can re-click Quiz.
 
@@ -99,14 +97,14 @@ needed.
 
 ## Question Loading Strategy (Lazy Detail)
 
-`GET /api/studio-artifacts` returns artifact **metadata only** — it never embeds
+`GET /api/study/artifacts` returns artifact **metadata only** — it never embeds
 the persisted quiz questions. The question rows are loaded separately, on demand,
 the first time an artifact is opened. This keeps the list response small and
 avoids fetching question sets the user may never open.
 
 The detail load is driven by the client view flow, not a route:
 
-1. Generation success only: questions returned by `POST /api/studio-questions` are
+1. Generation success only: questions returned by `POST /api/study/questions` are
    placed straight into the in-memory detail cache (`artifactDetailById`). No
    detail fetch is needed for the artifact just generated in this session.
 2. After a page reload (or when switching back to a passage), the in-memory cache
@@ -127,15 +125,16 @@ the only path that fetches persisted questions is skipped.
 A quiz artifact also tracks user attempts via the 1:1 `QuizResult` child.
 
 1. **Not Attempted:** When an artifact is `done` but has no `quizResult`, it represents a fresh quiz.
-2. **Finished:** Once the user completes the quiz, the client calls `studioRecordQuizResultAction` which upserts the `QuizResult` row with the final score.
-3. **Retry:** If the user wants to retry the quiz, the client calls `studioResetQuizResultAction` to delete the `QuizResult` row, reverting the artifact to the "Not Attempted" state.
+2. **Finished:** Once the user completes the quiz, the client calls `studioRecordQuizResultAction` (`POST /api/study/artifacts/[id]/quiz-result`) which upserts the `QuizResult` row with the final score.
+3. **Retry:** If the user wants to retry the quiz, the client calls `studioResetQuizResultAction` (`DELETE /api/study/artifacts/[id]/quiz-result`) to delete the `QuizResult` row, reverting the artifact to the "Not Attempted" state.
 
 ## Implementation References
 
-- Route: `src/app/api/studio-artifacts/route.ts`
+- Routes: `src/app/api/study/artifacts/route.ts`, `src/app/api/study/artifacts/[id]/route.ts`, `src/app/api/study/artifacts/[id]/quiz-result/route.ts`
 - Service: `src/server/modules/study/passage/studio-artifacts-service.ts`
 - Shared types: `src/contracts/study/studio-artifact-types.ts`
 - Client generation flow: `src/features/study/hooks/use-study-actions.ts`
+- Artifact client: `src/features/study/api-client/studio-artifacts-client.ts`
 - Lazy detail load: `studioLoadArtifactDetailAction` in `src/features/study/actions/studio-artifact-actions.ts`
 - View wiring: `onSetViewingArtifact` → `handleViewArtifact` in `src/features/study/ui/study-workspace-client.tsx`
 - Action lock logic: `src/features/study/ui/studio/studio-panel.tsx`

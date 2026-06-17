@@ -15,7 +15,7 @@ The route has two runtime paths, named by input type:
 2. **Sentence translate path** resolves a sentence or paragraph.
 
 Dictionary search, suggestions, and entry detail behavior are separate. See
-[dictionary-feature.md](./dictionary-feature.md).
+[dictionary.md](./dictionary.md).
 
 ## Scope
 
@@ -258,4 +258,4 @@ The `provider` response field indicates the data source (`"cache"`, `"dictionary
 `/api/translate` may reuse lexicon table read code for word selections, but it
 must not make an internal HTTP request to `/api/dictionary/*`. Dictionary search,
 suggest, autocomplete, and entry detail are separate features. See
-[dictionary-feature.md](./dictionary-feature.md).
+[dictionary.md](./dictionary.md).

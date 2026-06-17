@@ -1,16 +1,19 @@
-# Studio Questions API Feature
+# Study Questions API
+
+Part of the **Study** domain. See [Study domain index](README.md).
 
 ## Purpose
 
-Generate and persist comprehension questions for a passage owned by the authenticated user.
+Generate and persist comprehension questions for a passage owned by the
+authenticated user.
 
 ## Routes
 
 | Method | Path | Purpose |
 |--------|------|---------|
-| `POST` | `/api/studio-questions` | Generate a fresh quiz question set for a passage. |
+| `POST` | `/api/study/questions` | Generate a fresh quiz question set for a passage. |
 
-## Auth And Ownership Rules
+## Auth And Ownership
 
 - Authenticated user-owned write.
 - The route authenticates with `getAuthenticatedUser()`.
@@ -79,7 +82,7 @@ Error:
   re-generating. Safe for retries and double-submits.
 - Returned questions are cached client-side for the originating session. On a later
   reload they are reloaded lazily — see "Question Loading Strategy (Lazy Detail)" in
-  [Studio artifacts API](studio-artifacts-feature.md).
+  [Study artifacts API](artifacts.md).
 
 ## Error Cases
 
@@ -93,7 +96,7 @@ Error:
 
 ## Implementation References
 
-- Route: `src/app/api/studio-questions/route.ts`
+- Route: `src/app/api/study/questions/route.ts`
 - Service: `src/server/modules/study/passage/passage-study.service.ts`
 - Shared schema: `src/contracts/study/study-response-schema.ts`
 - Client API helper: `src/features/study/api-client/studio-questions-client.ts`

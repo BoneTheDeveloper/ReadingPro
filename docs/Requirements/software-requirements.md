@@ -134,7 +134,7 @@
 | POST | `/api/upload/text` | Submit text content, validate, analyze |
 | POST | `/api/cards/review` | Submit SM-2 card review |
 | GET | `/api/cards/due` | Fetch due cards for review (limit 20) |
-| POST | `/api/study-session` | Ensure active study session window |
+| POST | `/api/study/sessions` | Ensure active study session window |
 | GET | `/api/progress/stats` | Get user progress statistics |
 
 ---

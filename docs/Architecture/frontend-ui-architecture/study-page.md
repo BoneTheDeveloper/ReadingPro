@@ -405,7 +405,7 @@ Do not move ownership checks, persistence rules, or route response contracts int
 | Fetch study results | Active passage effect | `StudyPageClient` -> `/api/study-results` |
 | Quick translate | `StudyTranslationPopup` callback | `StudyPageClient` -> `/api/translate` |
 | Save selected vocabulary | `StudyTranslatePanel` callback | `StudyPageClient` -> `/api/vocabulary` |
-| Chat history and stream | `StudyChatPanel` | `/api/study-chat` |
+| Chat history and stream | `StudyChatPanel` | `/api/study/chat` |
 | Quiz attempt start/complete | `QuizContent`, `QuizResults` | `src/features/study/api-client/study-api.ts` |
 
 Rule: if a visual component needs one of these flows, pass a callback down from the owner instead of importing unrelated state from another panel.
