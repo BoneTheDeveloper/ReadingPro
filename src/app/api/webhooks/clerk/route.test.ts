@@ -12,13 +12,11 @@ vi.mock("@clerk/nextjs/webhooks", () => ({
 const syncMocks = vi.hoisted(() => ({
   syncUser: vi.fn(),
   deleteUserProfile: vi.fn(),
-  ensureUserProfile: vi.fn(),
 }));
 
 vi.mock("@/server/auth/sync-user", () => ({
   syncUser: syncMocks.syncUser,
   deleteUserProfile: syncMocks.deleteUserProfile,
-  ensureUserProfile: syncMocks.ensureUserProfile,
 }));
 
 import { POST } from "./route";

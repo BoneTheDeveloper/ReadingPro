@@ -2,7 +2,7 @@ import 'server-only';
 import { createHash } from "node:crypto";
 import { Prisma } from "@/generated/prisma/client";
 import { db } from "./client";
-import { ensureUserProfile } from "@/server/auth/sync-user";
+import { withUserProfile } from "@/server/auth/sync-user";
 
 interface TranslationKeyInput {
   userId: string;
@@ -76,88 +76,90 @@ export async function getTranslationCache(cacheKey: string) {
 }
 
 export async function upsertTranslationCache(input: TranslationCacheInput) {
-  await ensureUserProfile(input.userId);
-
   const cacheKey = buildTranslationCacheKey(input);
 
-  return db.translationCache.upsert({
-    where: { cacheKey },
-    update: {
-      provider: input.provider,
-      response: input.response,
-    },
-    create: {
-      cacheKey,
-      userId: input.userId,
-      sourceId: input.sourceId,
-      selectedText: input.selectedText,
-      contextSentence: input.contextSentence,
-      sourceLanguage: input.sourceLanguage,
-      targetLanguage: input.targetLanguage,
-      mode: "quick",
-      provider: input.provider,
-      response: input.response,
-    },
-  });
+  return withUserProfile(input.userId, () =>
+    db.translationCache.upsert({
+      where: { cacheKey },
+      update: {
+        provider: input.provider,
+        response: input.response,
+      },
+      create: {
+        cacheKey,
+        userId: input.userId,
+        sourceId: input.sourceId,
+        selectedText: input.selectedText,
+        contextSentence: input.contextSentence,
+        sourceLanguage: input.sourceLanguage,
+        targetLanguage: input.targetLanguage,
+        mode: "quick",
+        provider: input.provider,
+        response: input.response,
+      },
+    }),
+  );
 }
 
 export async function createTranslationHistory(input: TranslationHistoryInput) {
-  await ensureUserProfile(input.userId);
-
-  return db.translationHistory.create({
-    data: {
-      userId: input.userId,
-      sourceId: input.sourceId,
-      selectedText: input.selectedText,
-      contextSentence: input.contextSentence,
-      sourceLanguage: input.sourceLanguage,
-      targetLanguage: input.targetLanguage,
-      mode: "quick",
-      provider: input.provider,
-      translation: input.translation,
-      response: input.response,
-    },
-  });
+  return withUserProfile(input.userId, () =>
+    db.translationHistory.create({
+      data: {
+        userId: input.userId,
+        sourceId: input.sourceId,
+        selectedText: input.selectedText,
+        contextSentence: input.contextSentence,
+        sourceLanguage: input.sourceLanguage,
+        targetLanguage: input.targetLanguage,
+        mode: "quick",
+        provider: input.provider,
+        translation: input.translation,
+        response: input.response,
+      },
+    }),
+  );
 }
 
 export async function saveVocabularyItem(input: VocabularyInput) {
-  await ensureUserProfile(input.userId);
-
   const normalizedText = input.selectedText.toLowerCase().replace(/\s+/g, " ").trim();
 
-  const item = await db.vocabularyItem.upsert({
-    where: {
-      userId_normalizedText_targetLanguage_translation: {
+  // Only this write carries the userId FK; the occurrence below keys on
+  // vocabularyItemId/sourceId, so wrap just the item upsert.
+  const item = await withUserProfile(input.userId, () =>
+    db.vocabularyItem.upsert({
+      where: {
+        userId_normalizedText_targetLanguage_translation: {
+          userId: input.userId,
+          normalizedText,
+          targetLanguage: input.targetLanguage,
+          translation: input.translation,
+        },
+      },
+      update: {
+        translation: input.translation,
+        type: input.type ?? "WORD",
+        savedCount: { increment: 1 },
+      },
+      create: {
         userId: input.userId,
         normalizedText,
-        targetLanguage: input.targetLanguage,
+        displayText: input.selectedText,
         translation: input.translation,
+        sourceLanguage: input.sourceLanguage,
+        targetLanguage: input.targetLanguage,
+        type: input.type ?? "WORD",
+        source: "TRANSLATE",
       },
-    },
-    update: {
-      translation: input.translation,
-      type: input.type ?? "WORD",
-      savedCount: { increment: 1 },
-    },
-    create: {
-      userId: input.userId,
-      normalizedText,
-      displayText: input.selectedText,
-      translation: input.translation,
-      sourceLanguage: input.sourceLanguage,
-      targetLanguage: input.targetLanguage,
-      type: input.type ?? "WORD",
-      source: "TRANSLATE",
-    },
-    select: {
-      id: true,
-      displayText: true,
-      translation: true,
-      type: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-  });
+      select: {
+        id: true,
+        displayText: true,
+        translation: true,
+        type: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    }),
+  );
 
   if (input.sourceId) {
     try {

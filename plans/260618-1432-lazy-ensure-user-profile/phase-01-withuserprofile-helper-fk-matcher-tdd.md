@@ -1,9 +1,9 @@
 ---
 phase: 1
-title: "withUserProfile helper + FK matcher (TDD)"
-status: pending
+title: withUserProfile helper + FK matcher (TDD)
+status: completed
 priority: P2
-effort: "2h"
+effort: 2h
 dependencies: []
 ---
 
@@ -104,13 +104,13 @@ rollback releases the advisory lock and the retry re-runs the atomic block clean
 
 ## Success Criteria
 
-- [ ] Tests cover success / race-retry / non-userId-FK propagation / non-Prisma propagation
-- [ ] `withUserProfile` adds zero DB calls when `write` succeeds (asserted)
-- [ ] **HARD GATE:** `isMissingUserProfileFk(realCapturedError) === true` against a real
+- [x] Tests cover success / race-retry / non-userId-FK propagation / non-Prisma propagation
+- [x] `withUserProfile` adds zero DB calls when `write` succeeds (asserted)
+- [x] **HARD GATE:** `isMissingUserProfileFk(realCapturedError) === true` against a real
       (integration-captured, not hand-mocked) Prisma 7.8 `P2003` `userId`-FK payload
-- [ ] Heal branch emits `log.warn` on the retry path only (asserted not to fire on happy path)
-- [ ] `ensureUserProfile` unchanged; no Clerk call introduced
-- [ ] `pnpm run typecheck`, `lint`, auth tests pass
+- [x] Heal branch emits `log.warn` on the retry path only (asserted not to fire on happy path)
+- [x] `ensureUserProfile` unchanged; no Clerk call introduced
+- [x] `pnpm run typecheck`, `lint`, auth tests pass
 
 ## Risk Assessment
 

@@ -22,7 +22,7 @@ Two gate functions serve different surfaces:
 
 **Webhook sync (primary):** `POST /api/webhooks/clerk` receives `user.created`, `user.updated`, and `user.deleted` events from Clerk. Signature verified with `verifyWebhook()`. `user.deleted` triggers a hard delete (FK `onDelete: Cascade` cascades to owned rows).
 
-**Ensure-on-write fallback (secondary):** The 5 shared create modules (`passage-create`, `translation-create`, `vocabulary-create`, `vocabulary-set-create`, `session-create`) call `ensureUserProfile(userId)` before the first FK-creating write. This covers the window between account creation and the first webhook delivery.
+**Lazy ensure-on-write fallback (secondary):** FK-creating writes in the shared create modules run through `withUserProfile(userId, write)`. It executes the write optimistically and adds no extra round-trip when the profile already exists (the common case). Only if the write fails on a missing `UserProfile` FK (`P2003` on a `<table>_userId_fkey` constraint) does it call `ensureUserProfile(userId)` and retry once. This covers the window between account creation and the first webhook delivery without taxing the hot path. Non-`userId` FK failures (e.g. a missing `sourceId`) propagate unchanged. A persistent heal path emits `log.warn`, signalling a broken/lagging webhook.
 
 `UserProfile.id` is the Clerk user id. This avoids a separate auth-user mapping table.
 

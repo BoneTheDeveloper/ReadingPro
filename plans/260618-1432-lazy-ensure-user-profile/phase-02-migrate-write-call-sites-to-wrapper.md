@@ -1,10 +1,11 @@
 ---
 phase: 2
-title: "Migrate write call sites to wrapper"
-status: pending
+title: Migrate write call sites to wrapper
+status: completed
 priority: P2
-effort: "2h"
-dependencies: [1]
+effort: 2h
+dependencies:
+  - 1
 ---
 
 # Phase 2: Migrate write call sites to wrapper
@@ -81,11 +82,11 @@ export async function ensureActiveSession(userId: string) {
 
 ## Success Criteria
 
-- [ ] `rg "ensureUserProfile" src -g '!*.test.ts'` shows it only inside `withUserProfile`
-- [ ] Every migrated write passes its existing tests (existing-user behavior unchanged)
-- [ ] `ensureActiveSession` wraps the whole `$transaction`; advisory-lock behavior intact
-- [ ] Happy-path tests assert zero `ensureUserProfile`/profile-upsert calls
-- [ ] `pnpm run typecheck`, `lint`, full `test` pass
+- [x] `rg "ensureUserProfile" src -g '!*.test.ts'` shows it only inside `withUserProfile`
+- [x] Every migrated write passes its existing tests (existing-user behavior unchanged)
+- [x] `ensureActiveSession` wraps the whole `$transaction`; advisory-lock behavior intact
+- [x] Happy-path tests assert zero `ensureUserProfile`/profile-upsert calls
+- [x] `pnpm run typecheck`, `lint`, full `test` pass
 
 ## Risk Assessment
 

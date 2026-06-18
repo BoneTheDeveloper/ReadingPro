@@ -40,12 +40,16 @@ Clerk event (user.created / user.updated / user.deleted)
   -> UserProfile row upserted or hard-deleted
 ```
 
-First-write fallback (before first webhook delivery):
+Lazy first-write fallback (before first webhook delivery):
 
 ```text
 Shared create module (passage/translation/vocabulary/session)
-  -> ensureUserProfile(userId)   ← idempotent upsert
-  -> UserProfile row guaranteed before FK insert
+  -> withUserProfile(userId, write)
+     -> write()                         ← runs optimistically; no extra round-trip
+        -> on missing UserProfile FK (P2003 *_userId_fkey):
+           -> ensureUserProfile(userId) ← idempotent upsert
+           -> write()                   ← retry once, now FK target exists
+        -> other FK errors (e.g. *_sourceId_fkey) propagate unchanged
 ```
 
 ## Ownership Enforcement

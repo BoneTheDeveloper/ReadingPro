@@ -1,14 +1,14 @@
 ---
-title: "Lazy ensureUserProfile via optimistic FK-catch"
-description: ""
-status: pending
+title: Lazy ensureUserProfile via optimistic FK-catch
+description: ''
+status: completed
 priority: P2
-branch: "feature/issue-69-study-quiz-flow"
+branch: feature/issue-69-study-quiz-flow
 tags: []
 blockedBy: []
 blocks: []
-created: "2026-06-18T11:29:23.721Z"
-createdBy: "ck:plan"
+created: '2026-06-18T11:29:23.721Z'
+createdBy: 'ck:plan'
 source: skill
 ---
 
@@ -38,9 +38,9 @@ must propagate) · `ensureUserProfile` retained, invoked only inside the wrapper
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 1 | [withUserProfile helper + FK matcher (TDD)](./phase-01-withuserprofile-helper-fk-matcher-tdd.md) | Pending |
-| 2 | [Migrate write call sites to wrapper](./phase-02-migrate-write-call-sites-to-wrapper.md) | Pending |
-| 3 | [Verify and cleanup](./phase-03-verify-and-cleanup.md) | Pending |
+| 1 | [withUserProfile helper + FK matcher (TDD)](./phase-01-withuserprofile-helper-fk-matcher-tdd.md) | Completed |
+| 2 | [Migrate write call sites to wrapper](./phase-02-migrate-write-call-sites-to-wrapper.md) | Completed |
+| 3 | [Verify and cleanup](./phase-03-verify-and-cleanup.md) | Completed |
 
 ## Dependencies
 

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getUserId } from "@/server/auth/auth-utils";
 import { db } from "@/server/db/client";
-import { ensureUserProfile } from "@/server/auth/sync-user";
+import { withUserProfile } from "@/server/auth/sync-user";
 import { countWords } from "@/contracts/translation/translate-performance";
 
 const cleanupSchema = z.object({
@@ -46,7 +46,6 @@ export async function POST() {
   }
 
   const userId = await getUserId();
-  await ensureUserProfile(userId);
 
   const runId = Date.now().toString(36);
   const singleWord = `perfword${runId}`;
@@ -58,16 +57,18 @@ export async function POST() {
     `A final sentence contains ${fallbackText} for fallback coverage.`,
   ].join(" ");
 
-  const passage = await db.passage.create({
-    data: {
-      userId: userId,
-      title: `Translate performance ${runId}`,
-      content: context,
-      originalLevel: "B2",
-      wordCount: countWords(context),
-      sourceType: "TEXT",
-    },
-  });
+  const passage = await withUserProfile(userId, () =>
+    db.passage.create({
+      data: {
+        userId: userId,
+        title: `Translate performance ${runId}`,
+        content: context,
+        originalLevel: "B2",
+        wordCount: countWords(context),
+        sourceType: "TEXT",
+      },
+    }),
+  );
 
   const singleWordEntry = await createDictionaryEntry(singleWord, "tu hieu nang", "noun");
   const phraseEntry = await createDictionaryEntry(phrase, "cum tu hieu nang", "noun phrase");

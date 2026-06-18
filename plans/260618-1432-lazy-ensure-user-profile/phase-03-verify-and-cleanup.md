@@ -1,10 +1,11 @@
 ---
 phase: 3
-title: "Verify and cleanup"
-status: pending
+title: Verify and cleanup
+status: completed
 priority: P2
-effort: "1h"
-dependencies: [2]
+effort: 1h
+dependencies:
+  - 2
 ---
 
 # Phase 3: Verify and cleanup
@@ -54,10 +55,10 @@ Verification matrix:
 
 ## Success Criteria
 
-- [ ] `pnpm run typecheck`, `pnpm run lint`, `pnpm run test` all pass
-- [ ] No pre-emptive `ensureUserProfile` in any prod write path (rg guard)
-- [ ] Dead `ensureUserProfile` mock removed from `route.test.ts`
-- [ ] auth-architecture, auth-flow, SECURITY docs describe the lazy FK-catch model
+- [x] `pnpm run typecheck`, `pnpm run lint`, `pnpm run test` all pass
+- [x] No pre-emptive `ensureUserProfile` in any prod write path (rg guard)
+- [x] Dead `ensureUserProfile` mock removed from `route.test.ts`
+- [x] auth-architecture, auth-flow, SECURITY docs describe the lazy FK-catch model
 
 ## Risk Assessment
 
