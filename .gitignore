@@ -75,3 +75,6 @@ prisma/data/dictionary/en-vi/generated-*.json
 
 # Repomix
 repomix-output.xml
+
+#implement-notes
+implement-notes/
