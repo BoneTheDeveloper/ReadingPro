@@ -40,7 +40,7 @@ const routeMocks = vi.hoisted(() => {
   }
 
   return {
-    getAuthenticatedUser: vi.fn(),
+    getUserId: vi.fn(),
     getUserProgress: vi.fn(),
     ensureActiveSession: vi.fn(),
     processFileUpload: vi.fn(),
@@ -52,7 +52,7 @@ const routeMocks = vi.hoisted(() => {
 });
 
 vi.mock("@/server/auth/auth-utils", () => ({
-  getAuthenticatedUser: routeMocks.getAuthenticatedUser,
+  getUserId: routeMocks.getUserId,
   AuthenticationRequiredError: routeMocks.AuthenticationRequiredError,
 }));
 
@@ -94,7 +94,7 @@ function createUploadRequest(file: File | null) {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  routeMocks.getAuthenticatedUser.mockResolvedValue(userProfileFixture);
+  routeMocks.getUserId.mockResolvedValue(userProfileFixture.id);
   db.studyChatMessage.findMany.mockResolvedValue([]);
 });
 
@@ -351,7 +351,7 @@ describe("POST /api/study/studio/chat", () => {
       "A passageId is required.",
     );
 
-    routeMocks.getAuthenticatedUser.mockRejectedValueOnce(new routeMocks.AuthenticationRequiredError());
+    routeMocks.getUserId.mockRejectedValueOnce(new routeMocks.AuthenticationRequiredError());
     const unauthenticated = await getStudyChatHistory(
       new NextRequest(`https://english-reading.test/api/study/studio/chat?passageId=${passageFixture.id}`),
     );
@@ -388,7 +388,7 @@ describe("POST /api/study/studio/chat", () => {
       "Invalid chat request. Select a passage and enter a message.",
     );
 
-    routeMocks.getAuthenticatedUser.mockRejectedValueOnce(new routeMocks.AuthenticationRequiredError());
+    routeMocks.getUserId.mockRejectedValueOnce(new routeMocks.AuthenticationRequiredError());
     await expectJsonError(
       await studyChat(createJsonRequest({ passageId: passageFixture.id, messages: [] })),
       401,

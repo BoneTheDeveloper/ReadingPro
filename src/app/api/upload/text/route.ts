@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { NextRequest, NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
 import { validateTextContent } from '@/contracts/upload/upload-validation';
-import { getAuthenticatedUser } from '@/server/auth/auth-utils';
+import { getUserId } from '@/server/auth/auth-utils';
 import { isAuthenticationRequiredError } from '@/server/http/route-errors';
 import { createRequestLogContext, createRequestLogger } from '@/server/observability/logger';
 import { analyzeAndPersistContent } from '@/server/modules/upload/content-analysis/content-analysis.service';
@@ -36,9 +36,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
-    const user = await getAuthenticatedUser();
+    const userId = await getUserId();
     const result = await analyzeAndPersistContent({
-      userId: user.id,
+      userId: userId,
       text: parsed.data.text,
       title: parsed.data.title || 'Untitled',
       sourceType: 'TEXT',

@@ -27,7 +27,7 @@ const routeMocks = vi.hoisted(() => {
   }
 
   return {
-    getAuthenticatedUser: vi.fn(),
+    getUserId: vi.fn(),
     generateQuestionsForPassage: vi.fn(),
     AuthenticationRequiredError,
     PassageStudyServiceError,
@@ -35,7 +35,7 @@ const routeMocks = vi.hoisted(() => {
 });
 
 vi.mock("@/server/auth/auth-utils", () => ({
-  getAuthenticatedUser: routeMocks.getAuthenticatedUser,
+  getUserId: routeMocks.getUserId,
   AuthenticationRequiredError: routeMocks.AuthenticationRequiredError,
 }));
 
@@ -76,7 +76,7 @@ async function expectJsonError(response: Response, status: number, message: stri
 
 beforeEach(() => {
   vi.clearAllMocks();
-  routeMocks.getAuthenticatedUser.mockResolvedValue(userProfileFixture);
+  routeMocks.getUserId.mockResolvedValue(userProfileFixture.id);
 });
 
 describe("POST /api/study/studio/questions", () => {
@@ -135,7 +135,7 @@ describe("POST /api/study/studio/questions", () => {
   });
 
   it("returns stable auth and missing-passage errors", async () => {
-    routeMocks.getAuthenticatedUser.mockRejectedValueOnce(new routeMocks.AuthenticationRequiredError());
+    routeMocks.getUserId.mockRejectedValueOnce(new routeMocks.AuthenticationRequiredError());
     await expectJsonError(
       await generateQuestionsRoute(
         createJsonRequest({

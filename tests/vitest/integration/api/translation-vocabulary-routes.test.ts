@@ -18,14 +18,14 @@ import { generateObject } from "../../mocks/ai";
 import { createRequestLogger } from "../../mocks/logger";
 
 const routeMocks = vi.hoisted(() => ({
-  getAuthenticatedUser: vi.fn(),
+  getUserId: vi.fn(),
   translateWithProvider: vi.fn(),
   saveVocabularyItem: vi.fn(),
   getOwnedTranslationSource: vi.fn(),
 }));
 
 vi.mock("@/server/auth/auth-utils", () => ({
-  getAuthenticatedUser: routeMocks.getAuthenticatedUser,
+  getUserId: routeMocks.getUserId,
   AuthenticationRequiredError: class AuthenticationRequiredError extends Error {
     constructor() { super("Authentication required"); this.name = "AuthenticationRequiredError"; }
   },
@@ -151,7 +151,7 @@ function mockOwnedSource() {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  routeMocks.getAuthenticatedUser.mockResolvedValue(userProfileFixture);
+  routeMocks.getUserId.mockResolvedValue(userProfileFixture.id);
   mockOwnedSource();
   db.translationCache.findUnique.mockResolvedValue(null);
   db.translationCache.upsert.mockResolvedValue({ id: "translation-cache-1" });
@@ -246,7 +246,7 @@ describe("POST /api/translate", () => {
       "Invalid translation request.",
     );
 
-    routeMocks.getAuthenticatedUser.mockRejectedValueOnce(new Error("Authentication required"));
+    routeMocks.getUserId.mockRejectedValueOnce(new Error("Authentication required"));
     await expectJsonError(
       await translateRoute(createJsonRequest(translationBody())),
       401,
@@ -511,7 +511,7 @@ describe("POST /api/vocabulary", () => {
       "Invalid vocabulary request.",
     );
 
-    routeMocks.getAuthenticatedUser.mockRejectedValueOnce(new Error("Authentication required"));
+    routeMocks.getUserId.mockRejectedValueOnce(new Error("Authentication required"));
     await expectVocabularyJsonError(
       await vocabularyRoute(createJsonRequest(vocabularyBody())),
       401,

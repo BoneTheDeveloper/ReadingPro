@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { NextRequest, NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
-import { getAuthenticatedUser } from '@/server/auth/auth-utils';
+import { getUserId } from '@/server/auth/auth-utils';
 import { getZodErrorMessage, isAuthenticationRequiredError } from '@/server/http/route-errors';
 import { createRequestLogContext, createRequestLogger } from '@/server/observability/logger';
 import { ensureActiveSession } from '@/server/db/study-session-queries';
@@ -28,10 +28,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
     }
 
-    const user = await getAuthenticatedUser();
+    const userId = await getUserId();
 
     const session = await Sentry.startSpan({ name: 'db:session-ensure-active', op: 'db' }, async () => {
-      return ensureActiveSession(user.id);
+      return ensureActiveSession(userId);
     });
 
     return NextResponse.json({ success: true, data: toStudySessionDto(session) });

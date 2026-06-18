@@ -17,14 +17,14 @@ const routeMocks = vi.hoisted(() => {
   }
 
   return {
-    getAuthenticatedUser: vi.fn(),
+    getUserId: vi.fn(),
     getStudyChatModelId: vi.fn(() => "gpt-4o-mini"),
     AuthenticationRequiredError,
   };
 });
 
 vi.mock("@/server/auth/auth-utils", () => ({
-  getAuthenticatedUser: routeMocks.getAuthenticatedUser,
+  getUserId: routeMocks.getUserId,
   AuthenticationRequiredError: routeMocks.AuthenticationRequiredError,
 }));
 
@@ -34,7 +34,7 @@ vi.mock("@/server/ai/model-config", () => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
-  routeMocks.getAuthenticatedUser.mockResolvedValue(userProfileFixture);
+  routeMocks.getUserId.mockResolvedValue(userProfileFixture.id);
   db.studyChatMessage.findMany.mockResolvedValue([]);
 });
 
@@ -50,7 +50,7 @@ describe("study-chat API contracts", () => {
   });
 
   it("returns 401 envelopes for unauthenticated stream and history requests", async () => {
-    routeMocks.getAuthenticatedUser.mockRejectedValue(new routeMocks.AuthenticationRequiredError());
+    routeMocks.getUserId.mockRejectedValue(new routeMocks.AuthenticationRequiredError());
 
     const stream = await studyChatRoute(
       createJsonRequest({

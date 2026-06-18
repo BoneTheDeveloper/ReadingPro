@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
-import { getAuthenticatedUser } from "@/server/auth/auth-utils";
+import { getUserId } from "@/server/auth/auth-utils";
 import {
   createRequestLogContext,
   createRequestLogger,
@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
   );
 
   try {
-    const user = await getAuthenticatedUser();
+    const userId = await getUserId();
 
     const { searchParams } = new URL(request.url);
     const parsed = vocabularyListQuerySchema.safeParse(
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
     const result = await Sentry.startSpan(
       { name: "db:vocabulary-list", op: "db" },
       async () =>
-        listVocabularyItems({ userId: user.id, status, search, page, pageSize }),
+        listVocabularyItems({ userId: userId, status, search, page, pageSize }),
     );
 
     return NextResponse.json({

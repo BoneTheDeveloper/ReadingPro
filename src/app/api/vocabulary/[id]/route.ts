@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { deleteVocabularyItem } from "@/server/db/vocabulary-queries";
-import { getAuthenticatedUser } from "@/server/auth/auth-utils";
+import { getUserId } from "@/server/auth/auth-utils";
 import { isAuthenticationRequiredError, isOwnershipMissError } from "@/server/http/route-errors";
 import { createRequestLogContext, createRequestLogger } from "@/server/observability/logger";
 
@@ -14,10 +14,10 @@ export async function DELETE(
   );
 
   try {
-    const user = await getAuthenticatedUser();
+    const userId = await getUserId();
     const { id } = await params;
 
-    await deleteVocabularyItem({ userId: user.id, itemId: id });
+    await deleteVocabularyItem({ userId: userId, itemId: id });
 
     return NextResponse.json({ success: true });
   } catch (error) {

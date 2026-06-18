@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { getAuthenticatedUser } from "@/server/auth/auth-utils";
+import { getUserId } from "@/server/auth/auth-utils";
 import { db } from "@/server/db/client";
 import { countWords } from "@/contracts/translation/translate-performance";
 
@@ -44,7 +44,7 @@ export async function POST() {
     return disabledResponse();
   }
 
-  const user = await getAuthenticatedUser();
+  const userId = await getUserId();
   const runId = Date.now().toString(36);
   const singleWord = `perfword${runId}`;
   const phrase = `perf phrase ${runId}`;
@@ -57,7 +57,7 @@ export async function POST() {
 
   const passage = await db.passage.create({
     data: {
-      userId: user.id,
+      userId: userId,
       title: `Translate performance ${runId}`,
       content: context,
       originalLevel: "B2",
@@ -90,7 +90,7 @@ export async function DELETE(request: NextRequest) {
     return disabledResponse();
   }
 
-  await getAuthenticatedUser();
+  await getUserId();
   const parsed = cleanupSchema.safeParse(await request.json().catch(() => ({})));
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid cleanup request." }, { status: 400 });

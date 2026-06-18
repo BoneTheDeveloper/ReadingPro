@@ -4,24 +4,29 @@ import { db } from "../db/client";
 
 const clerkMocks = vi.hoisted(() => ({
   auth: vi.fn(),
+  protect: vi.fn(),
   getUser: vi.fn(),
   clerkClient: vi.fn(),
 }));
 
-vi.mock("@clerk/nextjs/server", () => ({
-  auth: clerkMocks.auth,
-  clerkClient: clerkMocks.clerkClient,
-}));
+vi.mock("@clerk/nextjs/server", () => {
+  // `auth` is callable and also exposes a static `protect()` (Clerk AuthFn shape).
+  Object.assign(clerkMocks.auth, { protect: clerkMocks.protect });
+  return { auth: clerkMocks.auth, clerkClient: clerkMocks.clerkClient };
+});
 
 import {
   AuthenticationRequiredError,
   getCurrentUser,
+  getPageUserId,
+  getUserId,
   requireAuth,
 } from "./auth-utils";
 
 describe("Clerk auth profile bootstrap", () => {
   beforeEach(() => {
     clerkMocks.auth.mockReset();
+    clerkMocks.protect.mockReset();
     clerkMocks.getUser.mockReset();
     clerkMocks.clerkClient.mockReset();
     clerkMocks.clerkClient.mockResolvedValue({
@@ -76,6 +81,32 @@ describe("Clerk auth profile bootstrap", () => {
         avatarUrl: "https://img.example.test/updated-avatar.png",
       },
     });
+  });
+
+  it("getUserId returns the verified id from the session JWT without Clerk or DB calls", async () => {
+    clerkMocks.auth.mockResolvedValue({ userId: userProfileFixture.id });
+
+    await expect(getUserId()).resolves.toBe(userProfileFixture.id);
+    expect(clerkMocks.clerkClient).not.toHaveBeenCalled();
+    expect(clerkMocks.getUser).not.toHaveBeenCalled();
+    expect(db.userProfile.upsert).not.toHaveBeenCalled();
+    expect(db.userProfile.findUnique).not.toHaveBeenCalled();
+  });
+
+  it("getUserId throws the typed auth error without a Clerk session", async () => {
+    clerkMocks.auth.mockResolvedValue({ userId: null });
+
+    await expect(getUserId()).rejects.toBeInstanceOf(AuthenticationRequiredError);
+    expect(clerkMocks.clerkClient).not.toHaveBeenCalled();
+  });
+
+  it("getPageUserId returns the id via auth.protect without Clerk or DB calls", async () => {
+    clerkMocks.protect.mockResolvedValue({ userId: userProfileFixture.id });
+
+    await expect(getPageUserId()).resolves.toBe(userProfileFixture.id);
+    expect(clerkMocks.protect).toHaveBeenCalled();
+    expect(clerkMocks.clerkClient).not.toHaveBeenCalled();
+    expect(db.userProfile.upsert).not.toHaveBeenCalled();
   });
 
   it("upserts a missing profile from Clerk identity metadata", async () => {

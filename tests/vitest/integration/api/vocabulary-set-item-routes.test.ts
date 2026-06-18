@@ -7,14 +7,14 @@ import { expectJsonError } from "../../helpers/api-test-helpers";
 import { userProfileFixture, VOCAB_SET_ID, VOCAB_ITEM_FOR_SET_ID } from "../../fixtures";
 
 const routeMocks = vi.hoisted(() => ({
-  getAuthenticatedUser: vi.fn(),
+  getUserId: vi.fn(),
   addItemToSet: vi.fn(),
   removeItemFromSet: vi.fn(),
   verifySetOwnership: vi.fn(),
 }));
 
 vi.mock("@/server/auth/auth-utils", () => ({
-  getAuthenticatedUser: routeMocks.getAuthenticatedUser,
+  getUserId: routeMocks.getUserId,
   AuthenticationRequiredError: class AuthenticationRequiredError extends Error {
     constructor() { super("Authentication required"); this.name = "AuthenticationRequiredError"; }
   },
@@ -28,7 +28,7 @@ vi.mock("@/server/db/vocabulary-set-queries", () => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
-  routeMocks.getAuthenticatedUser.mockResolvedValue(userProfileFixture);
+  routeMocks.getUserId.mockResolvedValue(userProfileFixture.id);
   routeMocks.addItemToSet.mockResolvedValue({
     id: "set-item-001",
     vocabularySetId: VOCAB_SET_ID,
@@ -91,7 +91,7 @@ describe("POST /api/vocabulary/sets/[id]/items (add items)", () => {
   });
 
   it("rejects unauthenticated request with 401", async () => {
-    routeMocks.getAuthenticatedUser.mockRejectedValue(new Error("Authentication required"));
+    routeMocks.getUserId.mockRejectedValue(new Error("Authentication required"));
 
     const response = await addItemsRoute(
       createJsonRequest({ itemIds: [VOCAB_ITEM_FOR_SET_ID] }),
@@ -130,7 +130,7 @@ describe("DELETE /api/vocabulary/sets/[id]/items/[itemId] (remove item)", () => 
   });
 
   it("rejects unauthenticated request with 401", async () => {
-    routeMocks.getAuthenticatedUser.mockRejectedValue(new Error("Authentication required"));
+    routeMocks.getUserId.mockRejectedValue(new Error("Authentication required"));
     const response = await removeItemRoute(
       new NextRequest("https://english-reading.test/api/vocabulary/sets/id/items/itemId", { method: "DELETE" }),
       { params: Promise.resolve({ id: VOCAB_SET_ID, itemId: VOCAB_ITEM_FOR_SET_ID }) },

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
-import { getAuthenticatedUser } from "@/server/auth/auth-utils";
+import { getUserId } from "@/server/auth/auth-utils";
 import { getZodErrorMessage, isAuthenticationRequiredError, isOwnershipMissError } from "@/server/http/route-errors";
 import { createRequestLogContext, createRequestLogger } from "@/server/observability/logger";
 import { generateQuestionsForPassage, PassageStudyServiceError } from "@/server/modules/study/passage/passage-study.service";
@@ -52,16 +52,16 @@ async function handleStudioQuestionsPost(request: NextRequest) {
     }
 
     const { passageId, artifactId } = parsed.data;
-    const user = await Sentry.startSpan(
+    const userId = await Sentry.startSpan(
       {
         name: "api:study:studio:questions-authenticate",
         op: "auth",
         attributes: { "study.passage_id": passageId },
       },
-      () => getAuthenticatedUser(),
+      () => getUserId(),
     );
 
-    const { artifact, questions } = await generateQuestionsForPassage(user.id, passageId, artifactId);
+    const { artifact, questions } = await generateQuestionsForPassage(userId, passageId, artifactId);
     return createStudioQuestionsSuccessResponse({ artifact, questions });
   } catch (error) {
     if (isAuthenticationRequiredError(error)) {

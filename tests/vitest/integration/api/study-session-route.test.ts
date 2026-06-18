@@ -15,14 +15,14 @@ const routeMocks = vi.hoisted(() => {
   }
 
   return {
-    getAuthenticatedUser: vi.fn(),
+    getUserId: vi.fn(),
     ensureActiveSession: vi.fn(),
     AuthenticationRequiredError,
   };
 });
 
 vi.mock("@/server/auth/auth-utils", () => ({
-  getAuthenticatedUser: routeMocks.getAuthenticatedUser,
+  getUserId: routeMocks.getUserId,
   AuthenticationRequiredError: routeMocks.AuthenticationRequiredError,
 }));
 
@@ -32,12 +32,12 @@ vi.mock("@/server/db/study-session-queries", () => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
-  routeMocks.getAuthenticatedUser.mockResolvedValue(userProfileFixture);
+  routeMocks.getUserId.mockResolvedValue(userProfileFixture.id);
 });
 
 describe("study-session API contracts", () => {
   it("returns 401 for unauthenticated ensure requests", async () => {
-    routeMocks.getAuthenticatedUser.mockRejectedValue(new routeMocks.AuthenticationRequiredError());
+    routeMocks.getUserId.mockRejectedValue(new routeMocks.AuthenticationRequiredError());
 
     const created = await createStudySessionRoute(createJsonRequest({}));
     expect(created.status).toBe(401);

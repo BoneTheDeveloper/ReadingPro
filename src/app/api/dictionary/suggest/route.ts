@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
-import { getAuthenticatedUser } from "@/server/auth/auth-utils";
+import { getUserId } from "@/server/auth/auth-utils";
 import { createRequestLogContext, createRequestLogger } from "@/server/observability/logger";
 import {
   getPrismaQueryMetrics,
@@ -73,12 +73,12 @@ async function handleSuggestGet(request: NextRequest, includePerformance: boolea
       });
     }
 
-    const user = await measureDictionaryStep(
+    const userId = await measureDictionaryStep(
       performanceTracker,
       "auth",
       () => Sentry.startSpan(
         { name: "api:dictionary-suggest-auth", op: "auth" },
-        () => getAuthenticatedUser(),
+        () => getUserId(),
       ),
     );
 
@@ -91,7 +91,7 @@ async function handleSuggestGet(request: NextRequest, includePerformance: boolea
           op: "db",
           attributes: {
             "dictionary.query_length": normalizedQuery.length,
-            "user.id": user.id,
+            "userId": userId,
           },
         },
         () => suggestDictionaryTerms(parsed.data.q, {

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
-import { getAuthenticatedUser } from "@/server/auth/auth-utils";
+import { getUserId } from "@/server/auth/auth-utils";
 import { createRequestLogContext, createRequestLogger } from "@/server/observability/logger";
 import {
   getPrismaQueryMetrics,
@@ -81,12 +81,12 @@ async function handleEntryDetailGet(
         })
       : null;
 
-    const user = await measureDictionaryStep(
+    const userId = await measureDictionaryStep(
       performanceTracker,
       "auth",
       () => Sentry.startSpan(
         { name: "api:dictionary-entry-detail-authenticate", op: "auth" },
-        () => getAuthenticatedUser(),
+        () => getUserId(),
       ),
     );
 
@@ -97,7 +97,7 @@ async function handleEntryDetailGet(
         {
           name: "db:dictionary-entry-detail",
           op: "db",
-          attributes: { "dictionary.entry_id": entryId, "user.id": user.id },
+          attributes: { "dictionary.entry_id": entryId, "userId": userId },
         },
         () => getDictionaryEntryDetail(entryId, {
           sourceLanguage: parsed.data.sourceLanguage,

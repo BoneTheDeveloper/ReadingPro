@@ -12,12 +12,12 @@ import { parseJsonResponse } from "../../helpers/api";
 import { expectApiErrorPayload, expectApiSuccessPayload } from "../../helpers/assertions";
 
 const routeMocks = vi.hoisted(() => ({
-  getAuthenticatedUser: vi.fn(),
+  getUserId: vi.fn(),
   searchDictionary: vi.fn(),
 }));
 
 vi.mock("@/server/auth/auth-utils", () => ({
-  getAuthenticatedUser: routeMocks.getAuthenticatedUser,
+  getUserId: routeMocks.getUserId,
 }));
 
 vi.mock("@/server/modules/dictionary/search/search.service", () => ({
@@ -45,7 +45,7 @@ const searchResult: DictionarySearchResultDto = {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  routeMocks.getAuthenticatedUser.mockResolvedValue(userProfileFixture);
+  routeMocks.getUserId.mockResolvedValue(userProfileFixture.id);
 });
 
 describe("GET /api/dictionary/search", () => {
@@ -78,7 +78,7 @@ describe("GET /api/dictionary/search", () => {
     expect(response.status).toBe(200);
     expectApiSuccessPayload(payload);
     expect(payload.data).toEqual([]);
-    expect(routeMocks.getAuthenticatedUser).toHaveBeenCalled();
+    expect(routeMocks.getUserId).toHaveBeenCalled();
     expect(routeMocks.searchDictionary).toHaveBeenCalledWith("a", {
       sourceLanguage: "en",
       targetLanguage: "vi",
@@ -138,7 +138,7 @@ describe("GET /api/dictionary/search", () => {
     );
 
     await expectJsonError(response, 400, "Invalid query parameters.");
-    expect(routeMocks.getAuthenticatedUser).not.toHaveBeenCalled();
+    expect(routeMocks.getUserId).not.toHaveBeenCalled();
     expect(routeMocks.searchDictionary).not.toHaveBeenCalled();
   });
 
@@ -148,12 +148,12 @@ describe("GET /api/dictionary/search", () => {
     );
 
     await expectJsonError(response, 400, "Invalid query parameters.");
-    expect(routeMocks.getAuthenticatedUser).not.toHaveBeenCalled();
+    expect(routeMocks.getUserId).not.toHaveBeenCalled();
     expect(routeMocks.searchDictionary).not.toHaveBeenCalled();
   });
 
   it("returns 401 when the user is not authenticated", async () => {
-    routeMocks.getAuthenticatedUser.mockRejectedValue(new Error("Authentication required"));
+    routeMocks.getUserId.mockRejectedValue(new Error("Authentication required"));
 
     const response = await dictionarySearch(
       createSearchRequest("q=algorithm&sourceLanguage=en&targetLanguage=vi"),

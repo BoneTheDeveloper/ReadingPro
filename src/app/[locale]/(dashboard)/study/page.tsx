@@ -1,4 +1,4 @@
-import { getAuthenticatedUser } from '@/server/auth/auth-utils';
+import { getPageUserId } from '@/server/auth/auth-utils';
 import { getUserPassages } from '@/server/db/passage-queries';
 import { StudyPageClient } from '@/features/study/ui/study-workspace-client';
 import type { PassageData } from '@/features/study/model/types';
@@ -6,8 +6,8 @@ import type { PassageData } from '@/features/study/model/types';
 export const dynamic = 'force-dynamic';
 
 export default async function StudyPage() {
-  const user = await getAuthenticatedUser();
-  const rows = await getUserPassages(user.id);
+  const userId = await getPageUserId();
+  const rows = await getUserPassages(userId);
 
   const initialPassages: PassageData[] = rows.map((p) => ({
     id: p.id,

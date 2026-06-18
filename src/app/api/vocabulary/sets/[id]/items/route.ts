@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 import { addItemToSet, verifySetOwnership } from "@/server/db/vocabulary-set-queries";
-import { getAuthenticatedUser } from "@/server/auth/auth-utils";
+import { getUserId } from "@/server/auth/auth-utils";
 import { isAuthenticationRequiredError, isOwnershipMissError } from "@/server/http/route-errors";
 import { createRequestLogContext, createRequestLogger } from "@/server/observability/logger";
 
@@ -32,10 +32,10 @@ export async function POST(
       return NextResponse.json({ error: "Invalid request." }, { status: 400 });
     }
 
-    const user = await getAuthenticatedUser();
+    const userId = await getUserId();
     const { id } = await params;
 
-    await verifySetOwnership(user.id, id);
+    await verifySetOwnership(userId, id);
 
     await Sentry.startSpan(
       { name: "db:vocabulary-set-add-items", op: "db" },

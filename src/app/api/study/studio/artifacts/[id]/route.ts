@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
-import { getAuthenticatedUser } from "@/server/auth/auth-utils";
+import { getUserId } from "@/server/auth/auth-utils";
 import { db } from "@/server/db/client";
 import { isAuthenticationRequiredError } from "@/server/http/route-errors";
 import { createModuleLogger } from "@/server/observability/logger";
@@ -25,12 +25,12 @@ export async function GET(
 ) {
   const { id } = await params;
   try {
-    const user = await getAuthenticatedUser();
+    const userId = await getUserId();
     
     // Scope through the parent artifact's owner so a user can only read
     // questions for artifacts they own (prevents cross-user id probing).
     const questions = await db.question.findMany({
-      where: { artifactId: id, artifact: { userId: user.id } },
+      where: { artifactId: id, artifact: { userId: userId } },
       orderBy: { createdAt: "asc" },
       select: {
         id: true,
@@ -48,7 +48,7 @@ export async function GET(
     if (questions.length === 0) {
       // Check if artifact exists but just has no questions yet, or if it doesn't exist/owned
       const artifact = await db.studioArtifact.findFirst({
-        where: { id, userId: user.id }
+        where: { id, userId: userId }
       });
       if (!artifact) {
         return NextResponse.json({ error: "Artifact not found" }, { status: 404 });

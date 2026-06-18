@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
-import { getAuthenticatedUser } from "@/server/auth/auth-utils";
+import { getUserId } from "@/server/auth/auth-utils";
 import {
   isAuthenticationRequiredError,
   isOwnershipMissError,
@@ -36,11 +36,11 @@ export async function GET(request: NextRequest) {
     }
 
     const { passageId } = parsed.data;
-    const user = await getAuthenticatedUser();
+    const userId = await getUserId();
 
     const { artifacts } = await Sentry.startSpan(
       { name: "study:fetch-artifacts", op: "db" },
-      async () => fetchStudioArtifacts(user.id, passageId),
+      async () => fetchStudioArtifacts(userId, passageId),
     );
 
     requestLog.info(

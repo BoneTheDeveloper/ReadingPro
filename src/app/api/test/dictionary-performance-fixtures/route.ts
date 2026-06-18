@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { getAuthenticatedUser } from "@/server/auth/auth-utils";
+import { getUserId } from "@/server/auth/auth-utils";
 import { db } from "@/server/db/client";
 
 const cleanupSchema = z.object({
@@ -42,7 +42,7 @@ export async function POST() {
     return disabledResponse();
   }
 
-  await getAuthenticatedUser();
+  await getUserId();
   const runId = Date.now().toString(36);
   const headword = `perfsuggest ${runId}`;
   const aliasHeadword = `perfalias target ${runId}`;
@@ -83,7 +83,7 @@ export async function DELETE(request: NextRequest) {
     return disabledResponse();
   }
 
-  await getAuthenticatedUser();
+  await getUserId();
   const parsed = cleanupSchema.safeParse(await request.json().catch(() => ({})));
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid cleanup request." }, { status: 400 });

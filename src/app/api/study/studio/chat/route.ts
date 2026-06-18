@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
-import { AuthenticationRequiredError, getAuthenticatedUser } from "@/server/auth/auth-utils";
+import { AuthenticationRequiredError, getUserId } from "@/server/auth/auth-utils";
 import { createRequestLogContext, createRequestLogger } from "@/server/observability/logger";
 import {
   studyChatRequestSchema,
@@ -74,28 +74,28 @@ export async function POST(request: NextRequest) {
     const { messages, passageId } = parsed.data;
     requestLog = requestLog.child({ passageId });
 
-    const user = await Sentry.startSpan(
+    const userId = await Sentry.startSpan(
       {
         name: "api:study:studio:chat-authenticate",
         op: "auth",
         attributes: { "study.passage_id": passageId, "study.message_count": messages.length },
       },
-      () => getAuthenticatedUser(),
+      () => getUserId(),
     );
-    requestLog = requestLog.child({ userId: user.id });
+    requestLog = requestLog.child({ userId: userId });
 
-    const passage = await getOwnedPassageForChat(user.id, passageId);
+    const passage = await getOwnedPassageForChat(userId, passageId);
 
-    const persisted = await loadPersistedMessages(user.id, passageId);
+    const persisted = await loadPersistedMessages(userId, passageId);
     const persistedUiMessages = toPersistedUiMessages(persisted);
 
     const userMessage = messages.findLast((msg) => msg.role === "user");
     if (userMessage) {
-      await persistUserMessage(user.id, passageId, userMessage);
+      await persistUserMessage(userId, passageId, userMessage);
     }
 
     const result = await streamStudyChat({
-      userId: user.id,
+      userId: userId,
       passageId,
       passage,
       incomingMessages: messages,
@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
         requestLog.error({ err: error }, "Failed to persist study chat assistant message");
         Sentry.captureException(error, {
           tags: { route: "api:study:studio:chat", method: "POST", operation: "assistant-message-create" },
-          extra: { userId: user.id, passageId },
+          extra: { userId: userId, passageId },
         });
       },
     });
@@ -148,17 +148,17 @@ export async function GET(request: NextRequest) {
     }
     requestLog = requestLog.child({ passageId: parsed.data.passageId });
 
-    const user = await Sentry.startSpan(
+    const userId = await Sentry.startSpan(
       {
         name: "api:study:studio:chat-history-authenticate",
         op: "auth",
         attributes: { "study.passage_id": parsed.data.passageId },
       },
-      () => getAuthenticatedUser(),
+      () => getUserId(),
     );
-    requestLog = requestLog.child({ userId: user.id });
+    requestLog = requestLog.child({ userId: userId });
 
-    const messages = await getChatHistory(user.id, parsed.data.passageId);
+    const messages = await getChatHistory(userId, parsed.data.passageId);
 
     requestLog.debug(
       { context: { messageCount: messages.length } },

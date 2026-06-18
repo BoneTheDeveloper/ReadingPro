@@ -12,12 +12,12 @@ import { parseJsonResponse } from "../../helpers/api";
 import { expectApiErrorPayload, expectApiSuccessPayload } from "../../helpers/assertions";
 
 const routeMocks = vi.hoisted(() => ({
-  getAuthenticatedUser: vi.fn(),
+  getUserId: vi.fn(),
   getDictionaryEntryDetail: vi.fn(),
 }));
 
 vi.mock("@/server/auth/auth-utils", () => ({
-  getAuthenticatedUser: routeMocks.getAuthenticatedUser,
+  getUserId: routeMocks.getUserId,
 }));
 
 vi.mock("@/server/modules/dictionary/entry-detail/entry-detail.service", () => ({
@@ -78,7 +78,7 @@ const dictionaryEntry: DictionaryEntryDto = {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  routeMocks.getAuthenticatedUser.mockResolvedValue(userProfileFixture);
+  routeMocks.getUserId.mockResolvedValue(userProfileFixture.id);
 });
 
 describe("GET /api/dictionary/entries/:entryId", () => {
@@ -169,7 +169,7 @@ describe("GET /api/dictionary/entries/:entryId", () => {
   });
 
   it("returns 401 when the user is not authenticated", async () => {
-    routeMocks.getAuthenticatedUser.mockRejectedValue(new Error("Authentication required"));
+    routeMocks.getUserId.mockRejectedValue(new Error("Authentication required"));
 
     const response = await dictionaryEntryDetail(
       createEntryDetailRequest(ENTRY_UUID, "sourceLanguage=en&targetLanguage=vi"),

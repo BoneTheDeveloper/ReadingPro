@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
 import { getUserProgress } from '@/server/db/quiz/quiz-review';
-import { getAuthenticatedUser } from '@/server/auth/auth-utils';
+import { getUserId } from '@/server/auth/auth-utils';
 import { isAuthenticationRequiredError } from '@/server/http/route-errors';
 import { createRequestLogContext, createRequestLogger } from '@/server/observability/logger';
 
@@ -12,10 +12,10 @@ export async function GET(request: NextRequest) {
   );
 
   try {
-    const user = await getAuthenticatedUser();
+    const userId = await getUserId();
     const stats = await Sentry.startSpan(
       { name: 'db:progress-stats', op: 'db' },
-      async () => getUserProgress(user.id),
+      async () => getUserProgress(userId),
     );
 
     return NextResponse.json({ success: true, data: stats });

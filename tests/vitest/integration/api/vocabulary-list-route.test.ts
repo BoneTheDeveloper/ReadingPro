@@ -6,12 +6,12 @@ import { expectJsonError } from "../../helpers/api-test-helpers";
 import { userProfileFixture, vocabularyItemFixture, VOCABULARY_ITEM_ID } from "../../fixtures";
 
 const routeMocks = vi.hoisted(() => ({
-  getAuthenticatedUser: vi.fn(),
+  getUserId: vi.fn(),
   listVocabularyItems: vi.fn(),
 }));
 
 vi.mock("@/server/auth/auth-utils", () => ({
-  getAuthenticatedUser: routeMocks.getAuthenticatedUser,
+  getUserId: routeMocks.getUserId,
   AuthenticationRequiredError: class AuthenticationRequiredError extends Error {
     constructor() { super("Authentication required"); this.name = "AuthenticationRequiredError"; }
   },
@@ -23,7 +23,7 @@ vi.mock("@/server/db/vocabulary-queries", () => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
-  routeMocks.getAuthenticatedUser.mockResolvedValue(userProfileFixture);
+  routeMocks.getUserId.mockResolvedValue(userProfileFixture.id);
   routeMocks.listVocabularyItems.mockResolvedValue({
     items: [vocabularyItemFixture],
     total: 1,
@@ -69,7 +69,7 @@ describe("GET /api/vocabulary/list", () => {
   });
 
   it("rejects unauthenticated request with 401", async () => {
-    routeMocks.getAuthenticatedUser.mockRejectedValue(new Error("Authentication required"));
+    routeMocks.getUserId.mockRejectedValue(new Error("Authentication required"));
     const request = new NextRequest("https://english-reading.test/api/vocabulary/list");
     const response = await listVocabularyRoute(request);
     await expectJsonError(response, 401, "Authentication required.");

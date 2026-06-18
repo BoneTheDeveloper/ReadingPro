@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
-import { getAuthenticatedUser } from "@/server/auth/auth-utils";
+import { getUserId } from "@/server/auth/auth-utils";
 import { 
   recordQuizResult, 
   resetQuizResult 
@@ -25,7 +25,7 @@ export async function POST(
 ) {
   const { id } = await params;
   try {
-    const user = await getAuthenticatedUser();
+    const userId = await getUserId();
     const body = await request.json();
     
     const parsed = recordQuizResultSchema.safeParse(body);
@@ -36,7 +36,7 @@ export async function POST(
       );
     }
 
-    await recordQuizResult(id, user.id, {
+    await recordQuizResult(id, userId, {
       correctCount: parsed.data.correctCount,
       totalQuestions: parsed.data.totalQuestions,
     });
@@ -62,9 +62,9 @@ export async function DELETE(
 ) {
   const { id } = await params;
   try {
-    const user = await getAuthenticatedUser();
+    const userId = await getUserId();
     
-    await resetQuizResult(id, user.id);
+    await resetQuizResult(id, userId);
 
     return NextResponse.json({ success: true });
   } catch (error) {
