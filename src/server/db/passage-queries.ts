@@ -1,7 +1,7 @@
 import 'server-only';
 import { z } from 'zod';
 import { Prisma } from '@/generated/prisma/client';
-import type { CEFRLevel } from '@/shared/domain/cefr';
+import type { CEFRLevel } from '@/contracts/domain/cefr';
 import { db } from './client';
 
 export const questionOptionSchema = z.object({

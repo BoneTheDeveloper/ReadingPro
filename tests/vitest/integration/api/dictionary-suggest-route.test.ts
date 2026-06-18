@@ -5,19 +5,19 @@ import {
   dictionarySuggestPerformanceResponseSchema,
   dictionarySuggestResponseSchema,
   dictionarySuggestSuccessResponseSchema,
-} from "@/shared/dictionary/dictionary-response-schema";
-import type { DictionarySuggestItemDto } from "@/shared/dictionary/dictionary-dtos";
+} from "@/contracts/dictionary/dictionary-response-schema";
+import type { DictionarySuggestItemDto } from "@/contracts/dictionary/dictionary-dtos";
 import { userProfileFixture } from "../../fixtures";
 import { parseJsonResponse } from "../../helpers/api";
 import { expectApiErrorPayload, expectApiSuccessPayload } from "../../helpers/assertions";
 
 const routeMocks = vi.hoisted(() => ({
-  getAuthenticatedUser: vi.fn(),
+  getUserId: vi.fn(),
   suggestDictionaryTerms: vi.fn(),
 }));
 
 vi.mock("@/server/auth/auth-utils", () => ({
-  getAuthenticatedUser: routeMocks.getAuthenticatedUser,
+  getUserId: routeMocks.getUserId,
 }));
 
 vi.mock("@/server/modules/dictionary/suggest/suggest.service", () => ({
@@ -54,7 +54,7 @@ const suggestItems: DictionarySuggestItemDto[] = [
 
 beforeEach(() => {
   vi.clearAllMocks();
-  routeMocks.getAuthenticatedUser.mockResolvedValue(userProfileFixture);
+  routeMocks.getUserId.mockResolvedValue(userProfileFixture.id);
 });
 
 describe("GET /api/dictionary/suggest", () => {
@@ -84,7 +84,7 @@ describe("GET /api/dictionary/suggest", () => {
     expect(response.status).toBe(200);
     expectApiSuccessPayload(payload);
     expect(payload.data).toEqual([]);
-    expect(routeMocks.getAuthenticatedUser).not.toHaveBeenCalled();
+    expect(routeMocks.getUserId).not.toHaveBeenCalled();
     expect(routeMocks.suggestDictionaryTerms).not.toHaveBeenCalled();
   });
 
@@ -123,12 +123,12 @@ describe("GET /api/dictionary/suggest", () => {
     );
 
     await expectJsonError(response, 400, "Invalid query parameters.");
-    expect(routeMocks.getAuthenticatedUser).not.toHaveBeenCalled();
+    expect(routeMocks.getUserId).not.toHaveBeenCalled();
     expect(routeMocks.suggestDictionaryTerms).not.toHaveBeenCalled();
   });
 
   it("returns 401 when the user is not authenticated", async () => {
-    routeMocks.getAuthenticatedUser.mockRejectedValue(new Error("Authentication required"));
+    routeMocks.getUserId.mockRejectedValue(new Error("Authentication required"));
 
     const response = await dictionarySuggest(
       createSuggestRequest("q=algo&sourceLanguage=en&targetLanguage=vi"),

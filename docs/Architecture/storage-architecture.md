@@ -2,7 +2,7 @@
 
 ## Storage Adapter
 
-`src/lib/storage/blob-storage.ts` exposes one storage API:
+`src/server/storage/blob-storage.ts` exposes one storage API:
 
 - `uploadFile(filename, buffer, contentType)`
 - `deleteFile(pathname)`

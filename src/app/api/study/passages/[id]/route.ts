@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
-import { getAuthenticatedUser } from "@/server/auth/auth-utils";
+import { getUserId } from "@/server/auth/auth-utils";
 import { deletePassage } from "@/server/db/passage-queries";
 import { isAuthenticationRequiredError } from "@/server/http/route-errors";
-import { createModuleLogger } from "@/server/core/logger";
+import { createModuleLogger } from "@/server/observability/logger";
 
 const log = createModuleLogger("api:study:passages:delete");
 
@@ -13,11 +13,11 @@ export async function DELETE(
 ) {
   const { id } = await params;
   try {
-    const user = await getAuthenticatedUser();
+    const userId = await getUserId();
     
-    await deletePassage(id, user.id);
+    await deletePassage(id, userId);
 
-    log.info({ passageId: id, userId: user.id }, "Passage deleted via API");
+    log.info({ passageId: id, userId: userId }, "Passage deleted via API");
 
     return NextResponse.json({
       success: true,

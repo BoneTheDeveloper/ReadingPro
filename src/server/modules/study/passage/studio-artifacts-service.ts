@@ -3,7 +3,7 @@ import { db } from "@/server/db/client";
 import {
   type StudioArtifact,
   type StudioArtifactType,
-} from "@/shared/study/studio-artifact-types";
+} from "@/contracts/study/studio-artifact-types";
 
 function toStudioArtifact(row: {
   id: string;

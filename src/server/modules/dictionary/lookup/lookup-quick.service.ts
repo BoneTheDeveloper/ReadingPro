@@ -1,6 +1,6 @@
 import 'server-only';
-import { createModuleLogger } from "@/server/core/logger";
-import { normalizeDictionaryTerm } from "@/shared/dictionary/normalize-dictionary-term";
+import { createModuleLogger } from "@/server/observability/logger";
+import { normalizeDictionaryTerm } from "@/contracts/dictionary/normalize-dictionary-term";
 import { resolveQuickDictionaryLookupSql } from "./lookup.service";
 
 const log = createModuleLogger("dictionary:quick-resolver");

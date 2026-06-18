@@ -2,8 +2,8 @@ import 'server-only';
 import {
   getSourceLabel,
   type DictionarySearchResultDto,
-} from "@/shared/dictionary/dictionary-dtos";
-import { normalizeDictionaryTerm } from "@/shared/dictionary/normalize-dictionary-term";
+} from "@/contracts/dictionary/dictionary-dtos";
+import { normalizeDictionaryTerm } from "@/contracts/dictionary/normalize-dictionary-term";
 import {
   searchDictionaryCandidates,
   type DictionarySearchCandidateRow,

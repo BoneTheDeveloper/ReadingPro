@@ -85,7 +85,7 @@ src/features/study/model/types.ts
 src/features/study/model/selection-utils.ts
 +-- DOM selection extraction and popup geometry inputs
 
-src/features/study/api/study-api.ts
+src/features/study/api-client/study-api.ts
 +-- Client API helpers used by quiz and question generation
 
 src/features/study/actions/*
@@ -104,10 +104,10 @@ src/features/upload/ui/*
 src/features/upload/actions/*
 +-- Shared upload mutation entrypoints
 
-src/lib/passages/services/*
+src/server/modules/*
 +-- Reusable Passage domain services
 
-src/lib/passages/repositories/*
+src/server/db/*
 +-- Passage repository/database access
 ```
 
@@ -121,7 +121,7 @@ src/lib/passages/repositories/*
 - Reader selection UI belongs to the center panel area; the selection state is lifted to `StudyPageClient` because studio translation details also need it.
 - Study-specific upload composition belongs in `StudyUploadModal`; upload state is surfaced to `StudySourcesPanel` as an upload row.
 - Upload form pieces, input validation, file/text normalization, and upload-specific workflow should move to `src/features/upload` instead of being duplicated inside Study.
-- Reusable Passage domain logic should live in `src/lib/passages`, not in Study or Upload UI.
+- Reusable Passage domain logic should live in `src/server/modules`, not in Study or Upload UI.
 - Quiz runtime state belongs in `QuizContent`; quiz completion display belongs in `QuizResults`.
 - Chat transport and chat history bootstrap currently belong in `StudyChatPanel`.
 - Durable ownership checks, provider calls, DB writes, and route contracts stay outside visual components.
@@ -139,9 +139,9 @@ When adding a Study subcomponent, place it by ownership:
 | Quiz taking and quiz results | `studio/quiz/*` |
 | Study upload modal shell and Study workspace callbacks | `src/features/study/ui/upload/*` |
 | Reusable upload form, dropzone, text input, upload schema, upload workflow | `src/features/upload/*` |
-| Reusable passage creation, reads, ownership, repository access | `src/lib/passages/*` |
+| Reusable passage creation, reads, ownership, repository access | `src/server/modules/*` |
 | Cross-panel state or orchestration | `StudyPageClient` or `src/features/study/model/use-*` |
-| Server mutation or ownership logic | `src/features/study/actions/*` or `src/lib/study/*` |
+| Server mutation or ownership logic | `src/features/study/actions/*` or `src/server/modules/study/*` |
 
 ## Root Client: StudyPageClient
 
@@ -390,7 +390,7 @@ Workspace state is split by responsibility:
 | Quiz current question, selected answer, feedback, attempt ids | `QuizContent` |
 | Upload modal mode, pasted text, modal-local validation | `StudyUploadModal` |
 
-Do not move ownership checks, persistence rules, or route response contracts into these UI components. Those belong in server actions, route handlers, feature API helpers, or `src/lib`.
+Do not move ownership checks, persistence rules, or route response contracts into these UI components. Those belong in server actions, route handlers, feature API helpers, or `src/server/modules`.
 
 ## Data And Action Boundaries
 
@@ -405,8 +405,8 @@ Do not move ownership checks, persistence rules, or route response contracts int
 | Fetch study results | Active passage effect | `StudyPageClient` -> `/api/study-results` |
 | Quick translate | `StudyTranslationPopup` callback | `StudyPageClient` -> `/api/translate` |
 | Save selected vocabulary | `StudyTranslatePanel` callback | `StudyPageClient` -> `/api/vocabulary` |
-| Chat history and stream | `StudyChatPanel` | `/api/study-chat` |
-| Quiz attempt start/complete | `QuizContent`, `QuizResults` | `src/features/study/api/study-api.ts` |
+| Chat history and stream | `StudyChatPanel` | `/api/study/studio/chat` |
+| Quiz attempt start/complete | `QuizContent`, `QuizResults` | `src/features/study/api-client/study-api.ts` |
 
 Rule: if a visual component needs one of these flows, pass a callback down from the owner instead of importing unrelated state from another panel.
 

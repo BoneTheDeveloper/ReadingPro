@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { getProgressStats } from "./api/progress-client"
+import { getProgressStats } from "./api-client/progress-client"
 import {
   TrendingUp,
   Clock,
@@ -11,10 +11,10 @@ import {
   Flame,
   Calendar,
 } from "lucide-react"
-import { cn } from "@/shared/utils"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import type { ProgressStatsDto } from "@/shared/study/study-response-schema"
+import { cn } from "@/contracts/utils"
+import { Card, CardContent } from "@/ui/primitives/card"
+import { Button } from "@/ui/primitives/button"
+import type { ProgressStatsDto } from "@/contracts/study/study-response-schema"
 
 export function ProgressDashboard() {
   const router = useRouter()

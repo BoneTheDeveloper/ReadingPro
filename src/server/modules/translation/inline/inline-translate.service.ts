@@ -3,15 +3,15 @@ import type { Prisma } from "@/generated/prisma/client";
 import * as Sentry from "@sentry/nextjs";
 import type { QuickTranslation } from "@/server/ai/translator";
 import { quickTranslationSchema } from "@/server/ai/translator";
-import { createRequestLogger } from "@/server/core/logger";
+import { createRequestLogger } from "@/server/observability/logger";
 import { getQuickSelectionScope } from "@/server/modules/translation/quick-selection-scope";
 import type {
   TranslatePerformanceSnapshot,
-} from "@/shared/translation/translate-performance";
+} from "@/contracts/translation/translate-performance";
 import {
   createTranslatePerformanceTracker,
   getTranslateResolutionSource,
-} from "@/shared/translation/translate-performance";
+} from "@/contracts/translation/translate-performance";
 import { runWithPrismaQueryStep } from "@/server/observability/prisma-query-metrics";
 import {
   buildTranslationCacheKey,

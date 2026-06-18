@@ -24,7 +24,7 @@ src/app/[locale]/(group)/feature/page.tsx
     +-- src/features/feature/feature-section.tsx
     +-- src/features/feature/feature-list.tsx
     +-- src/features/feature/use-feature-data.ts
-    +-- src/components/ui/*
+    +-- src/ui/primitives/*
 ```
 
 Feature folders may use a deeper split when the feature is large. The Study workspace is the reference example for a large feature.
@@ -180,21 +180,21 @@ Naming:
 - `useVocabularyList`
 - `useVocabularySets`
 
-Do not put durable domain behavior in UI hooks. Durable behavior belongs in `src/lib`.
+Do not put durable domain behavior in UI hooks. Durable behavior belongs in `src/server/modules`.
 
 ## Service Placement Rules
 
 Use `src/features/<feature>/services` for services that belong to a specific feature or use case.
 
-Use `src/lib/<domain>` for domain services that are shared across multiple features, API routes, server actions, or background jobs. Group them by capability inside the domain, such as `src/lib/dictionary/lookup/lookup.service.ts` or `src/lib/upload/content-analysis/content-analysis.service.ts`.
+Use `src/server/modules/<domain>` for domain services that are shared across multiple features, API routes, server actions, or background jobs. Group them by capability inside the domain, such as `src/server/modules/dictionary/lookup/lookup.service.ts` or `src/server/modules/upload/content-analysis/content-analysis.service.ts`.
 
-Do not put every service into a generic `src/lib/services` folder. Services should be grouped by domain so ownership is clear.
+Do not put every service into a generic `src/server/services` folder. Services should be grouped by domain so ownership is clear.
 
 Placement decision:
 
 ```text
 Is it a browser fetch wrapper?
-  -> src/features/<feature>/api
+  -> src/features/<feature>/api-client
 
 Is it a React/page-state workflow?
   -> src/features/<feature>/hooks or ui
@@ -203,28 +203,28 @@ Is it one feature's server-side use case or workflow?
   -> src/features/<feature>/services
 
 Is it reusable domain/business logic?
-  -> src/lib/<domain>/...
+  -> src/server/modules/<domain>/...
 
 Does it perform database access?
-  -> src/lib/<domain>/repositories
+  -> src/server/modules/<domain>
 ```
 
 Rules:
 
 - If a service is used by only one feature and describes that feature's workflow, keep it inside that feature.
-- If a service represents reusable domain/business logic, move it to `src/lib/<domain>`.
+- If a service represents reusable domain/business logic, move it to `src/server/modules/<domain>`.
 - If a service depends on UI state, React hooks, or page-specific behavior, it must stay in `src/features`.
-- If a service performs database/domain operations that should be reused outside one feature, it belongs in `src/lib/<domain>`.
-- If a service only wraps a client-side API call, put it in `src/features/<feature>/api`, not in `src/lib`.
-- Repository/database access should live under `src/lib/<domain>/repositories`.
-- API routes may call a feature service only when the route exists solely to execute that feature workflow. If the same behavior is also needed by another route, server action, background job, or feature, extract the reusable part to `src/lib/<domain>`.
+- If a service performs database/domain operations that should be reused outside one feature, it belongs in `src/server/modules/<domain>`.
+- If a service only wraps a client-side API call, put it in `src/features/<feature>/api-client`, not in `src/server/modules`.
+- Repository/database access should live under `src/server/modules/<domain>`.
+- API routes may call a feature service only when the route exists solely to execute that feature workflow. If the same behavior is also needed by another route, server action, background job, or feature, extract the reusable part to `src/server/modules/<domain>`.
 
 Examples:
 
-- `src/features/study/api/studio-questions-client.ts` is a feature API client because browser hooks call it and it wraps `/api/studio-questions`.
+- `src/features/study/api-client/studio-questions-client.ts` is a feature API client because browser hooks call it and it wraps `/api/study/studio/questions`.
 - `src/features/upload/services/upload-workflow.ts` is a feature service because it coordinates the upload-only workflow: validate file, store file, extract text, call content analysis, and clean up storage on failure.
-- `src/lib/upload/content-analysis/content-analysis.service.ts` is a lib service because content analysis is reusable by file upload, text upload, server actions, and tests.
-- `src/lib/dictionary/lookup/lookup.service.ts` is a lib service because dictionary lookup is domain logic used behind API routes and backed by dictionary repositories.
+- `src/server/modules/upload/content-analysis/content-analysis.service.ts` is a lib service because content analysis is reusable by file upload, text upload, server actions, and tests.
+- `src/server/modules/dictionary/lookup/lookup.service.ts` is a lib service because dictionary lookup is domain logic used behind API routes and backed by dictionary repositories.
 
 ## API Boundary Rules
 
@@ -258,7 +258,7 @@ Feature `api/` is for client-side code only. It should not contain route handler
     → repository (Prisma queries, DB access)
 ```
 
-Backend routes do not call `src/features/<feature>/api`; that folder is for browser fetch wrappers. Backend routes call services directly.
+Backend routes do not call `src/features/<feature>/api-client`; that folder is for browser fetch wrappers. Backend routes call services directly.
 
 Component-local fetch is acceptable only when:
 
@@ -280,7 +280,7 @@ Route handlers and server actions must keep ownership checks, persistence rules,
 
 ## Shared UI Rules
 
-Use `src/components/ui` for primitives only:
+Use `src/ui/primitives` for primitives only:
 
 - Button
 - Input
@@ -291,9 +291,9 @@ Use `src/components/ui` for primitives only:
 - Card
 - Progress
 
-Do not put feature-specific business UI in `src/components/ui`.
+Do not put feature-specific business UI in `src/ui/primitives`.
 
-Use `src/components/layout` for app shell elements:
+Use `src/ui/layout` for app shell elements:
 
 - Dashboard sidebar.
 - Auth controls.
@@ -335,7 +335,7 @@ Rules:
 - Do not share by importing a page client from another feature.
 - Do not make `src/features/upload` mean "the standalone upload page"; the standalone route is optional and should be a thin wrapper or disabled.
 - Upload-specific business behavior should live below UI surfaces in `features/upload/actions` and `features/upload/services`.
-- Reusable Passage domain behavior should live under a Passage domain area in `src/lib`, with database access kept in repository/query modules. Do not put reusable Passage behavior in feature services.
+- Reusable Passage domain behavior should live under a Passage domain area in `src/server/modules`, with database access kept in repository/query modules. Do not put reusable Passage behavior in feature services.
 
 If a capability is reused by two product features, extract the reusable part before importing across feature folders. Keep feature-specific composition in the consuming feature.
 

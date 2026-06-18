@@ -2,7 +2,8 @@
 
 import { useEffect } from "react";
 import * as Sentry from "@sentry/nextjs";
-import { ensureStudySession } from "@/features/study/api/study-session-client";
+import { ensureStudySession } from "@/features/study/api-client/study-session-client";
+import { STUDY_API_ROUTES } from "@/features/study/api-client/api-utils";
 
 const STUDY_SESSION_HEARTBEAT_MS = 60_000;
 
@@ -24,7 +25,7 @@ export function useStudySessionHeartbeat(enabled = true) {
             category: "study-session",
             level: "error",
             message: "study-session-heartbeat-failed",
-            data: { route: "/api/study-session" },
+            data: { route: STUDY_API_ROUTES.sessions },
           });
         }
       } catch {
@@ -32,7 +33,7 @@ export function useStudySessionHeartbeat(enabled = true) {
           category: "study-session",
           level: "error",
           message: "study-session-heartbeat-failed",
-          data: { route: "/api/study-session" },
+          data: { route: STUDY_API_ROUTES.sessions },
         });
       }
     };

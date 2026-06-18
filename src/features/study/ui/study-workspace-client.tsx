@@ -7,8 +7,8 @@ import * as Sentry from "@sentry/nextjs";
 import {
   translateResponseSchema,
   vocabularyResponseSchema,
-} from "@/shared/translation/translation-response-schema";
-import { clampTranslationContext, isTranslateTextWithinLimit } from "@/shared/translation/translation-limits";
+} from "@/contracts/translation/translation-response-schema";
+import { clampTranslationContext, isTranslateTextWithinLimit } from "@/contracts/translation/translation-limits";
 import type { PassageData, TranslationSelection, QuickTranslationData, StudioArtifact } from "@/features/study/model/types";
 import { ARTIFACT_STALE_TIME } from "@/features/study/model/types";
 import { StudySourcesPanel } from "./sources-panel";
@@ -17,6 +17,7 @@ import { StudyStudioPanel } from "./studio/studio-panel";
 import { StudyTranslationPopup } from "./studio/translate/translation-popup";
 import { StudyUploadModal } from "./upload-modal";
 import { useStudyActions } from "@/features/study/hooks/use-study-actions";
+import { STUDY_API_ROUTES } from "@/features/study/api-client/api-utils";
 import { useStudyPanelLayout } from "@/features/study/hooks/use-study-panel-layout";
 import { useStudyWorkspaceState } from "@/features/study/hooks/use-study-workspace-state";
 
@@ -65,7 +66,7 @@ export function StudyPageClient({
     status: "idle",
   });
   const [savedVocabularyIds, setSavedVocabularyIds] = useState<Set<string>>(new Set());
-  const [viewingTranslate, setViewingTranslate] = useState(false);
+  const [viewingLookup, setViewingLookup] = useState(false);
 
   // Clear stale selection on passage/mode change (adjust during rendering, not in effect)
   const [prevPassageId, setPrevPassageId] = useState(state.activePassageId);
@@ -282,7 +283,7 @@ export function StudyPageClient({
       },
     }));
 
-    fetch(`/api/studio-artifacts?passageId=${passageId}`, { signal: controller.signal })
+    fetch(`${STUDY_API_ROUTES.artifacts}?passageId=${passageId}`, { signal: controller.signal })
       .then(async (r) => {
         if (!r.ok) {
           throw new Error(`Failed to fetch study artifacts (${r.status})`);
@@ -391,7 +392,7 @@ export function StudyPageClient({
                   status={quickTranslationState.status}
                   onTranslate={handleQuickTranslate}
                   onOpenDetails={() => {
-                    setViewingTranslate(true);
+                    setViewingLookup(true);
                     Sentry.addBreadcrumb({
                       category: "study-translation",
                       level: "info",
@@ -436,8 +437,8 @@ export function StudyPageClient({
               onToggleCollapse={layout.toggleRight}
               translationSelection={selection}
               quickTranslation={quickTranslationState.data}
-              viewingTranslate={viewingTranslate}
-              onSetViewingTranslate={setViewingTranslate}
+              viewingLookup={viewingLookup}
+              onSetViewingLookup={setViewingLookup}
               onSaveVocabulary={handleSaveVocabulary}
               vocabularySaved={isVocabularySaved}
               onRecordQuizResult={(artifactId, stats) => {

@@ -17,14 +17,14 @@ API DTOs unless they are mapped into the documented response schema first.
 | `GET /api/cards/due` | JSON contracted | `dueCardsResponseSchema` |
 | `POST /api/cards/review` | JSON contracted | `cardReviewResponseSchema` |
 | `GET /api/progress/stats` | JSON contracted | `progressStatsResponseSchema` |
-| `POST /api/studio-questions` | JSON contracted | `generatedStudyQuestionsResponseSchema` |
-| `POST /api/study-session` | JSON contracted | `studySessionResponseSchema` |
-| `GET /api/studio-artifacts` | JSON, inline response (no named schema) | request: `studyArtifactsQuerySchema` (query) |
+| `POST /api/study/studio/questions` | JSON contracted | `generatedStudyQuestionsResponseSchema` |
+| `POST /api/study/sessions` | JSON contracted | `studySessionResponseSchema` |
+| `GET /api/study/studio/artifacts` | JSON, inline response (no named schema) | request: `studyArtifactsQuerySchema` (query) |
 | `GET /api/study-results` | JSON contracted | (inline Zod query schema, StudioResult type) |
 | `POST /api/upload` | JSON contracted | `uploadResponseSchema` |
 | `POST /api/upload/text` | JSON contracted | `uploadResponseSchema` |
-| `GET /api/study-chat` | JSON contracted history payload | `studyChatHistoryResponseSchema` |
-| `POST /api/study-chat` | Streaming exception | request schema plus JSON error envelope |
+| `GET /api/study/studio/chat` | JSON contracted history payload | `studyChatHistoryResponseSchema` |
+| `POST /api/study/studio/chat` | Streaming exception | request schema plus JSON error envelope |
 
 Non-product or diagnostic routes such as `/api/health`, `/api/local-blob`,
 `/api/sentry-example-api`, and test fixture endpoints are outside the product

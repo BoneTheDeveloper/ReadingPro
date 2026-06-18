@@ -3,6 +3,7 @@ import { Prisma } from "@/generated/prisma/client";
 import { db } from "./client";
 import { simpleSchedule } from "@/server/modules/spaced-repetition/scheduler";
 import { findOrCreateDailySet, findOrCreateWeeklySet, addItemToSet } from "./vocabulary-set-queries";
+import { withUserProfile } from "@/server/auth/sync-user";
 import type { VocabularyItem, VocabularyOccurrence } from "@/generated/prisma/client";
 
 // --- Helpers ---
@@ -41,35 +42,39 @@ export async function upsertVocabularyItem(params: UpsertVocabularyItemParams): 
   const display = params.selectedText.trim();
   const type = detectType(normalized);
 
-  const item = await db.vocabularyItem.upsert({
-    where: {
-      userId_normalizedText_targetLanguage_translation: {
+  // Only this write carries the userId FK; the occurrence + set writes below
+  // self-heal via their own wrappers, so wrap just the item upsert.
+  const item = await withUserProfile(params.userId, () =>
+    db.vocabularyItem.upsert({
+      where: {
+        userId_normalizedText_targetLanguage_translation: {
+          userId: params.userId,
+          normalizedText: normalized,
+          targetLanguage: params.targetLanguage,
+          translation: params.translation,
+        },
+      },
+      update: {
+        savedCount: { increment: 1 },
+        updatedAt: new Date(),
+        // Preserve status, nextReviewAt, lastReviewedAt on re-save
+      },
+      create: {
         userId: params.userId,
         normalizedText: normalized,
-        targetLanguage: params.targetLanguage,
+        displayText: display,
+        type,
         translation: params.translation,
+        sourceLanguage: params.sourceLanguage,
+        targetLanguage: params.targetLanguage,
+        source: params.source ?? "TRANSLATE",
+        dictionaryEntryId: params.dictionaryEntryId ?? null,
+        dictionarySenseId: params.dictionarySenseId ?? null,
+        status: "NEW",
+        savedCount: 1,
       },
-    },
-    update: {
-      savedCount: { increment: 1 },
-      updatedAt: new Date(),
-      // Preserve status, nextReviewAt, lastReviewedAt on re-save
-    },
-    create: {
-      userId: params.userId,
-      normalizedText: normalized,
-      displayText: display,
-      type,
-      translation: params.translation,
-      sourceLanguage: params.sourceLanguage,
-      targetLanguage: params.targetLanguage,
-      source: params.source ?? "TRANSLATE",
-      dictionaryEntryId: params.dictionaryEntryId ?? null,
-      dictionarySenseId: params.dictionarySenseId ?? null,
-      status: "NEW",
-      savedCount: 1,
-    },
-  });
+    }),
+  );
 
   // Create occurrence (idempotent via unique constraint)
   await createOccurrence(item.id, params.selectedText.trim(), params.sourceId, params.contextSentence);

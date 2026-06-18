@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
-import { getAuthenticatedUser } from "@/server/auth/auth-utils";
-import { createRequestLogContext, createRequestLogger } from "@/server/core/logger";
+import { getUserId } from "@/server/auth/auth-utils";
+import { createRequestLogContext, createRequestLogger } from "@/server/observability/logger";
 import {
   getPrismaQueryMetrics,
   runWithPrismaQueryMetrics,
@@ -12,9 +12,9 @@ import {
   measureDictionaryStep,
   shouldIncludeDictionaryPerformanceMetrics,
 } from "@/server/modules/dictionary/shared/dictionary-performance";
-import { normalizeDictionaryTerm } from "@/shared/dictionary/normalize-dictionary-term";
+import { normalizeDictionaryTerm } from "@/contracts/dictionary/normalize-dictionary-term";
 import { searchDictionary } from "@/server/modules/dictionary/search/search.service";
-import type { DictionarySearchResultDto } from "@/shared/dictionary/dictionary-dtos";
+import type { DictionarySearchResultDto } from "@/contracts/dictionary/dictionary-dtos";
 
 const dictionarySearchQuerySchema = z.object({
   q: z.string().trim().min(1).max(200),
@@ -71,12 +71,12 @@ async function handleDictionarySearchGet(request: NextRequest, includePerformanc
         })
       : null;
 
-    const user = await measureDictionaryStep(
+    const userId = await measureDictionaryStep(
       performanceTracker,
       "auth",
       () => Sentry.startSpan(
         { name: "api:dictionary-search-authenticate", op: "auth" },
-        () => getAuthenticatedUser(),
+        () => getUserId(),
       ),
     );
 
@@ -89,7 +89,7 @@ async function handleDictionarySearchGet(request: NextRequest, includePerformanc
           op: "db",
           attributes: {
             "dictionary.query_length": normalizedQuery.length,
-            "user.id": user.id,
+            "userId": userId,
           },
         },
         () => searchDictionary(parsed.data.q, {

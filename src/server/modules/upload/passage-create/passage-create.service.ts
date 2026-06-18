@@ -1,8 +1,9 @@
 import 'server-only';
 import * as Sentry from '@sentry/nextjs';
-import { createModuleLogger } from '@/server/core/logger';
-import { getHeuristicCEFR } from '@/shared/domain/cefr';
+import { createModuleLogger } from '@/server/observability/logger';
+import { getHeuristicCEFR } from '@/contracts/domain/cefr';
 import { createPassage } from '@/server/db/passage-queries';
+import { withUserProfile } from '@/server/auth/sync-user';
 import type { PassageData } from '@/features/study/model/types';
 
 const log = createModuleLogger('service:passage-create');
@@ -23,13 +24,13 @@ export async function createPassageRecord(input: CreatePassageInput): Promise<Pa
   log.info({ level: originalLevel }, 'CEFR level computed');
 
   const passage = await Sentry.startSpan({ name: 'db:passage-create', op: 'db' }, async () => {
-    return createPassage(userId, {
+    return withUserProfile(userId, () => createPassage(userId, {
       title,
       content: text,
       originalLevel,
       wordCount,
       sourceType,
-    });
+    }));
   });
 
   return {

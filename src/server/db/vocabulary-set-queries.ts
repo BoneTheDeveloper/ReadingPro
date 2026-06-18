@@ -1,6 +1,7 @@
 import 'server-only';
 import { Prisma } from "@/generated/prisma/client";
 import { db } from "./client";
+import { withUserProfile } from "@/server/auth/sync-user";
 import type { VocabularySetType, VocabularySet, VocabularySetItem } from "@/generated/prisma/client";
 
 // --- Date helpers for set naming and period computation ---
@@ -58,24 +59,26 @@ export async function findOrCreateDailySet(userId: string, date?: Date): Promise
   const periodEnd = endOfDay(now);
   const name = formatDailyName(now);
 
-  return db.vocabularySet.upsert({
-    where: {
-      userId_type_periodStart_periodEnd: {
+  return withUserProfile(userId, () =>
+    db.vocabularySet.upsert({
+      where: {
+        userId_type_periodStart_periodEnd: {
+          userId,
+          type: "DAILY",
+          periodStart,
+          periodEnd,
+        },
+      },
+      update: {},
+      create: {
         userId,
+        name,
         type: "DAILY",
         periodStart,
         periodEnd,
       },
-    },
-    update: {},
-    create: {
-      userId,
-      name,
-      type: "DAILY",
-      periodStart,
-      periodEnd,
-    },
-  });
+    }),
+  );
 }
 
 export async function findOrCreateWeeklySet(userId: string, date?: Date): Promise<VocabularySet> {
@@ -84,37 +87,41 @@ export async function findOrCreateWeeklySet(userId: string, date?: Date): Promis
   const sunday = getSunday(now);
   const name = formatWeeklyRange(monday, sunday);
 
-  return db.vocabularySet.upsert({
-    where: {
-      userId_type_periodStart_periodEnd: {
+  return withUserProfile(userId, () =>
+    db.vocabularySet.upsert({
+      where: {
+        userId_type_periodStart_periodEnd: {
+          userId,
+          type: "WEEKLY",
+          periodStart: monday,
+          periodEnd: sunday,
+        },
+      },
+      update: {},
+      create: {
         userId,
+        name,
         type: "WEEKLY",
         periodStart: monday,
         periodEnd: sunday,
       },
-    },
-    update: {},
-    create: {
-      userId,
-      name,
-      type: "WEEKLY",
-      periodStart: monday,
-      periodEnd: sunday,
-    },
-  });
+    }),
+  );
 }
 
 export async function createManualSet(params: {
   userId: string;
   name: string;
 }): Promise<VocabularySet> {
-  return db.vocabularySet.create({
-    data: {
-      userId: params.userId,
-      name: params.name,
-      type: "MANUAL",
-    },
-  });
+  return withUserProfile(params.userId, () =>
+    db.vocabularySet.create({
+      data: {
+        userId: params.userId,
+        name: params.name,
+        type: "MANUAL",
+      },
+    }),
+  );
 }
 
 // --- Ownership helpers ---

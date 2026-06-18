@@ -21,11 +21,11 @@ Select text in owned passage
 | Responsibility | File |
 |----------------|------|
 | Route | `src/app/api/translate/route.ts` |
-| Service | `src/lib/translation/inline/inline-translate.service.ts` |
-| Repository | `src/lib/translation/inline/inline-translate.repository.ts` |
-| DB helpers | `src/lib/db/translation-queries.ts` |
-| Limits | `src/lib/translation/translation-limits.ts` |
-| Performance | `src/lib/translation/translate-performance.ts` |
+| Service | `src/server/modules/translation/inline/inline-translate.service.ts` |
+| Repository | `src/server/modules/translation/inline/inline-translate.repository.ts` |
+| DB helpers | `src/server/db/translation-queries.ts` |
+| Limits | `src/contracts/translation/translation-limits.ts` |
+| Performance | `src/contracts/translation/translate-performance.ts` |
 
 ## Persistence
 

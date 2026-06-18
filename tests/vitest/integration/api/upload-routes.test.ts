@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { POST as uploadFileRoute } from "@/app/api/upload/route";
 import { POST as uploadTextRoute } from "@/app/api/upload/text/route";
-import { uploadResponseSchema } from "@/shared/upload/upload-response-schema";
+import { uploadResponseSchema } from "@/contracts/upload/upload-response-schema";
 import { userProfileFixture } from "../../fixtures";
 import { createFile, createJsonRequest, parseJsonResponse } from "../../helpers/api";
 import { expectApiErrorPayload } from "../../helpers/assertions";
@@ -23,7 +23,7 @@ const routeMocks = vi.hoisted(() => {
   }
 
   return {
-    getAuthenticatedUser: vi.fn(),
+    getUserId: vi.fn(),
     processFileUpload: vi.fn(),
     analyzeAndPersistContent: vi.fn(),
     AuthenticationRequiredError,
@@ -32,7 +32,7 @@ const routeMocks = vi.hoisted(() => {
 });
 
 vi.mock("@/server/auth/auth-utils", () => ({
-  getAuthenticatedUser: routeMocks.getAuthenticatedUser,
+  getUserId: routeMocks.getUserId,
   AuthenticationRequiredError: routeMocks.AuthenticationRequiredError,
 }));
 
@@ -55,12 +55,12 @@ function createUploadRequest(file: File | null) {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  routeMocks.getAuthenticatedUser.mockResolvedValue(userProfileFixture);
+  routeMocks.getUserId.mockResolvedValue(userProfileFixture.id);
 });
 
 describe("upload API contracts", () => {
   it("returns 401 for unauthenticated file uploads before processing the file", async () => {
-    routeMocks.getAuthenticatedUser.mockRejectedValue(new routeMocks.AuthenticationRequiredError());
+    routeMocks.getUserId.mockRejectedValue(new routeMocks.AuthenticationRequiredError());
 
     const response = await uploadFileRoute(
       createUploadRequest(createFile("story.txt", "A useful story for reading practice.")),
@@ -75,7 +75,7 @@ describe("upload API contracts", () => {
   });
 
   it("returns 401 for unauthenticated text uploads after JSON validation", async () => {
-    routeMocks.getAuthenticatedUser.mockRejectedValue(new routeMocks.AuthenticationRequiredError());
+    routeMocks.getUserId.mockRejectedValue(new routeMocks.AuthenticationRequiredError());
 
     const response = await uploadTextRoute(
       createJsonRequest({

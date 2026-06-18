@@ -10,13 +10,13 @@ import { expectJsonError } from "../../helpers/api-test-helpers";
 import { userProfileFixture, vocabularySetFixture, VOCAB_SET_ID } from "../../fixtures";
 
 const routeMocks = vi.hoisted(() => ({
-  getAuthenticatedUser: vi.fn(),
+  getUserId: vi.fn(),
   updateVocabularySet: vi.fn(),
   deleteVocabularySet: vi.fn(),
 }));
 
 vi.mock("@/server/auth/auth-utils", () => ({
-  getAuthenticatedUser: routeMocks.getAuthenticatedUser,
+  getUserId: routeMocks.getUserId,
   AuthenticationRequiredError: class AuthenticationRequiredError extends Error {
     constructor() { super("Authentication required"); this.name = "AuthenticationRequiredError"; }
   },
@@ -29,7 +29,7 @@ vi.mock("@/server/db/vocabulary-set-queries", () => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
-  routeMocks.getAuthenticatedUser.mockResolvedValue(userProfileFixture);
+  routeMocks.getUserId.mockResolvedValue(userProfileFixture.id);
   routeMocks.updateVocabularySet.mockResolvedValue(vocabularySetFixture);
   routeMocks.deleteVocabularySet.mockResolvedValue(undefined);
 });
@@ -74,7 +74,7 @@ describe("PATCH /api/vocabulary/sets/[id] (rename)", () => {
   });
 
   it("rejects unauthenticated request with 401", async () => {
-    routeMocks.getAuthenticatedUser.mockRejectedValue(new Error("Authentication required"));
+    routeMocks.getUserId.mockRejectedValue(new Error("Authentication required"));
     const response = await updateSetRoute(
       createJsonRequest({ name: "Renamed" }),
       { params: Promise.resolve({ id: VOCAB_SET_ID }) },
@@ -111,7 +111,7 @@ describe("DELETE /api/vocabulary/sets/[id]", () => {
   });
 
   it("rejects unauthenticated request with 401", async () => {
-    routeMocks.getAuthenticatedUser.mockRejectedValue(new Error("Authentication required"));
+    routeMocks.getUserId.mockRejectedValue(new Error("Authentication required"));
     const response = await deleteSetRoute(
       new NextRequest("https://english-reading.test/api/vocabulary/sets/id", { method: "DELETE" }),
       { params: Promise.resolve({ id: VOCAB_SET_ID }) },

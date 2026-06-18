@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
-import { POST as createStudySessionRoute } from "@/app/api/study-session/route";
-import { studySessionResponseSchema, toStudySessionDto } from "@/shared/study/study-response-schema";
+import { POST as createStudySessionRoute } from "@/app/api/study/sessions/route";
+import { studySessionResponseSchema, toStudySessionDto } from "@/contracts/study/study-response-schema";
 import { studySessionFixture, userProfileFixture } from "../../fixtures";
 import { createJsonRequest, parseJsonResponse } from "../../helpers/api";
 import { expectApiErrorPayload } from "../../helpers/assertions";
@@ -15,14 +15,14 @@ const routeMocks = vi.hoisted(() => {
   }
 
   return {
-    getAuthenticatedUser: vi.fn(),
+    getUserId: vi.fn(),
     ensureActiveSession: vi.fn(),
     AuthenticationRequiredError,
   };
 });
 
 vi.mock("@/server/auth/auth-utils", () => ({
-  getAuthenticatedUser: routeMocks.getAuthenticatedUser,
+  getUserId: routeMocks.getUserId,
   AuthenticationRequiredError: routeMocks.AuthenticationRequiredError,
 }));
 
@@ -32,12 +32,12 @@ vi.mock("@/server/db/study-session-queries", () => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
-  routeMocks.getAuthenticatedUser.mockResolvedValue(userProfileFixture);
+  routeMocks.getUserId.mockResolvedValue(userProfileFixture.id);
 });
 
 describe("study-session API contracts", () => {
   it("returns 401 for unauthenticated ensure requests", async () => {
-    routeMocks.getAuthenticatedUser.mockRejectedValue(new routeMocks.AuthenticationRequiredError());
+    routeMocks.getUserId.mockRejectedValue(new routeMocks.AuthenticationRequiredError());
 
     const created = await createStudySessionRoute(createJsonRequest({}));
     expect(created.status).toBe(401);
@@ -70,7 +70,7 @@ describe("study-session API contracts", () => {
   });
 
   it("returns 400 for invalid JSON", async () => {
-    const response = await createStudySessionRoute(new NextRequest("https://test/api/study-session", {
+    const response = await createStudySessionRoute(new NextRequest("https://test/api/study/sessions", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: "not-json",

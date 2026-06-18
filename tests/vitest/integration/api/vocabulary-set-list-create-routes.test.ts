@@ -12,13 +12,13 @@ import { userProfileFixture, vocabularySetFixture, VOCAB_SET_ID } from "../../fi
 const setWithCount = { ...vocabularySetFixture, _count: { items: 2 } };
 
 const routeMocks = vi.hoisted(() => ({
-  getAuthenticatedUser: vi.fn(),
+  getUserId: vi.fn(),
   listVocabularySets: vi.fn(),
   createManualSet: vi.fn(),
 }));
 
 vi.mock("@/server/auth/auth-utils", () => ({
-  getAuthenticatedUser: routeMocks.getAuthenticatedUser,
+  getUserId: routeMocks.getUserId,
   AuthenticationRequiredError: class AuthenticationRequiredError extends Error {
     constructor() { super("Authentication required"); this.name = "AuthenticationRequiredError"; }
   },
@@ -31,7 +31,7 @@ vi.mock("@/server/db/vocabulary-set-queries", () => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
-  routeMocks.getAuthenticatedUser.mockResolvedValue(userProfileFixture);
+  routeMocks.getUserId.mockResolvedValue(userProfileFixture.id);
   routeMocks.listVocabularySets.mockResolvedValue([setWithCount]);
   routeMocks.createManualSet.mockResolvedValue(setWithCount);
 });
@@ -65,7 +65,7 @@ describe("POST /api/vocabulary/sets (create manual set)", () => {
   });
 
   it("rejects unauthenticated request with 401", async () => {
-    routeMocks.getAuthenticatedUser.mockRejectedValue(new Error("Authentication required"));
+    routeMocks.getUserId.mockRejectedValue(new Error("Authentication required"));
     const response = await createSetRoute(createJsonRequest({ name: "My Words" }));
     await expectJsonError(response, 401, "Authentication required.");
   });
@@ -113,7 +113,7 @@ describe("GET /api/vocabulary/sets (list sets)", () => {
   });
 
   it("rejects unauthenticated request with 401", async () => {
-    routeMocks.getAuthenticatedUser.mockRejectedValue(new Error("Authentication required"));
+    routeMocks.getUserId.mockRejectedValue(new Error("Authentication required"));
     const request = new NextRequest("https://english-reading.test/api/vocabulary/sets");
     const response = await listSetsRoute(request);
     await expectJsonError(response, 401, "Authentication required.");

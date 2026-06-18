@@ -1,11 +1,11 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { getDictionarySuggestions } from "../api/dictionary-client"
+import { getDictionarySuggestions } from "../api-client/dictionary-client"
 import type {
   DictionarySuggestItemDto,
-} from "@/shared/dictionary/dictionary-dtos"
-import { normalizeDictionaryTerm } from "@/shared/dictionary/normalize-dictionary-term"
+} from "@/contracts/dictionary/dictionary-dtos"
+import { normalizeDictionaryTerm } from "@/contracts/dictionary/normalize-dictionary-term"
 
 const DEBOUNCE_MS = 250
 const MIN_SUGGEST_LENGTH = 2

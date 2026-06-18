@@ -14,9 +14,9 @@ import {
   PanelRight,
   RefreshCw,
 } from "lucide-react";
-import { cn } from "@/shared/utils";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { cn } from "@/contracts/utils";
+import { Card, CardContent } from "@/ui/primitives/card";
+import { Button } from "@/ui/primitives/button";
 import type {
   PassageData,
   QuickTranslationData,
@@ -30,8 +30,8 @@ import type {
 } from "@/features/study/model/types";
 import { QuizContent } from "./quiz/quiz-content";
 import { StudyChatPanel } from "./chat/chat-panel";
-import { StudyTranslatePanel } from "./translate/translate-panel";
-import { resetQuizResult } from "@/features/study/api/studio-artifacts-client";
+import { StudyLookupPanel } from "./lookup/lookup-panel";
+import { resetQuizResult } from "@/features/study/api-client/studio-artifacts-client";
 
 interface StudyStudioPanelProps {
   artifactsCache: ArtifactsCacheEntry;
@@ -45,8 +45,8 @@ interface StudyStudioPanelProps {
   onToggleCollapse: () => void;
   translationSelection: TranslationSelection | null;
   quickTranslation: QuickTranslationData | null;
-  viewingTranslate: boolean;
-  onSetViewingTranslate: (viewing: boolean) => void;
+  viewingLookup: boolean;
+  onSetViewingLookup: (viewing: boolean) => void;
   onSaveVocabulary: () => void;
   vocabularySaved: boolean;
   onRecordQuizResult: (artifactId: string, stats: { correctCount: number; totalQuestions: number }) => void;
@@ -101,8 +101,8 @@ const studioActions: {
     icon: MessageCircle,
   },
   {
-    id: "translate",
-    labelKey: "translate",
+    id: "lookup",
+    labelKey: "lookup",
     descriptionKey: "vietnameseTranslation",
     icon: Languages,
   },
@@ -138,8 +138,8 @@ export function StudyStudioPanel({
   onToggleCollapse,
   translationSelection,
   quickTranslation,
-  viewingTranslate,
-  onSetViewingTranslate,
+  viewingLookup,
+  onSetViewingLookup,
   onSaveVocabulary,
   vocabularySaved,
   onRecordQuizResult,
@@ -186,7 +186,7 @@ export function StudyStudioPanel({
     );
   }
 
-  if (viewingTranslate && translationSelection && activePassage) {
+  if (viewingLookup && translationSelection && activePassage) {
     return (
       <Card className="h-full flex flex-col overflow-hidden">
         <CardContent className="p-0 flex flex-col h-full">
@@ -195,16 +195,16 @@ export function StudyStudioPanel({
               variant="ghost"
               size="icon"
               className="shrink-0"
-              onClick={() => onSetViewingTranslate(false)}
+              onClick={() => onSetViewingLookup(false)}
             >
               <ArrowLeft className="w-4 h-4 text-muted-foreground" />
             </Button>
             <Languages className="w-4 h-4 text-muted-foreground" />
             <h2 className="text-sm font-semibold text-foreground truncate">
-              {t("translate")}: {translationSelection.selectedText}
+              {t("lookup")}: {translationSelection.selectedText}
             </h2>
           </div>
-          <StudyTranslatePanel
+          <StudyLookupPanel
             selection={translationSelection}
             quickTranslation={quickTranslation}
             saved={vocabularySaved}
@@ -286,7 +286,7 @@ export function StudyStudioPanel({
                 onClick={() => {
                   if (action.disabled || !hasActivePassage) return;
                   if (action.id === "chat") setViewingChat(true);
-                  else if (action.id === "translate") onSetViewingTranslate(true);
+                  else if (action.id === "lookup") onSetViewingLookup(true);
                   else onActionClick(action.id);
                 }}
                 disabled={action.disabled || !hasActivePassage}
@@ -390,7 +390,7 @@ export function StudyStudioPanel({
                 onClick={() => {
                   if (disabled) return;
                   if (action.id === "chat") setViewingChat(true);
-                  else if (action.id === "translate") onSetViewingTranslate(true);
+                  else if (action.id === "lookup") onSetViewingLookup(true);
                   else onActionClick(action.id);
                 }}
                 disabled={disabled}
@@ -402,7 +402,7 @@ export function StudyStudioPanel({
                     "opacity-50 cursor-not-allowed",
                   !action.disabled &&
                     action.id !== "chat" &&
-                    action.id !== "translate" &&
+                    action.id !== "lookup" &&
                     hasActivePassage &&
                     runningCount >= maxConcurrent &&
                     !locked &&
@@ -443,12 +443,11 @@ export function StudyStudioPanel({
           })}
         </div>
 
+        <div className="border-t border-border mx-3" />
+
         <div className="flex-1 overflow-y-auto panel-scroll px-4 pb-4">
           {artifacts.length > 0 && (
-            <div className="space-y-1">
-              <h3 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-1 mb-2">
-                Results
-              </h3>
+            <div className="space-y-1 pt-2">
               {artifacts.map((artifact) => {
                 const meta = artifactMeta[artifact.type] ?? {
                   icon: HelpCircle,

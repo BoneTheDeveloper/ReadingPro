@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
-import { getAuthenticatedUser } from "@/server/auth/auth-utils";
+import { getUserId } from "@/server/auth/auth-utils";
 import { 
   simplifyPassageForUser, 
   PassageStudyServiceError 
 } from "@/server/modules/study/passage/passage-study.service";
 import { isAuthenticationRequiredError } from "@/server/http/route-errors";
-import { createModuleLogger } from "@/server/core/logger";
+import { createModuleLogger } from "@/server/observability/logger";
 
 const log = createModuleLogger("api:study:passages:simplify");
 
@@ -16,9 +16,9 @@ export async function POST(
 ) {
   const { id } = await params;
   try {
-    const user = await getAuthenticatedUser();
+    const userId = await getUserId();
     
-    const result = await simplifyPassageForUser(user.id, id);
+    const result = await simplifyPassageForUser(userId, id);
 
     if ("skipped" in result) {
       return NextResponse.json({ success: true, data: result });

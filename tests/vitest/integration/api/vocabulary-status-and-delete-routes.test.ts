@@ -8,13 +8,13 @@ import { expectJsonError } from "../../helpers/api-test-helpers";
 import { userProfileFixture, vocabularyItemFixture, VOCABULARY_ITEM_ID } from "../../fixtures";
 
 const routeMocks = vi.hoisted(() => ({
-  getAuthenticatedUser: vi.fn(),
+  getUserId: vi.fn(),
   updateVocabularyStatus: vi.fn(),
   deleteVocabularyItem: vi.fn(),
 }));
 
 vi.mock("@/server/auth/auth-utils", () => ({
-  getAuthenticatedUser: routeMocks.getAuthenticatedUser,
+  getUserId: routeMocks.getUserId,
   AuthenticationRequiredError: class AuthenticationRequiredError extends Error {
     constructor() { super("Authentication required"); this.name = "AuthenticationRequiredError"; }
   },
@@ -27,7 +27,7 @@ vi.mock("@/server/db/vocabulary-queries", () => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
-  routeMocks.getAuthenticatedUser.mockResolvedValue(userProfileFixture);
+  routeMocks.getUserId.mockResolvedValue(userProfileFixture.id);
   routeMocks.updateVocabularyStatus.mockResolvedValue(vocabularyItemFixture);
   routeMocks.deleteVocabularyItem.mockResolvedValue(undefined);
 });
@@ -84,7 +84,7 @@ describe("PATCH /api/vocabulary/[id]/status", () => {
   });
 
   it("rejects unauthenticated request with 401", async () => {
-    routeMocks.getAuthenticatedUser.mockRejectedValue(new Error("Authentication required"));
+    routeMocks.getUserId.mockRejectedValue(new Error("Authentication required"));
     const response = await updateStatusRoute(
       createJsonRequest({ status: "LEARNING" }),
       { params: Promise.resolve({ id: VOCABULARY_ITEM_ID }) },
@@ -130,7 +130,7 @@ describe("DELETE /api/vocabulary/[id]", () => {
   });
 
   it("rejects unauthenticated request with 401", async () => {
-    routeMocks.getAuthenticatedUser.mockRejectedValue(new Error("Authentication required"));
+    routeMocks.getUserId.mockRejectedValue(new Error("Authentication required"));
     const response = await deleteVocabularyRoute(
       new NextRequest("https://english-reading.test/api/vocabulary/id", { method: "DELETE" }),
       { params: Promise.resolve({ id: VOCABULARY_ITEM_ID }) },

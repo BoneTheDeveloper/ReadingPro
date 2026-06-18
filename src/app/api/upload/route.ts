@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
-import { getAuthenticatedUser } from "@/server/auth/auth-utils";
+import { getUserId } from "@/server/auth/auth-utils";
 import { isAuthenticationRequiredError } from "@/server/http/route-errors";
-import { createRequestLogContext, createRequestLogger } from "@/server/core/logger";
+import { createRequestLogContext, createRequestLogger } from "@/server/observability/logger";
 import { processFileUpload, UploadWorkflowError } from "@/features/upload/services/upload-workflow";
 
 export async function POST(request: NextRequest) {
@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
   );
 
   try {
-    const user = await getAuthenticatedUser();
+    const userId = await getUserId();
     const formData = await request.formData();
     const rawFile = formData.get("file");
     const file = rawFile instanceof File ? rawFile : null;
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    const result = await processFileUpload(user.id, file);
+    const result = await processFileUpload(userId, file);
 
     return NextResponse.json({
       success: true,

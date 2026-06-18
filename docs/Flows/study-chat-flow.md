@@ -4,7 +4,7 @@
 
 ```text
 Client chat panel
-  -> POST /api/study-chat
+  -> POST /api/study/studio/chat
   -> validate messages and passageId
   -> enforce message count and user-text limits
   -> getAuthenticatedUser()
@@ -18,7 +18,7 @@ Client chat panel
 ## GET History
 
 ```text
-GET /api/study-chat?passageId=...
+GET /api/study/studio/chat?passageId=...
   -> validate passageId
   -> authenticate
   -> load messages by userId + passageId
@@ -34,7 +34,7 @@ GET /api/study-chat?passageId=...
 
 ## Code Paths
 
-- Route: `src/app/api/study-chat/route.ts`
+- Route: `src/app/api/study/studio/chat/route.ts`
 - UI: `src/features/study/ui/studio/chat/chat-panel.tsx`
-- Prompt helper: `src/lib/ai/prompt-utils.ts`
-- Model config: `src/lib/ai/model-config.ts`
+- Prompt helper: `src/server/ai/prompt-utils.ts`
+- Model config: `src/server/ai/model-config.ts`

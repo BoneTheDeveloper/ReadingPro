@@ -10,7 +10,7 @@ import { resetSentryMocks } from "../mocks/sentry";
 // Mock it as a no-op so tests can import server modules without crashing.
 vi.mock("server-only", () => ({}));
 
-vi.mock("@/server/core/logger", () => import("../mocks/logger"));
+vi.mock("@/server/observability/logger", () => import("../mocks/logger"));
 vi.mock("@/server/db/client", () => import("../mocks/db"));
 
 vi.mock("ai", async (importActual) => {

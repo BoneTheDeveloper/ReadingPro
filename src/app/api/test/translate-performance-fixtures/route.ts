@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { getAuthenticatedUser } from "@/server/auth/auth-utils";
+import { getUserId } from "@/server/auth/auth-utils";
 import { db } from "@/server/db/client";
-import { countWords } from "@/shared/translation/translate-performance";
+import { withUserProfile } from "@/server/auth/sync-user";
+import { countWords } from "@/contracts/translation/translate-performance";
 
 const cleanupSchema = z.object({
   passageIds: z.array(z.string()).default([]),
@@ -44,7 +45,8 @@ export async function POST() {
     return disabledResponse();
   }
 
-  const user = await getAuthenticatedUser();
+  const userId = await getUserId();
+
   const runId = Date.now().toString(36);
   const singleWord = `perfword${runId}`;
   const phrase = `perf phrase ${runId}`;
@@ -55,16 +57,18 @@ export async function POST() {
     `A final sentence contains ${fallbackText} for fallback coverage.`,
   ].join(" ");
 
-  const passage = await db.passage.create({
-    data: {
-      userId: user.id,
-      title: `Translate performance ${runId}`,
-      content: context,
-      originalLevel: "B2",
-      wordCount: countWords(context),
-      sourceType: "TEXT",
-    },
-  });
+  const passage = await withUserProfile(userId, () =>
+    db.passage.create({
+      data: {
+        userId: userId,
+        title: `Translate performance ${runId}`,
+        content: context,
+        originalLevel: "B2",
+        wordCount: countWords(context),
+        sourceType: "TEXT",
+      },
+    }),
+  );
 
   const singleWordEntry = await createDictionaryEntry(singleWord, "tu hieu nang", "noun");
   const phraseEntry = await createDictionaryEntry(phrase, "cum tu hieu nang", "noun phrase");
@@ -90,7 +94,7 @@ export async function DELETE(request: NextRequest) {
     return disabledResponse();
   }
 
-  await getAuthenticatedUser();
+  await getUserId();
   const parsed = cleanupSchema.safeParse(await request.json().catch(() => ({})));
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid cleanup request." }, { status: 400 });

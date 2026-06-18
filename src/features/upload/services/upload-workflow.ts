@@ -1,7 +1,7 @@
 import * as Sentry from '@sentry/nextjs';
 import { parsePDF } from '@/server/parsers/pdf';
 import { deleteFile, uploadFile } from '@/server/storage/blob-storage';
-import { sanitizeFilename, sanitizeTitle, validateFile, validateTextContent } from '@/shared/upload/upload-validation';
+import { sanitizeFilename, sanitizeTitle, validateFile, validateTextContent } from '@/contracts/upload/upload-validation';
 import { analyzeAndPersistContent } from '@/server/modules/upload/content-analysis/content-analysis.service';
 
 export interface FileUploadWorkflowResult {

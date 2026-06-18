@@ -1,13 +1,13 @@
-import type { TranslationData } from "@/shared/translation/translation-response-schema";
-import type { StudioArtifact } from "@/shared/study/studio-artifact-types";
+import type { TranslationData } from "@/contracts/translation/translation-response-schema";
+import type { StudioArtifact } from "@/contracts/study/studio-artifact-types";
 export type {
   StudioArtifact,
   StudioArtifactStatus,
   StudioArtifactType,
   StudioArtifactErrorCode,
   QuizResult,
-} from "@/shared/study/studio-artifact-types";
-export { ARTIFACT_STALE_TIME, STUDIO_GENERATION_TIMEOUT_MS } from "@/shared/study/studio-artifact-types";
+} from "@/contracts/study/studio-artifact-types";
+export { ARTIFACT_STALE_TIME, STUDIO_GENERATION_TIMEOUT_MS } from "@/contracts/study/studio-artifact-types";
 
 export type StudyStatus =
   | "idle"
@@ -103,7 +103,7 @@ export type StudioActionId =
   | "summary"
   | "chat"
   | "mindmap"
-  | "translate";
+  | "lookup";
 
 export interface StudioAction {
   id: StudioActionId;

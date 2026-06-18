@@ -144,5 +144,5 @@ Required checks before shipping:
 - Use class-based dark mode: `.dark`.
 - Keep Tailwind classes semantic: `bg-background`, `bg-surface`, `text-foreground`, `border-border`.
 - Do not add hardcoded hex values in components.
-- Do not modify `src/components/ui/*` primitives unless a primitive has a token bug.
+- Do not modify `src/ui/primitives/*` primitives unless a primitive has a token bug.
 - Update `docs/Design/styling-guide.md` after implementation so it matches `src/app/globals.css`.

@@ -2,8 +2,8 @@
 
 import { useTranslations } from "next-intl";
 import { BookOpen, Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { cn } from "@/shared/utils";
+import { Input } from "@/ui/primitives/input";
+import { cn } from "@/contracts/utils";
 import { VocabularyItemCard } from "./vocabulary-item-card";
 import type {
   VocabularyItem,

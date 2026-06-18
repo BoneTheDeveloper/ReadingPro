@@ -57,6 +57,16 @@ Set the required local values:
 - `DATABASE_URL`
 - `DIRECT_URL`
 
+**Clerk webhook (required for user profile sync):**
+
+The app receives Clerk lifecycle events at `POST /api/webhooks/clerk` to keep `UserProfile` in sync. To enable locally:
+
+1. Install the [Clerk CLI](https://clerk.com/docs/deployments/webhooks) or use the Clerk dashboard to create a webhook endpoint pointing to your tunnel URL (e.g. `https://your-tunnel.ngrok.io/api/webhooks/clerk`).
+2. Subscribe to `user.created`, `user.updated`, and `user.deleted` events.
+3. Copy the signing secret into `CLERK_WEBHOOK_SIGNING_SECRET` in `.env.local`.
+
+In production/preview, set `CLERK_WEBHOOK_SIGNING_SECRET` as an environment variable in your Vercel project and configure the Clerk webhook endpoint to your deployed URL.
+
 Optional model overrides:
 
 - `OPENAI_STUDY_CHAT_MODEL`
@@ -102,12 +112,10 @@ pnpm db:check:dictionary-seed
 ## Documentation
 
 - Docs index: [docs/README.md](docs/README.md)
-- Product overview: [docs/project-overview-pdr.md](docs/project-overview-pdr.md)
+- Product overview: [docs/Product/overview-pdr.md](docs/Product/overview-pdr.md)
 - Codebase summary: [docs/codebase-summary.md](docs/codebase-summary.md)
 - System architecture: [docs/Architecture/system-architecture.md](docs/Architecture/system-architecture.md)
 - API index: [docs/API/api-index.md](docs/API/api-index.md)
-- Local development: [docs/Operations/local-development.md](docs/Operations/local-development.md)
-- Environment variables: [docs/Operations/env-vars.md](docs/Operations/env-vars.md)
 
 ## Source-Of-Truth Notes
 

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
-import { getAuthenticatedUser } from "@/server/auth/auth-utils";
+import { getUserId } from "@/server/auth/auth-utils";
 import { isAuthenticationRequiredError } from "@/server/http/route-errors";
-import { createRequestLogContext, createRequestLogger } from "@/server/core/logger";
+import { createRequestLogContext, createRequestLogger } from "@/server/observability/logger";
 import { listVocabularySets, createManualSet } from "@/server/db/vocabulary-set-queries";
 
 const createSetSchema = z.object({
@@ -17,13 +17,13 @@ export async function GET(request: NextRequest) {
   );
 
   try {
-    const user = await getAuthenticatedUser();
+    const userId = await getUserId();
 
     const { searchParams } = new URL(request.url);
     const type = searchParams.get("type") ?? undefined;
 
     const sets = await listVocabularySets({
-      userId: user.id,
+      userId: userId,
       type: type as "MANUAL" | "DAILY" | "WEEKLY" | undefined,
     });
 
@@ -57,13 +57,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid request." }, { status: 400 });
     }
 
-    const user = await getAuthenticatedUser();
+    const userId = await getUserId();
 
     const set = await Sentry.startSpan(
       { name: "db:vocabulary-set-create", op: "db" },
       async () =>
         createManualSet({
-          userId: user.id,
+          userId: userId,
           name: parsed.data.name,
         }),
     );

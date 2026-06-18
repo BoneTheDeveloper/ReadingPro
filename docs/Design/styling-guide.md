@@ -32,14 +32,14 @@ Use ONLY these Tailwind classes (mapped from CSS variables):
 | Raw `<textarea>` | shadcn `Textarea` |
 | Inline SVGs (when Lucide has equivalent) | `import { Icon } from "lucide-react"` |
 | `onMouseEnter`/`onMouseLeave` | Tailwind `hover:` classes |
-| String concatenation for classes | `cn()` from `@/shared/utils` |
+| String concatenation for classes | `cn()` from `@/contracts/utils` |
 
 ## shadcn/ui Primitives
 
-Components in `src/components/ui/`: avatar, badge, button, card, dialog, dropdown-menu, input, progress, separator, sheet, tabs, textarea, tooltip.
+Components in `src/ui/primitives/`: avatar, badge, button, card, dialog, dropdown-menu, input, progress, separator, sheet, tabs, textarea, tooltip.
 
 **Rules:**
-- Import and compose — never modify files in `src/components/ui/`
+- Import and compose — never modify files in `src/ui/primitives/`
 - Use `Card`/`CardContent` for card-like layouts
 - Use `Dialog` for modals
 - Use `Button variant="outline"` or `variant="ghost"` for secondary actions

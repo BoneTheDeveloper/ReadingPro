@@ -17,7 +17,7 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
   ]),
   {
-    files: ["src/features/**/ui/**", "src/features/**/hooks/**", "src/shared/**"],
+    files: ["src/features/**/ui/**", "src/features/**/hooks/**", "src/contracts/**"],
     rules: {
       "no-restricted-imports": [
         "error",
@@ -26,6 +26,29 @@ const eslintConfig = defineConfig([
             {
               group: ["@/server/**", "**/server/**"],
               message: "Frontend features and shared contracts must not import from the server directory. Use standard API routes instead.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ["src/**"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: [
+                "../../app/*",
+                "../../server/*",
+                "../../contracts/*",
+                "../../features/*",
+                "../../ui/*",
+                "../../../**",
+              ],
+              message: "Cross-layer imports must use the @/ alias, not relative paths.",
             },
           ],
         },

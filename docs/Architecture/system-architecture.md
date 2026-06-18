@@ -29,7 +29,7 @@ The application is a server-first Next.js product. User-facing pages are locale-
 | User identity | Clerk + `UserProfile` | Clerk owns login; app DB owns profile row and data relationships. |
 | Product features | `src/features/*` | Frontend UI, hooks, and feature-specific API clients. |
 | Server logic | `src/server/*` | Backend modules: db, ai, auth, storage, and core domain services. |
-| API Contracts | `src/shared/*` | Shared Zod schemas and DTOs defining the frontend/backend interface. |
+| API Contracts | `src/contracts/*` | Shared Zod schemas and DTOs defining the frontend/backend interface. |
 | Data model | `prisma/schema/` (multi-file) | Source of truth for tables and relationships, split by domain. |
 | API | `src/app/api/**/route.ts` | HTTP/streaming adapters (delegates to `src/server/modules`). |
 
@@ -62,8 +62,6 @@ Dictionary tables are shared read data and are not user-owned.
 - Runtime: [runtime-architecture.md](runtime-architecture.md)
 - Frontend UI: [frontend-ui-architecture](frontend-ui-architecture/README.md)
 - Auth: [auth-architecture.md](auth-architecture.md)
-- Database: [database-architecture.md](database-architecture.md)
 - Storage: [storage-architecture.md](storage-architecture.md)
 - API: [api-architecture.md](api-architecture.md)
 - Observability: [observability-architecture.md](observability-architecture.md)
-- Deployment: [deployment-architecture.md](deployment-architecture.md)

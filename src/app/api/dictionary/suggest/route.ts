@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
-import { getAuthenticatedUser } from "@/server/auth/auth-utils";
-import { createRequestLogContext, createRequestLogger } from "@/server/core/logger";
+import { getUserId } from "@/server/auth/auth-utils";
+import { createRequestLogContext, createRequestLogger } from "@/server/observability/logger";
 import {
   getPrismaQueryMetrics,
   runWithPrismaQueryMetrics,
@@ -12,9 +12,9 @@ import {
   measureDictionaryStep,
   shouldIncludeDictionaryPerformanceMetrics,
 } from "@/server/modules/dictionary/shared/dictionary-performance";
-import { normalizeDictionaryTerm } from "@/shared/dictionary/normalize-dictionary-term";
+import { normalizeDictionaryTerm } from "@/contracts/dictionary/normalize-dictionary-term";
 import { suggestDictionaryTerms } from "@/server/modules/dictionary/suggest/suggest.service";
-import type { DictionarySuggestItemDto } from "@/shared/dictionary/dictionary-dtos";
+import type { DictionarySuggestItemDto } from "@/contracts/dictionary/dictionary-dtos";
 
 const suggestQuerySchema = z.object({
   q: z.string().trim().min(1).max(200),
@@ -73,12 +73,12 @@ async function handleSuggestGet(request: NextRequest, includePerformance: boolea
       });
     }
 
-    const user = await measureDictionaryStep(
+    const userId = await measureDictionaryStep(
       performanceTracker,
       "auth",
       () => Sentry.startSpan(
         { name: "api:dictionary-suggest-auth", op: "auth" },
-        () => getAuthenticatedUser(),
+        () => getUserId(),
       ),
     );
 
@@ -91,7 +91,7 @@ async function handleSuggestGet(request: NextRequest, includePerformance: boolea
           op: "db",
           attributes: {
             "dictionary.query_length": normalizedQuery.length,
-            "user.id": user.id,
+            "userId": userId,
           },
         },
         () => suggestDictionaryTerms(parsed.data.q, {

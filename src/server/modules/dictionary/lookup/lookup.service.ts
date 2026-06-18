@@ -1,13 +1,13 @@
 import 'server-only';
 import { runWithPrismaQueryStep } from "@/server/observability/prisma-query-metrics";
-import { normalizeDictionaryTerm } from "@/shared/dictionary/normalize-dictionary-term";
+import { normalizeDictionaryTerm } from "@/contracts/dictionary/normalize-dictionary-term";
 import {
   type DictionaryEntryDto,
   type DictionaryMissDto,
   type DictionaryTranslationDto,
   RUNTIME_STATUSES,
   getSourceLabel,
-} from "@/shared/dictionary/dictionary-dtos";
+} from "@/contracts/dictionary/dictionary-dtos";
 import { buildEntryDto } from "@/server/modules/dictionary/shared/dictionary-dto-builders";
 import {
   findDictionaryLookupEntry,

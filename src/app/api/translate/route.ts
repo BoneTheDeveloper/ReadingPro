@@ -1,18 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
-import { getAuthenticatedUser } from "@/server/auth/auth-utils";
-import { createRequestLogContext, createRequestLogger } from "@/server/core/logger";
+import { getUserId } from "@/server/auth/auth-utils";
+import { createRequestLogContext, createRequestLogger } from "@/server/observability/logger";
 import {
   getPrismaQueryMetrics,
   runWithPrismaQueryMetrics,
 } from "@/server/observability/prisma-query-metrics";
-import { MAX_TRANSLATE_CONTEXT_LENGTH, MAX_TRANSLATE_TEXT_LENGTH } from "@/shared/translation/translation-limits";
+import { MAX_TRANSLATE_CONTEXT_LENGTH, MAX_TRANSLATE_TEXT_LENGTH } from "@/contracts/translation/translation-limits";
 import {
   createTranslatePerformanceTracker,
   shouldIncludeTranslatePerformanceMetrics,
   type TranslatePerformanceSnapshot,
-} from "@/shared/translation/translate-performance";
+} from "@/contracts/translation/translate-performance";
 import type { QuickTranslation } from "@/server/ai/translator";
 import { executeTranslate } from "@/server/modules/translation/inline/inline-translate.service";
 
@@ -89,13 +89,13 @@ async function handlePost(request: NextRequest, includePerformance: boolean) {
       targetLanguage: input.targetLanguage,
     });
 
-    const user = await Sentry.startSpan(
+    const userId = await Sentry.startSpan(
       {
         name: "api:translate-authenticate",
         op: "auth",
         attributes: { "translation.source_id": input.sourceId },
       },
-      () => getAuthenticatedUser(),
+      () => getUserId(),
     );
 
     const result = await executeTranslate(
@@ -107,9 +107,9 @@ async function handlePost(request: NextRequest, includePerformance: boolean) {
         targetLanguage: input.targetLanguage,
       },
       {
-        userId: user.id,
+        userId: userId,
         performanceTracker,
-        requestLog: requestLog.child({ userId: user.id }),
+        requestLog: requestLog.child({ userId: userId }),
       },
     );
 

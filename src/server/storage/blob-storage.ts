@@ -2,7 +2,7 @@ import 'server-only';
 import { put, del, head } from "@vercel/blob";
 import { writeFile, mkdir, readFile, unlink } from "node:fs/promises";
 import path from "node:path";
-import { createModuleLogger } from "@/server/core/logger";
+import { createModuleLogger } from "@/server/observability/logger";
 
 const log = createModuleLogger("storage:blob");
 

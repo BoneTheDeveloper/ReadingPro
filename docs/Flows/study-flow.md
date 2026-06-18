@@ -18,7 +18,7 @@ Learner opens /[locale]/study
 |--------|------|
 | Upload from study modal | `src/features/study/actions/study-upload-action.ts` |
 | Simplify active passage | `src/features/study/actions/study-simplify-action.ts` |
-| Generate quiz questions | `POST /api/studio-questions` via `src/features/study/api/studio-questions-client.ts` |
+| Generate quiz questions | `POST /api/study/studio/questions` via `src/features/study/api-client/studio-questions-client.ts` |
 | Create / complete / delete artifact | `src/features/study/actions/studio-artifact-actions.ts` |
 | Record / reset quiz result | `src/features/study/actions/studio-artifact-actions.ts` |
 | Delete passage | `src/features/study/actions/study-delete-passage-action.ts` |
@@ -43,9 +43,9 @@ A quiz is a `StudioArtifact` whose `status` is `generating` -> `done` | `failed`
   the request so the action lock releases), and `passage-study.service.ts` races the LLM
   call with the same budget. A timeout surfaces as error code `TIMEOUT`.
 - **Failure reason is client-only.** Failures carry a shared `StudioArtifactErrorCode`
-  (`src/lib/study/shared/studio-artifact-types.ts`) returned as `{ error, code }` and shown
+  (`src/contracts/study/studio-artifact-types.ts`) returned as `{ error, code }` and shown
   as a localized card message. It is **not** persisted — the reason is gone after reload by design.
-- **Atomic generation.** `POST /api/studio-questions` creates the `StudioArtifact`
+- **Atomic generation.** `POST /api/study/studio/questions` creates the `StudioArtifact`
   (`status: "done"`) + its `Question` rows in a single DB transaction. On any failure
   nothing is persisted. The DB only ever holds completed quizzes.
 - **Failures are in-memory only.** A failed generation leaves no DB row. The client

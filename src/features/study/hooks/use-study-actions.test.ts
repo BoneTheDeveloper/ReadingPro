@@ -1,20 +1,20 @@
 import { act, renderHook } from "@testing-library/react";
 import { useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { simplifyPassage } from "@/features/study/api/passages-client";
-import { generateStudioQuestions } from "@/features/study/api/studio-questions-client";
+import { simplifyPassage } from "@/features/study/api-client/passages-client";
+import { generateStudioQuestions } from "@/features/study/api-client/studio-questions-client";
 import type { PassageData, QuestionData, StudioArtifact, StudyState } from "../model/types";
 import { useStudyActions } from "./use-study-actions";
 
-vi.mock("@/features/study/api/studio-questions-client", () => ({
+vi.mock("@/features/study/api-client/studio-questions-client", () => ({
   generateStudioQuestions: vi.fn(),
 }));
 
-vi.mock("@/features/study/api/passages-client", () => ({
+vi.mock("@/features/study/api-client/passages-client", () => ({
   simplifyPassage: vi.fn(),
 }));
 
-vi.mock("@/features/study/api/studio-artifacts-client", () => ({
+vi.mock("@/features/study/api-client/studio-artifacts-client", () => ({
   getArtifactDetail: vi.fn(),
   recordQuizResult: vi.fn(),
   resetQuizResult: vi.fn(),

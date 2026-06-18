@@ -2,8 +2,8 @@
 
 import { useTranslations } from "next-intl";
 import { ChevronDown, ChevronRight, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/shared/utils";
+import { Button } from "@/ui/primitives/button";
+import { cn } from "@/contracts/utils";
 import type { VocabularySet, VocabularySetType } from "../model/vocabulary-types";
 
 const SET_TYPE_TONE: Record<VocabularySetType, string> = {

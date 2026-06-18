@@ -1,13 +1,13 @@
 import { NextRequest } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { POST as generateQuestionsRoute } from "@/app/api/studio-questions/route";
+import { POST as generateQuestionsRoute } from "@/app/api/study/studio/questions/route";
 import {
   generatedStudyQuestionsSuccessResponseSchema,
-} from "@/shared/study/study-response-schema";
-import { apiErrorResponseSchema } from "@/shared/api/api-response-schema";
+} from "@/contracts/study/study-response-schema";
+import { apiErrorResponseSchema } from "@/contracts/http/api-response-schema";
 import { generatedQuestionsFixture, passageFixture, userProfileFixture } from "../../fixtures";
-import type { StudioArtifact } from "@/shared/study/studio-artifact-types";
+import type { StudioArtifact } from "@/contracts/study/studio-artifact-types";
 import { createJsonRequest, parseJsonResponse } from "../../helpers/api";
 import { expectApiErrorPayload, expectApiSuccessPayload } from "../../helpers/assertions";
 
@@ -27,7 +27,7 @@ const routeMocks = vi.hoisted(() => {
   }
 
   return {
-    getAuthenticatedUser: vi.fn(),
+    getUserId: vi.fn(),
     generateQuestionsForPassage: vi.fn(),
     AuthenticationRequiredError,
     PassageStudyServiceError,
@@ -35,7 +35,7 @@ const routeMocks = vi.hoisted(() => {
 });
 
 vi.mock("@/server/auth/auth-utils", () => ({
-  getAuthenticatedUser: routeMocks.getAuthenticatedUser,
+  getUserId: routeMocks.getUserId,
   AuthenticationRequiredError: routeMocks.AuthenticationRequiredError,
 }));
 
@@ -76,10 +76,10 @@ async function expectJsonError(response: Response, status: number, message: stri
 
 beforeEach(() => {
   vi.clearAllMocks();
-  routeMocks.getAuthenticatedUser.mockResolvedValue(userProfileFixture);
+  routeMocks.getUserId.mockResolvedValue(userProfileFixture.id);
 });
 
-describe("POST /api/studio-questions", () => {
+describe("POST /api/study/studio/questions", () => {
   it("generates questions for the authenticated user's passage", async () => {
     routeMocks.generateQuestionsForPassage.mockResolvedValue({ artifact: generatedArtifact, questions: [generatedQuestion] });
 
@@ -110,7 +110,7 @@ describe("POST /api/studio-questions", () => {
   it("rejects malformed and invalid bodies before generation", async () => {
     await expectJsonError(
       await generateQuestionsRoute(
-        new NextRequest("https://english-reading.test/api/studio-questions", {
+        new NextRequest("https://english-reading.test/api/study/studio/questions", {
           method: "POST",
           body: "{",
         }),
@@ -135,7 +135,7 @@ describe("POST /api/studio-questions", () => {
   });
 
   it("returns stable auth and missing-passage errors", async () => {
-    routeMocks.getAuthenticatedUser.mockRejectedValueOnce(new routeMocks.AuthenticationRequiredError());
+    routeMocks.getUserId.mockRejectedValueOnce(new routeMocks.AuthenticationRequiredError());
     await expectJsonError(
       await generateQuestionsRoute(
         createJsonRequest({
@@ -195,7 +195,7 @@ describe("POST /api/studio-questions", () => {
       "Question generation failed — try again",
     );
     expect(Sentry.captureException).toHaveBeenCalledWith(error, {
-      tags: { route: "api:studio-questions", method: "POST" },
+      tags: { route: "api:study:studio:questions", method: "POST" },
     });
   });
 });

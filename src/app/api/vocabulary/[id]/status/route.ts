@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 import { updateVocabularyStatus } from "@/server/db/vocabulary-queries";
-import { getAuthenticatedUser } from "@/server/auth/auth-utils";
+import { getUserId } from "@/server/auth/auth-utils";
 import { isAuthenticationRequiredError, isOwnershipMissError } from "@/server/http/route-errors";
-import { createRequestLogContext, createRequestLogger } from "@/server/core/logger";
+import { createRequestLogContext, createRequestLogger } from "@/server/observability/logger";
 
 const statusUpdateSchema = z.object({
   status: z.enum(["NEW", "LEARNING", "MASTERED"]),
@@ -32,14 +32,14 @@ export async function PATCH(
       return NextResponse.json({ error: "Invalid request." }, { status: 400 });
     }
 
-    const user = await getAuthenticatedUser();
+    const userId = await getUserId();
     const { id } = await params;
 
     const item = await Sentry.startSpan(
       { name: "db:vocabulary-status-update", op: "db" },
       async () =>
         updateVocabularyStatus({
-          userId: user.id,
+          userId: userId,
           itemId: id,
           status: parsed.data.status,
         }),

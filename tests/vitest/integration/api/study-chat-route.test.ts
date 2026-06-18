@@ -1,8 +1,8 @@
 import { NextRequest } from "next/server";
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { GET as getStudyChatHistory, POST as studyChatRoute } from "@/app/api/study-chat/route";
+import { GET as getStudyChatHistory, POST as studyChatRoute } from "@/app/api/study/studio/chat/route";
 import { streamText } from "ai";
-import { studyChatHistoryResponseSchema } from "@/shared/study/study-response-schema";
+import { studyChatHistoryResponseSchema } from "@/contracts/study/study-response-schema";
 import { passageFixture, userProfileFixture } from "../../fixtures";
 import { createJsonRequest, parseJsonResponse } from "../../helpers/api";
 import { expectApiErrorPayload } from "../../helpers/assertions";
@@ -17,14 +17,14 @@ const routeMocks = vi.hoisted(() => {
   }
 
   return {
-    getAuthenticatedUser: vi.fn(),
+    getUserId: vi.fn(),
     getStudyChatModelId: vi.fn(() => "gpt-4o-mini"),
     AuthenticationRequiredError,
   };
 });
 
 vi.mock("@/server/auth/auth-utils", () => ({
-  getAuthenticatedUser: routeMocks.getAuthenticatedUser,
+  getUserId: routeMocks.getUserId,
   AuthenticationRequiredError: routeMocks.AuthenticationRequiredError,
 }));
 
@@ -34,13 +34,13 @@ vi.mock("@/server/ai/model-config", () => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
-  routeMocks.getAuthenticatedUser.mockResolvedValue(userProfileFixture);
+  routeMocks.getUserId.mockResolvedValue(userProfileFixture.id);
   db.studyChatMessage.findMany.mockResolvedValue([]);
 });
 
 describe("study-chat API contracts", () => {
   it("returns a stable 400 history error when passageId is missing", async () => {
-    const response = await getStudyChatHistory(new NextRequest("https://english-reading.test/api/study-chat"));
+    const response = await getStudyChatHistory(new NextRequest("https://english-reading.test/api/study/studio/chat"));
 
     expect(response.status).toBe(400);
     expectApiErrorPayload(
@@ -50,7 +50,7 @@ describe("study-chat API contracts", () => {
   });
 
   it("returns 401 envelopes for unauthenticated stream and history requests", async () => {
-    routeMocks.getAuthenticatedUser.mockRejectedValue(new routeMocks.AuthenticationRequiredError());
+    routeMocks.getUserId.mockRejectedValue(new routeMocks.AuthenticationRequiredError());
 
     const stream = await studyChatRoute(
       createJsonRequest({
@@ -62,7 +62,7 @@ describe("study-chat API contracts", () => {
     expectApiErrorPayload(await stream.json(), "Authentication required.");
 
     const history = await getStudyChatHistory(
-      new NextRequest(`https://english-reading.test/api/study-chat?passageId=${passageFixture.id}`),
+      new NextRequest(`https://english-reading.test/api/study/studio/chat?passageId=${passageFixture.id}`),
     );
     expect(history.status).toBe(401);
     expectApiErrorPayload(
@@ -86,7 +86,7 @@ describe("study-chat API contracts", () => {
   });
 
   it("returns 400 for malformed JSON body", async () => {
-    const request = new NextRequest("https://english-reading.test/api/study-chat", {
+    const request = new NextRequest("https://english-reading.test/api/study/studio/chat", {
       method: "POST",
       headers: { "content-type": "text/plain" },
       body: "this is not json {{{",

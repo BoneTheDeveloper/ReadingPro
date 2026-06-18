@@ -2,9 +2,9 @@ import { fireEvent, screen, waitFor } from "@testing-library/react";
 import * as Sentry from "@sentry/nextjs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { StudyPageClient } from "@/features/study/ui/study-workspace-client";
-import { generateStudioQuestions } from "@/features/study/api/studio-questions-client";
-import { simplifyPassage, createPassage } from "@/features/study/api/passages-client";
-import { getArtifactDetail } from "@/features/study/api/studio-artifacts-client";
+import { generateStudioQuestions } from "@/features/study/api-client/studio-questions-client";
+import { simplifyPassage, createPassage } from "@/features/study/api-client/passages-client";
+import { getArtifactDetail } from "@/features/study/api-client/studio-artifacts-client";
 import { extractSelectionInfo } from "@/features/study/model/selection-utils";
 
 import { createStudyPassage, createStudyQuestion } from "../../../fixtures";
@@ -93,17 +93,17 @@ vi.mock("react-dropzone", () => ({
   }),
 }));
 
-vi.mock("@/features/study/api/studio-questions-client", () => ({
+vi.mock("@/features/study/api-client/studio-questions-client", () => ({
   generateStudioQuestions: vi.fn(),
 }));
 
-vi.mock("@/features/study/api/passages-client", () => ({
+vi.mock("@/features/study/api-client/passages-client", () => ({
   simplifyPassage: vi.fn(),
   createPassage: vi.fn(),
   deletePassage: vi.fn(async () => true),
 }));
 
-vi.mock("@/features/study/api/studio-artifacts-client", () => ({
+vi.mock("@/features/study/api-client/studio-artifacts-client", () => ({
   getArtifactDetail: vi.fn(),
   recordQuizResult: vi.fn(),
   resetQuizResult: vi.fn(),
@@ -160,13 +160,13 @@ describe("StudyPageClient", () => {
           return vocabularySaveResponse();
         }
 
-        if (url.startsWith("/api/study-chat")) {
+        if (url.startsWith("/api/study/studio/chat")) {
           return new Response(JSON.stringify({ messages: [] }), {
             status: 200,
           });
         }
 
-        if (url.startsWith("/api/studio-artifacts")) {
+        if (url.startsWith("/api/study/studio/artifacts")) {
           return new Response(JSON.stringify({ success: true, data: { artifacts: [] } }), {
             status: 200,
           });
@@ -334,10 +334,8 @@ describe("StudyPageClient", () => {
         artifactId: expect.any(String),
       }),
     );
-    expect(await screen.findByText("Results")).toBeInTheDocument();
-
     await user.click(
-      screen.getByRole("button", { name: /Quiz: The Test Passage/ }),
+      await screen.findByRole("button", { name: /Quiz: The Test Passage/ }),
     );
     expect(screen.getByText(question.questionText)).toBeInTheDocument();
   });
@@ -358,7 +356,7 @@ describe("StudyPageClient", () => {
       updatedAt: new Date().toISOString(),
     };
     vi.mocked(fetch).mockImplementation(async (input: RequestInfo | URL) => {
-      if (String(input).startsWith("/api/studio-artifacts")) {
+      if (String(input).startsWith("/api/study/studio/artifacts")) {
         return new Response(
           JSON.stringify({ success: true, data: { artifacts: [persistedArtifact] } }),
           { status: 200 },
@@ -527,11 +525,11 @@ describe("StudyPageClient", () => {
       screen.queryByRole("button", { name: /Save/ }),
     ).not.toBeInTheDocument();
 
-    // Open details shows the translate panel reusing the same translation, no second API call
+    // Open details shows the lookup panel reusing the same translation, no second API call
     const fetchCallsBeforeDetails = vi.mocked(fetch).mock.calls.length;
     await user.click(screen.getByRole("button", { name: /Open details/ }));
     expect(
-      await screen.findByText("Translate: algorithmic bias"),
+      await screen.findByText("Lookup: algorithmic bias"),
     ).toBeInTheDocument();
     expect(fetch).toHaveBeenCalledTimes(fetchCallsBeforeDetails);
   });

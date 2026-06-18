@@ -1,16 +1,16 @@
 import { NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
-import { getAuthenticatedUser } from "@/server/auth/auth-utils";
+import { getUserId } from "@/server/auth/auth-utils";
 import { createPassageRecord } from "@/server/modules/upload/passage-create/passage-create.service";
-import { createPassageRequestSchema } from "@/shared/study/passage-schema";
+import { createPassageRequestSchema } from "@/contracts/study/passage-schema";
 import { isAuthenticationRequiredError, getZodErrorMessage } from "@/server/http/route-errors";
-import { createModuleLogger } from "@/server/core/logger";
+import { createModuleLogger } from "@/server/observability/logger";
 
 const log = createModuleLogger("api:study:passages");
 
 export async function POST(request: Request) {
   try {
-    const user = await getAuthenticatedUser();
+    const userId = await getUserId();
     const body = await request.json();
     
     const parsed = createPassageRequestSchema.safeParse(body);
@@ -22,13 +22,13 @@ export async function POST(request: Request) {
     }
 
     const passage = await createPassageRecord({
-      userId: user.id,
+      userId: userId,
       text: parsed.data.text,
       title: parsed.data.title,
       sourceType: parsed.data.sourceType === "PDF" ? "PDF" : "TEXT",
     });
 
-    log.info({ passageId: passage.id, userId: user.id }, "Passage created via API");
+    log.info({ passageId: passage.id, userId: userId }, "Passage created via API");
 
     return NextResponse.json({
       success: true,

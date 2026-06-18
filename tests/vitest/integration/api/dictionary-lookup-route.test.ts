@@ -5,19 +5,19 @@ import {
   dictionaryLookupPerformanceResponseSchema,
   dictionaryLookupResponseSchema,
   dictionaryLookupSuccessResponseSchema,
-} from "@/shared/dictionary/dictionary-response-schema";
-import type { DictionaryEntryDto, DictionaryMissDto } from "@/shared/dictionary/dictionary-dtos";
+} from "@/contracts/dictionary/dictionary-response-schema";
+import type { DictionaryEntryDto, DictionaryMissDto } from "@/contracts/dictionary/dictionary-dtos";
 import { userProfileFixture } from "../../fixtures";
 import { parseJsonResponse } from "../../helpers/api";
 import { expectApiErrorPayload, expectApiSuccessPayload } from "../../helpers/assertions";
 
 const routeMocks = vi.hoisted(() => ({
-  getAuthenticatedUser: vi.fn(),
+  getUserId: vi.fn(),
   resolveDictionaryLookup: vi.fn(),
 }));
 
 vi.mock("@/server/auth/auth-utils", () => ({
-  getAuthenticatedUser: routeMocks.getAuthenticatedUser,
+  getUserId: routeMocks.getUserId,
 }));
 
 vi.mock("@/server/modules/dictionary/lookup/lookup.service", () => ({
@@ -69,7 +69,7 @@ const missResult: DictionaryMissDto = {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  routeMocks.getAuthenticatedUser.mockResolvedValue(userProfileFixture);
+  routeMocks.getUserId.mockResolvedValue(userProfileFixture.id);
 });
 
 describe("GET /api/dictionary/lookup", () => {
@@ -144,12 +144,12 @@ describe("GET /api/dictionary/lookup", () => {
     );
 
     await expectJsonError(response, 400, "Invalid query parameters.");
-    expect(routeMocks.getAuthenticatedUser).not.toHaveBeenCalled();
+    expect(routeMocks.getUserId).not.toHaveBeenCalled();
     expect(routeMocks.resolveDictionaryLookup).not.toHaveBeenCalled();
   });
 
   it("returns 401 when the user is not authenticated", async () => {
-    routeMocks.getAuthenticatedUser.mockRejectedValue(new Error("Authentication required"));
+    routeMocks.getUserId.mockRejectedValue(new Error("Authentication required"));
 
     const response = await dictionaryLookup(
       createLookupRequest("q=algorithm&sourceLanguage=en&targetLanguage=vi"),

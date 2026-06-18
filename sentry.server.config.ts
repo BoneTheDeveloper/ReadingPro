@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/nextjs";
-import { getSentryConfig, isSentryEnabled } from "@/shared/core/sentry";
+import { getSentryConfig, isSentryEnabled } from "@/contracts/observability/sentry";
 
 if (isSentryEnabled()) {
   const config = getSentryConfig();

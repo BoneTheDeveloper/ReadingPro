@@ -51,7 +51,7 @@ Preferred browser-side data path:
 ```text
 client component
   -> src/features/<feature>/hooks/use-*.ts
-      -> src/features/<feature>/api/<feature>-client.ts
+      -> src/features/<feature>/api-client/<feature>-client.ts
           -> /api route handler
 ```
 
@@ -61,13 +61,13 @@ Route handlers live under `src/app/api/**/route.ts`. They parse external input, 
 
 Streaming exception:
 
-- `POST /api/study-chat` returns an AI SDK UI message stream response.
+- `POST /api/study/studio/chat` returns an AI SDK UI message stream response.
 
 ## Runtime Boundary Rules
 
 - **Client Safety:** Browser code must not import Prisma, Clerk server APIs, filesystem, or server-only AI modules. This is enforced via `import 'server-only'` in `src/server/`.
 - **API Encapsulation:** Browser fetch logic must live in feature `api/` clients rather than directly in components or hooks.
-- **Validation:** Route handlers must validate all external input with Zod using schemas from `src/shared/`.
-- **Shared Contracts:** Shared logic and types belong in `src/shared/`.
+- **Validation:** Route handlers must validate all external input with Zod using schemas from `src/contracts/`.
+- **Shared Contracts:** Shared logic and types belong in `src/contracts/`.
 - **Backend Services:** Reusable backend logic belongs in `src/server/modules/`.
-- **Aliases:** Use path aliases `@/server/*`, `@/shared/*`, and `@/features/*` consistently.
+- **Aliases:** Use path aliases `@/server/*`, `@/contracts/*`, and `@/features/*` consistently.

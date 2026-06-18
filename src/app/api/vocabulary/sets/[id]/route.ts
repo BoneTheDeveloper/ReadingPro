@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 import { updateVocabularySet, deleteVocabularySet } from "@/server/db/vocabulary-set-queries";
-import { getAuthenticatedUser } from "@/server/auth/auth-utils";
+import { getUserId } from "@/server/auth/auth-utils";
 import { isAuthenticationRequiredError, isOwnershipMissError } from "@/server/http/route-errors";
-import { createRequestLogContext, createRequestLogger } from "@/server/core/logger";
+import { createRequestLogContext, createRequestLogger } from "@/server/observability/logger";
 
 const renameSetSchema = z.object({
   name: z.string().trim().min(1).max(100),
@@ -32,14 +32,14 @@ export async function PATCH(
       return NextResponse.json({ error: "Invalid request." }, { status: 400 });
     }
 
-    const user = await getAuthenticatedUser();
+    const userId = await getUserId();
     const { id } = await params;
 
     const set = await Sentry.startSpan(
       { name: "db:vocabulary-set-update", op: "db" },
       async () =>
         updateVocabularySet({
-          userId: user.id,
+          userId: userId,
           setId: id,
           name: parsed.data.name,
         }),
@@ -73,10 +73,10 @@ export async function DELETE(
   );
 
   try {
-    const user = await getAuthenticatedUser();
+    const userId = await getUserId();
     const { id } = await params;
 
-    await deleteVocabularySet({ userId: user.id, setId: id });
+    await deleteVocabularySet({ userId: userId, setId: id });
 
     return NextResponse.json({ success: true });
   } catch (error) {

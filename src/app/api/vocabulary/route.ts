@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
-import { getAuthenticatedUser } from "@/server/auth/auth-utils";
+import { getUserId } from "@/server/auth/auth-utils";
 import {
   createRequestLogContext,
   createRequestLogger,
-} from "@/server/core/logger";
+} from "@/server/observability/logger";
 import { isAuthenticationRequiredError } from "@/server/http/route-errors";
 import {
   VocabularyServiceError,
@@ -57,13 +57,13 @@ export async function POST(request: NextRequest) {
       source: input.source,
     });
 
-    const user = await Sentry.startSpan(
+    const userId = await Sentry.startSpan(
       { name: "api:vocabulary-authenticate", op: "auth" },
-      () => getAuthenticatedUser(),
+      () => getUserId(),
     );
-    requestLog = requestLog.child({ userId: user.id });
+    requestLog = requestLog.child({ userId: userId });
 
-    const item = await saveVocabularyItem({ ...input, userId: user.id });
+    const item = await saveVocabularyItem({ ...input, userId: userId });
 
     return NextResponse.json({ success: true, data: item });
   } catch (error) {
