@@ -81,6 +81,7 @@ Non-domain infrastructure / development routes.
 | Route | Purpose |
 |-------|---------|
 | `GET /api/health` | Health check. |
+| `POST /api/webhooks/clerk` | Clerk webhook receiver (public). Verifies signature with `CLERK_WEBHOOK_SIGNING_SECRET` and syncs `user.created` / `user.updated` / `user.deleted` events to `UserProfile`. |
 | `GET /api/local-blob/[pathname]` | Development-only local file serving. |
 | `POST /api/test/dictionary-performance-fixtures` | Test fixture route for dictionary benchmarks. |
 | `POST /api/test/translate-performance-fixtures` | Test fixture route for translation benchmarks. |

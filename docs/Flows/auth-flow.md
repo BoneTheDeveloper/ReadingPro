@@ -5,26 +5,52 @@
 ```text
 Browser request
   -> src/proxy.ts
-  -> Clerk middleware checks session
+  -> Clerk middleware checks session (optimistic redirect only)
   -> protected route without session redirects to localized sign-in
   -> authenticated auth page redirects to dashboard
   -> next-intl handles locale routing
 ```
 
-## Server User Access
+## API Route Auth (hot path)
 
 ```text
-Route handler/server action/page
-  -> getAuthenticatedUser()
-  -> Clerk auth()
-  -> fetch Clerk user
-  -> syncUser()
-  -> UserProfile row
+API route handler
+  -> getUserId()
+  -> Clerk auth()          ← JWT only, no Backend API call, no DB write
+  -> userId string
+  -> DB query with { where: { userId } }
+```
+
+## Page / Server Component Auth
+
+```text
+Server Component
+  -> getPageUserId()
+  -> auth.protect()        ← authoritative JWT check; redirects if no session
+  -> userId string
+```
+
+## Profile Sync
+
+```text
+Clerk event (user.created / user.updated / user.deleted)
+  -> POST /api/webhooks/clerk
+  -> verifyWebhook()       ← signature check
+  -> syncUser() / deleteUserProfile()
+  -> UserProfile row upserted or hard-deleted
+```
+
+First-write fallback (before first webhook delivery):
+
+```text
+Shared create module (passage/translation/vocabulary/session)
+  -> ensureUserProfile(userId)   ← idempotent upsert
+  -> UserProfile row guaranteed before FK insert
 ```
 
 ## Ownership Enforcement
 
-Every user-owned operation must use the synced `UserProfile.id`:
+Every user-owned operation must supply `userId` from the auth gate:
 
 - `Passage.userId`
 - `StudySession.userId`
@@ -34,6 +60,8 @@ Every user-owned operation must use the synced `UserProfile.id`:
 - `TranslationHistory.userId`
 - `VocabularyItem.userId`
 - `FileUploadIntent.userId`
+
+`userId` comes from `getUserId()` or `getPageUserId()`, never from the request body.
 
 ## Failure Behavior
 
