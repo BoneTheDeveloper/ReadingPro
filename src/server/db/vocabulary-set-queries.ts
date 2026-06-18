@@ -1,6 +1,7 @@
 import 'server-only';
 import { Prisma } from "@/generated/prisma/client";
 import { db } from "./client";
+import { ensureUserProfile } from "@/server/auth/sync-user";
 import type { VocabularySetType, VocabularySet, VocabularySetItem } from "@/generated/prisma/client";
 
 // --- Date helpers for set naming and period computation ---
@@ -53,6 +54,8 @@ export interface VocabularySetWithCount extends VocabularySet {
 // --- Queries ---
 
 export async function findOrCreateDailySet(userId: string, date?: Date): Promise<VocabularySet> {
+  await ensureUserProfile(userId);
+
   const now = date ?? new Date();
   const periodStart = startOfDay(now);
   const periodEnd = endOfDay(now);
@@ -79,6 +82,8 @@ export async function findOrCreateDailySet(userId: string, date?: Date): Promise
 }
 
 export async function findOrCreateWeeklySet(userId: string, date?: Date): Promise<VocabularySet> {
+  await ensureUserProfile(userId);
+
   const now = date ?? new Date();
   const monday = getMonday(now);
   const sunday = getSunday(now);
@@ -108,6 +113,8 @@ export async function createManualSet(params: {
   userId: string;
   name: string;
 }): Promise<VocabularySet> {
+  await ensureUserProfile(params.userId);
+
   return db.vocabularySet.create({
     data: {
       userId: params.userId,

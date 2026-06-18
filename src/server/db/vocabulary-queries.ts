@@ -3,6 +3,7 @@ import { Prisma } from "@/generated/prisma/client";
 import { db } from "./client";
 import { simpleSchedule } from "@/server/modules/spaced-repetition/scheduler";
 import { findOrCreateDailySet, findOrCreateWeeklySet, addItemToSet } from "./vocabulary-set-queries";
+import { ensureUserProfile } from "@/server/auth/sync-user";
 import type { VocabularyItem, VocabularyOccurrence } from "@/generated/prisma/client";
 
 // --- Helpers ---
@@ -37,6 +38,8 @@ interface UpsertVocabularyItemParams {
 // --- Queries ---
 
 export async function upsertVocabularyItem(params: UpsertVocabularyItemParams): Promise<VocabularyItem> {
+  await ensureUserProfile(params.userId);
+
   const normalized = normalizeText(params.selectedText);
   const display = params.selectedText.trim();
   const type = detectType(normalized);

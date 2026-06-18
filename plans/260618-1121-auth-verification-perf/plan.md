@@ -42,8 +42,8 @@ CVE-2025-29927). `getCurrentUser()` retained only where the full profile is need
 |-------|------|--------|
 | 1 | [Fast-path getUserId (TDD)](./phase-01-fast-path-getuserid-tdd.md) | Completed |
 | 2 | [Migrate routes to getUserId](./phase-02-migrate-routes-to-getuserid.md) | Completed |
-| 3 | [Ensure-on-write fallback (TDD)](./phase-03-ensure-on-write-fallback-tdd.md) | Pending |
-| 4 | [Clerk webhook sync](./phase-04-clerk-webhook-sync.md) | Pending |
+| 3 | [Ensure-on-write fallback (TDD)](./phase-03-ensure-on-write-fallback-tdd.md) | Completed |
+| 4 | [Clerk webhook sync](./phase-04-clerk-webhook-sync.md) | Completed |
 | 5 | [Verification and docs](./phase-05-verification-and-docs.md) | Pending |
 
 ## Dependencies

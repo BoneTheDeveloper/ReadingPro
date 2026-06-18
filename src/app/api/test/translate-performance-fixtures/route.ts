@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getUserId } from "@/server/auth/auth-utils";
 import { db } from "@/server/db/client";
+import { ensureUserProfile } from "@/server/auth/sync-user";
 import { countWords } from "@/contracts/translation/translate-performance";
 
 const cleanupSchema = z.object({
@@ -45,6 +46,8 @@ export async function POST() {
   }
 
   const userId = await getUserId();
+  await ensureUserProfile(userId);
+
   const runId = Date.now().toString(36);
   const singleWord = `perfword${runId}`;
   const phrase = `perf phrase ${runId}`;

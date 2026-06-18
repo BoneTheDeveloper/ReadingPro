@@ -1,6 +1,7 @@
 import 'server-only';
 import { z } from 'zod';
 import { db } from './client';
+import { ensureUserProfile } from '@/server/auth/sync-user';
 
 export const SESSION_IDLE_MS = 10 * 60 * 1000;
 
@@ -12,6 +13,8 @@ export const createStudySessionSchema = z.object({
 
 export async function createStudySession(userId: string) {
   const validated = createStudySessionSchema.parse({ userId });
+  await ensureUserProfile(validated.userId);
+
   const now = new Date();
 
   return db.studySession.create({
@@ -36,6 +39,8 @@ export async function closeStaleStudySessions(userId: string, now = new Date()) 
 }
 
 export async function ensureActiveSession(userId: string) {
+  await ensureUserProfile(userId);
+
   const now = new Date();
 
   return db.$transaction(async (tx) => {

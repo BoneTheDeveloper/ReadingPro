@@ -2,6 +2,7 @@ import 'server-only';
 import { createHash } from "node:crypto";
 import { Prisma } from "@/generated/prisma/client";
 import { db } from "./client";
+import { ensureUserProfile } from "@/server/auth/sync-user";
 
 interface TranslationKeyInput {
   userId: string;
@@ -75,6 +76,8 @@ export async function getTranslationCache(cacheKey: string) {
 }
 
 export async function upsertTranslationCache(input: TranslationCacheInput) {
+  await ensureUserProfile(input.userId);
+
   const cacheKey = buildTranslationCacheKey(input);
 
   return db.translationCache.upsert({
@@ -99,6 +102,8 @@ export async function upsertTranslationCache(input: TranslationCacheInput) {
 }
 
 export async function createTranslationHistory(input: TranslationHistoryInput) {
+  await ensureUserProfile(input.userId);
+
   return db.translationHistory.create({
     data: {
       userId: input.userId,
@@ -116,6 +121,8 @@ export async function createTranslationHistory(input: TranslationHistoryInput) {
 }
 
 export async function saveVocabularyItem(input: VocabularyInput) {
+  await ensureUserProfile(input.userId);
+
   const normalizedText = input.selectedText.toLowerCase().replace(/\s+/g, " ").trim();
 
   const item = await db.vocabularyItem.upsert({

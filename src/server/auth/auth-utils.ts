@@ -1,4 +1,4 @@
-import 'server-only';
+import "server-only";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { cache } from "react";
 import { createModuleLogger } from "@/server/observability/logger";
@@ -12,13 +12,6 @@ export class AuthenticationRequiredError extends Error {
     this.name = "AuthenticationRequiredError";
   }
 }
-
-export async function getAuthenticatedUser() {
-  const user = await requireAuth();
-  log.info({ authenticated: true, userPresent: true }, "Authenticated user retrieved");
-  return user;
-}
-
 export const getCurrentUser = cache(async () => {
   const { userId } = await auth();
   if (!userId) return null;
@@ -43,6 +36,15 @@ export async function requireAuth() {
   if (!user) {
     throw new AuthenticationRequiredError();
   }
+  return user;
+}
+
+export async function getAuthenticatedUser() {
+  const user = await requireAuth();
+  log.info(
+    { authenticated: true, userPresent: true },
+    "Authenticated user retrieved",
+  );
   return user;
 }
 
