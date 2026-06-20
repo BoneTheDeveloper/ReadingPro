@@ -1,13 +1,8 @@
 # Database Conventions
 
-**English Reading Training App**
-
-The Prisma schema in [`../../prisma/schema/`](../../prisma/schema/) is the single
+The Prisma schema in [`schema/`](schema/) is the single
 source of truth for tables, columns, types, relations, indexes, cascade rules, and
 DB enums — every model carries a `///` docstring. **Do not restate columns here.**
-
-This doc holds only the cross-model conventions the schema cannot express in one place:
-the identifier policy and the string columns that act as enums without a DB enum type.
 
 ## Identifier Standard
 
@@ -43,7 +38,3 @@ only and are not enforced by the schema. Catalogued here for reference:
 | `VocabularyItem.source` | `TRANSLATE`, `DICTIONARY` |
 | `DictionaryTranslation.status` | `draft`, (reviewed states) |
 | `DictionaryAlias.aliasType` | `variant`, ... |
-
-> True DB enums (`CEFRLevel`, `SourceType`, `QuestionType`, `Tier`, `VocabularySetType`)
-> live in [`../../prisma/schema/enums.prisma`](../../prisma/schema/enums.prisma) and are
-> not duplicated here.

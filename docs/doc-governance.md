@@ -18,7 +18,8 @@ it and never restates it — only owner-scope nuances worth calling out are note
 | API implementation and contracts | [`API/api-implementation-conventions.md`](API/api-implementation-conventions.md), [`API/api-index.md`](API/api-index.md) | Detailed route behavior stays in API docs. |
 | Code and file placement | [`code-standards.md`](code-standards.md), [`codebase-summary.md`](codebase-summary.md) | Broad conventions and feature map only. |
 | Page and feature UI composition | [`Architecture/frontend-ui-architecture/page-composition-conventions.md`](Architecture/frontend-ui-architecture/page-composition-conventions.md) | — |
-| Database schema, columns, relations | [`../prisma/schema/`](../prisma/schema/) | Identifier policy and enum catalogs only. |
+| Database schema, columns, relations | [`../prisma/schema/`](../prisma/schema/) | — |
+| Database conventions (identifier policy, string-enum catalog) | [`../prisma/schema-conventions.md`](../prisma/schema-conventions.md) | Cross-model rules the schema can't express; never restate columns. |
 | Prisma migration procedure | [`../prisma/migrations-guide.md`](../prisma/migrations-guide.md), [`../prisma/SECURITY.md`](../prisma/SECURITY.md) | — |
 | Test suite structure | [`../tests/README.md`](../tests/README.md) | — |
 | Performance query budgets | [`../tests/performance/query-budget-benchmarks.md`](../tests/performance/query-budget-benchmarks.md), [`../tests/performance/README.md`](../tests/performance/README.md) | — |
