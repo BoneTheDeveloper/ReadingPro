@@ -21,51 +21,33 @@ So the learner has no single flow that connects the two. New words stay tied to 
 
 ## Solution
 
-The app provides one integrated loop:
+The app joins reading and vocabulary learning into one flow, so a word the learner meets while reading carries its passage context all the way into spaced-repetition review.
 
-```text
-Upload or paste content
-  -> analyze CEFR level
-  -> simplify when useful
-  -> generate comprehension questions
-  -> study in a three-panel workspace
-  -> translate and save vocabulary
-  -> review cards with SM-2 scheduling
-  -> track progress
-```
+**1. Bring any passage.** The learner starts from a variety of sources — pasted text, a PDF, a YouTube link, a web link or even a paper passaege through the OCR — and turns it into a study passage.
 
-## Current State
+**2. Check understanding.** The app generates comprehension questions and flashcards so the learner can quickly confirm how well they understood the passage.
 
-As of 2026-06-06, the MVP is implemented on Next.js App Router with Clerk auth, Neon PostgreSQL through Prisma, local/Vercel Blob storage, AI-assisted study features, Sentry, Pino, and performance test hooks.
+**3. Go deeper through chat.** A passage-grounded chat lets the learner dig into the content — not only to study, but to research and pull more information about what the passage covers.
 
-Operational features include:
+**4. Capture words.** Inline translation and an in-app dictionary — available both inside the study page and on a dedicated standalone page — let the learner get the meaning of any word efficiently and store chosen words, with their passage context, into a word bank.
 
-- Text and PDF upload.
-- Passage persistence and soft deletion.
-- CEFR metadata, simplification, and question generation.
-- Three-panel study workspace.
-- Inline translation, dictionary lookup/search/suggest, translation cache/history, and vocabulary saving.
-- Study chat with streaming AI tutor responses scoped to the selected passage.
-- SM-2 review scheduling and progress stats.
-- Local, preview, and production environment contracts.
+**5. Memorize them.** From the word bank the learner builds word sets, manually or automatically, and memorizes them through spaced repetition.
 
-## MVP Scope
+The loop closes when saved words keep the context of the passage they came from, reinforcing them once in the reading and again in the card-set review.
 
-In scope:
+## Goal
 
-- Authenticated learner-owned passages.
-- English source content and Vietnamese translation/dictionary targets.
-- Private file storage abstraction.
-- Seeded dictionary data and raw-SQL optimized dictionary reads where needed.
-- Production deployment on Vercel with Neon and Vercel Blob.
+Connect reading and vocabulary learning so that words learned in context are retained measurably better than context-free flashcard drilling.
 
-Out of scope for the current MVP:
+## Success Metrics
 
-- Native mobile apps.
-- Payments and subscriptions.
-- Collaborative classrooms.
-- Audio pronunciation and speech input.
-- OCR and YouTube transcription.
+| ID | Metric | Target |
+|----|--------|--------|
+| M1 | Word retention — reviewed words recalled correctly at a 7-day interval | ≥ X% |
+| M2 | Engagement — learner returns to review on at least X days per week | ≥ X days/week |
+| M3 | Flow completion — studied passages that produce at least one saved word set | ≥ X% |
+
+Targets (X) are placeholders to be set once a baseline is measured.
 
 ## References
 

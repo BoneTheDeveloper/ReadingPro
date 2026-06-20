@@ -1,0 +1,56 @@
+# EP-03 · Passage Chat
+
+**PRD Solution area:** 3. Go deeper through chat · [Product PDR](../../Product/overview-pdr.md)
+
+The learner uses a passage-grounded chat to dig into the content — not only to study, but to
+research and pull more information about what the passage covers.
+
+---
+
+## US-10 · Ask a question grounded in the passage
+
+**Priority:** Must **Status:** Implemented
+
+**As a** learner, **I want** to ask a tutor question about the selected passage, **so that** I
+get contextual explanations while reading.
+
+**Acceptance criteria**
+
+```gherkin
+Scenario: Ask about an owned passage
+  Given I own the selected passage
+  When I ask a question in the chat
+  Then the system answers using the passage context and streams the response
+  And it persists the conversation for later
+
+Scenario: Passage not owned
+  Given I do not own the selected passage
+  When I try to ask
+  Then the system rejects the request
+```
+
+**Traceability:** Use case [UC-12](../use-cases.md#uc-12-ask-study-chat) ·
+Scope: AI · Tests: [test-scenarios.md](../../Testing/test-scenarios.md)
+
+---
+
+## US-11 · Research deeper through chat
+
+**Priority:** Should **Status:** Implemented
+
+**As a** learner, **I want** to ask follow-up and research questions that go beyond literal
+comprehension, **so that** I can learn more about the topic the passage covers.
+
+**Acceptance criteria**
+
+```gherkin
+Scenario: Continue a research thread
+  Given I have an ongoing chat about a passage I own
+  When I ask a broader question about the topic
+  Then the system answers in context and keeps the thread coherent across turns
+```
+
+- Chat is scoped to the passage I own; answers stay grounded in that context.
+
+**Traceability:** Use case [UC-12](../use-cases.md#uc-12-ask-study-chat) ·
+Scope: AI · Tests: [test-scenarios.md](../../Testing/test-scenarios.md)

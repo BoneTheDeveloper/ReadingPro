@@ -45,7 +45,7 @@ Each folder owns exactly one question. Nothing is duplicated across folders.
 | Section | Question it answers | Contents |
 |---------|---------------------|----------|
 | [Product](Product/overview-pdr.md) | Why & what (strategy) | [Overview PDR](Product/overview-pdr.md), [feature scope](Product/feature-scope.md), [roadmap](Product/roadmap.md), [changelog](Product/changelog.md). |
-| [Requirements](Requirements/use-cases.md) | What exactly must it do (spec) | [Business](Requirements/business-requirements.md) + [software](Requirements/software-requirements.md) requirements, [use cases](Requirements/use-cases.md), [user stories](Requirements/user-stories.md). |
+| [Requirements](Requirements/use-cases.md) | What exactly must it do (spec) | [Business](Requirements/business-requirements.md) + [software](Requirements/software-requirements.md) requirements, [use cases](Requirements/use-cases.md), [user stories](Requirements/user-stories/README.md). |
 | [Architecture](Architecture/system-architecture.md) | How is it built | Runtime, frontend UI, auth, database design, storage, observability, deployment. |
 | [API](API/api-index.md) | Request/response contracts | API conventions and per-feature route docs. |
 | [Database](Database/data-dictionary.md) | Data contracts | Identifier policy + string-enum catalogs. Schema, columns, and relations are the [`prisma/schema/`](../prisma/schema/) source of truth; migration procedure in [`../prisma/`](../prisma/migrations-guide.md). |
