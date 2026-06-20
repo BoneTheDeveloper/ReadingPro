@@ -1,25 +1,46 @@
 # Documentation Index
 
-Start here when onboarding to the English Reading Training App docs.
+This is the **map** of the English Reading Training App docs — it tells you where things live, not how to build them. Docs are organized **by the question each folder answers**.
 
-Docs are organized **by the question each folder answers**. The table below maps each
-folder to its question and contents.
+> **Core rule — Single Source of Truth (SSoT).**
+> Each concern has exactly **one** canonical owner. Every other doc *links* to that owner
+> and never restates its content. When something changes, you update it in one place.
+
+## Cross-cutting docs
+
+These aren't folders, but every section relies on them:
+
+| Doc | Owns |
+|-----|------|
+| [`code-standards.md`](code-standards.md) | Code conventions and file placement rules. |
+| [`codebase-summary.md`](codebase-summary.md) | High-level tour of the codebase. |
+
 
 ## Main Sections
 
 | Section | Question it answers | Contents |
 |---------|---------------------|----------|
-| [Product](Product/overview-prd.md) | Why & what (strategy) | [Overview PRD](Product/overview-prd.md), [feature scope](Product/feature-scope.md), [roadmap](Product/roadmap.md), [changelog](Product/changelog.md). |
-| [Requirements](Requirements/use-cases.md) | What exactly must it do (spec) | [Business](Requirements/business-requirements.md) + [software](Requirements/software-requirements.md) requirements, [use cases](Requirements/use-cases.md), [user stories](Requirements/user-stories/README.md). |
-| [Architecture](Architecture/system-architecture.md) | How is it built | Runtime, frontend UI, auth, database design, storage, observability, deployment. |
-| [API](API/api-index.md) | Request/response contracts | API conventions and per-feature route docs. |
-| [Database](../prisma/schema-conventions.md) | Data contracts | Identifier policy + string-enum catalogs live in [`prisma/schema-conventions.md`](../prisma/schema-conventions.md); schema, columns, and relations are the [`prisma/schema/`](../prisma/schema/) source of truth; migration procedure in [`../prisma/`](../prisma/migrations-guide.md). |
-| [Flows](Flows/upload-flow.md) | How features behave end-to-end | UI-to-persistence flow per feature, plus page-to-page [navigation flow](Flows/navigation-flow.md). |
-| [Testing](Testing/testing-strategy.md) | How we verify it | [Strategy](Testing/testing-strategy.md), [test scenarios](Testing/test-scenarios.md), [traceability matrix](Testing/traceability-matrix.md), [contract tests](Testing/contract-tests.md), [performance benchmarks](Testing/performance-benchmarks.md). |
-| [Design](Design/design-guidelines.md) | Visual system | Design guidelines, styling guide, dark-mode color design. |
+| [Product](Product/overview-prd.md) | Why does this exist, and what are we building? | [Overview PRD](Product/overview-prd.md), [feature scope](Product/feature-scope.md), [roadmap](Product/roadmap.md), [changelog](Product/changelog.md). |
+| [Requirements](Requirements/use-cases.md) | What exactly must it do? | [Business](Requirements/business-requirements.md) + [software](Requirements/software-requirements.md) requirements, [use cases](Requirements/use-cases.md), [user stories](Requirements/user-stories/README.md). |
+| [Architecture](Architecture/system-architecture.md) | How is it built? | [System architecture](Architecture/system-architecture.md): runtime, frontend UI, auth, database design, storage, observability, deployment. <!-- TODO: replace with real per-topic file links if these are separate docs --> |
+| [API](API/api-index.md) | What are the request/response contracts? | [API index](API/api-index.md) (route inventory) + [implementation conventions](API/api-implementation-conventions.md), and per-feature route docs. |
+| [Flows](Flows/upload-flow.md) | How do features behave end-to-end? | UI-to-persistence flow per feature (e.g. [upload flow](Flows/upload-flow.md)), plus page-to-page [navigation flow](Flows/navigation-flow.md). |
+| [Testing](Testing/testing-strategy.md) | How do we verify it? | [Strategy](Testing/testing-strategy.md), [test scenarios](Testing/test-scenarios.md), [traceability matrix](Testing/traceability-matrix.md), [contract tests](Testing/contract-tests.md), [performance benchmarks](Testing/performance-benchmarks.md). |
+| [Design](Design/design-guidelines.md) | What is the visual system? | [Design guidelines](Design/design-guidelines.md), [styling guide](Design/styling-guide.md), [dark-mode color design](Design/dark-mode-colors.md). <!-- TODO: confirm the styling-guide and dark-mode filenames match your repo --> |
 
-## Governance
 
-Doc ownership and the "one canonical home per concern, never restate" rules live in
-[doc-governance.md](doc-governance.md). Consult it before adding a section that might
-already belong to another doc.
+
+## Source of Truth Rules
+
+Per the **Core rule** above, each concern has one canonical owner; every other doc links to
+it and never restates it. This table is the registry of who owns what.
+
+| Concern | Canonical owner |
+|---------|-----------------|
+| Product vision (problem, solution, users, goal, success metrics) | [`Product/overview-prd.md`](Product/overview-prd.md) |
+| Business case (objective, value props, business model) | [`Requirements/business-requirements.md`](Requirements/business-requirements.md) |
+| Delivery phases and status | [`Product/roadmap.md`](Product/roadmap.md) |
+| Feature scope (in / out of scope) | [`Product/feature-scope.md`](Product/feature-scope.md) |
+| API route inventory | [`API/api-index.md`](API/api-index.md) |
+| API implementation and contracts | [`API/api-implementation-conventions.md`](API/api-implementation-conventions.md) |
+| Page and feature UI composition | [`Architecture/frontend-ui-architecture/page-composition-conventions.md`](Architecture/frontend-ui-architecture/page-composition-conventions.md) |
