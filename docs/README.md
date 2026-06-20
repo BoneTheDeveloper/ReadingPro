@@ -27,7 +27,7 @@ src/
 
 ## Reading Order
 
-1. [Product Overview PDR](Product/overview-pdr.md) - product purpose, users, MVP scope, and current state.
+1. [Product Overview PDR](Product/overview-pdr.md) - product purpose, users, problem, solution, goal, and success metrics.
 2. [Codebase Summary](codebase-summary.md) - detailed source layout, framework stack, and feature map.
 3. [Code Standards](code-standards.md) - thin top-level convention for writing code and placing files.
 4. [System Architecture](Architecture/system-architecture.md) - high-level system map.
@@ -49,7 +49,7 @@ Each folder owns exactly one question. Nothing is duplicated across folders.
 | [Architecture](Architecture/system-architecture.md) | How is it built | Runtime, frontend UI, auth, database design, storage, observability, deployment. |
 | [API](API/api-index.md) | Request/response contracts | API conventions and per-feature route docs. |
 | [Database](Database/data-dictionary.md) | Data contracts | Identifier policy + string-enum catalogs. Schema, columns, and relations are the [`prisma/schema/`](../prisma/schema/) source of truth; migration procedure in [`../prisma/`](../prisma/migrations-guide.md). |
-| [Flows](Flows/upload-flow.md) | How features behave end-to-end | UI-to-persistence flow per feature. |
+| [Flows](Flows/upload-flow.md) | How features behave end-to-end | UI-to-persistence flow per feature, plus page-to-page [navigation flow](Flows/navigation-flow.md). |
 | [Testing](Testing/testing-strategy.md) | How we verify it | [Strategy](Testing/testing-strategy.md), [test scenarios](Testing/test-scenarios.md), [traceability matrix](Testing/traceability-matrix.md), [contract tests](Testing/contract-tests.md), [performance benchmarks](Testing/performance-benchmarks.md). |
 | [Design](Design/design-guidelines.md) | Visual system | Design guidelines, styling guide, dark-mode color design. |
 
@@ -75,6 +75,10 @@ specific to a folder, keep the detailed rule in that folder and cross-link from 
 
 | Rule area | Canonical location | `docs/` role |
 |-----------|--------------------|--------------|
+| Product vision (problem, solution, users, goal, success metrics) | [`Product/overview-pdr.md`](Product/overview-pdr.md) | Canonical; BRD and requirements link here, never restate. |
+| Business case (objective, value props, business model, milestones) | [`Requirements/business-requirements.md`](Requirements/business-requirements.md) | Owns business framing; links to PDR for vision. |
+| Feature scope (what is in / out of scope) | [`Product/feature-scope.md`](Product/feature-scope.md) | Single scope owner; PDR, BRD, and roadmap link here, never re-list. |
+| API route inventory | [`API/api-index.md`](API/api-index.md) | Single source of truth for routes; other docs link, never re-list. |
 | Code and file placement | [`code-standards.md`](code-standards.md), [`codebase-summary.md`](codebase-summary.md) | Keep broad conventions and feature map only. |
 | Page and feature UI composition | [`Architecture/frontend-ui-architecture/page-composition-conventions.md`](Architecture/frontend-ui-architecture/page-composition-conventions.md) | Link and summarize only. |
 | API implementation and contracts | [`API/api-implementation-conventions.md`](API/api-implementation-conventions.md), [`API/api-index.md`](API/api-index.md) | Keep detailed route behavior in API docs. |

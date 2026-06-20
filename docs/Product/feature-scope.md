@@ -18,8 +18,11 @@
 ## Not In Current Scope
 
 - Native mobile apps.
-- Billing and subscriptions.
-- Classroom/team management.
+- Billing and subscriptions (deferred, not permanently excluded).
+- Classroom/team management and real-time collaboration.
+- Social features (leaderboards, sharing).
+- Content library / curation.
+- Grammar exercises.
 - Audio pronunciation.
 - Offline-first sync.
 - Multi-target-language dictionary support beyond current route contracts.

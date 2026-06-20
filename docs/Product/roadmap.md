@@ -28,12 +28,10 @@ As of 2026-06-06, the product is in MVP hardening. Core study, auth, database, s
 
 ## Deferred
 
-- OCR for scanned PDFs.
-- YouTube transcription.
-- Payments/subscriptions.
-- Classroom collaboration.
-- Native mobile.
-- Offline sync.
+OCR and YouTube transcription are **in scope** as planned import sources (see the Content
+expansion phase above), not deferred. The authoritative out-of-scope list — payments,
+classroom collaboration, native mobile, offline sync, and the rest — is owned by
+[feature-scope.md](feature-scope.md#not-in-current-scope).
 
 ## Open Questions
 

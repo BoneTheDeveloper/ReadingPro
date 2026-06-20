@@ -2,7 +2,7 @@
 
 ## Product
 
-English Reading Training App is an AI-assisted reading trainer for English learners. A learner uploads or pastes English content, studies the passage in a guided workspace, translates selected text, asks passage-grounded study questions, and reviews generated cards through spaced repetition.
+English Reading Training App is an AI-assisted reading trainer for English learners. A learner uploads or pastes English content, studies the passage in a guided workspace, translates selected text, asks passage-grounded study questions, and reviews saved vocabulary through spaced repetition.
 
 ## Users
 
