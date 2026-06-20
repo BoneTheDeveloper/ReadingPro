@@ -1,14 +1,3 @@
-# Performance Benchmarks
-
-## Canonical Rule Docs
-
-Performance benchmark implementation and budget policy live under `tests/performance/`:
-
-- [../../tests/performance/README.md](../../tests/performance/README.md)
-- [../../tests/performance/query-budget-benchmarks.md](../../tests/performance/query-budget-benchmarks.md)
-
-This file exists so the main docs tree can point readers to performance testing without copying benchmark tables.
-
 ## Summary
 
 - Query-count budgets are hard gates where marked in the canonical benchmark doc.

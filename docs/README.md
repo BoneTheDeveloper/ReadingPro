@@ -21,10 +21,10 @@ These aren't folders, but every section relies on them:
 | Section | Question it answers | Contents |
 |---------|---------------------|----------|
 | [Product](Product/overview-prd.md) | Why does this exist, and what are we building? | [Overview PRD](Product/overview-prd.md), [feature scope](Product/feature-scope.md), [roadmap](Product/roadmap.md), [changelog](Product/changelog.md). |
-| [Requirements](Requirements/use-cases.md) | What exactly must it do? | [Business](Requirements/business-requirements.md) + [software](Requirements/software-requirements.md) requirements, [use cases](Requirements/use-cases.md), [user stories](Requirements/user-stories/README.md). |
+| [Requirements](Requirements/use-cases.md) | What must it do, from the user's point of view? | [Business](Requirements/business-requirements.md) + [software](Requirements/software-requirements.md) requirements, black-box [use cases](Requirements/use-cases.md), [user stories](Requirements/user-stories/README.md). |
 | [Architecture](Architecture/system-architecture.md) | How is it built? | [System architecture](Architecture/system-architecture.md): runtime, frontend UI, auth, database design, storage, observability, deployment. <!-- TODO: replace with real per-topic file links if these are separate docs --> |
 | [API](API/api-index.md) | What are the request/response contracts? | [API index](API/api-index.md) (route inventory) + [implementation conventions](API/api-implementation-conventions.md), and per-feature route docs. |
-| [Flows](Flows/upload-flow.md) | How do features behave end-to-end? | UI-to-persistence flow per feature (e.g. [upload flow](Flows/upload-flow.md)), plus page-to-page [navigation flow](Flows/navigation-flow.md). |
+| [Flows](Flows/README.md) | How does a request travel through the code to make it happen? | White-box [flows index](Flows/README.md): UI-to-persistence call path per feature, plus page-to-page [navigation flow](Flows/navigation-flow.md). |
 | [Testing](Testing/testing-strategy.md) | How do we verify it? | [Strategy](Testing/testing-strategy.md), [test scenarios](Testing/test-scenarios.md), [traceability matrix](Testing/traceability-matrix.md), [contract tests](Testing/contract-tests.md), [performance benchmarks](Testing/performance-benchmarks.md). |
 | [Design](Design/design-guidelines.md) | What is the visual system? | [Design guidelines](Design/design-guidelines.md), [styling guide](Design/styling-guide.md), [dark-mode color design](Design/dark-mode-colors.md). <!-- TODO: confirm the styling-guide and dark-mode filenames match your repo --> |
 
@@ -44,3 +44,5 @@ it and never restates it. This table is the registry of who owns what.
 | API route inventory | [`API/api-index.md`](API/api-index.md) |
 | API implementation and contracts | [`API/api-implementation-conventions.md`](API/api-implementation-conventions.md) |
 | Page and feature UI composition | [`Architecture/frontend-ui-architecture/page-composition-conventions.md`](Architecture/frontend-ui-architecture/page-composition-conventions.md) |
+| External/actor behavior (black-box use cases) | [`Requirements/use-cases.md`](Requirements/use-cases.md) |
+| Internal request/data path (white-box flows) | [`Flows/`](Flows/README.md) |

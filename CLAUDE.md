@@ -3,16 +3,20 @@
 1. Read `docs/README.md` for the current documentation map.
 2. Read `docs/codebase-summary.md` when you need the source layout or feature map.
 3. Read `docs/code-standards.md` for broad code and file placement conventions.
-4. Read the most relevant detailed domain doc before editing code.
+4. Read the most relevant detailed doc before editing code.
 
-If a task needs exact files, search within the relevant docs folder first, then search source with `rg`.
+## Task-Specific Docs
 
-## Working Rules
+Before starting a task in these areas, read its canonical docs first:
 
-- Prefer canonical docs over stale memory or inferred behavior.
-- Keep `docs/code-standards.md` broad; put detailed rules beside the files or folders they govern.
-- Update docs when a code change alters product behavior, architecture,
-  operations, API contracts, database shape, or test expectations.
+- **Database / schema / migrations** → [`prisma/schema-conventions.md`](prisma/schema-conventions.md)
+  (identifier policy, string-enum catalog), [`prisma/schema/`](prisma/schema/) (the schema
+  source of truth), [`prisma/migrations-guide.md`](prisma/migrations-guide.md), and
+  [`prisma/SECURITY.md`](prisma/SECURITY.md) for the DB security model.
+- **Testing** → [`docs/Testing/`](docs/Testing/) — strategy, test scenarios, traceability
+  matrix, contract tests, and performance benchmarks.
+
+
 
 ## Navigation
 
@@ -30,3 +34,7 @@ pnpm run typecheck
 pnpm run lint
 pnpm run test
 ```
+## Working Rules
+
+- Update docs when a code change alters product behavior, architecture,
+  operations, API contracts, database shape, or test expectations.
