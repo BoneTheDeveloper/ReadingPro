@@ -88,10 +88,7 @@ Shared capability rule: reusable upload code belongs under `src/features/upload`
 - Dashboard home uses mock data in `src/app/[locale]/page.tsx`; do not document it as live progress data until the page reads real user stats.
 - `/[locale]/progress` redirects to `/` and does not render `src/features/progress/progress-dashboard.tsx`.
 
-## References
+## Related Code
 
-- Runtime architecture: [../runtime-architecture.md](../runtime-architecture.md)
-- System architecture: [../system-architecture.md](../system-architecture.md)
-- Design guidelines: [../../Design/design-guidelines.md](../../Design/design-guidelines.md)
 - Dashboard shell: `src/ui/layout/dashboard-sidebar.tsx`
 - Locale layout: `src/app/[locale]/layout.tsx`

@@ -71,8 +71,3 @@ Docs must state whether the route is:
 - Authenticated shared-data read.
 - Authenticated user-owned read/write.
 - Development/test only.
-
-## Related Docs
-
-- [API Implementation Conventions](api-implementation-conventions.md)
-- [API Index](api-index.md)

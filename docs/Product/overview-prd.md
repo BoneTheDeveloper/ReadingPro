@@ -1,4 +1,4 @@
-# Project Overview PDR
+# Project Overview PRD
 
 ## Product
 
@@ -48,13 +48,6 @@ Connect reading and vocabulary learning so that words learned in context are ret
 | M3 | Flow completion — studied passages that produce at least one saved word set | ≥ X% |
 
 Targets (X) are placeholders to be set once a baseline is measured.
-
-## References
-
-- Use cases: [../Requirements/use-cases.md](../Requirements/use-cases.md)
-- Feature scope: [feature-scope.md](feature-scope.md)
-- System architecture: [../Architecture/system-architecture.md](../Architecture/system-architecture.md)
-- Roadmap: [roadmap.md](roadmap.md)
 
 **Status:** Active
 **Last Updated:** 2026-06-06

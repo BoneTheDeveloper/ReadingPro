@@ -29,9 +29,7 @@ As of 2026-06-06, the product is in MVP hardening. Core study, auth, database, s
 ## Deferred
 
 OCR and YouTube transcription are **in scope** as planned import sources (see the Content
-expansion phase above), not deferred. The authoritative out-of-scope list — payments,
-classroom collaboration, native mobile, offline sync, and the rest — is owned by
-[feature-scope.md](feature-scope.md#not-in-current-scope).
+expansion phase above), not deferred.
 
 ## Open Questions
 
@@ -39,11 +37,6 @@ classroom collaboration, native mobile, offline sync, and the rest — is owned 
 - Whether dictionary routes should remain authenticated for all shared-data reads.
 - How saved vocabulary should enter spaced repetition.
 - Whether study chat should support provider selection or a single fixed model.
-
-## References
-
-- Feature scope: [feature-scope.md](feature-scope.md)
-- Testing strategy: [../Testing/testing-strategy.md](../Testing/testing-strategy.md)
 
 **Status:** Active
 **Last Updated:** 2026-06-06

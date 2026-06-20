@@ -432,9 +432,8 @@ Rule: if a visual component needs one of these flows, pass a callback down from 
 - Use `*Results` for terminal/completion views.
 - Do not introduce generic names like `LeftPanel`, `RightPanel`, `MainContent`, or `CardGrid` in Study UI.
 
-## References
+## Related Code
 
-- Study flow: [../../Flows/study-flow.md](../../Flows/study-flow.md)
 - Study route: `src/app/[locale]/(dashboard)/study/page.tsx`
 - Study UI: `src/features/study/ui`
 - Study model hooks: `src/features/study/model`

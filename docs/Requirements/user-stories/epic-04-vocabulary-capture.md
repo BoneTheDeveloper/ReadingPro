@@ -1,6 +1,6 @@
 # EP-04 · Vocabulary Capture
 
-**PRD Solution area:** 4. Capture words · [Product PDR](../../Product/overview-pdr.md)
+**PRD Solution area:** 4. Capture words · [Product PRD](../../Product/overview-prd.md)
 
 The learner gets the meaning of any word efficiently — through inline translation and an
 in-app dictionary, in the study page and on a dedicated standalone page — and stores chosen

@@ -1,6 +1,6 @@
 # EP-03 · Passage Chat
 
-**PRD Solution area:** 3. Go deeper through chat · [Product PDR](../../Product/overview-pdr.md)
+**PRD Solution area:** 3. Go deeper through chat · [Product PRD](../../Product/overview-prd.md)
 
 The learner uses a passage-grounded chat to dig into the content — not only to study, but to
 research and pull more information about what the passage covers.

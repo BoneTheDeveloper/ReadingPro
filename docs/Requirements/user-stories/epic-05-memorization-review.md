@@ -1,6 +1,6 @@
 # EP-05 · Memorization & Review
 
-**PRD Solution area:** 5. Memorize them · [Product PDR](../../Product/overview-pdr.md)
+**PRD Solution area:** 5. Memorize them · [Product PRD](../../Product/overview-prd.md)
 
 From the word bank the learner builds word sets — manually or automatically — and memorizes
 them through spaced repetition, with each word carrying its passage context into review.

@@ -4,7 +4,7 @@
 
 User stories organized as a three-tier story map — **Epic → Story → Acceptance Criteria** —
 following INVEST and BDD (Given/When/Then) practice. Each epic maps to a Solution area in
-the [Product PDR](../../Product/overview-pdr.md). Stories back-link to their use case in
+the [Product PRD](../../Product/overview-prd.md). Stories back-link to their use case in
 [use-cases.md](../use-cases.md).
 
 ## Format

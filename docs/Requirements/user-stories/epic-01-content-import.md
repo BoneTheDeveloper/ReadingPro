@@ -1,6 +1,6 @@
 # EP-01 · Content Import
 
-**PRD Solution area:** 1. Bring any passage · [Product PDR](../../Product/overview-pdr.md)
+**PRD Solution area:** 1. Bring any passage · [Product PRD](../../Product/overview-prd.md)
 
 The learner turns content from any source into a study passage. Sources: pasted text, PDF,
 YouTube link (via transcription), web link, and paper images (via OCR).

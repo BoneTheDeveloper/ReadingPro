@@ -6,18 +6,6 @@ Docs are organized **by the question each folder answers**, so there is exactly 
 home for each concern. They flow with the delivery lifecycle: *why & what →
 exact spec → how it's built → contracts → behavior → how we verify → how we run it.*
 
-## Project Architecture
-
-### Source Layout
-
-```text
-src/
-  app/                  Next.js routing layer: thin pages + thin API route handlers (HTTP adapters)
-  server/               Backend layer (enforced server-only): db, ai, auth, http, modules
-  contracts/            Contract layer (isomorphic/pure): Zod schemas, DTOs, pure utils
-  features/             Frontend feature layer (FSD-lite): ui, hooks, model, api-client
-  ui/                   Universal design system: primitives (UI atoms) + layout
-```
 
 ### Core Invariants
 
@@ -27,7 +15,7 @@ src/
 
 ## Reading Order
 
-1. [Product Overview PDR](Product/overview-pdr.md) - product purpose, users, problem, solution, goal, and success metrics.
+1. [Product Overview PRD](Product/overview-prd.md) - product purpose, users, problem, solution, goal, and success metrics.
 2. [Codebase Summary](codebase-summary.md) - detailed source layout, framework stack, and feature map.
 3. [Code Standards](code-standards.md) - thin top-level convention for writing code and placing files.
 4. [System Architecture](Architecture/system-architecture.md) - high-level system map.
@@ -44,7 +32,7 @@ Each folder owns exactly one question. Nothing is duplicated across folders.
 
 | Section | Question it answers | Contents |
 |---------|---------------------|----------|
-| [Product](Product/overview-pdr.md) | Why & what (strategy) | [Overview PDR](Product/overview-pdr.md), [feature scope](Product/feature-scope.md), [roadmap](Product/roadmap.md), [changelog](Product/changelog.md). |
+| [Product](Product/overview-prd.md) | Why & what (strategy) | [Overview PRD](Product/overview-prd.md), [feature scope](Product/feature-scope.md), [roadmap](Product/roadmap.md), [changelog](Product/changelog.md). |
 | [Requirements](Requirements/use-cases.md) | What exactly must it do (spec) | [Business](Requirements/business-requirements.md) + [software](Requirements/software-requirements.md) requirements, [use cases](Requirements/use-cases.md), [user stories](Requirements/user-stories/README.md). |
 | [Architecture](Architecture/system-architecture.md) | How is it built | Runtime, frontend UI, auth, database design, storage, observability, deployment. |
 | [API](API/api-index.md) | Request/response contracts | API conventions and per-feature route docs. |
@@ -68,20 +56,8 @@ information sits with its subject. Find them by role here:
 | Performance benchmark runner | [`../tests/performance/README.md`](../tests/performance/README.md), [`../tests/performance/query-budget-benchmarks.md`](../tests/performance/query-budget-benchmarks.md) |
 | Localization (i18n) | [`../localization/README.md`](../localization/README.md), [`../localization/docs/`](../localization/docs/) |
 
-## Source Of Truth Rules
+## Governance
 
-Do not duplicate detailed rules that belong beside executable assets. When a rule is
-specific to a folder, keep the detailed rule in that folder and cross-link from `docs/`.
-
-| Rule area | Canonical location | `docs/` role |
-|-----------|--------------------|--------------|
-| Product vision (problem, solution, users, goal, success metrics) | [`Product/overview-pdr.md`](Product/overview-pdr.md) | Canonical; BRD and requirements link here, never restate. |
-| Business case (objective, value props, business model, milestones) | [`Requirements/business-requirements.md`](Requirements/business-requirements.md) | Owns business framing; links to PDR for vision. |
-| Feature scope (what is in / out of scope) | [`Product/feature-scope.md`](Product/feature-scope.md) | Single scope owner; PDR, BRD, and roadmap link here, never re-list. |
-| API route inventory | [`API/api-index.md`](API/api-index.md) | Single source of truth for routes; other docs link, never re-list. |
-| Code and file placement | [`code-standards.md`](code-standards.md), [`codebase-summary.md`](codebase-summary.md) | Keep broad conventions and feature map only. |
-| Page and feature UI composition | [`Architecture/frontend-ui-architecture/page-composition-conventions.md`](Architecture/frontend-ui-architecture/page-composition-conventions.md) | Link and summarize only. |
-| API implementation and contracts | [`API/api-implementation-conventions.md`](API/api-implementation-conventions.md), [`API/api-index.md`](API/api-index.md) | Keep detailed route behavior in API docs. |
-| Prisma migration procedure | [`../prisma/migrations-guide.md`](../prisma/migrations-guide.md), [`../prisma/SECURITY.md`](../prisma/SECURITY.md) | Link and summarize only. |
-| Test suite structure | [`../tests/README.md`](../tests/README.md) | Link and summarize only. |
-| Performance query budgets | [`../tests/performance/query-budget-benchmarks.md`](../tests/performance/query-budget-benchmarks.md), [`../tests/performance/README.md`](../tests/performance/README.md) | Link and summarize only. |
+Doc ownership and the "one canonical home per concern, never restate" rules live in
+[doc-governance.md](doc-governance.md). Consult it before adding a section that might
+already belong to another doc.

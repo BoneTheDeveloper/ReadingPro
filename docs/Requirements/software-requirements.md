@@ -128,8 +128,7 @@
 
 ## 4. API Endpoints
 
-The complete, authoritative endpoint list lives in [../API/api-index.md](../API/api-index.md).
-It is the single source of truth for routes; this SRS does not duplicate it. Key route groups:
+Full endpoint list: [../API/api-index.md](../API/api-index.md). Key route groups:
 upload, study (passages / studio / sessions), translate, vocabulary (incl. `[id]/review`),
 dictionary, and progress.
 
