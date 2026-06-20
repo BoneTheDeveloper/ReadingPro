@@ -80,7 +80,7 @@ src/features/study/ui/upload/study-upload-modal.tsx
 - Study chat/session: `/api/study/studio/chat`, `/api/study/sessions`
 - Study results: `/api/study-results`
 - Studio artifacts: `/api/study/studio/artifacts` (quiz outcomes persist as a `QuizResult` child of a `StudioArtifact` via server actions, not a dedicated route)
-- Cards/progress: `/api/cards/*`, `/api/progress/stats`
+- Vocabulary review/progress: `/api/vocabulary/[id]/review`, `/api/vocabulary/[id]/status`, `/api/progress/stats`
 - Health/dev/test: `/api/health`, `/api/local-blob/[pathname]`, `/api/test/*`
 
 See [../API/api-index.md](../API/api-index.md).

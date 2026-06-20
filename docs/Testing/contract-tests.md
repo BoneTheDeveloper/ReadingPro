@@ -15,8 +15,7 @@ Contract tests protect stable API request and response shapes, especially routes
 - `GET /api/dictionary/suggest`
 - `GET /api/dictionary/entries/[entryId]`
 - `GET/POST /api/study/studio/chat`
-- `GET /api/cards/due`
-- `POST /api/cards/review`
+- `POST /api/vocabulary/[id]/review`
 - `GET /api/progress/stats`
 
 ## Assertions
@@ -43,6 +42,10 @@ Phase 2 MVP-hardening coverage lives in:
 - `tests/vitest/integration/api/dictionary-suggest-route.test.ts`
 - `tests/vitest/integration/api/dictionary-entry-detail-route.test.ts`
 - `tests/vitest/integration/api/study-chat-route.test.ts`
-- `tests/vitest/integration/api/cards-progress-routes.test.ts`
 - `tests/vitest/integration/api/study-session-route.test.ts`
 - `tests/vitest/integration/api/routes.test.ts`
+
+The vocabulary review **schedule logic** is covered by
+`src/server/modules/spaced-repetition/scheduler.test.ts`. The
+`POST /api/vocabulary/[id]/review` HTTP route has no dedicated integration test yet
+(**GAP**).

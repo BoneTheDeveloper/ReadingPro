@@ -39,7 +39,6 @@ The application is a server-first Next.js product. User-facing pages are locale-
 
 - `Passage`
 - `StudySession`
-- `QuestionReview`
 - `StudyChatMessage`
 - `TranslationCache`
 - `TranslationHistory`
@@ -55,7 +54,7 @@ Dictionary tables are shared read data and are not user-owned.
 - Study: server-loaded passages -> three-panel workspace -> simplify/questions/chat/translation actions.
 - Translation: selection -> owned passage check -> cache/dictionary/provider -> cache/history/vocabulary.
 - Dictionary: normalized query -> repository SQL/Prisma -> DTO.
-- Review: generated questions -> card reviews -> SM-2 scheduling -> progress stats.
+- Review: saved vocabulary items -> fixed-interval schedule (NEW/LEARNING/MASTERED) -> progress stats.
 
 ## Architecture Docs
 

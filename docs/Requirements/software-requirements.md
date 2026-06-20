@@ -53,14 +53,14 @@
 | FR-05.4 | Track streak of consecutive correct answers |
 | FR-05.5 | Display final score summary |
 
-### FR-06: SM-2 Spaced Repetition
+### FR-06: Vocabulary Spaced Repetition
 
 | ID | Requirement |
 |----|-------------|
-| FR-06.1 | Accept quality rating (0-5) after each card review |
-| FR-06.2 | Calculate new easeFactor, intervalDays, nextReviewDate per SM-2 |
-| FR-06.3 | Upsert CardReview record (unique on [questionId, userId]) |
-| FR-06.4 | Fetch due cards where nextReviewDate <= now (limit 20) |
+| FR-06.1 | Accept a boolean review outcome (`isCorrect`) per vocabulary item review |
+| FR-06.2 | Advance status (NEW → LEARNING → MASTERED) and reschedule `nextReviewAt` via the fixed-interval `simpleSchedule` (ADR 0005) |
+| FR-06.3 | Record `lastReviewedAt` on each review; preserve review progress on item re-save |
+| FR-06.4 | Allow manual status override (NEW/LEARNING/MASTERED) per item |
 
 ### FR-07: Study Sessions
 
@@ -74,8 +74,8 @@
 
 | ID | Requirement |
 |----|-------------|
-| FR-08.1 | Display total cards, mature cards, due cards, today's reviews |
-| FR-08.2 | Provide "Study Now" action for due cards |
+| FR-08.1 | Display study streak, time studied today, time studied this week, and active days this week (per `GET /api/progress/stats`) |
+| FR-08.2 | Surface vocabulary due for review from the vocabulary list |
 
 ### FR-09: Authentication
 
@@ -128,14 +128,10 @@
 
 ## 4. API Endpoints
 
-| Method | Endpoint | Purpose |
-|--------|----------|---------|
-| POST | `/api/upload` | Upload file, extract text, run analysis pipeline |
-| POST | `/api/upload/text` | Submit text content, validate, analyze |
-| POST | `/api/cards/review` | Submit SM-2 card review |
-| GET | `/api/cards/due` | Fetch due cards for review (limit 20) |
-| POST | `/api/study/sessions` | Ensure active study session window |
-| GET | `/api/progress/stats` | Get user progress statistics |
+The complete, authoritative endpoint list lives in [../API/api-index.md](../API/api-index.md).
+It is the single source of truth for routes; this SRS does not duplicate it. Key route groups:
+upload, study (passages / studio / sessions), translate, vocabulary (incl. `[id]/review`),
+dictionary, and progress.
 
 ---
 
@@ -151,12 +147,12 @@ Upload/Text → Validate → PDF Extract (if needed)
     → Persist Passage + Questions to DB
 ```
 
-### Card Review Pipeline
+### Vocabulary Review Pipeline
 
 ```
-User answers question → Quality rating (0-5)
-    → SM-2 calculate (easeFactor, intervalDays, nextReviewDate)
-    → Upsert CardReview
+User reviews vocabulary item → result isCorrect (boolean)
+    → simpleSchedule(status, isCorrect) → next status + nextReviewAt
+    → update VocabularyItem (status, nextReviewAt, lastReviewedAt)
 ```
 
 ### Auth Flow

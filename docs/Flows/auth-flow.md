@@ -58,7 +58,6 @@ Every user-owned operation must supply `userId` from the auth gate:
 
 - `Passage.userId`
 - `StudySession.userId`
-- `CardReview.userId`
 - `StudyChatMessage.userId`
 - `TranslationCache.userId`
 - `TranslationHistory.userId`

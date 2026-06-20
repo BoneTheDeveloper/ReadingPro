@@ -41,7 +41,7 @@ Integrated pipeline: **Upload → Analyze → Read → Test → Retain**
 > **Note:** A1-level content skips the simplification step entirely — `simplifiedContent` remains null.
 
 4. Comprehension questions generated with source citations
-5. SM-2 spaced repetition schedules reviews for long-term retention
+5. Fixed-interval vocabulary spaced repetition (NEW/LEARNING/MASTERED) schedules reviews for long-term retention
 
 > **Session lifecycle:** Study sessions track all activities (reading, quizzes, reviews). Sessions auto-close when user logs out or is inactive for an extended period.
 
@@ -53,7 +53,7 @@ Integrated pipeline: **Upload → Analyze → Read → Test → Retain**
 |-------|-------------|
 | Adaptive Difficulty | AI detects text complexity and simplifies to learner's level |
 | Source-Backed Testing | Every answer traceable to passage text with line citations |
-| Long-term Retention | SM-2 algorithm ensures efficient review scheduling |
+| Long-term Retention | Fixed-interval vocabulary review scheduling drives efficient review |
 | Minimal Friction | Upload text/PDF, get instant analysis and flashcards |
 
 ---
@@ -63,7 +63,7 @@ Integrated pipeline: **Upload → Analyze → Read → Test → Retain**
 | Metric | Target |
 |--------|--------|
 | User retention (7-day) | >40% return rate |
-| Cards reaching maturity | >60% of studied cards |
+| Vocabulary reaching MASTERED | >60% of reviewed items |
 | Average session duration | >5 minutes |
 
 ---
