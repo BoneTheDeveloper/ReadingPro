@@ -13,8 +13,12 @@ Before starting a task in these areas, read its canonical docs first:
   (identifier policy, string-enum catalog), [`prisma/schema/`](prisma/schema/) (the schema
   source of truth), [`prisma/migrations-guide.md`](prisma/migrations-guide.md), and
   [`prisma/SECURITY.md`](prisma/SECURITY.md) for the DB security model.
-- **Testing** → [`docs/Testing/`](docs/Testing/) — strategy, test scenarios, traceability
-  matrix, contract tests, and performance benchmarks.
+- **Testing — suite structure / naming / where files go** → [`tests/README.md`](tests/README.md)
+  (beside the test assets; the canonical rule doc).
+- **Testing — query budgets** → [`tests/performance/README.md`](tests/performance/README.md)
+  and [`tests/performance/query-budget-benchmarks.md`](tests/performance/query-budget-benchmarks.md).
+- **Testing — requirements tracing** (scenarios, traceability, contract catalog) →
+  [`docs/Testing/`](docs/Testing/).
 
 
 
