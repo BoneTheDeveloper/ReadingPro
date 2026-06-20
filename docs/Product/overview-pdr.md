@@ -6,15 +6,18 @@ English Reading Training App is an AI-assisted reading trainer for English learn
 
 ## Users
 
+The product targets a single user: the **independent learner**.
+
 | User | Need |
 |------|------|
-| Independent learner | Practice reading with level-appropriate support and retention tracking. |
-| Exam learner | Build comprehension skills for CEFR-oriented study. |
-| Teacher or tutor | Turn learner-provided material into questions and study sessions. |
+| Independent learner | Read self-chosen English content to learn new English (vocabulary, language, usage) and to understand the given passage more deeply, with level-appropriate support and retention tracking. |
+
 
 ## Problem
 
-Learners often read material that is either too hard, too isolated from vocabulary support, or not connected to long-term review. Generic translation and chat tools do not preserve passage ownership, progress, or review history.
+Reading apps and vocabulary-learning apps exist separately and do not reinforce each other. Reading tools help a learner get through a passage but drop the new words once the page is closed. Flashcard apps drill words in isolation, stripped of the context where the learner first met them.
+
+So the learner has no single flow that connects the two. New words stay tied to nothing, which makes them hard to remember. The learner needs each new word to keep the context of the passage it came from, so it can be reinforced twice — once while reading, and again through a spaced-repetition card-set loop — instead of being memorized as a context-free entry.
 
 ## Solution
 
