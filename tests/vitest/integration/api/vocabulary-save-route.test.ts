@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { POST as vocabularyRoute } from "@/app/api/vocabulary/route";
+import { vocabularyResponseSchema } from "@/contracts/translation/translation-response-schema";
 import { createJsonRequest } from "../../helpers/api";
 import { expectApiSuccessPayload } from "../../helpers/assertions";
 import { expectJsonError } from "../../helpers/api-test-helpers";
@@ -48,6 +49,27 @@ describe("POST /api/vocabulary (save from translate)", () => {
         contextSentence: "The ephemeral nature of beauty.",
       }),
     );
+  });
+
+  it("response conforms to vocabularyResponseSchema with exactly 6 DTO fields", async () => {
+    const response = await vocabularyRoute(createJsonRequest(vocabularyBody()));
+    const payload = await response.json();
+
+    const parsed = vocabularyResponseSchema.safeParse(payload);
+    expect(parsed.success, `Schema parse error: ${JSON.stringify(parsed.error?.issues)}`).toBe(true);
+
+    if (parsed.success && "data" in parsed.data) {
+      const data = parsed.data.data;
+      expect(Object.keys(data).sort()).toEqual(
+        ["createdAt", "displayText", "id", "translation", "type", "updatedAt"],
+      );
+      expect(data).not.toHaveProperty("userId");
+      expect(data).not.toHaveProperty("status");
+      expect(data).not.toHaveProperty("savedCount");
+      expect(data).not.toHaveProperty("normalizedText");
+      expect(typeof data.createdAt).toBe("string");
+      expect(typeof data.updatedAt).toBe("string");
+    }
   });
 
   it("rejects invalid JSON with 400", async () => {

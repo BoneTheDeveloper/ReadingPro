@@ -1,7 +1,5 @@
 # Study Artifacts API
 
-Part of the **Study** domain. See [Study domain index](../README.md).
-
 ## Purpose
 
 Fetch generated artifacts (quizzes, etc.) for a passage owned by the

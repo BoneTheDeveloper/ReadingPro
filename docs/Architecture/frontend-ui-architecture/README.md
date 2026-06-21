@@ -1,10 +1,37 @@
 # Frontend UI Architecture
 
+Screen-level UI contract for agents changing pages. This README owns the app shell,
+cross-cutting UI rules, and the page index. Composition mechanics and the component
+inventory each have their own guide; the visual language (tokens, color, type, motion)
+lives in [../../Design/design.md](../../Design/design.md).
+
+## Folder Layout
+
+```text
+frontend-ui-architecture/
++-- README.md                        index + app shell + UI rules (this file)
++-- page-composition-conventions.md  how pages are composed
++-- component-catalog.md             reusable component inventory
++-- pages/                           one doc per screen
+```
+
+| Doc | Use it for |
+|-----|------------|
+| [page-composition-conventions.md](page-composition-conventions.md) | Composition shape, feature-folder layout, route / page-client / hook / service / API-boundary rules, cross-feature capability rules, page-doc template. |
+| [component-catalog.md](component-catalog.md) | Primitives, layout chrome, and feature components: variants, states, anatomy, when to use each. |
+| [pages/](pages/) | A single screen: route, rendering boundary, layout, state and data, UI states. See [Page Inventory](#page-inventory). |
+
 ## Overview
 
-The frontend uses a server-first Next.js App Router shell with feature-owned Client Components for interactive screens. Product UI code lives under `src/features/<feature>/ui`, React hooks live under `src/features/<feature>/hooks`, types and state logic live under `src/features/<feature>/model`, client fetch wrappers live under `src/features/<feature>/api-client`, and reusable primitives live under `src/ui/primitives`.
+The frontend is a server-first Next.js App Router shell with feature-owned Client
+Components for interactive screens. Code lives under `src/features/<feature>/`:
 
-Use this folder as the screen-level UI architecture contract for agents changing pages. Use [../../Design/design-guidelines.md](../../Design/design-guidelines.md) for the broader visual language.
+- `ui` — components, panels, page clients
+- `hooks` — React hooks (`use-*.ts`)
+- `model` — types, schemas, pure state logic
+- `api-client` — client fetch wrappers
+
+Reusable primitives live in `src/ui/primitives`.
 
 ## App Shell
 
@@ -27,71 +54,54 @@ src/app/[locale]
     +-- progress
 ```
 
-Global locale layout responsibilities:
+Global locale layout (`layout.tsx`):
 
 - Validate the locale against `routing.locales`.
 - Load next-intl messages.
 - Provide Clerk, theme, and next-intl providers.
 - Register Inter, Literata, and JetBrains Mono font variables.
-- Keep the body full-height and overflow-hidden so dashboard pages own their scroll regions.
+- Keep the body full-height and overflow-hidden so pages own their scroll regions.
 
-Dashboard layout responsibilities:
+Dashboard layout:
 
-- Wrap dashboard pages with `DashboardSidebar`.
-- Provide desktop icon rail, mobile drawer, top bar, search input, language switcher, theme toggle, and auth controls.
-- Keep page content inside a `flex-1` main area with `min-h-0` so panels can scroll internally.
+- Wrap pages with `DashboardSidebar`.
+- Provide the icon rail, mobile drawer, top bar, search, language switcher, theme toggle, and auth controls.
+- Keep content in a `flex-1` main area with `min-h-0` so panels scroll internally.
 
 ## Global UI Rules
 
-- Keep dashboard pages quiet, dense, and content-first.
-- Use shadcn-style primitives from `src/ui/primitives` before adding custom primitives.
+Cross-cutting rules for every dashboard screen. Composition mechanics (where state,
+components, and services go) belong to
+[page-composition-conventions.md](page-composition-conventions.md).
+
+- Keep pages quiet, dense, and content-first.
+- Reach for `src/ui/primitives` before adding custom primitives.
 - Use Lucide icons for icon buttons, source types, and feature actions.
-- Keep browser-only state inside Client Components or feature hooks.
-- Keep authenticated data loading in Server Component route entries or server actions.
-- Preserve readable line lengths for passage content; do not stretch reading text across wide screens.
-- Prefer page-local scrolling inside the dashboard shell instead of body scrolling.
-
-## Composition Convention
-
-Use [page-composition-conventions.md](page-composition-conventions.md) when adding or refactoring pages.
-
-Default hierarchy:
-
-```text
-Route page
-+-- Page client
-    +-- Page layout regions
-        +-- Feature components
-            +-- Shared UI primitives
-```
-
-The short rule: keep `page.tsx` thin, use one root page client for interactive pages, compose major product regions from the page client, move reusable browser behavior into feature hooks, and keep durable domain logic in `src/server/modules`.
-
-Shared capability rule: reusable upload code belongs under `src/features/upload`, while Study-specific upload composition belongs under `src/features/study/ui/upload`. The standalone `/upload` route is optional and should not own the canonical upload architecture.
+- Keep browser-only state in Client Components or feature hooks.
+- Load authenticated data in Server Component route entries or server actions.
+- Keep passage text at a readable line length; do not stretch it across wide screens.
+- Prefer page-local scrolling over body scrolling.
 
 ## Page Inventory
 
-| Route | Current role | Detail doc |
-|-------|--------------|------------|
-| `/[locale]` | Dashboard home with mock study stats, next action, recent reading, progress cards, and quick actions. | [dashboard-page.md](dashboard-page.md) |
-| `/[locale]/study` | Main three-panel study workspace for sources, reader, studio actions, chat, quizzes, translation, and upload modal. | [study-page.md](study-page.md) |
-| `/[locale]/upload` | Transitional standalone upload/text entry page; target direction is thin wrapper or disabled route. | [upload-page.md](upload-page.md) |
-| `/[locale]/processing` | Transitional upload-processing progress screen. | [processing-page.md](processing-page.md) |
-| `/[locale]/dictionary` | Authenticated dictionary lookup page with suggestions, entry details, and vocabulary save actions. | [dictionary-page.md](dictionary-page.md) |
-| `/[locale]/vocabulary` | Authenticated vocabulary management page with words and sets tabs. | [vocabulary-page.md](vocabulary-page.md) |
-| `/[locale]/progress` | Redirect stub to dashboard home. | [progress-page.md](progress-page.md) |
-| `/[locale]/sign-in`, `/[locale]/sign-up` | Clerk-hosted auth screens inside a branded centered auth shell. | [auth-pages.md](auth-pages.md) |
+| Route | Role | Doc |
+|-------|------|-----|
+| `/[locale]` | Dashboard home: study stats, next action, recent reading, quick actions. | [dashboard-page.md](pages/dashboard-page.md) |
+| `/[locale]/study` | Three-panel study workspace: sources, reader, studio, chat, quizzes, translation, upload modal. | [study-page.md](pages/study-page.md) |
+| `/[locale]/upload` | Transitional standalone upload / text entry; target is a thin wrapper or disabled route. | [upload-page.md](pages/upload-page.md) |
+| `/[locale]/processing` | Transitional upload-processing progress screen. | [processing-page.md](pages/processing-page.md) |
+| `/[locale]/dictionary` | Dictionary lookup: suggestions, entry details, save-to-vocabulary. | [dictionary-page.md](pages/dictionary-page.md) |
+| `/[locale]/vocabulary` | Vocabulary management: words and sets tabs. | [vocabulary-page.md](pages/vocabulary-page.md) |
+| `/[locale]/progress` | Redirect stub to dashboard home. | [progress-page.md](pages/progress-page.md) |
+| `/[locale]/sign-in`, `/[locale]/sign-up` | Clerk-hosted auth screens in a branded centered shell. | [auth-pages.md](pages/auth-pages.md) |
 
 ## Current Mismatches
 
-- `src/features/upload` and Study upload modal currently overlap. Target direction: keep upload as a shared capability under `src/features/upload`, and keep Study-specific source creation UI under `src/features/study/ui/upload`.
-- Dashboard home uses mock data in `src/app/[locale]/page.tsx`; do not document it as live progress data until the page reads real user stats.
+- `src/features/upload` and the Study upload modal overlap. Target: keep reusable upload under `src/features/upload` and Study-specific source UI under `src/features/study/ui/upload`. Boundary owned by [page-composition-conventions.md](page-composition-conventions.md#cross-feature-capability-rules).
+- Dashboard home uses mock data in `src/app/[locale]/page.tsx`; do not treat it as live progress data until it reads real user stats.
 - `/[locale]/progress` redirects to `/` and does not render `src/features/progress/progress-dashboard.tsx`.
 
-## References
+## Related Code
 
-- Runtime architecture: [../runtime-architecture.md](../runtime-architecture.md)
-- System architecture: [../system-architecture.md](../system-architecture.md)
-- Design guidelines: [../../Design/design-guidelines.md](../../Design/design-guidelines.md)
 - Dashboard shell: `src/ui/layout/dashboard-sidebar.tsx`
 - Locale layout: `src/app/[locale]/layout.tsx`

@@ -22,17 +22,6 @@ interface TranslationHistoryInput extends TranslationCacheInput {
   translation: string;
 }
 
-interface VocabularyInput {
-  userId: string;
-  selectedText: string;
-  translation: string;
-  sourceLanguage: string;
-  targetLanguage: string;
-  sourceId?: string;
-  contextSentence?: string;
-  type?: string;
-}
-
 function stableHash(value: unknown) {
   return createHash("sha256")
     .update(JSON.stringify(value))
@@ -49,14 +38,6 @@ export function buildTranslationCacheKey(input: TranslationKeyInput) {
     sourceId: input.sourceId,
     selectedText: input.selectedText,
     contextSentence: input.contextSentence,
-    targetLanguage: input.targetLanguage,
-  });
-}
-
-export function buildVocabularyKey(input: Omit<VocabularyInput, "translation" | "sourceLanguage" | "type">) {
-  return stableHash({
-    userId: input.userId,
-    selectedText: input.selectedText,
     targetLanguage: input.targetLanguage,
   });
 }
@@ -120,65 +101,3 @@ export async function createTranslationHistory(input: TranslationHistoryInput) {
   );
 }
 
-export async function saveVocabularyItem(input: VocabularyInput) {
-  const normalizedText = input.selectedText.toLowerCase().replace(/\s+/g, " ").trim();
-
-  // Only this write carries the userId FK; the occurrence below keys on
-  // vocabularyItemId/sourceId, so wrap just the item upsert.
-  const item = await withUserProfile(input.userId, () =>
-    db.vocabularyItem.upsert({
-      where: {
-        userId_normalizedText_targetLanguage_translation: {
-          userId: input.userId,
-          normalizedText,
-          targetLanguage: input.targetLanguage,
-          translation: input.translation,
-        },
-      },
-      update: {
-        translation: input.translation,
-        type: input.type ?? "WORD",
-        savedCount: { increment: 1 },
-      },
-      create: {
-        userId: input.userId,
-        normalizedText,
-        displayText: input.selectedText,
-        translation: input.translation,
-        sourceLanguage: input.sourceLanguage,
-        targetLanguage: input.targetLanguage,
-        type: input.type ?? "WORD",
-        source: "TRANSLATE",
-      },
-      select: {
-        id: true,
-        displayText: true,
-        translation: true,
-        type: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    }),
-  );
-
-  if (input.sourceId) {
-    try {
-      await db.vocabularyOccurrence.create({
-        data: {
-          vocabularyItemId: item.id,
-          sourceId: input.sourceId,
-          selectedText: input.selectedText,
-          contextSentence: input.contextSentence ?? null,
-        },
-      });
-    } catch (error: unknown) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-        // Duplicate occurrence — safe to ignore
-      } else {
-        throw error;
-      }
-    }
-  }
-
-  return item;
-}

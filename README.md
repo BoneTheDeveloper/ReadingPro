@@ -114,7 +114,7 @@ pnpm db:check:dictionary-seed
 - Docs index: [docs/README.md](docs/README.md)
 - Product overview: [docs/Product/overview-pdr.md](docs/Product/overview-pdr.md)
 - Codebase summary: [docs/codebase-summary.md](docs/codebase-summary.md)
-- System architecture: [docs/Architecture/system-architecture.md](docs/Architecture/system-architecture.md)
+- System architecture: [docs/Architecture/README.md](docs/Architecture/README.md)
 - API index: [docs/API/api-index.md](docs/API/api-index.md)
 
 ## Source-Of-Truth Notes

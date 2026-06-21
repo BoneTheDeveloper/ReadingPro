@@ -15,7 +15,6 @@ yourself, from your laptop.
 
 `prisma.config.ts` loads `.env.local` by default. The `:prod` scripts set
 `PRISMA_ENV_FILE=.env.prod` so the same CLI points at the production branch.
-There is no staging database and no per-PR database branch.
 
 ## 1. Dev Schema Change
 
@@ -47,7 +46,6 @@ There is no staging database and no per-PR database branch.
 
 Rules:
 
-- Name migrations `<verb>_<noun>`. Never leave a timestamp-only name.
 - Commit every generated migration folder.
 - Do not edit a migration after it has been applied to any shared database.
 - If `prisma/migrations/` has a git conflict, resolve by re-running
@@ -91,13 +89,6 @@ pnpm db:migrate:dev --name <descriptive_name> --create-only
 pnpm db:migrate:dev
 ```
 
-### Dry-run against a temporary Neon branch
-
-```bash
-neon branches create --name dry-run-<migration> --parent production
-# point .env.prod at the dry-run branch, run db:migrate:deploy:prod, smoke test
-neon branches delete dry-run-<migration>
-```
 
 Before a destructive production run, confirm Neon point-in-time restore is
 available and create a manual backup branch:

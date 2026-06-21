@@ -27,7 +27,3 @@ Server actions should use `Sentry.withServerActionInstrumentation` where practic
 ## Performance Diagnostics
 
 Dictionary and translation routes can include performance snapshots only when their explicit test/performance gates request them. These headers/fields are for benchmark and regression work, not default product responses.
-
-## References
-
-- Performance benchmarks: [../Testing/performance-benchmarks.md](../Testing/performance-benchmarks.md)

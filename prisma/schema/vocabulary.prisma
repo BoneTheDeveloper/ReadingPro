@@ -19,6 +19,8 @@ model VocabularyItem {
   normalizedText    String    @default("")
   /// Original-cased term as displayed.
   displayText       String    @default("")
+  /// Lowercased/normalized translation for dedupe — raw translation preserved for display.
+  normalizedTranslation String @default("")
   /// SRS bucket: 'NEW' | 'LEARNING' | 'MASTERED'.
   status            String    @default("NEW")
   /// Origin of the save: 'TRANSLATE' | 'DICTIONARY'.
@@ -37,7 +39,7 @@ model VocabularyItem {
   occurrences VocabularyOccurrence[]
   setItems    VocabularySetItem[]
 
-  @@unique([userId, normalizedText, targetLanguage, translation])
+  @@unique([userId, normalizedText, targetLanguage, normalizedTranslation])
   @@index([userId, nextReviewAt])
   @@index([userId, status])
   @@map("vocabulary_items")

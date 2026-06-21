@@ -1,7 +1,5 @@
 # Study Questions API
 
-Part of the **Study** domain. See [Study domain index](../README.md).
-
 ## Purpose
 
 Generate and persist comprehension questions for a passage owned by the

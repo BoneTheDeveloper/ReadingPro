@@ -5,7 +5,11 @@
 Single source of truth for application use cases. Each use case lists its actor,
 preconditions, main flow, and—where it maps to an HTTP endpoint—the primary route(s).
 
----
+**Lens:** black box, actor-centric — *what* the user does and how the system responds.
+This doc deliberately omits file/function names and internal call chains. For the
+white-box code path of any use case, see the matching flow in
+[`../Flows/`](../Flows/README.md).
+
 
 ## UC-01: Upload and Analyze Content
 
@@ -84,36 +88,31 @@ preconditions, main flow, and—where it maps to an HTTP endpoint—the primary 
 
 ---
 
-## UC-04: Review Due Cards (Spaced Repetition)
+## UC-04: Review Vocabulary (Spaced Repetition)
 
 **Actor:** Authenticated User
 
-**Preconditions:** User has cards with nextReviewDate <= now
+**Preconditions:** User has saved vocabulary items with `nextReviewAt <= now`
 
-**Primary routes:** `GET /api/cards/due`, `POST /api/cards/review`, `GET /api/progress/stats`
+**Primary routes:** `POST /api/vocabulary/[id]/review`, `PATCH /api/vocabulary/[id]/status`,
+`GET /api/progress/stats`
 
 ### Main Flow
 
-1. User navigates to Progress Dashboard
-2. System displays due card count
-3. User clicks "Study Now"
-4. System creates StudySession record
-5. System fetches up to 20 due cards
-6. For each card:
-   a. System displays question
-   b. User answers
-   c. User rates recall quality (0-5)
-   d. System calculates SM-2 interval (easeFactor, intervalDays, nextReviewDate)
-   e. System upserts CardReview record
-7. User completes session
-8. System records quiz attempt completion separately from StudySession lifecycle
+1. User opens their vocabulary list and sees items due for review (filtered by `nextReviewAt`)
+2. User reviews an item and marks the result correct or incorrect
+3. System submits `POST /api/vocabulary/[id]/review` with `{ isCorrect }`
+4. System advances the item's status (NEW → LEARNING → MASTERED) and reschedules `nextReviewAt`
+   using the fixed-interval schedule (`simpleSchedule`)
+5. System records `lastReviewedAt`
+6. Progress stats (streak, time studied, active days) reflect the activity
 
 ### Alternative Flows
 
 | Step | Alternative |
 |------|------------|
-| 2a | No due cards → "Study Now" disabled, show "All caught up!" |
-| 6d | SM-2 easeFactor drops below 1.3 → reset to 1.3 |
+| 1a | No items due → nothing to review |
+| 4a | User manually overrides status via `PATCH /api/vocabulary/[id]/status` |
 
 ---
 
@@ -173,7 +172,7 @@ preconditions, main flow, and—where it maps to an HTTP endpoint—the primary 
 ### Main Flow
 
 1. User navigates to Progress Dashboard
-2. System displays stats: total cards, mature cards, due cards, today's reviews
+2. System displays stats: study streak, time studied today, time studied this week, active days this week
 3. User reviews study history
 
 ### Alternative Flows
@@ -242,13 +241,21 @@ preconditions, main flow, and—where it maps to an HTTP endpoint—the primary 
 ### Main Flow
 
 1. User saves a selected term and its translation for later use
-2. System upserts the entry by a stable user/source/selection/context key
+2. System upserts the entry by a stable identity key — `user + normalized term +
+   target language + normalized translation`
+3. System records an occurrence for the passage/context and returns the saved item
+   as a stable DTO
 
 ### Alternative Flows
 
 | Step | Alternative |
 |------|------------|
-| 2a | Entry with same key exists → update in place rather than duplicate |
+| 2a | Same term, same meaning (normalized translation equal) → update in place, increment save count rather than duplicate |
+| 2b | Same term, different meaning (normalized translation differs) → create a separate item |
+| 3a | Same term + meaning seen in a different passage/context → one item, additional occurrence recorded |
+
+See [vocabulary-flow.md](../Flows/data-flows/vocabulary-flow.md) for the dedup,
+boundary, and race-condition resolutions.
 
 ---
 

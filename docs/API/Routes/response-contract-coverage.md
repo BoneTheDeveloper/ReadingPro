@@ -9,13 +9,12 @@ API DTOs unless they are mapped into the documented response schema first.
 | Route | Classification | Shared schema |
 | --- | --- | --- |
 | `POST /api/translate` | JSON contracted, optional performance branch | `translateResponseSchema` |
-| `POST /api/vocabulary` | JSON contracted | `vocabularyResponseSchema` |
+| `POST /api/vocabulary` | JSON contracted (Prisma → DTO mapped at boundary) | `vocabularyResponseSchema` (`vocabularyDataSchema`, `.strict()`) |
 | `GET /api/dictionary/lookup` | JSON contracted, optional performance branch | `dictionaryLookupResponseSchema` |
 | `GET /api/dictionary/search` | JSON contracted, optional performance branch | `dictionarySearchResponseSchema` |
 | `GET /api/dictionary/suggest` | JSON contracted, optional performance branch | `dictionarySuggestResponseSchema` |
 | `GET /api/dictionary/entries/:entryId` | JSON contracted, optional performance branch | `dictionaryEntryDetailResponseSchema` |
-| `GET /api/cards/due` | JSON contracted | `dueCardsResponseSchema` |
-| `POST /api/cards/review` | JSON contracted | `cardReviewResponseSchema` |
+| `POST /api/vocabulary/[id]/review` | JSON, inline response (no named schema) | `{ success, data: VocabularyItem }` |
 | `GET /api/progress/stats` | JSON contracted | `progressStatsResponseSchema` |
 | `POST /api/study/studio/questions` | JSON contracted | `generatedStudyQuestionsResponseSchema` |
 | `POST /api/study/sessions` | JSON contracted | `studySessionResponseSchema` |
@@ -46,5 +45,6 @@ payloads.
 | Quiz attempt | `tests/vitest/integration/api/routes.test.ts` |
 | Study results | no dedicated test file yet |
 | Study chat | `tests/vitest/integration/api/study-chat-route.test.ts`, `tests/vitest/integration/api/routes.test.ts` |
-| Cards and progress | `tests/vitest/integration/api/cards-progress-routes.test.ts`, `tests/vitest/integration/api/routes.test.ts` |
+| Progress | `tests/vitest/integration/api/routes.test.ts` |
+| Vocabulary review schedule | `src/server/modules/spaced-repetition/scheduler.test.ts` (logic only; review HTTP route untested — GAP) |
 | Study session | `tests/vitest/integration/api/study-session-route.test.ts`, `tests/vitest/integration/api/routes.test.ts` |

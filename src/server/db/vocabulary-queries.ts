@@ -4,17 +4,12 @@ import { db } from "./client";
 import { simpleSchedule } from "@/server/modules/spaced-repetition/scheduler";
 import { findOrCreateDailySet, findOrCreateWeeklySet, addItemToSet } from "./vocabulary-set-queries";
 import { withUserProfile } from "@/server/auth/sync-user";
+import { normalizeText, detectType } from "./vocabulary-text-utils";
 import type { VocabularyItem, VocabularyOccurrence } from "@/generated/prisma/client";
 
 // --- Helpers ---
 
-function normalizeText(text: string): string {
-  return text.toLowerCase().replace(/\s+/g, " ").trim();
-}
-
-function detectType(text: string): "WORD" | "PHRASE" {
-  return text.includes(" ") ? "PHRASE" : "WORD";
-}
+export { normalizeText, detectType } from "./vocabulary-text-utils";
 
 // --- Types ---
 
@@ -41,17 +36,18 @@ export async function upsertVocabularyItem(params: UpsertVocabularyItemParams): 
   const normalized = normalizeText(params.selectedText);
   const display = params.selectedText.trim();
   const type = detectType(normalized);
+  const normalizedTranslation = normalizeText(params.translation);
 
   // Only this write carries the userId FK; the occurrence + set writes below
   // self-heal via their own wrappers, so wrap just the item upsert.
   const item = await withUserProfile(params.userId, () =>
     db.vocabularyItem.upsert({
       where: {
-        userId_normalizedText_targetLanguage_translation: {
+        userId_normalizedText_targetLanguage_normalizedTranslation: {
           userId: params.userId,
           normalizedText: normalized,
           targetLanguage: params.targetLanguage,
-          translation: params.translation,
+          normalizedTranslation,
         },
       },
       update: {
@@ -65,6 +61,7 @@ export async function upsertVocabularyItem(params: UpsertVocabularyItemParams): 
         displayText: display,
         type,
         translation: params.translation,
+        normalizedTranslation,
         sourceLanguage: params.sourceLanguage,
         targetLanguage: params.targetLanguage,
         source: params.source ?? "TRANSLATE",

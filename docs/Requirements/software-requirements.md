@@ -1,9 +1,5 @@
 # Software Requirements Specification (SRS)
 
-**English Reading Training App**
-
----
-
 ## 1. Functional Requirements
 
 ### FR-01: Content Upload
@@ -53,14 +49,25 @@
 | FR-05.4 | Track streak of consecutive correct answers |
 | FR-05.5 | Display final score summary |
 
-### FR-06: SM-2 Spaced Repetition
+### FR-05b: Vocabulary Capture
 
 | ID | Requirement |
 |----|-------------|
-| FR-06.1 | Accept quality rating (0-5) after each card review |
-| FR-06.2 | Calculate new easeFactor, intervalDays, nextReviewDate per SM-2 |
-| FR-06.3 | Upsert CardReview record (unique on [questionId, userId]) |
-| FR-06.4 | Fetch due cards where nextReviewDate <= now (limit 20) |
+| FR-05b.1 | Save a selected term + translation from the translate or dictionary surface (`POST /api/vocabulary`) |
+| FR-05b.2 | Deduplicate items by identity key `userId + normalizedText + targetLanguage + normalizedTranslation`; the translation is normalized (lowercase + collapse-spaces + trim) before keying so casing/whitespace variants do not create duplicates |
+| FR-05b.3 | Same term + same meaning re-saved → update in place and increment `savedCount`; same term + different meaning → create a separate item |
+| FR-05b.4 | Record a `VocabularyOccurrence` per passage/context; same term+meaning in a new passage adds an occurrence without duplicating the item |
+| FR-05b.5 | Return the saved item as the documented `vocabularyDataSchema` DTO (raw Prisma records must be mapped at the route boundary) |
+| FR-05b.6 | Preserve review progress (`status`, `nextReviewAt`, `lastReviewedAt`) and the first-saved `displayText`/`translation` on re-save |
+
+### FR-06: Vocabulary Spaced Repetition
+
+| ID | Requirement |
+|----|-------------|
+| FR-06.1 | Accept a boolean review outcome (`isCorrect`) per vocabulary item review |
+| FR-06.2 | Advance status (NEW → LEARNING → MASTERED) and reschedule `nextReviewAt` via the fixed-interval `simpleSchedule` (ADR 0005) |
+| FR-06.3 | Record `lastReviewedAt` on each review; preserve review progress on item re-save |
+| FR-06.4 | Allow manual status override (NEW/LEARNING/MASTERED) per item |
 
 ### FR-07: Study Sessions
 
@@ -74,8 +81,8 @@
 
 | ID | Requirement |
 |----|-------------|
-| FR-08.1 | Display total cards, mature cards, due cards, today's reviews |
-| FR-08.2 | Provide "Study Now" action for due cards |
+| FR-08.1 | Display study streak, time studied today, time studied this week, and active days this week (per `GET /api/progress/stats`) |
+| FR-08.2 | Surface vocabulary due for review from the vocabulary list |
 
 ### FR-09: Authentication
 
@@ -111,62 +118,4 @@
 | NFR-07 | Observability | Sentry error tracking + performance spans |
 | NFR-08 | Observability | Pino structured logging |
 
----
-
-## 3. System Constraints
-
-| Constraint | Detail |
-|-----------|--------|
-| Framework | Next.js 16 App Router with React Server Components |
-| Database | Neon PostgreSQL via Prisma ORM |
-| AI Model | OpenAI gpt-4o-mini via Vercel AI SDK |
-| Auth | Clerk (email/password + Google OAuth) |
-| Storage | Local filesystem in development, Vercel Blob in preview/production |
-| Browser | Modern browsers (Chrome, Firefox, Safari, Edge latest 2 versions) |
-
----
-
-## 4. API Endpoints
-
-| Method | Endpoint | Purpose |
-|--------|----------|---------|
-| POST | `/api/upload` | Upload file, extract text, run analysis pipeline |
-| POST | `/api/upload/text` | Submit text content, validate, analyze |
-| POST | `/api/cards/review` | Submit SM-2 card review |
-| GET | `/api/cards/due` | Fetch due cards for review (limit 20) |
-| POST | `/api/study/sessions` | Ensure active study session window |
-| GET | `/api/progress/stats` | Get user progress statistics |
-
----
-
-## 5. Processing Flows
-
-### Content Analysis Pipeline
-
-```
-Upload/Text → Validate → PDF Extract (if needed)
-    → CEFR Detect (AI + heuristic fallback)
-    → Content Simplify (AI, one level below)
-    → Question Generate (AI, 5 MC/TF with citations)
-    → Persist Passage + Questions to DB
-```
-
-### Card Review Pipeline
-
-```
-User answers question → Quality rating (0-5)
-    → SM-2 calculate (easeFactor, intervalDays, nextReviewDate)
-    → Upsert CardReview
-```
-
-### Auth Flow
-
-```
-Protected route → Clerk middleware
-    → No session → redirect /sign-in?redirect_url={original}
-    → Has session → Server action/route uses authenticated user
-```
-
----
-
-**Last Updated:** 2026-06-05
+**Last Updated:** 2026-06-21

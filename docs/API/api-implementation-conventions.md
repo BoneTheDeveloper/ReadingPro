@@ -1,10 +1,4 @@
 # API Implementation Conventions
-
-How to write an API route handler. Layer boundaries and where each file type lives
-(services, queries, shared contracts, feature clients) are owned by
-[`../codebase-summary.md`](../codebase-summary.md) *Source Boundary Rules* — this doc
-does not restate folder layout, only route-handler behavior.
-
 ## Route Handler Structure
 
 Route handlers live in `src/app/api/**/route.ts` and should stay thin:
@@ -26,11 +20,30 @@ fallbacks, and complex DTO building. Push reusable backend logic into the server
 modules and shared contracts/types into the contract layer — see
 [`../codebase-summary.md`](../codebase-summary.md) for the exact folders.
 
+Route handlers must not pass raw Prisma rows to `NextResponse.json`. Map to a named DTO
+at the route boundary. Two accepted patterns:
+
+- **Inline mapper** (collocated in the same directory as `route.ts`, e.g.
+  `vocabulary-dto-mapper.ts`): `data: toVocabularyDTO(item)` — use when the mapper is
+  only needed by this one route. Extract to a sibling file rather than embedding in
+  `route.ts` so the pure function can be unit-tested without pulling in the Prisma client.
+- **Contract mapper** (in `src/contracts/`): `data: toStudySessionDto(session)` — use
+  for shared or structurally non-trivial mappings.
+
 ## Response Contract
 
 - Success: `{ success: true, data }`
 - Error: `{ error: string }`
 - Streaming exception: `POST /api/study/studio/chat`
+- Do not return raw Prisma rows. Map to the route's named DTO before responding (see
+  Delegation above).
+- Coerce Prisma `Date` fields to ISO strings with `new Date(x).toISOString()`, not
+  `.toISOString()` directly — the latter throws when the value is already a string (e.g.
+  in test environments or serialized input).
+- If the client parses the response with a `.strict()` Zod schema, the DTO must match
+  that schema field-for-field. Unrecognized keys cause a silent `safeParse` failure on
+  the client; the save appears to succeed on the server but the client treats it as an
+  error.
 
 ## Validation
 
@@ -52,10 +65,10 @@ modules and shared contracts/types into the contract layer — see
 - Use `Sentry.startSpan` around auth, DB, AI, and storage steps.
 - Capture unexpected failures with route and method tags.
 - Do not capture expected validation failures as unexpected exceptions.
+- Do not log user-generated content (selected text, context sentences, translations,
+  or any other learner-supplied data) in request loggers or Sentry metadata.
 
 ## Reference Routes
 
 - `src/app/api/translate/route.ts`
 - `src/app/api/study/studio/chat/route.ts`
-- `src/app/api/dictionary/lookup/route.ts`
-- `src/app/api/upload/route.ts`
