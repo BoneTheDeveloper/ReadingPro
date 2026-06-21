@@ -120,7 +120,6 @@ selection and routes it to the correct internal runtime path.
   asynchronously.
 - Error responses, source misses, auth failures, and malformed cached JSON are
   not cached.
-- Logs and Sentry metadata must not include raw selected text or raw context.
 
 ### Vocabulary API
 
@@ -195,7 +194,6 @@ Request body:
   context sentence, and target language.
 - The route does not translate text; it only saves an already resolved
   translation.
-- Logs and Sentry metadata must not include raw selected text or raw context.
 
 ## Server Logic
 

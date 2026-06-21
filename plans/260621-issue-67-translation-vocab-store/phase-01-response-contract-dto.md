@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: "Response Contract DTO"
-status: pending
+status: complete
 priority: P1
 effort: "1.5h"
 dependencies: []

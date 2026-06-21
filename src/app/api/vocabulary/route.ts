@@ -11,6 +11,7 @@ import {
   VocabularyServiceError,
   saveVocabularyItem,
 } from "@/server/modules/vocabulary/vocabulary.service";
+import { toVocabularyDTO } from "./vocabulary-dto-mapper";
 
 const vocabularyRequestSchema = z.object({
   selectedText: z.string().trim().min(1).max(500),
@@ -65,7 +66,7 @@ export async function POST(request: NextRequest) {
 
     const item = await saveVocabularyItem({ ...input, userId: userId });
 
-    return NextResponse.json({ success: true, data: item });
+    return NextResponse.json({ success: true, data: toVocabularyDTO(item) });
   } catch (error) {
     if (isAuthenticationRequiredError(error)) {
       requestLog.warn("Unauthenticated vocabulary request rejected");

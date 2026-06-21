@@ -51,9 +51,7 @@ a dictionary entry.
 
 ### 4. Success response
 
-The route maps the persisted record to the stable `vocabularyDataSchema` DTO at the
-boundary — it does **not** return the raw Prisma row. The client parses this shape with a
-`.strict()` schema, so extra fields would be rejected.
+Maps the persisted record to `vocabularyDataSchema` at the route boundary.
 
 ```ts
 {
@@ -104,7 +102,6 @@ exposed on this response.
 - `status`, `nextReviewAt`, `lastReviewedAt` preserved on re-save (review progress not reset)
 - `type` auto-detected: contains space => `PHRASE`, otherwise `WORD`
 - `normalizedText`: lowercased, whitespace-normalized
-- Response is mapped Prisma → DTO at the route boundary (raw records are not stable API DTOs)
 - Daily/weekly set creation and item addition happen as side effects
 - See [vocabulary-flow.md](../../../Flows/data-flows/vocabulary-flow.md) for happy/exception/edge/race paths
 
