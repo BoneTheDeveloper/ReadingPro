@@ -12,6 +12,7 @@ These aren't folders, but every section relies on them:
 
 | Doc | Owns |
 |-----|------|
+| [`development-guide.md`](development-guide.md) | Implementation flow — which doc to read first and what comes next. |
 | [`code-standards.md`](code-standards.md) | Code conventions and file placement rules. |
 | [`codebase-summary.md`](codebase-summary.md) | High-level tour of the codebase. |
 
