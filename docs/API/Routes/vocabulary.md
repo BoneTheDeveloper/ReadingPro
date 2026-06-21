@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Save, browse, and manage vocabulary items. Items are deduplicated by user, normalized text, target language, and translation. Each save creates an occurrence record and auto-adds the item to daily/weekly sets.
+Save, browse, and manage vocabulary items. Items are deduplicated by user, normalized text, target language, and **normalized translation**. Each save creates an occurrence record and auto-adds the item to daily/weekly sets.
 
 ## Routes
 
@@ -30,7 +30,7 @@ All routes require authentication. Ownership is enforced by checking `userId` on
 
 #### 1. Purpose
 
-Save a vocabulary item from the translate or dictionary panel. Deduplicates by `userId + normalizedText + targetLanguage + translation`. On re-save, increments `savedCount` and creates a new occurrence. Auto-adds to daily and weekly sets.
+Save a vocabulary item from the translate or dictionary panel. Deduplicates by `userId + normalizedText + targetLanguage + normalizedTranslation`. On re-save of the same meaning, increments `savedCount` and records an occurrence; a different meaning (translation that differs after normalization) creates a separate item. Auto-adds to daily and weekly sets.
 
 #### 2. Method + path
 
@@ -60,36 +60,33 @@ When `source="DICTIONARY"`, `dictionaryEntryId` and `dictionarySenseId` link the
 
 #### 4. Success response
 
+The route maps the persisted record to the stable `vocabularyDataSchema` DTO at the
+boundary — it does **not** return the raw Prisma row. The client parses this shape
+with a `.strict()` schema, so extra fields would be rejected.
+
 ```ts
 {
   success: true;
-  data: VocabularyItem;
+  data: VocabularyDTO;
 }
 ```
 
-`VocabularyItem`:
+`VocabularyDTO` (= `vocabularyDataSchema`):
 
 ```ts
 {
   id: string;
-  userId: string;
-  normalizedText: string;
   displayText: string;
-  type: "WORD" | "PHRASE";
-  translation: string;
-  sourceLanguage: string;
-  targetLanguage: string;
-  dictionaryEntryId: string | null;
-  dictionarySenseId: string | null;
-  status: "NEW" | "LEARNING" | "MASTERED";
-  source: string;
-  savedCount: number;
-  nextReviewAt: string | null;
-  lastReviewedAt: string | null;
-  createdAt: string;
-  updatedAt: string;
+  translation: string;        // raw, first-saved casing (display value)
+  type: string | null;        // "WORD" | "PHRASE"
+  createdAt: string;          // ISO
+  updatedAt: string;          // ISO
 }
 ```
+
+Internal fields (`userId`, `normalizedText`, `normalizedTranslation`, `status`,
+`savedCount`, `nextReviewAt`, `source`, dictionary links, …) are persisted but **not**
+exposed on this response.
 
 #### 5. Error response
 
@@ -106,12 +103,16 @@ When `source="DICTIONARY"`, `dictionaryEntryId` and `dictionarySenseId` link the
 
 #### 6. Notes about cache / auth / boundaries
 
-- Dedup key: `userId + normalizedText + targetLanguage + translation`
-- On re-save: `savedCount` incremented, `updatedAt` refreshed, new `VocabularyOccurrence` created
+- Dedup key: `userId + normalizedText + targetLanguage + normalizedTranslation`
+- `normalizedTranslation`: the meaning normalized (lowercased, whitespace-collapsed, trimmed) — the discriminator for "same vs different meaning". The raw `translation` is kept only as the display value
+- On re-save of the same meaning: `savedCount` incremented, `updatedAt` refreshed, occurrence recorded (idempotent per passage/context)
+- A different meaning (normalized translation differs) creates a separate item
 - `status`, `nextReviewAt`, `lastReviewedAt` preserved on re-save (review progress not reset)
 - `type` auto-detected: contains space => `PHRASE`, otherwise `WORD`
 - `normalizedText`: lowercased, whitespace-normalized
+- Response is mapped Prisma → DTO at the route boundary (raw records are not stable API DTOs)
 - Daily/weekly set creation and item addition happen as side effects
+- See [vocabulary-flow.md](../../Flows/data-flows/vocabulary-flow.md) for happy/exception/edge/race paths
 
 ### List Vocabulary Items
 

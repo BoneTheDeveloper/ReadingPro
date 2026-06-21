@@ -49,6 +49,17 @@
 | FR-05.4 | Track streak of consecutive correct answers |
 | FR-05.5 | Display final score summary |
 
+### FR-05b: Vocabulary Capture
+
+| ID | Requirement |
+|----|-------------|
+| FR-05b.1 | Save a selected term + translation from the translate or dictionary surface (`POST /api/vocabulary`) |
+| FR-05b.2 | Deduplicate items by identity key `userId + normalizedText + targetLanguage + normalizedTranslation`; the translation is normalized (lowercase + collapse-spaces + trim) before keying so casing/whitespace variants do not create duplicates |
+| FR-05b.3 | Same term + same meaning re-saved → update in place and increment `savedCount`; same term + different meaning → create a separate item |
+| FR-05b.4 | Record a `VocabularyOccurrence` per passage/context; same term+meaning in a new passage adds an occurrence without duplicating the item |
+| FR-05b.5 | Return the saved item as the documented `vocabularyDataSchema` DTO (raw Prisma records must be mapped at the route boundary) |
+| FR-05b.6 | Preserve review progress (`status`, `nextReviewAt`, `lastReviewedAt`) and the first-saved `displayText`/`translation` on re-save |
+
 ### FR-06: Vocabulary Spaced Repetition
 
 | ID | Requirement |

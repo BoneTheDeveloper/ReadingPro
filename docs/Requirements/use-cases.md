@@ -241,13 +241,21 @@ white-box code path of any use case, see the matching flow in
 ### Main Flow
 
 1. User saves a selected term and its translation for later use
-2. System upserts the entry by a stable user/source/selection/context key
+2. System upserts the entry by a stable identity key — `user + normalized term +
+   target language + normalized translation`
+3. System records an occurrence for the passage/context and returns the saved item
+   as a stable DTO
 
 ### Alternative Flows
 
 | Step | Alternative |
 |------|------------|
-| 2a | Entry with same key exists → update in place rather than duplicate |
+| 2a | Same term, same meaning (normalized translation equal) → update in place, increment save count rather than duplicate |
+| 2b | Same term, different meaning (normalized translation differs) → create a separate item |
+| 3a | Same term + meaning seen in a different passage/context → one item, additional occurrence recorded |
+
+See [vocabulary-flow.md](../Flows/data-flows/vocabulary-flow.md) for the dedup,
+boundary, and race-condition resolutions.
 
 ---
 

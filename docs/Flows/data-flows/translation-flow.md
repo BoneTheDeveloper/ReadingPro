@@ -1,22 +1,81 @@
 # Translation Data Flow
 
-## Flow
+Covers: UC-09 Translate Selection. Route: `POST /api/translate` (inline quick
+translation). Authoring follows [the per-route path taxonomy](./README.md).
+
+---
+
+## `POST /api/translate`
+
+### Happy Path
 
 ```text
-Select text in owned passage
-  -> POST /api/translate
-  -> validate text/context/source/language limits
-  -> getAuthenticatedUser()
-  -> executeTranslate()
-  -> build exact cache key
+User selects English text in an owned passage
+  -> POST /api/translate { text, context, sourceId, sourceLanguage:"en", targetLanguage:"vi", clientMetrics? }
+  -> validate request (strict Zod: text/context length limits, sourceId UUID, fixed languages)
+  -> getUserId()
+  -> executeTranslate(): build exact cache key (userId + sourceId + text + context + target)
   -> read owned Passage + matching TranslationCache in one query
-  -> cache hit: return provider "cache" and append TranslationHistory
-  -> cache miss: resolve dictionary/fallback/provider path
-  -> write TranslationCache and TranslationHistory for successful result
-  -> return QuickTranslation DTO
+        cache hit  -> return provider "cache"; append TranslationHistory (async)
+        cache miss -> resolve dictionary -> phrase -> provider (google_translate) -> fallback
+                   -> write TranslationCache + TranslationHistory for the successful result
+  -> 200 { success: true, data: QuickTranslation DTO }   // { translation, type, provider }
 ```
 
-## Main Code Paths
+The client parses the response against `translateResponseSchema` (strict). The route
+returns only the DTO fields; benchmark internals are gated (see Edge Case).
+
+### Exception Flow
+
+| Trigger | Status | Response |
+|---------|--------|----------|
+| Malformed JSON body | `400` | `{ error: "Invalid JSON payload." }` |
+| Schema validation fails (over-limit text/context, bad UUID, wrong language literal, unknown field — schema is `.strict()`) | `400` | `{ error: "Invalid translation request." }` |
+| Unauthenticated | `401` | `{ error: "Authentication required." }` |
+| `sourceId` passage not owned / deleted | rejected before provider call | error envelope; nothing cached |
+| Provider failure | falls through to fallback path | failures are **not** cached |
+
+Telemetry logs `sourceId` and selected-text **length** only — never the raw selection
+or context.
+
+### Edge Case / Boundary Condition
+
+| Case | Decision |
+|------|----------|
+| Selection at the upper length limit | Allowed up to `MAX_TRANSLATE_TEXT_LENGTH`; context clamped via `clampTranslationContext` before send |
+| Word vs phrase vs sentence vs paragraph | Same route; resolution source (`dictionary`/`phrase`/`google_translate`/`fallback`) is chosen internally and surfaced as `provider` |
+| Repeat translate of an identical selection+context | Served from `TranslationCache` (provider `"cache"`); dictionary/provider resolution skipped, history still appended |
+| Malformed cached JSON | Treated as a miss and re-resolved; not returned |
+| Performance header absent (default) | Benchmark/timing internals are **omitted** from the response; only the product DTO is returned |
+
+> **Cache boundary (resolution):** a cache hit is returned **only after** the same
+> query confirms the source passage still belongs to the authenticated user and is not
+> deleted. Ownership is never assumed from the cache key alone.
+
+### Race Condition
+
+| Scenario | Resolution |
+|----------|------------|
+| Two identical translate requests in flight (cache cold) | Both may resolve and write `TranslationCache`; the cache write is keyed on the exact tuple, so the second write is a harmless overwrite of an equal value — no duplicate cache identity |
+| `TranslationHistory` appended on every completed translate | Append-only; concurrent appends are independent rows by design |
+
+Quick translation is idempotent from the user's view: repeated calls yield the same
+DTO. The client de-dupes overlapping requests with a `requestId` guard (UX), not the
+server.
+
+---
+
+## Persistence
+
+| Table | Write | Notes |
+|-------|-------|-------|
+| `TranslationCache` | upsert on exact tuple | Only successful final DTOs; dictionary API responses are **not** stored here |
+| `TranslationHistory` | append | One row per completed translation event |
+
+`VocabularyItem` is **not** written here — saving is a separate user action handled by
+[vocabulary-flow.md](./vocabulary-flow.md).
+
+## Code Paths
 
 | Responsibility | File |
 |----------------|------|
@@ -25,29 +84,5 @@ Select text in owned passage
 | Repository | `src/server/modules/translation/inline/inline-translate.repository.ts` |
 | DB helpers | `src/server/db/translation-queries.ts` |
 | Limits | `src/contracts/translation/translation-limits.ts` |
-| Performance | `src/contracts/translation/translate-performance.ts` |
-
-## Persistence
-
-- `TranslationCache` stores successful final translation DTOs keyed by exact
-  user/source/selection/context/target.
-- `TranslationHistory` stores each completed translation event.
-- `VocabularyItem` is written by the separate vocabulary route.
-
-## Cache Rule
-
-`POST /api/translate` uses the conservative exact-cache strategy:
-
-- Cache key inputs are `userId`, `sourceId`, selected text, context sentence,
-  and target language.
-- Cached data is returned only after the same query verifies the source passage
-  still belongs to the authenticated user and is not deleted.
-- Cache hits skip dictionary/provider resolution but still append translation
-  history asynchronously.
-- Only successful final DTOs are cached. Auth failures, source misses, invalid
-  payloads, provider failures, and malformed cached JSON are not cached.
-- Dictionary API responses are not stored in this translation cache.
-
-## Performance Mode
-
-Performance snapshots are included only when the route receives the expected performance header/gate. Default product responses do not expose benchmark internals.
+| Performance gate | `src/contracts/translation/translate-performance.ts` |
+| Response contract | `src/contracts/translation/translation-response-schema.ts` (`translateResponseSchema`) |
