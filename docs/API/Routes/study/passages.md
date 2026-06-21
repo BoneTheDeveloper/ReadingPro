@@ -1,7 +1,5 @@
 # Study Passages API
 
-Part of the **Study** domain. See [Study domain index](README.md).
-
 ## Purpose
 
 Create, delete, and simplify reading passages owned by the authenticated user.

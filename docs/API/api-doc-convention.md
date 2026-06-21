@@ -18,7 +18,7 @@ really a sub-resource of an existing domain.
 | Study | `modules/study` | `Routes/study/` (file per sub-resource) |
 | Translation | `modules/translation` | `Routes/translation.md` |
 | Dictionary | `modules/dictionary` | `Routes/dictionary.md` |
-| Vocabulary | `modules/vocabulary` (+ `modules/spaced-repetition` engine) | `Routes/vocabulary.md` |
+| Vocabulary | `modules/vocabulary` (+ `modules/spaced-repetition` engine) | `Routes/vocabulary/` (file per sub-resource) |
 | Progress | reporting over study sessions | `Routes/progress.md` |
 | Utility | none (infra/dev) | listed in `api-index.md` |
 

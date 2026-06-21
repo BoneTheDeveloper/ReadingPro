@@ -1,7 +1,5 @@
 # Study Chat API
 
-Part of the **Study** domain. See [Study domain index](../README.md).
-
 ## Mode Switching
 
 Mode switching is intentionally disabled for now. Study chat always uses

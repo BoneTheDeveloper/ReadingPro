@@ -6,28 +6,6 @@ Quick translation can share the same database tables internally for exact word
 or short phrase lookup, but quick translation must not own dictionary
 search/suggest behavior. See [translation.md](./translation.md).
 
-## Scope
-
-In scope:
-
-- Return autocomplete suggestions for typed query text.
-- Search dictionary entries from submitted/free-text queries.
-- Return ranked search results for submitted/free-text queries.
-- Resolve exact typed headword or alias lookup.
-- Resolve selected suggestion/search result detail by entry id.
-- Use the existing dictionary database tables as the global lookup source.
-
-Out of scope:
-
-- Quick translation API behavior.
-- `/api/translate` request behavior.
-- Runtime provider, Wiktionary, Google Translate, or LLM dictionary lookup.
-- Redis or server in-memory dictionary cache.
-- Persisting client cache to `localStorage` or IndexedDB.
-- Admin review UI.
-- UI rendering, pronunciation/audio.
-- Target-language selection beyond Vietnamese.
-
 ## Endpoints
 
 ### Suggest API
@@ -405,11 +383,3 @@ Separate:
 - `/api/dictionary/suggest`, `/api/dictionary/search`, `/api/dictionary/lookup`, and `/api/dictionary/entries/:entryId` must not translate arbitrary sentences.
 
 The only UI bridge allowed in MVP is navigation/opening dictionary search with selected text. Once opened, dictionary feature owns the behavior.
-
-## Observability
-
-Logs and Sentry metadata must avoid raw query text. Record query length, normalized length, result count, match type counts, found/miss state, target language, and status.
-
-## V1 Boundaries
-
-V1 focuses on functional dictionary search and deterministic lookup over the existing dictionary tables. It intentionally excludes server-side dictionary caching, persistent browser cache, admin review UI, runtime provider lookup, AI-generated dictionary answers, pronunciation/audio, and multilingual target-language selection.

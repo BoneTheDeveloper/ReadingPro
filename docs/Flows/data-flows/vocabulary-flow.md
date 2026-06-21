@@ -2,7 +2,7 @@
 
 Covers: UC-10 Save Vocabulary. Routes: `POST /api/vocabulary` (capture). Browse,
 review, set-management, and delete routes are documented in
-[API/Routes/vocabulary.md](../../API/Routes/vocabulary.md); this flow focuses on the
+[API/Routes/vocabulary/](../../API/Routes/vocabulary/README.md); this flow focuses on the
 capture path, which is where the dedup/store strategy lives.
 
 Authoring follows [the per-route path taxonomy](./README.md).

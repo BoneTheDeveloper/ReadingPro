@@ -52,19 +52,19 @@ The largest domain — see the [Study domain index](Routes/study/README.md).
 
 ### Vocabulary
 
-Includes the spaced-repetition review surface. See [vocabulary.md](Routes/vocabulary.md).
+Includes the spaced-repetition review surface — see the [Vocabulary domain index](Routes/vocabulary/README.md).
 
 | Method | Path | Doc |
 |--------|------|-----|
-| `POST` | `/api/vocabulary` | [vocabulary.md](Routes/vocabulary.md) |
-| `GET` | `/api/vocabulary/list` | [vocabulary.md](Routes/vocabulary.md) |
-| `PATCH` | `/api/vocabulary/[id]/status` | [vocabulary.md](Routes/vocabulary.md) |
-| `POST` | `/api/vocabulary/[id]/review` | [vocabulary.md](Routes/vocabulary.md) |
-| `DELETE` | `/api/vocabulary/[id]` | [vocabulary.md](Routes/vocabulary.md) |
-| `GET`/`POST` | `/api/vocabulary/sets` | [vocabulary.md](Routes/vocabulary.md) |
-| `PATCH`/`DELETE` | `/api/vocabulary/sets/[id]` | [vocabulary.md](Routes/vocabulary.md) |
-| `POST` | `/api/vocabulary/sets/[id]/items` | [vocabulary.md](Routes/vocabulary.md) |
-| `DELETE` | `/api/vocabulary/sets/[id]/items/[itemId]` | [vocabulary.md](Routes/vocabulary.md) |
+| `POST` | `/api/vocabulary` | [items.md](Routes/vocabulary/items.md) |
+| `GET` | `/api/vocabulary/list` | [items.md](Routes/vocabulary/items.md) |
+| `PATCH` | `/api/vocabulary/[id]/status` | [review.md](Routes/vocabulary/review.md) |
+| `POST` | `/api/vocabulary/[id]/review` | [review.md](Routes/vocabulary/review.md) |
+| `DELETE` | `/api/vocabulary/[id]` | [items.md](Routes/vocabulary/items.md) |
+| `GET`/`POST` | `/api/vocabulary/sets` | [sets.md](Routes/vocabulary/sets.md) |
+| `PATCH`/`DELETE` | `/api/vocabulary/sets/[id]` | [sets.md](Routes/vocabulary/sets.md) |
+| `POST` | `/api/vocabulary/sets/[id]/items` | [sets.md](Routes/vocabulary/sets.md) |
+| `DELETE` | `/api/vocabulary/sets/[id]/items/[itemId]` | [sets.md](Routes/vocabulary/sets.md) |
 
 ### Progress
 

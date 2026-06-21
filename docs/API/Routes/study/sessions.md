@@ -1,7 +1,5 @@
 # Study Sessions API
 
-Part of the **Study** domain. See [Study domain index](README.md).
-
 > Aggregate study statistics live in the separate **Progress** domain
 > ([progress.md](../progress.md)), not here. A study session is a
 > presence/heartbeat lifecycle record only.

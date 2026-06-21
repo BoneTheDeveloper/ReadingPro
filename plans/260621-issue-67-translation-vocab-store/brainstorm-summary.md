@@ -31,6 +31,13 @@ raw Prisma records must be mapped to the documented schema first.
 - Translate result + error states already render in the popup (AC2/AC4).
 - Telemetry logs only `sourceId` + text lengths, never raw text (AC6).
 
+> **Red-team correction (M3):** the client is *not* fully correct on saved-state. The
+> server fix makes the save **succeed**, but the client's `savedVocabularyIds` keys on
+> the selection JSON (incl. `contextSentence`), which diverges from the server's
+> translation-based dedup. Same word+meaning from a different passage is one item
+> server-side but shows un-saved client-side. Deferred to the UI round (key client
+> state on the returned item `id`); documented in Phase 3.
+
 ---
 
 ## Decisions
@@ -64,10 +71,11 @@ identity (`dictionarySenseId`) is out of scope.
 
 | Layer | File | Change |
 |-------|------|--------|
-| Schema | `prisma/schema/vocabulary.prisma` | Add `normalizedTranslation`; switch `@@unique` to `[userId, normalizedText, targetLanguage, normalizedTranslation]` |
-| Migration | `prisma/migrations/...` | Add column + backfill normalized values + **merge pre-existing near-duplicates before the unique applies** (else migration fails) |
+| Schema | `prisma/schema/vocabulary.prisma` | Add `normalizedTranslation` (required); switch `@@unique` to `[userId, normalizedText, targetLanguage, normalizedTranslation]` |
+| Migration | `prisma/migrations/...` | Plain schema change + `migrate reset` — **dev DB is disposable, no backfill/merge** (red-team: merge complexity dismissed) |
 | Query | `src/server/db/vocabulary-queries.ts` | Normalize translation; key upsert on it; keep raw `translation` as display |
-| Route | `src/app/api/vocabulary/route.ts` | Map persisted item → `vocabularyDataSchema` DTO |
+| Dead code | `src/server/db/translation-queries.ts` | **Delete** unused `saveVocabularyItem` (old key → would break typecheck after rename) |
+| Route | `src/app/api/vocabulary/route.ts` | Map persisted item → `vocabularyDataSchema` DTO (`new Date(...).toISOString()`; `item.type` directly) |
 | Contract | `src/contracts/translation/translation-response-schema.ts` | No change — it is the target |
 
 **Deferred (next round):** popup Save button, in-flight guard, Saved-state UI in
@@ -82,7 +90,7 @@ identity (`dictionarySenseId`) is out of scope.
 - `docs/Flows/data-flows/translation-flow.md` — rewritten to the taxonomy, route-specific.
 - `docs/Requirements/use-cases.md` — UC-10 delta (dedup on normalized translation).
 - `docs/Requirements/software-requirements.md` — FR-05b Vocabulary Capture.
-- `docs/API/Routes/vocabulary.md` — success response = DTO; dedup key updated.
+- `docs/API/Routes/vocabulary/items.md` — success response = DTO; dedup key updated (split from the old monolithic `vocabulary.md` into `vocabulary/{README,items,review,sets}.md`).
 - `docs/API/Routes/response-contract-coverage.md` — boundary-mapping note.
 
 ---
@@ -91,7 +99,7 @@ identity (`dictionarySenseId`) is out of scope.
 
 - Store: re-save → 1 row, `savedCount=2`; different meaning → 2 rows; `"Chạy"` vs `"chạy"` → 1 row; different passage → +1 occurrence.
 - Contract test: `POST /api/vocabulary` response parses against `vocabularyDataSchema`.
-- Migration: backfill + duplicate-merge verified.
+- Migration: plain schema change applies cleanly after `migrate reset` (no data to migrate).
 - Invalid request rejected; telemetry carries no raw text.
 
 ## Open Questions
