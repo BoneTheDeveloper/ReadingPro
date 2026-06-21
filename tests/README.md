@@ -6,7 +6,8 @@ The repository uses `tests/` for Vitest suites, Vitest config, performance bench
 
 | Type | Tool | Location | Naming | Purpose |
 | --- | --- | --- | --- | --- |
-| Unit | Vitest | `tests/vitest/unit/` or `src/**` | `*.test.ts` | Pure logic or one narrow module with mocked boundaries. |
+| Unit | Vitest | `src/**` (co-located) | `*.test.ts` | Pure logic for a single source module — placed next to the file it tests. |
+| Unit (infra) | Vitest | `tests/vitest/unit/` | `*.test.ts` | Infrastructure or cross-file modules with no single source home (e.g. Sentry config, benchmark utils). |
 | Component | Vitest + React Testing Library | `tests/vitest/integration/components/` | `*.integration.test.tsx` | User-facing component behavior with framework and service boundaries mocked. |
 | Integration | Vitest | `tests/vitest/integration/` | `*.integration.test.ts` | Multiple app modules together with live providers and database mocked. |
 | Smoke | Vitest | `tests/vitest/smoke/` | `*.test.tsx` | Minimal proof that the Vitest stack and app entrypoints are wired. |
