@@ -15,15 +15,15 @@ This file is the top-level convention for writing code and placing files. Keep i
 
 Non-negotiable boundaries. Breaking one is a bug, not a style choice.
 
-1. **Strict server boundary:** `src/server/` is marked `server-only`. Backend logic never leaks to the client.
+1. **Strict server boundary:** `src/server/` is marked `server-only`. Browser code must not import Prisma, Clerk server APIs, filesystem, or server-only AI modules.
 2. **Pure contracts:** `src/contracts/` contains only Zod schemas and types, and never imports from `src/server/`.
-3. **Frontend via HTTP only:** `src/features/` communicates with the backend only through standard HTTP API routes.
+3. **Frontend via HTTP only:** `src/features/` communicates with the backend only through standard HTTP API routes. Browser fetch logic lives in feature `api/` clients, not directly in components or hooks.
 
 ## Code Style
 
 - Use strict TypeScript and avoid `any`; prefer `unknown` plus narrowing at external boundaries.
 - Prefer explicit input and output types at service, route, and shared helper boundaries.
-- Use Zod for untrusted input and generated structured output.
+- Use Zod for untrusted input and generated structured output; route handlers must validate all external input using schemas from `src/contracts/`.
 - Keep functions small enough that ownership, side effects, and failure paths are obvious.
 - Name code by product role or domain responsibility, not by layout position or implementation trivia.
 - Add comments only when they clarify non-obvious constraints, invariants, or cross-layer decisions.

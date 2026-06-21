@@ -8,7 +8,7 @@ for the components involved.
 
 ## Translate a selection and save a word
 
-Screen: [Study](../../Architecture/frontend-ui-architecture/study-page.md) center + studio panels.
+Screen: [Study](../../Architecture/frontend-ui-architecture/pages/study-page.md) center + studio panels.
 Code path: [translation-flow.md](../data-flows/translation-flow.md), [vocabulary-flow.md](../data-flows/vocabulary-flow.md).
 
 1. User selects text inside the reading content.
@@ -32,7 +32,7 @@ flowchart LR
 
 ## Simplify a passage to a lower CEFR level
 
-Screen: [Study](../../Architecture/frontend-ui-architecture/study-page.md) center panel.
+Screen: [Study](../../Architecture/frontend-ui-architecture/pages/study-page.md) center panel.
 Code path: [study-flow.md](../data-flows/study-flow.md).
 
 1. User opens a passage whose CEFR level is above A2 → a compact **Simplify** action shows.
@@ -44,7 +44,7 @@ Code path: [study-flow.md](../data-flows/study-flow.md).
 
 ## Add a source (upload or paste)
 
-Screen: [Study](../../Architecture/frontend-ui-architecture/study-page.md) upload modal →
+Screen: [Study](../../Architecture/frontend-ui-architecture/pages/study-page.md) upload modal →
 sources panel. Code path: [upload-flow.md](../data-flows/upload-flow.md).
 
 1. User clicks **add source** (sources panel header, or "New Reading").
@@ -65,7 +65,7 @@ flowchart LR
 
 ## Generate a studio artifact (quiz / summary)
 
-Screen: [Study](../../Architecture/frontend-ui-architecture/study-page.md) studio panel.
+Screen: [Study](../../Architecture/frontend-ui-architecture/pages/study-page.md) studio panel.
 Code path: [study-flow.md](../data-flows/study-flow.md).
 
 1. With a passage active, user clicks a **studio action card** (Quiz, Summary). Disabled
@@ -80,7 +80,7 @@ Code path: [study-flow.md](../data-flows/study-flow.md).
 
 ## Look up a word in the dictionary and save it
 
-Screen: [Dictionary](../../Architecture/frontend-ui-architecture/dictionary-page.md).
+Screen: [Dictionary](../../Architecture/frontend-ui-architecture/pages/dictionary-page.md).
 Code path: [dictionary-flow.md](../data-flows/dictionary-flow.md), [vocabulary-flow.md](../data-flows/vocabulary-flow.md).
 
 1. User types in the search field → **suggestions** appear.
@@ -90,7 +90,7 @@ Code path: [dictionary-flow.md](../data-flows/dictionary-flow.md), [vocabulary-f
 
 ## Review vocabulary (spaced repetition)
 
-Screen: [Vocabulary](../../Architecture/frontend-ui-architecture/vocabulary-page.md).
+Screen: [Vocabulary](../../Architecture/frontend-ui-architecture/pages/vocabulary-page.md).
 Code path: [vocabulary-flow.md](../data-flows/vocabulary-flow.md),
 [spaced-repetition-flow.md](../data-flows/spaced-repetition-flow.md).
 

@@ -107,12 +107,12 @@ screens, not here (single source of truth):
 
 | Feature | UI doc |
 |---------|--------|
-| Study workspace (sources, reader, studio, chat, translate, quiz) | [study-page.md](study-page.md) |
-| Dictionary | [dictionary-page.md](dictionary-page.md) |
-| Vocabulary | [vocabulary-page.md](vocabulary-page.md) |
-| Dashboard home | [dashboard-page.md](dashboard-page.md) |
-| Upload / processing | [upload-page.md](upload-page.md), [processing-page.md](processing-page.md) |
-| Auth | [auth-pages.md](auth-pages.md) |
+| Study workspace (sources, reader, studio, chat, translate, quiz) | [study-page.md](pages/study-page.md) |
+| Dictionary | [dictionary-page.md](pages/dictionary-page.md) |
+| Vocabulary | [vocabulary-page.md](pages/vocabulary-page.md) |
+| Dashboard home | [dashboard-page.md](pages/dashboard-page.md) |
+| Upload / processing | [upload-page.md](pages/upload-page.md), [processing-page.md](pages/processing-page.md) |
+| Auth | [auth-pages.md](pages/auth-pages.md) |
 
 ## Adding a new component
 

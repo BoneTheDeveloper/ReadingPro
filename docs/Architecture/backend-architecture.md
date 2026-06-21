@@ -5,9 +5,7 @@ repository, and domain-module placement rules.
 
 > **Scope.** This doc owns backend **code placement**. It does not own HTTP route conventions
 > (response shape, Zod, auth handling) — those live in
-> [`../API/api-implementation-conventions.md`](../API/api-implementation-conventions.md) — nor
-> the route inventory, which lives in [`../API/api-index.md`](../API/api-index.md).
-
+> [`../API/api-implementation-conventions.md`](../API/api-implementation-conventions.md)
 ## Service/Repository Boundary
 
 | Layer | Responsibility |
@@ -47,7 +45,3 @@ src/app/api/study/studio/questions/route.ts
 src/app/api/study/studio/artifacts/route.ts
   -> src/server/modules/study/passage/studio-artifacts-service.ts
   -> src/contracts/study/studio-artifact-types.ts
-
-## Related docs
-
-- HTTP route handler rules (response shape, Zod, auth): [`../API/api-implementation-conventions.md`](../API/api-implementation-conventions.md)

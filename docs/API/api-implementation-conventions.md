@@ -51,5 +51,3 @@ modules and shared contracts/types into the contract layer — see
 
 - `src/app/api/translate/route.ts`
 - `src/app/api/study/studio/chat/route.ts`
-- `src/app/api/dictionary/lookup/route.ts`
-- `src/app/api/upload/route.ts`
