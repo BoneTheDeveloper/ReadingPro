@@ -1,6 +1,6 @@
 # EP-06 · Account & Access
 
-**PRD Solution area:** cross-cutting (privacy & ownership) · [Product PRD](../../Product/overview-prd.md)
+**PRD Solution area:** cross-cutting (privacy & ownership)
 
 The learner signs in to access their own passages, vocabulary, and progress, and signs out to
 end the session. All content is private and owned per authenticated learner.

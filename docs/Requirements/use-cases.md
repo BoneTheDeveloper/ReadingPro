@@ -10,7 +10,6 @@ This doc deliberately omits file/function names and internal call chains. For th
 white-box code path of any use case, see the matching flow in
 [`../Flows/`](../Flows/README.md).
 
----
 
 ## UC-01: Upload and Analyze Content
 

@@ -4,7 +4,10 @@
 
 The frontend uses a server-first Next.js App Router shell with feature-owned Client Components for interactive screens. Product UI code lives under `src/features/<feature>/ui`, React hooks live under `src/features/<feature>/hooks`, types and state logic live under `src/features/<feature>/model`, client fetch wrappers live under `src/features/<feature>/api-client`, and reusable primitives live under `src/ui/primitives`.
 
-Use this folder as the screen-level UI architecture contract for agents changing pages. Use [../../Design/design-guidelines.md](../../Design/design-guidelines.md) for the broader visual language.
+Use this folder as the screen-level UI architecture contract for agents changing pages. Two
+companions sit beside it: the [component catalog](component-catalog.md) inventories the
+reusable building blocks, and [../../Design/design.md](../../Design/design.md) owns the broader
+visual language (tokens, color, typography, motion).
 
 ## App Shell
 
@@ -50,6 +53,13 @@ Dashboard layout responsibilities:
 - Keep authenticated data loading in Server Component route entries or server actions.
 - Preserve readable line lengths for passage content; do not stretch reading text across wide screens.
 - Prefer page-local scrolling inside the dashboard shell instead of body scrolling.
+
+## Component Catalog
+
+This README and the per-page docs cover **page/screen architecture** (how pages are composed).
+The reusable building blocks — primitives in `src/ui/primitives`, layout chrome in
+`src/ui/layout`, and feature UI — are inventoried separately in
+[component-catalog.md](component-catalog.md): variants, states, anatomy, and when to use each.
 
 ## Composition Convention
 

@@ -1,11 +1,5 @@
 # Dark Mode Color Design
 
-**English Reading Training App**
-
-Status: Draft  
-Last Updated: 2026-05-20  
-Source: `docs/Design/design-guidelines.md`
-
 ## Design Goal
 
 Dark mode should feel like a quiet evening reading room: focused, warm, and low-glare. It must support long reading sessions without making the product feel like a terminal, gaming UI, or neon SaaS dashboard.

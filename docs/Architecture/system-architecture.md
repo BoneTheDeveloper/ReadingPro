@@ -23,44 +23,33 @@ The application is a server-first Next.js product. User-facing pages are locale-
 
 ## Main Boundaries
 
-| Boundary | Owner | Notes |
-|----------|-------|-------|
-| Routing/auth middleware | `src/proxy.ts` | Clerk route protection plus next-intl locale routing. |
-| User identity | Clerk + `UserProfile` | Clerk owns login; app DB owns profile row and data relationships. |
-| Product features | `src/features/*` | Frontend UI, hooks, and feature-specific API clients. |
-| Server logic | `src/server/*` | Backend modules: db, ai, auth, storage, and core domain services. |
-| API Contracts | `src/contracts/*` | Shared Zod schemas and DTOs defining the frontend/backend interface. |
-| Data model | `prisma/schema/` (multi-file) | Source of truth for tables and relationships, split by domain. |
-| API | `src/app/api/**/route.ts` | HTTP/streaming adapters (delegates to `src/server/modules`). |
+The system splits into a routing/auth middleware (`src/proxy.ts`), frontend features
+(`src/features/*`), backend modules (`src/server/*`), shared contracts (`src/contracts/*`),
+HTTP adapters (`src/app/api/**/route.ts`), and the Prisma data model (`prisma/schema/`).
+
+For the detailed boundary map see the per-area docs in [Architecture Docs](#architecture-docs)
+below; for the folder-level source layout see [`../codebase-summary.md`](../codebase-summary.md),
+and for the non-negotiable boundary invariants see [`../code-standards.md`](../code-standards.md).
 
 ## Data Ownership
 
-`UserProfile.id` equals the Clerk user id. User-owned tables store `userId` and must be filtered by it:
-
-- `Passage`
-- `StudySession`
-- `StudyChatMessage`
-- `TranslationCache`
-- `TranslationHistory`
-- `VocabularyItem`
-- `FileUploadIntent`
-- `StudioArtifact`
-
-Dictionary tables are shared read data and are not user-owned.
+`UserProfile.id` equals the Clerk user id; user-owned tables are filtered by `userId`. The
+canonical list of user-owned tables and the enforcement rules live in
+[auth-architecture.md](auth-architecture.md#ownership).
 
 ## Core Workflows
 
-- Upload: file/text input -> validation -> storage/PDF parse -> content analysis -> passage/questions.
-- Study: server-loaded passages -> three-panel workspace -> simplify/questions/chat/translation actions.
-- Translation: selection -> owned passage check -> cache/dictionary/provider -> cache/history/vocabulary.
-- Dictionary: normalized query -> repository SQL/Prisma -> DTO.
-- Review: saved vocabulary items -> fixed-interval schedule (NEW/LEARNING/MASTERED) -> progress stats.
+End-to-end behavior is owned by the flow and use-case docs, not restated here:
+
+- *What* the user does (black box): [`../Requirements/use-cases.md`](../Requirements/use-cases.md)
+- *How* the code fulfills it (white box): [`../Flows/data-flows/`](../Flows/data-flows/)
 
 ## Architecture Docs
 
 - Runtime: [runtime-architecture.md](runtime-architecture.md)
 - Frontend UI: [frontend-ui-architecture](frontend-ui-architecture/README.md)
+- Backend modules (service/repository placement): [backend-architecture.md](backend-architecture.md)
 - Auth: [auth-architecture.md](auth-architecture.md)
 - Storage: [storage-architecture.md](storage-architecture.md)
-- API: [api-architecture.md](api-architecture.md)
 - Observability: [observability-architecture.md](observability-architecture.md)
+- API contracts: [`../API/api-index.md`](../API/api-index.md) + [implementation conventions](../API/api-implementation-conventions.md)

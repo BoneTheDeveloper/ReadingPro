@@ -5,23 +5,6 @@
 3. Read `docs/code-standards.md` for broad code and file placement conventions.
 4. Read the most relevant detailed doc before editing code.
 
-## Task-Specific Docs
-
-Before starting a task in these areas, read its canonical docs first:
-
-- **Database / schema / migrations** → [`prisma/schema-conventions.md`](prisma/schema-conventions.md)
-  (identifier policy, string-enum catalog), [`prisma/schema/`](prisma/schema/) (the schema
-  source of truth), [`prisma/migrations-guide.md`](prisma/migrations-guide.md), and
-  [`prisma/SECURITY.md`](prisma/SECURITY.md) for the DB security model.
-- **Testing — suite structure / naming / where files go** → [`tests/README.md`](tests/README.md)
-  (beside the test assets; the canonical rule doc).
-- **Testing — query budgets** → [`tests/performance/README.md`](tests/performance/README.md)
-  and [`tests/performance/query-budget-benchmarks.md`](tests/performance/query-budget-benchmarks.md).
-- **Testing — requirements tracing** (scenarios, traceability, contract catalog) →
-  [`docs/Testing/`](docs/Testing/).
-
-
-
 ## Navigation
 
 - Prefer `rg` and `rg --files` for text and file discovery.

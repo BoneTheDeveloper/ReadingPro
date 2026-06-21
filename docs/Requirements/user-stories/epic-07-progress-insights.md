@@ -1,9 +1,9 @@
 # EP-07 · Progress & Insights
 
-**PRD Solution area:** Success metrics · [Product PRD](../../Product/overview-prd.md)
+**PRD Solution area:** Success metrics
 
 The learner sees how their study and retention are progressing — the surface that makes the
-app's [success metrics](../../Product/overview-prd.md#success-metrics) visible to the learner.
+app's success metrics visible to the learner.
 
 ---
 

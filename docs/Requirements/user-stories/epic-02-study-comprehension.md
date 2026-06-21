@@ -1,6 +1,6 @@
 # EP-02 · Study & Comprehension
 
-**PRD Solution area:** 2. Check understanding · [Product PRD](../../Product/overview-prd.md)
+**PRD Solution area:** 2. Check understanding
 
 The learner reads a passage in a focused workspace and checks how well they understood it
 through a simplified view, comprehension questions, and a flashcard self-test.

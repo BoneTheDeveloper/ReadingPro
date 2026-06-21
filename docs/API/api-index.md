@@ -8,7 +8,7 @@ routes). See the [canonical domain taxonomy](Api-doc-convention.md#canonical-dom
 
 - Implementation convention: [api-implementation-conventions.md](api-implementation-conventions.md)
 - Documentation convention: [Api-doc-convention.md](Api-doc-convention.md)
-- Architecture: [../Architecture/api-architecture.md](../Architecture/api-architecture.md)
+- Backend placement (services/repositories): [../Architecture/backend-architecture.md](../Architecture/backend-architecture.md)
 
 ## Domains
 

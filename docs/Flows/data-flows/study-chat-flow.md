@@ -1,4 +1,4 @@
-# Study Chat Flow
+# Study Chat Data Flow
 
 ## POST Stream
 

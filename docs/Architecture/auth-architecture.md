@@ -34,6 +34,20 @@ Middleware is an optimistic redirect only — `getPageUserId()` (via `auth.prote
 
 ## Ownership
 
+User-owned tables store `userId` and must be filtered by it (`UserProfile.id` equals the
+Clerk user id):
+
+- `Passage`
+- `StudySession`
+- `StudyChatMessage`
+- `TranslationCache`
+- `TranslationHistory`
+- `VocabularyItem`
+- `FileUploadIntent`
+- `StudioArtifact`
+
+Dictionary tables are shared read data and are not user-owned.
+
 Authenticated routes must enforce ownership with `userId`:
 
 - Passage reads use `id`, `userId`, and `deletedAt: null`.

@@ -1,9 +1,6 @@
 # Navigation Flow
 
-How a learner moves between pages. This doc owns **page-to-page navigation**; per-feature
-behavior lives in the other `Flows/*` docs, and route contracts live in
-[../API/api-index.md](../API/api-index.md).
-
+How a learner moves between pages. This doc owns **page-to-page navigation**; 
 ## Pages
 
 | Route | Page | Entry points |
@@ -45,8 +42,8 @@ flowchart TD
 ## Notes
 
 - Unauthenticated access to any protected route redirects to `/sign-in?redirect_url={original}`,
-  then returns the learner to where they were headed (see [auth-flow.md](auth-flow.md)).
+  then returns the learner to where they were headed (see [auth-flow.md](../data-flows/auth-flow.md)).
 - `/study` is the hub: import (`/upload` → `/processing`), comprehension, chat, and
   translate-to-save all originate here.
 - Both `/study` (inline) and `/dictionary` (standalone) can save words into `/vocabulary`,
-  which feeds the spaced-repetition review (see [spaced-repetition-flow.md](spaced-repetition-flow.md)).
+  which feeds the spaced-repetition review (see [spaced-repetition-flow.md](../data-flows/spaced-repetition-flow.md)).

@@ -1,9 +1,5 @@
 # Software Requirements Specification (SRS)
 
-**English Reading Training App**
-
----
-
 ## 1. Functional Requirements
 
 ### FR-01: Content Upload
@@ -111,57 +107,4 @@
 | NFR-07 | Observability | Sentry error tracking + performance spans |
 | NFR-08 | Observability | Pino structured logging |
 
----
-
-## 3. System Constraints
-
-| Constraint | Detail |
-|-----------|--------|
-| Framework | Next.js 16 App Router with React Server Components |
-| Database | Neon PostgreSQL via Prisma ORM |
-| AI Model | OpenAI gpt-4o-mini via Vercel AI SDK |
-| Auth | Clerk (email/password + Google OAuth) |
-| Storage | Local filesystem in development, Vercel Blob in preview/production |
-| Browser | Modern browsers (Chrome, Firefox, Safari, Edge latest 2 versions) |
-
----
-
-## 4. API Endpoints
-
-Full endpoint list: [../API/api-index.md](../API/api-index.md). Key route groups:
-upload, study (passages / studio / sessions), translate, vocabulary (incl. `[id]/review`),
-dictionary, and progress.
-
----
-
-## 5. Processing Flows
-
-### Content Analysis Pipeline
-
-```
-Upload/Text → Validate → PDF Extract (if needed)
-    → CEFR Detect (AI + heuristic fallback)
-    → Content Simplify (AI, one level below)
-    → Question Generate (AI, 5 MC/TF with citations)
-    → Persist Passage + Questions to DB
-```
-
-### Vocabulary Review Pipeline
-
-```
-User reviews vocabulary item → result isCorrect (boolean)
-    → simpleSchedule(status, isCorrect) → next status + nextReviewAt
-    → update VocabularyItem (status, nextReviewAt, lastReviewedAt)
-```
-
-### Auth Flow
-
-```
-Protected route → Clerk middleware
-    → No session → redirect /sign-in?redirect_url={original}
-    → Has session → Server action/route uses authenticated user
-```
-
----
-
-**Last Updated:** 2026-06-05
+**Last Updated:** 2026-06-21

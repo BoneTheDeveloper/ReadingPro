@@ -1,10 +1,4 @@
 # API Implementation Conventions
-
-How to write an API route handler. Layer boundaries and where each file type lives
-(services, queries, shared contracts, feature clients) are owned by
-[`../codebase-summary.md`](../codebase-summary.md) *Source Boundary Rules* — this doc
-does not restate folder layout, only route-handler behavior.
-
 ## Route Handler Structure
 
 Route handlers live in `src/app/api/**/route.ts` and should stay thin:

@@ -579,4 +579,4 @@ On review, the item's `status`, `nextReviewAt`, and `lastReviewedAt` are updated
 - Item queries: `src/server/db/vocabulary-queries.ts`
 - Set queries: `src/server/db/vocabulary-set-queries.ts`
 - Spaced-repetition engine: `src/server/modules/spaced-repetition/scheduler.ts`
-- Save flow: `docs/Flows/vocabulary-flow.md`
+- Save flow: `docs/Flows/data-flows/vocabulary-flow.md`

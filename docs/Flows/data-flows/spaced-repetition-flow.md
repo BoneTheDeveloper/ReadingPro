@@ -1,4 +1,4 @@
-# Spaced Repetition Flow
+# Spaced Repetition Data Flow
 
 The app schedules review of saved **vocabulary items** only. There is no separate
 SM-2 card-review subsystem — the earlier `QuestionReview` / `/api/cards/*` path was
