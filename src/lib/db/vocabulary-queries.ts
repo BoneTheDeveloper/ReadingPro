@@ -79,8 +79,8 @@ export async function upsertVocabularyItem(params: UpsertVocabularyItemParams): 
   ]);
 
   await Promise.all([
-    addItemToSet({ setId: dailySet.id, itemId: item.id }),
-    addItemToSet({ setId: weeklySet.id, itemId: item.id }),
+    addItemToSet({ userId: params.userId, setId: dailySet.id, itemId: item.id }),
+    addItemToSet({ userId: params.userId, setId: weeklySet.id, itemId: item.id }),
   ]);
 
   return item;

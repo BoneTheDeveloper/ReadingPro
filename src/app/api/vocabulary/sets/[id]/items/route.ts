@@ -3,7 +3,7 @@ import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 import { addItemToSet } from "@/lib/db/vocabulary-set-queries";
 import { getAuthenticatedUser } from "@/lib/auth/auth-utils";
-import { isAuthenticationRequiredError } from "@/lib/api/route-errors";
+import { isAuthenticationRequiredError, isOwnershipMissError } from "@/lib/api/route-errors";
 import { createRequestLogContext, createRequestLogger } from "@/lib/core/logger";
 import { db } from "@/lib/db/client";
 
@@ -49,7 +49,7 @@ export async function POST(
       async () =>
         Promise.all(
           parsed.data.itemIds.map((itemId) =>
-            addItemToSet({ setId: id, itemId }),
+            addItemToSet({ userId: user.id, setId: id, itemId }),
           ),
         ),
     );
@@ -58,6 +58,10 @@ export async function POST(
   } catch (error) {
     if (isAuthenticationRequiredError(error)) {
       return NextResponse.json({ error: "Authentication required." }, { status: 401 });
+    }
+
+    if (isOwnershipMissError(error, ["vocabulary item", "vocabulary"])) {
+      return NextResponse.json({ error: "Vocabulary item not found." }, { status: 404 });
     }
 
     requestLog.error({ err: error }, "Failed to add items to vocabulary set");

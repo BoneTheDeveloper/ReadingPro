@@ -49,6 +49,7 @@ describe("POST /api/vocabulary/sets/[id]/items (add items)", () => {
     expect(response.status).toBe(200);
     expect(payload).toEqual({ success: true });
     expect(routeMocks.addItemToSet).toHaveBeenCalledWith({
+      userId: userProfileFixture.id,
       setId: VOCAB_SET_ID,
       itemId: VOCAB_ITEM_FOR_SET_ID,
     });

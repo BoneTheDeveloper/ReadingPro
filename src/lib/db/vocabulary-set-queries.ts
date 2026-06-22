@@ -169,9 +169,18 @@ export async function deleteVocabularySet(params: {
 }
 
 export async function addItemToSet(params: {
+  userId: string;
   setId: string;
   itemId: string;
 }): Promise<VocabularySetItem> {
+  const item = await db.vocabularyItem.findUnique({
+    where: { id: params.itemId },
+  });
+
+  if (!item || item.userId !== params.userId) {
+    throw new Error(`No vocabulary item found for user`);
+  }
+
   try {
     return await db.vocabularySetItem.create({
       data: {
