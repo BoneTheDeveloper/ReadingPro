@@ -8,17 +8,20 @@ import {
   GraduationCap,
   Library,
   Menu,
-  Plus,
-  Search,
+  Settings as SettingsIcon,
+  Sun,
+  Moon,
+  Monitor,
 } from "lucide-react";
 import { cn } from "@/contracts/utils";
 import { Button } from "@/ui/primitives/button";
-import { Input } from "@/ui/primitives/input";
 import { AuthControls } from "./auth-controls";
-import { ThemeToggle } from "./theme-toggle";
 import { LanguageSwitcher } from "./language-switcher";
+import { SettingsModal } from "@/features/study/ui/settings-modal";
 import { useTranslations } from "next-intl";
 import { useStudySessionHeartbeat } from "@/features/study/hooks/use-study-session-heartbeat";
+import { useTheme } from "@/ui/theme-provider";
+import { useSyncExternalStore } from "react";
 
 // App shell per design.md §8:
 // - 62px dark rail (#221F2B), 40px icon tiles (radius 13px)
@@ -43,10 +46,8 @@ export function DashboardSidebar({
   const t = useTranslations();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
-  // Canonical app-wide presence heartbeat: the sidebar wraps every authenticated
-  // surface (landing dashboard + (dashboard) layout), so study time is tracked on
-  // every page after login, not just the reading workspace.
   useStudySessionHeartbeat(true);
 
   const closeMobile = useCallback(() => setMobileOpen(false), []);
@@ -80,7 +81,11 @@ export function DashboardSidebar({
         style={{ width: RAIL_WIDTH_PX }}
         className="hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 bg-rail items-center py-5 z-40"
       >
-        <SidebarContent isActive={isActive} t={t} />
+        <SidebarContent
+          isActive={isActive}
+          t={t}
+          onOpenSettings={() => setSettingsOpen(true)}
+        />
       </aside>
 
       {mobileOpen && (
@@ -96,33 +101,48 @@ export function DashboardSidebar({
           mobileOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
-        <MobileSidebarContent isActive={isActive} onNavigate={closeMobile} t={t} />
+        <MobileSidebarContent
+          isActive={isActive}
+          onNavigate={closeMobile}
+          onOpenSettings={() => {
+            setMobileOpen(false);
+            setSettingsOpen(true);
+          }}
+          t={t}
+        />
       </aside>
 
       <div
         style={{ marginLeft: RAIL_WIDTH_PX }}
         className="hidden lg:flex flex-1 flex-col h-dvh overflow-hidden"
       >
-        <TopBar />
+        <TopBar onOpenSettings={() => setSettingsOpen(true)} />
         <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
           {children}
         </main>
       </div>
 
       <div className="lg:hidden flex-1 flex flex-col h-dvh overflow-hidden">
-        <TopBar onMenuToggle={() => setMobileOpen(true)} />
+        <TopBar
+          onMenuToggle={() => setMobileOpen(true)}
+          onOpenSettings={() => setSettingsOpen(true)}
+        />
         <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
           {children}
         </main>
       </div>
+
+      <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </div>
   );
 }
 
 function TopBar({
   onMenuToggle,
+  onOpenSettings,
 }: {
   onMenuToggle?: () => void;
+  onOpenSettings: () => void;
 }) {
   if (onMenuToggle) {
     return (
@@ -140,36 +160,91 @@ function TopBar({
         <span className="font-semibold text-foreground text-sm">
           English Reading
         </span>
+        <div className="ml-auto flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onOpenSettings}
+            aria-label="Open settings"
+            className="text-muted-foreground"
+          >
+            <SettingsIcon className="w-5 h-5" />
+          </Button>
+          <AuthControls compact />
+        </div>
       </header>
     );
   }
 
-  // Desktop top bar: the rail already houses primary nav + brand; the top bar
-  // carries search + auth controls in the paper header band.
   return (
-    <header className="hidden lg:flex sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-border items-center justify-between h-14 px-8">
+    <header className="hidden lg:flex sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-border items-center justify-between h-16 px-8">
       <div className="flex items-center gap-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-          <Input
-            placeholder="Search vocabulary, sources…"
-            className="pl-9 w-72 h-9"
-          />
-        </div>
+        <GraduationCap className="w-5 h-5 text-primary" />
+        <span className="font-semibold text-foreground text-sm">
+          English Reading
+        </span>
       </div>
       <div className="flex items-center gap-3">
         <LanguageSwitcher />
-        <ThemeToggle />
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onOpenSettings}
+          aria-label="Open settings"
+          className="text-muted-foreground hover:text-primary"
+        >
+          <SettingsIcon className="w-5 h-5" />
+        </Button>
         <AuthControls />
       </div>
     </header>
   );
 }
 
-function SidebarContent({ isActive, t }: { isActive: (href: string) => boolean; t: ReturnType<typeof useTranslations> }) {
+function RailThemeButton({ isActive }: { isActive: boolean }) {
+  const { theme, setTheme } = useTheme();
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
+  if (!mounted) {
+    return (
+      <div className="w-10 h-10 flex items-center justify-center text-white/30">
+        <Sun className="w-5 h-5" />
+      </div>
+    );
+  }
+  const Icon = theme === "dark" ? Moon : theme === "light" ? Sun : Monitor;
+  const next = theme === "light" ? "dark" : "light";
+  return (
+    <button
+      type="button"
+      onClick={() => setTheme(next)}
+      title={theme === "light" ? "Switch to dark" : "Switch to light"}
+      className={cn(
+        "w-10 h-10 flex items-center justify-center rounded-[13px] transition-all",
+        isActive
+          ? "bg-white/[0.14] text-white"
+          : "text-white/60 hover:text-white hover:bg-white/[0.08]",
+      )}
+    >
+      <Icon className="w-5 h-5" />
+    </button>
+  );
+}
+
+function SidebarContent({
+  isActive,
+  t,
+  onOpenSettings,
+}: {
+  isActive: (href: string) => boolean;
+  t: ReturnType<typeof useTranslations>;
+  onOpenSettings: () => void;
+}) {
   return (
     <div className="flex flex-col h-full w-full items-center">
-      {/* Indigo gradient logo (top) per §8 */}
       <div
         className="mb-6 w-10 h-10 rounded-[13px] flex items-center justify-center text-white"
         style={{
@@ -203,21 +278,17 @@ function SidebarContent({ isActive, t }: { isActive: (href: string) => boolean; 
         })}
       </nav>
 
-      {/* New Reading quick action (coral) */}
-      <div className="px-2 w-full">
-        <Link
-          href="/study"
-          aria-label="New reading"
-          title="New reading"
-          className="mt-2 w-10 h-10 mx-auto flex justify-center items-center bg-coral text-white rounded-[13px] shadow-coral hover:-translate-y-px hover:bg-coral-hover transition-all"
+      <div className="mt-4 pt-4 w-full px-2 border-t border-white/10 flex flex-col items-center gap-1.5">
+        <RailThemeButton isActive={false} />
+        <button
+          type="button"
+          onClick={onOpenSettings}
+          title={t("Navigation.settings")}
+          aria-label={t("Navigation.settings")}
+          className="w-10 h-10 flex items-center justify-center rounded-[13px] text-white/60 hover:text-white hover:bg-white/[0.08] transition-all"
         >
-          <Plus className="w-5 h-5" strokeWidth={2.25} />
-        </Link>
-      </div>
-
-      {/* Rail footer: user avatar (sign-in/user controls are in the top bar) */}
-      <div className="mt-4 pt-4 w-full px-2 border-t border-white/10 flex flex-col items-center">
-        <AuthControls compact variant="rail" />
+          <SettingsIcon className="w-5 h-5" />
+        </button>
       </div>
     </div>
   );
@@ -226,10 +297,12 @@ function SidebarContent({ isActive, t }: { isActive: (href: string) => boolean; 
 function MobileSidebarContent({
   isActive,
   onNavigate,
+  onOpenSettings,
   t,
 }: {
   isActive: (href: string) => boolean;
   onNavigate: () => void;
+  onOpenSettings: () => void;
   t: ReturnType<typeof useTranslations>;
 }) {
   return (
@@ -281,6 +354,15 @@ function MobileSidebarContent({
             </Link>
           );
         })}
+
+        <button
+          type="button"
+          onClick={onOpenSettings}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:bg-accent/60 hover:text-foreground transition-colors"
+        >
+          <SettingsIcon className="w-4.5 h-4.5 text-muted-foreground" />
+          {t("Navigation.settings")}
+        </button>
       </nav>
 
       <div className="px-3 py-3 border-t border-border">

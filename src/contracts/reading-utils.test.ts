@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  calculateReadingTime,
   identifyChallengingWords,
   parsePassageForDisplay,
 } from "./reading-utils";
@@ -36,11 +35,5 @@ describe("reading-utils", () => {
       "Second paragraph.",
       "Third.",
     ]);
-  });
-
-  it("calculates reading time from CEFR speed with a B1 fallback", () => {
-    expect(calculateReadingTime(181, "B2")).toBe("~2 min read");
-    expect(calculateReadingTime(151, "unknown")).toBe("~2 min read");
-    expect(calculateReadingTime(0, "A1")).toBe("~0 min read");
   });
 });

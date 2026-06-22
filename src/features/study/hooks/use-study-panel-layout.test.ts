@@ -1,6 +1,11 @@
 import { act, renderHook } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { useDefaultLayout, type Layout, type PanelImperativeHandle } from "react-resizable-panels";
+import { describe, expect, it, vi } from "vitest";
+import {
+  useDefaultLayout,
+  type Layout,
+  type PanelImperativeHandle,
+  type PanelSize,
+} from "react-resizable-panels";
 import { useStudyPanelLayout } from "./use-study-panel-layout";
 
 vi.mock("react-resizable-panels", () => ({
@@ -10,7 +15,8 @@ vi.mock("react-resizable-panels", () => ({
   })),
 }));
 
-function createPanel(collapsed = false): PanelImperativeHandle {
+function createPanel(initialCollapsed = false): PanelImperativeHandle {
+  let collapsed = initialCollapsed;
   return {
     isCollapsed: vi.fn(() => collapsed),
     collapse: vi.fn(() => {
@@ -24,16 +30,11 @@ function createPanel(collapsed = false): PanelImperativeHandle {
   };
 }
 
+function makeSize(inPixels: number): PanelSize {
+  return { asPercentage: 0, inPixels };
+}
+
 describe("useStudyPanelLayout", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    vi.useFakeTimers();
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
   it("wires default layout persistence to sessionStorage after mounting", () => {
     const onLayoutChanged = vi.fn();
     vi.mocked(useDefaultLayout).mockReturnValue({
@@ -53,24 +54,19 @@ describe("useStudyPanelLayout", () => {
     expect(result.current.onLayoutChanged).toBe(onLayoutChanged);
   });
 
-  it("collapses and expands the left panel with the expected transient state", () => {
+  it("collapses and expands the left panel using only the imperative handle", () => {
     const panel = createPanel(false);
     const { result } = renderHook(() => useStudyPanelLayout());
 
     act(() => {
       result.current.leftPanelRef.current = panel;
+    });
+    act(() => {
       result.current.toggleLeft();
     });
 
-    expect(result.current.leftCollapsible).toBe(true);
-    expect(panel.collapse).not.toHaveBeenCalled();
-
-    act(() => {
-      vi.runOnlyPendingTimers();
-    });
-
     expect(panel.collapse).toHaveBeenCalledTimes(1);
-    expect(result.current.leftPanelCollapsed).toBe(true);
+    expect(result.current.leftPanelCollapsed).toBe(false);
 
     act(() => {
       result.current.toggleLeft();
@@ -78,41 +74,60 @@ describe("useStudyPanelLayout", () => {
 
     expect(panel.expand).toHaveBeenCalledTimes(1);
     expect(result.current.leftPanelCollapsed).toBe(false);
-    expect(result.current.leftCollapsible).toBe(true);
-
-    act(() => {
-      vi.advanceTimersByTime(150);
-    });
-
-    expect(result.current.leftCollapsible).toBe(false);
   });
 
-  it("collapses and expands the right panel independently", () => {
+  it("mirrors onResize into the collapsed state when the panel snaps to collapsedSize", () => {
     const panel = createPanel(false);
     const { result } = renderHook(() => useStudyPanelLayout());
 
     act(() => {
-      result.current.rightPanelRef.current = panel;
-      result.current.toggleRight();
+      result.current.leftPanelRef.current = panel;
     });
 
-    expect(result.current.rightCollapsible).toBe(true);
+    expect(result.current.leftPanelCollapsed).toBe(false);
 
     act(() => {
-      vi.runOnlyPendingTimers();
+      result.current.handleLeftResize(makeSize(280));
     });
-
-    expect(panel.collapse).toHaveBeenCalledTimes(1);
-    expect(result.current.rightPanelCollapsed).toBe(true);
+    expect(result.current.leftPanelCollapsed).toBe(false);
 
     act(() => {
-      result.current.toggleRight();
-      vi.advanceTimersByTime(150);
+      result.current.handleLeftResize(makeSize(60));
     });
+    expect(result.current.leftPanelCollapsed).toBe(true);
 
-    expect(panel.expand).toHaveBeenCalledTimes(1);
+    act(() => {
+      result.current.handleLeftResize(makeSize(280));
+    });
+    expect(result.current.leftPanelCollapsed).toBe(false);
+  });
+
+  it("mirrors onResize for the right panel independently", () => {
+    const { result } = renderHook(() => useStudyPanelLayout());
+
+    act(() => {
+      result.current.handleRightResize(makeSize(280));
+    });
     expect(result.current.rightPanelCollapsed).toBe(false);
-    expect(result.current.rightCollapsible).toBe(false);
+
+    act(() => {
+      result.current.handleRightResize(makeSize(60));
+    });
+    expect(result.current.rightPanelCollapsed).toBe(true);
+  });
+
+  it("treats values within the 4px threshold of collapsedSize as collapsed", () => {
+    const { result } = renderHook(() => useStudyPanelLayout());
+
+    act(() => {
+      result.current.handleLeftResize(makeSize(64));
+    });
+    expect(result.current.leftPanelCollapsed).toBe(true);
+
+    act(() => {
+      result.current.handleLeftResize(makeSize(65));
+    });
+    expect(result.current.leftPanelCollapsed).toBe(false);
   });
 
   it("leaves panel state unchanged when refs are not attached", () => {
@@ -121,12 +136,9 @@ describe("useStudyPanelLayout", () => {
     act(() => {
       result.current.toggleLeft();
       result.current.toggleRight();
-      vi.runOnlyPendingTimers();
     });
 
     expect(result.current.leftPanelCollapsed).toBe(false);
-    expect(result.current.leftCollapsible).toBe(false);
     expect(result.current.rightPanelCollapsed).toBe(false);
-    expect(result.current.rightCollapsible).toBe(false);
   });
 });

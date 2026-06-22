@@ -245,7 +245,7 @@ describe("StudyPageClient", () => {
     expect(screen.getByRole("dialog")).toBeInTheDocument();
 
     await user.click(
-      screen.getByRole("button", { name: /Paste text Copied text/ }),
+      screen.getByRole("button", { name: /^Paste text$/ }),
     );
     await user.type(
       screen.getByPlaceholderText("Paste your English text content here..."),
@@ -282,6 +282,8 @@ describe("StudyPageClient", () => {
 
     await user.click(getSourceListItem(eligible.title));
     await user.click(screen.getByRole("button", { name: "Simplify" }));
+    // New flow: confirm dialog appears first; click Confirm to fire the request.
+    await user.click(screen.getByRole("button", { name: "Confirm" }));
 
     await waitFor(() =>
       expect(simplifyPassage).toHaveBeenCalledWith(eligible.id),
@@ -301,9 +303,13 @@ describe("StudyPageClient", () => {
     );
     await secondRender.user.click(getSourceListItem("Already Simple"));
 
+    // A1/A2: button still renders (faded), but clicking opens the
+    // "Already simple" dialog instead of firing simplifyPassage.
+    await secondRender.user.click(screen.getByRole("button", { name: "Simplify" }));
     expect(
-      screen.queryByRole("button", { name: "Simplify" }),
-    ).not.toBeInTheDocument();
+      await screen.findByRole("button", { name: "Close" }),
+    ).toBeInTheDocument();
+    expect(simplifyPassage).not.toHaveBeenCalledWith("a2-passage");
   });
 
   it("generates quiz results and opens result detail", async () => {

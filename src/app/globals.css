@@ -353,3 +353,28 @@
     letter-spacing: 0.01em;
     max-width: 66ch;
 }
+
+/* Studio slide-in overlay (right → left) — wireframe §1 lines 252-260 */
+@keyframes studio-slide-in {
+    from {
+        transform: translateX(24px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.studio-overlay-enter {
+    animation: studio-slide-in 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.studio-scrim-enter {
+    animation: studio-fade-in 180ms ease-out both;
+}
+
+@keyframes studio-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
