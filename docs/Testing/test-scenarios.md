@@ -34,16 +34,15 @@ with no real covering file is marked **GAP** and must not be claimed as covered.
 | TS-22 | happy | an owned passage | `POST /api/study/studio/questions` is called | 200; questions generated and persisted against the passage | US-07 / UC-03 | `tests/vitest/integration/api/studio-questions-route.test.ts` |
 | TS-23a | happy | a valid Clerk `user.created` or `user.updated` webhook with correct signature | `POST /api/webhooks/clerk` is called | 200; `syncUser` called with mapped fields; local profile upserted | US-20 / UC-05 | `src/app/api/webhooks/clerk/route.test.ts` |
 | TS-23b | error | a Clerk webhook request with an invalid signature | `POST /api/webhooks/clerk` is called | 400; no sync performed | US-20 / UC-05 | `src/app/api/webhooks/clerk/route.test.ts` |
-| TS-24a | happy | a passage without simplified content | `POST /api/study/passages/[id]/simplify` is called | simplification runs; simplified text persisted; 200 with `{ success: true, data: { … } }` | US-06 / UC-02 | `tests/vitest/integration/services/passage-study-service.test.ts` (logic only; route = GAP) |
-| TS-24b | edge | a passage whose CEFR level is already the simplest | `POST /api/study/passages/[id]/simplify` is called | 200 with `{ success: true, data: { skipped: true } }`; no AI call made | US-06 / UC-02 | `tests/vitest/integration/services/passage-study-service.test.ts` (logic only; route = GAP) |
-| TS-25 | happy | a quiz completed for a studio artifact | `POST /api/study/studio/artifacts/[id]/quiz-result` is called | quiz result upserted; accuracy computed; artifact updated | US-07 / UC-03 | `src/server/modules/study/passage/studio-artifacts-service.test.ts` (logic only; route = GAP) |
-| TS-26 | happy | a signed-in user submitting a vocabulary review result | `POST /api/vocabulary/[id]/review` is called | 200; scheduler advances status and updates `nextReviewAt` | US-19 / UC-04 | **GAP** (no HTTP-level integration test) |
+| TS-24a | happy | a passage without simplified content | `POST /api/study/passages/[id]/simplify` is called | simplification runs; simplified text persisted; 200 with `{ success: true, data: { … } }` | US-06 / UC-02 | `tests/vitest/integration/api/passage-simplify-route.test.ts` |
+| TS-24b | edge | a passage whose CEFR level is already the simplest | `POST /api/study/passages/[id]/simplify` is called | 200 with `{ success: true, data: { skipped: true } }`; no AI call made | US-06 / UC-02 | `tests/vitest/integration/api/passage-simplify-route.test.ts` |
+| TS-25 | happy | a quiz completed for a studio artifact | `POST /api/study/studio/artifacts/[id]/quiz-result` is called | quiz result upserted; accuracy computed; artifact updated | US-07 / UC-03 | `tests/vitest/integration/api/studio-artifacts-routes.test.ts` |
+| TS-26 | happy | a signed-in user submitting a vocabulary review result | `POST /api/vocabulary/[id]/review` is called | 200; scheduler advances status and updates `nextReviewAt` | US-19 / UC-04 | `tests/vitest/integration/api/vocabulary-review-route.test.ts` |
 
 ## Notes
 
 - **GAP** rows have no automated coverage and represent genuine test debt, not invented coverage.
-- TS-08 is covered at the scheduler logic level only; the HTTP route `POST /api/vocabulary/[id]/review` is a GAP (TS-26).
+- TS-08 is covered at the scheduler logic level only; the HTTP route `POST /api/vocabulary/[id]/review` is covered by `vocabulary-review-route.test.ts` (TS-26).
 - TS-11: sign-out exercised only manually via Clerk; no Vitest or Playwright spec asserts the redirect.
-- TS-24a, TS-24b: passage simplify service logic is tested; the HTTP route (`POST /api/study/passages/[id]/simplify`) has no integration test.
-- TS-25: quiz-result save logic is tested via `studio-artifacts-service.test.ts`; the HTTP route has no integration test.
-- TS-26: the `POST /api/vocabulary/[id]/review` route has no dedicated integration test.
+- TS-24a, TS-24b: passage simplify HTTP route is covered by `passage-simplify-route.test.ts`.
+- TS-25: quiz-result HTTP route is covered by `studio-artifacts-routes.test.ts`.
