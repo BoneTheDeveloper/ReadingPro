@@ -1,673 +1,222 @@
-# Design Guidelines
+# Design System — Study Workspace
 
-**English Reading Training App**
-
----
-
-## Design Philosophy
-
-**Calm, editorial, reading-first study experience.**
-
-The UI should prioritize reading, comprehension, and long-session usability over flashy visuals or aggressive SaaS aesthetics. Every element serves the learning goal.
-
-The product should feel:
-- Calm
-- Focused
-- Intelligent
-- Editorial
-- Premium
-- Study-oriented
-
-Inspired by: Linear, Readwise, Notion, Arc Browser, modern editorial applications.
+> Single source of truth for keeping color, buttons, icons, and layout consistent across the app.
+> Spirit: **focused · youthful energy · modern yet friendly · not gaudy.**
 
 ---
 
-## Core Principles
+## 1. Colors
 
-### 1. Content First
+### Neutrals (warm paper base)
+| Role | Hex | Used for |
+|---|---|---|
+| Paper / App bg | `#F5F2EC` | global background, secondary panel fill |
+| Side panel | `#FBF9F5` | Sources & Studio sidebars |
+| Surface / Reader | `#FFFFFF` | cards, reading area, inputs |
+| Border | `#EAE5DB` | dividers, card/input borders |
+| Border strong (dashed) | `#DAD4C8` | "add source" placeholder |
+| Dark anchor (rail) | `#221F2B` | left nav rail, primary text |
 
-The primary focus of the interface is always the content. UI chrome should never overpower the reading experience.
+### Text
+| Role | Hex |
+|---|---|
+| Primary text | `#221F2B` |
+| Secondary text | `#565160` |
+| Muted / caption | `#908B98` |
 
-Hierarchy priority:
-1. Content
-2. Active actions
-3. Navigation
-4. Secondary utilities
+### Brand & accents
+| Name | Base | Hover | Soft bg | Soft border | Text on soft |
+|---|---|---|---|---|---|
+| **Indigo** (brand, primary action) | `#5A4FE0` | `#4A3FD0` | `#ECEAFB` | `#D6D1F7` | `#4A3FD0` |
+| **Coral** (accent / secondary CTA / highlight) | `#F2664A` | `#E0512F` | `#FCE7E1` | `#F9D9D0` | `#C8442B` |
+| **Green** (success / known) | `#2FA66A` | `#1E7A4B` | `#DDF3E7` | `#CFEEDD` | `#1E7A4B` |
+| **Amber** (warning / new) | `#EEA63C` | — | `#FBEFD8` | `#F8E4C2` | `#A66A12` |
 
-### 2. Calm Interfaces
+**Color usage rules**
+- Indigo leads: primary actions, active item, brand.
+- Coral only for **reading highlights** + **one prominent CTA per screen**.
+- Green for "correct / known / success" states.
+- **Never** place > 2 accent colors side by side → avoids "gaudy".
+- The dark rail is the anchor that lets the 3 light panels stand out.
 
-Avoid:
-- Excessive gradients
-- Neon colors
-- Heavy shadows
-- Over-animation
-- Visual clutter
-
-Prefer:
-- Warm neutrals
-- Soft elevation
-- Subtle transitions
-- Clear spacing
-- Controlled accents
-
-### 3. Semantic Color Usage
-
-Accent colors must communicate meaning. Do not use the same accent color everywhere.
-
-| Color   | Meaning                               |
-| ------- | ------------------------------------- |
-| Navy    | Primary actions / authority           |
-| Gold    | Study momentum / reviews / highlights |
-| Green   | Success / completion                  |
-| Red     | Errors / destructive actions          |
-| Neutral | Passive UI                            |
-
----
-
-## Color System
-
-### Base Colors
-
+### CSS variables (quick copy)
 ```css
---background: #F6F4EE;
---surface: #FFFDF8;
---surface-elevated: #FFFFFF;
---border: #E7E0D4;
-```
-
-### Primary Colors (Navy - Authority & Focus)
-
-```css
---primary: #1D3557;
---primary-hover: #274C77;
---primary-active: #14243D;
-```
-
-### Accent Colors (Gold - Study & Highlights)
-
-```css
---accent-gold: #D4A373;
---accent-gold-soft: #FAEDCD;
-```
-
-### Success Colors
-
-```css
---success: #588157;
---success-soft: #DDE5D8;
-```
-
-### Danger Colors
-
-```css
---danger: #C8553D;
---danger-soft: #F9E0DA;
-```
-
-### Typography Colors
-
-```css
---text-primary: #111827;
---text-secondary: #4B5563;
---text-muted: #9CA3AF;
-```
-
-### Neutral Palette (Reading Content)
-
-```css
---neutral-0: #ffffff;
---neutral-50: #fafafa;
---neutral-100: #f5f5f5;
---neutral-200: #e5e5e5;
---neutral-300: #d4d4d4;
---neutral-400: #a3a3a3;
---neutral-500: #737373;
---neutral-600: #525252;
---neutral-700: #404040;
---neutral-800: #262626;
---neutral-900: #171717;
---neutral-950: #0a0a0a;
-```
-
-### CEFR Color Coding (Reading Levels)
-
-```css
---cefr-a1: #86efac;  /* Green - Beginner */
---cefr-a2: #a3e635;
---cefr-b1: #fde047;  /* Yellow - Elementary */
---cefr-b2: #fbbf24;  /* Orange - Intermediate */
---cefr-c1: #f472b6;  /* Pink - Advanced */
---cefr-c2: #a78bfa;  /* Purple - Mastery */
-```
-
----
-
-## Typography System
-
-### Typography Philosophy
-
-Typography should feel editorial, clean, highly readable, and calm. Avoid dense text blocks, tiny font sizes, and excessively bold UI.
-
-### Font Families
-
-**Primary:** Inter (Google Fonts)
-- Excellent readability at all sizes
-- Vietnamese character support
-- Optimized for UI elements and body text
-
-**Reading:** Literata (Google Fonts)
-- Designed for extended reading
-- Vietnamese character support
-- Used for: Long-form content, study passages
-
-**Code/Monospace:** JetBrains Mono
-- Clear, modern monospace
-- Used for: Technical terms, code snippets
-
-```css
---font-sans: 'Inter', system-ui, sans-serif;
---font-serif: 'Literata', Georgia, serif;
---font-mono: 'JetBrains Mono', 'Courier New', monospace;
-```
-
-### Font Sizes
-
-| Role           | Size | Weight |
-| -------------- | ---- | ------ |
-| Hero title     | 48px | 700    |
-| Section title  | 32px | 700    |
-| Card title     | 20px | 600    |
-| Body           | 16px | 400    |
-| Secondary text | 14px | 500    |
-| Caption        | 12px | 500    |
-
-### Reading Content Typography
-
-```css
-.reading-content {
-  font-family: var(--font-serif);
-  font-size: 1.125rem (18px);
-  line-height: 1.8;
-  letter-spacing: 0.01em;
-  max-width: 70ch;
+:root {
+  /* neutrals */
+  --paper:#F5F2EC; --panel:#FBF9F5; --surface:#FFFFFF;
+  --border:#EAE5DB; --border-strong:#DAD4C8; --rail:#221F2B;
+  /* text */
+  --ink:#221F2B; --ink-2:#565160; --ink-3:#908B98;
+  /* indigo */
+  --indigo:#5A4FE0; --indigo-hover:#4A3FD0; --indigo-soft:#ECEAFB; --indigo-soft-border:#D6D1F7;
+  /* coral */
+  --coral:#F2664A; --coral-hover:#E0512F; --coral-soft:#FCE7E1; --coral-text:#C8442B;
+  /* green */
+  --green:#2FA66A; --green-soft:#DDF3E7; --green-text:#1E7A4B;
+  /* amber */
+  --amber:#EEA63C; --amber-soft:#FBEFD8; --amber-text:#A66A12;
 }
 ```
 
 ---
 
-## Spacing System
+## 2. Typography
 
-8px base unit. Avoid arbitrary spacing values.
+| Role | Font | Size / Weight |
+|---|---|---|
+| UI (default) | **Plus Jakarta Sans** | 11–14px · 400/500/600/700 |
+| Large headings | Plus Jakarta Sans | 22–38px · 700/800, letter-spacing −0.02em |
+| Reading / content | **Lora** (serif) | 18px · 1.85 line-height, max 66ch |
+| Line numbers / code / hex | mono (`ui-monospace`) | 11px · color `#B8B2A6` |
 
-| Token | Value | Usage |
-|-------|-------|-------|
-| `space-1` | 4px  | Tight spacing    |
-| `space-2` | 8px  | Small gaps       |
-| `space-3` | 12px | Compact padding  |
-| `space-4` | 16px | Default padding  |
-| `space-6` | 24px | Section spacing  |
-| `space-8` | 32px | Large sections   |
-| `space-10` | 40px | Major divisions |
-| `space-12` | 48px | Page margins    |
-| `space-16` | 64px | Hero spacing    |
+- Section label: 11px, weight 700, `letter-spacing:0.13em`, UPPERCASE, color `#908B98`.
+- Reading area can switch Serif ↔ Sans (tweak `readingTypeface`).
 
----
-
-## Border Radius
-
-Cards should feel soft but structured. Avoid sharp corners.
-
-```css
---radius-sm: 10px;
---radius-md: 16px;
---radius-lg: 24px;
---radius-xl: 32px;
---radius-full: 9999px;  /* Pills, avatars */
+```html
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
 ```
 
 ---
 
-## Shadows & Elevation
+## 3. Corner radius (soft)
 
-Use subtle elevation only. Avoid heavy shadows.
+| Token | px | Used for |
+|---|---|---|
+| `radius-xl` | 16px | popup, large cards, modal |
+| `radius-lg` | 14px | **buttons**, Studio cards, panel preview |
+| `radius-md` | 12–13px | result cards, source rows, icon tiles |
+| `radius-sm` | 10–11px | inputs, small buttons, segmented |
+| `radius-pill` | 99px | badges, chips, avatar, dots |
 
-```css
---shadow-sm:
-  0 1px 2px rgba(0,0,0,0.04),
-  0 4px 12px rgba(0,0,0,0.03);
---shadow-md:
-  0 1px 3px rgba(0,0,0,0.06),
-  0 6px 16px rgba(0,0,0,0.04);
---shadow-lg:
-  0 4px 6px rgba(0,0,0,0.04),
-  0 10px 24px rgba(0,0,0,0.06);
+> Rule: the larger the element, the rounder the corner. Standard button = **14px**.
+
+---
+
+## 4. Shadows (depth)
+
+| Token | Value |
+|---|---|
+| Card subtle | `0 1px 2px rgba(0,0,0,.04), 0 4px 12px rgba(0,0,0,.04)` |
+| Raised (hover) | `0 4px 12px rgba(0,0,0,.07)` |
+| Popup / modal | `0 4px 12px rgba(0,0,0,.06), 0 18px 40px rgba(0,0,0,.10)` |
+| Indigo button | `0 2px 5px rgba(90,79,224,.30), 0 6px 16px rgba(90,79,224,.20)` |
+| Coral button | `0 2px 5px rgba(242,102,74,.30), 0 6px 16px rgba(242,102,74,.18)` |
+
+Button shadows are **tinted to the button color** (indigo/coral) for real depth.
+
+---
+
+## 5. Buttons
+
+**Standard:** radius 14px · padding `11px 20px` · 14px/600 · transition `all 140ms ease`.
+
+| Level | Bg | Text | Border | Shadow | Hover | Active (press) |
+|---|---|---|---|---|---|---|
+| **Primary** | `#5A4FE0` | white | — | indigo | `#4A3FD0` + lift `−1px` | sink `+1px`, reduce shadow |
+| **Secondary** | `#FFFFFF` | `#221F2B` | `#EAE5DB` | card subtle | border+text → indigo, lift `−1px` | sink `+1px` |
+| **Ghost** | transparent | `#565160` | — | — | bg `#F2EFE8` | bg `#EAE5DB` |
+| **Danger** | `#F2664A` | white | — | coral | `#E0512F` + lift `−1px` | sink `+1px` |
+| **Disabled** | `#F2EFE8` | `#A39EAA` | — | — | — (cursor not-allowed) | — |
+
+**Press behavior:** `transform:translateY(1px)` + reduced shadow → "real press" feel.
+**Small button:** padding `8px 14px`, radius 11px, 12px/600.
+**Square icon button:** 38–40px, radius 12px, hover changes border color by context (✓ green, ✕ coral).
+
+```html
+<!-- Primary button -->
+<button style="padding:11px 20px;border:none;border-radius:14px;background:#5A4FE0;color:#fff;
+  font:600 14px 'Plus Jakarta Sans';cursor:pointer;transition:all 140ms ease;
+  box-shadow:0 2px 5px rgba(90,79,224,.30),0 6px 16px rgba(90,79,224,.20);"
+  onmouseover="this.style.background='#4A3FD0';this.style.transform='translateY(-1px)'"
+  onmouseout="this.style.background='#5A4FE0';this.style.transform='none'">Save to vocabulary</button>
 ```
 
 ---
 
-## Layout Principles
+## 6. Badges & Chips
 
-### Dashboard Layout
+### CEFR levels — semantic difficulty scale (do NOT use 6 disjoint colors)
+**A = easy (green) → B = mid (amber) → C = hard (coral)**, each with a light/dark step.
 
-- Left sidebar → navigation
-- Main content → primary focus
-- Right utilities → contextual tools
+| | Bg | Text |
+|---|---|---|
+| A1 | `#DDF3E7` | `#1E7A4B` |
+| A2 | `#CFEEDD` | `#176B40` |
+| B1 | `#FBEFD8` | `#A66A12` |
+| B2 | `#F8E4C2` | `#8A560C` |
+| C1 | `#FCE7E1` | `#C8442B` |
+| C2 | `#F9D9D0` | `#A8341E` |
 
-Content width should remain readable. Avoid ultra-wide reading layouts.
+Badge: `padding:4px 12px; border-radius:99px; font:700 12px`.
 
-### Container Widths
+### Learning status (badge with leading dot)
+| Status | Bg | Text | Dot |
+|---|---|---|---|
+| New | `#FBEFD8` | `#A66A12` | `#EEA63C` |
+| Learning | `#ECEAFB` | `#4A3FD0` | `#5A4FE0` |
+| Known | `#DDF3E7` | `#1E7A4B` | `#2FA66A` |
 
-```css
---container-sm: 640px;
---container-md: 768px;
---container-lg: 1024px;
---container-xl: 1280px;
---container-reading: 70ch;
-```
-
-### Responsive Breakpoints
-
-```css
---breakpoint-sm: 640px;   /* Mobile landscape */
---breakpoint-md: 768px;   /* Tablet */
---breakpoint-lg: 1024px;  /* Desktop */
---breakpoint-xl: 1280px;  /* Large desktop */
-```
-
-Mobile-First Approach:
-- Default styles: 320px - 639px
-- sm: 640px+
-- md: 768px+
-- lg: 1024px+
+### Chip (filter / related)
+`padding:5px 12px; border-radius:99px; border:1px solid #EAE5DB; background:#fff`.
+Active = indigo bg, white text. Hover = indigo border/text.
 
 ---
 
-## Component Patterns
+## 7. Icons — **use inline SVG (NOT emoji)**
 
-### Cards
+- **Lucide** set (open-source line icons). Draw directly as inline `<svg>` in markup — **do NOT** use `lucide.createIcons()` (it mutates the DOM and conflicts with the React runtime, causing crashes).
+- Standard: `viewBox="0 0 24 24"`, `fill="none"`, `stroke="currentColor"`, `stroke-width="2"`, `stroke-linecap/linejoin="round"`. Recolor via `style="color:…"`, resize via `width/height`.
 
-Cards should have breathing room, subtle borders, warm surfaces, and avoid noisy backgrounds. Hover states should feel responsive but restrained.
-
-```css
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-6);
-  box-shadow: var(--shadow-sm);
-}
-
-.card-hoverable:hover {
-  box-shadow: var(--shadow-md);
-  transition: all 200ms ease;
-}
+```html
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+  stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#221F2B;">
+  <!-- path… -->
+</svg>
 ```
 
-### Buttons
+| Context | Lucide names |
+|---|---|
+| Navigation | `book-open` (Study), `languages` (Dictionary), `library` (Vocabulary), `bar-chart-3` (Progress), `settings`, `moon` |
+| Sources / Upload | `file-text` (Text), `play-circle` (Video — *note: `youtube` does not exist in this build*), `file` (PDF), `link` (Web), `upload`, `search`, `plus` |
+| Studio | `list-checks` (Quiz), `layers` (Flashcards), `align-left` (Summary), `message-circle` (Chat), `network` (Mind map), `globe` (Translate) |
+| Actions | `check`, `x`, `rotate-ccw` (undo), `trash-2`, `download`, `bookmark` (save), `volume-2` (play audio), `chevron-left/right`, `arrow-up` (send) |
 
-**Primary Buttons** — Navy backgrounds. Used for main CTA, confirmation actions, important workflow steps.
-
-**Secondary Buttons** — Subtle surfaces with borders.
-
-**Ghost Buttons** — Only for tertiary actions.
-
-```css
-/* Primary Action */
-.btn-primary {
-  background: var(--primary);
-  color: white;
-  padding: 0.75rem 1.5rem;
-  border-radius: var(--radius-md);
-  font-weight: 600;
-  transition: all 180ms cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.btn-primary:hover {
-  background: var(--primary-hover);
-}
-
-/* Secondary Action */
-.btn-secondary {
-  background: var(--surface);
-  color: var(--text-primary);
-  border: 1px solid var(--border);
-}
-```
-
-### Input Fields
-
-```css
-.input {
-  background: var(--surface-elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 0.75rem 1rem;
-  font-size: 1rem;
-  transition: border-color 180ms ease;
-}
-
-.input:focus {
-  outline: none;
-  border-color: var(--primary);
-}
-```
-
-### Progress Indicators
-
-```css
-.progress-bar {
-  background: var(--border);
-  border-radius: var(--radius-full);
-  height: 8px;
-  overflow: hidden;
-}
-
-.progress-fill {
-  background: linear-gradient(90deg, var(--primary), var(--accent-gold));
-  height: 100%;
-  transition: width 300ms ease;
-}
-```
-
-### Form Validation States
-
-```css
-/* Success */
-.input-success { border-color: var(--success); }
-/* Error */
-.input-error { border-color: var(--danger); }
-```
+Icon color by context: **default** `#221F2B`/`#565160` · **muted** `#908B98` · **active** `#5A4FE0`.
 
 ---
 
-## Motion
-
-Motion should feel fast, soft, and intentional.
-
-Avoid: bouncy animations, large-scale motion, distracting transitions.
-
-### Standard Transition
-
-```css
-transition: all 180ms cubic-bezier(0.4, 0, 0.2, 1);
-```
-
-### Animation Durations
-
-```css
---duration-fast: 150ms;
---duration-normal: 200ms;
---duration-slow: 300ms;
-```
-
-### Easing
-
-```css
---ease-out: cubic-bezier(0, 0, 0.2, 1);
---ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
-```
-
-Honors `prefers-reduced-motion`.
-
----
-
-## Reading Experience
-
-The reading experience is the heart of the product.
-
-Requirements:
-- Comfortable line width
-- Strong paragraph rhythm
-- Generous whitespace
-- Minimal distractions
-- Clear hierarchy
-
-Avoid: extremely long text lines, dense layouts, excessive UI around content.
-
----
-
-## Empty States
-
-Every empty state should contain:
-- A clear title
-- A short explanation
-- A CTA
-
-Empty states should guide the user, explain the next step, reduce confusion, and feel intentional.
-
----
-
-## Interaction States
-
-Every interactive component must have:
-- Hover state
-- Active state
-- Focus state
-- Disabled state
-
-Never rely only on color changes.
-
----
-
-## Loading States
-
-### Skeleton Loading
-
-```css
-.skeleton {
-  background: linear-gradient(
-    90deg,
-    var(--neutral-200) 0%,
-    var(--neutral-100) 50%,
-    var(--neutral-200) 100%
-  );
-  background-size: 200% 100%;
-  animation: skeleton-loading 1.5s ease-in-out infinite;
-}
-```
-
----
-
-## Accessibility
-
-Maintain:
-- Strong text contrast (WCAG 2.1 AA: 4.5:1 minimum for normal text)
-- Readable font sizes
-- Keyboard accessibility
-- Clear focus indicators (2px solid primary)
-- Minimum touch target: 40x40px (mobile), recommended 48x48px
-- Screen reader support with proper ARIA labels
-- Semantic HTML structure
-
----
-
-## Dark Mode
-
-### Color Mapping
-
-```css
-.dark {
-  --background: #111827;
-  --surface: #1F2937;
-  --surface-elevated: #374151;
-  --border: #4B5563;
-  --text-primary: #F9FAFB;
-  --text-secondary: #D1D5DB;
-  --text-muted: #6B7280;
-}
-```
-
-Implementation:
-- Uses CSS custom properties for easy theming
-- Respects `prefers-color-scheme`
-- Manual toggle in user settings
-
----
-
-## Icon System
-
-**Library:** Lucide Icons (via shadcn/ui)
-
-**Key Icons:**
-- `upload`: File upload
-- `file-text`: Text/PDF input
-- `youtube`: YouTube input
-- `book-open`: Reading view
-- `check-circle`: Success/Complete
-- `flame`: Streak
-- `trophy`: Achievement
-- `bar-chart-3`: Progress
-
----
-
-## Voice & Tone
-
-**App Voice:** Encouraging, clear, supportive
-
-**Microcopy Examples:**
-- "Great progress! Keep it up." (Success)
-- "Almost there! One more step." (Progress)
-- "Let's analyze your text..." (Processing)
-- "Ready to learn something new?" (Welcome)
-
----
-
-## Reading Comprehension Test Pattern
-
-### Layout Structure
+## 8. 3-panel layout
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                        Progress Bar                          │
-├──────────────────────┬──────────────────────────────────────┤
-│   Reading Passage    │         Question Panel                │
-│   (Always Visible)   │                                      │
-│                      │  ┌─────────────────────────────────┐ │
-│  ┌────────────────┐  │  │ Question #1              [Type] │ │
-│  │   Passage      │  │  └─────────────────────────────────┘ │
-│  │   Content      │  │  ┌─────────────────────────────────┐ │
-│  │   with         │  │  │ ○ Option A                       │ │
-│  │   numbered     │  │  │ ○ Option B                       │ │
-│  │   lines        │  │  │ ○ Option C                       │ │
-│  │                │  │  │ ○ Option D                       │ │
-│  └────────────────┘  │  └─────────────────────────────────┘ │
-│   Scrollable         │  [Review Passage] [Next Question]   │
-└──────────────────────┴──────────────────────────────────────┘
-
-Mobile: Stacked (Passage top, Question bottom)
-Desktop: Side-by-side (Passage left, Question right)
+[ Rail 62px ] [ Sources 262px ] [ Reader — flexible ] [ Studio 286px ]
+   #221F2B         #FBF9F5            #FFFFFF              #FBF9F5
 ```
 
-### Component Specifications
-
-#### Passage Panel
-
-```css
-.passage-panel {
-  background: var(--surface);
-  border-radius: var(--radius-xl);
-  border: 1px solid var(--border);
-}
-
-.passage-content {
-  font-family: var(--font-serif);
-  font-size: 1.125rem;
-  line-height: 1.8;
-  max-height: 500px;
-  overflow-y: auto;
-}
-
-.line-number {
-  position: absolute;
-  left: 0;
-  font-family: var(--font-sans);
-  font-size: 0.6875rem;
-  color: var(--text-muted);
-}
-
-.highlight-source {
-  background: linear-gradient(120deg, var(--accent-gold-soft), var(--surface));
-  border-radius: var(--radius-sm);
-  padding: 2px 4px;
-}
-```
-
-#### Question Panel
-
-```css
-.option-label {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-4);
-  border: 2px solid var(--border);
-  border-radius: var(--radius-lg);
-  cursor: pointer;
-}
-
-.option-label.selected {
-  border-color: var(--primary);
-  background: var(--surface);
-}
-
-.option-label.correct {
-  border-color: var(--success);
-  background: var(--success-soft);
-}
-
-.option-label.incorrect {
-  border-color: var(--danger);
-  background: var(--danger-soft);
-}
-```
-
-#### Feedback States
-
-```css
-.feedback.correct {
-  background: var(--success-soft);
-  border: 1px solid var(--success);
-}
-
-.feedback.incorrect {
-  background: var(--danger-soft);
-  border: 1px solid var(--danger);
-}
-
-.feedback-source {
-  margin-top: var(--space-3);
-  padding: var(--space-3);
-  background: var(--surface);
-  border-radius: var(--radius-md);
-  border-left: 3px solid var(--accent-gold);
-}
-```
-
-### Interaction Flow
-
-1. **Initial State**: Question displayed, options enabled
-2. **Select Option**: Highlight selected, enable "Check Answer"
-3. **Check Answer**: Disable options, show correct/incorrect states, display feedback, highlight source in passage
-4. **After Answer**: Show "Review Passage" and "Next Question" buttons
-5. **Completion**: Show results summary with score
+- **Rail** dark, 40px icons (radius 13px), active item bg `rgba(255,255,255,.14)`, indigo gradient logo on top, avatar at bottom.
+- **Side panels** warm paper `#FBF9F5`, 54px-tall header with UPPERCASE label + icon button.
+- **Reader** pure white (sharpest text): 3px progress bar with indigo→coral gradient at top, meta bar (badge + read time + word count + segmented).
+- Each panel scrolls internally; app frame is `height:100vh; overflow:hidden`.
+- Indigo appears only on the active item → the eye instantly knows where it is.
 
 ---
 
-## Design Goals
+## 9. Inputs & Segmented
 
-We are building:
-- A premium study experience
-- A calm AI workspace
-- A reading-first product
-- A focused productivity tool
-
-We are NOT building:
-- A crypto dashboard
-- A gaming UI
-- A neon SaaS interface
-- A visually noisy application
+- **Input:** `padding:9px 12px; border:1px solid #EAE5DB; border-radius:11px; background:#fff`. Focus → indigo border + glow `0 0 0 3px rgba(90,79,224,.10)`. Search icon sits inside (left), padding-left 33px.
+- **Segmented:** bg `#F5F2EC`, border `#EAE5DB`, radius 11px, padding 3px. Active tab = white bg + subtle shadow + indigo text.
 
 ---
 
-**Status:** Active
-**Last Updated:** 2026-05-20
+## 10. Spacing & rhythm
+
+- Panel header padding: `0 16px`, height 54px.
+- Reader padding: `36px 40px`.
+- Studio grid gap: 8px · List gap: 7px · Source-row inner gap: 11px.
+- Use **flex/grid + `gap`**, not loose margins, for groups of elements.
+
+---
+
+### Implementation notes (Design Component)
+- All styles **inline**; only `@font-face`/`@keyframes`/resets go in `<helmet>`.
+- Hover/press states: use `style-hover` / `style-active` / `style-focus`.
+- Dynamic values (reading font, highlight color, line-number toggle) flow through `renderVals()` then read via `{{ }}` — keep everything else as literals so it paints immediately while streaming.
