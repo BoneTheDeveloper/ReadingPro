@@ -7,10 +7,10 @@
 @theme inline {
     --color-background: var(--background);
     --color-foreground: var(--foreground);
-    --font-sans: var(--font-inter);
-    --font-serif: var(--font-literata);
+    --font-sans: var(--font-jakarta);
+    --font-serif: var(--font-lora);
     --font-mono: var(--font-jetbrains-mono);
-    --font-heading: var(--font-inter);
+    --font-heading: var(--font-jakarta);
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -54,6 +54,44 @@
     --color-cefr-b2: var(--cefr-b2);
     --color-cefr-c1: var(--cefr-c1);
     --color-cefr-c2: var(--cefr-c2);
+    --color-cefr-a1-text: var(--cefr-a1-text);
+    --color-cefr-a2-text: var(--cefr-a2-text);
+    --color-cefr-b1-text: var(--cefr-b1-text);
+    --color-cefr-b2-text: var(--cefr-b2-text);
+    --color-cefr-c1-text: var(--cefr-c1-text);
+    --color-cefr-c2-text: var(--cefr-c2-text);
+    /* Brand & accent extras (new system) */
+    --color-coral: var(--coral);
+    --color-coral-hover: var(--coral-hover);
+    --color-coral-soft: var(--coral-soft);
+    --color-coral-text: var(--coral-text);
+    --color-indigo-soft: var(--indigo-soft);
+    --color-indigo-soft-border: var(--indigo-soft-border);
+    --color-amber: var(--amber);
+    --color-amber-soft: var(--amber-soft);
+    --color-amber-text: var(--amber-text);
+    /* Learning status */
+    --color-status-new-bg: var(--status-new-bg);
+    --color-status-new-text: var(--status-new-text);
+    --color-status-new-dot: var(--status-new-dot);
+    --color-status-learning-bg: var(--status-learning-bg);
+    --color-status-learning-text: var(--status-learning-text);
+    --color-status-learning-dot: var(--status-learning-dot);
+    --color-status-known-bg: var(--status-known-bg);
+    --color-status-known-text: var(--status-known-text);
+    --color-status-known-dot: var(--status-known-dot);
+    /* Structural neutrals */
+    --color-paper: var(--paper);
+    --color-panel: var(--panel);
+    --color-border-strong: var(--border-strong);
+    --color-rail: var(--rail);
+    --color-ink-3: var(--ink-3);
+    /* Tinted/depth shadows */
+    --shadow-card: var(--shadow-card);
+    --shadow-raised: var(--shadow-raised);
+    --shadow-popup: var(--shadow-popup);
+    --shadow-indigo: var(--shadow-indigo);
+    --shadow-coral: var(--shadow-coral);
     --radius-sm: calc(var(--radius) * 0.625);
     --radius-md: var(--radius);
     --radius-lg: calc(var(--radius) * 1.5);
@@ -64,75 +102,123 @@
 }
 
 :root {
-    /* Base surfaces */
-    --background: #F6F4EE;
-    --foreground: #111827;
-    --surface: #FFFDF8;
+    /* Base surfaces — warm paper */
+    --background: #F5F2EC; /* paper */
+    --foreground: #221F2B; /* ink */
+    --surface: #FFFFFF;
     --surface-elevated: #FFFFFF;
-    --border: #E7E0D4;
-    --input: #FFFDF8;
+    --border: #EAE5DB;
+    --input: #FFFFFF;
 
-    /* Primary — Navy */
-    --primary: #1D3557;
+    /* Structural neutrals (study workspace) */
+    --paper: #F5F2EC;
+    --panel: #FBF9F5;
+    --border-strong: #DAD4C8;
+    --rail: #221F2B; /* dark anchor / left nav rail */
+    --ink-3: #908B98; /* muted / caption text */
+
+    /* Primary — Indigo */
+    --primary: #5A4FE0;
     --primary-foreground: #FFFFFF;
-    --ring: #274C77;
+    --ring: #5A4FE0;
 
-    /* Secondary */
-    --secondary: #274C77;
-    --secondary-foreground: #FFFFFF;
+    /* Secondary — neutral surface (button styling refined in primitives) */
+    --secondary: #FBF9F5;
+    --secondary-foreground: #221F2B;
 
     /* Muted */
-    --muted: #EDE8DC;
-    --muted-foreground: #6B7280;
+    --muted: #F2EFE8;
+    --muted-foreground: #565160; /* ink-2 */
 
-    /* Accent — Gold */
-    --accent: #FAEDCD;
-    --accent-foreground: #1D3557;
-    --gold: #D4A373;
-    --gold-soft: #FAEDCD;
+    /* Accent — soft neutral hover/surface role (NOT the coral brand accent) */
+    --accent: #F2EFE8;
+    --accent-foreground: #221F2B;
 
-    /* Success */
-    --success: #588157;
-    --success-soft: #DDE5D8;
+    /* Indigo soft (selected/active surfaces) */
+    --indigo-soft: #ECEAFB;
+    --indigo-soft-border: #D6D1F7;
 
-    /* Danger */
-    --destructive: #C8553D;
-    --danger: #C8553D;
-    --danger-soft: #F9E0DA;
+    /* Coral — accent / highlight / one prominent CTA */
+    --coral: #F2664A;
+    --coral-hover: #E0512F;
+    --coral-soft: #FCE7E1;
+    --coral-text: #C8442B;
+
+    /* Amber — warm warning / "new" */
+    --amber: #EEA63C;
+    --amber-soft: #FBEFD8;
+    --amber-text: #A66A12;
+
+    /* Gold (legacy warm accent) — mapped onto the amber family */
+    --gold: #C8842A;
+    --gold-soft: #FBEFD8;
+
+    /* Success — green */
+    --success: #2FA66A;
+    --success-soft: #DDF3E7;
+
+    /* Danger — coral */
+    --destructive: #F2664A;
+    --danger: #F2664A;
+    --danger-soft: #FCE7E1;
 
     /* Card & Popover */
-    --card: #FFFDF8;
-    --card-foreground: #111827;
+    --card: #FFFFFF;
+    --card-foreground: #221F2B;
     --popover: #FFFFFF;
-    --popover-foreground: #111827;
+    --popover-foreground: #221F2B;
 
-    /* Charts */
-    --chart-1: #1D3557;
-    --chart-2: #D4A373;
-    --chart-3: #588157;
-    --chart-4: #274C77;
-    --chart-5: #8B6F47;
+    /* Charts — indigo / coral / green / amber family */
+    --chart-1: #5A4FE0;
+    --chart-2: #F2664A;
+    --chart-3: #2FA66A;
+    --chart-4: #EEA63C;
+    --chart-5: #908B98;
 
-    /* Radius — soft but structured */
+    /* Radius — soft but structured (button rounding handled in primitives) */
     --radius: 1rem;
 
-    /* Sidebar */
-    --sidebar: #EDE8DC;
-    --sidebar-foreground: #111827;
-    --sidebar-primary: #1D3557;
+    /* Sidebar (recolored; restyled to dark rail in shell phase) */
+    --sidebar: #FBF9F5;
+    --sidebar-foreground: #221F2B;
+    --sidebar-primary: #5A4FE0;
     --sidebar-primary-foreground: #FFFFFF;
-    --sidebar-accent: #FAEDCD;
-    --sidebar-accent-foreground: #1D3557;
-    --sidebar-border: #E7E0D4;
-    --sidebar-ring: #274C77;
+    --sidebar-accent: #ECEAFB;
+    --sidebar-accent-foreground: #4A3FD0;
+    --sidebar-border: #EAE5DB;
+    --sidebar-ring: #5A4FE0;
 
-    /* CEFR levels */
-    --cefr-a1: #86EFAC;
-    --cefr-a2: #A3E635;
-    --cefr-b1: #FDE047;
-    --cefr-b2: #FBBF24;
-    --cefr-c1: #F472B6;
-    --cefr-c2: #A78BFA;
+    /* Learning status — badge bg / text / leading dot */
+    --status-new-bg: #FBEFD8;
+    --status-new-text: #A66A12;
+    --status-new-dot: #EEA63C;
+    --status-learning-bg: #ECEAFB;
+    --status-learning-text: #4A3FD0;
+    --status-learning-dot: #5A4FE0;
+    --status-known-bg: #DDF3E7;
+    --status-known-text: #1E7A4B;
+    --status-known-dot: #2FA66A;
+
+    /* CEFR — semantic difficulty scale: A=green → B=amber → C=coral */
+    --cefr-a1: #DDF3E7;
+    --cefr-a2: #CFEEDD;
+    --cefr-b1: #FBEFD8;
+    --cefr-b2: #F8E4C2;
+    --cefr-c1: #FCE7E1;
+    --cefr-c2: #F9D9D0;
+    --cefr-a1-text: #1E7A4B;
+    --cefr-a2-text: #176B40;
+    --cefr-b1-text: #A66A12;
+    --cefr-b2-text: #8A560C;
+    --cefr-c1-text: #C8442B;
+    --cefr-c2-text: #A8341E;
+
+    /* Depth shadows (button shadows are tinted to the button color) */
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.04);
+    --shadow-raised: 0 4px 12px rgba(0, 0, 0, 0.07);
+    --shadow-popup: 0 4px 12px rgba(0, 0, 0, 0.06), 0 18px 40px rgba(0, 0, 0, 0.1);
+    --shadow-indigo: 0 2px 5px rgba(90, 79, 224, 0.3), 0 6px 16px rgba(90, 79, 224, 0.2);
+    --shadow-coral: 0 2px 5px rgba(242, 102, 74, 0.3), 0 6px 16px rgba(242, 102, 74, 0.18);
 }
 
 @layer base {
@@ -262,8 +348,8 @@
 /* Reading content — editorial serif */
 .reading-content {
     font-family: var(--font-serif);
-    font-size: 1.125rem;
-    line-height: 1.8;
+    font-size: 1.125rem; /* 18px */
+    line-height: 1.85;
     letter-spacing: 0.01em;
-    max-width: 70ch;
+    max-width: 66ch;
 }

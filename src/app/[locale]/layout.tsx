@@ -2,19 +2,19 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { Inter, JetBrains_Mono, Literata } from "next/font/google";
+import { Plus_Jakarta_Sans, JetBrains_Mono, Lora } from "next/font/google";
 import { VercelSpeedInsights } from "@/ui/vercel-speed-insights";
 import { ThemeProvider } from "@/ui/theme-provider";
 import { routing } from "@/i18n/routing";
 import "../globals.css";
 
-const inter = Inter({
-  variable: "--font-inter",
+const jakarta = Plus_Jakarta_Sans({
+  variable: "--font-jakarta",
   subsets: ["latin", "vietnamese"],
 });
 
-const literata = Literata({
-  variable: "--font-literata",
+const lora = Lora({
+  variable: "--font-lora",
   subsets: ["latin", "vietnamese"],
 });
 
@@ -46,7 +46,7 @@ export default async function LocaleLayout({
   return (
     <html
       lang={locale}
-      className={`${inter.variable} ${literata.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      className={`${jakarta.variable} ${lora.variable} ${jetbrainsMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <body className="h-full overflow-hidden flex flex-col font-sans">

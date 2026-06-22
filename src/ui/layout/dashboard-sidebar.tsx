@@ -6,14 +6,10 @@ import {
   BookOpen,
   BookMarked,
   GraduationCap,
-  LayoutDashboard,
   Library,
   Menu,
   Plus,
   Search,
-  Settings,
-  HelpCircle,
-  Bell,
 } from "lucide-react";
 import { cn } from "@/contracts/utils";
 import { Button } from "@/ui/primitives/button";
@@ -24,8 +20,16 @@ import { LanguageSwitcher } from "./language-switcher";
 import { useTranslations } from "next-intl";
 import { useStudySessionHeartbeat } from "@/features/study/hooks/use-study-session-heartbeat";
 
+// App shell per design.md §8:
+// - 62px dark rail (#221F2B), 40px icon tiles (radius 13px)
+// - Active item bg rgba(255,255,255,.14), indigo gradient logo top
+// - Side panels warm paper (#FBF9F5), 54px header with UPPERCASE label
+// - Reader region pure white; app frame 100vh / overflow:hidden
+
+const RAIL_WIDTH_PX = 62;
+
 const navItems = [
-  { href: "/", labelKey: "Navigation.dashboard", icon: LayoutDashboard },
+  { href: "/", labelKey: "Navigation.dashboard", icon: GraduationCap },
   { href: "/study", labelKey: "Navigation.study", icon: BookOpen },
   { href: "/vocabulary", labelKey: "Navigation.vocabulary", icon: Library },
   { href: "/dictionary", labelKey: "Navigation.dictionary", icon: BookMarked },
@@ -72,7 +76,10 @@ export function DashboardSidebar({
 
   return (
     <div className="h-dvh flex bg-background overflow-hidden">
-      <aside className="hidden lg:flex lg:flex-col lg:w-20 lg:fixed lg:inset-y-0 bg-muted border-r border-border items-center py-8 z-40">
+      <aside
+        style={{ width: RAIL_WIDTH_PX }}
+        className="hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 bg-rail items-center py-5 z-40"
+      >
         <SidebarContent isActive={isActive} t={t} />
       </aside>
 
@@ -92,7 +99,17 @@ export function DashboardSidebar({
         <MobileSidebarContent isActive={isActive} onNavigate={closeMobile} t={t} />
       </aside>
 
-      <div className="flex-1 lg:ml-20 flex flex-col h-dvh overflow-hidden">
+      <div
+        style={{ marginLeft: RAIL_WIDTH_PX }}
+        className="hidden lg:flex flex-1 flex-col h-dvh overflow-hidden"
+      >
+        <TopBar />
+        <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          {children}
+        </main>
+      </div>
+
+      <div className="lg:hidden flex-1 flex flex-col h-dvh overflow-hidden">
         <TopBar onMenuToggle={() => setMobileOpen(true)} />
         <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
           {children}
@@ -105,34 +122,10 @@ export function DashboardSidebar({
 function TopBar({
   onMenuToggle,
 }: {
-  onMenuToggle: () => void;
+  onMenuToggle?: () => void;
 }) {
-  return (
-    <>
-      <header className="hidden lg:flex fixed top-0 left-20 right-0 h-16 z-30 bg-background/80 backdrop-blur-md border-b border-border items-center justify-between px-8">
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search..."
-              className="pl-10 w-64 rounded-full bg-input border-none"
-            />
-          </div>
-        </div>
-        <div className="flex items-center gap-6">
-          <LanguageSwitcher />
-          <ThemeToggle />
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-muted-foreground hover:text-primary"
-          >
-            <Bell className="w-5 h-5" />
-          </Button>
-          <AuthControls />
-        </div>
-      </header>
-
+  if (onMenuToggle) {
+    return (
       <header className="lg:hidden sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-border px-4 py-3 flex items-center gap-3">
         <Button
           variant="ghost"
@@ -147,71 +140,84 @@ function TopBar({
         <span className="font-semibold text-foreground text-sm">
           English Reading
         </span>
-        <div className="ml-auto flex items-center gap-1">
-          <LanguageSwitcher />
-          <ThemeToggle />
-        </div>
       </header>
-    </>
+    );
+  }
+
+  // Desktop top bar: the rail already houses primary nav + brand; the top bar
+  // carries search + auth controls in the paper header band.
+  return (
+    <header className="hidden lg:flex sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-border items-center justify-between h-14 px-8">
+      <div className="flex items-center gap-4">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+          <Input
+            placeholder="Search vocabulary, sources…"
+            className="pl-9 w-72 h-9"
+          />
+        </div>
+      </div>
+      <div className="flex items-center gap-3">
+        <LanguageSwitcher />
+        <ThemeToggle />
+        <AuthControls />
+      </div>
+    </header>
   );
 }
 
 function SidebarContent({ isActive, t }: { isActive: (href: string) => boolean; t: ReturnType<typeof useTranslations> }) {
   return (
     <div className="flex flex-col h-full w-full items-center">
-      <div className="mb-10 text-primary">
-        <GraduationCap className="w-7 h-7" />
+      {/* Indigo gradient logo (top) per §8 */}
+      <div
+        className="mb-6 w-10 h-10 rounded-[13px] flex items-center justify-center text-white"
+        style={{
+          background:
+            "linear-gradient(135deg, #5A4FE0 0%, #7A6BFF 60%, #F2664A 100%)",
+        }}
+        aria-hidden
+      >
+        <GraduationCap className="w-5 h-5" />
       </div>
 
-      <nav className="flex-1 w-full px-3 space-y-2 flex flex-col items-center">
+      <nav className="flex-1 w-full px-2 space-y-1.5 flex flex-col items-center">
         {navItems.map((item) => {
           const active = isActive(item.href);
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={cn(
-                "w-full flex justify-center items-center p-3 rounded-lg transition-colors",
-                active
-                  ? "text-primary bg-accent/80 border-r-4 border-primary"
-                  : "text-muted-foreground hover:text-primary hover:bg-accent/60",
-              )}
+              aria-label={t(item.labelKey)}
               title={t(item.labelKey)}
+              className={cn(
+                "w-10 h-10 flex justify-center items-center rounded-[13px] transition-all",
+                active
+                  ? "bg-white/[0.14] text-white"
+                  : "text-white/60 hover:text-white hover:bg-white/[0.08]",
+              )}
             >
-              <item.icon className="w-5 h-5" />
+              <item.icon className="w-5 h-5" strokeWidth={1.75} />
             </Link>
           );
         })}
       </nav>
 
-      <div className="px-3 w-full">
+      {/* New Reading quick action (coral) */}
+      <div className="px-2 w-full">
         <Link
           href="/study"
-          className="mt-6 w-full py-3 flex justify-center bg-primary text-primary-foreground rounded-xl shadow-sm hover:opacity-90 active:scale-[0.99] transition-all"
-          title="New Reading"
+          aria-label="New reading"
+          title="New reading"
+          className="mt-2 w-10 h-10 mx-auto flex justify-center items-center bg-coral text-white rounded-[13px] shadow-coral hover:-translate-y-px hover:bg-coral-hover transition-all"
         >
-          <Plus className="w-5 h-5" />
+          <Plus className="w-5 h-5" strokeWidth={2.25} />
         </Link>
       </div>
 
-      <div className="mt-auto pt-6 w-full px-3 border-t border-border space-y-2 flex flex-col items-center">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="w-full text-muted-foreground hover:bg-accent/60"
-          title="Settings"
-        >
-          <Settings className="w-5 h-5" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="w-full text-muted-foreground hover:bg-accent/60"
-          title="Help"
-        >
-          <HelpCircle className="w-5 h-5" />
-        </Button>
-        <AuthControls compact />
+      {/* Rail footer: user avatar (sign-in/user controls are in the top bar) */}
+      <div className="mt-4 pt-4 w-full px-2 border-t border-white/10 flex flex-col items-center">
+        <AuthControls compact variant="rail" />
       </div>
     </div>
   );
@@ -230,8 +236,14 @@ function MobileSidebarContent({
     <div className="flex flex-col h-full">
       <div className="px-5 py-5 border-b border-border">
         <Link href="/" className="flex items-center gap-3" onClick={onNavigate}>
-          <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center">
-            <GraduationCap className="w-5 h-5 text-primary-foreground" />
+          <div
+            className="w-9 h-9 rounded-[12px] flex items-center justify-center text-white"
+            style={{
+              background:
+                "linear-gradient(135deg, #5A4FE0 0%, #7A6BFF 60%, #F2664A 100%)",
+            }}
+          >
+            <GraduationCap className="w-5 h-5" />
           </div>
           <div>
             <h1 className="text-sm font-bold text-foreground leading-tight">

@@ -328,7 +328,7 @@ export function StudyPageClient({
       {/* Sticky reading progress bar */}
       <div className="fixed top-0 left-0 w-full h-1 bg-muted z-50">
         <div
-          className="h-full bg-primary rounded-full transition-all"
+          className="h-full bg-gradient-to-r from-primary to-coral rounded-full transition-all"
           style={{ width: "0%" }}
         />
       </div>
@@ -369,9 +369,9 @@ export function StudyPageClient({
             className={`w-4 ${layout.leftPanelCollapsed ? "cursor-default! pointer-events-auto" : ""}`}
           />
           <Panel id="content" minSize={220}>
-            <div className="h-full bg-background flex flex-col overflow-hidden rounded-xl border border-border">
-              <div className="p-4 border-b border-border">
-                <h2 className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+            <div className="h-full bg-surface flex flex-col overflow-hidden rounded-xl border border-border">
+              <div className="h-[54px] px-4 flex items-center border-b border-border">
+                <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   {t("content")}
                 </h2>
               </div>

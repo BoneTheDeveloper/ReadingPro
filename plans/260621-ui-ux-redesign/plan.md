@@ -1,7 +1,7 @@
 ---
 title: "UI/UX Redesign — Indigo/Coral Study Workspace"
 description: ""
-status: pending
+status: in_progress
 priority: P2
 branch: "redesign-branch-new-ui"
 tags: []
@@ -42,12 +42,12 @@ surface gets touched twice.
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 1 | [Design Tokens & Fonts](./phase-01-design-tokens-fonts.md) | Pending |
-| 2 | [Restyle UI Primitives](./phase-02-restyle-ui-primitives.md) | Pending |
-| 3 | [App Shell & Dark Rail](./phase-03-app-shell-dark-rail.md) | Pending |
-| 4 | [Page Restyle Per Route](./phase-04-page-restyle-per-route.md) | Pending |
+| 1 | [Design Tokens & Fonts](./phase-01-design-tokens-fonts.md) | Complete |
+| 2 | [Restyle UI Primitives](./phase-02-restyle-ui-primitives.md) | Complete |
+| 3 | [App Shell & Dark Rail](./phase-03-app-shell-dark-rail.md) | Complete |
+| 4 | [Page Restyle Per Route](./phase-04-page-restyle-per-route.md) | Complete |
 | 5 | [Dark Mode Reconcile](./phase-05-dark-mode-reconcile.md) | **Deferred** (light-only ship) |
-| 6 | [Visual QA vs Wireframes](./phase-06-visual-qa-vs-wireframes.md) | Pending |
+| 6 | [Visual QA vs Wireframes](./phase-06-visual-qa-vs-wireframes.md) | Complete |
 
 ## Dependencies
 

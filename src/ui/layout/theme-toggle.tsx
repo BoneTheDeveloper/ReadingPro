@@ -10,12 +10,17 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/ui/primitives/dropdown-menu";
+import { cn } from "@/contracts/utils";
 
 const emptySubscribe = () => () => {};
 const getClientSnapshot = () => true;
 const getServerSnapshot = () => false;
 
-export function ThemeToggle() {
+interface ThemeToggleProps {
+  variant?: "default" | "rail";
+}
+
+export function ThemeToggle({ variant = "default" }: ThemeToggleProps) {
   const { setTheme, theme } = useTheme();
   const mounted = useSyncExternalStore(
     emptySubscribe,
@@ -23,12 +28,18 @@ export function ThemeToggle() {
     getServerSnapshot,
   );
 
+  const isRail = variant === "rail";
+  // On the dark rail we invert: white-ish idle, brighter on hover
+  const iconClass = isRail
+    ? "text-white/60 hover:text-white"
+    : "text-muted-foreground hover:text-primary";
+
   if (!mounted) {
     return (
       <Button
         variant="ghost"
-        size="icon"
-        className="text-muted-foreground"
+        size={isRail ? "icon" : "icon"}
+        className={cn(isRail ? "w-10 h-10" : "", iconClass)}
         aria-label="Toggle theme"
         disabled
         suppressHydrationWarning
@@ -44,7 +55,7 @@ export function ThemeToggle() {
         <Button
           variant="ghost"
           size="icon"
-          className="text-muted-foreground hover:text-primary"
+          className={cn(isRail ? "w-10 h-10" : "", iconClass)}
           aria-label="Toggle theme"
         >
           {theme === "dark" ? (

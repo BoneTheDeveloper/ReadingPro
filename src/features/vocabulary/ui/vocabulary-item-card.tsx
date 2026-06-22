@@ -37,12 +37,11 @@ interface VocabularyItemCardProps {
   onDelete: (id: string) => void;
 }
 
+// Status badge variants — use the new learning-status tokens from design.md §6
 const STATUS_STYLES: Record<VocabularyStatus, string> = {
-  NEW: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-  LEARNING:
-    "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-  MASTERED:
-    "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+  NEW: "bg-status-new-bg text-status-new-text",
+  LEARNING: "bg-status-learning-bg text-status-learning-text",
+  MASTERED: "bg-status-known-bg text-status-known-text",
 };
 
 const SOURCE_CONFIG = {

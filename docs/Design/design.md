@@ -192,7 +192,8 @@ Icon color by context: **default** `#221F2B`/`#565160` · **muted** `#908B98` ·
    #221F2B         #FBF9F5            #FFFFFF              #FBF9F5
 ```
 
-- **Rail** dark, 40px icons (radius 13px), active item bg `rgba(255,255,255,.14)`, indigo gradient logo on top, avatar at bottom.
+- **Rail** dark, 40px icons (radius 13px), active item bg `rgba(255,255,255,.14)`, indigo gradient logo on top, user avatar at bottom. Navigation controls (theme, language, user menu) live in the sticky top bar, not the rail.
+- **Top bar** sticky, `bg-background/80 backdrop-blur-md`, carries: search (desktop only), LanguageSwitcher, ThemeToggle, AuthControls/user menu.
 - **Side panels** warm paper `#FBF9F5`, 54px-tall header with UPPERCASE label + icon button.
 - **Reader** pure white (sharpest text): 3px progress bar with indigo→coral gradient at top, meta bar (badge + read time + word count + segmented).
 - Each panel scrolls internally; app frame is `height:100vh; overflow:hidden`.

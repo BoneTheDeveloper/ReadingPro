@@ -157,9 +157,9 @@ export function StudyStudioPanel({
 
   if (viewingChat && activePassage) {
     return (
-      <Card className="h-full flex flex-col overflow-hidden">
+      <Card className="h-full flex flex-col overflow-hidden bg-panel">
         <CardContent className="p-0 flex flex-col h-full">
-          <div className="p-4 flex items-center gap-3 border-b border-border">
+          <div className="h-[54px] px-4 flex items-center gap-3 border-b border-border">
             <Button
               variant="ghost"
               size="icon"
@@ -172,7 +172,7 @@ export function StudyStudioPanel({
               <ArrowLeft className="w-4 h-4 text-muted-foreground" />
             </Button>
             <MessageCircle className="w-4 h-4 text-muted-foreground" />
-            <h2 className="text-sm font-semibold text-foreground truncate">
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider truncate">
               {t("chatAbout", { title: activePassage.title })}
             </h2>
           </div>
@@ -188,9 +188,9 @@ export function StudyStudioPanel({
 
   if (viewingLookup && translationSelection && activePassage) {
     return (
-      <Card className="h-full flex flex-col overflow-hidden">
+      <Card className="h-full flex flex-col overflow-hidden bg-panel">
         <CardContent className="p-0 flex flex-col h-full">
-          <div className="p-4 flex items-center gap-3 border-b border-border">
+          <div className="h-[54px] px-4 flex items-center gap-3 border-b border-border">
             <Button
               variant="ghost"
               size="icon"
@@ -200,7 +200,7 @@ export function StudyStudioPanel({
               <ArrowLeft className="w-4 h-4 text-muted-foreground" />
             </Button>
             <Languages className="w-4 h-4 text-muted-foreground" />
-            <h2 className="text-sm font-semibold text-foreground truncate">
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider truncate">
               {t("lookup")}: {translationSelection.selectedText}
             </h2>
           </div>
@@ -229,9 +229,9 @@ export function StudyStudioPanel({
     const detail = artifactDetailById[viewingArtifact.id];
 
     return (
-      <Card className="h-full flex flex-col overflow-hidden">
+      <Card className="h-full flex flex-col overflow-hidden bg-panel">
         <CardContent className="p-0 flex flex-col h-full">
-          <div className="p-4 flex items-center gap-3 border-b border-border">
+          <div className="h-[54px] px-4 flex items-center gap-3 border-b border-border">
             <Button
               variant="ghost"
               size="icon"
@@ -241,7 +241,7 @@ export function StudyStudioPanel({
               <ArrowLeft className="w-4 h-4 text-muted-foreground" />
             </Button>
             <Icon className="w-4 h-4 text-muted-foreground" />
-            <h2 className="text-sm font-semibold text-foreground truncate">
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider truncate">
               {t("resultTitle", { type: label, title: viewingArtifact.title })}
             </h2>
           </div>
@@ -265,7 +265,7 @@ export function StudyStudioPanel({
   // Collapsed mode: icon-only strip
   if (collapsed) {
     return (
-      <Card className="h-full flex flex-col overflow-hidden">
+      <Card className="h-full flex flex-col overflow-hidden bg-panel">
         <CardContent className="p-0 flex flex-col h-full items-center">
           <div className="w-full p-2 flex justify-center border-b border-border">
             <Button
@@ -357,9 +357,9 @@ export function StudyStudioPanel({
   };
 
   return (
-    <Card className="h-full flex flex-col overflow-hidden">
+    <Card className="h-full flex flex-col overflow-hidden bg-panel">
       <CardContent className="p-0 flex flex-col h-full">
-        <div className="px-4 pt-4 pb-2 flex items-center justify-between">
+        <div className="h-[54px] px-4 flex items-center justify-between">
           <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             {t("studio")}
           </h2>

@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: "Design Tokens & Fonts"
-status: pending
+status: complete
 priority: P1
 effort: "3-4h"
 dependencies: []

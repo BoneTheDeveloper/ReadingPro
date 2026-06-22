@@ -13,7 +13,8 @@ import {
 import { cn } from "@/contracts/utils";
 import { calculateReadingTime } from "@/contracts/reading-utils";
 import { getCEFRLabel } from "@/contracts/domain/cefr";
-import { getCEFRColor } from "@/contracts/ui/cefr-style";
+import { getCEFRBadgeVariant } from "@/contracts/ui/cefr-style";
+import { Badge } from "@/ui/primitives/badge";
 import type { PassageData, TranslationSelection } from "@/features/study/model/types";
 import { extractSelectionInfo } from "@/features/study/model/selection-utils";
 
@@ -129,7 +130,7 @@ export function StudyContentPanel({
   const currentLevel =
     viewMode === "simplified" ? passage.simplifiedLevel : passage.originalLevel;
   const level = (currentLevel || passage.originalLevel || "B2") as Parameters<
-    typeof getCEFRColor
+    typeof getCEFRBadgeVariant
   >[0];
   const readingTime = calculateReadingTime(passage.wordCount, level);
   const canSimplify =
@@ -140,6 +141,8 @@ export function StudyContentPanel({
   return (
     <div className="p-8 overflow-y-auto panel-scroll flex-1">
       <div className="max-w-3xl mx-auto">
+        {/* Indigo→coral reading progress strip */}
+        <div className="h-1 bg-gradient-to-r from-primary to-coral rounded-full mb-6 opacity-30" />
         <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
           <div className="flex items-center gap-2">
             {passage.simplifiedContent ? (
@@ -179,9 +182,9 @@ export function StudyContentPanel({
             ) : null}
           </div>
           <div className="flex items-center gap-2">
-            <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-medium border border-primary/20">
+            <Badge variant={getCEFRBadgeVariant(level)}>
               {getCEFRLabel(level)}
-            </span>
+            </Badge>
             <div className="flex items-center gap-1 text-muted-foreground text-xs">
               <Clock className="w-3.5 h-3.5" />
               {readingTime}

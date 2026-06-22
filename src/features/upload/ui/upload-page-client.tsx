@@ -12,7 +12,7 @@ export function UploadPageClient() {
   const { isProcessing, handleFileUpload, handleTextSubmit } = useUploadSubmit()
 
   return (
-    <div className="min-h-dvh bg-muted">
+    <div className="min-h-dvh bg-panel">
       <header className="bg-surface border-b border-border">
         <div className="max-w-4xl mx-auto px-6 py-4">
           <h1 className="text-2xl font-bold text-foreground">Upload Content</h1>

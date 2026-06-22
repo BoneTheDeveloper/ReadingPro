@@ -1,7 +1,7 @@
 ---
 phase: 6
 title: "Visual QA vs Wireframes"
-status: pending
+status: complete
 priority: P2
 effort: "3-5h"
 dependencies: [5]

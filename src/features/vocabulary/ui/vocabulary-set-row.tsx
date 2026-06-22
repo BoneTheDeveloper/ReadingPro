@@ -9,7 +9,7 @@ import type { VocabularySet, VocabularySetType } from "../model/vocabulary-types
 const SET_TYPE_TONE: Record<VocabularySetType, string> = {
   MANUAL: "bg-primary/10 text-primary",
   DAILY: "bg-gold-soft text-gold",
-  WEEKLY: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+  WEEKLY: "bg-amber-soft text-amber-text",
 };
 
 const SET_TYPE_LABEL: Record<VocabularySetType, string> = {

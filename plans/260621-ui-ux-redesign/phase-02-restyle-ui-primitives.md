@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Restyle UI Primitives"
-status: pending
+status: complete
 priority: P1
 effort: "4-6h"
 dependencies: [1]

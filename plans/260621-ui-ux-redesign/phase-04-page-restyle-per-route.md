@@ -1,7 +1,7 @@
 ---
 phase: 4
 title: "Page Restyle Per Route"
-status: pending
+status: complete
 priority: P2
 effort: "1-2d"
 dependencies: [3]

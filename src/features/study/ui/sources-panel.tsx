@@ -60,7 +60,7 @@ export function StudySourcesPanel({
   // Collapsed mode: icon-only strip
   if (collapsed) {
     return (
-      <Card className="h-full flex flex-col overflow-hidden">
+      <Card className="h-full flex flex-col overflow-hidden bg-panel">
         <CardContent className="p-0 flex flex-col h-full items-center">
           {/* Collapse toggle */}
           <div className="w-full p-2 flex justify-center border-b border-border">
@@ -101,13 +101,9 @@ export function StudySourcesPanel({
                     title={doc.title}
                     className={cn(
                       "w-11 h-11 rounded-lg flex items-center justify-center transition-colors cursor-pointer",
-                      isActive && isYoutube
-                        ? "bg-red-500/10 text-red-500"
-                        : isActive
-                          ? "bg-primary/10 text-primary"
-                          : isYoutube
-                            ? "text-red-400 hover:bg-red-500/10 hover:text-red-500"
-                            : "text-blue-400 hover:bg-primary/10 hover:text-primary",
+                      isActive
+                        ? "bg-primary/10 text-primary"
+                        : "text-ink-3 hover:bg-primary/10 hover:text-primary",
                     )}
                   >
                     <DocIcon className="w-5 h-5" />
@@ -123,10 +119,10 @@ export function StudySourcesPanel({
 
   // Expanded mode
   return (
-    <Card className="h-full flex flex-col overflow-hidden">
+    <Card className="h-full flex flex-col overflow-hidden bg-panel">
       <CardContent className="p-0 flex flex-col h-full">
         {/* Panel header */}
-        <div className="p-4 flex items-center justify-between border-b border-border">
+        <div className="h-[54px] px-4 flex items-center justify-between border-b border-border">
           <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             {t("sources")}
           </h2>
@@ -212,13 +208,9 @@ export function StudySourcesPanel({
                   <div
                     className={cn(
                       "w-8 h-8 rounded-lg flex items-center justify-center shrink-0",
-                      isActive && isYoutube
-                        ? "bg-red-500/10 text-red-500"
-                        : isActive
-                          ? "bg-primary/10 text-primary"
-                          : isYoutube
-                            ? "bg-red-500/5 text-red-400"
-                            : "bg-blue-500/5 text-blue-400",
+                      isActive
+                        ? "bg-primary/10 text-primary"
+                        : "bg-indigo-soft text-ink-3",
                     )}
                   >
                     <DocIcon className="w-4 h-4" />

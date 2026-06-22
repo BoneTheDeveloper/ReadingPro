@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "App Shell & Dark Rail"
-status: pending
+status: complete
 priority: P1
 effort: "4-6h"
 dependencies: [2]
@@ -19,7 +19,8 @@ per-page work.
 ## Requirements
 
 - Functional: `dashboard-sidebar.tsx` becomes the 62px dark rail — 40px icon buttons (radius 13px),
-  active item `rgba(255,255,255,.14)`, indigo gradient logo top, avatar bottom.
+  active item `rgba(255,255,255,.14)`, indigo gradient logo top, user avatar at bottom. Theme/language
+  controls are NOT in the rail — they live in the sticky top bar (per layout decision 2026-06-22).
 - Functional: Lucide icons as inline SVG (design.md §7 — do NOT call `lucide.createIcons()`; it
   mutates the DOM and crashes React). Use a React Lucide import or static SVGs.
 - Functional: dashboard layout regions adopt panel chrome (warm paper, 54px header, UPPERCASE
@@ -36,8 +37,8 @@ per page-composition-conventions.
 
 ## Related Code Files
 
-- Modify: `src/ui/layout/dashboard-sidebar.tsx` — dark rail
-- Modify: `src/ui/layout/theme-toggle.tsx`, `language-switcher.tsx`, `auth-controls.tsx` — fit rail
+- Modify: `src/ui/layout/dashboard-sidebar.tsx` — dark rail (no theme/language controls in rail; those are in the top bar)
+- Modify: `src/ui/layout/theme-toggle.tsx`, `language-switcher.tsx`, `auth-controls.tsx` — used in the top bar (desktop) and mobile header
 - Modify: `src/app/[locale]/(dashboard)/layout.tsx` — region backgrounds/scroll
 - Read for spec: `docs/Design/design.md` §7 icons, §8 layout
 - Read for structure: `docs/Architecture/frontend-ui-architecture/component-catalog.md` (layout),
