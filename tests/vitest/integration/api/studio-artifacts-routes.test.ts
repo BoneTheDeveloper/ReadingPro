@@ -203,7 +203,7 @@ describe("POST /api/study/studio/artifacts/[id]/quiz-result", () => {
       }),
       { params: Promise.resolve({ id: ARTIFACT_ID }) },
     );
-    await expectJsonError(response, 400);
+    await expectJsonError(response, 400, "Too small: expected number to be >=0");
     expect(routeMocks.recordQuizResult).not.toHaveBeenCalled();
   });
 
