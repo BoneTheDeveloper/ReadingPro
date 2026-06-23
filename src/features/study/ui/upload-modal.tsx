@@ -24,7 +24,7 @@ type InputMode = "file" | "text" | null
 function SourceButton({ icon: Icon, label, desc, onClick, disabled }: {
   icon: typeof Upload
   label: string
-  desc: string
+  desc?: string
   onClick?: () => void
   disabled?: boolean
 }) {
@@ -40,7 +40,7 @@ function SourceButton({ icon: Icon, label, desc, onClick, disabled }: {
       </div>
       <div className="text-left">
         <p className={cn("text-sm font-semibold", disabled ? "text-muted-foreground" : "text-foreground")}>{label}</p>
-        <p className="text-xs text-muted-foreground">{desc}</p>
+        {desc && <p className="text-xs text-muted-foreground">{desc}</p>}
       </div>
     </Button>
   )
@@ -149,10 +149,10 @@ export function StudyUploadModal({
               </div>
 
               <div className="grid grid-cols-2 gap-3 mt-5">
-                <SourceButton icon={Upload} label={t("uploadFile")} desc={t("browseFromDevice")} onClick={() => setActiveMode("file")} />
+                <SourceButton icon={Upload} label={t("uploadFile")} onClick={() => setActiveMode("file")} />
                 <SourceButton icon={Globe} label={t("website")} desc={t("comingSoon")} disabled />
                 <SourceButton icon={FileText} label={t("googleDrive")} desc={t("comingSoon")} disabled />
-                <SourceButton icon={Type} label={t("pasteText")} desc={t("copiedText")} onClick={() => setActiveMode("text")} />
+                <SourceButton icon={Type} label={t("pasteText")} onClick={() => setActiveMode("text")} />
               </div>
             </>
           )}

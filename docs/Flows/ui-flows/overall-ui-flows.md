@@ -35,12 +35,33 @@ flowchart LR
 Screen: [Study](../../Architecture/frontend-ui-architecture/pages/study-page.md) center panel.
 Code path: [study-flow.md](../data-flows/study-flow.md).
 
-1. User opens a passage whose CEFR level is above A2 → a compact **Simplify** action shows.
-   (A1/A2 passages hide it; they are already beginner-friendly.)
-2. User clicks **Simplify** → reader enters a centered loading state.
-3. Simplified content resolves → reader shows a two-option **segmented control**
+The meta bar shows the active CEFR badge, word count, and the Original/Simplified
+segmented control. Reading time is **not** displayed — the heuristic was inaccurate
+and is replaced by the word count.
+
+1. User opens a passage that has **no** `simplifiedContent` yet → a faded **Simplify**
+   action shows in the meta bar (`bg-primary/5 text-primary`, indicates "available,
+   not yet generated"). Already-simplified passages hide the button.
+2. User clicks **Simplify** → a confirm dialog opens:
+   - **Above A2:** "Simplify this passage?" with Confirm / Cancel. Confirm enters the
+     centered loading state and triggers the request.
+   - **A1/A2:** "Already simple — no further simplification possible" with a Close
+     button only. No request is made.
+3. Simplified content resolves → reader shows the two-option **segmented control**
    (`simplified` / `original`); user toggles between versions.
 4. On failure → a destructive inline notice appears below the content; original stays readable.
+
+```mermaid
+flowchart LR
+  Open[Open passage with no simplifiedContent] --> Click[Click faded Simplify]
+  Click --> Level{originalLevel}
+  Level -->|A1 or A2| Simple[Modal: Already simple, Close]
+  Level -->|B1+| Confirm[Modal: Simplify this passage?]
+  Confirm --> ConfirmOK{User clicks Confirm}
+  ConfirmOK -->|Yes| Loading[Centered loading state]
+  ConfirmOK -->|Cancel| Cancel[Modal closes, no request]
+  Loading --> Result[Simplified content + segmented toggle]
+```
 
 ## Add a source (upload or paste)
 

@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Group, Panel, Separator } from "react-resizable-panels";
-import { useTranslations } from "next-intl";
 import * as Sentry from "@sentry/nextjs";
 import {
   translateResponseSchema,
@@ -36,7 +35,6 @@ export function StudyPageClient({
 }: {
   initialPassages: PassageData[];
 }) {
-  const t = useTranslations("Study");
   const {
     state,
     setState,
@@ -325,16 +323,8 @@ export function StudyPageClient({
 
   return (
     <>
-      {/* Sticky reading progress bar */}
-      <div className="fixed top-0 left-0 w-full h-1 bg-muted z-50">
-        <div
-          className="h-full bg-primary rounded-full transition-all"
-          style={{ width: "0%" }}
-        />
-      </div>
-
       {/* Three-panel workspace */}
-      <div className="flex-1 min-h-0 overflow-hidden bg-muted px-2 pb-2 pt-16">
+      <div className="flex-1 min-h-0 overflow-hidden bg-muted px-2 pb-2 pt-2">
         <Group
           id="study-panels"
           orientation="horizontal"
@@ -345,11 +335,12 @@ export function StudyPageClient({
           <Panel
             panelRef={layout.leftPanelRef}
             id="source"
-            collapsible={layout.leftCollapsible}
+            collapsible={true}
             collapsedSize="60px"
             defaultSize="280px"
             minSize="200px"
             maxSize="800px"
+            onResize={layout.handleLeftResize}
           >
             <StudySourcesPanel
               documents={documents}
@@ -364,17 +355,9 @@ export function StudyPageClient({
             />
           </Panel>
 
-          <Separator
-            disabled={layout.leftPanelCollapsed}
-            className={`w-4 ${layout.leftPanelCollapsed ? "cursor-default! pointer-events-auto" : ""}`}
-          />
-          <Panel id="content" minSize={220}>
-            <div className="h-full bg-background flex flex-col overflow-hidden rounded-xl border border-border">
-              <div className="p-4 border-b border-border">
-                <h2 className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  {t("content")}
-                </h2>
-              </div>
+          <Separator className="w-4" />
+          <Panel id="content" minSize={360}>
+            <div className="h-full bg-surface flex flex-col overflow-hidden rounded-xl border border-border">
               <StudyContentPanel
                 passage={activePassage}
                 error={state.error}
@@ -406,18 +389,16 @@ export function StudyPageClient({
             </div>
           </Panel>
 
-          <Separator
-            disabled={layout.rightPanelCollapsed}
-            className={`w-4 ${layout.rightPanelCollapsed ? "cursor-default! pointer-events-auto" : ""}`}
-          />
+          <Separator className="w-4" />
 
           <Panel
             panelRef={layout.rightPanelRef}
             id="studio"
-            collapsible={layout.rightCollapsible}
+            collapsible={true}
             collapsedSize="60px"
             defaultSize="280px"
             minSize="200px"
+            onResize={layout.handleRightResize}
           >
             <StudyStudioPanel
               artifactsCache={state.artifactsByPassageId[state.activePassageId ?? ""] ?? { status: "idle", data: [] }}

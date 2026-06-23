@@ -64,12 +64,12 @@ export function UploadZone({
         {...getRootProps()}
         className={cn(
           "relative flex flex-col items-center justify-center",
-          "border-2 border-dashed rounded-xl p-12 text-center",
+          "border-2 border-dashed rounded-[14px] p-12 text-center",
           "transition-all duration-200 cursor-pointer",
           "min-h-[300px]",
           isDragActive && "border-primary bg-accent scale-[1.02]",
           !isDragActive &&
-            "border-border hover:border-primary/40 hover:bg-accent/40",
+            "border-border hover:border-primary/40 hover:bg-muted",
           (disabled || isProcessing) && "opacity-50 cursor-not-allowed",
         )}
       >
@@ -79,7 +79,7 @@ export function UploadZone({
           <div
             className={cn(
               "w-14 h-14 rounded-xl flex items-center justify-center transition-transform",
-              isDragActive ? "bg-accent scale-110" : "bg-accent",
+              isDragActive ? "bg-indigo-soft scale-110" : "bg-indigo-soft",
             )}
           >
             {isProcessing ? (

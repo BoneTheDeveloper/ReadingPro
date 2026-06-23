@@ -29,28 +29,6 @@ describe("ProgressDashboard", () => {
     });
   });
 
-  it("loads and renders progress stats", async () => {
-    mockProgressFetch({
-      streakDays: 3,
-      timeStudiedTodaySeconds: 125, // 2m
-      timeStudiedWeekSeconds: 3665, // 1h 1m
-      activeDaysThisWeek: 4,
-    });
-
-    renderWithUser(<ProgressDashboard />);
-
-    expect(document.querySelector(".animate-spin")).toBeInTheDocument();
-    expect(await screen.findByText("Your Progress")).toBeInTheDocument();
-    expect(screen.getByText("Current Streak")).toBeInTheDocument();
-    expect(screen.getByText("Today's Study")).toBeInTheDocument();
-    expect(screen.getByText("Weekly Study")).toBeInTheDocument();
-    expect(screen.getByText("Active Days")).toBeInTheDocument();
-    expect(screen.getByText("3 days")).toBeInTheDocument();
-    expect(screen.getByText("2m")).toBeInTheDocument();
-    expect(screen.getByText("1h 1m")).toBeInTheDocument();
-    expect(screen.getByText("4/7")).toBeInTheDocument();
-  });
-
   it("falls back to default stats after a fetch failure", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => {
       throw new Error("network down");

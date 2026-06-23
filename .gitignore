@@ -78,3 +78,7 @@ repomix-output.xml
 
 #implement-notes
 implement-notes/
+
+#obsidian
+docs/.obsidian/
+docs/.trash/

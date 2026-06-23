@@ -12,30 +12,24 @@ describe("SRS Scheduler", () => {
   });
 
   describe("simpleSchedule()", () => {
-    it("schedules NEW to LEARNING on correct", () => {
+    it("schedules NEW to LEARNING with a 1-day interval on correct", () => {
       const result = simpleSchedule("NEW", true);
-      expect(result).toMatchObject({
-        nextStatus: "LEARNING",
-        intervalDays: 1
-      });
+      expect(result).toMatchObject({ nextStatus: "LEARNING", intervalDays: 1 });
       expect(result.nextReviewDate?.toISOString()).toBe("2026-05-22T12:00:00.000Z");
     });
 
-    it("schedules LEARNING to MASTERED on correct", () => {
+    it("schedules LEARNING to MASTERED with no next review on correct", () => {
       const result = simpleSchedule("LEARNING", true);
       expect(result).toMatchObject({
         nextStatus: "MASTERED",
         intervalDays: 0,
-        nextReviewDate: null
+        nextReviewDate: null,
       });
     });
 
-    it("schedules to LEARNING on incorrect", () => {
+    it("drops MASTERED back to LEARNING with a 1-day interval on incorrect", () => {
       const result = simpleSchedule("MASTERED", false);
-      expect(result).toMatchObject({
-        nextStatus: "LEARNING",
-        intervalDays: 1
-      });
+      expect(result).toMatchObject({ nextStatus: "LEARNING", intervalDays: 1 });
       expect(result.nextReviewDate?.toISOString()).toBe("2026-05-22T12:00:00.000Z");
     });
   });

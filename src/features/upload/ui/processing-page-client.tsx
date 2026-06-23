@@ -40,7 +40,7 @@ function ProcessingPageContent() {
   }, [router, contentId, filename])
 
   return (
-    <div className="min-h-dvh bg-muted flex items-center justify-center p-6">
+    <div className="min-h-dvh bg-panel flex items-center justify-center p-6">
       <div className="text-center max-w-md">
         <div className="relative w-20 h-20 mx-auto mb-6">
           <RefreshCw className="w-full h-full text-primary animate-spin" />
@@ -68,7 +68,7 @@ export function ProcessingPageClient() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-dvh bg-muted flex items-center justify-center p-6">
+        <div className="min-h-dvh bg-panel flex items-center justify-center p-6">
           <div className="text-center">
             <RefreshCw className="w-10 h-10 text-primary animate-spin mx-auto mb-4" />
             <p className="text-muted-foreground">Loading...</p>

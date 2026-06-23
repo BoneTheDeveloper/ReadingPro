@@ -23,6 +23,31 @@ Learner opens /[locale]/study
 | Record / reset quiz result | `src/features/study/actions/studio-artifact-actions.ts` |
 | Delete passage | `src/features/study/actions/study-delete-passage-action.ts` |
 
+## Simplify
+
+`StudyContentPanel` owns the simplify UX and decides whether to fire the request:
+
+- The **Simplify** button renders only while `passage.simplifiedContent` is `null`
+  and `passage.originalLevel` is known. Its styling is intentionally **faded**
+  (`bg-primary/5` + `border-primary/30`) to signal "available, not yet generated".
+- Clicking opens a local confirm dialog (no request yet). The dialog has two modes:
+  - `confirm` — default for levels `B1+`. Body asks "Simplify this passage?".
+    Confirm calls `onSimplify` which routes through `useStudyActions` →
+    `POST /api/study/passage/{id}/simplify`. Cancel just closes.
+  - `alreadySimple` — when `originalLevel ∈ {A1, A2}` (the `SKIP_SIMPLIFY_LEVELS`
+    set in `content-panel.tsx`). Body says "Already simple — no further
+    simplification possible." Only a **Close** button is shown; no API call.
+- The actual API contract (`POST /api/study/passage/{id}/simplify`) is unchanged:
+  it returns `{ simplifiedContent, simplifiedLevel }` per
+  `simplifyPassageResponseSchema` and the response is written into
+  `state.simplifiedContent` / `state.simplifiedLevel`. The client never passes a
+  "skip" flag — the A1/A2 short-circuit is purely UI-side, matching the previous
+  behavior where the button was hidden entirely.
+
+Reading time is no longer shown in the meta bar; the helper `calculateReadingTime`
+in `@/contracts/reading-utils` has been removed. The CEFR badge + word count
+remain.
+
 ## State
 
 Client workspace state is managed by:

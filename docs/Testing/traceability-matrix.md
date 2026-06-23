@@ -13,13 +13,13 @@ covering test cell is **GAP** has no real automated test and must not be claimed
 | US-01 | UC-01 | `POST /api/upload/text` | TS-01, TS-02, TS-03 | `tests/vitest/integration/api/upload-routes.test.ts` |
 | US-02 | UC-01 | `POST /api/upload` | TS-04 | `tests/vitest/integration/api/upload-routes.test.ts` |
 | US-01 | UC-01 | `POST /api/study/passages` | — | **GAP** (no HTTP-level integration test; DB logic: `src/server/db/passage-queries.test.ts`) |
-| US-06 | UC-02 | `POST /api/study/passages/[id]/simplify` | TS-24a, TS-24b | `tests/vitest/integration/services/passage-study-service.test.ts` (logic only; route = GAP) |
+| US-06 | UC-02 | `POST /api/study/passages/[id]/simplify` | TS-24a, TS-24b | `tests/vitest/integration/api/passage-simplify-route.test.ts` |
 | US-09 | UC-08 | `DELETE /api/study/passages/[id]` | — | **GAP** (no HTTP-level integration test; DB logic: `src/server/db/passage-queries.test.ts`) |
 | US-12 | UC-09 | `POST /api/translate` | TS-14, TS-15 | `tests/vitest/integration/api/translation-vocabulary-routes.test.ts` |
 | US-07 | UC-03 | `POST /api/study/studio/questions` | TS-22 | `tests/vitest/integration/api/studio-questions-route.test.ts` |
-| US-09 | UC-08 | `GET /api/study/studio/artifacts` | TS-13 | `src/server/modules/study/passage/studio-artifacts-service.test.ts` (logic only; route = GAP) |
-| US-09 | UC-08 | `GET /api/study/studio/artifacts/[id]` | — | **GAP** (no HTTP-level integration test; service logic: `src/server/modules/study/passage/studio-artifacts-service.test.ts`) |
-| US-07 | UC-03 | `POST /api/study/studio/artifacts/[id]/quiz-result` | TS-25 | `src/server/modules/study/passage/studio-artifacts-service.test.ts` (logic only; route = GAP) |
+| US-09 | UC-08 | `GET /api/study/studio/artifacts` | TS-13 | `tests/vitest/integration/api/studio-artifacts-routes.test.ts` |
+| US-09 | UC-08 | `GET /api/study/studio/artifacts/[id]` | — | `tests/vitest/integration/api/studio-artifacts-routes.test.ts` |
+| US-07 | UC-03 | `POST /api/study/studio/artifacts/[id]/quiz-result` | TS-25 | `tests/vitest/integration/api/studio-artifacts-routes.test.ts` |
 | US-10 | UC-12 | `GET /api/study/studio/chat` | TS-21 | `tests/vitest/integration/api/study-chat-route.test.ts` |
 | US-10 | UC-12 | `POST /api/study/studio/chat` | TS-21 | `tests/vitest/integration/api/study-chat-route.test.ts` |
 | US-14 | UC-11 | `GET /api/dictionary/lookup` | TS-19, TS-20 | `tests/vitest/integration/api/dictionary-lookup-route.test.ts` |
@@ -30,7 +30,7 @@ covering test cell is **GAP** has no real automated test and must not be claimed
 | US-15 | UC-10 | `GET /api/vocabulary/list` | TS-16 | `tests/vitest/integration/api/vocabulary-list-route.test.ts` |
 | US-15 | UC-10 | `PATCH /api/vocabulary/[id]/status` | TS-18 | `tests/vitest/integration/api/vocabulary-status-and-delete-routes.test.ts` |
 | US-15 | UC-10 | `DELETE /api/vocabulary/[id]` | TS-18 | `tests/vitest/integration/api/vocabulary-status-and-delete-routes.test.ts` |
-| US-19 | UC-04 | `POST /api/vocabulary/[id]/review` | TS-08, TS-26 | `src/server/modules/spaced-repetition/scheduler.test.ts` (logic only; route = GAP) |
+| US-19 | UC-04 | `POST /api/vocabulary/[id]/review` | TS-08, TS-26 | `tests/vitest/integration/api/vocabulary-review-route.test.ts` (HTTP); `src/server/modules/spaced-repetition/scheduler.test.ts` (scheduler logic) |
 | US-16 | UC-10 | `GET /api/vocabulary/sets` | TS-17 | `tests/vitest/integration/api/vocabulary-set-list-create-routes.test.ts` |
 | US-16 | UC-10 | `POST /api/vocabulary/sets` | TS-17 | `tests/vitest/integration/api/vocabulary-set-list-create-routes.test.ts` |
 | US-16 | UC-10 | `PATCH /api/vocabulary/sets/[id]` | TS-17 | `tests/vitest/integration/api/vocabulary-set-update-delete-routes.test.ts` |
@@ -53,13 +53,8 @@ covering test cell is **GAP** has no real automated test and must not be claimed
 
 ## Gaps Summary
 
-- `POST /api/vocabulary/[id]/review` — scheduler logic covered; HTTP route has no integration test (TS-26).
 - `POST /api/study/passages` — passage creation route has no HTTP-level integration test.
 - `DELETE /api/study/passages/[id]` — passage delete route has no HTTP-level integration test.
-- `POST /api/study/passages/[id]/simplify` — simplification service logic covered; HTTP route has no integration test (TS-24).
-- `GET /api/study/studio/artifacts` — service logic covered; HTTP route auth and failure envelope not explicitly asserted.
-- `GET /api/study/studio/artifacts/[id]` — route serves per-artifact question data; no HTTP-level integration test.
-- `POST /api/study/studio/artifacts/[id]/quiz-result` — quiz-result service logic covered; HTTP route has no integration test (TS-25).
 - `GET /api/local-blob/[pathname]` — dev-only; no automated test.
 - `POST /api/test/dictionary-performance-fixtures`, `POST /api/test/translate-performance-fixtures` — exercised indirectly by the performance runner under `tests/performance/`, no Vitest assertion.
 - `GET /api/sentry-example-api` — Sentry smoke route; no automated test.

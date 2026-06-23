@@ -37,7 +37,7 @@ export function TextInputArea({
 
   return (
     <div className="w-full">
-      <div className="border border-border rounded-xl overflow-hidden bg-surface">
+      <div className="border border-border rounded-[14px] overflow-hidden bg-surface">
         <div className="flex items-center gap-3 px-5 py-3.5 border-b border-border bg-muted/40">
           <FileText className="w-4 h-4 text-primary" />
           <h3 className="font-semibold text-foreground text-sm">
@@ -53,7 +53,7 @@ export function TextInputArea({
           }}
           disabled={disabled || isProcessing}
           placeholder="Paste your English text content here..."
-          className="w-full p-6 min-h-75 resize-none border-0 focus-visible:ring-0 text-lg leading-relaxed bg-surface"
+          className="w-full p-6 min-h-75 resize-none border-0 focus-visible:ring-0 text-lg leading-relaxed bg-surface font-serif"
         />
 
         <div className="flex items-center justify-between px-5 py-3.5 border-t border-border bg-muted/40">

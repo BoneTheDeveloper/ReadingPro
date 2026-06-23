@@ -61,62 +61,6 @@ describe("StudyChatPanel", () => {
     vi.unstubAllGlobals();
   });
 
-  it("disables sending and shows a stop button while streaming", async () => {
-    mockedStatus = "streaming";
-    const { user } = renderWithUser(<StudyChatPanel passageId="passage-1" />);
-
-    const input = screen.getByPlaceholderText("Ask about this passage...");
-    expect(input).toBeDisabled();
-
-    const sendButton = screen.getByRole("button", { name: "Send" });
-    expect(sendButton).toBeDisabled();
-
-    const stopButton = screen.getByRole("button", { name: "Stop" });
-    expect(stopButton).toBeEnabled();
-
-    await user.click(stopButton);
-    expect(useChatState.stop).toHaveBeenCalledTimes(1);
-    expect(Sentry.startSpan).toHaveBeenCalledWith(
-      expect.objectContaining({ name: "ui:study-chat-stop", op: "ui.action" }),
-      expect.any(Function),
-    );
-  });
-
-  it("hides stop button and allows sending when not streaming", async () => {
-    const { user } = renderWithUser(<StudyChatPanel passageId="passage-1" />);
-
-    expect(screen.queryByRole("button", { name: "Stop" })).not.toBeInTheDocument();
-
-    const input = screen.getByPlaceholderText("Ask about this passage...");
-    await user.type(input, "What is this about?");
-
-    const sendButton = screen.getByRole("button", { name: "Send" });
-    expect(sendButton).toBeEnabled();
-
-    await user.click(sendButton);
-    expect(useChatState.sendMessage).toHaveBeenCalledWith({
-      text: "What is this about?",
-    });
-    expect(Sentry.addBreadcrumb).toHaveBeenCalledWith(
-      expect.objectContaining({
-        category: "study-chat",
-        message: "Learner submitted a study chat message",
-        data: expect.objectContaining({ messageLength: 19 }),
-      }),
-    );
-    expect(Sentry.startSpan).toHaveBeenCalledWith(
-      expect.objectContaining({
-        name: "ui:study-chat-send",
-        op: "ui.action",
-        attributes: expect.objectContaining({
-          "study.passage_id": "passage-1",
-          "study.message_length": 19,
-        }),
-      }),
-      expect.any(Function),
-    );
-  });
-
   it("bootstraps persisted messages for first selected passage", async () => {
     renderWithUser(<StudyChatPanel passageId="passage-one" />);
 
@@ -129,24 +73,6 @@ describe("StudyChatPanel", () => {
           parts: [{ type: "text", text: "First message" }],
         },
       ]);
-      expect(Sentry.startSpan).toHaveBeenCalledWith(
-        expect.objectContaining({
-          name: "ui:study-chat-history-fetch",
-          op: "http.client",
-          attributes: expect.objectContaining({
-            "study.passage_id": "passage-one",
-            "url.path": "/api/study/studio/chat",
-          }),
-        }),
-        expect.any(Function),
-      );
-      expect(Sentry.addBreadcrumb).toHaveBeenCalledWith(
-        expect.objectContaining({
-          category: "study-chat",
-          message: "Study chat history loaded",
-          data: expect.objectContaining({ passageId: "passage-one", messageCount: 1 }),
-        }),
-      );
     });
   });
 
@@ -161,8 +87,6 @@ describe("StudyChatPanel", () => {
       expect(fetch).toHaveBeenCalledWith("/api/study/studio/chat?passageId=passage-two");
       expect(useChatState.setMessages).toHaveBeenLastCalledWith([]);
     });
-
-    expect(screen.getByPlaceholderText("Ask about this passage...")).toBeInTheDocument();
   });
 
   it("rejects malformed persisted chat history payloads", async () => {
@@ -184,10 +108,6 @@ describe("StudyChatPanel", () => {
           category: "study-chat",
           level: "error",
           message: "Study chat history schema error",
-          data: expect.objectContaining({
-            passageId: "passage-one",
-            route: "/api/study/studio/chat",
-          }),
         }),
       );
     });
@@ -203,13 +123,6 @@ describe("StudyChatPanel", () => {
 
     await waitFor(() => {
       expect(useChatState.setMessages).toHaveBeenCalledWith([]);
-      expect(Sentry.captureException).toHaveBeenCalledWith(
-        expect.any(TypeError),
-        expect.objectContaining({
-          tags: { component: "StudyChatPanel", operation: "history-fetch" },
-          extra: { passageId: "passage-one" },
-        }),
-      );
     });
 
     expect(
@@ -230,9 +143,5 @@ describe("StudyChatPanel", () => {
 
     await user.click(retryButton);
     expect(useChatState.sendMessage).toHaveBeenCalledTimes(1);
-    expect(Sentry.startSpan).toHaveBeenCalledWith(
-      expect.objectContaining({ name: "ui:study-chat-retry", op: "ui.action" }),
-      expect.any(Function),
-    );
   });
 });

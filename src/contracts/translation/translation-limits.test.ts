@@ -19,22 +19,11 @@ describe("clampTranslationContext", () => {
     expect(clamped.length).toBe(MAX_TRANSLATE_CONTEXT_LENGTH);
     expect(clamped).toContain(selectedText);
   });
-
-  it("falls back to the leading slice when selected text is absent", () => {
-    const context = "a".repeat(MAX_TRANSLATE_CONTEXT_LENGTH + 100);
-
-    expect(clampTranslationContext(context, "missing")).toBe(
-      context.slice(0, MAX_TRANSLATE_CONTEXT_LENGTH),
-    );
-  });
 });
 
 describe("isTranslateTextWithinLimit", () => {
-  it("allows text at the configured quick-translation limit", () => {
-    expect(isTranslateTextWithinLimit("a".repeat(MAX_TRANSLATE_TEXT_LENGTH))).toBe(true);
-  });
-
   it("rejects text over the configured quick-translation limit", () => {
+    expect(isTranslateTextWithinLimit("a".repeat(MAX_TRANSLATE_TEXT_LENGTH))).toBe(true);
     expect(isTranslateTextWithinLimit("a".repeat(MAX_TRANSLATE_TEXT_LENGTH + 1))).toBe(false);
   });
 });

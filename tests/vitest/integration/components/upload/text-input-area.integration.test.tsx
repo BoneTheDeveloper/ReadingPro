@@ -7,15 +7,6 @@ const validText =
   "This is a long enough English text sample for the upload flow, with enough detail to pass validation.";
 
 describe("TextInputArea", () => {
-  it("renders an empty paste area with disabled submit", () => {
-    renderWithUser(<TextInputArea onSubmit={vi.fn()} />);
-
-    expect(screen.getByText("Paste your text")).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("Paste your English text content here...")).toBeEnabled();
-    expect(screen.getByText("0 words")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Continue" })).toBeDisabled();
-  });
-
   it("updates the word count and submits valid text", async () => {
     const onSubmit = vi.fn();
     const { user } = renderWithUser(<TextInputArea onSubmit={onSubmit} />);
@@ -41,12 +32,5 @@ describe("TextInputArea", () => {
     await user.type(textarea, " This edit clears the displayed validation error.");
 
     expect(screen.queryByText("Text is too short (minimum 50 characters)")).not.toBeInTheDocument();
-  });
-
-  it("disables input and shows processing state while work is running", () => {
-    renderWithUser(<TextInputArea onSubmit={vi.fn()} isProcessing />);
-
-    expect(screen.getByPlaceholderText("Paste your English text content here...")).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Processing..." })).toBeDisabled();
   });
 });

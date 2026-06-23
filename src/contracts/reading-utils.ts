@@ -62,18 +62,3 @@ export function parsePassageForDisplay(text: string) {
   const paragraphs = text.split(/\n\n+/);
   return paragraphs;
 }
-
-export function calculateReadingTime(wordCount: number, level: string): string {
-  const wpm: Record<string, number> = {
-    A1: 100,
-    A2: 120,
-    B1: 150,
-    B2: 180,
-    C1: 220,
-    C2: 250,
-  };
-
-  const speed = wpm[level] ?? 150;
-  const minutes = Math.ceil(wordCount / speed);
-  return `~${minutes} min read`;
-}
