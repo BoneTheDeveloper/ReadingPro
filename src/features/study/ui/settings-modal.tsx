@@ -104,20 +104,19 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
               }
             />
             <SettingsDivider />
+          </SettingsSection>
+
+          <SettingsSection title={t("pronunciation")}>
             <SettingsRow
-              label={t("translationLanguage")}
-              hint={t("translationLanguageHint")}
+              label={t("voice")}
+              hint={t("voiceHint")}
               control={
-                <LocalePill
-                  id="trans-lang"
-                  activeDropdown={activeDropdown}
-                  onToggle={(id) => setActiveDropdown(activeDropdown === id ? null : id)}
-                  value="vi"
+                <Pill
+                  value="us"
                   options={[
-                    { value: "vi", label: "Tiếng Việt" },
-                    { value: "en", label: "English" },
+                    { value: "us", label: t("voiceUS") },
+                    { value: "uk", label: t("voiceUK") },
                   ]}
-                  onChange={() => {}}
                 />
               }
             />
@@ -174,28 +173,6 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
             <SettingsRow
               label={t("reviewReminders")}
               hint={t("reviewRemindersHint")}
-              control={<Switch defaultChecked />}
-            />
-          </SettingsSection>
-
-          <SettingsSection title={t("pronunciation")}>
-            <SettingsRow
-              label={t("voice")}
-              hint={t("voiceHint")}
-              control={
-                <Pill
-                  value="us"
-                  options={[
-                    { value: "us", label: t("voiceUS") },
-                    { value: "uk", label: t("voiceUK") },
-                  ]}
-                />
-              }
-            />
-            <SettingsDivider />
-            <SettingsRow
-              label={t("autoPlay")}
-              hint={t("autoPlayHint")}
               control={<Switch defaultChecked />}
             />
           </SettingsSection>

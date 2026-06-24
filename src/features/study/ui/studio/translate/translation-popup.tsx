@@ -2,7 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Loader2, Languages, ExternalLink, Volume2 } from "lucide-react";
+import { Loader2, Languages, Volume2 } from "lucide-react";
 import { Button } from "@/ui/primitives/button";
 import { cn } from "@/contracts/utils";
 import type { TranslationSelection } from "@/features/study/model/types";
@@ -191,96 +191,103 @@ export function StudyTranslationPopup({
     <div
       ref={panelRef}
       className={cn(
-        "fixed z-50 bg-popover border border-border rounded-lg shadow-lg",
-        "w-70",
+        "fixed z-50 bg-surface border border-border rounded-xl shadow-xl",
+        "w-[340px]",
       )}
       style={{ top, left }}
     >
-      {/* Source section */}
-      <div className="px-3 pt-3 pb-2">
-        <div className="flex items-center gap-1.5">
+      {status === "loading" && (
+        <div className="px-4 py-4 flex items-center gap-2">
+          <Loader2 className="w-4 h-4 text-primary animate-spin" />
+          <span className="text-sm text-muted-foreground">
+            {t("translationLoading")}
+          </span>
+        </div>
+      )}
+
+      {status === "error" && (
+        <div className="px-4 py-4">
+          <p className="text-sm text-destructive py-1">
+            {t("translationError")}
+          </p>
           <button
             type="button"
-            className="p-0.5 rounded hover:bg-muted text-muted-foreground shrink-0"
-            aria-label={t("listenSource")}
+            className="text-xs text-primary hover:underline"
+            onClick={onTranslate}
           >
-            <Volume2 className="w-3.5 h-3.5" />
+            {t("tryAgain")}
           </button>
-          <p className="text-sm text-foreground line-clamp-2">
-            {selection.selectedText}
-          </p>
         </div>
-      </div>
+      )}
 
-      <div className="border-t border-border" />
-
-      {/* Translation section */}
-      <div className="px-3 pt-2 pb-3">
-        {status === "loading" && (
-          <div className="flex items-center gap-2 py-1">
-            <Loader2 className="w-4 h-4 text-primary animate-spin" />
-            <span className="text-sm text-muted-foreground">
-              {t("translationLoading")}
-            </span>
-          </div>
-        )}
-
-        {status === "error" && (
-          <div>
-            <p className="text-sm text-destructive py-1">
-              {t("translationError")}
+      {status === "success" && translation && (
+        <>
+          {/* Header row: source word + US/UK pill */}
+          <div className="px-4 pt-4 pb-3 flex items-center gap-3">
+            <p className="text-base font-semibold text-foreground line-clamp-1 flex-1 min-w-0">
+              {selection.selectedText}
             </p>
-            <button
-              type="button"
-              className="text-xs text-primary hover:underline"
-              onClick={onTranslate}
-            >
-              {t("tryAgain")}
-            </button>
-          </div>
-        )}
-
-        {status === "success" && translation && (
-          <div>
-            {/* Main translation with speaker on the left */}
-            <div className="flex items-start gap-5.5">
+            <div className="shrink-0 inline-flex bg-paper border border-border p-[3px]">
               <button
                 type="button"
-                className="p-0.5 mt-0.5 rounded hover:bg-muted text-muted-foreground shrink-0"
-                aria-label={t("listenTranslation")}
+                className="px-3 py-1 text-[12px] font-semibold rounded bg-surface text-primary shadow-sm"
               >
-                <Volume2 className="w-3.5 h-3.5" />
+                US
               </button>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground">
-                  {translation.translation}
-                </p>
-              </div>
-            </div>
-
-            {/* Type badge */}
-            {translation.type && (
-              <div className="mt-1 ml-5.5">
-                <span className="text-[11px] italic text-muted-foreground">
-                  {translation.type}
-                </span>
-              </div>
-            )}
-
-            <div className="flex items-center gap-2 pt-2 mt-2 border-t border-border">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 text-xs gap-1.5"
-                onClick={onOpenDetails}
+              <button
+                type="button"
+                className="px-3 py-1 text-[12px] font-semibold text-muted-foreground"
               >
-                <ExternalLink className="w-3 h-3" />
-                {t("openDetails")}
-              </Button>
+                UK
+              </button>
             </div>
           </div>
-        )}
-      </div>
+
+          {/* Translation word */}
+          <div className="px-4 pb-3">
+            <p className="text-lg font-semibold text-primary leading-tight">
+              {translation.translation.replace(/^\W+|\W+$/g, "")}
+            </p>
+          </div>
+
+          {/* Description */}
+          {translation.type && (
+            <div className="px-4 pb-3">
+              <p className="text-[13px] text-muted-foreground leading-relaxed">
+                {translation.type}
+              </p>
+            </div>
+          )}
+
+          <div className="h-px bg-border/30 mx-4" />
+
+          {/* Save / Details buttons */}
+          <div className="px-4 pt-3 pb-4 flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 flex-1 text-[13px] font-semibold gap-1.5"
+              onClick={onOpenDetails}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
+              </svg>
+              {t("save")}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 flex-1 text-[13px] font-semibold gap-1.5 text-primary"
+              onClick={onOpenDetails}
+            >
+              {t("openDetails")}
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m9 18 6-6-6-6" />
+              </svg>
+            </Button>
+          </div>
+        </>
+      )}
     </div>
   );
 }

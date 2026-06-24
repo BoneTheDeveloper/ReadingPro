@@ -110,9 +110,8 @@ export function StudyPageClient({
 
   const handleSelectionChange = useCallback(
     (sel: TranslationSelection | null) => {
-      setSelection(sel);
-
       if (!sel) {
+        setSelection(null);
         setQuickTranslationState((prev) => ({
           requestId: prev.requestId + 1,
           data: null,
@@ -120,6 +119,11 @@ export function StudyPageClient({
         }));
         return;
       }
+
+      const wordCount = sel.selectedText.trim().split(/\s+/).length;
+      if (wordCount > 1) return;
+
+      setSelection(sel);
 
       if (!isTranslateTextWithinLimit(sel.selectedText)) {
         setSelection(null);
@@ -396,7 +400,7 @@ export function StudyPageClient({
   return (
     <>
       {/* Three-panel workspace */}
-      <div className="flex-1 min-h-0 overflow-hidden bg-muted px-2 pb-2 pt-2">
+      <div className="flex-1 min-h-0 overflow-hidden">
         <Group
           id="study-panels"
           orientation="horizontal"
@@ -429,7 +433,7 @@ export function StudyPageClient({
 
           <Separator className="w-0.25" />
           <Panel id="content" minSize={550}>
-            <div className="h-full bg-surface flex flex-col overflow-hidden border border-border">
+            <div className="h-full bg-surface flex flex-col overflow-hidden">
               <StudyContentPanel
                 passage={activePassage}
                 error={state.error}
