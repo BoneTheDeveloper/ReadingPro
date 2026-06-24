@@ -3,7 +3,7 @@ import * as Sentry from "@sentry/nextjs";
 import { getUserId } from "@/server/auth/auth-utils";
 import { isAuthenticationRequiredError } from "@/server/http/route-errors";
 import { createRequestLogContext, createRequestLogger } from "@/server/observability/logger";
-import { processFileUpload, UploadWorkflowError } from "@/features/upload/services/upload-workflow";
+import { processFileUpload, UploadWorkflowError } from "@/server/modules/upload/upload-workflow";
 
 export async function POST(request: NextRequest) {
   const requestLog = createRequestLogger(

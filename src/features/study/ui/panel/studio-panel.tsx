@@ -14,7 +14,7 @@ import {
   RefreshCw,
   Loader2,
 } from "lucide-react";
-import { cn } from "@/contracts/utils";
+import { cn } from "@/ui/utils";
 import { Card, CardContent } from "@/ui/primitives/card";
 import { Button } from "@/ui/primitives/button";
 import type {
@@ -92,7 +92,9 @@ function formatRelativeTime(
   timestamp: string,
   t: ReturnType<typeof useTranslations<"Study">>,
 ): string {
-  const seconds = Math.floor((Date.now() - new Date(timestamp).getTime()) / 1000);
+  const seconds = Math.floor(
+    (Date.now() - new Date(timestamp).getTime()) / 1000,
+  );
   if (seconds < 60) return t("justNow");
   const minutes = Math.floor(seconds / 60);
   if (minutes < 60) return t("minutesAgo", { count: minutes });
@@ -126,11 +128,13 @@ export function StudyStudioPanel({
   // When the slide-in opens, this captures which entry point launched it.
   // The parent only knows "is the overlay open?"; the studio panel knows
   // whether to render the chat or the lookup view inside.
-  const [overlayMode, setOverlayMode] = useState<"chat" | "lookup" | null>(null);
+  const [overlayMode, setOverlayMode] = useState<"chat" | "lookup" | null>(
+    null,
+  );
 
   const artifacts = artifactsCache.data ?? [];
   const viewingArtifact = viewingArtifactRef
-    ? artifacts.find((r) => r.id === viewingArtifactRef.id) ?? null
+    ? (artifacts.find((r) => r.id === viewingArtifactRef.id) ?? null)
     : null;
 
   // Esc closes the slide-in overlay
@@ -183,7 +187,10 @@ export function StudyStudioPanel({
                 </Button>
                 <Icon className="w-4 h-4 text-muted-foreground" />
                 <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider truncate">
-                  {t("resultTitle", { type: label, title: viewingArtifact.title })}
+                  {t("resultTitle", {
+                    type: label,
+                    title: viewingArtifact.title,
+                  })}
                 </h2>
               </>
             }
@@ -198,7 +205,9 @@ export function StudyStudioPanel({
                 passageTitle={viewingArtifact.title}
                 artifactId={viewingArtifact.id}
                 onReset={() => onSetViewingArtifact(null)}
-                onRecordResult={(stats) => onRecordQuizResult(viewingArtifact.id, stats)}
+                onRecordResult={(stats) =>
+                  onRecordQuizResult(viewingArtifact.id, stats)
+                }
                 onResetResult={() => onResetQuizResult(viewingArtifact.id)}
               />
             )}
@@ -228,9 +237,21 @@ export function StudyStudioPanel({
           {/* Icon-only action chips for the three wired actions */}
           <div className="w-full px-2 py-2 flex flex-col items-center gap-1">
             {[
-              { id: "quiz" as StudioActionId, icon: HelpCircle, label: t("quiz") },
-              { id: "chat" as StudioActionId, icon: MessageCircle, label: t("chat") },
-              { id: "lookup" as StudioActionId, icon: Languages, label: t("translate") },
+              {
+                id: "quiz" as StudioActionId,
+                icon: HelpCircle,
+                label: t("quiz"),
+              },
+              {
+                id: "chat" as StudioActionId,
+                icon: MessageCircle,
+                label: t("chat"),
+              },
+              {
+                id: "lookup" as StudioActionId,
+                icon: Languages,
+                label: t("translate"),
+              },
             ].map((a) => (
               <button
                 key={a.id}
@@ -265,10 +286,14 @@ export function StudyStudioPanel({
     );
   }
 
-  const runningCount = artifacts.filter((r) => r.status === "generating").length;
+  const runningCount = artifacts.filter(
+    (r) => r.status === "generating",
+  ).length;
   const isActionLocked = (actionId: StudioActionId) => {
     if (actionId === "quiz")
-      return artifacts.some((r) => r.status === "generating" && r.type === "quiz");
+      return artifacts.some(
+        (r) => r.status === "generating" && r.type === "quiz",
+      );
     return false;
   };
 
@@ -317,7 +342,8 @@ export function StudyStudioPanel({
                 };
                 const Icon = meta.icon;
                 const label = t(meta.labelKey);
-                const hasResult = artifact.type === "quiz" && artifact.quizResult;
+                const hasResult =
+                  artifact.type === "quiz" && artifact.quizResult;
                 const isFailed = artifact.status === "failed";
                 const isGenerating = artifact.status === "generating";
 
@@ -327,21 +353,28 @@ export function StudyStudioPanel({
                       type="button"
                       onClick={() =>
                         artifact.status === "done" &&
-                        onSetViewingArtifact({ type: artifact.type, id: artifact.id })
+                        onSetViewingArtifact({
+                          type: artifact.type,
+                          id: artifact.id,
+                        })
                       }
                       disabled={artifact.status !== "done"}
                       className={cn(
                         "w-full flex items-center gap-2.5 px-3 py-2.5 h-auto text-left rounded-[13px] border bg-surface transition-all",
-                        isGenerating && "border-primary/20 bg-primary/5 cursor-default",
+                        isGenerating &&
+                          "border-primary/20 bg-primary/5 cursor-default",
                         artifact.status === "done" &&
                           "border-border hover:border-primary hover:-translate-y-px hover:shadow-card cursor-pointer",
-                        isFailed && "border-destructive/20 bg-destructive/5 opacity-60 cursor-not-allowed",
+                        isFailed &&
+                          "border-destructive/20 bg-destructive/5 opacity-60 cursor-not-allowed",
                       )}
                     >
                       <div
                         className={cn(
                           "w-8 h-8 rounded-[10px] flex items-center justify-center shrink-0",
-                          isFailed ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary",
+                          isFailed
+                            ? "bg-destructive/10 text-destructive"
+                            : "bg-primary/10 text-primary",
                         )}
                       >
                         {isGenerating ? (
@@ -352,7 +385,10 @@ export function StudyStudioPanel({
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-[12px] font-semibold text-foreground truncate leading-tight">
-                          {t("resultTitle", { type: label, title: artifact.title })}
+                          {t("resultTitle", {
+                            type: label,
+                            title: artifact.title,
+                          })}
                         </p>
                         <div className="flex items-center justify-between gap-2 mt-0.5">
                           <p className="text-[11px] text-muted-foreground truncate">
@@ -360,12 +396,19 @@ export function StudyStudioPanel({
                               ? t("generating")
                               : isFailed
                                 ? generationErrorMessage(artifact.errorCode, t)
-                                : formatRelativeTime(artifact.updatedAt ?? artifact.createdAt, t)}
+                                : formatRelativeTime(
+                                    artifact.updatedAt ?? artifact.createdAt,
+                                    t,
+                                  )}
                           </p>
                           {hasResult && (
                             <span className="text-[11px] font-semibold text-success bg-success-soft px-1.5 py-0.5 rounded shrink-0">
-                              {artifact.quizResult!.correctCount}/{artifact.quizResult!.totalQuestions} ·{" "}
-                              {Math.round(artifact.quizResult!.accuracyRate * 100)}%
+                              {artifact.quizResult!.correctCount}/
+                              {artifact.quizResult!.totalQuestions} ·{" "}
+                              {Math.round(
+                                artifact.quizResult!.accuracyRate * 100,
+                              )}
+                              %
                             </span>
                           )}
                         </div>
@@ -373,7 +416,9 @@ export function StudyStudioPanel({
                       <ChevronRight
                         className={cn(
                           "w-4 h-4 shrink-0 transition-colors",
-                          isFailed ? "text-muted-foreground/30" : "text-muted-foreground/50 group-hover:text-primary",
+                          isFailed
+                            ? "text-muted-foreground/30"
+                            : "text-muted-foreground/50 group-hover:text-primary",
                         )}
                       />
                     </button>
@@ -534,8 +579,12 @@ function StudioOverlay({
             <Icon className="w-5 h-5" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-[15px] font-bold text-foreground truncate">{title}</div>
-            <div className="text-[11px] text-muted-foreground mt-0.5">{subtitle}</div>
+            <div className="text-[15px] font-bold text-foreground truncate">
+              {title}
+            </div>
+            <div className="text-[11px] text-muted-foreground mt-0.5">
+              {subtitle}
+            </div>
           </div>
           <button
             type="button"
@@ -556,7 +605,9 @@ function StudioOverlay({
           </Button>
         </div>
 
-        <div className="flex-1 min-h-0 flex flex-col overflow-hidden">{children}</div>
+        <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+          {children}
+        </div>
       </div>
     </div>
   );

@@ -7,9 +7,9 @@ import { usePathname, useRouter } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { Check, X, Globe, BookOpen, Sparkles } from "lucide-react";
 import { Button } from "@/ui/primitives/button";
-import { cn } from "@/contracts/utils";
+import { cn } from "@/ui/utils";
 import { useTheme } from "@/ui/theme-provider";
-import { getCEFRBadgeVariant } from "@/contracts/ui/cefr-style";
+import { getCEFRBadgeVariant } from "@/features/study/ui/cefr-style";
 import { getCEFRLabel } from "@/contracts/domain/cefr";
 import { Badge } from "@/ui/primitives/badge";
 
@@ -46,7 +46,9 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
   // Close any open dropdown when clicking outside
   useEffect(() => {
     if (!activeDropdown) return;
-    function handler() { setActiveDropdown(null); }
+    function handler() {
+      setActiveDropdown(null);
+    }
     document.addEventListener("click", handler);
     return () => document.removeEventListener("click", handler);
   }, [activeDropdown]);
@@ -71,7 +73,9 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
             <div className="text-[19px] font-extrabold tracking-[-0.01em] text-foreground">
               {t("title")}
             </div>
-            <div className="text-xs text-muted-foreground mt-1">{t("subtitle")}</div>
+            <div className="text-xs text-muted-foreground mt-1">
+              {t("subtitle")}
+            </div>
           </div>
           <Button
             variant="ghost"
@@ -93,7 +97,9 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
                 <LocalePill
                   id="ui-lang"
                   activeDropdown={activeDropdown}
-                  onToggle={(id) => setActiveDropdown(activeDropdown === id ? null : id)}
+                  onToggle={(id) =>
+                    setActiveDropdown(activeDropdown === id ? null : id)
+                  }
                   value={locale}
                   options={routing.locales.map((loc) => ({
                     value: loc,
@@ -124,7 +130,9 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
 
           <SettingsSection title={t("level")}>
             <div className="border border-border bg-surface p-4">
-              <div className="text-[13px] font-semibold text-foreground">{t("targetLevel")}</div>
+              <div className="text-[13px] font-semibold text-foreground">
+                {t("targetLevel")}
+              </div>
               <div className="text-[11px] text-muted-foreground mt-0.5 mb-3">
                 {t("targetLevelHint")}
               </div>
@@ -139,14 +147,18 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
                         ? "bg-primary text-primary-foreground shadow-indigo"
                         : "bg-muted text-ink-2 hover:bg-muted/70",
                     )}
-                    onClick={() => {/* hook to user preferences in future */}}
+                    onClick={() => {
+                      /* hook to user preferences in future */
+                    }}
                   >
                     {level}
                   </button>
                 ))}
               </div>
               <div className="mt-3 flex items-center gap-2">
-                <Badge variant={getCEFRBadgeVariant("B2")}>{getCEFRLabel("B2")}</Badge>
+                <Badge variant={getCEFRBadgeVariant("B2")}>
+                  {getCEFRLabel("B2")}
+                </Badge>
                 <span className="text-[11px] text-muted-foreground">
                   {t("currentLevelHint")}
                 </span>
@@ -185,9 +197,21 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
                 <Pill
                   value={theme}
                   options={[
-                    { value: "light", label: t("themeLight"), icon: <Sparkles className="w-3 h-3" /> },
-                    { value: "dark", label: t("themeDark"), icon: <BookOpen className="w-3 h-3" /> },
-                    { value: "system", label: t("themeSystem"), icon: <Globe className="w-3 h-3" /> },
+                    {
+                      value: "light",
+                      label: t("themeLight"),
+                      icon: <Sparkles className="w-3 h-3" />,
+                    },
+                    {
+                      value: "dark",
+                      label: t("themeDark"),
+                      icon: <BookOpen className="w-3 h-3" />,
+                    },
+                    {
+                      value: "system",
+                      label: t("themeSystem"),
+                      icon: <Globe className="w-3 h-3" />,
+                    },
                   ]}
                   onChange={(v) => setTheme(v as "light" | "dark" | "system")}
                 />
@@ -212,7 +236,13 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
   );
 }
 
-function SettingsSection({ title, children }: { title: string; children: React.ReactNode }) {
+function SettingsSection({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <div>
       <div className="text-[11px] font-bold uppercase tracking-[0.13em] text-muted-foreground mb-2.5">
@@ -257,7 +287,10 @@ function Pill<T extends string>({
   onChange?: (v: T) => void;
 }) {
   return (
-    <div className="inline-flex bg-paper border border-border p-[3px]" role="tablist">
+    <div
+      className="inline-flex bg-paper border border-border p-[3px]"
+      role="tablist"
+    >
       {options.map((opt) => {
         const active = opt.value === value;
         return (
@@ -365,8 +398,15 @@ function LocalePill<T extends string>({
               active ? "bg-primary/10" : "hover:bg-muted",
             )}
           >
-            {opt.icon && <span className="text-muted-foreground">{opt.icon}</span>}
-            <span className={cn("text-[13px] font-semibold flex-1", active ? "text-primary" : "text-foreground")}>
+            {opt.icon && (
+              <span className="text-muted-foreground">{opt.icon}</span>
+            )}
+            <span
+              className={cn(
+                "text-[13px] font-semibold flex-1",
+                active ? "text-primary" : "text-foreground",
+              )}
+            >
               {opt.label}
             </span>
             {active && <Check className="w-3.5 h-3.5 text-primary shrink-0" />}

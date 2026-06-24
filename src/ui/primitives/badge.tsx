@@ -2,7 +2,7 @@ import { mergeProps } from "@base-ui/react/merge-props";
 import { useRender } from "@base-ui/react/use-render";
 import { cva, type VariantProps } from "class-variance-authority";
 
-import { cn } from "@/contracts/utils";
+import { cn } from "@/ui/utils";
 
 // Badges & chips per design.md §6:
 // - Pill (radius 99px), 4px 12px padding, 12px/700
@@ -40,8 +40,7 @@ const badgeVariants = cva(
         statusKnown: "bg-status-known-bg text-status-known-text",
 
         // Chip — pill, border, white bg, indigo when active
-        chip:
-          "bg-surface text-ink-2 border-border hover:border-primary hover:text-primary",
+        chip: "bg-surface text-ink-2 border-border hover:border-primary hover:text-primary",
         chipActive: "bg-primary text-primary-foreground border-primary",
       },
     },
@@ -74,7 +73,9 @@ function Badge({
 }
 
 export { Badge, badgeVariants };
-export type BadgeVariant = NonNullable<VariantProps<typeof badgeVariants>["variant"]>;
+export type BadgeVariant = NonNullable<
+  VariantProps<typeof badgeVariants>["variant"]
+>;
 
 // Helper maps for typed lookups in feature code
 export const CEFR_BADGE_VARIANT = {

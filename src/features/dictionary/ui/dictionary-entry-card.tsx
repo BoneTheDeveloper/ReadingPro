@@ -5,8 +5,11 @@ import { Badge } from "@/ui/primitives/badge";
 import { Button } from "@/ui/primitives/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/ui/primitives/card";
 import { Separator } from "@/ui/primitives/separator";
-import { cn } from "@/contracts/utils";
-import type { DictionaryEntryDto, DictionarySenseDto } from "@/contracts/dictionary/dictionary-dtos";
+import { cn } from "@/ui/utils";
+import type {
+  DictionaryEntryDto,
+  DictionarySenseDto,
+} from "@/contracts/dictionary/dictionary-dtos";
 import { useTranslations } from "next-intl";
 import type { SaveStatus } from "../hooks/use-save-dictionary-vocabulary";
 
@@ -45,7 +48,8 @@ export function DictionaryEntryCard({
           <>
             <Separator />
             <p className="text-xs text-muted-foreground">
-              {t("Dictionary.source")}: {entry.senses[0].translations[0].sourceLabel}
+              {t("Dictionary.source")}:{" "}
+              {entry.senses[0].translations[0].sourceLabel}
             </p>
           </>
         )}
@@ -62,22 +66,29 @@ interface SenseBlockProps {
 
 function SenseBlock({ sense, status, onSave }: SenseBlockProps) {
   const t = useTranslations();
-  const primary = sense.translations.find((t) => t.isPrimary) ?? sense.translations[0];
+  const primary =
+    sense.translations.find((t) => t.isPrimary) ?? sense.translations[0];
   const isDisabled = status === "saved" || status === "saving";
 
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2">
         {sense.partOfSpeech && (
-          <Badge variant="secondary" className="text-xs">{sense.partOfSpeech}</Badge>
+          <Badge variant="secondary" className="text-xs">
+            {sense.partOfSpeech}
+          </Badge>
         )}
         {sense.definition && (
-          <span className="text-sm text-muted-foreground">{sense.definition}</span>
+          <span className="text-sm text-muted-foreground">
+            {sense.definition}
+          </span>
         )}
       </div>
 
       {primary && (
-        <p className="text-lg font-medium text-primary">{primary.translation}</p>
+        <p className="text-lg font-medium text-primary">
+          {primary.translation}
+        </p>
       )}
 
       {sense.translations.length > 1 && (
@@ -93,7 +104,9 @@ function SenseBlock({ sense, status, onSave }: SenseBlockProps) {
       )}
 
       {sense.example && (
-        <p className="text-sm italic text-muted-foreground">&ldquo;{sense.example}&rdquo;</p>
+        <p className="text-sm italic text-muted-foreground">
+          &ldquo;{sense.example}&rdquo;
+        </p>
       )}
 
       <div className="flex items-center gap-2">
@@ -114,10 +127,7 @@ function SenseBlock({ sense, status, onSave }: SenseBlockProps) {
           }
         >
           <Bookmark
-            className={cn(
-              "w-3 h-3",
-              status === "saved" && "fill-current",
-            )}
+            className={cn("w-3 h-3", status === "saved" && "fill-current")}
           />
           {status === "idle" && t("Dictionary.saveToVocabulary")}
           {status === "saving" && t("Dictionary.saving")}
@@ -128,7 +138,9 @@ function SenseBlock({ sense, status, onSave }: SenseBlockProps) {
         {sense.tags.length > 0 && (
           <div className="flex flex-wrap gap-1">
             {sense.tags.map((tag) => (
-              <Badge key={tag} variant="outline" className="text-xs">{tag}</Badge>
+              <Badge key={tag} variant="outline" className="text-xs">
+                {tag}
+              </Badge>
             ))}
           </div>
         )}

@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Loader2, Languages } from "lucide-react";
 import { Button } from "@/ui/primitives/button";
-import { cn } from "@/contracts/utils";
+import { cn } from "@/ui/utils";
 import type { TranslationSelection } from "@/features/study/model/types";
 import type { QuickTranslationData } from "@/features/study/model/types";
 

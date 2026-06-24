@@ -1,20 +1,18 @@
 "use client";
 
-import {
-  Show,
-  SignInButton,
-  SignUpButton,
-  UserButton,
-} from "@clerk/nextjs";
+import { Show, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
 import { Button } from "@/ui/primitives/button";
-import { cn } from "@/contracts/utils";
+import { cn } from "@/ui/utils";
 
 interface AuthControlsProps {
   compact?: boolean;
   variant?: "default" | "rail";
 }
 
-export function AuthControls({ compact = false, variant = "default" }: AuthControlsProps) {
+export function AuthControls({
+  compact = false,
+  variant = "default",
+}: AuthControlsProps) {
   const isRail = variant === "rail";
   const iconClass = isRail
     ? "text-white/60 hover:text-white hover:bg-white/[0.08]"
@@ -39,7 +37,9 @@ export function AuthControls({ compact = false, variant = "default" }: AuthContr
         )}
       </Show>
       <Show when="signed-in">
-        <div className={cn(isRail && "w-10 h-10 flex items-center justify-center")}>
+        <div
+          className={cn(isRail && "w-10 h-10 flex items-center justify-center")}
+        >
           <UserButton
             appearance={{
               elements: {

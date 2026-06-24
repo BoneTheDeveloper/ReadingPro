@@ -10,7 +10,7 @@ import {
   Languages,
   Sparkles,
 } from "lucide-react";
-import { cn } from "@/contracts/utils";
+import { cn } from "@/ui/utils";
 import type { StudioActionId } from "@/features/study/model/types";
 
 // All 6 wireframe tiles. Only quiz / chat / lookup are wired in this build;
@@ -25,12 +25,48 @@ type TileSpec = {
 };
 
 const STUDIO_ACTION_TILES: TileSpec[] = [
-  { id: "quiz", labelKey: "quiz", descriptionKey: "testComprehension", icon: HelpCircle, enabled: true },
-  { id: "flashcard", labelKey: "flashcards", descriptionKey: "keyVocabulary", icon: Layers, enabled: false },
-  { id: "summary", labelKey: "summary", descriptionKey: "summaryDescription", icon: BookOpen, enabled: false },
-  { id: "mindmap", labelKey: "mindMap", descriptionKey: "visualOverview", icon: Network, enabled: false },
-  { id: "chat", labelKey: "chat", descriptionKey: "askQuestions", icon: MessageCircle, enabled: true },
-  { id: "lookup", labelKey: "translate", descriptionKey: "vietnameseTranslation", icon: Languages, enabled: true },
+  {
+    id: "quiz",
+    labelKey: "quiz",
+    descriptionKey: "testComprehension",
+    icon: HelpCircle,
+    enabled: true,
+  },
+  {
+    id: "flashcard",
+    labelKey: "flashcards",
+    descriptionKey: "keyVocabulary",
+    icon: Layers,
+    enabled: false,
+  },
+  {
+    id: "summary",
+    labelKey: "summary",
+    descriptionKey: "summaryDescription",
+    icon: BookOpen,
+    enabled: false,
+  },
+  {
+    id: "mindmap",
+    labelKey: "mindMap",
+    descriptionKey: "visualOverview",
+    icon: Network,
+    enabled: false,
+  },
+  {
+    id: "chat",
+    labelKey: "chat",
+    descriptionKey: "askQuestions",
+    icon: MessageCircle,
+    enabled: true,
+  },
+  {
+    id: "lookup",
+    labelKey: "translate",
+    descriptionKey: "vietnameseTranslation",
+    icon: Languages,
+    enabled: true,
+  },
 ];
 
 export function isStudioTileEnabled(actionId: StudioActionId): boolean {
@@ -75,7 +111,8 @@ export function StudioActionGrid({
             title={!enabled ? t("comingSoon") : t(tile.descriptionKey)}
             className={cn(
               "relative overflow-hidden flex flex-col items-center gap-1.5 px-2 py-3.5 rounded-[14px] border bg-surface transition-all",
-              !disabled && "border-border hover:border-primary hover:-translate-y-px hover:shadow-card cursor-pointer",
+              !disabled &&
+                "border-border hover:border-primary hover:-translate-y-px hover:shadow-card cursor-pointer",
               disabled && "border-border opacity-50 cursor-not-allowed",
             )}
           >
@@ -136,7 +173,9 @@ export function StudioEmptyState({
     return (
       <div className="flex flex-col items-center justify-center py-8 text-center">
         <Sparkles className="w-8 h-8 text-muted-foreground/30 mb-3" />
-        <p className="text-[13px] text-muted-foreground/60">{t("noResultsYet")}</p>
+        <p className="text-[13px] text-muted-foreground/60">
+          {t("noResultsYet")}
+        </p>
         <p className="text-[11px] text-muted-foreground/40 mt-1">
           {t("clickCardToGenerate")}
         </p>
@@ -146,7 +185,9 @@ export function StudioEmptyState({
   return (
     <div className="flex flex-col items-center justify-center py-8 text-center">
       <BookOpen className="w-8 h-8 text-muted-foreground/30 mb-3" />
-      <p className="text-[13px] text-muted-foreground/60">{t("selectPassage")}</p>
+      <p className="text-[13px] text-muted-foreground/60">
+        {t("selectPassage")}
+      </p>
       <p className="text-[11px] text-muted-foreground/40 mt-1">
         {t("uploadOrSelectSources")}
       </p>

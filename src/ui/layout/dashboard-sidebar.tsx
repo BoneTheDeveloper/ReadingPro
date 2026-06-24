@@ -13,7 +13,7 @@ import {
   Moon,
   Monitor,
 } from "lucide-react";
-import { cn } from "@/contracts/utils";
+import { cn } from "@/ui/utils";
 import { Button } from "@/ui/primitives/button";
 import { AuthControls } from "./auth-controls";
 import { SettingsModal } from "@/features/study/ui/settings-modal";
@@ -37,11 +37,7 @@ const navItems = [
   { href: "/dictionary", labelKey: "Navigation.dictionary", icon: BookMarked },
 ];
 
-export function DashboardSidebar({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export function DashboardSidebar({ children }: { children: React.ReactNode }) {
   const t = useTranslations();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -132,7 +128,9 @@ export function DashboardSidebar({
             <Menu className="w-5 h-5" />
           </Button>
           <GraduationCap className="w-5 h-5 text-primary" />
-          <span className="font-semibold text-foreground text-sm">English Reading</span>
+          <span className="font-semibold text-foreground text-sm">
+            English Reading
+          </span>
           <div className="ml-auto">
             <AuthControls compact />
           </div>
@@ -142,11 +140,13 @@ export function DashboardSidebar({
         </main>
       </div>
 
-      <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <SettingsModal
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+      />
     </div>
   );
 }
-
 
 function RailThemeButton({ isActive }: { isActive: boolean }) {
   const { theme, setTheme } = useTheme();

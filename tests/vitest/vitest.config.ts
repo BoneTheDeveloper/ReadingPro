@@ -40,11 +40,11 @@ const appLogicCoverageInclude = [
 const appLogicCoverageSoftInclude = [
   "src/contracts/reading-utils.ts",
   "src/contracts/domain/cefr.ts",
-  "src/contracts/ui/cefr-style.ts",
+  "src/features/study/ui/cefr-style.ts",
   "src/server/ai/prompt-utils.ts",
   "src/server/db/vocabulary-text-utils.ts",
   "src/server/observability/prisma-query-metrics.ts",
-  "src/features/study/model/selection-utils.ts",
+  "src/features/study/hooks/selection-utils.ts",
 ];
 
 export default defineConfig({

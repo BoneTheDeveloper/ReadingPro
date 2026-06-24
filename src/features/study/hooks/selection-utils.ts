@@ -1,4 +1,4 @@
-import type { TranslationSelection } from "./types";
+import type { TranslationSelection } from "../model/types";
 import { countWords } from "@/contracts/translation/translate-performance";
 
 type SelectionRect = TranslationSelection["selectionRect"];

@@ -25,7 +25,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@/ui/primitives/dropdown-menu";
-import { cn } from "@/contracts/utils";
+import { cn } from "@/ui/utils";
 import type {
   VocabularyItem,
   VocabularyStatus,

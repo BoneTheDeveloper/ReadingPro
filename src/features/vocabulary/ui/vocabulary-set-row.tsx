@@ -3,8 +3,11 @@
 import { useTranslations } from "next-intl";
 import { ChevronDown, ChevronRight, Trash2 } from "lucide-react";
 import { Button } from "@/ui/primitives/button";
-import { cn } from "@/contracts/utils";
-import type { VocabularySet, VocabularySetType } from "../model/vocabulary-types";
+import { cn } from "@/ui/utils";
+import type {
+  VocabularySet,
+  VocabularySetType,
+} from "../model/vocabulary-types";
 
 const SET_TYPE_TONE: Record<VocabularySetType, string> = {
   MANUAL: "bg-primary/10 text-primary",
@@ -62,7 +65,10 @@ export function VocabularySetRow({
             variant="ghost"
             size="icon-xs"
             className="shrink-0 text-muted-foreground hover:text-destructive"
-            onClick={(e) => { e.stopPropagation(); onDelete(); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
           >
             <Trash2 className="size-3" />
           </Button>

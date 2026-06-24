@@ -7,7 +7,7 @@ import { DefaultChatTransport } from "ai";
 import * as Sentry from "@sentry/nextjs";
 import { Send, Loader2, AlertCircle, RotateCw } from "lucide-react";
 import { Button } from "@/ui/primitives/button";
-import { cn } from "@/contracts/utils";
+import { cn } from "@/ui/utils";
 import { studyChatHistoryResponseSchema } from "@/contracts/study/study-response-schema";
 import { STUDY_API_ROUTES } from "@/features/study/api-client/api-utils";
 
@@ -16,7 +16,10 @@ interface StudyChatPanelProps {
   prefilledQuestion?: string | null;
 }
 
-export function StudyChatPanel({ passageId, prefilledQuestion }: StudyChatPanelProps) {
+export function StudyChatPanel({
+  passageId,
+  prefilledQuestion,
+}: StudyChatPanelProps) {
   const t = useTranslations("Study");
   const scrollRef = useRef<HTMLDivElement>(null);
   const [input, setInput] = useState(prefilledQuestion ?? "");
@@ -30,7 +33,9 @@ export function StudyChatPanel({ passageId, prefilledQuestion }: StudyChatPanelP
     [passageId],
   );
 
-  const { messages, sendMessage, status, error, stop, setMessages } = useChat({ transport });
+  const { messages, sendMessage, status, error, stop, setMessages } = useChat({
+    transport,
+  });
 
   const isStreaming = status === "submitted" || status === "streaming";
 
@@ -188,7 +193,10 @@ export function StudyChatPanel({ passageId, prefilledQuestion }: StudyChatPanelP
   return (
     <div className="flex flex-col h-full">
       {/* Messages */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto panel-scroll p-4 space-y-3">
+      <div
+        ref={scrollRef}
+        className="flex-1 overflow-y-auto panel-scroll p-4 space-y-3"
+      >
         {messages.length === 0 && !isStreaming && (
           <p className="text-sm text-muted-foreground text-center py-8">
             {t("chatNoMessages")}
@@ -244,7 +252,10 @@ export function StudyChatPanel({ passageId, prefilledQuestion }: StudyChatPanelP
       )}
 
       {/* Input */}
-      <form onSubmit={handleSubmit} className="p-3 border-t border-border flex items-center gap-2">
+      <form
+        onSubmit={handleSubmit}
+        className="p-3 border-t border-border flex items-center gap-2"
+      >
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}

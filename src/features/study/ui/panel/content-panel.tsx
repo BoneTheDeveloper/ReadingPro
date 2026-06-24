@@ -1,17 +1,11 @@
-"use client"
+"use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import {
-  Loader2,
-  FileText,
-  FileSearch,
-  Plus,
-  Sparkles,
-} from "lucide-react";
-import { cn } from "@/contracts/utils";
+import { Loader2, FileText, FileSearch, Plus, Sparkles } from "lucide-react";
+import { cn } from "@/ui/utils";
 import { getCEFRShortLabel } from "@/contracts/domain/cefr";
-import { getCEFRBadgeVariant } from "@/contracts/ui/cefr-style";
+import { getCEFRBadgeVariant } from "@/features/study/ui/cefr-style";
 import { Badge } from "@/ui/primitives/badge";
 import { Button } from "@/ui/primitives/button";
 import {
@@ -22,9 +16,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/ui/primitives/dialog";
-import { useScrollProgress } from "@/hooks/use-scroll-progress";
-import type { PassageData, TranslationSelection } from "@/features/study/model/types";
-import { extractSelectionInfo } from "@/features/study/model/selection-utils";
+import { useScrollProgress } from "@/features/study/hooks/use-scroll-progress";
+import type {
+  PassageData,
+  TranslationSelection,
+} from "@/features/study/model/types";
+import { extractSelectionInfo } from "@/features/study/hooks/selection-utils";
 
 type ViewMode = "original" | "simplified";
 
@@ -60,18 +57,21 @@ export function StudyContentPanel({
   const progress = useScrollProgress(scrollRef);
   const [simplifyModal, setSimplifyModal] = useState<SimplifyModal>(null);
 
-  const updateSelectionFromMouseEvent = useCallback((event: MouseEvent) => {
-    if (!passage) return;
-    const info = extractSelectionInfo({
-      contentRef,
-      sourceId: passage.id,
-      cursorPoint: {
-        x: event.clientX,
-        y: event.clientY,
-      },
-    });
-    onSelectionChange(info);
-  }, [passage, onSelectionChange]);
+  const updateSelectionFromMouseEvent = useCallback(
+    (event: MouseEvent) => {
+      if (!passage) return;
+      const info = extractSelectionInfo({
+        contentRef,
+        sourceId: passage.id,
+        cursorPoint: {
+          x: event.clientX,
+          y: event.clientY,
+        },
+      });
+      onSelectionChange(info);
+    },
+    [passage, onSelectionChange],
+  );
 
   useEffect(() => {
     function handleDocumentMouseUp(event: MouseEvent) {
@@ -84,10 +84,13 @@ export function StudyContentPanel({
     return () => document.removeEventListener("mouseup", handleDocumentMouseUp);
   }, [updateSelectionFromMouseEvent]);
 
-  const handleContentMouseUp = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
-    if (selectionStartedInContentRef.current) return;
-    updateSelectionFromMouseEvent(event.nativeEvent);
-  }, [updateSelectionFromMouseEvent]);
+  const handleContentMouseUp = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      if (selectionStartedInContentRef.current) return;
+      updateSelectionFromMouseEvent(event.nativeEvent);
+    },
+    [updateSelectionFromMouseEvent],
+  );
 
   const handleContentMouseDown = useCallback(() => {
     selectionStartedInContentRef.current = true;
@@ -146,8 +149,7 @@ export function StudyContentPanel({
     typeof getCEFRBadgeVariant
   >[0];
   const originalLevel = passage.originalLevel ?? null;
-  const canSimplify =
-    !passage.simplifiedContent && originalLevel !== null;
+  const canSimplify = !passage.simplifiedContent && originalLevel !== null;
   const isAlreadySimple =
     originalLevel !== null && SKIP_SIMPLIFY_LEVELS.has(originalLevel);
 
@@ -170,7 +172,9 @@ export function StudyContentPanel({
       {/* 53px meta bar — wireframe §1 lines 121-137: CEFR/word-count LEFT, Original/Simplified RIGHT */}
       <div className="h-[53px] shrink-0 flex items-center gap-3 px-6 border-b border-border/20">
         <div className="flex items-center gap-3">
-          <Badge variant={getCEFRBadgeVariant(level)}>{getCEFRShortLabel(level)}</Badge>
+          <Badge variant={getCEFRBadgeVariant(level)}>
+            {getCEFRShortLabel(level)}
+          </Badge>
           <span className="w-px h-3.5 bg-border" />
           <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
             <FileText className="w-3.5 h-3.5" />
@@ -181,7 +185,9 @@ export function StudyContentPanel({
             <button
               onClick={() =>
                 setSimplifyModal(
-                  isAlreadySimple ? { kind: "alreadySimple" } : { kind: "confirm" },
+                  isAlreadySimple
+                    ? { kind: "alreadySimple" }
+                    : { kind: "confirm" },
                 )
               }
               disabled={simplifying}
@@ -247,16 +253,24 @@ export function StudyContentPanel({
       </div>
 
       {/* Simplify confirm dialog */}
-      <Dialog open={simplifyModal !== null} onOpenChange={(open) => !open && setSimplifyModal(null)}>
+      <Dialog
+        open={simplifyModal !== null}
+        onOpenChange={(open) => !open && setSimplifyModal(null)}
+      >
         <DialogContent className="max-w-md">
           {simplifyModal?.kind === "confirm" && (
             <>
               <DialogHeader>
                 <DialogTitle>{t("simplifyConfirmTitle")}</DialogTitle>
-                <DialogDescription>{t("simplifyConfirmDescription")}</DialogDescription>
+                <DialogDescription>
+                  {t("simplifyConfirmDescription")}
+                </DialogDescription>
               </DialogHeader>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setSimplifyModal(null)}>
+                <Button
+                  variant="outline"
+                  onClick={() => setSimplifyModal(null)}
+                >
                   {t("cancel")}
                 </Button>
                 <Button
@@ -275,7 +289,9 @@ export function StudyContentPanel({
             <>
               <DialogHeader>
                 <DialogTitle>{t("simplifyAlreadySimpleTitle")}</DialogTitle>
-                <DialogDescription>{t("simplifyAlreadySimpleDescription")}</DialogDescription>
+                <DialogDescription>
+                  {t("simplifyAlreadySimpleDescription")}
+                </DialogDescription>
               </DialogHeader>
               <DialogFooter>
                 <Button onClick={() => setSimplifyModal(null)}>

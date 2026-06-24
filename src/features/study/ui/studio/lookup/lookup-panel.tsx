@@ -2,12 +2,9 @@
 
 import { useTranslations } from "next-intl";
 import * as Sentry from "@sentry/nextjs";
-import {
-  Bookmark,
-  MessageCircle,
-} from "lucide-react";
+import { Bookmark, MessageCircle } from "lucide-react";
 import { Button } from "@/ui/primitives/button";
-import { cn } from "@/contracts/utils";
+import { cn } from "@/ui/utils";
 import type {
   TranslationSelection,
   QuickTranslationData,
@@ -74,7 +71,10 @@ export function StudyLookupPanel({
         <Button
           variant={saved ? "ghost" : "outline"}
           size="sm"
-          className={cn("h-8 text-xs gap-1.5", saved && "text-muted-foreground")}
+          className={cn(
+            "h-8 text-xs gap-1.5",
+            saved && "text-muted-foreground",
+          )}
           onClick={saved ? undefined : onSave}
           disabled={saved}
         >

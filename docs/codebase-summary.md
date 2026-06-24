@@ -2,17 +2,17 @@
 
 ## Stack
 
-| Layer | Current choice |
-|-------|----------------|
-| Framework | Next.js 16.2 App Router, React 19, RSC |
-| UI | Tailwind CSS 4, shadcn-style primitives, Lucide icons |
-| Auth | Clerk for session and identity, app `UserProfile` for ownership |
-| Database | Neon Postgres, Prisma 7 generated into `src/generated/prisma` |
-| Storage | Local filesystem in development, private Vercel Blob in preview |
-| AI | Vercel AI SDK, OpenAI and Google provider packages |
-| Validation | Zod at API/server-action boundaries |
-| Observability | Sentry, Pino, optional Prisma/query performance headers |
-| Tests | Vitest, Testing Library, Playwright |
+| Layer         | Current choice                                                  |
+| ------------- | --------------------------------------------------------------- |
+| Framework     | Next.js 16.2 App Router, React 19, RSC                          |
+| UI            | Tailwind CSS 4, shadcn-style primitives, Lucide icons           |
+| Auth          | Clerk for session and identity, app `UserProfile` for ownership |
+| Database      | Neon Postgres, Prisma 7 generated into `src/generated/prisma`   |
+| Storage       | Local filesystem in development, private Vercel Blob in preview |
+| AI            | Vercel AI SDK, OpenAI and Google provider packages              |
+| Validation    | Zod at API/server-action boundaries                             |
+| Observability | Sentry, Pino, optional Prisma/query performance headers         |
+| Tests         | Vitest, Testing Library, Playwright                             |
 
 ## Source Layout
 

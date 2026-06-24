@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Input as InputPrimitive } from "@base-ui/react/input";
 
-import { cn } from "@/contracts/utils";
+import { cn } from "@/ui/utils";
 
 // Input per design.md §9:
 // - padding 9px 12px, border 1px solid #EAE5DB, radius 11px, bg #fff

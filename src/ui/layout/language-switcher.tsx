@@ -10,7 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/ui/primitives/dropdown-menu";
-import { cn } from "@/contracts/utils";
+import { cn } from "@/ui/utils";
 
 const localeLabels: Record<string, string> = {
   en: "English",
@@ -21,7 +21,9 @@ interface LanguageSwitcherProps {
   variant?: "default" | "rail";
 }
 
-export function LanguageSwitcher({ variant = "default" }: LanguageSwitcherProps) {
+export function LanguageSwitcher({
+  variant = "default",
+}: LanguageSwitcherProps) {
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();

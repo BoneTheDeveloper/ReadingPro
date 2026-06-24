@@ -1,15 +1,18 @@
-"use client"
+"use client";
 
-import { useCallback, useState } from "react"
-import { useDropzone, type FileRejection } from "react-dropzone"
-import { Upload, FileText, AlertCircle, Loader2 } from "lucide-react"
-import { validateFile, formatFileSize } from "@/contracts/upload/upload-validation"
-import { cn } from "@/contracts/utils"
+import { useCallback, useState } from "react";
+import { useDropzone, type FileRejection } from "react-dropzone";
+import { Upload, FileText, AlertCircle, Loader2 } from "lucide-react";
+import {
+  validateFile,
+  formatFileSize,
+} from "@/contracts/upload/upload-validation";
+import { cn } from "@/ui/utils";
 
 interface UploadZoneProps {
-  onFileSelect: (file: File) => void
-  isProcessing?: boolean
-  disabled?: boolean
+  onFileSelect: (file: File) => void;
+  isProcessing?: boolean;
+  disabled?: boolean;
 }
 
 export function UploadZone({
@@ -17,35 +20,35 @@ export function UploadZone({
   isProcessing,
   disabled,
 }: UploadZoneProps) {
-  const [error, setError] = useState<string>()
+  const [error, setError] = useState<string>();
 
   const onDrop = useCallback(
     (acceptedFiles: File[], rejectedFiles: FileRejection[]) => {
-      setError(undefined)
+      setError(undefined);
 
       if (rejectedFiles.length > 0) {
-        const rejection = rejectedFiles[0]
+        const rejection = rejectedFiles[0];
         if (rejection.errors[0]?.code === "file-too-large") {
-          setError("File size exceeds 10MB limit")
+          setError("File size exceeds 10MB limit");
         } else if (rejection.errors[0]?.code === "file-invalid-type") {
-          setError("Only .txt and .pdf files are supported")
+          setError("Only .txt and .pdf files are supported");
         } else {
-          setError("Invalid file. Please try again.")
+          setError("Invalid file. Please try again.");
         }
-        return
+        return;
       }
 
       if (acceptedFiles.length > 0) {
-        const validation = validateFile(acceptedFiles[0])
+        const validation = validateFile(acceptedFiles[0]);
         if (!validation.valid) {
-          setError(validation.error)
-          return
+          setError(validation.error);
+          return;
         }
-        onFileSelect(acceptedFiles[0])
+        onFileSelect(acceptedFiles[0]);
       }
     },
     [onFileSelect],
-  )
+  );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -56,7 +59,7 @@ export function UploadZone({
     maxSize: 10 * 1024 * 1024,
     multiple: false,
     disabled: disabled || isProcessing,
-  })
+  });
 
   return (
     <div className="w-full">
@@ -124,5 +127,5 @@ export function UploadZone({
         </div>
       )}
     </div>
-  )
+  );
 }

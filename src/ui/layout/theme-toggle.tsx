@@ -10,7 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/ui/primitives/dropdown-menu";
-import { cn } from "@/contracts/utils";
+import { cn } from "@/ui/utils";
 
 const emptySubscribe = () => () => {};
 const getClientSnapshot = () => true;

@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { cn } from "@/contracts/utils";
+import { cn } from "@/ui/utils";
 
 /**
  * Provides a lightweight scrollable container that preserves the shared UI

@@ -11,7 +11,7 @@ import {
   PanelLeft,
   Video,
 } from "lucide-react";
-import { cn } from "@/contracts/utils";
+import { cn } from "@/ui/utils";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -182,11 +182,13 @@ export function StudySourcesPanel({
               />
             ))}
 
-            {!isUploading && filteredDocs.length === 0 && documents.length > 0 && (
-              <p className="text-xs text-muted-foreground text-center py-4">
-                {t("noMatchingSources")}
-              </p>
-            )}
+            {!isUploading &&
+              filteredDocs.length === 0 &&
+              documents.length > 0 && (
+                <p className="text-xs text-muted-foreground text-center py-4">
+                  {t("noMatchingSources")}
+                </p>
+              )}
 
             {!isUploading && documents.length === 0 && (
               <p className="text-[13px] text-muted-foreground text-center py-8">
@@ -263,7 +265,9 @@ function SourceRow({
       <div
         className={cn(
           "w-8 h-8 rounded-[10px] flex items-center justify-center shrink-0",
-          active ? "bg-surface text-primary shadow-sm" : "bg-indigo-soft text-ink-3",
+          active
+            ? "bg-surface text-primary shadow-sm"
+            : "bg-indigo-soft text-ink-3",
         )}
       >
         <DocIcon className="w-4 h-4" />
@@ -273,12 +277,16 @@ function SourceRow({
         <h4
           className={cn(
             "text-[13px] truncate leading-tight",
-            active ? "font-semibold text-primary" : "font-medium text-foreground",
+            active
+              ? "font-semibold text-primary"
+              : "font-medium text-foreground",
           )}
         >
           {doc.title}
         </h4>
-        <p className="text-[11px] text-muted-foreground truncate mt-0.5">{doc.date}</p>
+        <p className="text-[11px] text-muted-foreground truncate mt-0.5">
+          {doc.date}
+        </p>
       </div>
 
       <DropdownMenu>

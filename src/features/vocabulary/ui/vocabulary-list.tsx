@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import { BookOpen, Search } from "lucide-react";
 import { Input } from "@/ui/primitives/input";
-import { cn } from "@/contracts/utils";
+import { cn } from "@/ui/utils";
 import { VocabularyItemCard } from "./vocabulary-item-card";
 import type {
   VocabularyItem,
@@ -80,7 +80,11 @@ export function VocabularyList({
             )}
             onClick={() => onStatusFilterChange(status)}
           >
-            {t(status === "ALL" ? "allWords" : status.toLowerCase() as Lowercase<VocabularyStatus>)}
+            {t(
+              status === "ALL"
+                ? "allWords"
+                : (status.toLowerCase() as Lowercase<VocabularyStatus>),
+            )}
           </button>
         ))}
       </div>

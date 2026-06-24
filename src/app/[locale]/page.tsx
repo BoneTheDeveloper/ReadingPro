@@ -15,7 +15,7 @@ import {
 import { buttonVariants } from "@/ui/primitives/button";
 import { DashboardSidebar } from "@/ui/layout/dashboard-sidebar";
 import { Link } from "@/i18n/navigation";
-import { cn } from "@/contracts/utils";
+import { cn } from "@/ui/utils";
 import { getCurrentUser } from "@/server/auth/auth-utils";
 import { getUserProgress } from "@/server/db/quiz/quiz-review";
 
@@ -185,38 +185,59 @@ function getNextAction(
   };
 }
 
-function getProgressCards(stats: UserProgress, passages: PassageOverview, t: Awaited<ReturnType<typeof getTranslations<"Dashboard">>>) {
+function getProgressCards(
+  stats: UserProgress,
+  passages: PassageOverview,
+  t: Awaited<ReturnType<typeof getTranslations<"Dashboard">>>,
+) {
   const cards = [
     {
       label: t("reviewsDue"),
       value: stats.dueCards > 0 ? stats.dueCards.toLocaleString() : "Clear",
       helper: stats.dueCards > 0 ? "Waiting now" : "No review debt",
       icon: Target,
-      tone: stats.dueCards > 0 ? "text-gold bg-gold-soft" : "text-success bg-success-soft",
+      tone:
+        stats.dueCards > 0
+          ? "text-gold bg-gold-soft"
+          : "text-success bg-success-soft",
     },
     {
       label: t("currentStreak"),
       value: stats.streakDays > 0 ? `${stats.streakDays}d` : "Start",
-      helper: stats.streakDays > 0 ? "active practice run" : "One review begins it",
+      helper:
+        stats.streakDays > 0 ? "active practice run" : "One review begins it",
       icon: Flame,
-      tone: stats.streakDays > 0 ? "text-gold bg-gold-soft" : "text-muted-foreground bg-muted",
+      tone:
+        stats.streakDays > 0
+          ? "text-gold bg-gold-soft"
+          : "text-muted-foreground bg-muted",
     },
     {
       label: "Time studied",
-      value: stats.timeStudiedTodaySeconds > 0 ? formatStudyDuration(stats.timeStudiedTodaySeconds) : "—",
+      value:
+        stats.timeStudiedTodaySeconds > 0
+          ? formatStudyDuration(stats.timeStudiedTodaySeconds)
+          : "—",
       helper:
         stats.timeStudiedWeekSeconds > 0
           ? `${formatStudyDuration(stats.timeStudiedWeekSeconds)} this week · ${pluralize(stats.activeDaysThisWeek, "active day")}`
           : "No study time today",
       icon: Clock3,
-      tone: stats.timeStudiedTodaySeconds > 0 ? "text-primary bg-primary/10" : "text-muted-foreground bg-muted",
+      tone:
+        stats.timeStudiedTodaySeconds > 0
+          ? "text-primary bg-primary/10"
+          : "text-muted-foreground bg-muted",
     },
     {
       label: t("today"),
-      value: stats.todayReviews > 0 ? stats.todayReviews.toLocaleString() : "Ready",
+      value:
+        stats.todayReviews > 0 ? stats.todayReviews.toLocaleString() : "Ready",
       helper: stats.todayReviews > 0 ? "reviews logged" : "No session yet",
       icon: CalendarCheck,
-      tone: stats.todayReviews > 0 ? "text-primary bg-primary/10" : "text-primary bg-primary/10",
+      tone:
+        stats.todayReviews > 0
+          ? "text-primary bg-primary/10"
+          : "text-primary bg-primary/10",
     },
   ];
 
@@ -270,7 +291,9 @@ export default async function DashboardPage() {
   const nextAction = getNextAction(stats, passageOverview, t);
   const progressCards = getProgressCards(stats, passageOverview, t);
   const maturePercent =
-    stats.totalCards > 0 ? Math.round((stats.matureCards / stats.totalCards) * 100) : 0;
+    stats.totalCards > 0
+      ? Math.round((stats.matureCards / stats.totalCards) * 100)
+      : 0;
   const showMastery = stats.totalCards >= 10;
   const milestoneItems = [
     { label: t("savePassage"), done: passageOverview.totalPassages > 0 },
@@ -328,23 +351,29 @@ export default async function DashboardPage() {
                   <p className="text-sm font-semibold uppercase tracking-[0.16em]">
                     {t("nextAction")}
                   </p>
-                  <h2 className="mt-2 text-2xl font-semibold leading-tight">{nextAction.title}</h2>
+                  <h2 className="mt-2 text-2xl font-semibold leading-tight">
+                    {nextAction.title}
+                  </h2>
                 </div>
-                <div className={cn("flex size-11 shrink-0 items-center justify-center rounded-xl", nextAction.iconTone)}>
+                <div
+                  className={cn(
+                    "flex size-11 shrink-0 items-center justify-center rounded-xl",
+                    nextAction.iconTone,
+                  )}
+                >
                   <nextAction.icon className="size-5" />
                 </div>
               </div>
-              <p className="mt-3 text-sm leading-6 opacity-85">{nextAction.body}</p>
+              <p className="mt-3 text-sm leading-6 opacity-85">
+                {nextAction.body}
+              </p>
               <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <span className="inline-flex w-fit items-center rounded-full border border-current/20 px-3 py-1 text-sm font-semibold">
                   {nextAction.urgency}
                 </span>
                 <Link
                   href={nextAction.href}
-                  className={cn(
-                    buttonVariants(),
-                    "h-10",
-                  )}
+                  className={cn(buttonVariants(), "h-10")}
                 >
                   {nextAction.cta}
                   <ArrowRight className="size-4" />
@@ -361,13 +390,24 @@ export default async function DashboardPage() {
                 className="rounded-xl border bg-surface p-5"
               >
                 <div className="flex items-center justify-between gap-3">
-                  <div className={cn("flex size-10 items-center justify-center rounded-lg", card.tone)}>
+                  <div
+                    className={cn(
+                      "flex size-10 items-center justify-center rounded-lg",
+                      card.tone,
+                    )}
+                  >
                     <card.icon className="size-5" />
                   </div>
-                  <span className="text-2xl font-semibold tabular-nums sm:text-3xl">{card.value}</span>
+                  <span className="text-2xl font-semibold tabular-nums sm:text-3xl">
+                    {card.value}
+                  </span>
                 </div>
-                <p className="mt-4 text-sm font-semibold text-foreground">{card.label}</p>
-                <p className="mt-1 text-sm text-muted-foreground">{card.helper}</p>
+                <p className="mt-4 text-sm font-semibold text-foreground">
+                  {card.label}
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {card.helper}
+                </p>
               </div>
             ))}
           </section>
@@ -380,7 +420,9 @@ export default async function DashboardPage() {
                   <p className="text-sm font-semibold uppercase tracking-[0.16em] text-gold">
                     {t("recentReading")}
                   </p>
-                  <h2 className="mt-2 text-2xl font-semibold">{t("pickUpWhereYouLeftOff")}</h2>
+                  <h2 className="mt-2 text-2xl font-semibold">
+                    {t("pickUpWhereYouLeftOff")}
+                  </h2>
                 </div>
                 <Link
                   href="/study"
@@ -418,7 +460,9 @@ export default async function DashboardPage() {
                         </p>
                       </div>
                       <div className="flex items-center gap-3 text-sm text-muted-foreground sm:justify-end">
-                        <span className="tabular-nums">{passage.wordCount.toLocaleString()} words</span>
+                        <span className="tabular-nums">
+                          {passage.wordCount.toLocaleString()} words
+                        </span>
                         <span>{formatDate(passage.createdAt)}</span>
                       </div>
                     </Link>
@@ -426,7 +470,9 @@ export default async function DashboardPage() {
                 ) : (
                   <div className="flex flex-col items-start gap-4 py-8 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                      <h3 className="text-lg font-semibold">{t("noSavedPassages")}</h3>
+                      <h3 className="text-lg font-semibold">
+                        {t("noSavedPassages")}
+                      </h3>
                       <p className="mt-1 max-w-xl text-sm leading-6 text-muted-foreground">
                         {t("noSavedPassagesDescription")}
                       </p>
@@ -453,7 +499,9 @@ export default async function DashboardPage() {
                     <p className="text-sm font-semibold uppercase tracking-[0.16em] text-gold">
                       {t("momentum")}
                     </p>
-                    <h2 className="text-xl font-semibold">{nextAction.eyebrow}</h2>
+                    <h2 className="text-xl font-semibold">
+                      {nextAction.eyebrow}
+                    </h2>
                   </div>
                 </div>
                 <p className="mt-4 text-sm leading-6 text-muted-foreground">
@@ -471,14 +519,21 @@ export default async function DashboardPage() {
                       <p className="text-sm font-semibold uppercase tracking-[0.16em] text-gold">
                         {t("deckHealth")}
                       </p>
-                      <h2 className="text-xl font-semibold">{t("mature", { percent: maturePercent })}</h2>
+                      <h2 className="text-xl font-semibold">
+                        {t("mature", { percent: maturePercent })}
+                      </h2>
                     </div>
                   </div>
                   <div className="mt-5 h-3 overflow-hidden rounded-full bg-muted">
-                    <div className="h-full rounded-full bg-success" style={{ width: `${maturePercent}%` }} />
+                    <div
+                      className="h-full rounded-full bg-success"
+                      style={{ width: `${maturePercent}%` }}
+                    />
                   </div>
                   <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                    {t("cardsInRotation", { count: pluralize(stats.totalCards, "card") })}
+                    {t("cardsInRotation", {
+                      count: pluralize(stats.totalCards, "card"),
+                    })}
                   </p>
                 </div>
               ) : (
@@ -491,19 +546,30 @@ export default async function DashboardPage() {
                       <p className="text-sm font-semibold uppercase tracking-[0.16em] text-gold">
                         {t("firstMilestone")}
                       </p>
-                      <h2 className="text-xl font-semibold">{t("buildTheLoop")}</h2>
+                      <h2 className="text-xl font-semibold">
+                        {t("buildTheLoop")}
+                      </h2>
                     </div>
                   </div>
                   <ul className="mt-4 space-y-3">
                     {milestoneItems.map((item) => (
-                      <li key={item.label} className="flex items-center gap-3 text-sm leading-6 text-muted-foreground">
+                      <li
+                        key={item.label}
+                        className="flex items-center gap-3 text-sm leading-6 text-muted-foreground"
+                      >
                         <CheckCircle2
                           className={cn(
                             "size-4 shrink-0",
                             item.done ? "text-success" : "text-border",
                           )}
                         />
-                        <span className={cn(item.done && "font-medium text-foreground")}>{item.label}</span>
+                        <span
+                          className={cn(
+                            item.done && "font-medium text-foreground",
+                          )}
+                        >
+                          {item.label}
+                        </span>
                       </li>
                     ))}
                   </ul>
@@ -515,9 +581,27 @@ export default async function DashboardPage() {
           {/* Quick actions */}
           <section className="grid gap-4 md:grid-cols-3">
             {[
-              { href: "/study" as const, icon: Target, title: t("reviewQueue"), text: stats.dueCards > 0 ? `${pluralize(stats.dueCards, "card")} due now.` : "Queue is clear." },
-              { href: "/study" as const, icon: FileText, title: t("addReading"), text: "Bring in a passage worth practicing." },
-              { href: "/study" as const, icon: Sparkles, title: t("generateQuestions"), text: "Create cards from saved reading." },
+              {
+                href: "/study" as const,
+                icon: Target,
+                title: t("reviewQueue"),
+                text:
+                  stats.dueCards > 0
+                    ? `${pluralize(stats.dueCards, "card")} due now.`
+                    : "Queue is clear.",
+              },
+              {
+                href: "/study" as const,
+                icon: FileText,
+                title: t("addReading"),
+                text: "Bring in a passage worth practicing.",
+              },
+              {
+                href: "/study" as const,
+                icon: Sparkles,
+                title: t("generateQuestions"),
+                text: "Create cards from saved reading.",
+              },
             ].map((action) => (
               <Link
                 key={action.title}
@@ -526,7 +610,9 @@ export default async function DashboardPage() {
               >
                 <action.icon className="size-5 text-gold" />
                 <h3 className="mt-4 text-base font-semibold">{action.title}</h3>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">{action.text}</p>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  {action.text}
+                </p>
               </Link>
             ))}
           </section>
