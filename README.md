@@ -23,7 +23,7 @@ AI-assisted reading trainer for English learners. Learners upload or paste Engli
 | Storage | Local filesystem in development, Vercel Blob in preview/production |
 | AI | Vercel AI SDK with OpenAI/Google provider packages |
 | Observability | Sentry, Pino |
-| Tests | Vitest, Testing Library, performance scripts |
+| Tests | Vitest, Testing Library |
 
 ## Quick Start
 
@@ -105,7 +105,7 @@ Dictionary seed/import helpers:
 
 ```bash
 pnpm db:seed:dictionary
-pnpm db:validate:dictionary
+pnpm db:seed:dictionary:bulk:dev
 pnpm db:check:dictionary-seed
 ```
 

@@ -8,11 +8,11 @@
 | UI | Tailwind CSS 4, shadcn-style primitives, Lucide icons |
 | Auth | Clerk for session and identity, app `UserProfile` for ownership |
 | Database | Neon Postgres, Prisma 7 generated into `src/generated/prisma` |
-| Storage | Local filesystem in development, private Vercel Blob in preview/production |
+| Storage | Local filesystem in development, private Vercel Blob in preview |
 | AI | Vercel AI SDK, OpenAI and Google provider packages |
 | Validation | Zod at API/server-action boundaries |
 | Observability | Sentry, Pino, optional Prisma/query performance headers |
-| Tests | Vitest, Testing Library, Playwright, performance benchmark scripts |
+| Tests | Vitest, Testing Library, Playwright |
 
 ## Source Layout
 

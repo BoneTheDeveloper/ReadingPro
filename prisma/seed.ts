@@ -1,9 +1,8 @@
 /**
  * Seeds dictionary entries from normalized split files into the sense-based dictionary model.
- * Idempotent: safe to run multiple times. Syncs data deterministically.
+ * Fast bulk replace: development-only, safe to run multiple times.
  *
  * Usage:
- *   pnpm db:seed:dictionary                # default: production split files
  *   pnpm db:seed:dictionary:bulk:dev       # fast dev-only replace from production split files
  */
 
@@ -15,13 +14,6 @@ import { join } from "node:path";
 import dotenv from "dotenv";
 
 dotenv.config({ path: ".env.local" });
-
-function assertNoDatasetArg() {
-  const arg = process.argv[2];
-  if (!arg) return;
-  console.error(`Unknown dataset "${arg}". Dictionary seed uses normalized split files only.`);
-  process.exit(1);
-}
 
 // --- Normalized split-file types ---
 
@@ -80,124 +72,9 @@ function loadNormalizedSeedData(): NormalizedSeedData {
   };
 }
 
-// --- Seed from normalized split files ---
-
-async function seedNormalized(prisma: PrismaClient) {
-  const { entries, senses, translations, aliases } = loadNormalizedSeedData();
-
-  const sensesByEntry = new Map<string, NormalizedSense[]>();
-  for (const s of senses) {
-    if (!sensesByEntry.has(s.entryKey)) sensesByEntry.set(s.entryKey, []);
-    sensesByEntry.get(s.entryKey)!.push(s);
-  }
-
-  const translationsBySense = new Map<string, NormalizedTranslation[]>();
-  for (const t of translations) {
-    if (!translationsBySense.has(t.senseKey)) translationsBySense.set(t.senseKey, []);
-    translationsBySense.get(t.senseKey)!.push(t);
-  }
-
-  const aliasesByEntry = new Map<string, NormalizedAlias[]>();
-  for (const a of aliases) {
-    if (!aliasesByEntry.has(a.entryKey)) aliasesByEntry.set(a.entryKey, []);
-    aliasesByEntry.get(a.entryKey)!.push(a);
-  }
-
-  // Clean previous audit rows
-  const batchName = "seed:en-vi:normalized";
-  const deleted = await prisma.dictionarySourceAudit.deleteMany({ where: { batchName } });
-  if (deleted.count > 0) console.log(`Cleared ${deleted.count} previous audit rows`);
-
-  console.log(`Seeding ${entries.length} entries from normalized split files...\n`);
-
-  for (let i = 0; i < entries.length; i++) {
-    const entry = entries[i];
-
-    const dictionaryEntry = await prisma.dictionaryEntry.upsert({
-      where: { normalizedHeadword_sourceLanguage: { normalizedHeadword: entry.normalizedHeadword, sourceLanguage: entry.sourceLanguage } },
-      update: { headword: entry.headword, frequencyRank: entry.frequencyRank },
-      create: {
-        headword: entry.headword,
-        normalizedHeadword: entry.normalizedHeadword,
-        sourceLanguage: entry.sourceLanguage,
-        frequencyRank: entry.frequencyRank,
-      },
-    });
-
-    // Delete existing senses + translations for deterministic sync
-    const existingSenses = await prisma.dictionarySense.findMany({ where: { entryId: dictionaryEntry.id }, select: { id: true } });
-    if (existingSenses.length > 0) {
-      await prisma.dictionaryTranslation.deleteMany({ where: { senseId: { in: existingSenses.map((s) => s.id) } } });
-      await prisma.dictionarySense.deleteMany({ where: { id: { in: existingSenses.map((s) => s.id) } } });
-    }
-
-    await prisma.dictionaryAlias.deleteMany({ where: { entryId: dictionaryEntry.id } });
-
-    const entrySenses = sensesByEntry.get(entry.entryKey) ?? [];
-    for (const sense of entrySenses) {
-      const createdSense = await prisma.dictionarySense.create({
-        data: {
-          entryId: dictionaryEntry.id,
-          partOfSpeech: sense.partOfSpeech,
-          definition: sense.definition,
-          example: sense.example,
-          tags: sense.tags,
-          usageRank: sense.usageRank,
-        },
-      });
-
-      const senseTranslations = translationsBySense.get(sense.senseKey) ?? [];
-      for (const tr of senseTranslations) {
-        await prisma.dictionaryTranslation.create({
-          data: {
-            senseId: createdSense.id,
-            targetLanguage: tr.targetLanguage,
-            translation: tr.translation,
-            isPrimary: tr.isPrimary,
-            rank: tr.rank,
-            confidence: tr.confidence,
-            status: tr.status,
-            sourceType: tr.sourceType,
-            sourceName: tr.sourceName,
-            reviewedAt: tr.status === "reviewed" || tr.status === "approved" ? new Date() : null,
-          },
-        });
-      }
-    }
-
-    const entryAliases = aliasesByEntry.get(entry.entryKey) ?? [];
-    for (const alias of entryAliases) {
-      await prisma.dictionaryAlias.create({
-        data: {
-          entryId: dictionaryEntry.id,
-          normalizedAlias: alias.normalizedAlias,
-          aliasType: alias.aliasType,
-        },
-      });
-    }
-
-    await prisma.dictionarySourceAudit.create({
-      data: {
-        batchName,
-        entityType: "DictionaryEntry",
-        entityId: dictionaryEntry.id,
-        note: `Seed entry "${entry.headword}" synced from normalized split files`,
-      },
-    });
-
-    if ((i + 1) % 50 === 0 || i === 0 || i === entries.length - 1) {
-      console.log(`  [${i + 1}/${entries.length}] seeded: "${entry.headword}" (${entrySenses.length} senses)`);
-    }
-  }
-
-  console.log(`\nDone. Seeded ${entries.length} entries (normalized split files)`);
-}
-
 // --- Fast dev-only replace from normalized split files ---
 
 async function seedNormalizedBulk(prisma: PrismaClient) {
-  assertDevelopmentBulkSeedAllowed();
-
   const { entries, senses, translations, aliases } = loadNormalizedSeedData();
   const batchName = "seed:en-vi:normalized";
   const now = new Date();
@@ -297,9 +174,6 @@ async function seedNormalizedBulk(prisma: PrismaClient) {
 }
 
 function assertDevelopmentBulkSeedAllowed() {
-  if (process.env.DICTIONARY_SEED_BULK_TARGET !== "development") {
-    throw new Error("Bulk dictionary seed requires DICTIONARY_SEED_BULK_TARGET=development.");
-  }
   if (process.env.VERCEL_ENV === "production" || process.env.NODE_ENV === "production") {
     throw new Error("Bulk dictionary seed is development-only and is blocked in production environments.");
   }
@@ -308,7 +182,7 @@ function assertDevelopmentBulkSeedAllowed() {
 // --- Main ---
 
 async function main() {
-  assertNoDatasetArg();
+  assertDevelopmentBulkSeedAllowed();
 
   const connectionString = process.env.DIRECT_URL ?? process.env.DATABASE_URL;
   if (!connectionString) {
@@ -319,13 +193,7 @@ async function main() {
   const prisma = new PrismaClient({ adapter });
 
   await prisma.$connect();
-
-  if (process.env.DICTIONARY_SEED_BULK === "1") {
-    await seedNormalizedBulk(prisma);
-  } else {
-    await seedNormalized(prisma);
-  }
-
+  await seedNormalizedBulk(prisma);
   await prisma.$disconnect();
 }
 

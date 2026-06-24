@@ -47,8 +47,6 @@ covering test cell is **GAP** has no real automated test and must not be claimed
 | Health check | `GET /api/health` | `tests/vitest/integration/api/health-and-env-contract.test.ts` |
 | Clerk identity sync (webhook) | `POST /api/webhooks/clerk` | `src/app/api/webhooks/clerk/route.test.ts` |
 | Dev-only local file serving | `GET /api/local-blob/[pathname]` | **GAP** |
-| Dictionary benchmark fixtures | `POST /api/test/dictionary-performance-fixtures` | **GAP** (driven by `tests/performance/` runner, no unit assertion) |
-| Translation benchmark fixtures | `POST /api/test/translate-performance-fixtures` | **GAP** (driven by `tests/performance/` runner, no unit assertion) |
 | Sentry smoke test | `GET /api/sentry-example-api` | **GAP** |
 
 ## Gaps Summary
@@ -56,7 +54,6 @@ covering test cell is **GAP** has no real automated test and must not be claimed
 - `POST /api/study/passages` — passage creation route has no HTTP-level integration test.
 - `DELETE /api/study/passages/[id]` — passage delete route has no HTTP-level integration test.
 - `GET /api/local-blob/[pathname]` — dev-only; no automated test.
-- `POST /api/test/dictionary-performance-fixtures`, `POST /api/test/translate-performance-fixtures` — exercised indirectly by the performance runner under `tests/performance/`, no Vitest assertion.
 - `GET /api/sentry-example-api` — Sentry smoke route; no automated test.
 - Sign-out flow (TS-11) — no automated coverage.
 

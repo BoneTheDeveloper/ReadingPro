@@ -12,7 +12,7 @@
 | Dictionary | Seeded English-Vietnamese lookup/search/suggest/entry detail, vocabulary save from dictionary. |
 | Vocabulary | Saved words/phrases with status tracking (NEW/LEARNING/MASTERED), auto daily/weekly sets, manual sets, occurrence history across passages. |
 | Review | Vocabulary spaced-repetition (NEW/LEARNING/MASTERED fixed-interval schedule), manual status override, progress stats. |
-| Observability | Pino logs, Sentry errors/spans, performance benchmark hooks. |
+| Observability | Pino logs, Sentry errors/spans. |
 | Deployment | Vercel, Neon Postgres, Vercel Blob, env separation. |
 
 ## Not In Current Scope
@@ -33,4 +33,3 @@
 - Target language is currently `vi` for dictionary/translation route schemas.
 - Uploads are private and tied to authenticated users.
 - Runtime data access must go through `DATABASE_URL`.
-- Production storage must use private Vercel Blob tokens separated by environment.

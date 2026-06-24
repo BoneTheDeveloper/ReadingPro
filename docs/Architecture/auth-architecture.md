@@ -66,6 +66,3 @@ Authenticated routes must enforce ownership with `userId`:
 | Authenticated user requests another user's resource | `404` JSON error where possible |
 | User visits protected page unauthenticated | Clerk/locale redirect to sign-in |
 
-## Environment
-
-Use separate Clerk development and production instances. Do not reuse production Clerk secrets in local development or preview environments. See `CLERK_WEBHOOK_SIGNING_SECRET` in `.env.example` for webhook verification setup.
