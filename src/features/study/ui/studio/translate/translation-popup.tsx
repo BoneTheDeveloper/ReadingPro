@@ -2,7 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Loader2, Languages, Volume2 } from "lucide-react";
+import { Loader2, Languages } from "lucide-react";
 import { Button } from "@/ui/primitives/button";
 import { cn } from "@/contracts/utils";
 import type { TranslationSelection } from "@/features/study/model/types";
@@ -269,7 +269,17 @@ export function StudyTranslationPopup({
               className="h-8 flex-1 text-[13px] font-semibold gap-1.5"
               onClick={onOpenDetails}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
               </svg>
               {t("save")}
@@ -281,7 +291,17 @@ export function StudyTranslationPopup({
               onClick={onOpenDetails}
             >
               {t("openDetails")}
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <path d="m9 18 6-6-6-6" />
               </svg>
             </Button>

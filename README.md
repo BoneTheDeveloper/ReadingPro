@@ -104,9 +104,7 @@ pnpm start
 Dictionary seed/import helpers:
 
 ```bash
-pnpm db:seed:dictionary
 pnpm db:seed:dictionary:bulk:dev
-pnpm db:check:dictionary-seed
 ```
 
 ## Documentation
