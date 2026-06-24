@@ -10,7 +10,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { cn } from "@/contracts/utils";
-import { getCEFRLabel } from "@/contracts/domain/cefr";
+import { getCEFRShortLabel } from "@/contracts/domain/cefr";
 import { getCEFRBadgeVariant } from "@/contracts/ui/cefr-style";
 import { Badge } from "@/ui/primitives/badge";
 import { Button } from "@/ui/primitives/button";
@@ -97,7 +97,7 @@ export function StudyContentPanel({
     return (
       <div className="flex items-center justify-center h-full min-h-100">
         <div className="text-center">
-          <div className="w-12 h-12 bg-muted rounded-xl flex items-center justify-center mx-auto mb-4">
+          <div className="w-12 h-12 bg-muted flex items-center justify-center mx-auto mb-4">
             <FileSearch className="w-6 h-6 text-muted-foreground" />
           </div>
           <p className="text-base font-medium text-foreground">
@@ -108,7 +108,7 @@ export function StudyContentPanel({
           </p>
           <button
             onClick={onOpenUploadModal}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all shadow-sm"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all shadow-sm"
           >
             <Plus className="w-4 h-4" />
             {t("addSource")}
@@ -122,7 +122,7 @@ export function StudyContentPanel({
     return (
       <div className="flex items-center justify-center h-full min-h-100">
         <div className="text-center">
-          <div className="w-12 h-12 bg-muted rounded-xl flex items-center justify-center mx-auto mb-4">
+          <div className="w-12 h-12 bg-muted flex items-center justify-center mx-auto mb-4">
             <Loader2 className="w-6 h-6 text-primary animate-spin" />
           </div>
           <p className="text-base font-medium text-foreground">
@@ -168,9 +168,9 @@ export function StudyContentPanel({
       </div>
 
       {/* 53px meta bar — wireframe §1 lines 121-137: CEFR/word-count LEFT, Original/Simplified RIGHT */}
-      <div className="h-[53px] shrink-0 flex items-center gap-3 px-6 border-b border-border">
+      <div className="h-[53px] shrink-0 flex items-center gap-3 px-6 border-b border-border/20">
         <div className="flex items-center gap-3">
-          <Badge variant={getCEFRBadgeVariant(level)}>{getCEFRLabel(level)}</Badge>
+          <Badge variant={getCEFRBadgeVariant(level)}>{getCEFRShortLabel(level)}</Badge>
           <span className="w-px h-3.5 bg-border" />
           <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
             <FileText className="w-3.5 h-3.5" />
@@ -186,7 +186,7 @@ export function StudyContentPanel({
               }
               disabled={simplifying}
               aria-label={t("simplify")}
-              className="ml-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-primary/30 bg-primary/5 text-primary text-xs font-semibold hover:bg-primary/10 hover:border-primary/50 transition-all disabled:opacity-50"
+              className="ml-3 inline-flex items-center gap-1.5 px-3 py-1.5 border border-primary/30 bg-primary/5 text-primary text-xs font-semibold hover:bg-primary/10 hover:border-primary/50 transition-all disabled:opacity-50"
             >
               <Sparkles className="w-3.5 h-3.5" />
               {t("simplify")}
@@ -201,12 +201,12 @@ export function StudyContentPanel({
             options={[
               {
                 value: "original",
-                label: `${t("original")} (${passage.originalLevel ?? level})`,
+                label: `${t("original")} (${getCEFRShortLabel((passage.originalLevel ?? level) as Parameters<typeof getCEFRBadgeVariant>[0])})`,
               },
               {
                 value: "simplified",
                 label: passage.simplifiedContent
-                  ? `${t("simplified")} (${passage.simplifiedLevel ?? level})`
+                  ? `${t("simplified")} (${getCEFRShortLabel((passage.simplifiedLevel ?? level) as Parameters<typeof getCEFRBadgeVariant>[0])})`
                   : t("simplified"),
               },
             ]}
@@ -237,8 +237,8 @@ export function StudyContentPanel({
           </div>
 
           {error && (
-            <div className="mt-8 pt-6 border-t border-border">
-              <div className="p-3 bg-danger-soft border border-destructive/20 rounded-lg text-destructive text-sm">
+            <div className="mt-8 pt-6 border-t border-border/20">
+              <div className="p-3 bg-danger-soft border border-destructive/20 text-destructive text-sm">
                 {error}
               </div>
             </div>
@@ -304,7 +304,7 @@ function SegmentedToggle<T extends string>({
   options: { value: T; label: string }[];
 }) {
   return (
-    <div className="inline-flex bg-paper border border-border rounded-[11px] p-[3px]">
+    <div className="inline-flex bg-paper border border-border p-[3px]">
       {options.map((opt) => {
         const active = opt.value === value;
         return (
@@ -313,7 +313,7 @@ function SegmentedToggle<T extends string>({
             type="button"
             onClick={() => onChange(opt.value)}
             className={cn(
-              "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all",
+              "px-3.5 py-1.5 text-xs font-semibold transition-all",
               active
                 ? "bg-surface text-primary shadow-sm"
                 : "text-muted-foreground hover:text-foreground",

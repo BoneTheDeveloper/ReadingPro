@@ -60,7 +60,7 @@ export function StudySourcesPanel({
   // Collapsed mode: icon-only strip
   if (collapsed) {
     return (
-      <Card className="h-full flex flex-col overflow-hidden bg-panel">
+      <Card className="h-full flex flex-col overflow-hidden bg-panel rounded-none">
         <CardContent className="p-0 flex flex-col h-full items-center">
           <div className="w-full p-2 flex justify-center border-b border-border">
             <Button
@@ -118,7 +118,7 @@ export function StudySourcesPanel({
 
   // Expanded mode — matches wireframe §1 lines 52-114
   return (
-    <Card className="h-full flex flex-col overflow-hidden bg-panel">
+    <Card className="h-full flex flex-col overflow-hidden bg-panel rounded-none">
       <CardContent className="p-0 flex flex-col h-full">
         {/* Panel header — wireframe lines 53-63: uppercase label + chevron collapse (no `+`, moved into the list) */}
         <div className="h-[54px] px-4 flex items-center justify-between border-b border-border">

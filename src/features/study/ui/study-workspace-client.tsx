@@ -7,12 +7,20 @@ import {
   translateResponseSchema,
   vocabularyResponseSchema,
 } from "@/contracts/translation/translation-response-schema";
-import { clampTranslationContext, isTranslateTextWithinLimit } from "@/contracts/translation/translation-limits";
-import type { PassageData, TranslationSelection, QuickTranslationData, StudioArtifact } from "@/features/study/model/types";
+import {
+  clampTranslationContext,
+  isTranslateTextWithinLimit,
+} from "@/contracts/translation/translation-limits";
+import type {
+  PassageData,
+  TranslationSelection,
+  QuickTranslationData,
+  StudioArtifact,
+} from "@/features/study/model/types";
 import { ARTIFACT_STALE_TIME } from "@/features/study/model/types";
-import { StudySourcesPanel } from "./sources-panel";
-import { StudyContentPanel } from "./studio/content/content-panel";
-import { StudyStudioPanel } from "./studio/studio-panel";
+import { StudySourcesPanel } from "./panel/sources-panel";
+import { StudyContentPanel } from "./panel/content-panel";
+import { StudyStudioPanel } from "./panel/studio-panel";
 import { StudyTranslationPopup } from "./studio/translate/translation-popup";
 import { StudyUploadModal } from "./upload-modal";
 import { useStudyActions } from "@/features/study/hooks/use-study-actions";
@@ -22,7 +30,12 @@ import { useStudyWorkspaceState } from "@/features/study/hooks/use-study-workspa
 
 let quickTranslationRequestCounter = 0;
 
-type QuickTranslationStatus = "idle" | "ready" | "loading" | "success" | "error";
+type QuickTranslationStatus =
+  | "idle"
+  | "ready"
+  | "loading"
+  | "success"
+  | "error";
 
 interface QuickTranslationState {
   requestId: number;
@@ -50,26 +63,41 @@ export function StudyPageClient({
     handleUploadError,
     handleDeletePassage,
   } = useStudyWorkspaceState(initialPassages);
-  const { handleSimplify, handleActionClick, handleViewArtifact, handleRecordQuizResult, handleResetQuizResult, retryQuizArtifact } = useStudyActions({ state, setState });
+  const {
+    handleSimplify,
+    handleActionClick,
+    handleViewArtifact,
+    handleRecordQuizResult,
+    handleResetQuizResult,
+    retryQuizArtifact,
+  } = useStudyActions({ state, setState });
   const layout = useStudyPanelLayout();
   // Presence heartbeat is mounted app-wide in DashboardSidebar; the study page is
   // wrapped by it, so no per-page heartbeat is needed here.
 
   // Translation state (lifted from StudyContentPanel)
-  const [contentViewMode, setContentViewMode] = useState<"original" | "simplified">("simplified");
+  const [contentViewMode, setContentViewMode] = useState<
+    "original" | "simplified"
+  >("simplified");
   const [selection, setSelection] = useState<TranslationSelection | null>(null);
-  const [quickTranslationState, setQuickTranslationState] = useState<QuickTranslationState>({
-    requestId: 0,
-    data: null,
-    status: "idle",
-  });
-  const [savedVocabularyIds, setSavedVocabularyIds] = useState<Set<string>>(new Set());
+  const [quickTranslationState, setQuickTranslationState] =
+    useState<QuickTranslationState>({
+      requestId: 0,
+      data: null,
+      status: "idle",
+    });
+  const [savedVocabularyIds, setSavedVocabularyIds] = useState<Set<string>>(
+    new Set(),
+  );
   const [viewingLookup, setViewingLookup] = useState(false);
 
   // Clear stale selection on passage/mode change (adjust during rendering, not in effect)
   const [prevPassageId, setPrevPassageId] = useState(state.activePassageId);
   const [prevViewMode, setPrevViewMode] = useState(contentViewMode);
-  if (state.activePassageId !== prevPassageId || contentViewMode !== prevViewMode) {
+  if (
+    state.activePassageId !== prevPassageId ||
+    contentViewMode !== prevViewMode
+  ) {
     setPrevPassageId(state.activePassageId);
     setPrevViewMode(contentViewMode);
     setSelection(null);
@@ -80,47 +108,56 @@ export function StudyPageClient({
     }));
   }
 
-  const handleSelectionChange = useCallback((sel: TranslationSelection | null) => {
-    setSelection(sel);
+  const handleSelectionChange = useCallback(
+    (sel: TranslationSelection | null) => {
+      setSelection(sel);
 
-    if (!sel) {
+      if (!sel) {
+        setQuickTranslationState((prev) => ({
+          requestId: prev.requestId + 1,
+          data: null,
+          status: "idle",
+        }));
+        return;
+      }
+
+      if (!isTranslateTextWithinLimit(sel.selectedText)) {
+        setSelection(null);
+        setQuickTranslationState((prev) => ({
+          requestId: prev.requestId + 1,
+          data: null,
+          status: "idle",
+        }));
+        Sentry.addBreadcrumb({
+          category: "study-translation",
+          level: "info",
+          message: "study-translation-selection-too-long",
+          data: {
+            sourceId: sel.sourceId,
+            selectedTextLength: sel.selectedText.length,
+          },
+        });
+        return;
+      }
+
       setQuickTranslationState((prev) => ({
         requestId: prev.requestId + 1,
         data: null,
-        status: "idle",
+        status: "ready",
       }));
-      return;
-    }
 
-    if (!isTranslateTextWithinLimit(sel.selectedText)) {
-      setSelection(null);
-      setQuickTranslationState((prev) => ({
-        requestId: prev.requestId + 1,
-        data: null,
-        status: "idle",
-      }));
       Sentry.addBreadcrumb({
         category: "study-translation",
         level: "info",
-        message: "study-translation-selection-too-long",
-        data: { sourceId: sel.sourceId, selectedTextLength: sel.selectedText.length },
+        message: "study-translation-selection-captured",
+        data: {
+          sourceId: sel.sourceId,
+          selectedTextLength: sel.selectedText.length,
+        },
       });
-      return;
-    }
-
-    setQuickTranslationState((prev) => ({
-      requestId: prev.requestId + 1,
-      data: null,
-      status: "ready",
-    }));
-
-    Sentry.addBreadcrumb({
-      category: "study-translation",
-      level: "info",
-      message: "study-translation-selection-captured",
-      data: { sourceId: sel.sourceId, selectedTextLength: sel.selectedText.length },
-    });
-  }, []);
+    },
+    [],
+  );
 
   const handleQuickTranslate = useCallback(() => {
     if (
@@ -132,13 +169,20 @@ export function StudyPageClient({
     }
 
     const requestId = ++quickTranslationRequestCounter;
-    setQuickTranslationState((prev) => ({ ...prev, requestId, status: "loading" }));
+    setQuickTranslationState((prev) => ({
+      ...prev,
+      requestId,
+      status: "loading",
+    }));
 
     Sentry.addBreadcrumb({
       category: "study-translation",
       level: "info",
       message: "study-translation-request",
-      data: { sourceId: selection.sourceId, selectedTextLength: selection.selectedText.length },
+      data: {
+        sourceId: selection.sourceId,
+        selectedTextLength: selection.selectedText.length,
+      },
     });
 
     fetch("/api/translate", {
@@ -146,7 +190,10 @@ export function StudyPageClient({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         text: selection.selectedText,
-        context: clampTranslationContext(selection.contextSentence, selection.selectedText),
+        context: clampTranslationContext(
+          selection.contextSentence,
+          selection.selectedText,
+        ),
         sourceId: selection.sourceId,
         sourceLanguage: "en",
         targetLanguage: "vi",
@@ -165,7 +212,8 @@ export function StudyPageClient({
           });
           throw new Error("Quick translation failed");
         }
-        if (!r.ok || "error" in parsed.data) throw new Error("Quick translation failed");
+        if (!r.ok || "error" in parsed.data)
+          throw new Error("Quick translation failed");
         return parsed.data.data;
       })
       .then((data) => {
@@ -201,7 +249,10 @@ export function StudyPageClient({
       category: "study-vocabulary",
       level: "info",
       message: "study-vocabulary-save-click",
-      data: { sourceId: selection.sourceId, selectedTextLength: selection.selectedText.length },
+      data: {
+        sourceId: selection.sourceId,
+        selectedTextLength: selection.selectedText.length,
+      },
     });
 
     try {
@@ -241,7 +292,8 @@ export function StudyPageClient({
         });
         throw new Error("Vocabulary save failed");
       }
-      if (!res.ok || "error" in parsed.data) throw new Error("Vocabulary save failed");
+      if (!res.ok || "error" in parsed.data)
+        throw new Error("Vocabulary save failed");
       setSavedVocabularyIds((prev) =>
         new Set(prev).add(buildTranslationSelectionKey(selection)),
       );
@@ -260,7 +312,9 @@ export function StudyPageClient({
     }
   }, [selection, quickTranslationState.data]);
 
-  const vocabularySaveKey = selection ? buildTranslationSelectionKey(selection) : null;
+  const vocabularySaveKey = selection
+    ? buildTranslationSelectionKey(selection)
+    : null;
   const isVocabularySaved = vocabularySaveKey
     ? savedVocabularyIds.has(vocabularySaveKey)
     : false;
@@ -270,7 +324,12 @@ export function StudyPageClient({
     if (!state.activePassageId) return;
     const passageId = state.activePassageId;
     const cached = state.artifactsByPassageId[passageId];
-    if (cached?.status === "success" && cached.fetchedAt && Date.now() - cached.fetchedAt < ARTIFACT_STALE_TIME) return;
+    if (
+      cached?.status === "success" &&
+      cached.fetchedAt &&
+      Date.now() - cached.fetchedAt < ARTIFACT_STALE_TIME
+    )
+      return;
 
     const controller = new AbortController();
     setState((prev) => ({
@@ -281,7 +340,9 @@ export function StudyPageClient({
       },
     }));
 
-    fetch(`${STUDY_API_ROUTES.artifacts}?passageId=${passageId}`, { signal: controller.signal })
+    fetch(`${STUDY_API_ROUTES.artifacts}?passageId=${passageId}`, {
+      signal: controller.signal,
+    })
       .then(async (r) => {
         if (!r.ok) {
           throw new Error(`Failed to fetch study artifacts (${r.status})`);
@@ -295,7 +356,11 @@ export function StudyPageClient({
             ...prev,
             artifactsByPassageId: {
               ...prev.artifactsByPassageId,
-              [passageId]: { status: "success", data: json.data?.artifacts ?? [], fetchedAt: Date.now() },
+              [passageId]: {
+                status: "success",
+                data: json.data?.artifacts ?? [],
+                fetchedAt: Date.now(),
+              },
             },
           };
         });
@@ -312,7 +377,14 @@ export function StudyPageClient({
             ...prev,
             artifactsByPassageId: {
               ...prev.artifactsByPassageId,
-              [passageId]: { status: "error", data: cached?.data ?? [], error: err instanceof Error ? err.message : "Failed to fetch artifacts" },
+              [passageId]: {
+                status: "error",
+                data: cached?.data ?? [],
+                error:
+                  err instanceof Error
+                    ? err.message
+                    : "Failed to fetch artifacts",
+              },
             },
           };
         });
@@ -355,9 +427,9 @@ export function StudyPageClient({
             />
           </Panel>
 
-          <Separator className="w-4" />
-          <Panel id="content" minSize={360}>
-            <div className="h-full bg-surface flex flex-col overflow-hidden rounded-xl border border-border">
+          <Separator className="w-0.25" />
+          <Panel id="content" minSize={550}>
+            <div className="h-full bg-surface flex flex-col overflow-hidden border border-border">
               <StudyContentPanel
                 passage={activePassage}
                 error={state.error}
@@ -389,7 +461,7 @@ export function StudyPageClient({
             </div>
           </Panel>
 
-          <Separator className="w-4" />
+          <Separator className="w-0.25" />
 
           <Panel
             panelRef={layout.rightPanelRef}
@@ -401,10 +473,20 @@ export function StudyPageClient({
             onResize={layout.handleRightResize}
           >
             <StudyStudioPanel
-              artifactsCache={state.artifactsByPassageId[state.activePassageId ?? ""] ?? { status: "idle", data: [] }}
+              artifactsCache={
+                state.artifactsByPassageId[state.activePassageId ?? ""] ?? {
+                  status: "idle",
+                  data: [],
+                }
+              }
               activePassage={activePassage}
               hasActivePassage={!!state.activePassageId}
-              viewingArtifactRef={state.activePassageId ? state.viewingArtifactByPassageId[state.activePassageId] ?? null : null}
+              viewingArtifactRef={
+                state.activePassageId
+                  ? (state.viewingArtifactByPassageId[state.activePassageId] ??
+                    null)
+                  : null
+              }
               onSetViewingArtifact={(ref) => {
                 if (!state.activePassageId) return;
                 // Routes through the hook so opening a persisted artifact lazy-loads
@@ -423,10 +505,16 @@ export function StudyPageClient({
               onSaveVocabulary={handleSaveVocabulary}
               vocabularySaved={isVocabularySaved}
               onRecordQuizResult={(artifactId, stats) => {
-                if (state.activePassageId) handleRecordQuizResult(state.activePassageId, artifactId, stats);
+                if (state.activePassageId)
+                  handleRecordQuizResult(
+                    state.activePassageId,
+                    artifactId,
+                    stats,
+                  );
               }}
               onResetQuizResult={(artifactId) => {
-                if (state.activePassageId) handleResetQuizResult(state.activePassageId, artifactId);
+                if (state.activePassageId)
+                  handleResetQuizResult(state.activePassageId, artifactId);
               }}
               onRetryArtifact={retryQuizArtifact}
             />

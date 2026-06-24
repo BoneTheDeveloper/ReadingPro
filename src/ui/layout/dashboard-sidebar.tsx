@@ -16,7 +16,6 @@ import {
 import { cn } from "@/contracts/utils";
 import { Button } from "@/ui/primitives/button";
 import { AuthControls } from "./auth-controls";
-import { LanguageSwitcher } from "./language-switcher";
 import { SettingsModal } from "@/features/study/ui/settings-modal";
 import { useTranslations } from "next-intl";
 import { useStudySessionHeartbeat } from "@/features/study/hooks/use-study-session-heartbeat";
@@ -116,17 +115,28 @@ export function DashboardSidebar({
         style={{ marginLeft: RAIL_WIDTH_PX }}
         className="hidden lg:flex flex-1 flex-col h-dvh overflow-hidden"
       >
-        <TopBar onOpenSettings={() => setSettingsOpen(true)} />
         <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
           {children}
         </main>
       </div>
 
       <div className="lg:hidden flex-1 flex flex-col h-dvh overflow-hidden">
-        <TopBar
-          onMenuToggle={() => setMobileOpen(true)}
-          onOpenSettings={() => setSettingsOpen(true)}
-        />
+        <header className="lg:hidden sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-border px-4 py-3 flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setMobileOpen(true)}
+            className="-ml-1.5"
+            aria-label="Open menu"
+          >
+            <Menu className="w-5 h-5" />
+          </Button>
+          <GraduationCap className="w-5 h-5 text-primary" />
+          <span className="font-semibold text-foreground text-sm">English Reading</span>
+          <div className="ml-auto">
+            <AuthControls compact />
+          </div>
+        </header>
         <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
           {children}
         </main>
@@ -137,69 +147,6 @@ export function DashboardSidebar({
   );
 }
 
-function TopBar({
-  onMenuToggle,
-  onOpenSettings,
-}: {
-  onMenuToggle?: () => void;
-  onOpenSettings: () => void;
-}) {
-  if (onMenuToggle) {
-    return (
-      <header className="lg:hidden sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-border px-4 py-3 flex items-center gap-3">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onMenuToggle}
-          className="-ml-1.5"
-          aria-label="Open menu"
-        >
-          <Menu className="w-5 h-5" />
-        </Button>
-        <GraduationCap className="w-5 h-5 text-primary" />
-        <span className="font-semibold text-foreground text-sm">
-          English Reading
-        </span>
-        <div className="ml-auto flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onOpenSettings}
-            aria-label="Open settings"
-            className="text-muted-foreground"
-          >
-            <SettingsIcon className="w-5 h-5" />
-          </Button>
-          <AuthControls compact />
-        </div>
-      </header>
-    );
-  }
-
-  return (
-    <header className="hidden lg:flex sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-border items-center justify-between h-16 px-8">
-      <div className="flex items-center gap-4">
-        <GraduationCap className="w-5 h-5 text-primary" />
-        <span className="font-semibold text-foreground text-sm">
-          English Reading
-        </span>
-      </div>
-      <div className="flex items-center gap-3">
-        <LanguageSwitcher />
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onOpenSettings}
-          aria-label="Open settings"
-          className="text-muted-foreground hover:text-primary"
-        >
-          <SettingsIcon className="w-5 h-5" />
-        </Button>
-        <AuthControls />
-      </div>
-    </header>
-  );
-}
 
 function RailThemeButton({ isActive }: { isActive: boolean }) {
   const { theme, setTheme } = useTheme();
@@ -289,6 +236,9 @@ function SidebarContent({
         >
           <SettingsIcon className="w-5 h-5" />
         </button>
+        <div className="mt-1">
+          <AuthControls />
+        </div>
       </div>
     </div>
   );

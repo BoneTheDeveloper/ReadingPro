@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { createPortal } from "react-dom";
+import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
@@ -19,11 +20,6 @@ const localeLabels: Record<string, string> = {
   vi: "Tiếng Việt",
 };
 
-const localeChip: Record<string, string> = {
-  en: "EN",
-  vi: "VI",
-};
-
 interface SettingsModalProps {
   open: boolean;
   onClose: () => void;
@@ -36,6 +32,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -45,6 +42,14 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
   }, [open, onClose]);
+
+  // Close any open dropdown when clicking outside
+  useEffect(() => {
+    if (!activeDropdown) return;
+    function handler() { setActiveDropdown(null); }
+    document.addEventListener("click", handler);
+    return () => document.removeEventListener("click", handler);
+  }, [activeDropdown]);
 
   if (!open) return null;
 
@@ -59,9 +64,9 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
         className="absolute inset-0 bg-rail/40 backdrop-blur-[3px]"
         aria-hidden
       />
-      <div className="relative w-full max-w-[560px] max-h-[88vh] overflow-y-auto bg-surface border border-border rounded-[22px] shadow-popup">
+      <div className="relative w-full max-w-[560px] max-h-[88vh] overflow-y-auto bg-surface border border-border shadow-popup">
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-surface px-7 pt-5 pb-4 border-b border-border flex items-start justify-between gap-4">
+        <div className="sticky top-0 z-10 bg-surface px-7 pt-5 pb-4 border-b border-border/20 flex items-start justify-between gap-4">
           <div>
             <div className="text-[19px] font-extrabold tracking-[-0.01em] text-foreground">
               {t("title")}
@@ -73,7 +78,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
             size="icon"
             onClick={onClose}
             aria-label={tc("close")}
-            className="h-[34px] w-[34px] rounded-[11px] border border-border bg-surface text-muted-foreground hover:border-coral hover:text-coral transition-all"
+            className="h-[34px] w-[34px] border border-border bg-surface text-muted-foreground hover:border-coral hover:text-coral transition-all"
           >
             <X className="w-4 h-4" strokeWidth={2.2} />
           </Button>
@@ -85,9 +90,16 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
               label={t("uiLanguage")}
               hint={t("uiLanguageHint")}
               control={
-                <LocaleDropdown
-                  current={locale}
-                  onChange={switchLocale}
+                <LocalePill
+                  id="ui-lang"
+                  activeDropdown={activeDropdown}
+                  onToggle={(id) => setActiveDropdown(activeDropdown === id ? null : id)}
+                  value={locale}
+                  options={routing.locales.map((loc) => ({
+                    value: loc,
+                    label: localeLabels[loc] ?? loc,
+                  }))}
+                  onChange={(v) => switchLocale(v)}
                 />
               }
             />
@@ -95,12 +107,24 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
             <SettingsRow
               label={t("translationLanguage")}
               hint={t("translationLanguageHint")}
-              control={<Pill value="vi" options={[{ value: "vi", label: "Tiếng Việt" }, { value: "en", label: "English" }]} />}
+              control={
+                <LocalePill
+                  id="trans-lang"
+                  activeDropdown={activeDropdown}
+                  onToggle={(id) => setActiveDropdown(activeDropdown === id ? null : id)}
+                  value="vi"
+                  options={[
+                    { value: "vi", label: "Tiếng Việt" },
+                    { value: "en", label: "English" },
+                  ]}
+                  onChange={() => {}}
+                />
+              }
             />
           </SettingsSection>
 
           <SettingsSection title={t("level")}>
-            <div className="border border-border rounded-[14px] bg-surface p-4">
+            <div className="border border-border bg-surface p-4">
               <div className="text-[13px] font-semibold text-foreground">{t("targetLevel")}</div>
               <div className="text-[11px] text-muted-foreground mt-0.5 mb-3">
                 {t("targetLevelHint")}
@@ -193,25 +217,11 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
               }
             />
             <SettingsDivider />
-            <SettingsRow
-              label={t("readingSize")}
-              hint={t("readingSizeHint")}
-              control={
-                <Pill
-                  value="m"
-                  options={[
-                    { value: "s", label: "A−" },
-                    { value: "m", label: "A" },
-                    { value: "l", label: "A+" },
-                  ]}
-                />
-              }
-            />
           </SettingsSection>
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 z-10 bg-surface px-7 py-4 border-t border-border flex items-center justify-between gap-4">
+        <div className="sticky bottom-0 z-10 bg-surface px-7 py-4 border-t border-border/20 flex items-center justify-between gap-4">
           <div className="text-[11px] text-muted-foreground inline-flex items-center gap-1.5">
             <Check className="w-3 h-3 text-success" />
             {t("autoSaved")}
@@ -231,7 +241,7 @@ function SettingsSection({ title, children }: { title: string; children: React.R
       <div className="text-[11px] font-bold uppercase tracking-[0.13em] text-muted-foreground mb-2.5">
         {title}
       </div>
-      <div className="border border-border rounded-[14px] overflow-hidden bg-surface">{children}</div>
+      <div className="border border-border bg-surface">{children}</div>
     </div>
   );
 }
@@ -257,7 +267,7 @@ function SettingsRow({
 }
 
 function SettingsDivider() {
-  return <div className="h-px bg-border" />;
+  return <div className="h-px bg-border/20" />;
 }
 
 function Pill<T extends string>({
@@ -270,7 +280,7 @@ function Pill<T extends string>({
   onChange?: (v: T) => void;
 }) {
   return (
-    <div className="inline-flex bg-paper border border-border rounded-[11px] p-[3px]" role="tablist">
+    <div className="inline-flex bg-paper border border-border p-[3px]" role="tablist">
       {options.map((opt) => {
         const active = opt.value === value;
         return (
@@ -281,7 +291,7 @@ function Pill<T extends string>({
             aria-selected={active}
             onClick={() => onChange?.(opt.value)}
             className={cn(
-              "inline-flex items-center gap-1 px-3.5 py-1.5 rounded-lg text-[12.5px] transition-all",
+              "inline-flex items-center gap-1 px-3.5 py-1.5 text-[12.5px] transition-all",
               active
                 ? "bg-surface text-primary font-semibold shadow-sm"
                 : "text-muted-foreground font-medium hover:text-foreground",
@@ -315,59 +325,78 @@ function Switch({ defaultChecked = false }: { defaultChecked?: boolean }) {
   );
 }
 
-function LocaleDropdown({
-  current,
+function LocalePill<T extends string>({
+  id,
+  activeDropdown,
+  onToggle,
+  value,
+  options,
   onChange,
 }: {
-  current: string;
-  onChange: (next: string) => void;
+  id: string;
+  activeDropdown: string | null;
+  onToggle: (id: string) => void;
+  value: T;
+  options: { value: T; label: string; icon?: React.ReactNode }[];
+  onChange?: (v: T) => void;
 }) {
-  return (
-    <div className="relative group">
-      <button
-        type="button"
-        className="inline-flex items-center gap-2 px-3 py-2 border border-border rounded-[11px] bg-surface text-[13px] font-semibold text-foreground hover:border-primary hover:text-primary transition-all"
-      >
-        <span className="w-6 h-[18px] rounded-[5px] bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center">
-          {localeChip[current] ?? current.toUpperCase()}
-        </span>
-        {localeLabels[current] ?? current}
-        <span className="text-muted-foreground">▾</span>
-      </button>
-      <div className="absolute right-0 top-full mt-2 w-[212px] bg-surface border border-border rounded-[14px] shadow-popup p-1.5 z-10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
-        {routing.locales.map((loc) => {
-          const active = loc === current;
-          return (
-            <button
-              key={loc}
-              type="button"
-              onClick={() => onChange(loc)}
-              className={cn(
-                "w-full flex items-center gap-2.5 px-2.5 py-2 rounded-[10px] text-left transition-colors",
-                active ? "bg-primary/10" : "hover:bg-muted",
-              )}
-            >
-              <span
-                className={cn(
-                  "w-[30px] h-[30px] rounded-[9px] text-[11px] font-bold flex items-center justify-center",
-                  active ? "bg-primary text-primary-foreground" : "bg-muted text-ink-2",
-                )}
-              >
-                {localeChip[loc] ?? loc.toUpperCase()}
-              </span>
-              <div className="flex-1">
-                <div className={cn("text-[13px] font-semibold", active ? "text-primary" : "text-foreground")}>
-                  {localeLabels[loc] ?? loc}
-                </div>
-                <div className="text-[11px] text-muted-foreground">
-                  {loc === "vi" ? "Vietnamese" : "English"}
-                </div>
-              </div>
-              {active && <Check className="w-4 h-4 text-primary" />}
-            </button>
-          );
-        })}
+  const [pos, setPos] = useState({ top: 0, left: 0, width: 0 });
+  const ref = useRef<HTMLDivElement>(null);
+  const selected = options.find((o) => o.value === value);
+  const isOpen = activeDropdown === id;
+
+  const open = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const rect = ref.current!.getBoundingClientRect();
+    setPos({ top: rect.bottom, left: rect.left, width: rect.width });
+    onToggle(id);
+  };
+
+  if (!isOpen) {
+    return (
+      <div ref={ref}>
+        <button
+          type="button"
+          onClick={open}
+          className="inline-flex items-center gap-2 px-3 py-2 border border-border bg-surface text-[13px] font-semibold text-foreground hover:border-primary hover:text-primary transition-all min-w-[120px]"
+        >
+          {selected?.icon}
+          <span className="flex-1 text-left">{selected?.label}</span>
+          <span className="text-muted-foreground">▾</span>
+        </button>
       </div>
-    </div>
+    );
+  }
+
+  return createPortal(
+    <div
+      className="fixed z-[200] w-[160px] bg-surface border border-border shadow-popup p-1.5"
+      style={{ top: pos.top + 8, left: pos.left + pos.width - 160 }}
+    >
+      {options.map((opt) => {
+        const active = opt.value === value;
+        return (
+          <button
+            key={opt.value}
+            type="button"
+            onClick={() => {
+              onChange?.(opt.value);
+              onToggle(id);
+            }}
+            className={cn(
+              "w-full flex items-center gap-2 px-3 py-2 text-left transition-colors",
+              active ? "bg-primary/10" : "hover:bg-muted",
+            )}
+          >
+            {opt.icon && <span className="text-muted-foreground">{opt.icon}</span>}
+            <span className={cn("text-[13px] font-semibold flex-1", active ? "text-primary" : "text-foreground")}>
+              {opt.label}
+            </span>
+            {active && <Check className="w-3.5 h-3.5 text-primary shrink-0" />}
+          </button>
+        );
+      })}
+    </div>,
+    document.body,
   );
 }

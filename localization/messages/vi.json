@@ -102,9 +102,11 @@
     "autoPlay": "Tự phát âm khi tra từ",
     "autoPlayHint": "Phát ngay khi mở một từ",
     "display": "Hiển thị",
+    "theme": "Giao diện",
     "themeHint": "Giao diện sáng hoặc tối",
-    "readingSize": "Cỡ chữ vùng đọc",
-    "readingSizeHint": "Cho dễ đọc lâu hơn",
+    "themeLight": "Sáng",
+    "themeDark": "Tối",
+    "themeSystem": "Hệ thống",
     "autoSaved": "Tự động lưu"
   },
   "Study": {

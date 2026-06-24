@@ -102,9 +102,11 @@
     "autoPlay": "Auto-play on lookup",
     "autoPlayHint": "Speak as soon as a word opens",
     "display": "Display",
+    "theme": "Theme",
     "themeHint": "Light or dark interface",
-    "readingSize": "Reading text size",
-    "readingSizeHint": "Comfortable for long reading",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeSystem": "System",
     "autoSaved": "Saved automatically"
   },
   "Study": {

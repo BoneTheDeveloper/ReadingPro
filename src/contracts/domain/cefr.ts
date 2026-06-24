@@ -19,6 +19,10 @@ export function getCEFRLabel(level: CEFRLevel): string {
   return labels[level];
 }
 
+export function getCEFRShortLabel(level: CEFRLevel): string {
+  return level;
+}
+
 export function getTargetCEFRLevel(level: CEFRLevel): CEFRLevel | null {
   return TARGET_LEVEL_MAP[level] ?? null;
 }

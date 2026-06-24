@@ -28,15 +28,15 @@ import type {
   StudioActionId,
   TranslationSelection,
 } from "@/features/study/model/types";
-import { QuizContent } from "./quiz/quiz-content";
-import { StudyChatPanel } from "./chat/chat-panel";
-import { StudyLookupPanel } from "./lookup/lookup-panel";
+import { QuizContent } from "../studio/quiz/quiz-content";
+import { StudyChatPanel } from "../studio/chat/chat-panel";
+import { StudyLookupPanel } from "../studio/lookup/lookup-panel";
 import { resetQuizResult } from "@/features/study/api-client/studio-artifacts-client";
 import {
   StudioActionGrid,
   StudioEmptyState,
   StudioLibraryHeader,
-} from "./studio-action-tile";
+} from "../studio/studio-action-tile";
 
 interface StudyStudioPanelProps {
   artifactsCache: ArtifactsCacheEntry;
@@ -168,7 +168,7 @@ export function StudyStudioPanel({
     const detail = artifactDetailById[viewingArtifact.id];
 
     return (
-      <Card className="h-full flex flex-col overflow-hidden bg-panel">
+      <Card className="h-full flex flex-col overflow-hidden bg-panel rounded-none">
         <CardContent className="p-0 flex flex-col h-full">
           <PanelHeader
             left={
@@ -211,7 +211,7 @@ export function StudyStudioPanel({
   // Collapsed mode: icon-only strip
   if (collapsed) {
     return (
-      <Card className="h-full flex flex-col overflow-hidden bg-panel">
+      <Card className="h-full flex flex-col overflow-hidden bg-panel rounded-none">
         <CardContent className="p-0 flex flex-col h-full items-center">
           <div className="w-full p-2 flex justify-center border-b border-border">
             <Button
@@ -273,7 +273,7 @@ export function StudyStudioPanel({
   };
 
   return (
-    <Card className="h-full flex flex-col overflow-hidden bg-panel">
+    <Card className="h-full flex flex-col overflow-hidden bg-panel rounded-none">
       <CardContent className="p-0 flex flex-col h-full">
         <PanelHeader
           left={
