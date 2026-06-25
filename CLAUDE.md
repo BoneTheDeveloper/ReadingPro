@@ -1,6 +1,6 @@
 ## Start Here
 
-1. Read `docs/README.md` for the current documentation map.
+1. Read `docs/docs-index.md` for the current documentation map.
 2. Read `docs/development-guide.md` for the implementation flow — which doc to read first and what comes next for a given task.
 3. Read `docs/codebase-summary.md` when you need the source layout or feature map.
 4. Read `docs/code-standards.md` for broad code and file placement conventions.

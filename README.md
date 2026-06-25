@@ -109,7 +109,7 @@ pnpm db:seed:dictionary:bulk:dev
 
 ## Documentation
 
-- Docs index: [docs/README.md](docs/README.md)
+- Docs index: [docs/docs-index.md](docs/docs-index.md)
 - Product overview: [docs/Product/overview-pdr.md](docs/Product/overview-pdr.md)
 - Codebase summary: [docs/codebase-summary.md](docs/codebase-summary.md)
 - System architecture: [docs/Architecture/README.md](docs/Architecture/README.md)

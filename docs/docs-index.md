@@ -1,6 +1,6 @@
 # Documentation Index
 
-This is the **map** of the English Reading Training App docs — it tells you where things live, not how to build them. Docs are organized **by the question each folder answers**.
+This is the **map** of app — it tells you where things live, not how to build them. Docs are organized **by the question each folder answers**.
 
 > **Core rule — Single Source of Truth (SSoT).**
 > Each concern has exactly **one** canonical owner. Every other doc *links* to that owner
@@ -26,7 +26,7 @@ These aren't folders, but every section relies on them:
 | [Design](Design/design.md) | What is the visual system? | [Design guidelines](Design/design.md), [Dark-mode color design](Design/design.dark.md). |
 | [Architecture](Architecture/README.md) | How is it built? | [Architecture index](Architecture/README.md): system overview + ownership map for runtime, frontend UI, backend, auth, storage, observability. Frontend has a [screen architecture](Architecture/frontend-ui-architecture/README.md) + [component catalog](Architecture/frontend-ui-architecture/component-catalog.md). |
 | [API](API/api-index.md) | What are the request/response contracts? | [API index](API/api-index.md) (route inventory) + [implementation conventions](API/api-implementation-conventions.md), and per-feature route docs. |
-| [Flows](Flows/README.md) | How does a request travel through the code, and how does the user move through the UI? | Two lenses: [data flows](Flows/data-flows/) (white-box UI-to-persistence call path per feature) and [UI flows](Flows/ui-flows/) (UX — [navigation](Flows/ui-flows/navigation-flow.md) page-to-page + [interaction](Flows/ui-flows/overall-ui-flows.md) in-screen). |
+| [Flows](Flows/README.md) | How does a request travel through the code, and how does the user move through the UI? | Three lenses: [data flows](Flows/data-flows/) (white-box UI-to-persistence call path per feature), [UI flows](Flows/ui-flows/) (UX — [navigation](Flows/ui-flows/navigation-flow.md) page-to-page + [interaction](Flows/ui-flows/overall-ui-flows.md) in-screen), and [user flows](Flows/user-flows/) (black-box learner actions only). |
 | [Testing](Testing/testing-strategy.md) | How do we verify it? | [Test scenarios](Testing/test-scenarios.md), [Traceability matrix](Testing/traceability-matrix.md), [Contract tests](Testing/contract-tests.md). Suite structure + naming rules live in [`tests/README.md`](../tests/README.md). |
 
 
@@ -51,3 +51,4 @@ it and never restates it. This table is the registry of who owns what.
 | Internal request/data path (white-box data flows) | [`Flows/data-flows/`](Flows/data-flows/) |
 | Page-to-page navigation (UX) | [`Flows/ui-flows/navigation-flow.md`](Flows/ui-flows/navigation-flow.md) |
 | In-screen interaction (UX UI flows) | [`Flows/ui-flows/overall-ui-flows.md`](Flows/ui-flows/overall-ui-flows.md) |
+| Learner actions (black-box user flows) | [`Flows/user-flows/`](Flows/user-flows/) |

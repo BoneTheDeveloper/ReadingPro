@@ -6,7 +6,6 @@ this folder, which describe *how pages are composed*.
 
 > **Scope split.** This catalog owns the **component inventory** (anatomy, variants, props,
 > states, usage). It does **not** own visual tokens — color, typography, spacing, radius,
-> shadows, and motion live in [`../../Design/design.md`](../../Design/design.md). When a
 > component's look is described here, it links to the token, never restates it.
 
 ## Where components live
@@ -27,7 +26,7 @@ All primitives follow the same shape, so a new one is predictable:
   styling hooks and test/query targeting.
 - **`cva` variants.** Components with visual variants use `class-variance-authority`; the
   variant map is exported (e.g. `buttonVariants`) for composition.
-- **`cn` merge.** Class lists merge through `cn` from `@/contracts/utils`; callers can always
+- **`cn` merge.** Class lists merge through `cn` from `@/ui/utils`; callers can always
   pass `className` to extend.
 - **Native prop pass-through.** Props extend the underlying element/primitive props, so
   standard HTML/ARIA attributes work without wrappers.
@@ -98,7 +97,6 @@ App-shell chrome under `src/ui/layout`, mounted by the dashboard layout:
 | `LanguageSwitcher` | `language-switcher.tsx` | next-intl locale switcher. |
 | `ThemeToggle` | `theme-toggle.tsx` | Light/dark toggle. |
 
-See [README.md](README.md) for app-shell responsibilities and the page inventory.
 
 ## Feature components
 
@@ -122,9 +120,3 @@ screens, not here (single source of truth):
 4. Pull colors/spacing/radius from [Design tokens](../../Design/design.md) — do not hardcode new values.
 5. Allow `className` pass-through via `cn`.
 6. Add a row to the inventory above; document anatomy if it is a high-traffic primitive.
-
-## Related code
-
-- Primitives: `src/ui/primitives`
-- Layout: `src/ui/layout`
-- Class merge util: `src/contracts/utils.ts` (`cn`)
