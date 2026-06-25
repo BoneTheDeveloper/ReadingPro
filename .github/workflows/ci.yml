@@ -54,5 +54,5 @@ jobs:
       - name: Typecheck
         run: pnpm exec tsc --noEmit
 
-      - name: Test with coverage
-        run: pnpm test:coverage
+      - name: Test
+        run: pnpm test

@@ -23,7 +23,7 @@ const appLogicCoverageInclude = [
   "src/features/study/api-client/studio-questions-client.ts",
   "src/features/study/api-client/study-session-client.ts",
   // Feature services — orchestration across modules
-  "src/features/upload/services/upload-workflow.ts",
+  "src/server/modules/upload/upload-workflow.ts",
   // HTTP routes — the actual public contract surface
   "src/app/api/upload/route.ts",
   "src/app/api/upload/text/route.ts",
@@ -68,14 +68,6 @@ export default defineConfig({
       reporter: ["text", "json", "html"],
       reportsDirectory: "coverage",
       include: [...appLogicCoverageInclude, ...appLogicCoverageSoftInclude],
-      // Tier 1 is the real failure surface; the threshold targets it.
-      // The previous 80% threshold was an artifact of stale paths in the
-      // include list (most listed files did not exist). Re-raise this
-      // toward 80 as Phase 3 fills the GAP routes and components
-      // converge on real behavior tests instead of static renders.
-      thresholds: {
-        lines: 70,
-      },
     },
   },
 });

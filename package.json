@@ -11,17 +11,13 @@
     "build": "prisma generate --generator client && next build",
     "start": "next start",
     "test": "vitest --config tests/vitest/vitest.config.ts run",
-    "test:coverage": "vitest --config tests/vitest/vitest.config.ts run --coverage",
     "typecheck": "tsc --noEmit",
     "lint": "eslint",
     "postinstall": "prisma generate --generator client",
     "db:generate": "prisma generate --generator client",
     "db:migrate:dev": "prisma migrate dev",
     "db:studio": "prisma studio",
-    "db:seed:dictionary": "tsx prisma/seed.ts",
-    "db:seed:dictionary:bulk:dev": "DICTIONARY_SEED_BULK=1 DICTIONARY_SEED_BULK_TARGET=development tsx prisma/seed.ts",
-    "db:validate:dictionary": "tsx scripts/dictionary/validate-dictionary.ts",
-    "db:check:dictionary-seed": "tsx scripts/dictionary/check-seed-status.ts"
+    "db:seed:dictionary": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.72",

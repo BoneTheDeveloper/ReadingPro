@@ -1,9 +1,9 @@
 /**
  * Seeds dictionary entries from normalized split files into the sense-based dictionary model.
- * Fast bulk replace: development-only, safe to run multiple times.
+ * Development-only, safe to run multiple times.
  *
  * Usage:
- *   pnpm db:seed:dictionary:bulk:dev       # fast dev-only replace from production split files
+ *   pnpm db:seed:dictionary
  */
 
 import { PrismaPg } from "@prisma/adapter-pg";
