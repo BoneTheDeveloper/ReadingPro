@@ -198,6 +198,21 @@ export async function reviewVocabularyItem(params: {
   });
 }
 
+export async function getVocabularyStats(userId: string): Promise<{
+  total: number;
+  new: number;
+  learning: number;
+  known: number;
+}> {
+  const [total, newCount, learningCount, knownCount] = await Promise.all([
+    db.vocabularyItem.count({ where: { userId } }),
+    db.vocabularyItem.count({ where: { userId, status: "NEW" } }),
+    db.vocabularyItem.count({ where: { userId, status: "LEARNING" } }),
+    db.vocabularyItem.count({ where: { userId, status: "MASTERED" } }),
+  ]);
+  return { total, new: newCount, learning: learningCount, known: knownCount };
+}
+
 export async function deleteVocabularyItem(params: {
   userId: string;
   itemId: string;
