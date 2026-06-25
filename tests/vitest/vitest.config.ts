@@ -43,7 +43,6 @@ const appLogicCoverageSoftInclude = [
   "src/features/study/ui/cefr-style.ts",
   "src/server/ai/prompt-utils.ts",
   "src/server/db/vocabulary-text-utils.ts",
-  "src/server/observability/prisma-query-metrics.ts",
   "src/features/study/hooks/selection-utils.ts",
 ];
 

@@ -11,7 +11,7 @@
 | Storage       | Local filesystem in development, private Vercel Blob in preview |
 | AI            | Vercel AI SDK, OpenAI and Google provider packages              |
 | Validation    | Zod at API/server-action boundaries                             |
-| Observability | Sentry, Pino, optional Prisma/query performance headers         |
+| Observability | Sentry, Pino                                                    |
 | Tests         | Vitest, Testing Library, Playwright                             |
 
 ## Source Layout

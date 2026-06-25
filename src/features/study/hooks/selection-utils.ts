@@ -1,5 +1,5 @@
 import type { TranslationSelection } from "../model/types";
-import { countWords } from "@/contracts/translation/translate-performance";
+import { countWords } from "@/contracts/translation/text-utils";
 
 type SelectionRect = TranslationSelection["selectionRect"];
 type SelectionPoint = { x: number; y: number };

@@ -8,25 +8,23 @@ export async function resolveSentenceTranslate(
   input: TranslateServiceInput,
   ctx: TranslateServiceContext,
 ): Promise<QuickTranslation> {
-  const providerResult = await measureStep(ctx, "nonAiProvider", () =>
-    Sentry.startSpan(
-      {
-        name: "sentence-translate:resolve",
-        op: "function",
-        attributes: {
-          "translation.source_id": input.sourceId,
-          "translation.text_length": input.text.length,
-          "translation.target_language": input.targetLanguage,
-          "user.id": ctx.userId,
-        },
+  const providerResult = await Sentry.startSpan(
+    {
+      name: "sentence-translate:resolve",
+      op: "function",
+      attributes: {
+        "translation.source_id": input.sourceId,
+        "translation.text_length": input.text.length,
+        "translation.target_language": input.targetLanguage,
+        "user.id": ctx.userId,
       },
-      () =>
-        translateWithProvider({
-          text: input.text,
-          sourceLanguage: input.sourceLanguage,
-          targetLanguage: input.targetLanguage,
-        }),
-    ),
+    },
+    () =>
+      translateWithProvider({
+        text: input.text,
+        sourceLanguage: input.sourceLanguage,
+        targetLanguage: input.targetLanguage,
+      }),
   );
 
   ctx.requestLog.info(
@@ -45,14 +43,4 @@ export async function resolveSentenceTranslate(
     type: null,
     provider: providerResult.provider,
   };
-}
-
-async function measureStep<T>(
-  ctx: TranslateServiceContext,
-  step: string,
-  callback: () => Promise<T>,
-): Promise<T> {
-  if (!ctx.performanceTracker) return callback();
-  const { runWithPrismaQueryStep } = await import("@/server/observability/prisma-query-metrics");
-  return ctx.performanceTracker.measure(step, () => runWithPrismaQueryStep(step, callback));
 }

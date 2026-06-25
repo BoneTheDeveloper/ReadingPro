@@ -5,14 +5,7 @@ import type { QuickTranslation } from "@/server/ai/translator";
 import { quickTranslationSchema } from "@/server/ai/translator";
 import { createRequestLogger } from "@/server/observability/logger";
 import { getQuickSelectionScope } from "@/server/modules/translation/quick-selection-scope";
-import type {
-  TranslatePerformanceSnapshot,
-} from "@/contracts/translation/translate-performance";
-import {
-  createTranslatePerformanceTracker,
-  getTranslateResolutionSource,
-} from "@/contracts/translation/translate-performance";
-import { runWithPrismaQueryStep } from "@/server/observability/prisma-query-metrics";
+import type { TranslateResolutionSource } from "@/contracts/translation/text-utils";
 import {
   buildTranslationCacheKey,
   fetchCacheAndSource,
@@ -31,16 +24,14 @@ export interface TranslateServiceInput {
 }
 
 type RequestLogger = ReturnType<typeof createRequestLogger>;
-type PerformanceTracker = ReturnType<typeof createTranslatePerformanceTracker> | null;
 
 export interface TranslateServiceContext {
   userId: string;
-  performanceTracker: PerformanceTracker;
   requestLog: RequestLogger;
 }
 
 export type TranslateResult =
-  | { ok: true; data: QuickTranslation; resolutionSource: TranslatePerformanceSnapshot["resolutionSource"] }
+  | { ok: true; data: QuickTranslation; resolutionSource: TranslateResolutionSource }
   | { ok: false; status: 404 };
 
 function toJsonValue(value: unknown): Prisma.InputJsonValue {
@@ -63,9 +54,7 @@ export async function executeTranslate(
     targetLanguage: input.targetLanguage,
   });
 
-  const rows = await measureStep(ctx, "cacheAndSourceRead", () =>
-    fetchCacheAndSource(cacheKey, ctx.userId, input.sourceId),
-  );
+  const rows = await fetchCacheAndSource(cacheKey, ctx.userId, input.sourceId);
 
   const row = rows[0];
 
@@ -180,11 +169,16 @@ async function persistAsync(
   }
 }
 
-async function measureStep<T>(
-  ctx: TranslateServiceContext,
-  step: string,
-  callback: () => Promise<T>,
-): Promise<T> {
-  if (!ctx.performanceTracker) return callback();
-  return ctx.performanceTracker.measure(step, () => runWithPrismaQueryStep(step, callback));
+function getTranslateResolutionSource(input: {
+  provider: QuickTranslation["provider"];
+  selectedText: string;
+}): TranslateResolutionSource {
+  if (input.provider === "dictionary" && countWords(input.selectedText) > 1) {
+    return "phrase";
+  }
+  return input.provider as TranslateResolutionSource;
+}
+
+function countWords(value: string): number {
+  return value.match(/[A-Za-z0-9]+(?:['-][A-Za-z0-9]+)*/g)?.length ?? 0;
 }

@@ -3,15 +3,6 @@ import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 import { getUserId } from "@/server/auth/auth-utils";
 import { createRequestLogContext, createRequestLogger } from "@/server/observability/logger";
-import {
-  getPrismaQueryMetrics,
-  runWithPrismaQueryMetrics,
-} from "@/server/observability/prisma-query-metrics";
-import {
-  createDictionaryPerformanceTracker,
-  measureDictionaryStep,
-  shouldIncludeDictionaryPerformanceMetrics,
-} from "@/server/modules/dictionary/shared/dictionary-performance";
 import { normalizeDictionaryTerm } from "@/contracts/dictionary/normalize-dictionary-term";
 import { searchDictionary } from "@/server/modules/dictionary/search/search.service";
 import type { DictionarySearchResultDto } from "@/contracts/dictionary/dictionary-dtos";
@@ -28,16 +19,6 @@ function isAuthenticationError(error: unknown) {
 }
 
 export async function GET(request: NextRequest) {
-  const includePerformance = shouldIncludeDictionaryPerformanceMetrics(request.headers);
-  if (includePerformance) {
-    return runWithPrismaQueryMetrics(() => handleDictionarySearchGet(request, true));
-  }
-
-  return handleDictionarySearchGet(request, false);
-}
-
-async function handleDictionarySearchGet(request: NextRequest, includePerformance: boolean) {
-  const routeStartedAt = performance.now();
   const requestLog = createRequestLogger(
     "api:dictionary-search",
     createRequestLogContext(request, "GET", "/api/dictionary/search"),
@@ -62,43 +43,26 @@ async function handleDictionarySearchGet(request: NextRequest, includePerformanc
     }
 
     const normalizedQuery = normalizeDictionaryTerm(parsed.data.q);
-    const performanceTracker = includePerformance
-      ? createDictionaryPerformanceTracker({
-          query: parsed.data.q,
-          normalizedQuery,
-          phase: "search",
-          startedAt: routeStartedAt,
-        })
-      : null;
 
-    const userId = await measureDictionaryStep(
-      performanceTracker,
-      "auth",
-      () => Sentry.startSpan(
-        { name: "api:dictionary-search-authenticate", op: "auth" },
-        () => getUserId(),
-      ),
+    await Sentry.startSpan(
+      { name: "api:dictionary-search-authenticate", op: "auth" },
+      () => getUserId(),
     );
 
-    const results = await measureDictionaryStep(
-      performanceTracker,
-      "searchResolve",
-      () => Sentry.startSpan(
-        {
-          name: "db:dictionary-search",
-          op: "db",
-          attributes: {
-            "dictionary.query_length": normalizedQuery.length,
-            "userId": userId,
-          },
+    const results = (await Sentry.startSpan(
+      {
+        name: "db:dictionary-search",
+        op: "db",
+        attributes: {
+          "dictionary.query_length": normalizedQuery.length,
         },
-        () => searchDictionary(parsed.data.q, {
-          sourceLanguage: parsed.data.sourceLanguage,
-          targetLanguage: parsed.data.targetLanguage,
-          limit: parsed.data.limit,
-        }),
-      ),
-    ) as DictionarySearchResultDto[];
+      },
+      () => searchDictionary(parsed.data.q, {
+        sourceLanguage: parsed.data.sourceLanguage,
+        targetLanguage: parsed.data.targetLanguage,
+        limit: parsed.data.limit,
+      }),
+    )) as DictionarySearchResultDto[];
 
     requestLog.info(
       {
@@ -110,10 +74,7 @@ async function handleDictionarySearchGet(request: NextRequest, includePerformanc
       "Dictionary search completed",
     );
 
-    return createSearchSuccessResponse({
-      data: results,
-      performanceTracker,
-    });
+    return NextResponse.json({ success: true, data: results });
   } catch (error) {
     if (isAuthenticationError(error)) {
       return NextResponse.json({ error: "Authentication required." }, { status: 401 });
@@ -125,21 +86,4 @@ async function handleDictionarySearchGet(request: NextRequest, includePerformanc
     });
     return NextResponse.json({ error: "Dictionary search failed." }, { status: 500 });
   }
-}
-
-function createSearchSuccessResponse(input: {
-  data: DictionarySearchResultDto[];
-  performanceTracker: ReturnType<typeof createDictionaryPerformanceTracker> | null;
-}) {
-  if (!input.performanceTracker) {
-    return NextResponse.json({ success: true, data: input.data });
-  }
-
-  return NextResponse.json({
-    success: true,
-    data: input.data,
-    performance: input.performanceTracker.snapshot(
-      getPrismaQueryMetrics() ?? { queryCount: 0, totalDurationMs: 0, steps: {} },
-    ),
-  });
 }

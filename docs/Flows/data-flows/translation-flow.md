@@ -46,7 +46,6 @@ or context.
 | Word vs phrase vs sentence vs paragraph | Same route; resolution source (`dictionary`/`phrase`/`google_translate`/`fallback`) is chosen internally and surfaced as `provider` |
 | Repeat translate of an identical selection+context | Served from `TranslationCache` (provider `"cache"`); dictionary/provider resolution skipped, history still appended |
 | Malformed cached JSON | Treated as a miss and re-resolved; not returned |
-| Performance header absent (default) | Benchmark/timing internals are **omitted** from the response; only the product DTO is returned |
 
 > **Cache boundary (resolution):** a cache hit is returned **only after** the same
 > query confirms the source passage still belongs to the authenticated user and is not
@@ -84,5 +83,4 @@ server.
 | Repository | `src/server/modules/translation/inline/inline-translate.repository.ts` |
 | DB helpers | `src/server/db/translation-queries.ts` |
 | Limits | `src/contracts/translation/translation-limits.ts` |
-| Performance gate | `src/contracts/translation/translate-performance.ts` |
 | Response contract | `src/contracts/translation/translation-response-schema.ts` (`translateResponseSchema`) |

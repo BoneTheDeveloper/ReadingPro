@@ -8,12 +8,12 @@ API DTOs unless they are mapped into the documented response schema first.
 
 | Route | Classification | Shared schema |
 | --- | --- | --- |
-| `POST /api/translate` | JSON contracted, optional performance branch | `translateResponseSchema` |
+| `POST /api/translate` | JSON contracted| `translateResponseSchema` |
 | `POST /api/vocabulary` | JSON contracted (Prisma → DTO mapped at boundary) | `vocabularyResponseSchema` (`vocabularyDataSchema`, `.strict()`) |
-| `GET /api/dictionary/lookup` | JSON contracted, optional performance branch | `dictionaryLookupResponseSchema` |
-| `GET /api/dictionary/search` | JSON contracted, optional performance branch | `dictionarySearchResponseSchema` |
-| `GET /api/dictionary/suggest` | JSON contracted, optional performance branch | `dictionarySuggestResponseSchema` |
-| `GET /api/dictionary/entries/:entryId` | JSON contracted, optional performance branch | `dictionaryEntryDetailResponseSchema` |
+| `GET /api/dictionary/lookup` | JSON contracted| `dictionaryLookupResponseSchema` |
+| `GET /api/dictionary/search` | JSON contracted| `dictionarySearchResponseSchema` |
+| `GET /api/dictionary/suggest` | JSON contracted | `dictionarySuggestResponseSchema` |
+| `GET /api/dictionary/entries/:entryId` | JSON contracted | `dictionaryEntryDetailResponseSchema` |
 | `POST /api/vocabulary/[id]/review` | JSON, inline response (no named schema) | `{ success, data: VocabularyItem }` |
 | `GET /api/progress/stats` | JSON contracted | `progressStatsResponseSchema` |
 | `POST /api/study/studio/questions` | JSON contracted | `generatedStudyQuestionsResponseSchema` |

@@ -188,7 +188,7 @@ export function VocabularyPageClient() {
             {Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={i}
-                className="h-[88px] bg-white border border-[#EAE5DB] rounded-2xl animate-pulse"
+                className="h-[88px] bg-white border border-[#EAE5DB] rounded-lg animate-pulse"
               />
             ))}
           </div>

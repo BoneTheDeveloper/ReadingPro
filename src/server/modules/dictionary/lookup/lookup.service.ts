@@ -1,5 +1,4 @@
 import 'server-only';
-import { runWithPrismaQueryStep } from "@/server/observability/prisma-query-metrics";
 import { normalizeDictionaryTerm } from "@/contracts/dictionary/normalize-dictionary-term";
 import {
   type DictionaryEntryDto,
@@ -76,12 +75,11 @@ export async function resolveQuickDictionaryLookupSql(
 }
 
 function runLookupQueryStep<T>(
-  prefix: string | undefined,
-  step: string,
+  _prefix: string | undefined,
+  _step: string,
   callback: () => Promise<T>,
 ) {
-  if (!prefix) return callback();
-  return runWithPrismaQueryStep(`${prefix}.${step}`, callback);
+  return callback();
 }
 
 export function groupLookupRows(rows: LookupRawRow[]) {

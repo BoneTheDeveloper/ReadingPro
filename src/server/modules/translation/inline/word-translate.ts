@@ -8,27 +8,25 @@ export async function resolveWordTranslate(
   input: TranslateServiceInput,
   ctx: TranslateServiceContext,
 ): Promise<QuickTranslation> {
-  const result = await measureStep(ctx, "dictionaryResolve", () =>
-    Sentry.startSpan(
-      {
-        name: "word-translate:resolve",
-        op: "function",
-        attributes: {
-          "translation.source_id": input.sourceId,
-          "translation.text_length": input.text.length,
-          "translation.context_length": input.context.length,
-          "translation.target_language": input.targetLanguage,
-          "user.id": ctx.userId,
-        },
+  const result = await Sentry.startSpan(
+    {
+      name: "word-translate:resolve",
+      op: "function",
+      attributes: {
+        "translation.source_id": input.sourceId,
+        "translation.text_length": input.text.length,
+        "translation.context_length": input.context.length,
+        "translation.target_language": input.targetLanguage,
+        "user.id": ctx.userId,
       },
-      () =>
-        resolveQuickDictionaryTranslation({
-          text: input.text,
-          context: input.context,
-          sourceLanguage: input.sourceLanguage,
-          targetLanguage: input.targetLanguage,
-        }),
-    ),
+    },
+    () =>
+      resolveQuickDictionaryTranslation({
+        text: input.text,
+        context: input.context,
+        sourceLanguage: input.sourceLanguage,
+        targetLanguage: input.targetLanguage,
+      }),
   );
 
   ctx.requestLog.info(
@@ -43,14 +41,4 @@ export async function resolveWordTranslate(
   );
 
   return result;
-}
-
-async function measureStep<T>(
-  ctx: TranslateServiceContext,
-  step: string,
-  callback: () => Promise<T>,
-): Promise<T> {
-  if (!ctx.performanceTracker) return callback();
-  const { runWithPrismaQueryStep } = await import("@/server/observability/prisma-query-metrics");
-  return ctx.performanceTracker.measure(step, () => runWithPrismaQueryStep(step, callback));
 }
