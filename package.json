@@ -17,7 +17,7 @@
     "db:generate": "prisma generate --generator client",
     "db:migrate:dev": "prisma migrate dev",
     "db:studio": "prisma studio",
-    "db:seed:dictionary": "tsx prisma/seed.ts"
+    "db:seed:dictionary": "tsx prisma/seed-script/seed.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.72",

@@ -7,7 +7,7 @@
  */
 
 import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "../src/generated/prisma/client";
+import { PrismaClient } from "../../src/generated/prisma/client";
 import { readFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 import { join } from "node:path";
@@ -67,7 +67,9 @@ function loadNormalizedSeedData(): NormalizedSeedData {
   return {
     entries: JSON.parse(readFileSync(join(baseDir, "entries.json"), "utf8")),
     senses: JSON.parse(readFileSync(join(baseDir, "senses.json"), "utf8")),
-    translations: JSON.parse(readFileSync(join(baseDir, "translations.json"), "utf8")),
+    translations: JSON.parse(
+      readFileSync(join(baseDir, "translations.json"), "utf8"),
+    ),
     aliases: JSON.parse(readFileSync(join(baseDir, "aliases.json"), "utf8")),
   };
 }
@@ -96,86 +98,100 @@ async function seedNormalizedBulk(prisma: PrismaClient) {
   console.log(`  translations: ${translations.length}`);
   console.log(`  aliases:      ${aliases.length}`);
 
-  await prisma.$transaction(async (tx) => {
-    await tx.dictionarySourceAudit.deleteMany({});
-    await tx.dictionaryAlias.deleteMany({});
-    await tx.dictionaryTranslation.deleteMany({});
-    await tx.dictionarySense.deleteMany({});
-    await tx.dictionaryEntry.deleteMany({});
+  await prisma.$transaction(
+    async (tx) => {
+      await tx.dictionarySourceAudit.deleteMany({});
+      await tx.dictionaryAlias.deleteMany({});
+      await tx.dictionaryTranslation.deleteMany({});
+      await tx.dictionarySense.deleteMany({});
+      await tx.dictionaryEntry.deleteMany({});
 
-    await tx.dictionaryEntry.createMany({
-      data: entries.map((entry) => ({
-        id: entryIds.get(entry.entryKey)!,
-        headword: entry.headword,
-        normalizedHeadword: entry.normalizedHeadword,
-        sourceLanguage: entry.sourceLanguage,
-        frequencyRank: entry.frequencyRank,
-        createdAt: now,
-        updatedAt: now,
-      })),
-    });
-
-    await tx.dictionarySense.createMany({
-      data: senses.map((sense) => ({
-        id: senseIds.get(sense.senseKey)!,
-        entryId: entryIds.get(sense.entryKey)!,
-        partOfSpeech: sense.partOfSpeech,
-        definition: sense.definition,
-        example: sense.example,
-        tags: sense.tags,
-        usageRank: sense.usageRank,
-        createdAt: now,
-        updatedAt: now,
-      })),
-    });
-
-    await tx.dictionaryTranslation.createMany({
-      data: translations.map((translation) => ({
-        id: randomUUID(),
-        senseId: senseIds.get(translation.senseKey)!,
-        targetLanguage: translation.targetLanguage,
-        translation: translation.translation,
-        isPrimary: translation.isPrimary,
-        rank: translation.rank,
-        confidence: translation.confidence,
-        status: translation.status,
-        sourceType: translation.sourceType,
-        sourceName: translation.sourceName,
-        reviewedAt: translation.status === "reviewed" || translation.status === "approved" ? now : null,
-        createdAt: now,
-        updatedAt: now,
-      })),
-    });
-
-    if (aliases.length > 0) {
-      await tx.dictionaryAlias.createMany({
-        data: aliases.map((alias) => ({
-          id: randomUUID(),
-          entryId: entryIds.get(alias.entryKey)!,
-          normalizedAlias: alias.normalizedAlias,
-          aliasType: alias.aliasType,
+      await tx.dictionaryEntry.createMany({
+        data: entries.map((entry) => ({
+          id: entryIds.get(entry.entryKey)!,
+          headword: entry.headword,
+          normalizedHeadword: entry.normalizedHeadword,
+          sourceLanguage: entry.sourceLanguage,
+          frequencyRank: entry.frequencyRank,
+          createdAt: now,
+          updatedAt: now,
         })),
       });
-    }
 
-    await tx.dictionarySourceAudit.createMany({
-      data: entries.map((entry) => ({
-        id: randomUUID(),
-        batchName,
-        entityType: "DictionaryEntry",
-        entityId: entryIds.get(entry.entryKey)!,
-        note: `Seed entry "${entry.headword}" bulk replaced from normalized split files`,
-        createdAt: now,
-      })),
-    });
-  }, { timeout: 120_000 });
+      await tx.dictionarySense.createMany({
+        data: senses.map((sense) => ({
+          id: senseIds.get(sense.senseKey)!,
+          entryId: entryIds.get(sense.entryKey)!,
+          partOfSpeech: sense.partOfSpeech,
+          definition: sense.definition,
+          example: sense.example,
+          tags: sense.tags,
+          usageRank: sense.usageRank,
+          createdAt: now,
+          updatedAt: now,
+        })),
+      });
 
-  console.log(`\nDone. Bulk replaced ${entries.length} dictionary entries for development.`);
+      await tx.dictionaryTranslation.createMany({
+        data: translations.map((translation) => ({
+          id: randomUUID(),
+          senseId: senseIds.get(translation.senseKey)!,
+          targetLanguage: translation.targetLanguage,
+          translation: translation.translation,
+          isPrimary: translation.isPrimary,
+          rank: translation.rank,
+          confidence: translation.confidence,
+          status: translation.status,
+          sourceType: translation.sourceType,
+          sourceName: translation.sourceName,
+          reviewedAt:
+            translation.status === "reviewed" ||
+            translation.status === "approved"
+              ? now
+              : null,
+          createdAt: now,
+          updatedAt: now,
+        })),
+      });
+
+      if (aliases.length > 0) {
+        await tx.dictionaryAlias.createMany({
+          data: aliases.map((alias) => ({
+            id: randomUUID(),
+            entryId: entryIds.get(alias.entryKey)!,
+            normalizedAlias: alias.normalizedAlias,
+            aliasType: alias.aliasType,
+          })),
+        });
+      }
+
+      await tx.dictionarySourceAudit.createMany({
+        data: entries.map((entry) => ({
+          id: randomUUID(),
+          batchName,
+          entityType: "DictionaryEntry",
+          entityId: entryIds.get(entry.entryKey)!,
+          note: `Seed entry "${entry.headword}" bulk replaced from normalized split files`,
+          createdAt: now,
+        })),
+      });
+    },
+    { timeout: 120_000 },
+  );
+
+  console.log(
+    `\nDone. Bulk replaced ${entries.length} dictionary entries for development.`,
+  );
 }
 
 function assertDevelopmentBulkSeedAllowed() {
-  if (process.env.VERCEL_ENV === "production" || process.env.NODE_ENV === "production") {
-    throw new Error("Bulk dictionary seed is development-only and is blocked in production environments.");
+  if (
+    process.env.VERCEL_ENV === "production" ||
+    process.env.NODE_ENV === "production"
+  ) {
+    throw new Error(
+      "Bulk dictionary seed is development-only and is blocked in production environments.",
+    );
   }
 }
 
