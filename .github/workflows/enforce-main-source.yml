@@ -26,7 +26,7 @@ jobs:
           HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
           BASE_REPO: ${{ github.repository }}
         run: |
-          if [ "$HEAD_REPO" != "$BASE_REPO" ] || [ "$HEAD_BRANCH" != "preview" ]; then
+          if [ "$HEAD_REPO" != "$BASE_REPO" ] || [[ "$HEAD_BRANCH" != preview* ]]; then
             echo "::error::Only PRs from the same-repository preview branch may merge into main."
             echo "Current source: $HEAD_REPO:$HEAD_BRANCH"
             exit 1
