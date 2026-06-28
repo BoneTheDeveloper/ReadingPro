@@ -12,3 +12,8 @@
 **Vulnerability:** The file upload handler blindly trusted the client-provided `file.type` for storing files in Supabase Storage, even when falling back to extension-based validation. An attacker could upload a file named `evil.txt` with a `Content-Type: text/html`, which would be stored and served by the CDN as `text/html`, leading to a Stored Cross-Site Scripting (XSS) vulnerability.
 **Learning:** Even if a file's extension validates successfully as a safe file type (like `.txt`), the user-provided MIME type from the upload request must not be trusted or passed directly to the storage provider.
 **Prevention:** Always derive the MIME type used for object storage directly from the validated and sanitized file extension or strictly allow-listed content analysis, rather than trusting the incoming `Content-Type` header or `File.type` property.
+
+## 2024-06-28 - Host Header Injection in Next.js Middleware
+**Vulnerability:** Next.js middleware used `request.url` to construct absolute URLs for redirection, making it susceptible to Host Header Injection. An attacker could craft a request with a malicious `Host` header to redirect users to an unintended domain or capture the redirect destination.
+**Learning:** `request.url` and `request.nextUrl` derive their hostnames from the `Host` header provided in the HTTP request, which can be easily spoofed. Relying on them for redirects in Next.js middleware without verification exposes the application to Host Header Injection.
+**Prevention:** Always use a canonical, environment-defined base URL (like `process.env.NEXT_PUBLIC_SITE_URL`) when constructing absolute redirect URLs, rather than trusting the `Host` header from incoming requests.

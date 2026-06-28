@@ -26,14 +26,17 @@ export default clerkMiddleware(async (auth, request) => {
   const localeMatch = pathname.match(/^\/(en|vi)(?:\/|$)/);
   const locale = localeMatch?.[1] ?? routing.defaultLocale;
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+
   if (!userId && !isAuthPage(request)) {
-    const signInUrl = new URL(`/${locale}/sign-in`, request.url);
-    signInUrl.searchParams.set("redirect_url", request.url);
+    const signInUrl = new URL(`/${locale}/sign-in`, siteUrl);
+    const safeCurrentUrl = new URL(request.nextUrl.pathname + request.nextUrl.search, siteUrl);
+    signInUrl.searchParams.set("redirect_url", safeCurrentUrl.toString());
     return NextResponse.redirect(signInUrl);
   }
 
   if (userId && isAuthPage(request)) {
-    return NextResponse.redirect(new URL(`/${locale}`, request.url));
+    return NextResponse.redirect(new URL(`/${locale}`, siteUrl));
   }
 
   return intlMiddleware(request);
