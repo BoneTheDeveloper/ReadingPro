@@ -26,26 +26,17 @@ export default clerkMiddleware(async (auth, request) => {
   const localeMatch = pathname.match(/^\/(en|vi)(?:\/|$)/);
   const locale = localeMatch?.[1] ?? routing.defaultLocale;
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || request.url;
-
   if (!userId && !isAuthPage(request)) {
-    const signInUrl = new URL(`/${locale}/sign-in`, baseUrl);
-    const redirectUrl = new URL(request.nextUrl.pathname + request.nextUrl.search, baseUrl).href;
-    signInUrl.searchParams.set("redirect_url", redirectUrl);
+    const signInUrl = new URL(`/${locale}/sign-in`, request.url);
+    signInUrl.searchParams.set("redirect_url", request.url);
     return NextResponse.redirect(signInUrl);
   }
 
   if (userId && isAuthPage(request)) {
-    return NextResponse.redirect(new URL(`/${locale}`, baseUrl));
+    return NextResponse.redirect(new URL(`/${locale}`, request.url));
   }
 
-  // Clone the request and update the URL to use the canonical base URL
-  // to prevent Host Header Injection in next-intl middleware redirects.
-  const safeUrl = new URL(request.nextUrl.pathname + request.nextUrl.search, baseUrl).href;
-  const safeRequest = new Request(safeUrl, request);
-
-  // @ts-expect-error - Request clone types are incompatible but runtime is fine
-  return intlMiddleware(safeRequest);
+  return intlMiddleware(request);
 });
 
 export const config = {
