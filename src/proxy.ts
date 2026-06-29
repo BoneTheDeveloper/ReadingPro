@@ -44,7 +44,8 @@ export default clerkMiddleware(async (auth, request) => {
   const safeUrl = new URL(request.nextUrl.pathname + request.nextUrl.search, baseUrl).href;
   const safeRequest = new Request(safeUrl, request);
 
-  return intlMiddleware(safeRequest as any);
+  // @ts-expect-error - Request clone types are incompatible but runtime is fine
+  return intlMiddleware(safeRequest);
 });
 
 export const config = {
