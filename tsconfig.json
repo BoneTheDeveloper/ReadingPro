@@ -1,11 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2017",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -20,17 +16,13 @@
     "tsBuildInfoFile": ".next/cache/typescript/tsconfig.tsbuildinfo",
     "plugins": [
       {
-        "name": "next"
-      }
+        "name": "next",
+      },
     ],
     "paths": {
-      "@/*": [
-        "./src/*"
-      ],
-      "@tests/*": [
-        "./tests/*"
-      ]
-    }
+      "@/*": ["./src/*"],
+      "@tests/*": ["./tests/*"],
+    },
   },
   "include": [
     "next-env.d.ts",
@@ -39,12 +31,6 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts",
-    ".next-performance/types/**/*.ts",
-    ".next-performance/dev/types/**/*.ts",
-    ".next-performance-production/types/**/*.ts",
-    ".next-performance-production/dev/types/**/*.ts"
   ],
-  "exclude": [
-    "node_modules"
-  ]
+  "exclude": ["node_modules"],
 }
