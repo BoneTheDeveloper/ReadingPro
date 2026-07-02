@@ -1,11 +1,16 @@
 "use client";
 
 import { Bookmark } from "lucide-react";
-import { Badge } from "@/ui/primitives/badge";
-import { Button } from "@/ui/primitives/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/ui/primitives/card";
-import { Separator } from "@/ui/primitives/separator";
-import { cn } from "@/ui/utils";
+import { Badge } from "@/components/primitives/badge";
+import { Button } from "@/components/primitives/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/primitives/card";
+import { Separator } from "@/components/primitives/separator";
+import { cn } from "@/components/utils";
 import type {
   DictionaryEntryDto,
   DictionarySenseDto,

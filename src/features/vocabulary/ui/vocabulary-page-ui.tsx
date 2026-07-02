@@ -1,8 +1,8 @@
 "use client";
 
 import { AlertCircle, RefreshCw } from "lucide-react";
-import { Button } from "@/ui/primitives/button";
-import { cn } from "@/ui/utils";
+import { Button } from "@/components/primitives/button";
+import { cn } from "@/components/utils";
 
 export function PageTabButton({
   active,

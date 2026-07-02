@@ -8,7 +8,7 @@ import {
   validateFile,
   formatFileSize,
 } from "@/contracts/upload/upload-validation";
-import { cn } from "@/ui/utils";
+import { cn } from "@/components/utils";
 import { createPassage } from "@/features/study/api-client/passages-client";
 import {
   Dialog,
@@ -16,10 +16,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@/ui/primitives/dialog";
-import { Button } from "@/ui/primitives/button";
-import { Input } from "@/ui/primitives/input";
-import { Textarea } from "@/ui/primitives/textarea";
+} from "@/components/primitives/dialog";
+import { Button } from "@/components/primitives/button";
+import { Input } from "@/components/primitives/input";
+import { Textarea } from "@/components/primitives/textarea";
 import type { StudyUploadModalProps } from "@/features/study/model/types";
 
 type InputMode = "file" | "text" | null;

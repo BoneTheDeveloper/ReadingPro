@@ -11,9 +11,9 @@ import {
   Flame,
   Calendar,
 } from "lucide-react";
-import { cn } from "@/ui/utils";
-import { Card, CardContent } from "@/ui/primitives/card";
-import { Button } from "@/ui/primitives/button";
+import { cn } from "@/components/utils";
+import { Card, CardContent } from "@/components/primitives/card";
+import { Button } from "@/components/primitives/button";
 import type { ProgressStatsDto } from "@/contracts/study/study-response-schema";
 
 export function ProgressDashboard() {

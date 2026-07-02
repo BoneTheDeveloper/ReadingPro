@@ -3,8 +3,8 @@
 import { useCallback, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Loader2, Plus } from "lucide-react";
-import { Button } from "@/ui/primitives/button";
-import { Input } from "@/ui/primitives/input";
+import { Button } from "@/components/primitives/button";
+import { Input } from "@/components/primitives/input";
 import type { VocabularySet } from "../model/vocabulary-types";
 
 interface VocabularySetListProps {
@@ -83,18 +83,16 @@ export function VocabularySetList({
       {/* Card grid */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {sets.map((set, i) => (
-          <SetCard
-            key={set.id}
-            set={set}
-            colorIndex={i}
-          />
+          <SetCard key={set.id} set={set} colorIndex={i} />
         ))}
 
         {/* Add new set card */}
         <button
           type="button"
           className="group flex flex-col items-center justify-center gap-3 min-h-[168px] rounded-2xl border-2 border-dashed border-[#DAD4C8] cursor-pointer text-[#908B98] font-semibold text-sm transition-all hover:border-[#5A4FE0] hover:text-[#5A4FE0] hover:bg-[#5A4FE0]/3"
-          onClick={() => {/* TODO: open create set modal */}}
+          onClick={() => {
+            /* TODO: open create set modal */
+          }}
         >
           <div className="w-9 h-9 rounded-xl border-2 border-dashed border-current flex items-center justify-center">
             <Plus className="size-4" strokeWidth={2.2} />
@@ -120,12 +118,15 @@ function SetCard({
   // Hardcoded knownCount — DB has no mastered-per-set count
   // TODO: add mastered count per set to enable real progress
   const knownCount = Math.min(itemCount, Math.floor(itemCount * 0.3));
-  const progress = itemCount > 0 ? Math.round((knownCount / itemCount) * 100) : 0;
+  const progress =
+    itemCount > 0 ? Math.round((knownCount / itemCount) * 100) : 0;
 
   return (
     <div
       className="group bg-white border border-[#EAE5DB] rounded-2xl p-5 cursor-pointer transition-all hover:border-[#5A4FE0] hover:shadow-md hover:-translate-y-0.5"
-      style={{ boxShadow: "0 1px 2px rgba(0,0,0,.04), 0 4px 12px rgba(0,0,0,.04)" }}
+      style={{
+        boxShadow: "0 1px 2px rgba(0,0,0,.04), 0 4px 12px rgba(0,0,0,.04)",
+      }}
     >
       {/* Icon + count */}
       <div className="flex items-start justify-between gap-2 mb-3">
@@ -133,7 +134,16 @@ function SetCard({
           className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
           style={{ background: col.bg }}
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={col.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke={col.color}
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <path d="m16 6 4 14" />
             <path d="M12 6v14" />
             <path d="M8 8v12" />
@@ -178,7 +188,10 @@ function SetCardGridSkeleton() {
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="bg-white border border-[#EAE5DB] rounded-2xl p-5 animate-pulse">
+        <div
+          key={i}
+          className="bg-white border border-[#EAE5DB] rounded-2xl p-5 animate-pulse"
+        >
           <div className="flex items-start justify-between mb-3">
             <div className="w-9 h-9 rounded-xl bg-[#F0EDE8]" />
             <div className="w-14 h-3 rounded bg-[#F0EDE8]" />

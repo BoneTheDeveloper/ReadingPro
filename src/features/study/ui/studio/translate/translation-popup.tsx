@@ -3,17 +3,13 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Loader2, Languages } from "lucide-react";
-import { Button } from "@/ui/primitives/button";
-import { cn } from "@/ui/utils";
+import { Button } from "@/components/primitives/button";
+import { cn } from "@/components/utils";
 import type { TranslationSelection } from "@/features/study/model/types";
 import type { QuickTranslationData } from "@/features/study/model/types";
 
 type QuickTranslationStatus =
-  | "idle"
-  | "ready"
-  | "loading"
-  | "success"
-  | "error";
+  "idle" | "ready" | "loading" | "success" | "error";
 
 interface StudyTranslationPopupProps {
   selection: TranslationSelection;

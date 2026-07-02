@@ -6,12 +6,12 @@ import { useLocale, useTranslations } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { Check, X, Globe, BookOpen, Sparkles } from "lucide-react";
-import { Button } from "@/ui/primitives/button";
-import { cn } from "@/ui/utils";
-import { useTheme } from "@/ui/theme-provider";
+import { Button } from "@/components/primitives/button";
+import { cn } from "@/components/utils";
+import { useTheme } from "@/components/theme-provider";
 import { getCEFRBadgeVariant } from "@/features/study/ui/cefr-style";
 import { getCEFRLabel } from "@/contracts/domain/cefr";
-import { Badge } from "@/ui/primitives/badge";
+import { Badge } from "@/components/primitives/badge";
 
 const CEFR_LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"] as const;
 

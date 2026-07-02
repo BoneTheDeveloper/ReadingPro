@@ -1,8 +1,8 @@
-import type { CEFRLevel } from '@/contracts/domain/cefr';
+import type { CEFRLevel } from "@/contracts/domain/cefr";
 import {
   CEFR_BADGE_VARIANT,
   type BadgeVariant,
-} from '@/ui/primitives/badge';
+} from "@/components/primitives/badge";
 
 // CEFR visual mapping per design.md §6:
 // - A = green family, B = amber family, C = coral family
@@ -16,12 +16,12 @@ export function getCEFRBadgeVariant(level: CEFRLevel): BadgeVariant {
 // consumers switch to the variant prop.
 export function getCEFRColor(level: CEFRLevel): string {
   const colors: Record<CEFRLevel, string> = {
-    A1: 'bg-cefr-a1 text-cefr-a1-text',
-    A2: 'bg-cefr-a2 text-cefr-a2-text',
-    B1: 'bg-cefr-b1 text-cefr-b1-text',
-    B2: 'bg-cefr-b2 text-cefr-b2-text',
-    C1: 'bg-cefr-c1 text-cefr-c1-text',
-    C2: 'bg-cefr-c2 text-cefr-c2-text',
+    A1: "bg-cefr-a1 text-cefr-a1-text",
+    A2: "bg-cefr-a2 text-cefr-a2-text",
+    B1: "bg-cefr-b1 text-cefr-b1-text",
+    B2: "bg-cefr-b2 text-cefr-b2-text",
+    C1: "bg-cefr-c1 text-cefr-c1-text",
+    C2: "bg-cefr-c2 text-cefr-c2-text",
   };
   return colors[level];
 }

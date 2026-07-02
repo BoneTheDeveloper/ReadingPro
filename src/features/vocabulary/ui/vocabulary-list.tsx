@@ -3,9 +3,9 @@
 import { useCallback, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Download, Plus, Search } from "lucide-react";
-import { Button } from "@/ui/primitives/button";
-import { Input } from "@/ui/primitives/input";
-import { cn } from "@/ui/utils";
+import { Button } from "@/components/primitives/button";
+import { Input } from "@/components/primitives/input";
+import { cn } from "@/components/utils";
 import type {
   VocabularyItem,
   VocabularyStatus,
@@ -33,9 +33,17 @@ const STATUS_FILTERS: Array<"ALL" | VocabularyStatus> = [
   "MASTERED",
 ];
 
-const STATUS_STYLE: Record<VocabularyStatus, { label: string; bg: string; color: string; dot: string }> = {
+const STATUS_STYLE: Record<
+  VocabularyStatus,
+  { label: string; bg: string; color: string; dot: string }
+> = {
   NEW: { label: "New", bg: "#FBEFD8", color: "#A66A12", dot: "#EEA63C" },
-  LEARNING: { label: "Learning", bg: "#ECEAFB", color: "#4A3FD0", dot: "#5A4FE0" },
+  LEARNING: {
+    label: "Learning",
+    bg: "#ECEAFB",
+    color: "#4A3FD0",
+    dot: "#5A4FE0",
+  },
   MASTERED: { label: "Known", bg: "#DDF3E7", color: "#1E7A4B", dot: "#2FA66A" },
 };
 
@@ -43,8 +51,7 @@ const FILTER_CHIP_BASE =
   "px-3.5 py-1.5 rounded-full border text-xs font-semibold cursor-pointer transition-all";
 const FILTER_CHIP_OFF =
   "bg-white text-[#565160] border-[#EAE5DB] hover:border-[#5A4FE0] hover:text-[#4A3FD0]";
-const FILTER_CHIP_ON =
-  "bg-[#5A4FE0] text-white border-[#5A4FE0]";
+const FILTER_CHIP_ON = "bg-[#5A4FE0] text-white border-[#5A4FE0]";
 
 export function VocabularyList({
   items,
@@ -85,7 +92,10 @@ export function VocabularyList({
             <button
               key={status}
               type="button"
-              className={cn(FILTER_CHIP_BASE, active ? FILTER_CHIP_ON : FILTER_CHIP_OFF)}
+              className={cn(
+                FILTER_CHIP_BASE,
+                active ? FILTER_CHIP_ON : FILTER_CHIP_OFF,
+              )}
               onClick={() => onStatusFilterChange(status)}
             >
               {status === "ALL"
@@ -129,19 +139,29 @@ export function VocabularyList({
           style={{ gap: "0" }}
         >
           <div className="w-36 shrink-0">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-[#908B98]">Word</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-[#908B98]">
+              Word
+            </span>
           </div>
           <div className="flex-1 min-w-0">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-[#908B98]">Definition</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-[#908B98]">
+              Definition
+            </span>
           </div>
           <div className="w-16 shrink-0 text-center">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-[#908B98]">Level</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-[#908B98]">
+              Level
+            </span>
           </div>
           <div className="w-24 shrink-0 text-center">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-[#908B98]">Status</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-[#908B98]">
+              Status
+            </span>
           </div>
           <div className="w-20 shrink-0 text-center">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-[#908B98]">Saved</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-[#908B98]">
+              Saved
+            </span>
           </div>
           <div className="w-16 shrink-0" />
         </div>
@@ -193,9 +213,11 @@ function TableRow({
   const statusStyle = STATUS_STYLE[item.status as VocabularyStatus];
 
   const savedDate = item.createdAt
-    ? new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric" }).format(
-        new Date(item.createdAt),
-      )
+    ? new Intl.DateTimeFormat("en", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }).format(new Date(item.createdAt))
     : "—";
 
   return (
@@ -210,7 +232,9 @@ function TableRow({
     >
       {/* Word */}
       <div className="w-36 shrink-0">
-        <span className="text-sm font-semibold text-[#221F2B]">{item.displayText}</span>
+        <span className="text-sm font-semibold text-[#221F2B]">
+          {item.displayText}
+        </span>
       </div>
 
       {/* Definition */}
@@ -262,7 +286,9 @@ function TableRow({
         <button
           type="button"
           title={isMastered ? t("markLearning") : t("markMastered")}
-          onClick={() => onStatusChange(item.id, isMastered ? "LEARNING" : "MASTERED")}
+          onClick={() =>
+            onStatusChange(item.id, isMastered ? "LEARNING" : "MASTERED")
+          }
           className="flex items-center justify-center size-7 rounded-xl border transition-all cursor-pointer"
           style={{
             borderColor: isMastered ? "#EAE5DB" : "#CFEEDD",
@@ -271,12 +297,30 @@ function TableRow({
           }}
         >
           {isMastered ? (
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="13"
+              height="13"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
               <path d="M3 3v5h5" />
             </svg>
           ) : (
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="13"
+              height="13"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M20 6 9 17l-5-5" />
             </svg>
           )}
@@ -289,7 +333,16 @@ function TableRow({
           onClick={() => onDelete(item.id)}
           className="flex items-center justify-center size-7 rounded-xl border border-[#EAE5DB] bg-white text-[#908B98] transition-all cursor-pointer hover:border-[#F2664A] hover:text-[#C8442B]"
         >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            width="13"
+            height="13"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <path d="M18 6 6 18" />
             <path d="m6 6 12 12" />
           </svg>
@@ -305,14 +358,25 @@ function EmptyVocabularyState() {
   return (
     <div className="py-14 text-center">
       <div className="flex justify-center mb-4 opacity-30">
-        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#221F2B" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          width="44"
+          height="44"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#221F2B"
+          strokeWidth="1.4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <path d="m16 6 4 14" />
           <path d="M12 6v14" />
           <path d="M8 8v12" />
           <path d="M4 4v16" />
         </svg>
       </div>
-      <p className="text-sm font-semibold text-[#565160] mb-1.5">{t("emptyTitle")}</p>
+      <p className="text-sm font-semibold text-[#565160] mb-1.5">
+        {t("emptyTitle")}
+      </p>
       <p className="text-xs text-[#908B98]">{t("emptyDescription")}</p>
     </div>
   );
@@ -350,14 +414,26 @@ function PaginationBar({
           disabled={page <= 1}
           onClick={() => onPageChange(page - 1)}
         >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            width="13"
+            height="13"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <path d="m15 18-6-6 6-6" />
           </svg>
         </button>
 
         {pageNumbers.map((p, i) =>
           p === "…" ? (
-            <span key={`ellipsis-${i}`} className="flex items-center justify-center size-8 text-xs text-[#908B98]">
+            <span
+              key={`ellipsis-${i}`}
+              className="flex items-center justify-center size-8 text-xs text-[#908B98]"
+            >
               …
             </span>
           ) : (
@@ -384,7 +460,16 @@ function PaginationBar({
           disabled={page >= totalPages}
           onClick={() => onPageChange(page + 1)}
         >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            width="13"
+            height="13"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <path d="m9 18 6-6-6-6" />
           </svg>
         </button>
@@ -413,7 +498,10 @@ function TableSkeleton() {
   return (
     <div className="divide-y divide-[#EAE5DB]">
       {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className="flex items-center px-4 py-3 gap-4 animate-pulse">
+        <div
+          key={i}
+          className="flex items-center px-4 py-3 gap-4 animate-pulse"
+        >
           <div className="w-28 h-3.5 rounded bg-[#F0EDE8]" />
           <div className="flex-1 h-3 rounded bg-[#F0EDE8]" />
           <div className="w-12 h-5 rounded-full bg-[#F0EDE8]" />

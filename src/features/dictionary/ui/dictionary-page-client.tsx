@@ -1,40 +1,51 @@
-"use client"
+"use client";
 
-import { useEffect, useRef } from "react"
-import { BookMarked, Search } from "lucide-react"
-import { Input } from "@/ui/primitives/input"
-import { useTranslations } from "next-intl"
-import { DictionaryEntryCard } from "./dictionary-entry-card"
-import { DictionarySuggestDropdown } from "./dictionary-suggest-dropdown"
-import { useSaveDictionaryVocabulary } from "../hooks/use-save-dictionary-vocabulary"
-import { useDictionarySuggest } from "../hooks/use-dictionary-suggest"
-import { useDictionaryEntryDetail } from "../hooks/use-dictionary-entry-detail"
+import { useEffect, useRef } from "react";
+import { BookMarked, Search } from "lucide-react";
+import { Input } from "@/components/primitives/input";
+import { useTranslations } from "next-intl";
+import { DictionaryEntryCard } from "./dictionary-entry-card";
+import { DictionarySuggestDropdown } from "./dictionary-suggest-dropdown";
+import { useSaveDictionaryVocabulary } from "../hooks/use-save-dictionary-vocabulary";
+import { useDictionarySuggest } from "../hooks/use-dictionary-suggest";
+import { useDictionaryEntryDetail } from "../hooks/use-dictionary-entry-detail";
 
 export function DictionaryPageClient() {
-  const t = useTranslations()
+  const t = useTranslations();
   const {
-    query, suggestions, loading: suggestLoading,
-    dropdownVisible, setDropdownVisible, handleQueryChange,
-  } = useDictionarySuggest()
-  const { selectedEntry, status: detailStatus, loadEntry } = useDictionaryEntryDetail()
-  const { saveSense, getStatus } = useSaveDictionaryVocabulary()
+    query,
+    suggestions,
+    loading: suggestLoading,
+    dropdownVisible,
+    setDropdownVisible,
+    handleQueryChange,
+  } = useDictionarySuggest();
+  const {
+    selectedEntry,
+    status: detailStatus,
+    loadEntry,
+  } = useDictionaryEntryDetail();
+  const { saveSense, getStatus } = useSaveDictionaryVocabulary();
 
-  const containerRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setDropdownVisible(false)
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
+        setDropdownVisible(false);
       }
     }
-    document.addEventListener("mousedown", handleClick)
-    return () => document.removeEventListener("mousedown", handleClick)
-  }, [setDropdownVisible])
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [setDropdownVisible]);
 
   const handleSelect = async (item: Parameters<typeof loadEntry>[0]) => {
-    setDropdownVisible(false)
-    loadEntry(item)
-  }
+    setDropdownVisible(false);
+    loadEntry(item);
+  };
 
   return (
     <div className="flex flex-col h-full max-w-2xl mx-auto px-4 py-8 gap-6">
@@ -50,7 +61,7 @@ export function DictionaryPageClient() {
             value={query}
             onChange={(e) => handleQueryChange(e.target.value)}
             onFocus={() => {
-              if (suggestions.length > 0) setDropdownVisible(true)
+              if (suggestions.length > 0) setDropdownVisible(true);
             }}
             placeholder={t("Dictionary.searchPlaceholder")}
             className="pl-9"
@@ -99,5 +110,5 @@ export function DictionaryPageClient() {
         )}
       </div>
     </div>
-  )
+  );
 }

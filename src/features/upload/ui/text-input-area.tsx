@@ -1,15 +1,15 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { FileText, AlertCircle, Loader2 } from "lucide-react"
-import { validateTextContent } from "@/contracts/upload/upload-validation"
-import { Button } from "@/ui/primitives/button"
-import { Textarea } from "@/ui/primitives/textarea"
+import { useState } from "react";
+import { FileText, AlertCircle, Loader2 } from "lucide-react";
+import { validateTextContent } from "@/contracts/upload/upload-validation";
+import { Button } from "@/components/primitives/button";
+import { Textarea } from "@/components/primitives/textarea";
 
 interface TextInputAreaProps {
-  onSubmit: (text: string) => void
-  isProcessing?: boolean
-  disabled?: boolean
+  onSubmit: (text: string) => void;
+  isProcessing?: boolean;
+  disabled?: boolean;
 }
 
 export function TextInputArea({
@@ -17,23 +17,23 @@ export function TextInputArea({
   isProcessing,
   disabled,
 }: TextInputAreaProps) {
-  const [text, setText] = useState("")
-  const [error, setError] = useState<string>()
+  const [text, setText] = useState("");
+  const [error, setError] = useState<string>();
 
   const handleSubmit = () => {
-    const validation = validateTextContent(text)
+    const validation = validateTextContent(text);
     if (!validation.valid) {
-      setError(validation.error)
-      return
+      setError(validation.error);
+      return;
     }
-    setError(undefined)
-    onSubmit(text)
-  }
+    setError(undefined);
+    onSubmit(text);
+  };
 
   const wordCount = text
     .trim()
     .split(/\s+/)
-    .filter((w) => w.length > 0).length
+    .filter((w) => w.length > 0).length;
 
   return (
     <div className="w-full">
@@ -48,8 +48,8 @@ export function TextInputArea({
         <Textarea
           value={text}
           onChange={(e) => {
-            setText(e.target.value)
-            setError(undefined)
+            setText(e.target.value);
+            setError(undefined);
           }}
           disabled={disabled || isProcessing}
           placeholder="Paste your English text content here..."
@@ -84,5 +84,5 @@ export function TextInputArea({
         </div>
       )}
     </div>
-  )
+  );
 }

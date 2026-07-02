@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { UploadZone } from "./upload-zone";
 import { TextInputArea } from "./text-input-area";
-import { Button } from "@/ui/primitives/button";
-import { cn } from "@/ui/utils";
+import { Button } from "@/components/primitives/button";
+import { cn } from "@/components/utils";
 import { useUploadSubmit } from "../hooks/use-upload-submit";
 
 export function UploadPageClient() {
