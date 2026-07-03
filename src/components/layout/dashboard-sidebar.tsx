@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { AuthControls } from "./auth-controls";
 import { SettingsModal } from "@/components/layout/settings-modal";
 import { useTranslations } from "next-intl";
-import { useStudySessionHeartbeat } from "@/features/study/hooks/use-study-session-heartbeat";
+import { useStudySessionHeartbeat } from "@/features/learning-session/hooks/use-learning-session-heartbeat";
 import { useTheme } from "@/components/provider/theme-provider";
 import { useSyncExternalStore } from "react";
 

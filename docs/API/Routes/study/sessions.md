@@ -77,5 +77,5 @@ otherwise creates a new session window.
 ## Implementation References
 
 - Route: `src/app/api/study/sessions/route.ts`
-- Session queries: `src/server/db/study-session-queries.ts`
-- Heartbeat client: `src/features/study/hooks/use-study-session-heartbeat.ts`
+- Session queries: `src/server/db/learning-session-queries.ts`
+- Heartbeat client: `src/features/study/hooks/use-learning-session-heartbeat.ts`

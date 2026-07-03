@@ -47,4 +47,4 @@ payloads.
 | Study chat | `tests/vitest/integration/api/study-chat-route.test.ts`, `tests/vitest/integration/api/routes.test.ts` |
 | Progress | `tests/vitest/integration/api/routes.test.ts` |
 | Vocabulary review schedule | `src/server/modules/spaced-repetition/scheduler.test.ts` (logic only; review HTTP route untested — GAP) |
-| Study session | `tests/vitest/integration/api/study-session-route.test.ts`, `tests/vitest/integration/api/routes.test.ts` |
+| Study session | `tests/vitest/integration/api/learning-session-route.test.ts`, `tests/vitest/integration/api/routes.test.ts` |

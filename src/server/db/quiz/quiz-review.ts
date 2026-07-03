@@ -1,5 +1,5 @@
-import 'server-only';
-import { db } from '../client';
+import "server-only";
+import { db } from "@/server/db/client";
 
 // A day counts toward the streak only when total study time that day exceeds this.
 export const STREAK_MIN_DAILY_MS = 10 * 60 * 1000;
@@ -40,7 +40,9 @@ export async function getUserProgress(userId: string) {
     (total, key) => total + (secondsByDay.get(key) ?? 0),
     0,
   );
-  const activeDaysThisWeek = weekDayKeys.filter((key) => qualifyingDayKeys.has(key)).length;
+  const activeDaysThisWeek = weekDayKeys.filter((key) =>
+    qualifyingDayKeys.has(key),
+  ).length;
 
   return {
     streakDays,

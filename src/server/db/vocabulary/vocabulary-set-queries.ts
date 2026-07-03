@@ -1,9 +1,15 @@
-import 'server-only';
-import { db } from "./client";
+import "server-only";
+import { db } from "@/server/db/client";
 import { withUserProfile } from "@/server/auth/sync-user";
-import type { VocabularySet, VocabularySetItem } from "@/generated/prisma/client";
+import type {
+  VocabularySet,
+  VocabularySetItem,
+} from "@/generated/prisma/client";
 
-function getPeriodBounds(type: "DAILY" | "WEEKLY"): { periodStart: Date; periodEnd: Date } {
+function getPeriodBounds(type: "DAILY" | "WEEKLY"): {
+  periodStart: Date;
+  periodEnd: Date;
+} {
   const now = new Date();
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
@@ -24,11 +30,15 @@ function getPeriodBounds(type: "DAILY" | "WEEKLY"): { periodStart: Date; periodE
   }
 }
 
-export async function findOrCreateDailySet(userId: string): Promise<VocabularySet> {
+export async function findOrCreateDailySet(
+  userId: string,
+): Promise<VocabularySet> {
   return findOrCreateSetByType(userId, "DAILY");
 }
 
-export async function findOrCreateWeeklySet(userId: string): Promise<VocabularySet> {
+export async function findOrCreateWeeklySet(
+  userId: string,
+): Promise<VocabularySet> {
   return findOrCreateSetByType(userId, "WEEKLY");
 }
 
@@ -146,7 +156,10 @@ export async function deleteVocabularySet(params: {
   });
 }
 
-export async function verifySetOwnership(userId: string, setId: string): Promise<void> {
+export async function verifySetOwnership(
+  userId: string,
+  setId: string,
+): Promise<void> {
   const existing = await db.vocabularySet.findUnique({
     where: { id: setId },
   });

@@ -3,7 +3,7 @@
 ## Purpose
 
 Expose aggregate study progress statistics for the authenticated user. This is a
-read-only reporting domain computed from study-session activity.
+read-only reporting domain computed from learning-session activity.
 
 > Creating/ensuring a study session is part of the **Study** domain
 > ([study/sessions.md](study/sessions.md)), not this domain.
@@ -67,7 +67,7 @@ time that day exceeds the threshold; raw `timeStudied*` totals stay ungated.
 
 ### Boundaries
 
-- Stats are derived from the user's study-session records.
+- Stats are derived from the user's learning-session records.
 - No client or server cache is expected.
 
 ## Implementation References

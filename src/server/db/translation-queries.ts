@@ -1,7 +1,7 @@
-import 'server-only';
+import "server-only";
 import { createHash } from "node:crypto";
 import { Prisma } from "@/generated/prisma/client";
-import { db } from "./client";
+import { db } from "@/server/db/client";
 import { withUserProfile } from "@/server/auth/sync-user";
 
 interface TranslationKeyInput {
@@ -23,9 +23,7 @@ interface TranslationHistoryInput extends TranslationCacheInput {
 }
 
 function stableHash(value: unknown) {
-  return createHash("sha256")
-    .update(JSON.stringify(value))
-    .digest("hex");
+  return createHash("sha256").update(JSON.stringify(value)).digest("hex");
 }
 
 export function normalizeDictionaryTerm(value: string) {
@@ -42,7 +40,10 @@ export function buildTranslationCacheKey(input: TranslationKeyInput) {
   });
 }
 
-export async function getOwnedTranslationSource(userId: string, sourceId: string) {
+export async function getOwnedTranslationSource(
+  userId: string,
+  sourceId: string,
+) {
   return db.passage.findUnique({
     where: { id: sourceId, userId, deletedAt: null },
     select: { id: true, title: true },
@@ -100,4 +101,3 @@ export async function createTranslationHistory(input: TranslationHistoryInput) {
     }),
   );
 }
-

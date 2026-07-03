@@ -1,9 +1,9 @@
-import { getPageUserId } from '@/server/auth/auth-utils';
-import { getUserPassages } from '@/server/db/passage-queries';
-import { StudyPageClient } from '@/features/study/ui/study-workspace-client';
-import type { PassageData } from '@/features/study/model/types';
+import { getPageUserId } from "@/server/auth/auth-utils";
+import { getUserPassages } from "@/server/db/passage-queries";
+import { StudyPageClient } from "@/features/study/workspace/ui/study-workspace-client";
+import type { PassageData } from "@/features/study/shared/types";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export default async function StudyPage() {
   const userId = await getPageUserId();

@@ -1,18 +1,16 @@
-"use client"
+"use client";
 
-import * as Sentry from "@sentry/nextjs"
-import { postJson } from "@/contracts/http/api-client-utils"
+import * as Sentry from "@sentry/nextjs";
+import { postJson } from "@/contracts/http/api-client-utils";
 import {
   dictionarySuggestResponseSchema,
   dictionaryEntryDetailResponseSchema,
-} from "@/contracts/dictionary/dictionary-response-schema"
-import {
-  vocabularyResponseSchema,
-} from "@/contracts/translation/translation-response-schema"
+} from "@/contracts/dictionary/dictionary-response-schema";
+import { vocabularyResponseSchema } from "@/contracts/translation/translation-response-schema";
 import type {
   DictionaryEntryDto,
   DictionarySenseDto,
-} from "@/contracts/dictionary/dictionary-dtos"
+} from "@/contracts/dictionary/dictionary-dtos";
 
 /**
  * Fetch suggestions for a dictionary search query.
@@ -20,16 +18,16 @@ import type {
 export async function getDictionarySuggestions(
   query: string,
   sourceLanguage = "en",
-  targetLanguage = "vi"
+  targetLanguage = "vi",
 ) {
   const params = new URLSearchParams({
     q: query,
     sourceLanguage,
     targetLanguage,
-  })
-  const res = await fetch(`/api/dictionary/suggest?${params}`)
-  const json: unknown = await res.json()
-  const parsed = dictionarySuggestResponseSchema.safeParse(json)
+  });
+  const res = await fetch(`/api/dictionary/suggest?${params}`);
+  const json: unknown = await res.json();
+  const parsed = dictionarySuggestResponseSchema.safeParse(json);
 
   if (!parsed.success || "error" in parsed.data) {
     Sentry.addBreadcrumb({
@@ -37,11 +35,11 @@ export async function getDictionarySuggestions(
       level: "error",
       message: "dictionary-suggest-schema-error",
       data: { route: "/api/dictionary/suggest" },
-    })
-    throw new Error("Failed to parse dictionary suggestions")
+    });
+    throw new Error("Failed to parse dictionary suggestions");
   }
 
-  return parsed.data.data
+  return parsed.data.data;
 }
 
 /**
@@ -50,20 +48,20 @@ export async function getDictionarySuggestions(
 export async function getDictionaryEntryDetail(
   entryId: string,
   sourceLanguage = "en",
-  targetLanguage = "vi"
+  targetLanguage = "vi",
 ) {
   const params = new URLSearchParams({
     sourceLanguage,
     targetLanguage,
-  })
-  const res = await fetch(`/api/dictionary/entries/${entryId}?${params}`)
+  });
+  const res = await fetch(`/api/dictionary/entries/${entryId}?${params}`);
 
   if (!res.ok) {
-    throw new Error(`Entry not found: ${entryId}`)
+    throw new Error(`Entry not found: ${entryId}`);
   }
 
-  const json: unknown = await res.json()
-  const parsed = dictionaryEntryDetailResponseSchema.safeParse(json)
+  const json: unknown = await res.json();
+  const parsed = dictionaryEntryDetailResponseSchema.safeParse(json);
 
   if (!parsed.success || "error" in parsed.data) {
     Sentry.addBreadcrumb({
@@ -71,11 +69,11 @@ export async function getDictionaryEntryDetail(
       level: "error",
       message: "dictionary-entry-detail-schema-error",
       data: { route: "/api/dictionary/entries/:entryId" },
-    })
-    throw new Error("Failed to parse dictionary entry detail")
+    });
+    throw new Error("Failed to parse dictionary entry detail");
   }
 
-  return parsed.data.data
+  return parsed.data.data;
 }
 
 /**
@@ -83,11 +81,12 @@ export async function getDictionaryEntryDetail(
  */
 export async function saveDictionaryVocabulary(
   entry: DictionaryEntryDto,
-  sense: DictionarySenseDto
+  sense: DictionarySenseDto,
 ) {
-  const primary = sense.translations.find((t) => t.isPrimary) ?? sense.translations[0]
+  const primary =
+    sense.translations.find((t) => t.isPrimary) ?? sense.translations[0];
   if (!primary) {
-    throw new Error("No primary translation found for sense")
+    throw new Error("No primary translation found for sense");
   }
 
   const payload = {
@@ -99,11 +98,15 @@ export async function saveDictionaryVocabulary(
     source: "DICTIONARY" as const,
     dictionaryEntryId: entry.id,
     dictionarySenseId: sense.id,
-  }
+  };
 
-  const result = await postJson("/api/vocabulary", payload, vocabularyResponseSchema)
+  const result = await postJson(
+    "/api/vocabulary",
+    payload,
+    vocabularyResponseSchema,
+  );
   if ("error" in result) {
-    throw new Error(result.error)
+    throw new Error(result.error);
   }
-  return result.data
+  return result.data;
 }

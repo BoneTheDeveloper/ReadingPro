@@ -1,37 +1,44 @@
-import 'server-only';
-import * as Sentry from '@sentry/nextjs';
-import { createModuleLogger } from '@/server/observability/logger';
-import { getHeuristicCEFR } from '@/contracts/domain/cefr';
-import { createPassage } from '@/server/db/passage-queries';
-import { withUserProfile } from '@/server/auth/sync-user';
-import type { PassageData } from '@/features/study/model/types';
+import "server-only";
+import * as Sentry from "@sentry/nextjs";
+import { createModuleLogger } from "@/server/observability/logger";
+import { getHeuristicCEFR } from "@/contracts/domain/cefr";
+import { createPassage } from "@/server/db/passage-queries";
+import { withUserProfile } from "@/server/auth/sync-user";
+import type { PassageData } from "@/features/study/shared/types";
 
-const log = createModuleLogger('service:passage-create');
+const log = createModuleLogger("service:passage-create");
 
 export type CreatePassageInput = {
   userId: string;
   text: string;
   title: string;
-  sourceType: 'TEXT' | 'PDF';
+  sourceType: "TEXT" | "PDF";
 };
 
-export async function createPassageRecord(input: CreatePassageInput): Promise<PassageData> {
+export async function createPassageRecord(
+  input: CreatePassageInput,
+): Promise<PassageData> {
   const { userId, text, title, sourceType } = input;
 
   const originalLevel = getHeuristicCEFR(text);
-  const wordCount = text.split(/\s+/).filter(w => w.length > 0).length;
+  const wordCount = text.split(/\s+/).filter((w) => w.length > 0).length;
 
-  log.info({ level: originalLevel }, 'CEFR level computed');
+  log.info({ level: originalLevel }, "CEFR level computed");
 
-  const passage = await Sentry.startSpan({ name: 'db:passage-create', op: 'db' }, async () => {
-    return withUserProfile(userId, () => createPassage(userId, {
-      title,
-      content: text,
-      originalLevel,
-      wordCount,
-      sourceType,
-    }));
-  });
+  const passage = await Sentry.startSpan(
+    { name: "db:passage-create", op: "db" },
+    async () => {
+      return withUserProfile(userId, () =>
+        createPassage(userId, {
+          title,
+          content: text,
+          originalLevel,
+          wordCount,
+          sourceType,
+        }),
+      );
+    },
+  );
 
   return {
     id: passage.id,
