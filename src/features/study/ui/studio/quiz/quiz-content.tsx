@@ -10,8 +10,8 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { cn } from "@/components/utils";
-import { Button } from "@/components/primitives/button";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import type { QuestionData } from "@/features/study/model/types";
 import { QuizResults } from "./quiz-results";
 

@@ -3,11 +3,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Loader2, FileText, FileSearch, Plus, Sparkles } from "lucide-react";
-import { cn } from "@/components/utils";
+import { cn } from "@/lib/utils";
 import { getCEFRShortLabel } from "@/contracts/domain/cefr";
 import { getCEFRBadgeVariant } from "@/features/study/ui/cefr-style";
-import { Badge } from "@/components/primitives/badge";
-import { Button } from "@/components/primitives/button";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -15,7 +15,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/primitives/dialog";
+} from "@/components/ui/dialog";
 import { useScrollProgress } from "@/features/study/hooks/use-scroll-progress";
 import type {
   PassageData,

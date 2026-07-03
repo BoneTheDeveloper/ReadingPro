@@ -3,8 +3,8 @@
 import { useCallback, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Loader2, Plus } from "lucide-react";
-import { Button } from "@/components/primitives/button";
-import { Input } from "@/components/primitives/input";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import type { VocabularySet } from "../model/vocabulary-types";
 
 interface VocabularySetListProps {

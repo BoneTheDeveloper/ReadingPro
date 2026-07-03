@@ -6,8 +6,8 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import * as Sentry from "@sentry/nextjs";
 import { Send, Loader2, AlertCircle, RotateCw } from "lucide-react";
-import { Button } from "@/components/primitives/button";
-import { cn } from "@/components/utils";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { studyChatHistoryResponseSchema } from "@/contracts/study/study-response-schema";
 import { STUDY_API_ROUTES } from "@/features/study/api-client/api-utils";
 

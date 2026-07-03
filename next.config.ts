@@ -10,7 +10,8 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const csp = {
   defaultSrc: "default-src 'self'",
-  scriptSrc: "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel-scripts.com https://*.clerk.accounts.dev https://challenges.cloudflare.com",
+  scriptSrc:
+    "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel-scripts.com https://*.clerk.accounts.dev https://challenges.cloudflare.com",
   styleSrc: "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   imgSrc: "img-src 'self' blob: data: https://img.clerk.com",
   fontSrc: "font-src 'self' https://fonts.gstatic.com",
@@ -25,7 +26,8 @@ const csp = {
   baseUri: "base-uri 'self'",
   formAction: "form-action 'self'",
   frameAncestors: "frame-ancestors 'none'",
-  frameSrc: "frame-src 'self' https://*.clerk.com https://challenges.cloudflare.com",
+  frameSrc:
+    "frame-src 'self' https://*.clerk.com https://challenges.cloudflare.com",
   workerSrc: "worker-src 'self' blob:",
   upgradeInsecure: "upgrade-insecure-requests",
 };
@@ -36,11 +38,17 @@ const cspHeader = Object.values(csp).join("; ");
 
 const securityHeaders = [
   { key: "Content-Security-Policy", value: cspHeader },
-  { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" },
+  {
+    key: "Strict-Transport-Security",
+    value: "max-age=31536000; includeSubDomains",
+  },
   { key: "X-Frame-Options", value: "SAMEORIGIN" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+  {
+    key: "Permissions-Policy",
+    value: "camera=(), microphone=(), geolocation=()",
+  },
   { key: "X-DNS-Prefetch-Control", value: "off" },
 ];
 

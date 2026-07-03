@@ -10,22 +10,22 @@ import {
   Languages,
   MoreHorizontal,
 } from "lucide-react";
-import { Button } from "@/components/primitives/button";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardAction,
-} from "@/components/primitives/card";
+} from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-} from "@/components/primitives/dropdown-menu";
-import { cn } from "@/components/utils";
+} from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 import type {
   VocabularyItem,
   VocabularyStatus,

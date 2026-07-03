@@ -3,8 +3,8 @@
 import { useTranslations } from "next-intl";
 import * as Sentry from "@sentry/nextjs";
 import { Bookmark, MessageCircle } from "lucide-react";
-import { Button } from "@/components/primitives/button";
-import { cn } from "@/components/utils";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import type {
   TranslationSelection,
   QuickTranslationData,

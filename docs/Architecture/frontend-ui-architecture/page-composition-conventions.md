@@ -24,7 +24,7 @@ src/app/[locale]/(group)/feature/page.tsx
     +-- src/features/feature/feature-section.tsx
     +-- src/features/feature/feature-list.tsx
     +-- src/features/feature/use-feature-data.ts
-    +-- src/ui/primitives/*
+    +-- src/ui/ui/*
 ```
 
 Feature folders may use a deeper split when the feature is large. The Study workspace is the reference example for a large feature.

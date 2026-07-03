@@ -12,10 +12,10 @@ import {
   Target,
   Upload,
 } from "lucide-react";
-import { buttonVariants } from "@/components/primitives/button";
+import { buttonVariants } from "@/components/ui/button";
 import { DashboardSidebar } from "@/components/layout/dashboard-sidebar";
 import { Link } from "@/i18n/navigation";
-import { cn } from "@/components/utils";
+import { cn } from "@/lib/utils";
 import { getCurrentUser } from "@/server/auth/auth-utils";
 import { getUserProgress } from "@/server/db/quiz/quiz-review";
 

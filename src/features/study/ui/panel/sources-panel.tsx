@@ -11,16 +11,16 @@ import {
   PanelLeft,
   Video,
 } from "lucide-react";
-import { cn } from "@/components/utils";
+import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
-} from "@/components/primitives/dropdown-menu";
-import { Card, CardContent } from "@/components/primitives/card";
-import { Button } from "@/components/primitives/button";
-import { Input } from "@/components/primitives/input";
+} from "@/components/ui/dropdown-menu";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import type { DocumentItem } from "@/features/study/model/types";
 
 interface StudySourcesPanelProps {

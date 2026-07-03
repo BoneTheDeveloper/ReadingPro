@@ -3,9 +3,9 @@
 import { useCallback, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Download, Plus, Search } from "lucide-react";
-import { Button } from "@/components/primitives/button";
-import { Input } from "@/components/primitives/input";
-import { cn } from "@/components/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import type {
   VocabularyItem,
   VocabularyStatus,

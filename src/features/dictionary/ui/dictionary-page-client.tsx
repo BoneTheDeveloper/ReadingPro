@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { BookMarked, Search } from "lucide-react";
-import { Input } from "@/components/primitives/input";
+import { Input } from "@/components/ui/input";
 import { useTranslations } from "next-intl";
 import { DictionaryEntryCard } from "./dictionary-entry-card";
 import { DictionarySuggestDropdown } from "./dictionary-suggest-dropdown";

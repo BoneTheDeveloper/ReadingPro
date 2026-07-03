@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { cn } from "@/components/utils";
+import { cn } from "@/lib/utils";
 
 /**
  * Provides a lightweight scrollable container that preserves the shared UI

@@ -3,8 +3,8 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { Trophy, AlertCircle, RefreshCw } from "lucide-react";
-import { Button } from "@/components/primitives/button";
-import { Card, CardContent } from "@/components/primitives/card";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   recordQuizResult,
   resetQuizResult,

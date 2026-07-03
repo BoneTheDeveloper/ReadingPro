@@ -14,9 +14,9 @@ import {
   RefreshCw,
   Loader2,
 } from "lucide-react";
-import { cn } from "@/components/utils";
-import { Card, CardContent } from "@/components/primitives/card";
-import { Button } from "@/components/primitives/button";
+import { cn } from "@/lib/utils";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import type {
   PassageData,
   QuickTranslationData,
