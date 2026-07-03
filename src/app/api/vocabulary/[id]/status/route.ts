@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
-import { updateVocabularyStatus } from "@/server/db/vocabulary-queries";
+import { updateVocabularyStatus } from "@/server/db/vocabulary/vocabulary-queries";
 import { getUserId } from "@/server/auth/auth-utils";
-import { isAuthenticationRequiredError, isOwnershipMissError } from "@/server/http/route-errors";
-import { createRequestLogContext, createRequestLogger } from "@/server/observability/logger";
+import {
+  isAuthenticationRequiredError,
+  isOwnershipMissError,
+} from "@/server/http/route-errors";
+import {
+  createRequestLogContext,
+  createRequestLogger,
+} from "@/server/observability/logger";
 
 const statusUpdateSchema = z.object({
   status: z.enum(["NEW", "LEARNING", "MASTERED"]),
@@ -24,7 +30,10 @@ export async function PATCH(
     try {
       body = await request.json();
     } catch {
-      return NextResponse.json({ error: "Invalid JSON payload." }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid JSON payload." },
+        { status: 400 },
+      );
     }
 
     const parsed = statusUpdateSchema.safeParse(body);
@@ -48,17 +57,26 @@ export async function PATCH(
     return NextResponse.json({ success: true, data: item });
   } catch (error) {
     if (isAuthenticationRequiredError(error)) {
-      return NextResponse.json({ error: "Authentication required." }, { status: 401 });
+      return NextResponse.json(
+        { error: "Authentication required." },
+        { status: 401 },
+      );
     }
 
     if (isOwnershipMissError(error, ["vocabulary item", "vocabulary"])) {
-      return NextResponse.json({ error: "Vocabulary item not found." }, { status: 404 });
+      return NextResponse.json(
+        { error: "Vocabulary item not found." },
+        { status: 404 },
+      );
     }
 
     requestLog.error({ err: error }, "Failed to update vocabulary status");
     Sentry.captureException(error, {
       tags: { route: "api:vocabulary:status", method: "PATCH" },
     });
-    return NextResponse.json({ error: "Failed to update vocabulary status." }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to update vocabulary status." },
+      { status: 500 },
+    );
   }
 }

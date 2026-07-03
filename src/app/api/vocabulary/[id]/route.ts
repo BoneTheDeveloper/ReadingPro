@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { deleteVocabularyItem } from "@/server/db/vocabulary-queries";
+import { deleteVocabularyItem } from "@/server/db/vocabulary/vocabulary-queries";
 import { getUserId } from "@/server/auth/auth-utils";
-import { isAuthenticationRequiredError, isOwnershipMissError } from "@/server/http/route-errors";
-import { createRequestLogContext, createRequestLogger } from "@/server/observability/logger";
+import {
+  isAuthenticationRequiredError,
+  isOwnershipMissError,
+} from "@/server/http/route-errors";
+import {
+  createRequestLogContext,
+  createRequestLogger,
+} from "@/server/observability/logger";
 
 export async function DELETE(
   request: NextRequest,
@@ -22,14 +28,23 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (error) {
     if (isAuthenticationRequiredError(error)) {
-      return NextResponse.json({ error: "Authentication required." }, { status: 401 });
+      return NextResponse.json(
+        { error: "Authentication required." },
+        { status: 401 },
+      );
     }
 
     if (isOwnershipMissError(error, ["vocabulary item", "vocabulary"])) {
-      return NextResponse.json({ error: "Vocabulary item not found." }, { status: 404 });
+      return NextResponse.json(
+        { error: "Vocabulary item not found." },
+        { status: 404 },
+      );
     }
 
     requestLog.error({ err: error }, "Failed to delete vocabulary item");
-    return NextResponse.json({ error: "Failed to delete vocabulary item." }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to delete vocabulary item." },
+      { status: 500 },
+    );
   }
 }

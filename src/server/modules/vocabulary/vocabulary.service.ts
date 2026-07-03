@@ -1,7 +1,7 @@
-import 'server-only';
+import "server-only";
 import * as Sentry from "@sentry/nextjs";
 import { createModuleLogger } from "@/server/observability/logger";
-import { upsertVocabularyItem } from "@/server/db/vocabulary-queries";
+import { upsertVocabularyItem } from "@/server/db/vocabulary/vocabulary-queries";
 import { getOwnedTranslationSource } from "@/server/db/translation-queries";
 
 const log = createModuleLogger("lib:vocabulary-service");

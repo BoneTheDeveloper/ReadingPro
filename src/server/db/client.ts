@@ -1,12 +1,20 @@
-import 'server-only';
-import { createPrismaClient, type AppPrismaClient } from './create-prisma-client';
+import "server-only";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "@/generated/prisma/client";
 
 const globalForPrisma = globalThis as unknown as {
-  prisma: AppPrismaClient | undefined;
+  db: PrismaClient | undefined;
 };
 
-export const db = globalForPrisma.prisma ?? createPrismaClient();
+function createPrismaClient(): PrismaClient {
+  const adapter = new PrismaPg({
+    connectionString: process.env.DATABASE_URL,
+  });
+  return new PrismaClient({ adapter });
+}
 
-if (process.env.NODE_ENV !== 'production') {
-  globalForPrisma.prisma = db;
+export const db = globalForPrisma.db ?? createPrismaClient();
+
+if (process.env.NODE_ENV !== "production") {
+  globalForPrisma.db = db;
 }

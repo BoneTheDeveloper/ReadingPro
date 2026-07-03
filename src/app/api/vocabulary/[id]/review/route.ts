@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
-import { reviewVocabularyItem } from "@/server/db/vocabulary-queries";
+import { reviewVocabularyItem } from "@/server/db/vocabulary/vocabulary-queries";
 import { getUserId } from "@/server/auth/auth-utils";
-import { isAuthenticationRequiredError, isOwnershipMissError } from "@/server/http/route-errors";
-import { createRequestLogContext, createRequestLogger } from "@/server/observability/logger";
+import {
+  isAuthenticationRequiredError,
+  isOwnershipMissError,
+} from "@/server/http/route-errors";
+import {
+  createRequestLogContext,
+  createRequestLogger,
+} from "@/server/observability/logger";
 
 const reviewSchema = z.object({
   isCorrect: z.boolean(),
@@ -25,7 +31,10 @@ export async function POST(
     try {
       body = await request.json();
     } catch {
-      return NextResponse.json({ error: "Invalid JSON payload." }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid JSON payload." },
+        { status: 400 },
+      );
     }
 
     const parsed = reviewSchema.safeParse(body);
@@ -48,17 +57,26 @@ export async function POST(
     return NextResponse.json({ success: true, data: item });
   } catch (error) {
     if (isAuthenticationRequiredError(error)) {
-      return NextResponse.json({ error: "Authentication required." }, { status: 401 });
+      return NextResponse.json(
+        { error: "Authentication required." },
+        { status: 401 },
+      );
     }
 
     if (isOwnershipMissError(error, ["vocabulary item", "vocabulary"])) {
-      return NextResponse.json({ error: "Vocabulary item not found." }, { status: 404 });
+      return NextResponse.json(
+        { error: "Vocabulary item not found." },
+        { status: 404 },
+      );
     }
 
     requestLog.error({ err: error }, "Failed to review vocabulary item");
     Sentry.captureException(error, {
       tags: { route: "api:vocabulary:review", method: "POST" },
     });
-    return NextResponse.json({ error: "Failed to review vocabulary item." }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to review vocabulary item." },
+      { status: 500 },
+    );
   }
 }

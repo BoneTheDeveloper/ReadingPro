@@ -1,11 +1,18 @@
-import 'server-only';
+import "server-only";
 import { Prisma } from "@/generated/prisma/client";
-import { db } from "./client";
+import { db } from "../client";
 import { simpleSchedule } from "@/server/modules/spaced-repetition/scheduler";
-import { findOrCreateDailySet, findOrCreateWeeklySet, addItemToSet } from "./vocabulary-set-queries";
+import {
+  findOrCreateDailySet,
+  findOrCreateWeeklySet,
+  addItemToSet,
+} from "./vocabulary-set-queries";
 import { withUserProfile } from "@/server/auth/sync-user";
 import { normalizeText, detectType } from "./vocabulary-text-utils";
-import type { VocabularyItem, VocabularyOccurrence } from "@/generated/prisma/client";
+import type {
+  VocabularyItem,
+  VocabularyOccurrence,
+} from "@/generated/prisma/client";
 
 // --- Helpers ---
 
@@ -32,7 +39,9 @@ interface UpsertVocabularyItemParams {
 
 // --- Queries ---
 
-export async function upsertVocabularyItem(params: UpsertVocabularyItemParams): Promise<VocabularyItem> {
+export async function upsertVocabularyItem(
+  params: UpsertVocabularyItemParams,
+): Promise<VocabularyItem> {
   const normalized = normalizeText(params.selectedText);
   const display = params.selectedText.trim();
   const type = detectType(normalized);
@@ -74,7 +83,12 @@ export async function upsertVocabularyItem(params: UpsertVocabularyItemParams): 
   );
 
   // Create occurrence (idempotent via unique constraint)
-  await createOccurrence(item.id, params.selectedText.trim(), params.sourceId, params.contextSentence);
+  await createOccurrence(
+    item.id,
+    params.selectedText.trim(),
+    params.sourceId,
+    params.contextSentence,
+  );
 
   // Add to daily + weekly sets
   const [dailySet, weeklySet] = await Promise.all([
@@ -107,7 +121,10 @@ async function createOccurrence(
     });
   } catch (error: unknown) {
     // P2002 = unique constraint violation — occurrence already exists, safe to ignore
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
       return;
     }
     throw error;
@@ -131,7 +148,10 @@ export async function listVocabularyItems(params: {
   }
 
   if (params.search) {
-    where.normalizedText = { contains: normalizeText(params.search), mode: "insensitive" };
+    where.normalizedText = {
+      contains: normalizeText(params.search),
+      mode: "insensitive",
+    };
   }
 
   const [items, total] = await Promise.all([
@@ -139,7 +159,14 @@ export async function listVocabularyItems(params: {
       where,
       include: {
         occurrences: {
-          select: { id: true, vocabularyItemId: true, sourceId: true, selectedText: true, contextSentence: true, createdAt: true },
+          select: {
+            id: true,
+            vocabularyItemId: true,
+            sourceId: true,
+            selectedText: true,
+            contextSentence: true,
+            createdAt: true,
+          },
           orderBy: { createdAt: "desc" },
           take: 5,
         },
@@ -186,7 +213,10 @@ export async function reviewVocabularyItem(params: {
     throw new Error(`No vocabulary item found for user`);
   }
 
-  const { nextStatus, nextReviewDate } = simpleSchedule(item.status, params.isCorrect);
+  const { nextStatus, nextReviewDate } = simpleSchedule(
+    item.status,
+    params.isCorrect,
+  );
 
   return db.vocabularyItem.update({
     where: { id: params.itemId },
