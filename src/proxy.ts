@@ -4,9 +4,12 @@ import { NextResponse } from "next/server";
 import { routing } from "@/i18n/routing";
 
 const intlMiddleware = createMiddleware(routing);
-const isAuthPage = createRouteMatcher([
+
+const isPublicRoute = createRouteMatcher([
+  "/:locale", // trang chủ
   "/:locale/sign-in(.*)",
   "/:locale/sign-up(.*)",
+  "/:locale/about(.*)", // thêm route public khác nếu có
 ]);
 
 export default clerkMiddleware(async (auth, request) => {
@@ -19,20 +22,24 @@ export default clerkMiddleware(async (auth, request) => {
     pathname.startsWith("/monitoring") ||
     pathname.startsWith("/__clerk/")
   ) {
-    return NextResponse.next({ request });
+    return NextResponse.next();
   }
 
   const { userId } = await auth();
-  const localeMatch = pathname.match(/^\/(en|vi)(?:\/|$)/);
-  const locale = localeMatch?.[1] ?? routing.defaultLocale;
 
-  if (!userId && !isAuthPage(request)) {
+  const localePattern = new RegExp(`^/(${routing.locales.join("|")})(?:/|$)`);
+  const locale = pathname.match(localePattern)?.[1] ?? routing.defaultLocale;
+
+  const isAuthPage =
+    pathname.includes("/sign-in") || pathname.includes("/sign-up");
+
+  if (!userId && !isPublicRoute(request)) {
     const signInUrl = new URL(`/${locale}/sign-in`, request.url);
     signInUrl.searchParams.set("redirect_url", request.url);
     return NextResponse.redirect(signInUrl);
   }
 
-  if (userId && isAuthPage(request)) {
+  if (userId && isAuthPage) {
     return NextResponse.redirect(new URL(`/${locale}`, request.url));
   }
 

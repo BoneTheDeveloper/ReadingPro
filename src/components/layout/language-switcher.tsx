@@ -3,14 +3,14 @@
 import { useLocale } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
-import { Button } from "@/ui/primitives/button";
+import { Button } from "@/components/primitives/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/ui/primitives/dropdown-menu";
-import { cn } from "@/ui/utils";
+} from "@/components/primitives/dropdown-menu";
+import { cn } from "@/components/utils";
 
 const localeLabels: Record<string, string> = {
   en: "English",

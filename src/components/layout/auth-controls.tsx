@@ -1,8 +1,8 @@
 "use client";
 
 import { Show, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
-import { Button } from "@/ui/primitives/button";
-import { cn } from "@/ui/utils";
+import { Button } from "@/components/primitives/button";
+import { cn } from "@/components/utils";
 
 interface AuthControlsProps {
   compact?: boolean;

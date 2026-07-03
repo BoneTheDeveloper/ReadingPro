@@ -13,13 +13,13 @@ import {
   Moon,
   Monitor,
 } from "lucide-react";
-import { cn } from "@/ui/utils";
-import { Button } from "@/ui/primitives/button";
+import { cn } from "@/components/utils";
+import { Button } from "@/components/primitives/button";
 import { AuthControls } from "./auth-controls";
 import { SettingsModal } from "@/features/study/ui/settings-modal";
 import { useTranslations } from "next-intl";
 import { useStudySessionHeartbeat } from "@/features/study/hooks/use-study-session-heartbeat";
-import { useTheme } from "@/ui/theme-provider";
+import { useTheme } from "@/components/theme-provider";
 import { useSyncExternalStore } from "react";
 
 // App shell per design.md §8:

@@ -2,15 +2,15 @@
 
 import { useSyncExternalStore } from "react";
 import { Moon, Sun, Monitor } from "lucide-react";
-import { useTheme } from "@/ui/theme-provider";
-import { Button } from "@/ui/primitives/button";
+import { useTheme } from "@/components/theme-provider";
+import { Button } from "@/components/primitives/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/ui/primitives/dropdown-menu";
-import { cn } from "@/ui/utils";
+} from "@/components/primitives/dropdown-menu";
+import { cn } from "@/components/utils";
 
 const emptySubscribe = () => () => {};
 const getClientSnapshot = () => true;

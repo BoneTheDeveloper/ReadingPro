@@ -26,7 +26,7 @@ All primitives follow the same shape, so a new one is predictable:
   styling hooks and test/query targeting.
 - **`cva` variants.** Components with visual variants use `class-variance-authority`; the
   variant map is exported (e.g. `buttonVariants`) for composition.
-- **`cn` merge.** Class lists merge through `cn` from `@/ui/utils`; callers can always
+- **`cn` merge.** Class lists merge through `cn` from `@/components/utils`; callers can always
   pass `className` to extend.
 - **Native prop pass-through.** Props extend the underlying element/primitive props, so
   standard HTML/ARIA attributes work without wrappers.
