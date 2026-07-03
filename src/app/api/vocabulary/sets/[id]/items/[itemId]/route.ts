@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { removeItemFromSet } from "@/server/db/vocabulary-set-queries";
+import { removeItemFromSet } from "@/server/db/vocabulary/vocabulary-set-queries";
 import { getUserId } from "@/server/auth/auth-utils";
-import { isAuthenticationRequiredError, isOwnershipMissError } from "@/server/http/route-errors";
-import { createRequestLogContext, createRequestLogger } from "@/server/observability/logger";
+import {
+  isAuthenticationRequiredError,
+  isOwnershipMissError,
+} from "@/server/http/route-errors";
+import {
+  createRequestLogContext,
+  createRequestLogger,
+} from "@/server/observability/logger";
 
 export async function DELETE(
   request: NextRequest,
@@ -10,7 +16,11 @@ export async function DELETE(
 ) {
   const requestLog = createRequestLogger(
     "api:vocabulary:sets:remove-item",
-    createRequestLogContext(request, "DELETE", "/api/vocabulary/sets/[id]/items/[itemId]"),
+    createRequestLogContext(
+      request,
+      "DELETE",
+      "/api/vocabulary/sets/[id]/items/[itemId]",
+    ),
   );
 
   try {
@@ -22,14 +32,26 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (error) {
     if (isAuthenticationRequiredError(error)) {
-      return NextResponse.json({ error: "Authentication required." }, { status: 401 });
+      return NextResponse.json(
+        { error: "Authentication required." },
+        { status: 401 },
+      );
     }
 
     if (isOwnershipMissError(error, ["vocabulary set", "set"])) {
-      return NextResponse.json({ error: "Vocabulary set not found." }, { status: 404 });
+      return NextResponse.json(
+        { error: "Vocabulary set not found." },
+        { status: 404 },
+      );
     }
 
-    requestLog.error({ err: error }, "Failed to remove item from vocabulary set");
-    return NextResponse.json({ error: "Failed to remove item from set." }, { status: 500 });
+    requestLog.error(
+      { err: error },
+      "Failed to remove item from vocabulary set",
+    );
+    return NextResponse.json(
+      { error: "Failed to remove item from set." },
+      { status: 500 },
+    );
   }
 }

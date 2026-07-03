@@ -1,10 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
-import { addItemToSet, verifySetOwnership } from "@/server/db/vocabulary-set-queries";
+import {
+  addItemToSet,
+  verifySetOwnership,
+} from "@/server/db/vocabulary/vocabulary-set-queries";
 import { getUserId } from "@/server/auth/auth-utils";
-import { isAuthenticationRequiredError, isOwnershipMissError } from "@/server/http/route-errors";
-import { createRequestLogContext, createRequestLogger } from "@/server/observability/logger";
+import {
+  isAuthenticationRequiredError,
+  isOwnershipMissError,
+} from "@/server/http/route-errors";
+import {
+  createRequestLogContext,
+  createRequestLogger,
+} from "@/server/observability/logger";
 
 const addItemsSchema = z.object({
   itemIds: z.array(z.string().uuid()).min(1).max(50),
@@ -24,7 +33,10 @@ export async function POST(
     try {
       body = await request.json();
     } catch {
-      return NextResponse.json({ error: "Invalid JSON payload." }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid JSON payload." },
+        { status: 400 },
+      );
     }
 
     const parsed = addItemsSchema.safeParse(body);
@@ -50,17 +62,26 @@ export async function POST(
     return NextResponse.json({ success: true });
   } catch (error) {
     if (isAuthenticationRequiredError(error)) {
-      return NextResponse.json({ error: "Authentication required." }, { status: 401 });
+      return NextResponse.json(
+        { error: "Authentication required." },
+        { status: 401 },
+      );
     }
 
     if (isOwnershipMissError(error, ["vocabulary set"])) {
-      return NextResponse.json({ error: "Vocabulary set not found." }, { status: 404 });
+      return NextResponse.json(
+        { error: "Vocabulary set not found." },
+        { status: 404 },
+      );
     }
 
     requestLog.error({ err: error }, "Failed to add items to vocabulary set");
     Sentry.captureException(error, {
       tags: { route: "api:vocabulary:sets:add-items", method: "POST" },
     });
-    return NextResponse.json({ error: "Failed to add items to set." }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to add items to set." },
+      { status: 500 },
+    );
   }
 }
