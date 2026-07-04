@@ -1,16 +1,30 @@
-import 'server-only';
-import { Prisma } from '@/generated/prisma/client'
-import { db } from '@/server/db/client'
-import { createModuleLogger } from '@/server/observability/logger'
+import "server-only";
+import { Prisma } from "@/generated/prisma/client";
+import { db } from "@/lib/db";
+import { createModuleLogger } from "@/server/observability/logger";
 
-const log = createModuleLogger('auth:sync-user')
+const log = createModuleLogger("auth:sync-user");
 
-export async function syncUser(authId: string, email?: string, name?: string, avatarUrl?: string) {
+export async function syncUser(
+  authId: string,
+  email?: string,
+  name?: string,
+  avatarUrl?: string,
+) {
   return db.userProfile.upsert({
     where: { id: authId },
-    update: { email: email || null, name: name || null, avatarUrl: avatarUrl || null },
-    create: { id: authId, email: email || null, name: name || null, avatarUrl: avatarUrl || null },
-  })
+    update: {
+      email: email || null,
+      name: name || null,
+      avatarUrl: avatarUrl || null,
+    },
+    create: {
+      id: authId,
+      email: email || null,
+      name: name || null,
+      avatarUrl: avatarUrl || null,
+    },
+  });
 }
 
 // Guarantees the UserProfile FK target row exists before a write that depends on it.
@@ -55,8 +69,8 @@ function fkConstraintName(e: Prisma.PrismaClientKnownRequestError): string {
 export function isMissingUserProfileFk(e: unknown): boolean {
   return (
     e instanceof Prisma.PrismaClientKnownRequestError &&
-    e.code === 'P2003' &&
-    fkConstraintName(e).includes('_userId_fkey')
+    e.code === "P2003" &&
+    fkConstraintName(e).includes("_userId_fkey")
   );
 }
 
@@ -65,14 +79,20 @@ export function isMissingUserProfileFk(e: unknown): boolean {
 // DB round-trips. Only on the new-user race — the write hits a missing UserProfile
 // FK — do we create the row and retry once. The first attempt inserted nothing
 // (FK rejected before commit), so the retry is clean.
-export async function withUserProfile<T>(userId: string, write: () => Promise<T>): Promise<T> {
+export async function withUserProfile<T>(
+  userId: string,
+  write: () => Promise<T>,
+): Promise<T> {
   try {
     return await write();
   } catch (e) {
     if (isMissingUserProfileFk(e)) {
       // A persistently hot heal path signals a broken/lagging Clerk webhook,
       // not a one-off first-write race — so this is worth a warning.
-      log.warn({ userId }, 'Missing UserProfile FK on write; ensuring profile and retrying');
+      log.warn(
+        { userId },
+        "Missing UserProfile FK on write; ensuring profile and retrying",
+      );
       await ensureUserProfile(userId);
       return await write();
     }

@@ -1,10 +1,9 @@
-import 'server-only';
+import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
 import * as Sentry from "@sentry/nextjs";
 import type { QuickTranslation } from "@/server/ai/translator";
 import { quickTranslationSchema } from "@/server/ai/translator";
 import { createRequestLogger } from "@/server/observability/logger";
-import { getQuickSelectionScope } from "@/server/modules/translation/quick-selection-scope";
 import type { TranslateResolutionSource } from "@/contracts/translation/text-utils";
 import {
   buildTranslationCacheKey,
@@ -13,7 +12,6 @@ import {
   writeTranslationHistory,
 } from "./inline-translate.repository";
 import { resolveWordTranslate } from "./word-translate";
-import { resolveSentenceTranslate } from "./sentence-translate";
 
 export interface TranslateServiceInput {
   text: string;
@@ -31,7 +29,11 @@ export interface TranslateServiceContext {
 }
 
 export type TranslateResult =
-  | { ok: true; data: QuickTranslation; resolutionSource: TranslateResolutionSource }
+  | {
+      ok: true;
+      data: QuickTranslation;
+      resolutionSource: TranslateResolutionSource;
+    }
   | { ok: false; status: 404 };
 
 function toJsonValue(value: unknown): Prisma.InputJsonValue {
@@ -85,7 +87,7 @@ export async function executeTranslate(
     }
   }
 
-  const result = await resolveTranslate(input, ctx);
+  const result = await resolveWordTranslate(input, ctx);
 
   void persistAsync(ctx.userId, input, result, ctx.requestLog, { cacheKey });
 
@@ -104,21 +106,8 @@ export async function executeTranslate(
   return {
     ok: true,
     data: result,
-    resolutionSource: getTranslateResolutionSource({
-      provider: result.provider,
-      selectedText: input.text,
-    }),
+    resolutionSource: result.provider as TranslateResolutionSource,
   };
-}
-
-function resolveTranslate(
-  input: TranslateServiceInput,
-  ctx: TranslateServiceContext,
-): Promise<QuickTranslation> {
-  const scope = getQuickSelectionScope(input.text);
-  return scope === "dictionary"
-    ? resolveWordTranslate(input, ctx)
-    : resolveSentenceTranslate(input, ctx);
 }
 
 async function persistAsync(
@@ -167,18 +156,4 @@ async function persistAsync(
       }),
     ]);
   }
-}
-
-function getTranslateResolutionSource(input: {
-  provider: QuickTranslation["provider"];
-  selectedText: string;
-}): TranslateResolutionSource {
-  if (input.provider === "dictionary" && countWords(input.selectedText) > 1) {
-    return "phrase";
-  }
-  return input.provider as TranslateResolutionSource;
-}
-
-function countWords(value: string): number {
-  return value.match(/[A-Za-z0-9]+(?:['-][A-Za-z0-9]+)*/g)?.length ?? 0;
 }

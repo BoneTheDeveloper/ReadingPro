@@ -1,19 +1,22 @@
-import 'server-only';
-import * as Sentry from '@sentry/nextjs';
-import { generateComprehensionQuestions, type GeneratedQuestion } from '@/server/ai/question-generator';
-import { simplifyContent } from '@/server/ai/content-simplifier';
-import { createModuleLogger } from '@/server/observability/logger';
-import { db } from '@/server/db/client';
+import "server-only";
+import * as Sentry from "@sentry/nextjs";
+import {
+  generateComprehensionQuestions,
+  type GeneratedQuestion,
+} from "@/server/ai/question-generator";
+import { simplifyContent } from "@/server/ai/content-simplifier";
+import { createModuleLogger } from "@/server/observability/logger";
+import { db } from "@/lib/db";
 import {
   getHeuristicCEFR,
   getTargetCEFRLevel,
   isSimplifiableCEFRLevel,
   type CEFRLevel,
-} from '@/contracts/domain/cefr';
+} from "@/contracts/domain/cefr";
 
-const log = createModuleLogger('features:upload:content-analysis');
+const log = createModuleLogger("features:upload:content-analysis");
 
-type SourceType = 'TEXT' | 'PDF';
+type SourceType = "TEXT" | "PDF";
 
 export interface AnalyzeAndPersistContentInput {
   userId: string;
@@ -39,7 +42,11 @@ export async function analyzeAndPersistContent({
 }: AnalyzeAndPersistContentInput): Promise<AnalyzeAndPersistContentResult> {
   const truncatedText = text.slice(0, 10000);
 
-  Sentry.addBreadcrumb({ category: 'analysis', message: 'Computing CEFR level', level: 'info' });
+  Sentry.addBreadcrumb({
+    category: "analysis",
+    message: "Computing CEFR level",
+    level: "info",
+  });
   const originalLevel = getHeuristicCEFR(truncatedText);
   const targetLevel = isSimplifiableCEFRLevel(originalLevel)
     ? getTargetCEFRLevel(originalLevel)
@@ -50,10 +57,17 @@ export async function analyzeAndPersistContent({
 
   if (targetLevel) {
     try {
-      Sentry.addBreadcrumb({ category: 'ai', message: `Simplifying to ${targetLevel}`, level: 'info' });
-      const simplified = await Sentry.startSpan({ name: 'ai:content-simplify', op: 'ai' }, async () => {
-        return simplifyContent(truncatedText, targetLevel);
+      Sentry.addBreadcrumb({
+        category: "ai",
+        message: `Simplifying to ${targetLevel}`,
+        level: "info",
       });
+      const simplified = await Sentry.startSpan(
+        { name: "ai:content-simplify", op: "ai" },
+        async () => {
+          return simplifyContent(truncatedText, targetLevel);
+        },
+      );
       if (simplified) {
         simplifiedContent = simplified.simplifiedText;
         simplifiedLevel = targetLevel;
@@ -62,49 +76,60 @@ export async function analyzeAndPersistContent({
       const err = error instanceof Error ? error : new Error(String(error));
       log.warn(
         { err, context: { targetLevel, originalLevel } },
-        'Content simplification failed; saving original text',
+        "Content simplification failed; saving original text",
       );
     }
   }
 
-  const questions = await generateQuestionsForContent(simplifiedContent || text);
+  const questions = await generateQuestionsForContent(
+    simplifiedContent || text,
+  );
   const wordCount = text.split(/\s+/).filter((word) => word.length > 0).length;
 
   const artifactId = crypto.randomUUID();
 
-  Sentry.addBreadcrumb({ category: 'db', message: 'Creating passage with questions', level: 'info' });
-  const passage = await Sentry.startSpan({ name: 'db:passage-create', op: 'db' }, async () => {
-    return db.passage.create({
-      data: {
-        userId,
-        title,
-        content: text,
-        simplifiedContent,
-        originalLevel,
-        simplifiedLevel,
-        wordCount,
-        sourceType,
-        filePath,
-        ...(questions.length > 0 ? {
-          studioArtifacts: {
-            create: {
-              id: artifactId,
-              userId,
-              type: 'quiz',
-              title: 'Initial Quiz',
-              status: 'done',
-            }
-          },
-          questions: {
-            create: questions.map((q) => ({
-              ...toQuestionCreateInput(q),
-              artifactId,
-            })),
-          },
-        } : {}),
-      },
-    });
+  Sentry.addBreadcrumb({
+    category: "db",
+    message: "Creating passage with questions",
+    level: "info",
   });
+  const passage = await Sentry.startSpan(
+    { name: "db:passage-create", op: "db" },
+    async () => {
+      return db.passage.create({
+        data: {
+          userId,
+          title,
+          content: text,
+          simplifiedContent,
+          originalLevel,
+          simplifiedLevel,
+          wordCount,
+          sourceType,
+          filePath,
+          ...(questions.length > 0
+            ? {
+                studioArtifacts: {
+                  create: {
+                    id: artifactId,
+                    userId,
+                    type: "quiz",
+                    title: "Initial Quiz",
+                    status: "done",
+                  },
+                },
+                questions: {
+                  create: questions.map((q) => ({
+                    ...toQuestionCreateInput(q),
+                    artifactId,
+                  })),
+                },
+              }
+            : {}),
+        },
+      });
+    },
+  );
 
   return {
     passageId: passage.id,
@@ -116,16 +141,23 @@ export async function analyzeAndPersistContent({
 
 async function generateQuestionsForContent(content: string) {
   try {
-    Sentry.addBreadcrumb({ category: 'ai', message: 'Generating comprehension questions', level: 'info' });
-    const questionResult = await Sentry.startSpan({ name: 'ai:question-gen', op: 'ai' }, async () => {
-      return generateComprehensionQuestions(content.slice(0, 10000), 5);
+    Sentry.addBreadcrumb({
+      category: "ai",
+      message: "Generating comprehension questions",
+      level: "info",
     });
+    const questionResult = await Sentry.startSpan(
+      { name: "ai:question-gen", op: "ai" },
+      async () => {
+        return generateComprehensionQuestions(content.slice(0, 10000), 5);
+      },
+    );
     return questionResult?.questions ?? [];
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error));
     log.warn(
       { err, context: { contentLength: content.length } },
-      'Question generation failed; passage saved without questions',
+      "Question generation failed; passage saved without questions",
     );
     return [];
   }

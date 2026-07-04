@@ -1,7 +1,7 @@
-import 'server-only';
+import "server-only";
 import * as Sentry from "@sentry/nextjs";
 import { Prisma } from "@/generated/prisma/client";
-import { db } from "@/server/db/client";
+import { db } from "@/lib/db";
 import { RUNTIME_STATUSES } from "@/contracts/dictionary/dictionary-dtos";
 
 export interface LookupRawRow {

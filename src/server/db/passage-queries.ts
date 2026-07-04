@@ -2,8 +2,7 @@ import "server-only";
 import { z } from "zod";
 import { Prisma } from "@/generated/prisma/client";
 import type { CEFRLevel } from "@/contracts/domain/cefr";
-import { db } from "@/server/db/client";
-
+import { db } from "@/lib/db";
 export const questionOptionSchema = z.object({
   id: z.string(),
   text: z.string(),

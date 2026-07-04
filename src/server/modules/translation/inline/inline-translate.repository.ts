@@ -1,7 +1,7 @@
-import 'server-only';
+import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
 import * as Sentry from "@sentry/nextjs";
-import { db } from "@/server/db/client";
+import { db } from "@/lib/db";
 import {
   buildTranslationCacheKey,
   createTranslationHistory,
@@ -17,7 +17,11 @@ export interface CacheAndSourceRow {
   sourceTitle: string | null;
 }
 
-export async function fetchCacheAndSource(cacheKey: string, userId: string, sourceId: string) {
+export async function fetchCacheAndSource(
+  cacheKey: string,
+  userId: string,
+  sourceId: string,
+) {
   return Sentry.startSpan(
     {
       name: "db:translate-cache-and-source-fetch",

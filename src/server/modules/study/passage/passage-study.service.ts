@@ -1,11 +1,18 @@
-import 'server-only';
+import "server-only";
 import * as Sentry from "@sentry/nextjs";
-import { generateComprehensionQuestions, type GeneratedQuestion } from "@/server/ai/question-generator";
+import {
+  generateComprehensionQuestions,
+  type GeneratedQuestion,
+} from "@/server/ai/question-generator";
 import { simplifyContent } from "@/server/ai/content-simplifier";
 import { createModuleLogger } from "@/server/observability/logger";
-import { db } from "@/server/db/client";
+import { db } from "@/lib/db";
 import { questionDataSchema } from "@/server/db/passage-queries";
-import { getTargetCEFRLevel, isSimplifiableCEFRLevel, type CEFRLevel } from "@/contracts/domain/cefr";
+import {
+  getTargetCEFRLevel,
+  isSimplifiableCEFRLevel,
+  type CEFRLevel,
+} from "@/contracts/domain/cefr";
 import type { GeneratedStudyQuestionDto } from "@/contracts/study/study-response-schema";
 import {
   STUDIO_GENERATION_TIMEOUT_MS,
@@ -21,22 +28,38 @@ export type SimplifyPassageResult =
   | { simplifiedContent: string; simplifiedLevel: CEFRLevel }
   | { skipped: true; reason: string };
 
-export async function simplifyPassageForUser(userId: string, passageId: string): Promise<SimplifyPassageResult> {
+export async function simplifyPassageForUser(
+  userId: string,
+  passageId: string,
+): Promise<SimplifyPassageResult> {
   const passage = await getOwnedPassage(userId, passageId);
   const originalLevel = passage.originalLevel as CEFRLevel | null;
 
   if (!originalLevel || !isSimplifiableCEFRLevel(originalLevel)) {
-    return { skipped: true, reason: `Text is already ${originalLevel || "unknown"} level` };
+    return {
+      skipped: true,
+      reason: `Text is already ${originalLevel || "unknown"} level`,
+    };
   }
 
   const targetLevel = getTargetCEFRLevel(originalLevel) ?? "B1";
-  Sentry.addBreadcrumb({ category: "ai", message: `Simplifying to ${targetLevel}`, level: "info" });
-  const simplified = await Sentry.startSpan({ name: "ai:content-simplify", op: "ai" }, async () => {
-    return simplifyContent(passage.content.slice(0, 10000), targetLevel);
+  Sentry.addBreadcrumb({
+    category: "ai",
+    message: `Simplifying to ${targetLevel}`,
+    level: "info",
   });
+  const simplified = await Sentry.startSpan(
+    { name: "ai:content-simplify", op: "ai" },
+    async () => {
+      return simplifyContent(passage.content.slice(0, 10000), targetLevel);
+    },
+  );
 
   if (!simplified) {
-    throw new PassageStudyServiceError("Simplification failed — try again", "GENERATION_FAILED");
+    throw new PassageStudyServiceError(
+      "Simplification failed — try again",
+      "GENERATION_FAILED",
+    );
   }
 
   await Sentry.startSpan({ name: "db:passage-update", op: "db" }, async () => {
@@ -59,7 +82,10 @@ export async function generateQuestionsForPassage(
   userId: string,
   passageId: string,
   artifactId: string,
-): Promise<{ artifact: StudioArtifact; questions: GeneratedStudyQuestionDto[] }> {
+): Promise<{
+  artifact: StudioArtifact;
+  questions: GeneratedStudyQuestionDto[];
+}> {
   const passage = await getOwnedPassage(userId, passageId);
 
   // Idempotency: if this artifact was already committed (e.g. double-submit or
@@ -77,52 +103,72 @@ export async function generateQuestionsForPassage(
 
   const contentToAnalyze = passage.simplifiedContent || passage.content;
 
-  Sentry.addBreadcrumb({ category: "ai", message: "Generating comprehension questions", level: "info" });
-  const questionResult = await Sentry.startSpan({ name: "ai:question-gen", op: "ai" }, async () => {
-    // Bound the LLM call so a hung upstream cannot hold the serverless invocation
-    // open. Mirrors the client AbortController budget; surfaces as a TIMEOUT code.
-    return withGenerationTimeout(generateComprehensionQuestions(contentToAnalyze.slice(0, 10000), 5));
+  Sentry.addBreadcrumb({
+    category: "ai",
+    message: "Generating comprehension questions",
+    level: "info",
   });
+  const questionResult = await Sentry.startSpan(
+    { name: "ai:question-gen", op: "ai" },
+    async () => {
+      // Bound the LLM call so a hung upstream cannot hold the serverless invocation
+      // open. Mirrors the client AbortController budget; surfaces as a TIMEOUT code.
+      return withGenerationTimeout(
+        generateComprehensionQuestions(contentToAnalyze.slice(0, 10000), 5),
+      );
+    },
+  );
 
   if (!questionResult) {
-    throw new PassageStudyServiceError("Question generation failed — try again", "GENERATION_FAILED");
+    throw new PassageStudyServiceError(
+      "Question generation failed — try again",
+      "GENERATION_FAILED",
+    );
   }
 
   const validQuestions = questionResult.questions.filter((q) =>
     isValidGeneratedQuestion(q, artifactId),
   );
   if (questionResult.questions.length === 0) {
-    throw new PassageStudyServiceError("No questions generated — try again", "NO_QUESTIONS");
+    throw new PassageStudyServiceError(
+      "No questions generated — try again",
+      "NO_QUESTIONS",
+    );
   }
   if (validQuestions.length === 0) {
-    throw new PassageStudyServiceError("All generated questions failed validation — try again", "VALIDATION_FAILED");
+    throw new PassageStudyServiceError(
+      "All generated questions failed validation — try again",
+      "VALIDATION_FAILED",
+    );
   }
 
   // Atomic: create artifact (status "done") + questions in one transaction so no
   // partial state can be persisted. LLM ran before this — the transaction is
   // insert-only and short, no long-running DB connection.
-  const { artifact } = await Sentry.startSpan({ name: "db:artifact-and-questions-create", op: "db" }, () =>
-    db.$transaction(async (tx) => {
-      const artifact = await tx.studioArtifact.create({
-        data: {
-          id: artifactId,
-          passageId,
-          userId,
-          type: "quiz",
-          title: passage.title,
-          status: "done",
-        },
-        include: { quizResult: true },
-      });
-      await tx.question.createMany({
-        data: validQuestions.map((question) => ({
-          passageId,
-          artifactId,
-          ...toQuestionCreateInput(question),
-        })),
-      });
-      return { artifact };
-    }),
+  const { artifact } = await Sentry.startSpan(
+    { name: "db:artifact-and-questions-create", op: "db" },
+    () =>
+      db.$transaction(async (tx) => {
+        const artifact = await tx.studioArtifact.create({
+          data: {
+            id: artifactId,
+            passageId,
+            userId,
+            type: "quiz",
+            title: passage.title,
+            status: "done",
+          },
+          include: { quizResult: true },
+        });
+        await tx.question.createMany({
+          data: validQuestions.map((question) => ({
+            passageId,
+            artifactId,
+            ...toQuestionCreateInput(question),
+          })),
+        });
+        return { artifact };
+      }),
   );
 
   return {
@@ -132,9 +178,14 @@ export async function generateQuestionsForPassage(
 }
 
 async function getOwnedPassage(userId: string, passageId: string) {
-  const passage = await Sentry.startSpan({ name: "db:passage-fetch", op: "db" }, async () => {
-    return db.passage.findUnique({ where: { id: passageId, userId, deletedAt: null } });
-  });
+  const passage = await Sentry.startSpan(
+    { name: "db:passage-fetch", op: "db" },
+    async () => {
+      return db.passage.findUnique({
+        where: { id: passageId, userId, deletedAt: null },
+      });
+    },
+  );
 
   if (!passage) {
     throw new PassageStudyServiceError("Passage not found");
@@ -148,12 +199,20 @@ async function getOwnedPassage(userId: string, passageId: string) {
 async function withGenerationTimeout<T>(work: Promise<T>): Promise<T> {
   // If the timeout wins, `work` is left pending; swallow a late rejection so the
   // abandoned LLM call cannot surface as an unhandled promise rejection.
-  work.catch((err) => log.warn({ err }, "Question generation settled after timeout"));
+  work.catch((err) =>
+    log.warn({ err }, "Question generation settled after timeout"),
+  );
 
   let timer: ReturnType<typeof setTimeout>;
   const timeout = new Promise<never>((_, reject) => {
     timer = setTimeout(
-      () => reject(new PassageStudyServiceError("Question generation timed out — try again", "TIMEOUT")),
+      () =>
+        reject(
+          new PassageStudyServiceError(
+            "Question generation timed out — try again",
+            "TIMEOUT",
+          ),
+        ),
       STUDIO_GENERATION_TIMEOUT_MS,
     );
   });
@@ -164,7 +223,10 @@ async function withGenerationTimeout<T>(work: Promise<T>): Promise<T> {
   }
 }
 
-function isValidGeneratedQuestion(question: GeneratedQuestion, artifactId: string) {
+function isValidGeneratedQuestion(
+  question: GeneratedQuestion,
+  artifactId: string,
+) {
   const result = questionDataSchema.safeParse({
     artifactId,
     questionText: question.questionText,
@@ -199,7 +261,10 @@ function toQuestionCreateInput(question: GeneratedQuestion) {
   };
 }
 
-function toQuestionData(question: GeneratedQuestion, index: number): GeneratedStudyQuestionDto {
+function toQuestionData(
+  question: GeneratedQuestion,
+  index: number,
+): GeneratedStudyQuestionDto {
   return {
     id: `pending-${index}`,
     number: index + 1,
@@ -222,7 +287,12 @@ function rowToArtifact(row: {
   status: string;
   createdAt: Date;
   updatedAt: Date;
-  quizResult?: { completedAt: Date; correctCount: number; totalQuestions: number; accuracyRate: number } | null;
+  quizResult?: {
+    completedAt: Date;
+    correctCount: number;
+    totalQuestions: number;
+    accuracyRate: number;
+  } | null;
 }): StudioArtifact {
   return {
     id: row.id,
@@ -232,22 +302,41 @@ function rowToArtifact(row: {
     status: row.status as StudioArtifactStatus,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
-    quizResult: row.quizResult ? {
-      completedAt: row.quizResult.completedAt.toISOString(),
-      correctCount: row.quizResult.correctCount,
-      totalQuestions: row.quizResult.totalQuestions,
-      accuracyRate: row.quizResult.accuracyRate,
-    } : undefined,
+    quizResult: row.quizResult
+      ? {
+          completedAt: row.quizResult.completedAt.toISOString(),
+          correctCount: row.quizResult.correctCount,
+          totalQuestions: row.quizResult.totalQuestions,
+          accuracyRate: row.quizResult.accuracyRate,
+        }
+      : undefined,
   };
 }
 
 function rowToExistingQuestionDto(
-  q: { id: string; questionText: string; options: unknown; correctOption: string; sourceText: string; sourceLine: number; explanation: string; questionType: string; difficulty: number },
+  q: {
+    id: string;
+    questionText: string;
+    options: unknown;
+    correctOption: string;
+    sourceText: string;
+    sourceLine: number;
+    explanation: string;
+    questionType: string;
+    difficulty: number;
+  },
   index: number,
 ): GeneratedStudyQuestionDto {
-  const options = typeof q.options === "string"
-    ? (() => { try { return JSON.parse(q.options as string); } catch { return []; } })()
-    : (q.options ?? []) as { id: string; text: string }[];
+  const options =
+    typeof q.options === "string"
+      ? (() => {
+          try {
+            return JSON.parse(q.options as string);
+          } catch {
+            return [];
+          }
+        })()
+      : ((q.options ?? []) as { id: string; text: string }[]);
   return {
     id: q.id,
     number: index + 1,
@@ -265,7 +354,10 @@ function rowToExistingQuestionDto(
 export class PassageStudyServiceError extends Error {
   readonly code: StudioArtifactErrorCode;
 
-  constructor(message: string, code: StudioArtifactErrorCode = "UPSTREAM_ERROR") {
+  constructor(
+    message: string,
+    code: StudioArtifactErrorCode = "UPSTREAM_ERROR",
+  ) {
     super(message);
     this.name = "PassageStudyServiceError";
     this.code = code;

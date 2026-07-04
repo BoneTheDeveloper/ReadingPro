@@ -1,13 +1,18 @@
-import 'server-only';
+import "server-only";
 import type { UiMessage } from "@/contracts/study/chat-schema";
-import { MAX_HISTORY_MESSAGES, MAX_USER_TEXT_PART_CHARS } from "@/contracts/study/chat-schema";
+import {
+  MAX_HISTORY_MESSAGES,
+  MAX_USER_TEXT_PART_CHARS,
+} from "@/contracts/study/chat-schema";
 
 export function truncateToRecentTurns(messages: UiMessage[]): UiMessage[] {
   if (messages.length <= MAX_HISTORY_MESSAGES) return messages;
   return messages.slice(-MAX_HISTORY_MESSAGES);
 }
 
-export function validateMessageSizeLimits(messages: UiMessage[]): string | null {
+export function validateMessageSizeLimits(
+  messages: UiMessage[],
+): string | null {
   if (messages.length > MAX_HISTORY_MESSAGES) {
     return `Your chat history is too long for one request. Keep the most recent ${MAX_HISTORY_MESSAGES} messages and try again.`;
   }

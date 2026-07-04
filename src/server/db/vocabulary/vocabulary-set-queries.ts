@@ -1,5 +1,5 @@
 import "server-only";
-import { db } from "@/server/db/client";
+import { db } from "@/lib/db";
 import { withUserProfile } from "@/server/auth/sync-user";
 import type {
   VocabularySet,

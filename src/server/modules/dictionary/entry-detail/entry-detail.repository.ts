@@ -1,6 +1,6 @@
-import 'server-only';
+import "server-only";
 import * as Sentry from "@sentry/nextjs";
-import { db } from "@/server/db/client";
+import { db } from "@/lib/db";
 import type { LookupRawRow } from "../lookup/lookup.repository";
 
 export async function findEntryByIdRaw(

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Download, Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";

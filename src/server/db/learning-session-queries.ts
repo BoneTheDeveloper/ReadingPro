@@ -1,6 +1,6 @@
 import "server-only";
 import { z } from "zod";
-import { db } from "@/server/db/client";
+import { db } from "@/lib/db";
 import { withUserProfile } from "@/server/auth/sync-user";
 
 export const SESSION_IDLE_MS = 10 * 60 * 1000;

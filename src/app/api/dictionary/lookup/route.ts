@@ -51,8 +51,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const normalizedQuery = normalizeDictionaryTerm(parsed.data.q);
-
     await Sentry.startSpan(
       { name: "api:dictionary-lookup-authenticate", op: "auth" },
       () => getUserId(),

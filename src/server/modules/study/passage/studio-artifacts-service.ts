@@ -1,5 +1,5 @@
-import 'server-only';
-import { db } from "@/server/db/client";
+import "server-only";
+import { db } from "@/lib/db";
 import {
   type StudioArtifact,
   type StudioArtifactType,
@@ -28,12 +28,14 @@ function toStudioArtifact(row: {
     status: row.status as StudioArtifact["status"],
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
-    quizResult: row.quizResult ? {
-      completedAt: row.quizResult.completedAt.toISOString(),
-      correctCount: row.quizResult.correctCount,
-      totalQuestions: row.quizResult.totalQuestions,
-      accuracyRate: row.quizResult.accuracyRate,
-    } : undefined,
+    quizResult: row.quizResult
+      ? {
+          completedAt: row.quizResult.completedAt.toISOString(),
+          correctCount: row.quizResult.correctCount,
+          totalQuestions: row.quizResult.totalQuestions,
+          accuracyRate: row.quizResult.accuracyRate,
+        }
+      : undefined,
   };
 }
 
@@ -56,9 +58,10 @@ export async function recordQuizResult(
   stats: { correctCount: number; totalQuestions: number },
 ): Promise<void> {
   // Accuracy Rate: round to 2 decimal places (e.g. 0.85)
-  const accuracyRate = stats.totalQuestions > 0
-    ? Math.round((stats.correctCount / stats.totalQuestions) * 100) / 100
-    : 0;
+  const accuracyRate =
+    stats.totalQuestions > 0
+      ? Math.round((stats.correctCount / stats.totalQuestions) * 100) / 100
+      : 0;
 
   // We enforce ownership via the parent StudioArtifact.
   const artifact = await db.studioArtifact.findUnique({

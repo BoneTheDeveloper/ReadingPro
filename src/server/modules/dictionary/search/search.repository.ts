@@ -1,7 +1,7 @@
-import 'server-only';
+import "server-only";
 import * as Sentry from "@sentry/nextjs";
 import { Prisma } from "@/generated/prisma/client";
-import { db } from "@/server/db/client";
+import { db } from "@/lib/db";
 import { RUNTIME_STATUSES } from "@/contracts/dictionary/dictionary-dtos";
 import { escapeLikeWildcards } from "@/contracts/dictionary/normalize-dictionary-term";
 
@@ -55,16 +55,18 @@ async function searchDictionaryCandidatesSql({
   const phraseStartQuery = `${escaped} %`;
   const phraseEndQuery = `% ${escaped}`;
 
-  const rows = await db.$queryRaw<Array<{
-    id: string;
-    headword: string;
-    matchType: string;
-    matchedText: string | null;
-    primaryTranslation: string | null;
-    partOfSpeech: string | null;
-    sourceType: string | null;
-    sourceName: string | null;
-  }>>`
+  const rows = await db.$queryRaw<
+    Array<{
+      id: string;
+      headword: string;
+      matchType: string;
+      matchedText: string | null;
+      primaryTranslation: string | null;
+      partOfSpeech: string | null;
+      sourceType: string | null;
+      sourceName: string | null;
+    }>
+  >`
     WITH candidates AS (
       SELECT
         e.id,
@@ -251,11 +253,11 @@ async function searchDictionaryCandidatesSql({
 
 function toMatchType(value: string): DictionarySearchCandidateRow["matchType"] {
   if (
-    value === "exact"
-    || value === "alias"
-    || value === "phrase"
-    || value === "prefix"
-    || value === "contains"
+    value === "exact" ||
+    value === "alias" ||
+    value === "phrase" ||
+    value === "prefix" ||
+    value === "contains"
   ) {
     return value;
   }

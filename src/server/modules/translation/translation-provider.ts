@@ -1,4 +1,4 @@
-import 'server-only';
+import "server-only";
 import { createModuleLogger } from "@/server/observability/logger";
 
 const log = createModuleLogger("translation:provider");
@@ -31,7 +31,9 @@ export async function translateWithProvider(input: {
         { context: { status: response.status, provider } },
         "Translation provider returned non-OK status",
       );
-      throw new Error(`Translation provider returned status ${response.status}`);
+      throw new Error(
+        `Translation provider returned status ${response.status}`,
+      );
     }
 
     const data = await response.json();
@@ -45,7 +47,13 @@ export async function translateWithProvider(input: {
     }
 
     log.debug(
-      { context: { provider, textLength: input.text.length, translationLength: translation.length } },
+      {
+        context: {
+          provider,
+          textLength: input.text.length,
+          translationLength: translation.length,
+        },
+      },
       "Translation completed",
     );
 

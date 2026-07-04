@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 import { getUserId } from "@/server/auth/auth-utils";
-import { createRequestLogContext, createRequestLogger } from "@/server/observability/logger";
+import {
+  createRequestLogContext,
+  createRequestLogger,
+} from "@/server/observability/logger";
 import { getDictionaryEntryDetail } from "@/server/modules/dictionary/entry-detail/entry-detail.service";
-import type { DictionaryEntryDto } from "@/contracts/dictionary/dictionary-dtos";
-
 const entryIdSchema = z.string().uuid();
 
 const entryDetailQuerySchema = z.object({
@@ -43,10 +44,15 @@ export async function GET(
     const parsed = entryDetailQuerySchema.safeParse(raw);
     if (!parsed.success) {
       requestLog.warn(
-        { context: { issues: parsed.error.issues.map((i) => i.path.join(".")) } },
+        {
+          context: { issues: parsed.error.issues.map((i) => i.path.join(".")) },
+        },
         "Invalid entry detail query rejected",
       );
-      return NextResponse.json({ error: "Invalid query parameters." }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid query parameters." },
+        { status: 400 },
+      );
     }
 
     await Sentry.startSpan(
@@ -60,17 +66,15 @@ export async function GET(
         op: "db",
         attributes: { "dictionary.entry_id": entryId },
       },
-      () => getDictionaryEntryDetail(entryId, {
-        sourceLanguage: parsed.data.sourceLanguage,
-        targetLanguage: parsed.data.targetLanguage,
-      }),
+      () =>
+        getDictionaryEntryDetail(entryId, {
+          sourceLanguage: parsed.data.sourceLanguage,
+          targetLanguage: parsed.data.targetLanguage,
+        }),
     );
 
     if (!dto) {
-      requestLog.info(
-        { context: { entryId } },
-        "Dictionary entry not found",
-      );
+      requestLog.info({ context: { entryId } }, "Dictionary entry not found");
       return NextResponse.json({ error: "Entry not found." }, { status: 404 });
     }
 
@@ -82,13 +86,19 @@ export async function GET(
     return NextResponse.json({ success: true, data: dto });
   } catch (error) {
     if (isAuthenticationError(error)) {
-      return NextResponse.json({ error: "Authentication required." }, { status: 401 });
+      return NextResponse.json(
+        { error: "Authentication required." },
+        { status: 401 },
+      );
     }
 
     requestLog.error({ err: error }, "Dictionary entry detail failed");
     Sentry.captureException(error, {
       tags: { route: "api:dictionary-entry-detail", method: "GET" },
     });
-    return NextResponse.json({ error: "Entry detail failed." }, { status: 500 });
+    return NextResponse.json(
+      { error: "Entry detail failed." },
+      { status: 500 },
+    );
   }
 }

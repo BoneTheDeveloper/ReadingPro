@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 import { getUserId } from "@/server/auth/auth-utils";
-import { createRequestLogContext, createRequestLogger } from "@/server/observability/logger";
+import {
+  createRequestLogContext,
+  createRequestLogger,
+} from "@/server/observability/logger";
 import { normalizeDictionaryTerm } from "@/contracts/dictionary/normalize-dictionary-term";
 import { suggestDictionaryTerms } from "@/server/modules/dictionary/suggest/suggest.service";
-import type { DictionarySuggestItemDto } from "@/contracts/dictionary/dictionary-dtos";
 
 const suggestQuerySchema = z.object({
   q: z.string().trim().min(1).max(200),
@@ -34,7 +36,10 @@ export async function GET(request: NextRequest) {
     const parsed = suggestQuerySchema.safeParse(raw);
     if (!parsed.success) {
       requestLog.warn("Invalid suggest query rejected");
-      return NextResponse.json({ error: "Invalid query parameters." }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid query parameters." },
+        { status: 400 },
+      );
     }
 
     const normalizedQuery = normalizeDictionaryTerm(parsed.data.q);
@@ -56,10 +61,11 @@ export async function GET(request: NextRequest) {
           "dictionary.query_length": normalizedQuery.length,
         },
       },
-      () => suggestDictionaryTerms(parsed.data.q, {
-        sourceLanguage: parsed.data.sourceLanguage,
-        targetLanguage: parsed.data.targetLanguage,
-      }),
+      () =>
+        suggestDictionaryTerms(parsed.data.q, {
+          sourceLanguage: parsed.data.sourceLanguage,
+          targetLanguage: parsed.data.targetLanguage,
+        }),
     );
 
     requestLog.info(
@@ -75,7 +81,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: true, data: merged });
   } catch (error) {
     if (isAuthenticationError(error)) {
-      return NextResponse.json({ error: "Authentication required." }, { status: 401 });
+      return NextResponse.json(
+        { error: "Authentication required." },
+        { status: 401 },
+      );
     }
 
     requestLog.error({ err: error }, "Dictionary suggest failed");
