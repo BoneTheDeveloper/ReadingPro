@@ -65,4 +65,3 @@ Authenticated routes must enforce ownership with `userId`:
 | No session on API route | `401` JSON error |
 | Authenticated user requests another user's resource | `404` JSON error where possible |
 | User visits protected page unauthenticated | Clerk/locale redirect to sign-in |
-

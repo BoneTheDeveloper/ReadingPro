@@ -37,24 +37,3 @@ HTTP adapters (`src/app/api/**/route.ts`), and the Prisma data model (`prisma/sc
 `UserProfile.id` equals the Clerk user id; user-owned tables are filtered by `userId`. The
 canonical list of user-owned tables and the enforcement rules live in
 [auth-architecture.md](auth-architecture.md#ownership).
-
-## Core Workflows
-
-End-to-end behavior is owned by the flow and use-case docs, not restated here:
-
-- *What* the user does (black box): [`../Requirements/use-cases.md`](../Requirements/use-cases.md)
-- *How* the code fulfills it (white box): [`../Flows/data-flows/`](../Flows/data-flows/)
-
-## Architecture Docs
-
-Each concern has exactly one canonical owner. Pick the doc by what you are changing; the
-"Does NOT own" column points to the real owner so nothing is restated twice.
-
-| Doc | Owns | Does NOT own (→ owner) |
-|-----|------|------------------------|
-| [runtime-architecture.md](runtime-architecture.md) | App Router runtime: Server vs Client Components, route handlers, proxy/middleware boundary. | Cross-layer boundary invariants → [`../code-standards.md`](../code-standards.md). |
-| [frontend-ui-architecture/](frontend-ui-architecture/README.md) | Screen/page composition, app shell, page inventory. Reusable building blocks in [component-catalog.md](frontend-ui-architecture/component-catalog.md). | Visual system (tokens, color, type, motion) → [`../Design/design.md`](../Design/design.md). |
-| [backend-architecture.md](backend-architecture.md) | Backend **code placement**: service / domain-module / repository layering. | HTTP route conventions — response shape, Zod, auth handling → [`../API/api-implementation-conventions.md`](../API/api-implementation-conventions.md). |
-| [auth-architecture.md](auth-architecture.md) | Identity provider, auth gates, profile sync, data-ownership rules. | Route-level auth wiring → [`../API/api-implementation-conventions.md`](../API/api-implementation-conventions.md). |
-| [storage-architecture.md](storage-architecture.md) | Blob storage adapter, per-environment backends, path contract. | — |
-| [observability-architecture.md](observability-architecture.md) | Sentry, Pino logging, Prisma metrics, performance headers. | — |
