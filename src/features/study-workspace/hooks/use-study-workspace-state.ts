@@ -1,8 +1,12 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { deletePassage } from "@/features/study/content-panel/api-client/passages-client";
-import type { DocumentItem, PassageData, StudyState } from "../../shared/types";
+import { deletePassage } from "@/features/content-panel/api-client/passages-client";
+import type {
+  DocumentItem,
+  PassageData,
+  StudyState,
+} from "@/features/study/shared/types";
 
 function getMostRecentPassageId(passages: PassageData[]): string | null {
   return (

@@ -1,6 +1,6 @@
 import "server-only";
 import { Prisma } from "@/generated/prisma/client";
-import { db } from "@/lib/db";
+import { db } from "@/server/lib/db";
 import { simpleSchedule } from "@/server/modules/spaced-repetition/scheduler";
 import {
   findOrCreateDailySet,

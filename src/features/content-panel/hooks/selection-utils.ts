@@ -1,4 +1,4 @@
-import type { TranslationSelection } from "../../shared/types";
+import type { TranslationSelection } from "@/features/study/shared/types";
 import { countWords } from "@/contracts/translation/text-utils";
 
 type SelectionRect = TranslationSelection["selectionRect"];

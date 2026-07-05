@@ -1,5 +1,5 @@
 import "server-only";
-import { db } from "@/lib/db";
+import { db } from "@/server/lib/db";
 
 // A day counts toward the streak only when total study time that day exceeds this.
 export const STREAK_MIN_DAILY_MS = 10 * 60 * 1000;

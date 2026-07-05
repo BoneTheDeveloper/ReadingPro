@@ -1,13 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
-import { AuthenticationRequiredError, getUserId } from "@/server/auth/auth-utils";
-import { createRequestLogContext, createRequestLogger } from "@/server/observability/logger";
+import {
+  AuthenticationRequiredError,
+  getUserId,
+} from "@/server/auth/auth-utils";
+import {
+  createRequestLogContext,
+  createRequestLogger,
+} from "@/server/observability/logger";
 import {
   studyChatRequestSchema,
   studyChatQuerySchema,
   type UiMessage,
 } from "@/contracts/study/chat-schema";
-import { validateMessageSizeLimits } from "@/server/modules/study/chat/chat-utils";
+import { validateMessageSizeLimits } from "@/server/modules/ai-chat/chat-utils";
 import {
   StudyChatServiceError,
   getOwnedPassageForChat,
@@ -16,7 +22,7 @@ import {
   persistUserMessage,
   streamStudyChat,
   getChatHistory,
-} from "@/server/modules/study/chat/chat-service";
+} from "@/server/modules/ai-chat/chat-service";
 
 function isUnauthenticatedError(error: unknown) {
   return error instanceof AuthenticationRequiredError;
@@ -35,17 +41,26 @@ export async function POST(request: NextRequest) {
         {
           name: "api:study:studio:chat-parse-body",
           op: "http.server",
-          attributes: { "http.request.method": "POST", "url.path": "/api/study/studio/chat" },
+          attributes: {
+            "http.request.method": "POST",
+            "url.path": "/api/study/studio/chat",
+          },
         },
         () => request.json(),
       );
     } catch {
       requestLog.warn("Invalid JSON payload received for study chat");
-      return NextResponse.json({ error: "Invalid JSON payload." }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid JSON payload." },
+        { status: 400 },
+      );
     }
 
     const rawMessages =
-      typeof body === "object" && body !== null && "messages" in body && Array.isArray(body.messages)
+      typeof body === "object" &&
+      body !== null &&
+      "messages" in body &&
+      Array.isArray(body.messages)
         ? (body.messages as UiMessage[])
         : [];
     const messageLimitsError = validateMessageSizeLimits(rawMessages);
@@ -62,11 +77,17 @@ export async function POST(request: NextRequest) {
 
     if (!parsed.success) {
       requestLog.warn(
-        { context: { issues: parsed.error.issues.map((issue) => issue.path.join(".")) } },
+        {
+          context: {
+            issues: parsed.error.issues.map((issue) => issue.path.join(".")),
+          },
+        },
         "Invalid study chat request rejected",
       );
       return NextResponse.json(
-        { error: "Invalid chat request. Select a passage and enter a message." },
+        {
+          error: "Invalid chat request. Select a passage and enter a message.",
+        },
         { status: 400 },
       );
     }
@@ -78,7 +99,10 @@ export async function POST(request: NextRequest) {
       {
         name: "api:study:studio:chat-authenticate",
         op: "auth",
-        attributes: { "study.passage_id": passageId, "study.message_count": messages.length },
+        attributes: {
+          "study.passage_id": passageId,
+          "study.message_count": messages.length,
+        },
       },
       () => getUserId(),
     );
@@ -101,9 +125,16 @@ export async function POST(request: NextRequest) {
       incomingMessages: messages,
       persistedMessages: persistedUiMessages,
       onFinishPersistError: (error) => {
-        requestLog.error({ err: error }, "Failed to persist study chat assistant message");
+        requestLog.error(
+          { err: error },
+          "Failed to persist study chat assistant message",
+        );
         Sentry.captureException(error, {
-          tags: { route: "api:study:studio:chat", method: "POST", operation: "assistant-message-create" },
+          tags: {
+            route: "api:study:studio:chat",
+            method: "POST",
+            operation: "assistant-message-create",
+          },
           extra: { userId: userId, passageId },
         });
       },
@@ -113,7 +144,10 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (isUnauthenticatedError(error)) {
       requestLog.warn("Unauthenticated study chat request rejected");
-      return NextResponse.json({ error: "Authentication required." }, { status: 401 });
+      return NextResponse.json(
+        { error: "Authentication required." },
+        { status: 401 },
+      );
     }
 
     if (error instanceof StudyChatServiceError) {
@@ -144,7 +178,10 @@ export async function GET(request: NextRequest) {
 
     if (!parsed.success) {
       requestLog.warn("Study chat history request missing passageId");
-      return NextResponse.json({ error: "A passageId is required." }, { status: 400 });
+      return NextResponse.json(
+        { error: "A passageId is required." },
+        { status: 400 },
+      );
     }
     requestLog = requestLog.child({ passageId: parsed.data.passageId });
 
@@ -175,7 +212,10 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     if (isUnauthenticatedError(error)) {
       requestLog.warn("Unauthenticated study chat history request rejected");
-      return NextResponse.json({ error: "Authentication required." }, { status: 401 });
+      return NextResponse.json(
+        { error: "Authentication required." },
+        { status: 401 },
+      );
     }
 
     if (error instanceof StudyChatServiceError) {

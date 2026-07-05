@@ -16,15 +16,15 @@ import type {
   TranslationSelection,
   QuickTranslationData,
 } from "@/features/study/shared/types";
-import { StudySourcesPanel } from "../../source-panel/ui/sources-panel";
-import { StudyContentPanel } from "../../content-panel/ui/content-panel";
-import { StudyStudioPanel } from "../../studio-panel/ui/studio-panel";
-import { StudyTranslationPopup } from "../../studio-panel/ui/studio/translate/translation-popup";
-import { StudyUploadModal } from "../../source-panel/ui/upload-modal";
+import { StudySourcesPanel } from "@/features/source-panel/ui/sources-panel";
+import { StudyContentPanel } from "@/features/content-panel/ui/content-panel";
+import { StudyStudioPanel } from "@/features/studio-panel/ui/studio-panel";
+import { StudyTranslationPopup } from "@/features/studio-panel/ui/studio/translate/translation-popup";
+import { StudyUploadModal } from "@/features/source-panel/ui/upload-modal";
 import { useStudyActions } from "../hooks/use-study-actions";
-import { useStudyPanelLayout } from "@/features/study/workspace/hooks/use-study-panel-layout";
+import { useStudyPanelLayout } from "@/features/study-workspace/hooks/use-study-panel-layout";
 import { useStudyWorkspaceState } from "../hooks/use-study-workspace-state";
-import { useStudyArtifacts } from "@/features/study/studio-panel/hooks/use-study-artifacts";
+import { useStudyArtifacts } from "@/features/studio-panel/hooks/use-study-artifacts";
 
 let quickTranslationRequestCounter = 0;
 

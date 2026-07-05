@@ -9,7 +9,7 @@ import {
   formatFileSize,
 } from "@/contracts/upload/upload-validation";
 import { cn } from "@/lib/utils";
-import { createPassage } from "@/features/study/content-panel/api-client/passages-client";
+import { createPassage } from "@/features/content-panel/api-client/passages-client";
 import {
   Dialog,
   DialogContent,

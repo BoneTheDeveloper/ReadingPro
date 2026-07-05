@@ -3,9 +3,9 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import type { Dispatch, SetStateAction } from "react";
-import { simplifyPassage } from "@/features/study/content-panel/api-client/passages-client";
-import { generateStudioQuestions } from "@/features/study/studio-panel/api-client/studio-questions-client";
-import { getArtifactDetail } from "@/features/study/studio-panel/api-client/studio-artifacts-client";
+import { simplifyPassage } from "@/features/content-panel/api-client/passages-client";
+import { generateStudioQuestions } from "@/features/studio-panel/api-client/studio-questions-client";
+import { getArtifactDetail } from "@/features/studio-panel/api-client/studio-artifacts-client";
 import type {
   ArtifactsCacheEntry,
   ArtifactRef,
@@ -13,7 +13,7 @@ import type {
   StudioArtifact,
   StudioArtifactErrorCode,
   StudyState,
-} from "../../shared/types";
+} from "@/features/study/shared/types";
 
 interface UseStudyActionsInput {
   state: StudyState;
