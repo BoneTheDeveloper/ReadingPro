@@ -10,7 +10,7 @@ import {
   createRequestLogContext,
   createRequestLogger,
 } from "@/server/observability/logger";
-import { fetchStudioArtifacts } from "@/server/modules/study/passage/studio-artifacts-service";
+import { fetchStudioArtifacts } from "@/server/modules/passage/studio-artifacts-service";
 
 const studyArtifactsQuerySchema = z.object({
   passageId: z.string().uuid(),
@@ -18,8 +18,8 @@ const studyArtifactsQuerySchema = z.object({
 
 export async function GET(request: NextRequest) {
   const requestLog = createRequestLogger(
-    "api:study:studio:artifacts",
-    createRequestLogContext(request, "GET", "/api/study/studio/artifacts"),
+    "api:studio:artifacts",
+    createRequestLogContext(request, "GET", "/api/studio/artifacts"),
   );
 
   try {

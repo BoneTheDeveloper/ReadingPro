@@ -6,7 +6,7 @@ import {
 } from "@/server/ai/question-generator";
 import { simplifyContent } from "@/server/ai/content-simplifier";
 import { createModuleLogger } from "@/server/observability/logger";
-import { db } from "@/lib/db";
+import { db } from "@/server/lib/db";
 import { questionDataSchema } from "@/server/db/passage-queries";
 import {
   getTargetCEFRLevel,

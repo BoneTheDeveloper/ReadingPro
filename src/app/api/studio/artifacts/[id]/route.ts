@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { getUserId } from "@/server/auth/auth-utils";
-import { db } from "@/lib/db";
+import { db } from "@/server/lib/db";
 import { isAuthenticationRequiredError } from "@/server/http/route-errors";
 import { createModuleLogger } from "@/server/observability/logger";
 import type { QuestionData } from "@/features/study/shared/types";
