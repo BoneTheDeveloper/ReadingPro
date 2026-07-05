@@ -58,7 +58,6 @@ export function StudyPageClient({
     handleDeletePassage,
   } = useStudyWorkspaceState(initialPassages);
   const {
-    handleSimplify,
     handleActionClick,
     handleViewArtifact,
     handleRecordQuizResult,
@@ -364,8 +363,6 @@ export function StudyPageClient({
               <StudyContentPanel
                 passage={activePassage}
                 error={state.error}
-                simplifying={state.simplifying}
-                onSimplify={handleSimplify}
                 viewMode={contentViewMode}
                 onViewModeChange={setContentViewMode}
                 onSelectionChange={handleSelectionChange}

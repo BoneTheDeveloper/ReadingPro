@@ -82,7 +82,6 @@ export interface StudyState {
   activePassageId: string | null;
   status: StudyStatus;
   error: string | null;
-  simplifying: boolean;
   uploadModalOpen: boolean;
   artifactsByPassageId: Record<string, ArtifactsCacheEntry>;
   viewingArtifactByPassageId: Record<string, ArtifactRef | null>;

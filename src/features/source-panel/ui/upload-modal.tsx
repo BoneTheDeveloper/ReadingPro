@@ -9,7 +9,7 @@ import {
   formatFileSize,
 } from "@/contracts/upload/upload-validation";
 import { cn } from "@/lib/utils";
-import { createPassage } from "@/features/content-panel/api-client/passages-client";
+import { uploadFile, uploadText } from "@/features/source-panel/api-client/upload-client";
 import {
   Dialog,
   DialogContent,
@@ -20,9 +20,35 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import type { StudyUploadModalProps } from "@/features/study/shared/types";
+import type {
+  PassageData,
+  SourceType,
+  StudyUploadModalProps,
+} from "@/features/study/shared/types";
 
 type InputMode = "file" | "text" | null;
+
+function toPassageData(input: {
+  passageId: string;
+  title: string;
+  text: string;
+  sourceType: SourceType;
+  originalLevel: string;
+  simplifiedLevel: string | null;
+}): PassageData {
+  const wordCount = input.text.split(/\s+/).filter((w) => w.length > 0).length;
+  return {
+    id: input.passageId,
+    title: input.title,
+    content: input.text,
+    simplifiedContent: null,
+    originalLevel: input.originalLevel,
+    simplifiedLevel: input.simplifiedLevel,
+    wordCount,
+    createdAt: Date.now(),
+    sourceType: input.sourceType,
+  };
+}
 
 function SourceButton({
   icon: Icon,
@@ -81,18 +107,23 @@ export function StudyUploadModal({
 
   const handleFileUpload = async (file: File) => {
     const fileName = file.name.replace(/\.(txt|pdf)$/, "");
-    const fileType = file.name.endsWith(".pdf") ? "PDF" : "TEXT";
+    const fileType: SourceType = file.name.endsWith(".pdf") ? "PDF" : "TEXT";
     onUploadStart(fileName);
     onClose();
     setError(null);
     try {
-      const text = await file.text();
-      const passage = await createPassage({
-        text,
-        title: fileName,
-        sourceType: fileType,
-      });
-      onUploadComplete(passage);
+      const text = fileType === "TEXT" ? await file.text() : "";
+      const result = await uploadFile(file);
+      onUploadComplete(
+        toPassageData({
+          passageId: result.passageId,
+          title: fileName,
+          text,
+          sourceType: fileType,
+          originalLevel: result.originalLevel,
+          simplifiedLevel: result.simplifiedLevel,
+        }),
+      );
     } catch (err) {
       onUploadError(err instanceof Error ? err.message : t("uploadFailed"));
     }
@@ -100,16 +131,22 @@ export function StudyUploadModal({
 
   const handleTextSubmit = async () => {
     if (!pastedText.trim()) return;
-    onUploadStart(t("pastedTextTitle"));
+    const title = t("pastedTextTitle");
+    onUploadStart(title);
     onClose();
     setError(null);
     try {
-      const passage = await createPassage({
-        text: pastedText,
-        title: t("pastedTextTitle"),
-        sourceType: "TEXT",
-      });
-      onUploadComplete(passage);
+      const result = await uploadText(pastedText);
+      onUploadComplete(
+        toPassageData({
+          passageId: result.passageId,
+          title,
+          text: pastedText,
+          sourceType: "TEXT",
+          originalLevel: result.originalLevel,
+          simplifiedLevel: result.simplifiedLevel,
+        }),
+      );
     } catch (err) {
       onUploadError(err instanceof Error ? err.message : t("uploadFailed"));
     }

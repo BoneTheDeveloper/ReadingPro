@@ -2,9 +2,9 @@ import "server-only";
 import { openai } from "@ai-sdk/openai";
 import { convertToModelMessages, streamText } from "ai";
 import * as Sentry from "@sentry/nextjs";
-import { db } from "@/lib/db";
+import { db } from "@/server/lib/db";
 import { wrapUserText } from "@/server/ai/prompt-utils";
-import { getStudyChatModelId } from "@/lib/ai";
+import { getStudyChatModelId } from "@/server/lib/model-config";
 import { createModuleLogger } from "@/server/observability/logger";
 import {
   MAX_PASSAGE_CHARS,

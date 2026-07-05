@@ -4,15 +4,9 @@ import {
   generateComprehensionQuestions,
   type GeneratedQuestion,
 } from "@/server/ai/question-generator";
-import { simplifyContent } from "@/server/ai/content-simplifier";
 import { createModuleLogger } from "@/server/observability/logger";
 import { db } from "@/server/lib/db";
 import { questionDataSchema } from "@/server/db/passage-queries";
-import {
-  getTargetCEFRLevel,
-  isSimplifiableCEFRLevel,
-  type CEFRLevel,
-} from "@/contracts/domain/cefr";
 import type { GeneratedStudyQuestionDto } from "@/contracts/study/study-response-schema";
 import {
   STUDIO_GENERATION_TIMEOUT_MS,
@@ -23,60 +17,6 @@ import {
 } from "@/contracts/study/studio-artifact-types";
 
 const log = createModuleLogger("lib:study:passage-service");
-
-export type SimplifyPassageResult =
-  | { simplifiedContent: string; simplifiedLevel: CEFRLevel }
-  | { skipped: true; reason: string };
-
-export async function simplifyPassageForUser(
-  userId: string,
-  passageId: string,
-): Promise<SimplifyPassageResult> {
-  const passage = await getOwnedPassage(userId, passageId);
-  const originalLevel = passage.originalLevel as CEFRLevel | null;
-
-  if (!originalLevel || !isSimplifiableCEFRLevel(originalLevel)) {
-    return {
-      skipped: true,
-      reason: `Text is already ${originalLevel || "unknown"} level`,
-    };
-  }
-
-  const targetLevel = getTargetCEFRLevel(originalLevel) ?? "B1";
-  Sentry.addBreadcrumb({
-    category: "ai",
-    message: `Simplifying to ${targetLevel}`,
-    level: "info",
-  });
-  const simplified = await Sentry.startSpan(
-    { name: "ai:content-simplify", op: "ai" },
-    async () => {
-      return simplifyContent(passage.content.slice(0, 10000), targetLevel);
-    },
-  );
-
-  if (!simplified) {
-    throw new PassageStudyServiceError(
-      "Simplification failed — try again",
-      "GENERATION_FAILED",
-    );
-  }
-
-  await Sentry.startSpan({ name: "db:passage-update", op: "db" }, async () => {
-    return db.passage.update({
-      where: { id: passageId, userId },
-      data: {
-        simplifiedContent: simplified.simplifiedText,
-        simplifiedLevel: targetLevel,
-      },
-    });
-  });
-
-  return {
-    simplifiedContent: simplified.simplifiedText,
-    simplifiedLevel: targetLevel,
-  };
-}
 
 export async function generateQuestionsForPassage(
   userId: string,

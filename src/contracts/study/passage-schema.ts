@@ -21,14 +21,7 @@ export const createPassageRequestSchema = z.object({
   sourceType: passageSourceTypeSchema.optional().default("TEXT"),
 }).strict();
 
-export const simplifyPassageResponseSchema = z.object({
-  simplifiedContent: z.string(),
-  simplifiedLevel: z.string(),
-}).strict();
-
 export const passageResponseSchema = makeResponseSchema(passageSchema);
-export const simplifyPassageActionResponseSchema = makeResponseSchema(simplifyPassageResponseSchema);
 
 export type PassageDto = z.infer<typeof passageSchema>;
 export type CreatePassageRequest = z.infer<typeof createPassageRequestSchema>;
-export type SimplifyPassageResponse = z.infer<typeof simplifyPassageResponseSchema>;

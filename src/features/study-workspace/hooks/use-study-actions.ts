@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import type { Dispatch, SetStateAction } from "react";
-import { simplifyPassage } from "@/features/content-panel/api-client/passages-client";
 import { generateStudioQuestions } from "@/features/studio-panel/api-client/studio-questions-client";
 import { getArtifactDetail } from "@/features/studio-panel/api-client/studio-artifacts-client";
 import type {
@@ -63,39 +62,6 @@ export function useStudyActions({ state, setState }: UseStudyActionsInput) {
     },
     [updateCacheEntry],
   );
-
-  const handleSimplify = useCallback(async () => {
-    const passageId = activePassageIdRef.current;
-    if (!passageId) return;
-
-    setState((prev) => ({ ...prev, simplifying: true, error: null }));
-    try {
-      const result = await simplifyPassage(passageId);
-      if ("skipped" in result) {
-        setState((prev) => ({ ...prev, simplifying: false }));
-        return;
-      }
-      setState((prev) => ({
-        ...prev,
-        simplifying: false,
-        passages: prev.passages.map((passage) =>
-          passage.id === passageId
-            ? {
-                ...passage,
-                simplifiedContent: result.simplifiedContent,
-                simplifiedLevel: result.simplifiedLevel,
-              }
-            : passage,
-        ),
-      }));
-    } catch (err) {
-      setState((prev) => ({
-        ...prev,
-        simplifying: false,
-        error: err instanceof Error ? err.message : t("simplificationFailed"),
-      }));
-    }
-  }, [setState, t]);
 
   // Marks the artifact failed in client state only — there is no persisted row to
   // clean up since the atomic generation either committed or rolled back entirely.
@@ -277,7 +243,6 @@ export function useStudyActions({ state, setState }: UseStudyActionsInput) {
   );
 
   return {
-    handleSimplify,
     handleActionClick,
     handleViewArtifact,
     handleRecordQuizResult,

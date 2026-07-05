@@ -1,5 +1,5 @@
 import "server-only";
-import { db } from "@/lib/db";
+import { db } from "@/server/lib/db";
 import {
   type StudioArtifact,
   type StudioArtifactType,
