@@ -36,11 +36,16 @@
 1. User clicks **Delete** on a passage in the sources list.
 2. The passage is removed from the list.
 
-## Routes
+## Routes & Actions
 
-| Action | Route |
-|--------|-------|
-| Open study workspace | `/study` |
-| Generate quiz | `POST /api/study/studio/questions` |
-| Chat with tutor | `POST /api/study/studio/chat` |
-| Delete passage | Server Action: `deletePassageAction` |
+| Action | Implementation |
+|--------|-----------------|
+| Open study workspace | GET `/[locale]/study` (Server Component page) |
+| List artifacts | Server Action: `getStudioArtifactsAction` from `src/features/studio-panel/actions.ts` |
+| Fetch artifact questions | Server Action: `getArtifactQuestionsAction` from `src/features/studio-panel/actions.ts` |
+| Generate quiz | `POST /api/studio/questions` (route handler with LLM streaming) |
+| Record quiz result | Server Action: `recordQuizResultAction` from `src/features/studio-panel/actions.ts` |
+| Reset quiz result | Server Action: `resetQuizResultAction` from `src/features/studio-panel/actions.ts` |
+| Chat with tutor | `POST /api/studio/chat` (route handler with LLM streaming) |
+| Get chat history | Server Action: `getChatHistoryAction` from `src/features/studio-panel/actions.ts` |
+| Delete passage | Server Action: `deletePassageAction` from `src/features/study-workspace/actions.ts` |

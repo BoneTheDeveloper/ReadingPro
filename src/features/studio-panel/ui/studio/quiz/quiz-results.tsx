@@ -6,9 +6,9 @@ import { Trophy, AlertCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  recordQuizResult,
-  resetQuizResult,
-} from "@/features/study/studio-panel/api-client/studio-artifacts-client";
+  recordQuizResultAction,
+  resetQuizResultAction,
+} from "@/features/studio-panel/actions";
 
 interface QuizResultsProps {
   correctCount: number;
@@ -43,7 +43,7 @@ export function QuizResults({
     isSavingRef.current = true;
 
     try {
-      await recordQuizResult(artifactId, {
+      await recordQuizResultAction(artifactId, {
         correctCount,
         totalQuestions,
       });
@@ -59,7 +59,7 @@ export function QuizResults({
   const handleRetry = useCallback(async () => {
     if (artifactId) {
       try {
-        await resetQuizResult(artifactId);
+        await resetQuizResultAction(artifactId);
         onResetResult();
       } catch (err) {
         console.error("Failed to reset quiz result", err);

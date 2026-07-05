@@ -3,7 +3,6 @@
 import { useEffect } from "react";
 import * as Sentry from "@sentry/nextjs";
 import { ensureStudySession } from "../api-client/learning-session-client";
-import { STUDY_API_ROUTES } from "@/features/study/shared/api-utils";
 
 const STUDY_SESSION_HEARTBEAT_MS = 60_000;
 
@@ -25,7 +24,7 @@ export function useStudySessionHeartbeat(enabled = true) {
             category: "learning-session",
             level: "error",
             message: "learning-session-heartbeat-failed",
-            data: { route: STUDY_API_ROUTES.sessions },
+            data: { route: "/api/learning-session" },
           });
         }
       } catch {
@@ -33,7 +32,7 @@ export function useStudySessionHeartbeat(enabled = true) {
           category: "learning-session",
           level: "error",
           message: "learning-session-heartbeat-failed",
-          data: { route: STUDY_API_ROUTES.sessions },
+          data: { route: "/api/learning-session" },
         });
       }
     };

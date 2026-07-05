@@ -8,8 +8,7 @@ import * as Sentry from "@sentry/nextjs";
 import { Send, Loader2, AlertCircle, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { studyChatHistoryResponseSchema } from "@/contracts/study/study-response-schema";
-import { STUDY_API_ROUTES } from "@/features/study/shared/api-utils";
+import { getChatHistoryAction } from "@/features/studio-panel/actions";
 interface StudyChatPanelProps {
   passageId: string;
   prefilledQuestion?: string | null;
@@ -26,7 +25,7 @@ export function StudyChatPanel({
   const transport = useMemo(
     () =>
       new DefaultChatTransport({
-        api: STUDY_API_ROUTES.chat,
+        api: "/api/studio/chat",
         body: { passageId },
       }),
     [passageId],
@@ -48,49 +47,16 @@ export function StudyChatPanel({
 
     async function bootstrapMessages() {
       try {
-        const response = await Sentry.startSpan(
+        const messages = await Sentry.startSpan(
           {
             name: "ui:study-chat-history-fetch",
-            op: "http.client",
+            op: "function",
             attributes: {
               "study.passage_id": passageId,
-              "http.request.method": "GET",
-              "url.path": STUDY_API_ROUTES.chat,
             },
           },
-          () =>
-            fetch(
-              `${STUDY_API_ROUTES.chat}?passageId=${encodeURIComponent(passageId)}`,
-            ),
+          () => getChatHistoryAction(passageId),
         );
-        if (!response.ok) {
-          Sentry.addBreadcrumb({
-            category: "study-chat",
-            level: "warning",
-            message: "Study chat history fetch returned a non-OK response",
-            data: {
-              passageId,
-              status: response.status,
-            },
-          });
-          setMessages([]);
-          return;
-        }
-        const payload: unknown = await response.json();
-        const parsed = studyChatHistoryResponseSchema.safeParse(payload);
-        if (!parsed.success || "error" in parsed.data) {
-          Sentry.addBreadcrumb({
-            category: "study-chat",
-            level: "error",
-            message: "Study chat history schema error",
-            data: {
-              passageId,
-              route: STUDY_API_ROUTES.chat,
-            },
-          });
-          if (isMounted) setMessages([]);
-          return;
-        }
         if (isMounted) {
           Sentry.addBreadcrumb({
             category: "study-chat",
@@ -98,10 +64,10 @@ export function StudyChatPanel({
             message: "Study chat history loaded",
             data: {
               passageId,
-              messageCount: parsed.data.messages.length,
+              messageCount: messages.length,
             },
           });
-          setMessages(parsed.data.messages);
+          setMessages(messages);
         }
       } catch (error) {
         Sentry.captureException(error, {

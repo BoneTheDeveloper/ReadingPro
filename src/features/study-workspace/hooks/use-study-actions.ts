@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import type { Dispatch, SetStateAction } from "react";
 import { generateStudioQuestions } from "@/features/studio-panel/api-client/studio-questions-client";
-import { getArtifactDetail } from "@/features/studio-panel/api-client/studio-artifacts-client";
+import { getArtifactQuestionsAction } from "@/features/studio-panel/actions";
 import type {
   ArtifactsCacheEntry,
   ArtifactRef,
@@ -197,7 +197,7 @@ export function useStudyActions({ state, setState, passages }: UseStudyActionsIn
       if (!ref || state.artifactDetailById[ref.id]) return;
 
       try {
-        const result = await getArtifactDetail(ref.id);
+        const result = await getArtifactQuestionsAction(ref.id);
 
         setState((prev) => ({
           ...prev,

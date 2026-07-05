@@ -10,7 +10,6 @@ import {
 } from "@/server/observability/logger";
 import {
   studyChatRequestSchema,
-  studyChatQuerySchema,
   type UiMessage,
 } from "@/contracts/study/chat-schema";
 import { validateMessageSizeLimits } from "@/server/modules/ai-chat/chat-utils";
@@ -21,7 +20,6 @@ import {
   toPersistedUiMessages,
   persistUserMessage,
   streamStudyChat,
-  getChatHistory,
 } from "@/server/modules/ai-chat/chat-service";
 
 function isUnauthenticatedError(error: unknown) {
@@ -160,74 +158,6 @@ export async function POST(request: NextRequest) {
     });
     return NextResponse.json(
       { error: "Unable to start the study chat stream." },
-      { status: 500 },
-    );
-  }
-}
-
-export async function GET(request: NextRequest) {
-  let requestLog = createRequestLogger(
-    "api:study:studio:chat",
-    createRequestLogContext(request, "GET", "/api/study/studio/chat"),
-  );
-
-  try {
-    const parsed = studyChatQuerySchema.safeParse({
-      passageId: request.nextUrl.searchParams.get("passageId"),
-    });
-
-    if (!parsed.success) {
-      requestLog.warn("Study chat history request missing passageId");
-      return NextResponse.json(
-        { error: "A passageId is required." },
-        { status: 400 },
-      );
-    }
-    requestLog = requestLog.child({ passageId: parsed.data.passageId });
-
-    const userId = await Sentry.startSpan(
-      {
-        name: "api:study:studio:chat-history-authenticate",
-        op: "auth",
-        attributes: { "study.passage_id": parsed.data.passageId },
-      },
-      () => getUserId(),
-    );
-    requestLog = requestLog.child({ userId: userId });
-
-    const messages = await getChatHistory(userId, parsed.data.passageId);
-
-    requestLog.debug(
-      { context: { messageCount: messages.length } },
-      "Loaded study chat history",
-    );
-
-    return NextResponse.json({
-      messages: messages.map((message) => ({
-        id: message.id,
-        role: message.role,
-        parts: [{ type: "text", text: message.content }],
-      })),
-    });
-  } catch (error) {
-    if (isUnauthenticatedError(error)) {
-      requestLog.warn("Unauthenticated study chat history request rejected");
-      return NextResponse.json(
-        { error: "Authentication required." },
-        { status: 401 },
-      );
-    }
-
-    if (error instanceof StudyChatServiceError) {
-      return NextResponse.json({ error: error.message }, { status: 404 });
-    }
-
-    requestLog.error({ err: error }, "Study chat history fetch failed");
-    Sentry.captureException(error, {
-      tags: { route: "api:study:studio:chat", method: "GET" },
-    });
-    return NextResponse.json(
-      { error: "Unable to load study chat history." },
       { status: 500 },
     );
   }

@@ -3,10 +3,8 @@
 import { useCallback, useState } from "react";
 import { Group, Panel, Separator } from "react-resizable-panels";
 import * as Sentry from "@sentry/nextjs";
-import {
-  translateResponseSchema,
-  vocabularyResponseSchema,
-} from "@/contracts/translation/translation-response-schema";
+import { translateResponseSchema } from "@/contracts/translation/translation-response-schema";
+import { saveVocabularyAction } from "../actions";
 import {
   clampTranslationContext,
   isTranslateTextWithinLimit,
@@ -274,24 +272,7 @@ export function StudyPageClient({
         vocabularyPayload.type = quickTranslation.type;
       }
 
-      const res = await fetch("/api/vocabulary", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(vocabularyPayload),
-      });
-      const json: unknown = await res.json();
-      const parsed = vocabularyResponseSchema.safeParse(json);
-      if (!parsed.success) {
-        Sentry.addBreadcrumb({
-          category: "study-vocabulary",
-          level: "error",
-          message: "study-vocabulary-schema-error",
-          data: { route: "/api/vocabulary" },
-        });
-        throw new Error("Vocabulary save failed");
-      }
-      if (!res.ok || "error" in parsed.data)
-        throw new Error("Vocabulary save failed");
+      const savedItem = await saveVocabularyAction(vocabularyPayload);
       setSavedVocabularyIds((prev) =>
         new Set(prev).add(buildTranslationSelectionKey(selection)),
       );
@@ -299,7 +280,7 @@ export function StudyPageClient({
         category: "study-vocabulary",
         level: "info",
         message: "study-vocabulary-save-success",
-        data: { vocabularyItemId: parsed.data.data.id },
+        data: { vocabularyItemId: savedItem.id },
       });
     } catch {
       Sentry.addBreadcrumb({

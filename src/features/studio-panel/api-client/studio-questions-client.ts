@@ -9,7 +9,6 @@ import {
   postJson,
   RequestTimeoutError,
 } from "@/contracts/http/api-client-utils";
-import { STUDY_API_ROUTES } from "@/features/study/shared/api-utils";
 
 export type GenerateStudioQuestionsResult =
   | { artifact: StudioArtifact; questions: QuestionData[] }
@@ -21,7 +20,7 @@ export async function generateStudioQuestions(input: {
 }): Promise<GenerateStudioQuestionsResult> {
   try {
     const payload = await postJson(
-      STUDY_API_ROUTES.questions,
+      "/api/studio/questions",
       input,
       generatedStudyQuestionsResponseSchema,
       STUDIO_GENERATION_TIMEOUT_MS,

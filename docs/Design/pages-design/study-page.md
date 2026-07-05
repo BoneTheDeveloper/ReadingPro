@@ -18,7 +18,7 @@ Main study workspace where users select a passage, read content, use AI chat, ge
 
 - `page.tsx` is a Server Component route entry.
 - It authenticates the user, loads owned passages with `getUserPassages`, maps them into serializable `PassageData`, and renders the interactive client.
-- `src/features/study/ui/study-workspace-client.tsx` is the root Client Component for the study workspace.
+- `src/features/study-workspace/ui/study-workspace-client.tsx` is the root Client Component for the study workspace.
 
 Current root component:
 
@@ -57,45 +57,48 @@ Use this hierarchy as the source of truth when changing Study UI composition.
 
 ```text
 src/app/[locale]/(dashboard)/study/page.tsx
-+-- StudyPageClient
++-- StudyPageClient (from src/features/study-workspace/ui/study-workspace-client.tsx)
     +-- useStudyWorkspaceState
     +-- useStudyActions
     +-- useStudyPanelLayout
     +-- react-resizable-panels Group#study-panels
     |   +-- Panel#source
-    |   |   +-- StudySourcesPanel
+    |   |   +-- StudySourcesPanel (from src/features/source-panel/ui/sources-panel.tsx)
     |   +-- Panel#content
-    |   |   +-- StudyContentPanel
+    |   |   +-- StudyContentPanel (from src/features/content-panel/ui/content-panel.tsx)
     |   |   +-- StudyTranslationPopup
     |   +-- Panel#studio
-    |       +-- StudyStudioPanel
-    |           +-- StudyChatPanel
+    |       +-- StudyStudioPanel (from src/features/studio-panel/ui/studio-panel.tsx)
+    |           +-- StudyChatPanel (from src/features/studio-panel/ui/studio/chat/chat-panel.tsx)
     |           +-- StudyTranslatePanel
     |           +-- QuizContent
-    |               +-- QuizResults
+    |               +-- QuizResults (from src/features/studio-panel/ui/studio/quiz/quiz-results.tsx)
     +-- StudyUploadModal
 ```
 
 Supporting modules:
 
 ```text
-src/features/study/model/types.ts
+src/features/study/shared/types.ts
 +-- Shared UI and client state types
 
-src/features/study/model/selection-utils.ts
+src/features/study/shared/selection-utils.ts
 +-- DOM selection extraction and popup geometry inputs
 
-src/features/study/api-client/study-api.ts
-+-- Client API helpers used by quiz and question generation
+src/features/studio-panel/api-client/studio-questions-client.ts
++-- Client API helper for quiz generation request
 
-src/features/study/actions/*
-+-- Server actions invoked from Study UI hooks and upload modal
+src/features/studio-panel/actions.ts
++-- Server actions for artifact management: getStudioArtifactsAction, getArtifactQuestionsAction, recordQuizResultAction, resetQuizResultAction, getChatHistoryAction
+
+src/features/study-workspace/actions.ts
++-- Server actions: deletePassageAction, saveVocabularyAction
 ```
 
-Target upload-related placement:
+Upload-related placement:
 
 ```text
-src/features/study/ui/upload/study-upload-modal.tsx
+src/features/study-workspace/ui/study-upload-modal.tsx
 +-- Study-specific modal shell and workspace callbacks
 
 src/features/upload/ui/*
@@ -104,10 +107,13 @@ src/features/upload/ui/*
 src/features/upload/actions/*
 +-- Shared upload mutation entrypoints
 
-src/server/modules/*
-+-- Reusable Passage domain services
+src/server/modules/passage/
++-- Passage domain services and business logic
 
-src/server/db/*
+src/server/modules/ai-chat/
++-- Chat history and streaming services
+
+src/server/db/
 +-- Passage repository/database access
 ```
 
@@ -130,24 +136,24 @@ When adding a Study subcomponent, place it by ownership:
 
 | New UI concern | Put it under |
 |----------------|--------------|
-| Source list, source search, source row, source menu | `StudySourcesPanel` or `src/features/study/ui/sources-*` |
-| Passage reading, reader metadata, selection capture | `StudyContentPanel` or `studio/content/*` |
-| Floating selected-text action | `StudyTranslationPopup` or `studio/translate/*` |
-| Studio action grid, results list, collapsed studio rail | `StudyStudioPanel` |
-| Chat messages, chat input, stream controls | `studio/chat/*` |
-| Translation detail, save vocabulary, ask AI from selection | `studio/translate/*` |
-| Quiz taking and quiz results | `studio/quiz/*` |
-| Study upload modal shell and Study workspace callbacks | `src/features/study/ui/upload/*` |
+| Source list, source search, source row, source menu | `StudySourcesPanel` or `src/features/source-panel/ui/*` |
+| Passage reading, reader metadata, selection capture | `StudyContentPanel` or `src/features/content-panel/ui/*` |
+| Floating selected-text action | `StudyTranslationPopup` or `src/features/studio-panel/ui/studio/lookup/*` |
+| Studio action grid, results list, collapsed studio rail | `StudyStudioPanel` in `src/features/studio-panel/ui/studio-panel.tsx` |
+| Chat messages, chat input, stream controls | `src/features/studio-panel/ui/studio/chat/*` |
+| Translation detail, save vocabulary, ask AI from selection | `src/features/studio-panel/ui/studio/lookup/*` |
+| Quiz taking and quiz results | `src/features/studio-panel/ui/studio/quiz/*` |
+| Study upload modal shell and Study workspace callbacks | `src/features/study-workspace/ui/` |
 | Reusable upload form, dropzone, text input, upload schema, upload workflow | `src/features/upload/*` |
-| Reusable passage creation, reads, ownership, repository access | `src/server/modules/*` |
-| Cross-panel state or orchestration | `StudyPageClient` or `src/features/study/model/use-*` |
-| Server mutation or ownership logic | `src/features/study/actions/*` or `src/server/modules/study/*` |
+| Reusable passage creation, reads, ownership, repository access | `src/server/modules/passage/*` |
+| Cross-panel state or orchestration | `StudyPageClient` or `src/features/study-workspace/hooks/use-*` |
+| Server mutation or ownership logic | `src/features/studio-panel/actions.ts`, `src/features/study-workspace/actions.ts`, or `src/server/modules/*` |
 
 ## Root Client: StudyPageClient
 
 File:
 
-`src/features/study/ui/study-workspace-client.tsx`
+`src/features/study-workspace/ui/study-workspace-client.tsx`
 
 Responsibilities:
 
@@ -173,7 +179,7 @@ If this file grows, extract orchestration into hooks before adding more JSX bran
 
 Component:
 
-`src/features/study/ui/sources-panel.tsx`
+`src/features/source-panel/ui/sources-panel.tsx`
 
 Purpose:
 
@@ -215,7 +221,7 @@ Component boundary:
 
 Component:
 
-`src/features/study/ui/studio/content/content-panel.tsx`
+`src/features/content-panel/ui/content-panel.tsx`
 
 Purpose:
 
@@ -266,7 +272,7 @@ Translation popup:
 
 Component:
 
-`src/features/study/ui/studio/studio-panel.tsx`
+`src/features/studio-panel/ui/studio-panel.tsx`
 
 Purpose:
 
@@ -329,13 +335,9 @@ Nested studio views:
 
 ## Upload Modal
 
-Current file:
+File:
 
-`src/features/study/ui/upload-modal.tsx`
-
-Target file:
-
-`src/features/study/ui/upload/study-upload-modal.tsx`
+`src/features/study-workspace/ui/study-upload-modal.tsx`
 
 Purpose:
 
@@ -376,17 +378,18 @@ Workspace state is split by responsibility:
 
 | Concern | Owner |
 |---------|-------|
-| Active passage, upload modal, document list, errors | `useStudyWorkspaceState` |
-| Quiz generation, studio action dispatch | `useStudyActions` |
-| Panel refs, collapse state, persisted layout | `useStudyPanelLayout` |
+| Active passage, upload modal, document list, errors | `useStudyWorkspaceState` (src/features/study-workspace/hooks/) |
+| Quiz generation, studio action dispatch | `useStudyActions` (src/features/study-workspace/hooks/) |
+| Panel refs, collapse state, persisted layout | `useStudyPanelLayout` (src/features/study-workspace/hooks/) |
+| Artifact list caching | `useStudyArtifacts` (src/features/studio-panel/hooks/) |
 | Selected text, quick translation, saved vocabulary keys | `StudyPageClient` |
-| Selection geometry and context extraction | `selection-utils.ts` |
-| Source panel local search | `StudySourcesPanel` |
-| Reader DOM ref and selection start tracking | `StudyContentPanel` |
-| Studio chat/detail local view switches | `StudyStudioPanel` |
-| Chat messages, stream status, chat input | `StudyChatPanel` |
-| Quiz current question, selected answer, feedback, attempt ids | `QuizContent` |
-| Upload modal mode, pasted text, modal-local validation | `StudyUploadModal` |
+| Selection geometry and context extraction | `selection-utils.ts` (src/features/study/shared/) |
+| Source panel local search | `StudySourcesPanel` (src/features/source-panel/ui/) |
+| Reader DOM ref and selection start tracking | `StudyContentPanel` (src/features/content-panel/ui/) |
+| Studio chat/detail local view switches | `StudyStudioPanel` (src/features/studio-panel/ui/) |
+| Chat messages, stream status, chat input | `StudyChatPanel` (src/features/studio-panel/ui/studio/chat/) |
+| Quiz current question, selected answer, feedback, attempt ids | `QuizContent` (src/features/studio-panel/ui/studio/quiz/) |
+| Upload modal mode, pasted text, modal-local validation | `StudyUploadModal` (src/features/study-workspace/ui/) |
 
 Do not move ownership checks, persistence rules, or route response contracts into these UI components. Those belong in server actions, route handlers, feature API helpers, or `src/server/modules`.
 
@@ -394,16 +397,18 @@ Do not move ownership checks, persistence rules, or route response contracts int
 
 | Flow | UI entry | Boundary module |
 |------|----------|-----------------|
-| Initial passage load | Route page | `getAuthenticatedUser`, `getUserPassages` |
+| Initial passage load | Route page | `getUserId`, `getUserPassages` |
 | Select passage | `StudySourcesPanel` callback | `useStudyWorkspaceState` |
-| Delete passage | `StudySourcesPanel` callback | `deletePassageAction` (Server Action) |
-| Upload passage | `StudyUploadModal` | `studyUploadAction` |
-| Generate quiz | `StudyStudioPanel` action card | `useStudyActions` -> `generateStudyQuestions` |
-| Fetch study results | Active passage effect | `StudyPageClient` -> `/api/study-results` |
-| Quick translate | `StudyTranslationPopup` callback | `StudyPageClient` -> `/api/translate` |
-| Save selected vocabulary | `StudyTranslatePanel` callback | `StudyPageClient` -> `/api/vocabulary` |
-| Chat history and stream | `StudyChatPanel` | `/api/study/studio/chat` |
-| Quiz attempt start/complete | `QuizContent`, `QuizResults` | `src/features/study/api-client/study-api.ts` |
+| Delete passage | `StudySourcesPanel` callback | `deletePassageAction` (src/features/study-workspace/actions.ts) |
+| Save vocabulary | `StudyTranslatePanel` callback | `saveVocabularyAction` (src/features/study-workspace/actions.ts) |
+| List artifacts | `StudyStudioPanel` effect | `getStudioArtifactsAction` (src/features/studio-panel/actions.ts) |
+| Generate quiz | `StudyStudioPanel` action card | `POST /api/studio/questions` via studio-questions-client.ts |
+| Fetch artifact questions | Quiz open | `getArtifactQuestionsAction` (src/features/studio-panel/actions.ts) |
+| Record quiz result | Quiz complete | `recordQuizResultAction` (src/features/studio-panel/actions.ts) |
+| Reset quiz result | Quiz retry | `resetQuizResultAction` (src/features/studio-panel/actions.ts) |
+| Quick translate | `StudyTranslationPopup` callback | `POST /api/translate` route handler |
+| Chat history load | `StudyChatPanel` mount | `getChatHistoryAction` (src/features/studio-panel/actions.ts) |
+| Chat stream | `StudyChatPanel` message send | `POST /api/studio/chat` route handler |
 
 Rule: if a visual component needs one of these flows, pass a callback down from the owner instead of importing unrelated state from another panel.
 
@@ -432,5 +437,9 @@ Rule: if a visual component needs one of these flows, pass a callback down from 
 ## Related Code
 
 - Study route: `src/app/[locale]/(dashboard)/study/page.tsx`
-- Study UI: `src/features/study/ui`
-- Study model hooks: `src/features/study/model`
+- Study workspace: `src/features/study-workspace/`
+- Source panel: `src/features/source-panel/`
+- Content panel: `src/features/content-panel/`
+- Studio panel: `src/features/studio-panel/`
+- Shared types: `src/features/study/shared/`
+- Studio artifacts service: `src/server/modules/passage/studio-artifacts-service.ts`

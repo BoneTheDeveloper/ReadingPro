@@ -4,6 +4,25 @@ import {
   type StudioArtifact,
   type StudioArtifactType,
 } from "@/contracts/study/studio-artifact-types";
+import type { QuestionData } from "@/features/study/shared/types";
+
+export class ArtifactNotFoundError extends Error {
+  constructor(artifactId: string) {
+    super(`Artifact not found or access denied: ${artifactId}`);
+    this.name = "ArtifactNotFoundError";
+  }
+}
+
+function parseQuestionOptions(value: unknown): QuestionData["options"] {
+  if (typeof value === "string") {
+    try {
+      return JSON.parse(value) as QuestionData["options"];
+    } catch {
+      return [];
+    }
+  }
+  return (value ?? []) as QuestionData["options"];
+}
 
 function toStudioArtifact(row: {
   id: string;
@@ -107,4 +126,52 @@ export async function resetQuizResult(
   await db.quizResult.deleteMany({
     where: { artifactId },
   });
+}
+
+export async function getArtifactQuestions(
+  userId: string,
+  artifactId: string,
+): Promise<{ questions: QuestionData[] }> {
+  // Scope through the parent artifact's owner so a user can only read
+  // questions for artifacts they own (prevents cross-user id probing).
+  const questions = await db.question.findMany({
+    where: { artifactId, artifact: { userId } },
+    orderBy: { createdAt: "asc" },
+    select: {
+      id: true,
+      questionText: true,
+      options: true,
+      correctOption: true,
+      sourceText: true,
+      sourceLine: true,
+      explanation: true,
+      questionType: true,
+      difficulty: true,
+    },
+  });
+
+  if (questions.length === 0) {
+    // Check if artifact exists but just has no questions yet, or if it doesn't exist/owned
+    const artifact = await db.studioArtifact.findFirst({
+      where: { id: artifactId, userId },
+    });
+    if (!artifact) {
+      throw new ArtifactNotFoundError(artifactId);
+    }
+  }
+
+  const mapped: QuestionData[] = questions.map((q, i) => ({
+    id: q.id,
+    number: i + 1,
+    questionText: q.questionText,
+    options: parseQuestionOptions(q.options),
+    correctAnswer: q.correctOption,
+    sourceText: q.sourceText,
+    sourceLine: q.sourceLine,
+    explanation: q.explanation,
+    questionType: q.questionType,
+    difficulty: q.difficulty,
+  }));
+
+  return { questions: mapped };
 }

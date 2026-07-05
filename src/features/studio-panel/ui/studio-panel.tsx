@@ -31,7 +31,7 @@ import type {
 import { QuizContent } from "./studio/quiz/quiz-content";
 import { StudyChatPanel } from "./studio/chat/chat-panel";
 import { StudyLookupPanel } from "./studio/lookup/lookup-panel";
-import { resetQuizResult } from "@/features/study/studio-panel/api-client/studio-artifacts-client";
+import { resetQuizResultAction } from "@/features/studio-panel/actions";
 import {
   StudioActionGrid,
   StudioEmptyState,
@@ -433,7 +433,7 @@ export function StudyStudioPanel({
                           onClick={async (e) => {
                             e.stopPropagation();
                             try {
-                              await resetQuizResult(artifact.id);
+                              await resetQuizResultAction(artifact.id);
                               onResetQuizResult(artifact.id);
                             } catch (err) {
                               console.error("Failed to reset quiz result", err);

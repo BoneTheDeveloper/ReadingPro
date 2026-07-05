@@ -16,11 +16,15 @@ Learner opens /[locale]/study
 
 | Action | File |
 |--------|------|
-| Upload from study modal | `src/features/study/actions/study-upload-action.ts` |
-| Generate quiz questions | `POST /api/study/studio/questions` via `src/features/study/api-client/studio-questions-client.ts` |
-| Create / complete / delete artifact | `src/features/study/actions/studio-artifact-actions.ts` |
-| Record / reset quiz result | `src/features/study/actions/studio-artifact-actions.ts` |
+| Upload from study modal | `src/features/upload/actions/create-uploaded-passage-action.ts` or study-specific flow |
+| Generate quiz questions | `POST /api/studio/questions` via `src/features/studio-panel/api-client/studio-questions-client.ts` |
+| List artifacts | `src/features/studio-panel/actions.ts` → `getStudioArtifactsAction` |
+| Fetch artifact questions | `src/features/studio-panel/actions.ts` → `getArtifactQuestionsAction` |
+| Record quiz result | `src/features/studio-panel/actions.ts` → `recordQuizResultAction` |
+| Reset quiz result | `src/features/studio-panel/actions.ts` → `resetQuizResultAction` |
+| Get chat history | `src/features/studio-panel/actions.ts` → `getChatHistoryAction` |
 | Delete passage | `src/features/study-workspace/actions.ts` → `deletePassageAction` |
+| Save vocabulary | `src/features/study-workspace/actions.ts` → `saveVocabularyAction` |
 
 ## Original/Simplified Toggle
 
@@ -35,9 +39,10 @@ Learner opens /[locale]/study
 
 Client workspace state is managed by:
 
-- `src/features/study/hooks/use-study-workspace-state.ts`
-- `src/features/study/hooks/use-study-panel-layout.ts`
-- `src/features/study/hooks/use-study-actions.ts` (quiz generation, retry, result caching)
+- `src/features/study-workspace/hooks/use-study-workspace-state.ts`
+- `src/features/study-workspace/hooks/use-study-panel-layout.ts`
+- `src/features/studio-panel/hooks/use-study-artifacts.ts` (artifact list, caching)
+- `src/features/learning-session/hooks/use-learning-session-heartbeat.ts` (session tracking)
 
 ## Quiz Generation Reliability
 
@@ -53,7 +58,7 @@ A quiz is a `StudioArtifact` whose `status` is `generating` -> `done` | `failed`
 - **Failure reason is client-only.** Failures carry a shared `StudioArtifactErrorCode`
   (`src/contracts/study/studio-artifact-types.ts`) returned as `{ error, code }` and shown
   as a localized card message. It is **not** persisted — the reason is gone after reload by design.
-- **Atomic generation.** `POST /api/study/studio/questions` creates the `StudioArtifact`
+- **Atomic generation.** `POST /api/studio/questions` creates the `StudioArtifact`
   (`status: "done"`) + its `Question` rows in a single DB transaction. On any failure
   nothing is persisted. The DB only ever holds completed quizzes.
 - **Failures are in-memory only.** A failed generation leaves no DB row. The client

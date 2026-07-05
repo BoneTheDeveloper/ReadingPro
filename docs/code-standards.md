@@ -17,7 +17,10 @@ Non-negotiable boundaries. Breaking one is a bug, not a style choice.
 
 1. **Strict server boundary:** `src/server/` is marked `server-only`. Browser code must not import Prisma, Clerk server APIs, filesystem, or server-only AI modules.
 2. **Pure contracts:** `src/contracts/` contains only Zod schemas and types, and never imports from `src/server/`.
-3. **Frontend via HTTP only:** `src/features/` communicates with the backend only through standard HTTP API routes. Browser fetch logic lives in feature `api/` clients, not directly in components or hooks.
+3. **Backend access via Route API or Server Action, never ad-hoc:** `src/features/` communicates with the backend through one of two paths, chosen by whether the operation calls AI/an external service:
+   - **Route API** (`src/app/api/**`) for anything calling AI or another external service (streaming, long-running generation, third-party calls). Browser fetch logic for these lives in feature `api/` clients, not directly in components or hooks.
+   - **Server Action** (`'use server'`, colocated as `features/<feature>/actions.ts`) for everything else — internal DB reads/writes with no AI/external call. Components/hooks import and call these directly; no fetch wrapper needed.
+   Either path must go through the resource's service/query module (`src/server/modules/<domain>` or `src/server/db/<domain>`) — never call Prisma directly from a route handler or a Server Action body.
 
 ## Code Style
 
@@ -53,4 +56,4 @@ Before adding or moving code:
 - Are generated files and historical records left alone unless the task explicitly targets them?
 
 **Status:** Active
-**Last Updated:** 2026-06-20
+**Last Updated:** 2026-07-05

@@ -3,12 +3,11 @@
 import { useEffect } from "react";
 import * as Sentry from "@sentry/nextjs";
 import type {
-  StudioArtifact,
   ArtifactsCacheEntry,
   StudyState,
-} from "../../shared/types";
-import { ARTIFACT_STALE_TIME } from "../../shared/types";
-import { STUDY_API_ROUTES } from "@/features/study/shared/api-utils";
+} from "@/features/study/shared/types";
+import { ARTIFACT_STALE_TIME } from "@/features/study/shared/types";
+import { getStudioArtifactsAction } from "@/features/studio-panel/actions";
 import type { Dispatch, SetStateAction } from "react";
 
 type ArtifactsState = Record<string, ArtifactsCacheEntry>;
@@ -40,8 +39,6 @@ export function useStudyArtifacts({
       return;
     if (cached?.status === "loading") return;
 
-    const controller = new AbortController();
-
     setState((prev) => ({
       ...prev,
       artifactsByPassageId: {
@@ -50,16 +47,8 @@ export function useStudyArtifacts({
       },
     }));
 
-    fetch(`${STUDY_API_ROUTES.artifacts}?passageId=${passageId}`, {
-      signal: controller.signal,
-    })
-      .then(async (r) => {
-        if (!r.ok) {
-          throw new Error(`Failed to fetch study artifacts (${r.status})`);
-        }
-        return (await r.json()) as { data?: { artifacts?: StudioArtifact[] } };
-      })
-      .then((json) => {
+    getStudioArtifactsAction(passageId)
+      .then(({ artifacts }) => {
         setState((prev) => {
           if (prev.activePassageId !== passageId) return prev;
           return {
@@ -68,7 +57,7 @@ export function useStudyArtifacts({
               ...prev.artifactsByPassageId,
               [passageId]: {
                 status: "success",
-                data: json.data?.artifacts ?? [],
+                data: artifacts,
                 fetchedAt: Date.now(),
               },
             },
@@ -76,7 +65,6 @@ export function useStudyArtifacts({
         });
       })
       .catch((err) => {
-        if (controller.signal.aborted) return;
         Sentry.captureException(err, {
           tags: { feature: "study", action: "fetch-artifacts" },
           extra: { passageId },
@@ -99,7 +87,5 @@ export function useStudyArtifacts({
           };
         });
       });
-
-    return () => controller.abort();
   }, [activePassageId, artifactsByPassageId, setState]);
 }
