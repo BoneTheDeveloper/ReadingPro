@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: "Remove simplify feature"
-status: pending
+status: completed
 priority: P2
 effort: "1.5h"
 dependencies: []
@@ -54,3 +54,9 @@ Simplify chạy xuyên: `content-panel.tsx` (nút + modal + prop `simplifying`/`
 - **Xoá nhầm `PassageStudyServiceError`** → vỡ studio/questions. Mitigation: grep sau khi sửa; giữ class + `generateQuestionsForPassage`.
 - **`simplifiedContent` bị tưởng là của simplify** → xoá nhầm trường upload sinh ra. Mitigation: chỉ gỡ luồng on-demand, giữ field + `passageSchema`.
 - **i18n sót key** → không lỗi build nhưng rác. Mitigation: grep `simplif` trong `messages/`.
+
+## Execution Notes (as implemented)
+- Phát hiện thêm: `app/api/studio/questions/route.ts` import `passage-study.service` sai path (pre-existing, `@/server/modules/study/passage/...` thay vì `@/server/modules/passage/...`) → sửa để giữ đúng success criteria "studio/questions vẫn build".
+- Phát hiện thêm: `content-panel.tsx` có 3 import alias hỏng pre-existing (`@/features/study/content-panel/...` → thực tế `@/features/content-panel/...`) → sửa vì nằm ngay trong file đang chỉnh, chặn typecheck.
+- Đã verify bằng `git stash` baseline: toàn bộ lỗi typecheck còn lại sau phase này là pre-existing, không phải do phase này gây ra.
+- Key i18n `confirm` (Study namespace) cũng xoá theo vì chỉ dialog simplify dùng, giờ mồ côi; `cancel` giữ (upload-modal còn dùng).

@@ -1,7 +1,7 @@
 ---
 title: "Passage mutations to Server Actions (action-only, no reorg)"
 description: "Remove simplify + dead create/POST path; convert passage DELETE to a server action; move the passage list to a server-authoritative (Model A) data-flow. No feature-folder reorganization."
-status: pending
+status: completed
 priority: P2
 branch: "preview"
 tags: [refactor, server-actions, passage]
@@ -36,10 +36,10 @@ Nguồn: [brainstorm-summary.md](./brainstorm-summary.md).
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 1 | [Remove simplify feature](./phase-01-remove-simplify-feature.md) | Pending |
-| 2 | [Remove dead create/POST passage path](./phase-02-remove-dead-create-post-passage-path.md) | Pending |
-| 3 | [deletePassage server action + Model A data-flow](./phase-03-deletepassage-server-action-model-a-data-flow.md) | Pending |
-| 4 | [Verify typecheck lint test](./phase-04-verify-typecheck-lint-test.md) | Pending |
+| 1 | [Remove simplify feature](./phase-01-remove-simplify-feature.md) | Completed |
+| 2 | [Remove dead create/POST passage path](./phase-02-remove-dead-create-post-passage-path.md) | Completed |
+| 3 | [deletePassage server action + Model A data-flow](./phase-03-deletepassage-server-action-model-a-data-flow.md) | Completed |
+| 4 | [Verify typecheck lint test](./phase-04-verify-typecheck-lint-test.md) | Completed |
 
 ## Dependencies
 
@@ -51,3 +51,9 @@ Nguồn: [brainstorm-summary.md](./brainstorm-summary.md).
 ## Out of scope
 
 Reorg `features/`, move `types.ts` (17 import), namespace `features/study/`, studio/vocab/dictionary, đổi UI upload route.
+
+## Known Gaps (chưa verify được, cần user tự kiểm)
+
+- **Không có test suite trong repo** (`tests/vitest/vitest.config.ts` không tồn tại, 0 file test tracked trong git) — pre-existing, không phải do refactor này. `pnpm test` không chạy được. Dựng test suite nằm ngoài phạm vi action-only đã chốt.
+- **Chưa smoke-test qua UI thật** — dev server cần đăng nhập Clerk, user yêu cầu dừng browser test giữa chừng. Luồng upload/delete/reconcile active mới chỉ được verify qua đọc code + typecheck, chưa chạy tay.
+- Xem chi tiết execution notes trong từng `phase-0X-*.md` để biết các điểm lệch khỏi kế hoạch ban đầu và lý do.

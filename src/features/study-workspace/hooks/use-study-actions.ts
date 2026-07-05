@@ -8,6 +8,7 @@ import { getArtifactDetail } from "@/features/studio-panel/api-client/studio-art
 import type {
   ArtifactsCacheEntry,
   ArtifactRef,
+  PassageData,
   StudioActionId,
   StudioArtifact,
   StudioArtifactErrorCode,
@@ -17,9 +18,10 @@ import type {
 interface UseStudyActionsInput {
   state: StudyState;
   setState: Dispatch<SetStateAction<StudyState>>;
+  passages: PassageData[];
 }
 
-export function useStudyActions({ state, setState }: UseStudyActionsInput) {
+export function useStudyActions({ state, setState, passages }: UseStudyActionsInput) {
   const t = useTranslations("Study");
   const activePassageIdRef = useRef(state.activePassageId);
   // Guards against re-entrant retries of the same artifact (e.g. a fast
@@ -129,7 +131,7 @@ export function useStudyActions({ state, setState }: UseStudyActionsInput) {
     async (artifactId: string) => {
       const passageId = activePassageIdRef.current;
       if (!passageId) return;
-      if (!state.passages.find((item) => item.id === passageId)) return;
+      if (!passages.find((item) => item.id === passageId)) return;
       if (retryingIdsRef.current.has(artifactId)) return;
       retryingIdsRef.current.add(artifactId);
 
@@ -145,14 +147,14 @@ export function useStudyActions({ state, setState }: UseStudyActionsInput) {
         retryingIdsRef.current.delete(artifactId);
       }
     },
-    [state.passages, updateArtifactStatus, generateQuizArtifact],
+    [passages, updateArtifactStatus, generateQuizArtifact],
   );
 
   const handleActionClick = useCallback(
     async (actionId: StudioActionId) => {
       const passageId = activePassageIdRef.current;
       if (!passageId) return;
-      const passage = state.passages.find((item) => item.id === passageId);
+      const passage = passages.find((item) => item.id === passageId);
       if (!passage) return;
 
       if (actionId !== "quiz") return;
@@ -178,7 +180,7 @@ export function useStudyActions({ state, setState }: UseStudyActionsInput) {
 
       await generateQuizArtifact(passageId, artifactId);
     },
-    [generateQuizArtifact, state.passages, updateCacheEntry],
+    [generateQuizArtifact, passages, updateCacheEntry],
   );
 
   // Lazy-loads artifact detail when the user opens an artifact that isn't in state yet.

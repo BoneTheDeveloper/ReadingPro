@@ -45,6 +45,7 @@ export function StudyPageClient({
   const {
     state,
     setState,
+    passages,
     activePassage,
     documents,
     isUploading,
@@ -63,7 +64,7 @@ export function StudyPageClient({
     handleRecordQuizResult,
     handleResetQuizResult,
     retryQuizArtifact,
-  } = useStudyActions({ state, setState });
+  } = useStudyActions({ state, setState, passages });
   const layout = useStudyPanelLayout();
   // Presence heartbeat is mounted app-wide in DashboardSidebar; the study page is
   // wrapped by it, so no per-page heartbeat is needed here.

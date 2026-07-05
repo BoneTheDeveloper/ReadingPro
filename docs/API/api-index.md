@@ -25,9 +25,6 @@ The largest domain — see the [Study domain index](Routes/study/README.md).
 
 | Method | Path | Doc |
 |--------|------|-----|
-| `POST` | `/api/study/passages` | [passages.md](Routes/study/passages.md) |
-| `DELETE` | `/api/study/passages/[id]` | [passages.md](Routes/study/passages.md) |
-| `POST` | `/api/study/passages/[id]/simplify` | [passages.md](Routes/study/passages.md) |
 | `POST` | `/api/study/sessions` | [sessions.md](Routes/study/sessions.md) |
 | `POST`/`GET` | `/api/study/studio/chat` | [studio/chat.md](Routes/study/studio/chat.md) |
 | `GET` | `/api/study/studio/artifacts` | [studio/artifacts.md](Routes/study/studio/artifacts.md) |

@@ -1,7 +1,6 @@
 import "server-only";
 import { z } from "zod";
 import { Prisma } from "@/generated/prisma/client";
-import type { CEFRLevel } from "@/contracts/domain/cefr";
 import { db } from "@/server/lib/db";
 export const questionOptionSchema = z.object({
   id: z.string(),
@@ -74,22 +73,6 @@ export async function getPassageWithQuestions(
     where: { id: passageId, userId, deletedAt: null },
     include: { questions: true },
   });
-}
-
-export async function createPassage(
-  userId: string,
-  data: {
-    title: string;
-    content: string;
-    simplifiedContent?: string;
-    originalLevel?: CEFRLevel;
-    simplifiedLevel?: CEFRLevel;
-    wordCount: number;
-    sourceType: "TEXT" | "PDF";
-    filePath?: string;
-  },
-) {
-  return db.passage.create({ data: { userId, ...data } });
 }
 
 export async function createQuestion(data: {

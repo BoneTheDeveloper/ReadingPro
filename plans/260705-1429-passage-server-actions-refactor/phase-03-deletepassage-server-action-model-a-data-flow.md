@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "deletePassage server action + Model A data-flow"
-status: pending
+status: completed
 priority: P1
 effort: "3h"
 dependencies: [2]
@@ -80,3 +80,10 @@ export async function deletePassageAction(passageId: string) {
 - **Guards đọc `state.passages` bị bỏ sót** → artifact retry lỗi. Mitigation: grep `state.passages` sau khi sửa = 0.
 - **Độ phức tạp Model A** cao hơn Model B (giữ client-state). User đã chọn Model A (server-authoritative) — giữ quyết định; nếu lúc code thấy churn vượt kỳ vọng, dừng và xác nhận lại với user trước khi đổi hướng.
 - **`getUserId()` trong server action** khác context route — đảm bảo `auth-utils.getUserId` chạy được trong action (cùng server runtime, Clerk hỗ trợ). Verify bằng test delete thực tế.
+
+## Execution Notes (as implemented) — deviations from plan, with reason
+
+- **`use-upload-submit.ts` KHÔNG đổi `router.push` → `router.refresh()`** (khác kế hoạch). Lý do: verify lại cho thấy hook này **chỉ** dùng bởi `upload-page-client.tsx` — trang `/upload` độc lập, KHÔNG phải modal trong `/study`. `router.push('/study')` ở đây đúng vì là điều hướng sang route khác; RSC của `/study` (`getUserPassages`) tự fetch mới khi navigate tới, không cần refresh(). Việc "upload xong list phải refresh" thực chất chỉ áp dụng cho `handleUploadComplete` trong `use-study-workspace-state.ts` (modal trong workspace, ở lại `/study`) — đã thêm `router.refresh()` đúng chỗ đó. Chỉ sửa import alias hỏng (`@/features/study/source-panel/...` → `@/features/source-panel/...`) trong `upload-page-client.tsx`, không đổi logic điều hướng.
+- Model A giữ nguyên `StudyState` (bỏ field `passages`) thay vì tách hoàn toàn state — giảm churn, không đụng `artifactsByPassageId`/`viewingArtifactByPassageId`/`artifactDetailById` (vẫn trong `state` như cũ).
+- `deletePassageAction` implement đúng theo kế hoạch (`'use server'`, `getUserId()` + `deletePassage(id,userId)` + `revalidatePath('/study')`).
+- **CHƯA verify qua UI thật** — dev server chặn bởi Clerk auth (không đăng nhập được trong phiên này), user yêu cầu dừng browser test. Rủi ro "getUserId() trong server action" ở trên **chưa được xác nhận bằng thao tác xoá thực tế qua UI** — chỉ xác nhận qua đọc code (route DELETE cũ dùng y hệt `getUserId()` + `deletePassage()`, cùng runtime server, nên về lý thuyết tương đương). Cần user tự verify khi đăng nhập được.

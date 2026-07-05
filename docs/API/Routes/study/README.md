@@ -12,7 +12,6 @@ split into two groups:
 
 | Sub-resource | Doc | Routes |
 |---|---|---|
-| Passages | [passages.md](passages.md) | `POST /api/study/passages`, `DELETE /api/study/passages/[id]`, `POST /api/study/passages/[id]/simplify` |
 | Sessions | [sessions.md](sessions.md) | `POST /api/study/sessions` |
 
 ## Studio panel

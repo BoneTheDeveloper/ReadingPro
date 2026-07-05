@@ -12,7 +12,7 @@ Route file:
 
 Purpose:
 
-Main study workspace where users select a passage, read content, simplify text, use AI chat, generate quizzes, inspect results, translate selected text, and save vocabulary.
+Main study workspace where users select a passage, read content, use AI chat, generate quizzes, inspect results, translate selected text, and save vocabulary.
 
 ## Rendering Boundary
 
@@ -224,22 +224,20 @@ Primary reading surface for the active passage.
 Visual hierarchy:
 
 1. Passage title and reading content.
-2. Simplified/original mode control or simplify action.
-3. CEFR, reading time, and word count metadata.
+2. Simplified/original mode control (if simplified content is available).
+3. CEFR and word count metadata.
 4. Inline errors.
 
 Reader states:
 
 - No active passage: centered empty state with add-source action.
-- Simplifying: centered loading state with spinner and helper copy.
 - Active passage: scrollable reading content with max width around `70ch`.
 - Error: destructive inline notice below content.
 
 Reading controls:
 
 - If simplified content exists, show a two-option segmented control for `simplified` and `original`.
-- If no simplified content exists and the original CEFR level is above A2, show a compact `Simplify` action.
-- For A1/A2 passages, hide simplify because the content is already beginner-friendly.
+- Simplified content is automatically generated during upload for levels B1 and above.
 
 Selection translation:
 
@@ -251,7 +249,7 @@ Selection translation:
 
 Component boundary:
 
-- Receives `passage`, simplifying state, error state, view mode, and callbacks.
+- Receives `passage`, error state, view mode, and callbacks.
 - Owns `contentRef` and mouse selection capture.
 - Uses `extractSelectionInfo` for DOM selection details.
 - Does not call translation APIs.
@@ -379,7 +377,7 @@ Workspace state is split by responsibility:
 | Concern | Owner |
 |---------|-------|
 | Active passage, upload modal, document list, errors | `useStudyWorkspaceState` |
-| Simplify, quiz generation, studio action dispatch | `useStudyActions` |
+| Quiz generation, studio action dispatch | `useStudyActions` |
 | Panel refs, collapse state, persisted layout | `useStudyPanelLayout` |
 | Selected text, quick translation, saved vocabulary keys | `StudyPageClient` |
 | Selection geometry and context extraction | `selection-utils.ts` |
@@ -398,9 +396,8 @@ Do not move ownership checks, persistence rules, or route response contracts int
 |------|----------|-----------------|
 | Initial passage load | Route page | `getAuthenticatedUser`, `getUserPassages` |
 | Select passage | `StudySourcesPanel` callback | `useStudyWorkspaceState` |
-| Delete passage | `StudySourcesPanel` callback | `useStudyWorkspaceState` -> study delete action |
+| Delete passage | `StudySourcesPanel` callback | `deletePassageAction` (Server Action) |
 | Upload passage | `StudyUploadModal` | `studyUploadAction` |
-| Simplify passage | `StudyContentPanel` or summary card callback | `useStudyActions` -> `studySimplifyAction` |
 | Generate quiz | `StudyStudioPanel` action card | `useStudyActions` -> `generateStudyQuestions` |
 | Fetch study results | Active passage effect | `StudyPageClient` -> `/api/study-results` |
 | Quick translate | `StudyTranslationPopup` callback | `StudyPageClient` -> `/api/translate` |

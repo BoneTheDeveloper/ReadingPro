@@ -8,16 +8,8 @@
 ## Read Original or Simplified Version
 
 1. Passage shows **Original** by default.
-2. If a simplified version is available, a toggle appears — user switches between **Original** and **Simplified**.
+2. If a simplified version is available (auto-generated during upload), a toggle appears — user switches between **Original** and **Simplified**.
 3. A CEFR badge and word count are shown in the meta bar.
-
-## Simplify a Passage
-
-1. User opens a passage with no simplified version yet → a faded **Simplify** action appears.
-2. User clicks **Simplify**:
-   - For levels A1/A2: a dialog says no further simplification is possible. User closes it.
-   - For levels B1+: a confirm dialog appears. User confirms → simplified version is generated.
-3. Simplified content appears → the Original/Simplified toggle becomes available.
 
 ## Generate a Quiz
 
@@ -49,7 +41,6 @@
 | Action | Route |
 |--------|-------|
 | Open study workspace | `/study` |
-| Simplify passage | `POST /api/study/passage/{id}/simplify` |
 | Generate quiz | `POST /api/study/studio/questions` |
 | Chat with tutor | `POST /api/study/studio/chat` |
-| Delete passage | `DELETE /api/study/passage/{id}` |
+| Delete passage | Server Action: `deletePassageAction` |

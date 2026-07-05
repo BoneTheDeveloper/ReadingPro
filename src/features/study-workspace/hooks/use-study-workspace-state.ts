@@ -1,12 +1,29 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
-import { deletePassage } from "@/features/content-panel/api-client/passages-client";
+import { useCallback, useMemo, useOptimistic, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { deletePassageAction } from "../actions";
 import type {
   DocumentItem,
   PassageData,
   StudyState,
 } from "@/features/study/shared/types";
+
+type PassagesAction =
+  | { type: "add"; passage: PassageData }
+  | { type: "remove"; id: string };
+
+function passagesReducer(
+  passages: PassageData[],
+  action: PassagesAction,
+): PassageData[] {
+  switch (action.type) {
+    case "add":
+      return [...passages, action.passage];
+    case "remove":
+      return passages.filter((p) => p.id !== action.id);
+  }
+}
 
 function getMostRecentPassageId(passages: PassageData[]): string | null {
   return (
@@ -19,14 +36,21 @@ function getMostRecentPassageId(passages: PassageData[]): string | null {
 }
 
 export function useStudyWorkspaceState(initialPassages: PassageData[]) {
+  const router = useRouter();
+  const [, startTransition] = useTransition();
+  // Server-authoritative list: `initialPassages` (RSC) is the source of truth;
+  // this overlay only exists so add/remove feel instant before revalidation lands.
+  const [passages, applyPassagesAction] = useOptimistic(
+    initialPassages,
+    passagesReducer,
+  );
+
   const [state, setState] = useState<StudyState>(() => {
     const initialId = getMostRecentPassageId(initialPassages);
     return {
-      passages: initialPassages,
       activePassageId: initialId,
       status: initialId ? "ready" : "idle",
       error: null,
-      simplifying: false,
       uploadModalOpen: false,
       artifactsByPassageId: {},
       viewingArtifactByPassageId: {},
@@ -38,14 +62,13 @@ export function useStudyWorkspaceState(initialPassages: PassageData[]) {
 
   const activePassage = useMemo(
     () =>
-      state.passages.find((passage) => passage.id === state.activePassageId) ??
-      null,
-    [state.passages, state.activePassageId],
+      passages.find((passage) => passage.id === state.activePassageId) ?? null,
+    [passages, state.activePassageId],
   );
 
   const documents: DocumentItem[] = useMemo(
     () =>
-      [...state.passages]
+      [...passages]
         .sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0))
         .map((passage) => ({
           id: passage.id,
@@ -59,7 +82,7 @@ export function useStudyWorkspaceState(initialPassages: PassageData[]) {
           wordCount: passage.wordCount,
           sourceType: passage.sourceType,
         })),
-    [state.passages],
+    [passages],
   );
 
   const handleSelectDocument = useCallback((id: string) => {
@@ -83,18 +106,26 @@ export function useStudyWorkspaceState(initialPassages: PassageData[]) {
     setUploadingFileName(fileName);
   }, []);
 
-  const handleUploadComplete = useCallback((passage: PassageData) => {
-    setState((prev) => ({
-      ...prev,
-      passages: [...prev.passages, passage],
-      activePassageId: passage.id,
-      uploadModalOpen: false,
-      status: "ready",
-      error: null,
-    }));
-    setIsUploading(false);
-    setUploadingFileName("");
-  }, []);
+  const handleUploadComplete = useCallback(
+    (passage: PassageData) => {
+      startTransition(() => {
+        applyPassagesAction({ type: "add", passage });
+      });
+      setState((prev) => ({
+        ...prev,
+        activePassageId: passage.id,
+        uploadModalOpen: false,
+        status: "ready",
+        error: null,
+      }));
+      setIsUploading(false);
+      setUploadingFileName("");
+      // Kicks off a fresh RSC fetch so the client-synthesized passage above is
+      // replaced by the server-authoritative row (full content, real levels).
+      router.refresh();
+    },
+    [applyPassagesAction, router],
+  );
 
   const handleUploadError = useCallback((error: string) => {
     setState((prev) => ({ ...prev, error }));
@@ -102,46 +133,52 @@ export function useStudyWorkspaceState(initialPassages: PassageData[]) {
     setUploadingFileName("");
   }, []);
 
-  const handleDeletePassage = useCallback(async (passageId: string) => {
-    try {
-      await deletePassage(passageId);
-      setState((prev) => {
-        const remaining = prev.passages.filter((p) => p.id !== passageId);
-        const restArtifactsByPassageId = { ...prev.artifactsByPassageId };
-        const restViewingByPassageId = { ...prev.viewingArtifactByPassageId };
-        delete restArtifactsByPassageId[passageId];
-        delete restViewingByPassageId[passageId];
-        if (prev.activePassageId === passageId) {
-          const replacementId = getMostRecentPassageId(remaining);
+  const handleDeletePassage = useCallback(
+    (passageId: string) => {
+      startTransition(async () => {
+        applyPassagesAction({ type: "remove", id: passageId });
+        setState((prev) => {
+          const restArtifactsByPassageId = { ...prev.artifactsByPassageId };
+          const restViewingByPassageId = { ...prev.viewingArtifactByPassageId };
+          delete restArtifactsByPassageId[passageId];
+          delete restViewingByPassageId[passageId];
+          if (prev.activePassageId === passageId) {
+            const remaining = passages.filter((p) => p.id !== passageId);
+            const replacementId = getMostRecentPassageId(remaining);
+            return {
+              ...prev,
+              activePassageId: replacementId,
+              artifactsByPassageId: restArtifactsByPassageId,
+              viewingArtifactByPassageId: restViewingByPassageId,
+              status: replacementId ? "ready" : "idle",
+              error: null,
+            };
+          }
           return {
             ...prev,
-            passages: remaining,
-            activePassageId: replacementId,
             artifactsByPassageId: restArtifactsByPassageId,
             viewingArtifactByPassageId: restViewingByPassageId,
-            status: replacementId ? "ready" : "idle",
             error: null,
           };
+        });
+        try {
+          await deletePassageAction(passageId);
+        } catch (err) {
+          setState((prev) => ({
+            ...prev,
+            error:
+              err instanceof Error ? err.message : "Failed to delete passage",
+          }));
         }
-        return {
-          ...prev,
-          passages: remaining,
-          artifactsByPassageId: restArtifactsByPassageId,
-          viewingArtifactByPassageId: restViewingByPassageId,
-          error: null,
-        };
       });
-    } catch (err) {
-      setState((prev) => ({
-        ...prev,
-        error: err instanceof Error ? err.message : "Failed to delete passage",
-      }));
-    }
-  }, []);
+    },
+    [applyPassagesAction, passages],
+  );
 
   return {
     state,
     setState,
+    passages,
     activePassage,
     documents,
     isUploading,

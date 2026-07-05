@@ -78,7 +78,6 @@ export interface ArtifactDetailCacheEntry {
 }
 
 export interface StudyState {
-  passages: PassageData[];
   activePassageId: string | null;
   status: StudyStatus;
   error: string | null;

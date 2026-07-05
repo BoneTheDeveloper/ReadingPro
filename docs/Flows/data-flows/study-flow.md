@@ -17,36 +17,19 @@ Learner opens /[locale]/study
 | Action | File |
 |--------|------|
 | Upload from study modal | `src/features/study/actions/study-upload-action.ts` |
-| Simplify active passage | `src/features/study/actions/study-simplify-action.ts` |
 | Generate quiz questions | `POST /api/study/studio/questions` via `src/features/study/api-client/studio-questions-client.ts` |
 | Create / complete / delete artifact | `src/features/study/actions/studio-artifact-actions.ts` |
 | Record / reset quiz result | `src/features/study/actions/studio-artifact-actions.ts` |
-| Delete passage | `src/features/study/actions/study-delete-passage-action.ts` |
+| Delete passage | `src/features/study-workspace/actions.ts` → `deletePassageAction` |
 
-## Simplify
+## Original/Simplified Toggle
 
-`StudyContentPanel` owns the simplify UX and decides whether to fire the request:
+`StudyContentPanel` displays simplified content when available (auto-generated during upload):
 
-- The **Simplify** button renders only while `passage.simplifiedContent` is `null`
-  and `passage.originalLevel` is known. Its styling is intentionally **faded**
-  (`bg-primary/5` + `border-primary/30`) to signal "available, not yet generated".
-- Clicking opens a local confirm dialog (no request yet). The dialog has two modes:
-  - `confirm` — default for levels `B1+`. Body asks "Simplify this passage?".
-    Confirm calls `onSimplify` which routes through `useStudyActions` →
-    `POST /api/study/passage/{id}/simplify`. Cancel just closes.
-  - `alreadySimple` — when `originalLevel ∈ {A1, A2}` (the `SKIP_SIMPLIFY_LEVELS`
-    set in `content-panel.tsx`). Body says "Already simple — no further
-    simplification possible." Only a **Close** button is shown; no API call.
-- The actual API contract (`POST /api/study/passage/{id}/simplify`) is unchanged:
-  it returns `{ simplifiedContent, simplifiedLevel }` per
-  `simplifyPassageResponseSchema` and the response is written into
-  `state.simplifiedContent` / `state.simplifiedLevel`. The client never passes a
-  "skip" flag — the A1/A2 short-circuit is purely UI-side, matching the previous
-  behavior where the button was hidden entirely.
-
-Reading time is no longer shown in the meta bar; the helper `calculateReadingTime`
-in `@/contracts/reading-utils` has been removed. The CEFR badge + word count
-remain.
+- The **Original/Simplified** toggle renders only when `passage.simplifiedContent` exists.
+- User switches between versions; the display updates immediately.
+- Simplified content is generated automatically during upload for levels B1+.
+- The CEFR badge and word count are shown in the meta bar.
 
 ## State
 

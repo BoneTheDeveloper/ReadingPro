@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Remove dead create/POST passage path"
-status: pending
+status: completed
 priority: P2
 effort: "1h"
 dependencies: [1]
@@ -46,3 +46,8 @@ Hiện có 2 đường text: (a) `upload-modal.createPassage` → `/api/study/pa
 - **`uploadText` trả shape khác `createPassage`** → `onUploadComplete` thiếu field. Mitigation: Phase 3 chuyển `onUploadComplete` sang optimistic + `router.refresh()` nên chỉ cần `passageId`; tạm thời map field có sẵn.
 - **`passageSchema`/`PassageDto` còn consumer ẩn** → xoá nhầm. Mitigation: grep trước khi gỡ; chỉ gỡ `passageResponseSchema` (wrapper) nếu chắc.
 - **Modal có nhánh file dùng createPassage** → cần trỏ `/api/upload`. Mitigation: đọc kỹ `upload-modal.tsx`, xử lý cả 2 nhánh.
+
+## Execution Notes (as implemented)
+- `passage-schema.ts` hoá ra **hoàn toàn không còn consumer nào** sau khi gỡ create/simplify → xoá cả file (không chỉ gỡ từng export như dự kiến).
+- Modal có cả 2 nhánh (file + text) đều dùng `createPassage` → cả hai đổi sang `uploadFile`/`uploadText` (từ `upload-client.ts`), thêm helper `toPassageData()` client-side để map response tối thiểu (`passageId`, `originalLevel`, `simplifiedLevel`) thành `PassageData` tạm; Phase 3's `router.refresh()` thay bằng bản đầy đủ từ RSC.
+- File PDF: không đọc được text ở client nên `content: ""` tạm thời trong placeholder — chấp nhận được vì Phase 3 refresh ngay sau đó.
