@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
-import { getUserId } from "@/server/auth/auth-utils";
+import { getUserId } from "@/services/clerk";
 import {
   createRequestLogContext,
   createRequestLogger,
-} from "@/server/observability/logger";
-import { normalizeDictionaryTerm } from "@/contracts/dictionary/normalize-dictionary-term";
-import { suggestDictionaryTerms } from "@/server/modules/dictionary/suggest/suggest.service";
+} from "@/services/logger";
+import { normalizeDictionaryTerm } from "@/features/dictionary/schemas/normalize-dictionary-term";
+import { suggestDictionaryTerms } from "@/features/dictionary/services/suggest-service";
 
 const suggestQuerySchema = z.object({
   q: z.string().trim().min(1).max(200),

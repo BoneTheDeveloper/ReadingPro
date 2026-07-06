@@ -1,8 +1,8 @@
 import "server-only";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/server/lib/db";
-import { RUNTIME_STATUSES } from "@/contracts/dictionary/dictionary-dtos";
-import { escapeLikeWildcards } from "@/contracts/dictionary/normalize-dictionary-term";
+import { RUNTIME_STATUSES } from "../lib/dictionary-helpers";
+import { escapeLikeWildcards } from "../schemas/normalize-dictionary-term";
 
 export interface DictionarySearchCandidateRow {
   id: string;

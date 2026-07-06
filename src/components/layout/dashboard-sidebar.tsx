@@ -18,7 +18,6 @@ import { Button } from "@/components/ui/button";
 import { AuthControls } from "./auth-controls";
 import { SettingsModal } from "@/components/layout/settings-modal";
 import { useTranslations } from "next-intl";
-import { useStudySessionHeartbeat } from "@/features/learning-session/use-learning-session-heartbeat";
 import { useTheme } from "@/components/provider/theme-provider";
 import { useSyncExternalStore } from "react";
 
@@ -42,8 +41,6 @@ export function DashboardSidebar({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-
-  useStudySessionHeartbeat(true);
 
   const closeMobile = useCallback(() => setMobileOpen(false), []);
 

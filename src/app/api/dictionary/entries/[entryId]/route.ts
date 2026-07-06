@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
-import { getUserId } from "@/server/auth/auth-utils";
+import { getUserId } from "@/services/clerk";
 import {
   createRequestLogContext,
   createRequestLogger,
-} from "@/server/observability/logger";
-import { getDictionaryEntryDetail } from "@/server/modules/dictionary/entry-detail/entry-detail.service";
+} from "@/services/logger";
+import { getDictionaryEntryDetail } from "@/features/dictionary/services/entry-detail-service";
 const entryIdSchema = z.string().uuid();
 
 const entryDetailQuerySchema = z.object({

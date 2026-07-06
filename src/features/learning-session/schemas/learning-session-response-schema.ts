@@ -2,7 +2,7 @@ import { z } from "zod";
 import {
   makeResponseSchema,
   makeSuccessEnvelopeSchema,
-} from "@/contracts/http/api-response-schema";
+} from "@/lib/http/response-schema";
 
 const nullableIsoDateSchema = z.string().nullable();
 

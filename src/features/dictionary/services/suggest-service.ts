@@ -1,7 +1,7 @@
 import 'server-only';
-import { normalizeDictionaryTerm } from "@/contracts/dictionary/normalize-dictionary-term";
+import { normalizeDictionaryTerm } from "../schemas/normalize-dictionary-term";
 import { getSourceLabel, type DictionarySuggestItemDto } from "@/contracts/dictionary/dictionary-dtos";
-import { findSuggestCandidates, type SuggestCandidateRow } from "./suggest.repository";
+import { findSuggestCandidates, type SuggestCandidateRow } from "../db/suggest-repository";
 
 export interface SuggestOptions {
   sourceLanguage: string;

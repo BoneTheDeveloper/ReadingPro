@@ -1,17 +1,17 @@
 import { z } from "zod";
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
-import { getUserId } from "@/server/auth/auth-utils";
+import { getUserId } from "@/services/clerk";
 import {
   getZodErrorMessage,
   isAuthenticationRequiredError,
-} from "@/server/http/route-errors";
+} from "@/lib/http/route-errors";
 import {
   createRequestLogContext,
   createRequestLogger,
-} from "@/server/observability/logger";
-import { ensureActiveSession } from "@/server/db/learning-session-queries";
-import { toLearningSessionDto } from "@/contracts/learning-session/learning-session-response-schema";
+} from "@/services/logger";
+import { ensureActiveSession } from "@/features/learning-session/db/learning-session-queries";
+import { toLearningSessionDto } from "@/features/learning-session/schemas/learning-session-response-schema";
 
 const learningSessionPostSchema = z.object({}).strict();
 

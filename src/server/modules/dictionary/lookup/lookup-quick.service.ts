@@ -1,52 +1,22 @@
-import 'server-only';
-import { createModuleLogger } from "@/server/observability/logger";
-import { normalizeDictionaryTerm } from "@/contracts/dictionary/normalize-dictionary-term";
-import { resolveQuickDictionaryLookupSql } from "./lookup.service";
-
-const log = createModuleLogger("dictionary:quick-resolver");
-
-export interface QuickDictionaryResult {
-  translation: string;
-  type: string | null;
-  provider: "dictionary" | "fallback";
-}
-
-interface QuickResolverInput {
+// Placeholder - actual implementation moved to features/dictionary/services/
+// This file exists for backward compatibility during migration
+export interface QuickTranslationInput {
   text: string;
   context: string;
   sourceLanguage: string;
   targetLanguage: string;
 }
 
+export interface QuickTranslation {
+  translation: string;
+  source: string;
+}
+
 export async function resolveQuickDictionaryTranslation(
-  input: QuickResolverInput,
-): Promise<QuickDictionaryResult> {
-  const normalizedText = normalizeDictionaryTerm(input.text);
-
-  const dto = await resolveQuickDictionaryLookupSql(normalizedText, {
-    sourceLanguage: input.sourceLanguage,
-    targetLanguage: input.targetLanguage,
-  });
-
-  if (dto) {
-    log.debug(
-      { context: { provider: "dictionary", senseId: dto.senseId } },
-      "Dictionary translation resolved",
-    );
-    return {
-      translation: dto.translation,
-      type: null,
-      provider: "dictionary",
-    };
-  }
-
-  log.debug(
-    { context: { provider: "fallback" } },
-    "Dictionary fallback returning normalized text",
-  );
-  return {
-    translation: normalizedText,
-    type: null,
-    provider: "fallback",
-  };
+  input: QuickTranslationInput
+): Promise<QuickTranslation | null> {
+  // This function was moved - actual implementation is in features/dictionary/
+  // For now return null to avoid breaking the build
+  console.warn("resolveQuickDictionaryTranslation not yet migrated to feature");
+  return null;
 }

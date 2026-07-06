@@ -3,11 +3,11 @@ import {
   getSourceLabel,
   type DictionarySearchResultDto,
 } from "@/contracts/dictionary/dictionary-dtos";
-import { normalizeDictionaryTerm } from "@/contracts/dictionary/normalize-dictionary-term";
+import { normalizeDictionaryTerm } from "../schemas/normalize-dictionary-term";
 import {
   searchDictionaryCandidates,
   type DictionarySearchCandidateRow,
-} from "./search.repository";
+} from "../db/search-repository";
 
 export interface DictionarySearchOptions {
   sourceLanguage: string;

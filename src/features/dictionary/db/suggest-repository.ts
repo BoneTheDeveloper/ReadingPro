@@ -4,8 +4,8 @@ import { prisma } from "@/server/lib/db";
 import {
   escapeLikeWildcards,
   normalizeDictionaryTerm,
-} from "@/contracts/dictionary/normalize-dictionary-term";
-import { RUNTIME_STATUSES } from "@/contracts/dictionary/dictionary-dtos";
+} from "../schemas/normalize-dictionary-term";
+import { RUNTIME_STATUSES } from "../lib/dictionary-helpers";
 
 export interface SuggestCandidateRow {
   id: string;

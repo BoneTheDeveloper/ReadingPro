@@ -1,5 +1,5 @@
 import 'server-only';
-import { normalizeDictionaryTerm } from "@/contracts/dictionary/normalize-dictionary-term";
+import { normalizeDictionaryTerm } from "../schemas/normalize-dictionary-term";
 import {
   type DictionaryEntryDto,
   type DictionaryMissDto,
@@ -7,12 +7,12 @@ import {
   RUNTIME_STATUSES,
   getSourceLabel,
 } from "@/contracts/dictionary/dictionary-dtos";
-import { buildEntryDto } from "@/server/modules/dictionary/shared/dictionary-dto-builders";
+import { buildEntryDto } from "./dto-builders";
 import {
   findDictionaryLookupEntry,
   findQuickLookupTranslation,
   type LookupRawRow,
-} from "./lookup.repository";
+} from "../db/lookup-repository";
 
 export interface LookupOptions {
   sourceLanguage: string;
@@ -30,10 +30,10 @@ export async function resolveDictionaryLookup(
     ? [...RUNTIME_STATUSES, "draft"]
     : [...RUNTIME_STATUSES];
 
-  const rows = await runLookupQueryStep(
-    options.performanceStepPrefix,
-    "lookup",
-    () => findDictionaryLookupEntry(normalized, options.sourceLanguage, options.targetLanguage),
+  const rows = await findDictionaryLookupEntry(
+    normalized,
+    options.sourceLanguage,
+    options.targetLanguage,
   );
 
   if (rows.length === 0) {
@@ -72,14 +72,6 @@ export async function resolveQuickDictionaryLookupSql(
     reviewedAt: row.reviewedAt?.toISOString() ?? null,
     sourceLabel: getSourceLabel(row.sourceType, row.sourceName),
   };
-}
-
-function runLookupQueryStep<T>(
-  _prefix: string | undefined,
-  _step: string,
-  callback: () => Promise<T>,
-) {
-  return callback();
 }
 
 export function groupLookupRows(rows: LookupRawRow[]) {

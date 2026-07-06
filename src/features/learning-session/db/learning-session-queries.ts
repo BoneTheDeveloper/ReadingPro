@@ -45,14 +45,8 @@ export async function closeStaleStudySessions(
 export async function ensureActiveSession(userId: string) {
   const now = new Date();
 
-  // Wrap the whole transaction: if the create hits a missing UserProfile FK, the
-  // transaction rolls back (releasing the advisory lock) and withUserProfile
-  // retries the entire atomic block after ensuring the profile.
   return withUserProfile(userId, () =>
     prisma.$transaction(async (tx) => {
-      // Serialize session resolution per user so concurrent tabs/devices collapse to
-      // one open session. The lock auto-releases on commit/rollback; never held across
-      // an external call. The partial unique index is a backstop only.
       await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`study_session:${userId}`})::bigint)`;
 
       await tx.$executeRaw`

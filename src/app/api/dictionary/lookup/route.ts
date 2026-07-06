@@ -1,17 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
-import { getUserId } from "@/server/auth/auth-utils";
+import { getUserId } from "@/services/clerk";
 import {
   createRequestLogContext,
   createRequestLogger,
-} from "@/server/observability/logger";
-import { normalizeDictionaryTerm } from "@/contracts/dictionary/normalize-dictionary-term";
-import { resolveDictionaryLookup } from "@/server/modules/dictionary/lookup/lookup.service";
+} from "@/services/logger";
+import { resolveDictionaryLookup } from "@/features/dictionary/services/lookup-service";
 import type {
   DictionaryEntryDto,
   DictionaryMissDto,
-} from "@/contracts/dictionary/dictionary-dtos";
+} from "@/contracts/dictionary/dictionary-response-schema";
 
 const dictionaryLookupQuerySchema = z.object({
   q: z.string().trim().min(1).max(200),

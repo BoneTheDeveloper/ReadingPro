@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
-import { getUserId } from "@/server/auth/auth-utils";
-import { createRequestLogContext, createRequestLogger } from "@/server/observability/logger";
-import { normalizeDictionaryTerm } from "@/contracts/dictionary/normalize-dictionary-term";
-import { searchDictionary } from "@/server/modules/dictionary/search/search.service";
-import type { DictionarySearchResultDto } from "@/contracts/dictionary/dictionary-dtos";
+import { getUserId } from "@/services/clerk";
+import { createRequestLogContext, createRequestLogger } from "@/services/logger";
+import { normalizeDictionaryTerm } from "@/features/dictionary/schemas/normalize-dictionary-term";
+import { searchDictionary } from "@/features/dictionary/services/search-service";
+import type { DictionarySearchResultDto } from "@/contracts/dictionary/dictionary-response-schema";
 
 const dictionarySearchQuerySchema = z.object({
   q: z.string().trim().min(1).max(200),
