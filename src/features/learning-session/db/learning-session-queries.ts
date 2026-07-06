@@ -1,7 +1,7 @@
 import "server-only";
 import { z } from "zod";
 import { prisma } from "@/server/lib/db";
-import { withUserProfile } from "@/server/auth/sync-user";
+import { withUserProfile } from "@/features/users/db/sync-user";
 
 export const SESSION_IDLE_MS = 10 * 60 * 1000;
 

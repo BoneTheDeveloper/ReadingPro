@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
-import { getUserId } from "@/server/auth/auth-utils";
-import { isAuthenticationRequiredError } from "@/server/http/route-errors";
+import { getUserId } from "@/services/clerk";
+import { isAuthenticationRequiredError } from "@/lib/http/route-errors";
 import {
   createRequestLogContext,
   createRequestLogger,
-} from "@/server/observability/logger";
-import { getVocabularyItemStats } from "@/server/modules/vocabulary/items/vocabulary-items.service";
+} from "@/services/logger";
+import { getVocabularyItemStats } from "@/features/vocabulary/db/vocabulary-items.service";
 
 export async function GET(request: NextRequest) {
   const requestLog = createRequestLogger(

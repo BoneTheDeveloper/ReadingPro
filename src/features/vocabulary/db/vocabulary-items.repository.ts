@@ -1,13 +1,13 @@
 import "server-only";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/server/lib/db";
-import { withUserProfile } from "@/server/auth/sync-user";
+import { withUserProfile } from "@/features/users/db/sync-user";
 import { getOwnedTranslationSource } from "@/server/db/translation-queries";
 import {
   findOrCreateDailySet,
   findOrCreateWeeklySet,
   addItemToSet,
-} from "@/server/modules/vocabulary/sets/vocabulary-sets.repository";
+} from "@/features/vocabulary/db/sets/vocabulary-sets.repository";
 import { normalizeText, detectType } from "./vocabulary-text-utils";
 import type {
   VocabularyItem,

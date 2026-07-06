@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
-import { reviewVocabularyItemById } from "@/server/modules/vocabulary/items/vocabulary-items.service";
-import { getUserId } from "@/server/auth/auth-utils";
+import { reviewVocabularyItemById } from "@/features/vocabulary/db/vocabulary-items.service";
+import { getUserId } from "@/services/clerk";
 import {
   isAuthenticationRequiredError,
   isOwnershipMissError,
-} from "@/server/http/route-errors";
+} from "@/lib/http/route-errors";
 import {
   createRequestLogContext,
   createRequestLogger,
-} from "@/server/observability/logger";
+} from "@/services/logger";
 
 const reviewSchema = z.object({
   isCorrect: z.boolean(),

@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
-import { addItemsToVocabularySet } from "@/server/modules/vocabulary/sets/vocabulary-sets.service";
-import { getUserId } from "@/server/auth/auth-utils";
+import { addItemsToVocabularySet } from "@/features/vocabulary/db/sets/vocabulary-sets.service";
+import { getUserId } from "@/services/clerk";
 import {
   isAuthenticationRequiredError,
   isOwnershipMissError,
-} from "@/server/http/route-errors";
+} from "@/lib/http/route-errors";
 import {
   createRequestLogContext,
   createRequestLogger,
-} from "@/server/observability/logger";
+} from "@/services/logger";
 
 const addItemsSchema = z.object({
   itemIds: z.array(z.string().uuid()).min(1).max(50),

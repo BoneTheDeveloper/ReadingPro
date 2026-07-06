@@ -1,7 +1,7 @@
 import "server-only";
 import { type NextRequest } from "next/server";
 import { verifyWebhook } from "@clerk/nextjs/webhooks";
-import { syncUser, deleteUserProfile } from "@/server/auth/sync-user";
+import { syncUser, deleteUserProfile } from "@/features/users/db/sync-user";
 
 export async function POST(req: NextRequest) {
   let evt;

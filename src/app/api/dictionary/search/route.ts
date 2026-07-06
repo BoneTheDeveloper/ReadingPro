@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 import { getUserId } from "@/services/clerk";
-import { createRequestLogContext, createRequestLogger } from "@/services/logger";
+import {
+  createRequestLogContext,
+  createRequestLogger,
+} from "@/services/logger";
 import { normalizeDictionaryTerm } from "@/features/dictionary/schemas/normalize-dictionary-term";
 import { searchDictionary } from "@/features/dictionary/services/search-service";
 import type { DictionarySearchResultDto } from "@/contracts/dictionary/dictionary-response-schema";
@@ -36,10 +39,15 @@ export async function GET(request: NextRequest) {
     const parsed = dictionarySearchQuerySchema.safeParse(raw);
     if (!parsed.success) {
       requestLog.warn(
-        { context: { issues: parsed.error.issues.map((i) => i.path.join(".")) } },
+        {
+          context: { issues: parsed.error.issues.map((i) => i.path.join(".")) },
+        },
         "Invalid dictionary search query rejected",
       );
-      return NextResponse.json({ error: "Invalid query parameters." }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid query parameters." },
+        { status: 400 },
+      );
     }
 
     const normalizedQuery = normalizeDictionaryTerm(parsed.data.q);
@@ -57,11 +65,12 @@ export async function GET(request: NextRequest) {
           "dictionary.query_length": normalizedQuery.length,
         },
       },
-      () => searchDictionary(parsed.data.q, {
-        sourceLanguage: parsed.data.sourceLanguage,
-        targetLanguage: parsed.data.targetLanguage,
-        limit: parsed.data.limit,
-      }),
+      () =>
+        searchDictionary(parsed.data.q, {
+          sourceLanguage: parsed.data.sourceLanguage,
+          targetLanguage: parsed.data.targetLanguage,
+          limit: parsed.data.limit,
+        }),
     )) as DictionarySearchResultDto[];
 
     requestLog.info(
@@ -77,13 +86,19 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: true, data: results });
   } catch (error) {
     if (isAuthenticationError(error)) {
-      return NextResponse.json({ error: "Authentication required." }, { status: 401 });
+      return NextResponse.json(
+        { error: "Authentication required." },
+        { status: 401 },
+      );
     }
 
     requestLog.error({ err: error }, "Dictionary search failed");
     Sentry.captureException(error, {
       tags: { route: "api:dictionary-search", method: "GET" },
     });
-    return NextResponse.json({ error: "Dictionary search failed." }, { status: 500 });
+    return NextResponse.json(
+      { error: "Dictionary search failed." },
+      { status: 500 },
+    );
   }
 }

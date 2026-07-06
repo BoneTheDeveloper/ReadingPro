@@ -1,1 +1,1 @@
-export * from "@/services/ai/content-simplifier";
+export * from "@/types/services/ai/content-simplifier";

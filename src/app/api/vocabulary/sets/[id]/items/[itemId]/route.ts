@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { removeItemFromVocabularySet } from "@/server/modules/vocabulary/sets/vocabulary-sets.service";
-import { getUserId } from "@/server/auth/auth-utils";
+import { removeItemFromVocabularySet } from "@/features/vocabulary/db/sets/vocabulary-sets.service";
+import { getUserId } from "@/services/clerk";
 import {
   isAuthenticationRequiredError,
   isOwnershipMissError,
-} from "@/server/http/route-errors";
+} from "@/lib/http/route-errors";
 import {
   createRequestLogContext,
   createRequestLogger,
-} from "@/server/observability/logger";
+} from "@/services/logger";
 
 export async function DELETE(
   request: NextRequest,

@@ -4,7 +4,7 @@ import { z } from "zod";
 import { getUserId } from "@/server/auth/auth-utils";
 import { getZodErrorMessage, isAuthenticationRequiredError, isOwnershipMissError } from "@/server/http/route-errors";
 import { createRequestLogContext, createRequestLogger } from "@/server/observability/logger";
-import { generateQuestionsForPassage, PassageStudyServiceError } from "@/server/modules/passage/passage-study.service";
+import { generateQuestionsForPassage, PassageStudyServiceError } from "@/features/passage/db/passage-study.service";
 import type { GeneratedStudyQuestionDto } from "@/contracts/study/study-response-schema";
 import type { StudioArtifact } from "@/contracts/study/studio-artifact-types";
 

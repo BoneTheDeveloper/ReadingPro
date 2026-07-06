@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
-import { getUserId } from "@/services/clerk";
+import { getUserId } from "@/types/services/clerk";
 import {
   getZodErrorMessage,
   isAuthenticationRequiredError,
@@ -9,7 +9,7 @@ import {
 import {
   createRequestLogContext,
   createRequestLogger,
-} from "@/services/logger";
+} from "@/types/services/logger";
 import { ensureActiveSession } from "@/features/learning-session/db/learning-session-queries";
 import { toLearningSessionDto } from "@/features/learning-session/schemas/learning-session-response-schema";
 

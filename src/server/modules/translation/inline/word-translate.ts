@@ -28,6 +28,11 @@ export async function resolveWordTranslate(
       }),
   );
 
+  if (!result) {
+    ctx.requestLog.info({ context: { scope: "word" } }, "Word translate not found");
+    return { translation: "", source: "none", provider: "none" };
+  }
+
   ctx.requestLog.info(
     {
       context: {

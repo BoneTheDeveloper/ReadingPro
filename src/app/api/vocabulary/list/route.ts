@@ -1,13 +1,13 @@
 import { z } from "zod";
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
-import { getUserId } from "@/server/auth/auth-utils";
+import { getUserId } from "@/services/clerk";
 import {
   createRequestLogContext,
   createRequestLogger,
-} from "@/server/observability/logger";
-import { getVocabularyItemList } from "@/server/modules/vocabulary/items/vocabulary-items.service";
-import { isAuthenticationRequiredError } from "@/server/http/route-errors";
+} from "@/services/logger";
+import { isAuthenticationRequiredError } from "@/lib/http/route-errors";
+import { getVocabularyItemList } from "@/features/vocabulary/db/vocabulary-items.service";
 
 const vocabularyListQuerySchema = z.object({
   status: z.enum(["NEW", "LEARNING", "MASTERED"]).optional(),

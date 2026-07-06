@@ -2,9 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { getUserId } from "@/server/auth/auth-utils";
-import { deletePassage } from "@/server/db/passage-queries";
-import { saveVocabularyItem } from "@/server/modules/vocabulary/items/vocabulary-items.service";
+import { getUserId } from "@/services/clerk";
+import { deletePassage } from "@/features/passage/db/passage-queries";
+import { saveVocabularyItem } from "@/features/vocabulary/db/vocabulary-items.service";
 
 export async function deletePassageAction(passageId: string) {
   const userId = await getUserId();

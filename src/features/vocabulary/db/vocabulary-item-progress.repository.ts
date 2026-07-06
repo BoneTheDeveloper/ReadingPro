@@ -1,6 +1,6 @@
 import "server-only";
 import { prisma } from "@/server/lib/db";
-import { simpleSchedule } from "@/server/modules/spaced-repetition/scheduler";
+import { simpleSchedule } from "@/features/vocabulary/db/scheduler";
 import type { VocabularyItem } from "@/generated/prisma/client";
 
 export async function updateVocabularyStatus(params: {

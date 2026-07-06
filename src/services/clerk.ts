@@ -2,7 +2,7 @@ import "server-only";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import * as Sentry from "@sentry/nextjs";
 import { cache } from "react";
-import { syncUser } from "@/server/auth/sync-user";
+import { syncUser } from "@/features/users/db/sync-user";
 import { createModuleLogger } from "@/server/observability/logger";
 
 const log = createModuleLogger("auth:utils");

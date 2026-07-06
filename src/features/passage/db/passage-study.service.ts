@@ -5,7 +5,7 @@ import {
   type GeneratedQuestion,
 } from "@/server/ai/question-generator";
 import { createModuleLogger } from "@/server/observability/logger";
-import { questionDataSchema } from "@/server/db/passage-queries";
+import { questionDataSchema } from "@/features/passage/db/passage-queries";
 import type { GeneratedStudyQuestionDto } from "@/contracts/study/study-response-schema";
 import {
   STUDIO_GENERATION_TIMEOUT_MS,

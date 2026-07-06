@@ -2,7 +2,7 @@ import "server-only";
 import { createHash } from "node:crypto";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/server/lib/db";
-import { withUserProfile } from "@/server/auth/sync-user";
+import { withUserProfile } from "@/features/users/db/sync-user";
 
 interface TranslationKeyInput {
   userId: string;

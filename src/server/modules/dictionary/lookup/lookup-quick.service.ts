@@ -1,5 +1,9 @@
-// Placeholder - actual implementation moved to features/dictionary/services/
-// This file exists for backward compatibility during migration
+import 'server-only';
+import { normalizeDictionaryTerm } from "@/features/dictionary/schemas/normalize-dictionary-term";
+import { RUNTIME_STATUSES } from "@/features/dictionary/lib/dictionary-helpers";
+import { prisma } from "@/server/lib/db";
+import { Prisma } from "@/generated/prisma/client";
+
 export interface QuickTranslationInput {
   text: string;
   context: string;
@@ -10,13 +14,44 @@ export interface QuickTranslationInput {
 export interface QuickTranslation {
   translation: string;
   source: string;
+  provider: string;
 }
+
+const RUNTIME_STATUS_LIST = Prisma.join(RUNTIME_STATUSES);
 
 export async function resolveQuickDictionaryTranslation(
   input: QuickTranslationInput
 ): Promise<QuickTranslation | null> {
-  // This function was moved - actual implementation is in features/dictionary/
-  // For now return null to avoid breaking the build
-  console.warn("resolveQuickDictionaryTranslation not yet migrated to feature");
-  return null;
+  const normalized = normalizeDictionaryTerm(input.text);
+
+  const rows = await prisma.$queryRaw<Array<{
+    translation: string;
+    sourceType: string;
+  }>>`
+    SELECT
+      t.translation,
+      t."sourceType"
+    FROM dictionary_entries e
+    LEFT JOIN dictionary_aliases a
+      ON a."entryId" = e.id AND a."normalizedAlias" = ${normalized}
+    JOIN dictionary_senses s ON s."entryId" = e.id
+    JOIN dictionary_translations t
+      ON t."senseId" = s.id
+      AND t."targetLanguage" = ${input.targetLanguage}
+      AND t.status IN (${RUNTIME_STATUS_LIST})
+      AND t."isPrimary" = true
+    WHERE e."sourceLanguage" = ${input.sourceLanguage}
+      AND (e."normalizedHeadword" = ${normalized} OR a.id IS NOT NULL)
+    ORDER BY s."usageRank" ASC
+    LIMIT 1
+  `;
+
+  if (rows.length === 0) return null;
+
+  const row = rows[0];
+  return {
+    translation: row.translation,
+    source: row.sourceType,
+    provider: 'dictionary',
+  };
 }

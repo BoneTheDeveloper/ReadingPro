@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/nextjs";
-import { parsePDF } from "@/server/modules/upload/parsers/pdf";
+import { parsePDF } from "@/features/upload/db/parsers/pdf";
 import { deleteFile, uploadFile } from "@/server/storage/blob-storage";
 import {
   sanitizeFilename,
@@ -7,7 +7,7 @@ import {
   validateFile,
   validateTextContent,
 } from "@/contracts/upload/upload-validation";
-import { analyzeAndPersistContent } from "@/server/modules/upload/content-analysis/content-analysis.service";
+import { analyzeAndPersistContent } from "@/features/upload/db/content-analysis/content-analysis.service";
 
 export interface FileUploadWorkflowResult {
   filename: string;

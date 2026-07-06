@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 import { Group, Panel, Separator } from "react-resizable-panels";
 import * as Sentry from "@sentry/nextjs";
 import { translateResponseSchema } from "@/contracts/translation/translation-response-schema";
-import { saveVocabularyAction } from "../actions";
+import { saveVocabularyAction } from "./actions";
 import {
   clampTranslationContext,
   isTranslateTextWithinLimit,
@@ -13,16 +13,16 @@ import type {
   PassageData,
   TranslationSelection,
   QuickTranslationData,
-} from "@/features/study/shared/types";
+} from "@/features/reading/schemas/translation-response-schema";
 import { StudySourcesPanel } from "@/features/source-panel/ui/sources-panel";
 import { StudyContentPanel } from "@/features/content-panel/ui/content-panel";
 import { StudyStudioPanel } from "@/features/studio-panel/ui/studio-panel";
 import { StudyTranslationPopup } from "@/features/studio-panel/ui/studio/translate/translation-popup";
 import { StudyUploadModal } from "@/features/source-panel/ui/upload-modal";
-import { useStudyActions } from "../hooks/use-study-actions";
-import { useStudyPanelLayout } from "@/features/study-workspace/hooks/use-study-panel-layout";
-import { useStudyWorkspaceState } from "../hooks/use-study-workspace-state";
-import { useStudyArtifacts } from "@/features/studio-panel/hooks/use-study-artifacts";
+import { useStudyActions } from "./_hooks/use-study-actions";
+import { useStudyPanelLayout } from "@/features/study-workspa./_hooks/use-study-panel-layout";
+import { useStudyWorkspaceState } from "./_hooks/use-study-workspace-state";
+import { useStudyArtifacts } from "@/features/studio-pan./_hooks/use-study-artifacts";
 
 let quickTranslationRequestCounter = 0;
 

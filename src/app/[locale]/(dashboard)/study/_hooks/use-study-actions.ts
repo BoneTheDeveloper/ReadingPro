@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import type { Dispatch, SetStateAction } from "react";
 import { generateStudioQuestions } from "@/features/studio-panel/api-client/studio-questions-client";
-import { getArtifactQuestionsAction } from "@/features/studio-panel/actions";
+import { getArtifactQuestionsAction } from "@/features/studio-pan./actions";
 import type {
   ArtifactsCacheEntry,
   ArtifactRef,
@@ -13,7 +13,7 @@ import type {
   StudioArtifact,
   StudioArtifactErrorCode,
   StudyState,
-} from "@/features/study/shared/types";
+} from "@/features/reading/schemas/translation-response-schema";
 
 interface UseStudyActionsInput {
   state: StudyState;

@@ -1,7 +1,7 @@
 import "server-only";
 import { createModuleLogger } from "@/server/observability/logger";
 import type { VocabularyItemDto, VocabularyStatsDto, VocabularyStatus } from "@/contracts/vocabulary/vocabulary-dtos";
-import { buildVocabularyItemDto, buildVocabularyStatsDto } from "@/server/modules/vocabulary/shared/vocabulary-dto-builders";
+import { buildVocabularyItemDto, buildVocabularyStatsDto } from "@/features/vocabulary/db/shared/vocabulary-dto-builders";
 import {
   findOwnedSource,
   upsertVocabularyItem,

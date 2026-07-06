@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
-import { getUserId } from "@/server/auth/auth-utils";
+import { getUserId } from "@/services/clerk";
 import {
   createRequestLogContext,
   createRequestLogger,
-} from "@/server/observability/logger";
-import { isAuthenticationRequiredError } from "@/server/http/route-errors";
+} from "@/services/logger";
+import { isAuthenticationRequiredError } from "@/lib/http/route-errors";
 import {
   VocabularyServiceError,
   saveVocabularyItem,
-} from "@/server/modules/vocabulary/items/vocabulary-items.service";
+} from "@/features/vocabulary/db/vocabulary-items.service";
 
 const vocabularyRequestSchema = z.object({
   selectedText: z.string().trim().min(1).max(500),

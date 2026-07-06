@@ -2,12 +2,12 @@
 
 import { useCallback, useMemo, useOptimistic, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { deletePassageAction } from "../actions";
+import { deletePassageAction } from "./actions";
 import type {
   DocumentItem,
   PassageData,
   StudyState,
-} from "@/features/study/shared/types";
+} from "@/features/reading/schemas/translation-response-schema";
 
 type PassagesAction =
   | { type: "add"; passage: PassageData }

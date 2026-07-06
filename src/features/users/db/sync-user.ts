@@ -1,7 +1,7 @@
 import "server-only";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/server/lib/db";
-import { createModuleLogger } from "@/server/observability/logger";
+import { createModuleLogger } from "@/services/logger";
 
 const log = createModuleLogger("auth:sync-user");
 
