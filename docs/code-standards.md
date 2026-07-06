@@ -102,31 +102,6 @@ const result = await getVocabularyList({ userId });
 return NextResponse.json({ success: true, data: result });
 ```
 
----
-
-## Documented Anti-Pattern: Vocabulary Module
-
-**Status:** Current code violates all standards. This callout is descriptive; fix is tracked separately.
-
-The `vocabulary` feature currently violates every rule above:
-
-| Rule | Violation | Location |
-|------|-----------|----------|
-| **Contracts exist** | No `contracts/vocabulary/` directory | Repository root |
-| **Service owns DTO building** | DTO mapper lives in API route folder, not service | `app/api/vocabulary/vocabulary-dto-mapper.ts` |
-| **Route never calls repository** | POST returns raw `saveVocabularyItem()` result with minimal mapping | `app/api/vocabulary/route.ts:69` |
-| **Route never calls repository** | GET returns raw Prisma `VocabularyItemWithOccurrences[]` directly | `app/api/vocabulary/list/route.ts:45–56` |
-| **No hand-written parallel types** | 14-field `VocabularyItem` interface diverges from what API actually returns | `features/vocabulary/model/vocabulary-types.ts` |
-| **Frontend validates responses** | Blind cast: `json as VocabularyListResponse` | `features/vocabulary/vocabulary-client.ts` |
-
-**Reference Implementation:** The `dictionary` module is the canonical correct implementation. Contrast:
-- ✅ `server/modules/dictionary/lookup/lookup.service.ts` — service calls repository + builds DTO
-- ✅ `contracts/dictionary/dictionary-response-schema.ts` — zod schema is single source of truth
-- ✅ `contracts/dictionary/dictionary-dtos.ts` — DTO types inferred from schema
-- ✅ `server/modules/dictionary/shared/dictionary-dto-builders.ts` — explicit mapper signatures
-
----
-
 ## File Naming Conventions
 
 - **Kebab-case** for all file names (`user-service.ts`, `auth-utils.ts`, not `userService.ts`).
