@@ -11,7 +11,7 @@ import {
 import {
   studyChatRequestSchema,
   type UiMessage,
-} from "@/features/studio-panel/schemas/chat-schema";
+} from "@/features/studio-panel/schemas/chat.schema";
 import { validateMessageSizeLimits } from "@/features/ai-chat/chat-utils";
 import {
   StudyChatServiceError,

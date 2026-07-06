@@ -4,9 +4,8 @@ import {
   type DictionaryEntryDto,
   type DictionaryMissDto,
   type DictionaryTranslationDto,
-  RUNTIME_STATUSES,
-  getSourceLabel,
-} from "@/features/dictionary/schemas/dictionary-dtos";
+} from "@/features/dictionary/schemas/dictionary-response.schema";
+import { RUNTIME_STATUSES, getSourceLabel } from "@/features/dictionary/lib/dictionary-helpers";
 import { buildEntryDto } from "./dto-builders";
 import {
   findDictionaryLookupEntry,

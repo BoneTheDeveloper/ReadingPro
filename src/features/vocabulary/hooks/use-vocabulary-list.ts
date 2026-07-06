@@ -4,12 +4,12 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { getVocabularyList } from "../vocabulary-client";
 import type {
-  VocabularyItem,
+  VocabularyItemDto,
   VocabularyStatus,
-} from "../model/vocabulary-types";
+} from "../model/vocabulary-response.schema";
 
 interface UseVocabularyListResult {
-  items: VocabularyItem[];
+  items: VocabularyItemDto[];
   total: number;
   loading: boolean;
   error: string | null;
@@ -27,7 +27,7 @@ export function useVocabularyList(
   const requestIdRef = useRef(0);
   const mountedRef = useRef(true);
 
-  const [items, setItems] = useState<VocabularyItem[]>([]);
+  const [items, setItems] = useState<VocabularyItemDto[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(enabled);
   const [error, setError] = useState<string | null>(null);

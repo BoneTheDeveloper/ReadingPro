@@ -7,12 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import type {
-  VocabularyItem,
+  VocabularyItemDto,
   VocabularyStatus,
-} from "../model/vocabulary-types";
+} from "../model/vocabulary-response.schema";
 
 interface VocabularyListProps {
-  items: VocabularyItem[];
+  items: VocabularyItemDto[];
   total: number;
   page: number;
   pageSize: number;
@@ -201,7 +201,7 @@ function TableRow({
   onStatusChange,
   onDelete,
 }: {
-  item: VocabularyItem;
+  item: VocabularyItemDto;
   onStatusChange: (id: string, status: VocabularyStatus) => void;
   onDelete: (id: string) => void;
 }) {

@@ -4,7 +4,7 @@ import {
   makePerformanceEnvelopeSchema,
   makePerformanceResponseSchema,
   makeSuccessEnvelopeSchema,
-} from "@/lib/http/api-response-schema";
+} from "@/lib/http/api-response.schema";
 
 const dictionaryTranslationStatusSchema = z.enum(["draft", "reviewed", "approved", "deprecated"]);
 const dictionarySourceTypeSchema = z.enum(["seed", "manual", "provider", "llm", "mixed"]);

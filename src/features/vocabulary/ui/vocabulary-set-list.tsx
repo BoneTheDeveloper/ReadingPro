@@ -5,10 +5,10 @@ import { useTranslations } from "next-intl";
 import { Loader2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { VocabularySet } from "../model/vocabulary-types";
+import type { VocabularySetDto } from "../model/vocabulary-response.schema";
 
 interface VocabularySetListProps {
-  sets: VocabularySet[];
+  sets: VocabularySetDto[];
   loading: boolean;
   onCreateSet: (name: string) => void;
   onDeleteSet: (id: string) => void;
@@ -107,7 +107,7 @@ function SetCard({
   set,
   colorIndex,
 }: {
-  set: VocabularySet;
+  set: VocabularySetDto;
   colorIndex: number;
 }) {
   const col = SET_COLORS[colorIndex % SET_COLORS.length];

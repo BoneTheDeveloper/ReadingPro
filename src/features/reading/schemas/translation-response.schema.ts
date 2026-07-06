@@ -4,7 +4,7 @@ import {
   makePerformanceEnvelopeSchema,
   makePerformanceResponseSchema,
   makeSuccessEnvelopeSchema,
-} from "@/lib/http/api-response-schema";
+} from "@/lib/http/api-response.schema";
 
 export const translationDataSchema = z.object({
   translation: z.string(),

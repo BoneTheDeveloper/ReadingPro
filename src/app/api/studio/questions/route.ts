@@ -5,7 +5,7 @@ import { getUserId } from "@/services/clerk";
 import { getZodErrorMessage, isAuthenticationRequiredError, isOwnershipMissError } from "@/lib/http/route-errors";
 import { createRequestLogContext, createRequestLogger } from "@/services/logger";
 import { generateQuestionsForPassage, PassageStudyServiceError } from "@/features/passage/db/passage-study.service";
-import type { GeneratedStudyQuestionDto } from "@/features/studio-panel/schemas/study-response-schema";
+import type { GeneratedStudyQuestionDto } from "@/features/studio-panel/schemas/study-response.schema";
 import type { StudioArtifact } from "@/features/studio-panel/schemas/studio-artifact-types";
 
 const studyQuestionsPostSchema = z.object({

@@ -1,4 +1,4 @@
-import { generatedStudyQuestionsResponseSchema } from "@/features/studio-panel/schemas/study-response-schema";
+import { generatedStudyQuestionsResponseSchema } from "@/features/studio-panel/schemas/study-response.schema";
 import {
   STUDIO_GENERATION_TIMEOUT_MS,
   type StudioArtifact,

@@ -3,7 +3,7 @@ import type {
   VocabularyOccurrenceDto,
   VocabularySetDto,
   VocabularyStatsDto,
-} from "@/features/vocabulary/model/vocabulary-dtos";
+} from "@/features/vocabulary/model/vocabulary-response.schema";
 
 interface OccurrenceShape {
   id: string;

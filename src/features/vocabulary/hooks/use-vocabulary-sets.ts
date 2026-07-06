@@ -3,10 +3,10 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { getVocabularySets } from "../vocabulary-client";
-import type { VocabularySet } from "../model/vocabulary-types";
+import type { VocabularySetDto } from "../model/vocabulary-response.schema";
 
 interface UseVocabularySetsResult {
-  sets: VocabularySet[];
+  sets: VocabularySetDto[];
   loading: boolean;
   error: string | null;
   refetch: () => void;
@@ -19,7 +19,7 @@ export function useVocabularySets(
   const requestIdRef = useRef(0);
   const mountedRef = useRef(true);
 
-  const [sets, setSets] = useState<VocabularySet[]>([]);
+  const [sets, setSets] = useState<VocabularySetDto[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

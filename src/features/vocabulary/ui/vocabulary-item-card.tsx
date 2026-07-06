@@ -27,12 +27,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import type {
-  VocabularyItem,
+  VocabularyItemDto,
   VocabularyStatus,
-} from "../model/vocabulary-types";
+} from "../model/vocabulary-response.schema";
 
 interface VocabularyItemCardProps {
-  item: VocabularyItem;
+  item: VocabularyItemDto;
   onStatusChange: (id: string, status: VocabularyStatus) => void;
   onDelete: (id: string) => void;
 }

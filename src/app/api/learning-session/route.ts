@@ -11,7 +11,7 @@ import {
   createRequestLogger,
 } from "@/services/logger";
 import { ensureActiveSession } from "@/features/learning-session/db/learning-session-queries";
-import { toLearningSessionDto } from "@/features/learning-session/schemas/learning-session-response-schema";
+import { toLearningSessionDto } from "@/features/learning-session/schemas/learning-session-response.schema";
 
 const learningSessionPostSchema = z.object({}).strict();
 

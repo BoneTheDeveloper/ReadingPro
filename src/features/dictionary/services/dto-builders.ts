@@ -3,8 +3,8 @@ import {
   type DictionaryEntryDto,
   type DictionarySenseDto,
   type DictionaryTranslationDto,
-  getSourceLabel,
-} from "@/features/dictionary/schemas/dictionary-dtos";
+} from "@/features/dictionary/schemas/dictionary-response.schema";
+import { getSourceLabel } from "@/features/dictionary/lib/dictionary-helpers";
 
 type EntryWithSenses = {
   id: string;

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getDictionarySuggestions } from "../dictionary-client";
-import type { DictionarySuggestItemDto } from "@/features/dictionary/schemas/dictionary-dtos";
+import type { DictionarySuggestItemDto } from "@/features/dictionary/schemas/dictionary-response.schema";
 import { normalizeDictionaryTerm } from "@/features/dictionary/schemas/normalize-dictionary-term";
 
 const DEBOUNCE_MS = 250;

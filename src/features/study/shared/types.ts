@@ -1,4 +1,4 @@
-import type { TranslationData } from "@/features/reading/schemas/translation-response-schema";
+import type { TranslationData } from "@/features/reading/schemas/translation-response.schema";
 import type { StudioArtifact } from "@/features/studio-panel/schemas/studio-artifact-types";
 export type {
   StudioArtifact,

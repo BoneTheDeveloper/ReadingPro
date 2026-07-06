@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import { Group, Panel, Separator } from "react-resizable-panels";
 import * as Sentry from "@sentry/nextjs";
-import { translateResponseSchema } from "@/features/reading/schemas/translation-response-schema";
+import { translateResponseSchema } from "@/features/reading/schemas/translation-response.schema";
 import { saveVocabularyAction } from "./actions";
 import {
   clampTranslationContext,

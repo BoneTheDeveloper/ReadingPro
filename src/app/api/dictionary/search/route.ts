@@ -8,7 +8,7 @@ import {
 } from "@/services/logger";
 import { normalizeDictionaryTerm } from "@/features/dictionary/schemas/normalize-dictionary-term";
 import { searchDictionary } from "@/features/dictionary/services/search-service";
-import type { DictionarySearchResultDto } from "@/features/dictionary/schemas/dictionary-response-schema";
+import type { DictionarySearchResultDto } from "@/features/dictionary/schemas/dictionary-response.schema";
 
 const dictionarySearchQuerySchema = z.object({
   q: z.string().trim().min(1).max(200),

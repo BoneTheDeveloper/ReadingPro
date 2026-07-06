@@ -15,9 +15,7 @@ import {
   createVocabularySet,
   deleteVocabularySet,
 } from "../vocabulary-client";
-import type {
-  VocabularyStatus,
-} from "../model/vocabulary-types";
+import type { VocabularyStatus } from "../model/vocabulary-response.schema";
 
 type ViewTab = "words" | "sets";
 

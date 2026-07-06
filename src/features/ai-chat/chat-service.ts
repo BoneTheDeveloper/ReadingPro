@@ -4,12 +4,12 @@ import { convertToModelMessages, streamText } from "ai";
 import * as Sentry from "@sentry/nextjs";
 import { prisma } from "@/lib/prisma";
 import { wrapUserText } from "@/services/ai/prompt-utils";
-import { getStudyChatModelId } from "@/lib/model-config";
+import { getStudyChatModelId } from "@/services/ai/model-config";
 import { createModuleLogger } from "@/services/logger";
 import {
   MAX_PASSAGE_CHARS,
   type UiMessage,
-} from "@/features/studio-panel/schemas/chat-schema";
+} from "@/features/studio-panel/schemas/chat.schema";
 import { truncateToRecentTurns, extractTextContent } from "./chat-utils";
 
 const log = createModuleLogger("lib:study:chat-service");

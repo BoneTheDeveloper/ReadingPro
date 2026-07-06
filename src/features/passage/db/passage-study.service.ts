@@ -6,7 +6,7 @@ import {
 } from "@/services/ai/question-generator";
 import { createModuleLogger } from "@/services/logger";
 import { questionDataSchema } from "@/features/passage/db/passage-queries";
-import type { GeneratedStudyQuestionDto } from "@/features/studio-panel/schemas/study-response-schema";
+import type { GeneratedStudyQuestionDto } from "@/features/studio-panel/schemas/study-response.schema";
 import {
   STUDIO_GENERATION_TIMEOUT_MS,
   type StudioArtifact,

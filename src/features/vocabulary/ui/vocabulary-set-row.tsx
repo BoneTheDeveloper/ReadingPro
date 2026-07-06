@@ -5,9 +5,9 @@ import { ChevronDown, ChevronRight, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type {
-  VocabularySet,
+  VocabularySetDto,
   VocabularySetType,
-} from "../model/vocabulary-types";
+} from "../model/vocabulary-response.schema";
 
 const SET_TYPE_TONE: Record<VocabularySetType, string> = {
   MANUAL: "bg-primary/10 text-primary",
@@ -27,7 +27,7 @@ export function VocabularySetRow({
   onToggle,
   onDelete,
 }: {
-  set: VocabularySet;
+  set: VocabularySetDto;
   expanded: boolean;
   onToggle: () => void;
   onDelete?: () => void;

@@ -9,8 +9,8 @@ import {
   vocabularySetResponseSchema,
   vocabularyStatsResponseSchema,
   vocabularyAckResponseSchema,
-} from "@/features/vocabulary/model/vocabulary-response-schema";
-import type { VocabularyStatus } from "./model/vocabulary-types";
+  type VocabularyStatus,
+} from "@/features/vocabulary/model/vocabulary-response.schema";
 
 function assertNoError<T extends { error?: string } | Record<string, unknown>>(
   result: T,
