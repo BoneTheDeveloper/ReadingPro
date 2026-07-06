@@ -1,7 +1,7 @@
 import "server-only";
 import * as Sentry from "@sentry/nextjs";
 import { Prisma } from "@/generated/prisma/client";
-import { db } from "@/server/lib/db";
+import { prisma } from "@/server/lib/db";
 import {
   escapeLikeWildcards,
   normalizeDictionaryTerm,
@@ -41,7 +41,7 @@ export async function findSuggestCandidates(
       },
     },
     () =>
-      db.$queryRaw<SuggestCandidateRow[]>`
+      prisma.$queryRaw<SuggestCandidateRow[]>`
         WITH headword_candidates AS (
           SELECT
             e.id,

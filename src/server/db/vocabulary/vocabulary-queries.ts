@@ -1,6 +1,6 @@
 import "server-only";
 import { Prisma } from "@/generated/prisma/client";
-import { db } from "@/server/lib/db";
+import { prisma } from "@/server/lib/db";
 import { simpleSchedule } from "@/server/modules/spaced-repetition/scheduler";
 import {
   findOrCreateDailySet,
@@ -50,7 +50,7 @@ export async function upsertVocabularyItem(
   // Only this write carries the userId FK; the occurrence + set writes below
   // self-heal via their own wrappers, so wrap just the item upsert.
   const item = await withUserProfile(params.userId, () =>
-    db.vocabularyItem.upsert({
+    prisma.vocabularyItem.upsert({
       where: {
         userId_normalizedText_targetLanguage_normalizedTranslation: {
           userId: params.userId,
@@ -111,7 +111,7 @@ async function createOccurrence(
   contextSentence?: string,
 ): Promise<void> {
   try {
-    await db.vocabularyOccurrence.create({
+    await prisma.vocabularyOccurrence.create({
       data: {
         vocabularyItemId,
         sourceId: sourceId ?? null,
@@ -155,7 +155,7 @@ export async function listVocabularyItems(params: {
   }
 
   const [items, total] = await Promise.all([
-    db.vocabularyItem.findMany({
+    prisma.vocabularyItem.findMany({
       where,
       include: {
         occurrences: {
@@ -175,7 +175,7 @@ export async function listVocabularyItems(params: {
       skip: (page - 1) * pageSize,
       take: pageSize,
     }),
-    db.vocabularyItem.count({ where }),
+    prisma.vocabularyItem.count({ where }),
   ]);
 
   return { items, total };
@@ -186,7 +186,7 @@ export async function updateVocabularyStatus(params: {
   itemId: string;
   status: "NEW" | "LEARNING" | "MASTERED";
 }): Promise<VocabularyItem> {
-  const item = await db.vocabularyItem.findUniqueOrThrow({
+  const item = await prisma.vocabularyItem.findUniqueOrThrow({
     where: { id: params.itemId },
   });
 
@@ -194,7 +194,7 @@ export async function updateVocabularyStatus(params: {
     throw new Error(`No vocabulary item found for user`);
   }
 
-  return db.vocabularyItem.update({
+  return prisma.vocabularyItem.update({
     where: { id: params.itemId },
     data: { status: params.status },
   });
@@ -205,7 +205,7 @@ export async function reviewVocabularyItem(params: {
   itemId: string;
   isCorrect: boolean;
 }): Promise<VocabularyItem> {
-  const item = await db.vocabularyItem.findUniqueOrThrow({
+  const item = await prisma.vocabularyItem.findUniqueOrThrow({
     where: { id: params.itemId },
   });
 
@@ -218,7 +218,7 @@ export async function reviewVocabularyItem(params: {
     params.isCorrect,
   );
 
-  return db.vocabularyItem.update({
+  return prisma.vocabularyItem.update({
     where: { id: params.itemId },
     data: {
       status: nextStatus,
@@ -235,10 +235,10 @@ export async function getVocabularyStats(userId: string): Promise<{
   known: number;
 }> {
   const [total, newCount, learningCount, knownCount] = await Promise.all([
-    db.vocabularyItem.count({ where: { userId } }),
-    db.vocabularyItem.count({ where: { userId, status: "NEW" } }),
-    db.vocabularyItem.count({ where: { userId, status: "LEARNING" } }),
-    db.vocabularyItem.count({ where: { userId, status: "MASTERED" } }),
+    prisma.vocabularyItem.count({ where: { userId } }),
+    prisma.vocabularyItem.count({ where: { userId, status: "NEW" } }),
+    prisma.vocabularyItem.count({ where: { userId, status: "LEARNING" } }),
+    prisma.vocabularyItem.count({ where: { userId, status: "MASTERED" } }),
   ]);
   return { total, new: newCount, learning: learningCount, known: knownCount };
 }
@@ -247,7 +247,7 @@ export async function deleteVocabularyItem(params: {
   userId: string;
   itemId: string;
 }): Promise<void> {
-  const item = await db.vocabularyItem.findUniqueOrThrow({
+  const item = await prisma.vocabularyItem.findUniqueOrThrow({
     where: { id: params.itemId },
   });
 
@@ -255,7 +255,7 @@ export async function deleteVocabularyItem(params: {
     throw new Error(`No vocabulary item found for user`);
   }
 
-  await db.vocabularyItem.delete({
+  await prisma.vocabularyItem.delete({
     where: { id: params.itemId },
   });
 }

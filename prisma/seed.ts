@@ -7,7 +7,7 @@
  */
 
 import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "../../src/generated/prisma/client";
+import { PrismaClient } from "../src/generated/prisma/client";
 import { readFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 import { join } from "node:path";

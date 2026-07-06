@@ -6,13 +6,13 @@ import {
 } from "@/server/ai/question-generator";
 import { simplifyContent } from "@/server/ai/content-simplifier";
 import { createModuleLogger } from "@/server/observability/logger";
-import { db } from "@/server/lib/db";
 import {
   getHeuristicCEFR,
   getTargetCEFRLevel,
   isSimplifiableCEFRLevel,
   type CEFRLevel,
 } from "@/contracts/domain/cefr";
+import { createPassageWithArtifacts } from "./content-analysis.repository";
 
 const log = createModuleLogger("features:upload:content-analysis");
 
@@ -93,43 +93,19 @@ export async function analyzeAndPersistContent({
     message: "Creating passage with questions",
     level: "info",
   });
-  const passage = await Sentry.startSpan(
-    { name: "db:passage-create", op: "db" },
-    async () => {
-      return db.passage.create({
-        data: {
-          userId,
-          title,
-          content: text,
-          simplifiedContent,
-          originalLevel,
-          simplifiedLevel,
-          wordCount,
-          sourceType,
-          filePath,
-          ...(questions.length > 0
-            ? {
-                studioArtifacts: {
-                  create: {
-                    id: artifactId,
-                    userId,
-                    type: "quiz",
-                    title: "Initial Quiz",
-                    status: "done",
-                  },
-                },
-                questions: {
-                  create: questions.map((q) => ({
-                    ...toQuestionCreateInput(q),
-                    artifactId,
-                  })),
-                },
-              }
-            : {}),
-        },
-      });
-    },
-  );
+  const passage = await createPassageWithArtifacts({
+    userId,
+    title,
+    text,
+    simplifiedContent,
+    originalLevel,
+    simplifiedLevel,
+    wordCount,
+    sourceType,
+    filePath,
+    artifactId,
+    questions: questions.map((q) => toQuestionCreateInput(q)),
+  });
 
   return {
     passageId: passage.id,

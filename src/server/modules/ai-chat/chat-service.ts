@@ -2,7 +2,7 @@ import "server-only";
 import { openai } from "@ai-sdk/openai";
 import { convertToModelMessages, streamText } from "ai";
 import * as Sentry from "@sentry/nextjs";
-import { db } from "@/server/lib/db";
+import { prisma } from "@/server/lib/db";
 import { wrapUserText } from "@/server/ai/prompt-utils";
 import { getStudyChatModelId } from "@/server/lib/model-config";
 import { createModuleLogger } from "@/server/observability/logger";
@@ -37,7 +37,7 @@ export async function getOwnedPassageForChat(
       },
     },
     () =>
-      db.passage.findUnique({
+      prisma.passage.findUnique({
         where: { id: passageId, userId, deletedAt: null },
         select: { id: true, content: true, title: true },
       }),
@@ -63,7 +63,7 @@ export async function loadPersistedMessages(userId: string, passageId: string) {
       },
     },
     () =>
-      db.studyChatMessage.findMany({
+      prisma.studyChatMessage.findMany({
         where: { userId, passageId },
         orderBy: { createdAt: "asc" },
         take: 20,
@@ -108,7 +108,7 @@ export async function persistUserMessage(
       },
     },
     () =>
-      db.studyChatMessage.create({
+      prisma.studyChatMessage.create({
         data: { userId, passageId, role: "user", content: text },
       }),
   );
@@ -215,7 +215,7 @@ export async function streamStudyChat(params: {
                 },
               },
               () =>
-                db.studyChatMessage.create({
+                prisma.studyChatMessage.create({
                   data: {
                     userId,
                     passageId,
@@ -246,7 +246,7 @@ export async function getChatHistory(userId: string, passageId: string) {
       },
     },
     () =>
-      db.studyChatMessage.findMany({
+      prisma.studyChatMessage.findMany({
         where: { userId, passageId },
         orderBy: { createdAt: "asc" },
         take: 40,

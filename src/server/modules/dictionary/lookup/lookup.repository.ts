@@ -1,7 +1,7 @@
 import "server-only";
 import * as Sentry from "@sentry/nextjs";
 import { Prisma } from "@/generated/prisma/client";
-import { db } from "@/server/lib/db";
+import { prisma } from "@/server/lib/db";
 import { RUNTIME_STATUSES } from "@/contracts/dictionary/dictionary-dtos";
 
 export interface LookupRawRow {
@@ -43,7 +43,7 @@ export async function findDictionaryLookupEntry(
       },
     },
     () =>
-      db.$queryRaw<LookupRawRow[]>`
+      prisma.$queryRaw<LookupRawRow[]>`
         WITH matching_entry AS (
           SELECT e.id, 0 AS match_priority
           FROM dictionary_entries e
@@ -130,7 +130,7 @@ export async function findQuickLookupTranslation(
       },
     },
     () =>
-      db.$queryRaw<QuickLookupRow[]>`
+      prisma.$queryRaw<QuickLookupRow[]>`
         SELECT
           t.id,
           t."senseId",

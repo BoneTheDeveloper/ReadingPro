@@ -1,10 +1,17 @@
 import "server-only";
-import { db } from "@/server/lib/db";
 import {
   type StudioArtifact,
   type StudioArtifactType,
 } from "@/contracts/study/studio-artifact-types";
 import type { QuestionData } from "@/features/study/shared/types";
+import {
+  deleteQuizResults,
+  findArtifactQuestions,
+  findStudioArtifactExists,
+  findStudioArtifactForOwnership,
+  findStudioArtifacts,
+  upsertQuizResult,
+} from "./studio-artifacts.repository";
 
 export class ArtifactNotFoundError extends Error {
   constructor(artifactId: string) {
@@ -62,11 +69,7 @@ export async function fetchStudioArtifacts(
   userId: string,
   passageId: string,
 ): Promise<{ artifacts: StudioArtifact[] }> {
-  const rows = await db.studioArtifact.findMany({
-    where: { passageId, userId },
-    orderBy: { createdAt: "desc" },
-    include: { quizResult: true },
-  });
+  const rows = await findStudioArtifacts(userId, passageId);
 
   return { artifacts: rows.map((row) => toStudioArtifact(row)) };
 }
@@ -83,29 +86,16 @@ export async function recordQuizResult(
       : 0;
 
   // We enforce ownership via the parent StudioArtifact.
-  const artifact = await db.studioArtifact.findUnique({
-    where: { id: artifactId, userId },
-    select: { id: true },
-  });
+  const artifact = await findStudioArtifactForOwnership(artifactId, userId);
 
   if (!artifact) {
     throw new Error("Artifact not found or access denied");
   }
 
-  await db.quizResult.upsert({
-    where: { artifactId },
-    create: {
-      artifactId,
-      correctCount: stats.correctCount,
-      totalQuestions: stats.totalQuestions,
-      accuracyRate,
-    },
-    update: {
-      correctCount: stats.correctCount,
-      totalQuestions: stats.totalQuestions,
-      accuracyRate,
-      completedAt: new Date(),
-    },
+  await upsertQuizResult(artifactId, {
+    correctCount: stats.correctCount,
+    totalQuestions: stats.totalQuestions,
+    accuracyRate,
   });
 }
 
@@ -114,18 +104,13 @@ export async function resetQuizResult(
   userId: string,
 ): Promise<void> {
   // We enforce ownership via the parent StudioArtifact.
-  const artifact = await db.studioArtifact.findUnique({
-    where: { id: artifactId, userId },
-    select: { id: true },
-  });
+  const artifact = await findStudioArtifactForOwnership(artifactId, userId);
 
   if (!artifact) {
     throw new Error("Artifact not found or access denied");
   }
 
-  await db.quizResult.deleteMany({
-    where: { artifactId },
-  });
+  await deleteQuizResults(artifactId);
 }
 
 export async function getArtifactQuestions(
@@ -134,27 +119,11 @@ export async function getArtifactQuestions(
 ): Promise<{ questions: QuestionData[] }> {
   // Scope through the parent artifact's owner so a user can only read
   // questions for artifacts they own (prevents cross-user id probing).
-  const questions = await db.question.findMany({
-    where: { artifactId, artifact: { userId } },
-    orderBy: { createdAt: "asc" },
-    select: {
-      id: true,
-      questionText: true,
-      options: true,
-      correctOption: true,
-      sourceText: true,
-      sourceLine: true,
-      explanation: true,
-      questionType: true,
-      difficulty: true,
-    },
-  });
+  const questions = await findArtifactQuestions(artifactId, userId);
 
   if (questions.length === 0) {
     // Check if artifact exists but just has no questions yet, or if it doesn't exist/owned
-    const artifact = await db.studioArtifact.findFirst({
-      where: { id: artifactId, userId },
-    });
+    const artifact = await findStudioArtifactExists(artifactId, userId);
     if (!artifact) {
       throw new ArtifactNotFoundError(artifactId);
     }

@@ -1,6 +1,6 @@
 import "server-only";
 import * as Sentry from "@sentry/nextjs";
-import { db } from "@/server/lib/db";
+import { prisma } from "@/server/lib/db";
 import type { LookupRawRow } from "../lookup/lookup.repository";
 
 export async function findEntryByIdRaw(
@@ -18,7 +18,7 @@ export async function findEntryByIdRaw(
       },
     },
     () =>
-      db.$queryRaw<LookupRawRow[]>`
+      prisma.$queryRaw<LookupRawRow[]>`
         SELECT
           e.id AS "entryId",
           e.headword,

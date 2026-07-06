@@ -1,6 +1,6 @@
 import "server-only";
 import { z } from "zod";
-import { db } from "@/server/lib/db";
+import { prisma } from "@/server/lib/db";
 import { withUserProfile } from "@/server/auth/sync-user";
 
 export const SESSION_IDLE_MS = 10 * 60 * 1000;
@@ -17,7 +17,7 @@ export async function createStudySession(userId: string) {
   const now = new Date();
 
   return withUserProfile(validated.userId, () =>
-    db.studySession.create({
+    prisma.studySession.create({
       data: {
         userId: validated.userId,
         startedAt: now,
@@ -33,7 +33,7 @@ export async function closeStaleStudySessions(
 ) {
   const staleBefore = new Date(now.getTime() - SESSION_IDLE_MS);
 
-  return db.$executeRaw`
+  return prisma.$executeRaw`
     UPDATE "study_sessions"
     SET "completedAt" = "lastActivityAt"
     WHERE "userId" = ${userId}
@@ -49,7 +49,7 @@ export async function ensureActiveSession(userId: string) {
   // transaction rolls back (releasing the advisory lock) and withUserProfile
   // retries the entire atomic block after ensuring the profile.
   return withUserProfile(userId, () =>
-    db.$transaction(async (tx) => {
+    prisma.$transaction(async (tx) => {
       // Serialize session resolution per user so concurrent tabs/devices collapse to
       // one open session. The lock auto-releases on commit/rollback; never held across
       // an external call. The partial unique index is a backstop only.

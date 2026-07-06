@@ -1,7 +1,7 @@
 import "server-only";
 import * as Sentry from "@sentry/nextjs";
 import { Prisma } from "@/generated/prisma/client";
-import { db } from "@/server/lib/db";
+import { prisma } from "@/server/lib/db";
 import { RUNTIME_STATUSES } from "@/contracts/dictionary/dictionary-dtos";
 import { escapeLikeWildcards } from "@/contracts/dictionary/normalize-dictionary-term";
 
@@ -55,7 +55,7 @@ async function searchDictionaryCandidatesSql({
   const phraseStartQuery = `${escaped} %`;
   const phraseEndQuery = `% ${escaped}`;
 
-  const rows = await db.$queryRaw<
+  const rows = await prisma.$queryRaw<
     Array<{
       id: string;
       headword: string;

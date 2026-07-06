@@ -1,7 +1,7 @@
 import "server-only";
 import { z } from "zod";
 import { Prisma } from "@/generated/prisma/client";
-import { db } from "@/server/lib/db";
+import { prisma } from "@/server/lib/db";
 export const questionOptionSchema = z.object({
   id: z.string(),
   text: z.string(),
@@ -28,7 +28,7 @@ export const questionDataSchema = z
   });
 
 export async function getUserPassages(userId: string) {
-  return db.passage.findMany({
+  return prisma.passage.findMany({
     where: { userId, deletedAt: null },
     orderBy: { createdAt: "desc" },
   });
@@ -38,12 +38,12 @@ export async function getUserPassageOverview(userId: string) {
   const where = { userId, deletedAt: null };
 
   const [summary, recentPassages] = await Promise.all([
-    db.passage.aggregate({
+    prisma.passage.aggregate({
       where,
       _count: { _all: true },
       _sum: { wordCount: true },
     }),
-    db.passage.findMany({
+    prisma.passage.findMany({
       where,
       orderBy: { createdAt: "desc" },
       take: 3,
@@ -69,7 +69,7 @@ export async function getPassageWithQuestions(
   passageId: string,
   userId: string,
 ) {
-  return db.passage.findUnique({
+  return prisma.passage.findUnique({
     where: { id: passageId, userId, deletedAt: null },
     include: { questions: true },
   });
@@ -91,20 +91,20 @@ export async function createQuestion(data: {
       `Invalid question data: ${result.error.issues.map((i) => i.message).join(", ")}`,
     );
   }
-  return db.question.create({
+  return prisma.question.create({
     data: data as unknown as Prisma.QuestionUncheckedCreateInput,
   });
 }
 
 export async function deletePassage(passageId: string, userId: string) {
-  return db.passage.update({
+  return prisma.passage.update({
     where: { id: passageId, userId },
     data: { deletedAt: new Date() },
   });
 }
 
 export async function getNewCards(userId: string, passageId: string) {
-  return db.question.findMany({
+  return prisma.question.findMany({
     where: {
       passageId,
       reviews: {

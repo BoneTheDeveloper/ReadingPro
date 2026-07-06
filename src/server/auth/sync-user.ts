@@ -1,6 +1,6 @@
 import "server-only";
 import { Prisma } from "@/generated/prisma/client";
-import { db } from "@/server/lib/db";
+import { prisma } from "@/server/lib/db";
 import { createModuleLogger } from "@/server/observability/logger";
 
 const log = createModuleLogger("auth:sync-user");
@@ -11,7 +11,7 @@ export async function syncUser(
   name?: string,
   avatarUrl?: string,
 ) {
-  return db.userProfile.upsert({
+  return prisma.userProfile.upsert({
     where: { id: authId },
     update: {
       email: email || null,
@@ -31,7 +31,7 @@ export async function syncUser(
 // JWT already verified userId via getUserId(); no Clerk fetch needed.
 // Email/name are backfilled later by the Clerk webhook.
 export async function ensureUserProfile(userId: string): Promise<void> {
-  await db.userProfile.upsert({
+  await prisma.userProfile.upsert({
     where: { id: userId },
     update: {},
     create: { id: userId },
@@ -41,7 +41,7 @@ export async function ensureUserProfile(userId: string): Promise<void> {
 // Hard-deletes the profile; FK onDelete: Cascade removes all user-scoped rows.
 // Uses deleteMany so replayed webhook events (no row) are a no-op.
 export async function deleteUserProfile(userId: string): Promise<void> {
-  await db.userProfile.deleteMany({ where: { id: userId } });
+  await prisma.userProfile.deleteMany({ where: { id: userId } });
 }
 
 // Pulls the failing FK constraint name out of a P2003, across both the PrismaPg

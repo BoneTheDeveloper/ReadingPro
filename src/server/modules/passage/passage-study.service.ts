@@ -5,7 +5,6 @@ import {
   type GeneratedQuestion,
 } from "@/server/ai/question-generator";
 import { createModuleLogger } from "@/server/observability/logger";
-import { db } from "@/server/lib/db";
 import { questionDataSchema } from "@/server/db/passage-queries";
 import type { GeneratedStudyQuestionDto } from "@/contracts/study/study-response-schema";
 import {
@@ -15,6 +14,11 @@ import {
   type StudioArtifactStatus,
   type StudioArtifactType,
 } from "@/contracts/study/studio-artifact-types";
+import {
+  createStudioArtifactWithQuestions,
+  findExistingStudioArtifact,
+  findOwnedPassage,
+} from "./passage-study.repository";
 
 const log = createModuleLogger("lib:study:passage-service");
 
@@ -30,10 +34,7 @@ export async function generateQuestionsForPassage(
 
   // Idempotency: if this artifact was already committed (e.g. double-submit or
   // retry after a lost response), return the existing data without re-generating.
-  const existing = await db.studioArtifact.findUnique({
-    where: { id: artifactId, userId },
-    include: { quizResult: true, questions: { orderBy: { createdAt: "asc" } } },
-  });
+  const existing = await findExistingStudioArtifact(artifactId, userId);
   if (existing) {
     return {
       artifact: rowToArtifact(existing),
@@ -85,31 +86,13 @@ export async function generateQuestionsForPassage(
   // Atomic: create artifact (status "done") + questions in one transaction so no
   // partial state can be persisted. LLM ran before this — the transaction is
   // insert-only and short, no long-running DB connection.
-  const { artifact } = await Sentry.startSpan(
-    { name: "db:artifact-and-questions-create", op: "db" },
-    () =>
-      db.$transaction(async (tx) => {
-        const artifact = await tx.studioArtifact.create({
-          data: {
-            id: artifactId,
-            passageId,
-            userId,
-            type: "quiz",
-            title: passage.title,
-            status: "done",
-          },
-          include: { quizResult: true },
-        });
-        await tx.question.createMany({
-          data: validQuestions.map((question) => ({
-            passageId,
-            artifactId,
-            ...toQuestionCreateInput(question),
-          })),
-        });
-        return { artifact };
-      }),
-  );
+  const { artifact } = await createStudioArtifactWithQuestions({
+    artifactId,
+    passageId,
+    userId,
+    title: passage.title,
+    questions: validQuestions.map(toQuestionCreateInput),
+  });
 
   return {
     artifact: rowToArtifact(artifact),
@@ -118,14 +101,7 @@ export async function generateQuestionsForPassage(
 }
 
 async function getOwnedPassage(userId: string, passageId: string) {
-  const passage = await Sentry.startSpan(
-    { name: "db:passage-fetch", op: "db" },
-    async () => {
-      return db.passage.findUnique({
-        where: { id: passageId, userId, deletedAt: null },
-      });
-    },
-  );
+  const passage = await findOwnedPassage(userId, passageId);
 
   if (!passage) {
     throw new PassageStudyServiceError("Passage not found");

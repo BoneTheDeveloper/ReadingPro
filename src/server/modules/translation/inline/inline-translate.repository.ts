@@ -1,7 +1,7 @@
 import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
 import * as Sentry from "@sentry/nextjs";
-import { db } from "@/server/lib/db";
+import { prisma } from "@/server/lib/db";
 import {
   buildTranslationCacheKey,
   createTranslationHistory,
@@ -31,7 +31,7 @@ export async function fetchCacheAndSource(
       },
     },
     () =>
-      db.$queryRaw<CacheAndSourceRow[]>`
+      prisma.$queryRaw<CacheAndSourceRow[]>`
         SELECT
           tc.provider AS "cacheProvider",
           tc.response AS "cacheResponse",

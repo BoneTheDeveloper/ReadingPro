@@ -1,5 +1,5 @@
 import "server-only";
-import { db } from "@/server/lib/db";
+import { prisma } from "@/server/lib/db";
 
 // A day counts toward the streak only when total study time that day exceeds this.
 export const STREAK_MIN_DAILY_MS = 10 * 60 * 1000;
@@ -10,7 +10,9 @@ export async function getUserProgress(userId: string) {
     // Per-day study time. Open sessions contribute time via lastActivityAt. Raw
     // seconds are returned for every day (ungated); the >threshold gate is applied
     // in JS so today/week totals stay honest while the streak stays gated.
-    db.$queryRaw<Array<{ day: Date | string; secs: number | string | null }>>`
+    prisma.$queryRaw<
+      Array<{ day: Date | string; secs: number | string | null }>
+    >`
       SELECT DATE("startedAt") AS day,
              SUM(GREATEST(EXTRACT(EPOCH FROM (COALESCE("completedAt", "lastActivityAt") - "startedAt")), 0)) AS secs
       FROM "study_sessions"

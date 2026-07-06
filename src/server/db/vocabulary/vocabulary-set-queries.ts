@@ -1,5 +1,5 @@
 import "server-only";
-import { db } from "@/server/lib/db";
+import { prisma } from "@/server/lib/db";
 import { withUserProfile } from "@/server/auth/sync-user";
 import type {
   VocabularySet,
@@ -48,7 +48,7 @@ async function findOrCreateSetByType(
 ): Promise<VocabularySet> {
   const { periodStart, periodEnd } = getPeriodBounds(type);
 
-  const existing = await db.vocabularySet.findFirst({
+  const existing = await prisma.vocabularySet.findFirst({
     where: {
       userId,
       type,
@@ -68,7 +68,7 @@ async function findOrCreateSetByType(
   });
 
   return withUserProfile(userId, () =>
-    db.vocabularySet.create({
+    prisma.vocabularySet.create({
       data: {
         userId,
         name: `${prefix} - ${dateStr}`,
@@ -84,7 +84,7 @@ export async function listVocabularySets(params: {
   userId: string;
   type?: "MANUAL" | "DAILY" | "WEEKLY";
 }): Promise<VocabularySet[]> {
-  const query: Parameters<typeof db.vocabularySet.findMany>[0] = {
+  const query: Parameters<typeof prisma.vocabularySet.findMany>[0] = {
     where: {
       userId: params.userId,
     },
@@ -100,7 +100,7 @@ export async function listVocabularySets(params: {
     query.where = { ...query.where, type: params.type };
   }
 
-  return db.vocabularySet.findMany(query);
+  return prisma.vocabularySet.findMany(query);
 }
 
 export async function createManualSet(params: {
@@ -108,7 +108,7 @@ export async function createManualSet(params: {
   name: string;
 }): Promise<VocabularySet> {
   return withUserProfile(params.userId, () =>
-    db.vocabularySet.create({
+    prisma.vocabularySet.create({
       data: {
         userId: params.userId,
         name: params.name,
@@ -125,7 +125,7 @@ export async function updateVocabularySet(params: {
   setId: string;
   name: string;
 }): Promise<VocabularySet> {
-  const existing = await db.vocabularySet.findUnique({
+  const existing = await prisma.vocabularySet.findUnique({
     where: { id: params.setId },
   });
 
@@ -133,7 +133,7 @@ export async function updateVocabularySet(params: {
     throw new Error(`No vocabulary set found for user`);
   }
 
-  return db.vocabularySet.update({
+  return prisma.vocabularySet.update({
     where: { id: params.setId },
     data: { name: params.name },
   });
@@ -143,7 +143,7 @@ export async function deleteVocabularySet(params: {
   userId: string;
   setId: string;
 }): Promise<void> {
-  const existing = await db.vocabularySet.findUnique({
+  const existing = await prisma.vocabularySet.findUnique({
     where: { id: params.setId },
   });
 
@@ -151,7 +151,7 @@ export async function deleteVocabularySet(params: {
     throw new Error(`No vocabulary set found for user`);
   }
 
-  await db.vocabularySet.delete({
+  await prisma.vocabularySet.delete({
     where: { id: params.setId },
   });
 }
@@ -160,7 +160,7 @@ export async function verifySetOwnership(
   userId: string,
   setId: string,
 ): Promise<void> {
-  const existing = await db.vocabularySet.findUnique({
+  const existing = await prisma.vocabularySet.findUnique({
     where: { id: setId },
   });
 
@@ -174,7 +174,7 @@ export async function addItemToSet(params: {
   itemId: string;
 }): Promise<VocabularySetItem> {
   try {
-    return await db.vocabularySetItem.create({
+    return await prisma.vocabularySetItem.create({
       data: {
         vocabularySetId: params.setId,
         vocabularyItemId: params.itemId,
@@ -182,7 +182,7 @@ export async function addItemToSet(params: {
     });
   } catch (error: unknown) {
     if (error instanceof Error && error.message.includes("unique constraint")) {
-      const existing = await db.vocabularySetItem.findUnique({
+      const existing = await prisma.vocabularySetItem.findUnique({
         where: {
           vocabularySetId_vocabularyItemId: {
             vocabularySetId: params.setId,
@@ -203,7 +203,7 @@ export async function removeItemFromSet(params: {
 }): Promise<void> {
   await verifySetOwnership(params.userId, params.setId);
 
-  await db.vocabularySetItem.deleteMany({
+  await prisma.vocabularySetItem.deleteMany({
     where: {
       vocabularySetId: params.setId,
       vocabularyItemId: params.itemId,

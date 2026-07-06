@@ -1,7 +1,7 @@
 import "server-only";
 import { createHash } from "node:crypto";
 import { Prisma } from "@/generated/prisma/client";
-import { db } from "@/server/lib/db";
+import { prisma } from "@/server/lib/db";
 import { withUserProfile } from "@/server/auth/sync-user";
 
 interface TranslationKeyInput {
@@ -44,14 +44,14 @@ export async function getOwnedTranslationSource(
   userId: string,
   sourceId: string,
 ) {
-  return db.passage.findUnique({
+  return prisma.passage.findUnique({
     where: { id: sourceId, userId, deletedAt: null },
     select: { id: true, title: true },
   });
 }
 
 export async function getTranslationCache(cacheKey: string) {
-  return db.translationCache.findUnique({
+  return prisma.translationCache.findUnique({
     where: { cacheKey },
     select: { provider: true, response: true },
   });
@@ -61,7 +61,7 @@ export async function upsertTranslationCache(input: TranslationCacheInput) {
   const cacheKey = buildTranslationCacheKey(input);
 
   return withUserProfile(input.userId, () =>
-    db.translationCache.upsert({
+    prisma.translationCache.upsert({
       where: { cacheKey },
       update: {
         provider: input.provider,
@@ -85,7 +85,7 @@ export async function upsertTranslationCache(input: TranslationCacheInput) {
 
 export async function createTranslationHistory(input: TranslationHistoryInput) {
   return withUserProfile(input.userId, () =>
-    db.translationHistory.create({
+    prisma.translationHistory.create({
       data: {
         userId: input.userId,
         sourceId: input.sourceId,

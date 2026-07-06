@@ -1,8 +1,9 @@
 import "server-only";
-import * as Sentry from "@sentry/nextjs";
 import { createModuleLogger } from "@/server/observability/logger";
-import { upsertVocabularyItem } from "@/server/db/vocabulary/vocabulary-queries";
-import { getOwnedTranslationSource } from "@/server/db/translation-queries";
+import {
+  findOwnedTranslationSource,
+  saveVocabularyItemRow,
+} from "./vocabulary.repository";
 
 const log = createModuleLogger("lib:vocabulary-service");
 
@@ -28,18 +29,9 @@ export interface SaveVocabularyItemInput {
 
 export async function saveVocabularyItem(input: SaveVocabularyItemInput) {
   if (input.source === "TRANSLATE" && input.sourceId) {
-    const passage = await Sentry.startSpan(
-      {
-        name: "db:vocabulary-source-fetch",
-        op: "db",
-        attributes: {
-          "db.operation": "findUnique",
-          "db.model": "Passage",
-          "translation.source_id": input.sourceId,
-          "user.id": input.userId,
-        },
-      },
-      () => getOwnedTranslationSource(input.userId, input.sourceId!),
+    const passage = await findOwnedTranslationSource(
+      input.userId,
+      input.sourceId,
     );
 
     if (!passage) {
@@ -47,19 +39,7 @@ export async function saveVocabularyItem(input: SaveVocabularyItemInput) {
     }
   }
 
-  const item = await Sentry.startSpan(
-    {
-      name: "db:vocabulary-upsert",
-      op: "db",
-      attributes: {
-        "db.operation": "upsert",
-        "db.model": "VocabularyItem",
-        "translation.selected_text_length": input.selectedText.length,
-        "user.id": input.userId,
-      },
-    },
-    () => upsertVocabularyItem(input),
-  );
+  const item = await saveVocabularyItemRow(input);
 
   log.info(
     {
