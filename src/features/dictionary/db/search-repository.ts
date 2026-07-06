@@ -2,7 +2,7 @@ import "server-only";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { RUNTIME_STATUSES } from "../lib/dictionary-helpers";
-import { escapeLikeWildcards } from "../schemas/normalize-dictionary-term";
+import { escapeLikeWildcards } from "../lib/normalize-dictionary-term";
 
 export interface DictionarySearchCandidateRow {
   id: string;

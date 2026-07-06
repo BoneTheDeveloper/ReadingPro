@@ -1,5 +1,8 @@
 import "server-only";
-import type { VocabularySetDto, VocabularySetType } from "@/features/vocabulary/model/vocabulary-response.schema";
+import type {
+  VocabularySetDto,
+  VocabularySetType,
+} from "@/features/vocabulary/vocabulary.schema";
 import { buildVocabularySetDto } from "@/features/vocabulary/db/shared/vocabulary-dto-builders";
 import {
   listVocabularySets,
@@ -51,7 +54,9 @@ export async function addItemsToVocabularySet(params: {
   await verifySetOwnership(params.userId, params.setId);
 
   await Promise.all(
-    params.itemIds.map((itemId) => addItemToSet({ setId: params.setId, itemId })),
+    params.itemIds.map((itemId) =>
+      addItemToSet({ setId: params.setId, itemId }),
+    ),
   );
 }
 

@@ -7,9 +7,12 @@ import { useDropzone, type FileRejection } from "react-dropzone";
 import {
   validateFile,
   formatFileSize,
-} from "@/features/upload/schemas/upload-validation";
+} from "@/features/upload/lib/upload-validation";
 import { cn } from "@/lib/utils";
-import { uploadFile, uploadText } from "@/features/source-panel/api-client/upload-client";
+import {
+  uploadFile,
+  uploadText,
+} from "@/features/source-panel/api-client/upload-client";
 import {
   Dialog,
   DialogContent,

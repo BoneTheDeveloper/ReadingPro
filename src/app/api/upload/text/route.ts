@@ -1,11 +1,14 @@
-import { z } from 'zod';
-import { NextRequest, NextResponse } from 'next/server';
-import * as Sentry from '@sentry/nextjs';
-import { validateTextContent } from '@/features/upload/schemas/upload-validation';
-import { getUserId } from '@/services/clerk';
-import { isAuthenticationRequiredError } from '@/lib/http/route-errors';
-import { createRequestLogContext, createRequestLogger } from '@/services/logger';
-import { analyzeAndPersistContent } from '@/features/upload/db/content-analysis/content-analysis.service';
+import { z } from "zod";
+import { NextRequest, NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
+import { validateTextContent } from "@/features/upload/lib/upload-validation";
+import { getUserId } from "@/services/clerk";
+import { isAuthenticationRequiredError } from "@/lib/http/route-errors";
+import {
+  createRequestLogContext,
+  createRequestLogger,
+} from "@/services/logger";
+import { analyzeAndPersistContent } from "@/features/upload/db/content-analysis/content-analysis.service";
 
 const textUploadSchema = z.object({
   text: z.string().min(1),
@@ -14,8 +17,8 @@ const textUploadSchema = z.object({
 
 export async function POST(request: NextRequest) {
   const requestLog = createRequestLogger(
-    'api:upload:text',
-    createRequestLogContext(request, 'POST', '/api/upload/text'),
+    "api:upload:text",
+    createRequestLogContext(request, "POST", "/api/upload/text"),
   );
 
   try {
@@ -23,12 +26,18 @@ export async function POST(request: NextRequest) {
     try {
       body = await request.json();
     } catch {
-      return NextResponse.json({ error: 'Invalid JSON payload.' }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid JSON payload." },
+        { status: 400 },
+      );
     }
 
     const parsed = textUploadSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: 'Text content is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: "Text content is required" },
+        { status: 400 },
+      );
     }
 
     const validation = validateTextContent(parsed.data.text);
@@ -40,23 +49,26 @@ export async function POST(request: NextRequest) {
     const result = await analyzeAndPersistContent({
       userId: userId,
       text: parsed.data.text,
-      title: parsed.data.title || 'Untitled',
-      sourceType: 'TEXT',
+      title: parsed.data.title || "Untitled",
+      sourceType: "TEXT",
     });
 
     return NextResponse.json({ success: true, data: result });
   } catch (error) {
     if (isAuthenticationRequiredError(error)) {
-      return NextResponse.json({ error: 'Authentication required.' }, { status: 401 });
+      return NextResponse.json(
+        { error: "Authentication required." },
+        { status: 401 },
+      );
     }
 
-    requestLog.error({ err: error }, 'Text processing failed');
+    requestLog.error({ err: error }, "Text processing failed");
     Sentry.captureException(error, {
-      tags: { route: 'api:upload:text', method: 'POST' },
+      tags: { route: "api:upload:text", method: "POST" },
     });
     return NextResponse.json(
-      { error: 'Failed to process text' },
-      { status: 500 }
+      { error: "Failed to process text" },
+      { status: 500 },
     );
   }
 }

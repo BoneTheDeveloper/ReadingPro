@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { Loader2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { VocabularySetDto } from "../model/vocabulary-response.schema";
+import type { VocabularySetDto } from "../vocabulary.schema";
 
 interface VocabularySetListProps {
   sets: VocabularySetDto[];

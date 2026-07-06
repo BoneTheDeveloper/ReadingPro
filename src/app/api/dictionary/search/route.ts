@@ -6,9 +6,9 @@ import {
   createRequestLogContext,
   createRequestLogger,
 } from "@/services/logger";
-import { normalizeDictionaryTerm } from "@/features/dictionary/schemas/normalize-dictionary-term";
+import { normalizeDictionaryTerm } from "@/features/dictionary/lib/normalize-dictionary-term";
 import { searchDictionary } from "@/features/dictionary/services/search-service";
-import type { DictionarySearchResultDto } from "@/features/dictionary/schemas/dictionary-response.schema";
+import type { DictionarySearchResultDto } from "@/features/dictionary/dictionary.schema";
 
 const dictionarySearchQuerySchema = z.object({
   q: z.string().trim().min(1).max(200),

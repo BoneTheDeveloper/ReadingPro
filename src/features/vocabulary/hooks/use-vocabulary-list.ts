@@ -3,10 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { getVocabularyList } from "../vocabulary-client";
-import type {
-  VocabularyItemDto,
-  VocabularyStatus,
-} from "../model/vocabulary-response.schema";
+import type { VocabularyItemDto, VocabularyStatus } from "../vocabulary.schema";
 
 interface UseVocabularyListResult {
   items: VocabularyItemDto[];

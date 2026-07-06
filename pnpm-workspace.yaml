@@ -13,3 +13,7 @@ allowBuilds:
   "@swc/core": true
   esbuild: true
   "@clerk/shared": false
+
+minimumReleaseAgeExclude:
+  - '@ai-sdk/react@4.0.17'
+  - ai@7.0.16

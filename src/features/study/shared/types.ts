@@ -1,20 +1,19 @@
 import type { TranslationData } from "@/features/reading/schemas/translation-response.schema";
-import type { StudioArtifact } from "@/features/studio-panel/schemas/studio-artifact-types";
+import type { StudioArtifact } from "@/features/studio-panel/lib/studio-artifact-types";
 export type {
   StudioArtifact,
   StudioArtifactStatus,
   StudioArtifactType,
   StudioArtifactErrorCode,
   QuizResult,
-} from "@/features/studio-panel/schemas/studio-artifact-types";
-export { ARTIFACT_STALE_TIME, STUDIO_GENERATION_TIMEOUT_MS } from "@/features/studio-panel/schemas/studio-artifact-types";
+} from "@/features/studio-panel/lib/studio-artifact-types";
+export {
+  ARTIFACT_STALE_TIME,
+  STUDIO_GENERATION_TIMEOUT_MS,
+} from "@/features/studio-panel/lib/studio-artifact-types";
 
 export type StudyStatus =
-  | "idle"
-  | "uploading"
-  | "analyzing"
-  | "ready"
-  | "error";
+  "idle" | "uploading" | "analyzing" | "ready" | "error";
 
 export type SourceType = "TEXT" | "PDF" | "URL" | "YOUTUBE";
 
@@ -98,12 +97,7 @@ export interface StudyUploadModalProps {
 }
 
 export type StudioActionId =
-  | "quiz"
-  | "flashcard"
-  | "summary"
-  | "chat"
-  | "mindmap"
-  | "lookup";
+  "quiz" | "flashcard" | "summary" | "chat" | "mindmap" | "lookup";
 
 export interface StudioAction {
   id: StudioActionId;
@@ -112,7 +106,6 @@ export interface StudioAction {
   iconName: string;
   disabled?: boolean;
 }
-
 
 export type TranslationProvider = TranslationData["provider"];
 

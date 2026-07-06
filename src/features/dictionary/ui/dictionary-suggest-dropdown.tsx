@@ -1,7 +1,7 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
-import type { DictionarySuggestItemDto } from "@/features/dictionary/schemas/dictionary-response.schema";
+import type { DictionarySuggestItemDto } from "@/features/dictionary/dictionary.schema";
 
 interface DictionarySuggestDropdownProps {
   suggestions: DictionarySuggestItemDto[];
@@ -41,9 +41,7 @@ export function DictionarySuggestDropdown({
             className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-accent/60 transition-colors text-sm"
             onClick={() => onSelect(item)}
           >
-            <span className="font-medium text-foreground">
-              {item.headword}
-            </span>
+            <span className="font-medium text-foreground">{item.headword}</span>
             {item.matchType === "alias" && item.matchedAlias && (
               <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
                 {item.matchedAlias}

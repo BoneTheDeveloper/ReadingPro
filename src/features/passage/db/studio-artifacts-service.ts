@@ -2,7 +2,7 @@ import "server-only";
 import {
   type StudioArtifact,
   type StudioArtifactType,
-} from "@/features/studio-panel/schemas/studio-artifact-types";
+} from "@/features/studio-panel/lib/studio-artifact-types";
 import type { QuestionData } from "@/features/study/shared/types";
 import {
   deleteQuizResults,

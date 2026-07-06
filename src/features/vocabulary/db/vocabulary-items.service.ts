@@ -1,7 +1,14 @@
 import "server-only";
 import { createModuleLogger } from "@/services/logger";
-import type { VocabularyItemDto, VocabularyStatsDto, VocabularyStatus } from "@/features/vocabulary/model/vocabulary-response.schema";
-import { buildVocabularyItemDto, buildVocabularyStatsDto } from "@/features/vocabulary/db/shared/vocabulary-dto-builders";
+import type {
+  VocabularyItemDto,
+  VocabularyStatsDto,
+  VocabularyStatus,
+} from "@/features/vocabulary/vocabulary.schema";
+import {
+  buildVocabularyItemDto,
+  buildVocabularyStatsDto,
+} from "@/features/vocabulary/db/shared/vocabulary-dto-builders";
 import {
   findOwnedSource,
   upsertVocabularyItem,
@@ -73,7 +80,9 @@ export async function getVocabularyItemList(params: {
   return { items: items.map(buildVocabularyItemDto), total };
 }
 
-export async function getVocabularyItemStats(userId: string): Promise<VocabularyStatsDto> {
+export async function getVocabularyItemStats(
+  userId: string,
+): Promise<VocabularyStatsDto> {
   const stats = await getVocabularyStats(userId);
   return buildVocabularyStatsDto(stats);
 }

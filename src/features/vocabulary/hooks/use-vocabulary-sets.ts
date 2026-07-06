@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { getVocabularySets } from "../vocabulary-client";
-import type { VocabularySetDto } from "../model/vocabulary-response.schema";
+import type { VocabularySetDto } from "../vocabulary.schema";
 
 interface UseVocabularySetsResult {
   sets: VocabularySetDto[];

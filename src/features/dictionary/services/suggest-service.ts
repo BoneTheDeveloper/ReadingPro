@@ -1,8 +1,11 @@
-import 'server-only';
-import { normalizeDictionaryTerm } from "../schemas/normalize-dictionary-term";
+import "server-only";
+import { normalizeDictionaryTerm } from "../lib/normalize-dictionary-term";
 import { getSourceLabel } from "@/features/dictionary/lib/dictionary-helpers";
-import type { DictionarySuggestItemDto } from "@/features/dictionary/schemas/dictionary-response.schema";
-import { findSuggestCandidates, type SuggestCandidateRow } from "../db/suggest-repository";
+import type { DictionarySuggestItemDto } from "@/features/dictionary/dictionary.schema";
+import {
+  findSuggestCandidates,
+  type SuggestCandidateRow,
+} from "../db/suggest-repository";
 
 export interface SuggestOptions {
   sourceLanguage: string;

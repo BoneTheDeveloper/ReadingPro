@@ -15,7 +15,7 @@ import {
   createVocabularySet,
   deleteVocabularySet,
 } from "../vocabulary-client";
-import type { VocabularyStatus } from "../model/vocabulary-response.schema";
+import type { VocabularyStatus } from "../vocabulary.schema";
 
 type ViewTab = "words" | "sets";
 
@@ -66,53 +66,86 @@ export function VocabularyPageClient() {
 
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<VocabularyStatus | "ALL">("ALL");
+  const [statusFilter, setStatusFilter] = useState<VocabularyStatus | "ALL">(
+    "ALL",
+  );
   const [activeTab, setActiveTab] = useState<ViewTab>("words");
   const [creating, setCreating] = useState(false);
 
   const {
-    stats, loading: statsLoading, error: statsError, refetch: refetchStats,
+    stats,
+    loading: statsLoading,
+    error: statsError,
+    refetch: refetchStats,
   } = useVocabularyStats();
 
   const {
-    items, total, loading: listLoading, error: listError, refetch: refetchList,
+    items,
+    total,
+    loading: listLoading,
+    error: listError,
+    refetch: refetchList,
   } = useVocabularyList(page, statusFilter, search);
 
   const {
-    sets, loading: setsLoading, error: setsError, refetch: refetchSets,
+    sets,
+    loading: setsLoading,
+    error: setsError,
+    refetch: refetchSets,
   } = useVocabularySets(activeTab === "sets");
 
-  const handleStatusChange = useCallback(async (id: string, status: VocabularyStatus) => {
-    try {
-      await updateVocabularyItemStatus(id, status);
-      refetchList();
-      refetchStats();
-    } catch { /* item keeps current status */ }
-  }, [refetchList, refetchStats]);
+  const handleStatusChange = useCallback(
+    async (id: string, status: VocabularyStatus) => {
+      try {
+        await updateVocabularyItemStatus(id, status);
+        refetchList();
+        refetchStats();
+      } catch {
+        /* item keeps current status */
+      }
+    },
+    [refetchList, refetchStats],
+  );
 
-  const handleDelete = useCallback(async (id: string) => {
-    try {
-      await deleteVocabularyItem(id);
-      refetchList();
-      refetchStats();
-    } catch { /* item stays */ }
-  }, [refetchList, refetchStats]);
+  const handleDelete = useCallback(
+    async (id: string) => {
+      try {
+        await deleteVocabularyItem(id);
+        refetchList();
+        refetchStats();
+      } catch {
+        /* item stays */
+      }
+    },
+    [refetchList, refetchStats],
+  );
 
-  const handleCreateSet = useCallback(async (name: string) => {
-    setCreating(true);
-    try {
-      await createVocabularySet(name);
-      refetchSets();
-    } catch { /* silently fail */ }
-    finally { setCreating(false); }
-  }, [refetchSets]);
+  const handleCreateSet = useCallback(
+    async (name: string) => {
+      setCreating(true);
+      try {
+        await createVocabularySet(name);
+        refetchSets();
+      } catch {
+        /* silently fail */
+      } finally {
+        setCreating(false);
+      }
+    },
+    [refetchSets],
+  );
 
-  const handleDeleteSet = useCallback(async (id: string) => {
-    try {
-      await deleteVocabularySet(id);
-      refetchSets();
-    } catch { /* silently fail */ }
-  }, [refetchSets]);
+  const handleDeleteSet = useCallback(
+    async (id: string) => {
+      try {
+        await deleteVocabularySet(id);
+        refetchSets();
+      } catch {
+        /* silently fail */
+      }
+    },
+    [refetchSets],
+  );
 
   const wOn = activeTab === "words";
   const sOn = activeTab === "sets";
@@ -224,7 +257,11 @@ export function VocabularyPageClient() {
         {/* Words tab */}
         {activeTab === "words" &&
           (listError ? (
-            <PageErrorState message={listError} onRetry={refetchList} retryLabel={t("retry")} />
+            <PageErrorState
+              message={listError}
+              onRetry={refetchList}
+              retryLabel={t("retry")}
+            />
           ) : (
             <VocabularyList
               items={items}
@@ -234,8 +271,14 @@ export function VocabularyPageClient() {
               search={search}
               statusFilter={statusFilter}
               loading={listLoading}
-              onSearchChange={(v) => { setSearch(v); setPage(1); }}
-              onStatusFilterChange={(s) => { setStatusFilter(s); setPage(1); }}
+              onSearchChange={(v) => {
+                setSearch(v);
+                setPage(1);
+              }}
+              onStatusFilterChange={(s) => {
+                setStatusFilter(s);
+                setPage(1);
+              }}
               onPageChange={setPage}
               onStatusChange={handleStatusChange}
               onDelete={handleDelete}
@@ -245,7 +288,11 @@ export function VocabularyPageClient() {
         {/* Sets tab */}
         {activeTab === "sets" &&
           (setsError ? (
-            <PageErrorState message={setsError} onRetry={refetchSets} retryLabel={t("retry")} />
+            <PageErrorState
+              message={setsError}
+              onRetry={refetchSets}
+              retryLabel={t("retry")}
+            />
           ) : (
             <VocabularySetList
               sets={sets}

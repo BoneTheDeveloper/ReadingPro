@@ -6,7 +6,7 @@ import {
   sanitizeTitle,
   validateFile,
   validateTextContent,
-} from "@/features/upload/schemas/upload-validation";
+} from "@/features/upload/lib/upload-validation";
 import { analyzeAndPersistContent } from "@/features/upload/db/content-analysis/content-analysis.service";
 
 export interface FileUploadWorkflowResult {

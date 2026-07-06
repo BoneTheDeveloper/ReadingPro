@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { getVocabularyStats } from "../vocabulary-client";
-import type { VocabularyStatsDto as VocabularyStats } from "@/features/vocabulary/model/vocabulary-response.schema";
+import type { VocabularyStatsDto as VocabularyStats } from "@/features/vocabulary/vocabulary.schema";
 
 interface UseVocabularyStatsResult {
   stats: VocabularyStats;
@@ -17,13 +17,20 @@ export function useVocabularyStats(): UseVocabularyStatsResult {
   const requestIdRef = useRef(0);
   const mountedRef = useRef(true);
 
-  const [stats, setStats] = useState<VocabularyStats>({ total: 0, new: 0, learning: 0, known: 0 });
+  const [stats, setStats] = useState<VocabularyStats>({
+    total: 0,
+    new: 0,
+    learning: 0,
+    known: 0,
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     mountedRef.current = true;
-    return () => { mountedRef.current = false; };
+    return () => {
+      mountedRef.current = false;
+    };
   }, []);
 
   const fetchStats = useCallback(async () => {

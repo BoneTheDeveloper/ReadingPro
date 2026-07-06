@@ -10,7 +10,7 @@ import {
   vocabularyStatsResponseSchema,
   vocabularyAckResponseSchema,
   type VocabularyStatus,
-} from "@/features/vocabulary/model/vocabulary-response.schema";
+} from "@/features/vocabulary/vocabulary.schema";
 
 function assertNoError<T extends { error?: string } | Record<string, unknown>>(
   result: T,
@@ -116,13 +116,20 @@ export async function getVocabularyStats() {
 /**
  * Update the review status of a vocabulary item.
  */
-export async function updateVocabularyItemStatus(id: string, status: VocabularyStatus) {
+export async function updateVocabularyItemStatus(
+  id: string,
+  status: VocabularyStatus,
+) {
   const result = await patchJson(
     `/api/vocabulary/${id}/status`,
     { status },
     vocabularyItemResponseSchema,
   );
-  assertNoError(result, `/api/vocabulary/${id}/status`, "Failed to update status");
+  assertNoError(
+    result,
+    `/api/vocabulary/${id}/status`,
+    "Failed to update status",
+  );
   return result;
 }
 
@@ -130,15 +137,26 @@ export async function updateVocabularyItemStatus(id: string, status: VocabularyS
  * Delete a saved vocabulary item.
  */
 export async function deleteVocabularyItem(id: string) {
-  const result = await deleteJson(`/api/vocabulary/${id}`, vocabularyAckResponseSchema);
-  assertNoError(result, `/api/vocabulary/${id}`, "Failed to delete vocabulary item");
+  const result = await deleteJson(
+    `/api/vocabulary/${id}`,
+    vocabularyAckResponseSchema,
+  );
+  assertNoError(
+    result,
+    `/api/vocabulary/${id}`,
+    "Failed to delete vocabulary item",
+  );
 }
 
 /**
  * Create a manual vocabulary set.
  */
 export async function createVocabularySet(name: string) {
-  const result = await postJson("/api/vocabulary/sets", { name }, vocabularySetResponseSchema);
+  const result = await postJson(
+    "/api/vocabulary/sets",
+    { name },
+    vocabularySetResponseSchema,
+  );
   assertNoError(result, "/api/vocabulary/sets", "Failed to create set");
   return result;
 }
@@ -147,6 +165,9 @@ export async function createVocabularySet(name: string) {
  * Delete a vocabulary set.
  */
 export async function deleteVocabularySet(id: string) {
-  const result = await deleteJson(`/api/vocabulary/sets/${id}`, vocabularyAckResponseSchema);
+  const result = await deleteJson(
+    `/api/vocabulary/sets/${id}`,
+    vocabularyAckResponseSchema,
+  );
   assertNoError(result, `/api/vocabulary/sets/${id}`, "Failed to delete set");
 }

@@ -1,12 +1,15 @@
-import 'server-only';
-import { normalizeDictionaryTerm } from "../schemas/normalize-dictionary-term";
+import "server-only";
+import { normalizeDictionaryTerm } from "../lib/normalize-dictionary-term";
 import {
   type DictionaryEntryDto,
   type DictionaryMissDto,
   type DictionaryTranslationDto,
-} from "@/features/dictionary/schemas/dictionary-response.schema";
-import { RUNTIME_STATUSES, getSourceLabel } from "@/features/dictionary/lib/dictionary-helpers";
-import { buildEntryDto } from "./dto-builders";
+} from "@/features/dictionary/dictionary.schema";
+import {
+  RUNTIME_STATUSES,
+  getSourceLabel,
+} from "@/features/dictionary/lib/dictionary-helpers";
+import { buildEntryDto } from "../dictionary.schema";
 import {
   findDictionaryLookupEntry,
   findQuickLookupTranslation,
@@ -75,27 +78,30 @@ export async function resolveQuickDictionaryLookupSql(
 
 export function groupLookupRows(rows: LookupRawRow[]) {
   const first = rows[0];
-  const senseMap = new Map<string, {
-    id: string;
-    partOfSpeech: string | null;
-    definition: string | null;
-    example: string | null;
-    tags: string[] | null;
-    usageRank: number;
-    translations: Array<{
+  const senseMap = new Map<
+    string,
+    {
       id: string;
-      senseId: string;
-      targetLanguage: string;
-      translation: string;
-      isPrimary: boolean;
-      rank: number;
-      confidence: number | null;
-      status: string;
-      sourceType: string;
-      sourceName: string | null;
-      reviewedAt: Date | null;
-    }>;
-  }>();
+      partOfSpeech: string | null;
+      definition: string | null;
+      example: string | null;
+      tags: string[] | null;
+      usageRank: number;
+      translations: Array<{
+        id: string;
+        senseId: string;
+        targetLanguage: string;
+        translation: string;
+        isPrimary: boolean;
+        rank: number;
+        confidence: number | null;
+        status: string;
+        sourceType: string;
+        sourceName: string | null;
+        reviewedAt: Date | null;
+      }>;
+    }
+  >();
 
   for (const row of rows) {
     let sense = senseMap.get(row.senseId);

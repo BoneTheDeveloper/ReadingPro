@@ -26,10 +26,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import type {
-  VocabularyItemDto,
-  VocabularyStatus,
-} from "../model/vocabulary-response.schema";
+import type { VocabularyItemDto, VocabularyStatus } from "../vocabulary.schema";
 
 interface VocabularyItemCardProps {
   item: VocabularyItemDto;

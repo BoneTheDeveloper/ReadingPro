@@ -1,5 +1,5 @@
-import 'server-only';
-import { normalizeDictionaryTerm } from "@/features/dictionary/schemas/normalize-dictionary-term";
+import "server-only";
+import { normalizeDictionaryTerm } from "@/features/dictionary/lib/normalize-dictionary-term";
 import { RUNTIME_STATUSES } from "@/features/dictionary/lib/dictionary-helpers";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated/prisma/client";
@@ -27,14 +27,16 @@ export const quickTranslationSchema = z.object({
 const RUNTIME_STATUS_LIST = Prisma.join(RUNTIME_STATUSES);
 
 export async function resolveQuickDictionaryTranslation(
-  input: QuickTranslationInput
+  input: QuickTranslationInput,
 ): Promise<QuickTranslation | null> {
   const normalized = normalizeDictionaryTerm(input.text);
 
-  const rows = await prisma.$queryRaw<Array<{
-    translation: string;
-    sourceType: string;
-  }>>`
+  const rows = await prisma.$queryRaw<
+    Array<{
+      translation: string;
+      sourceType: string;
+    }>
+  >`
     SELECT
       t.translation,
       t."sourceType"
@@ -59,6 +61,6 @@ export async function resolveQuickDictionaryTranslation(
   return {
     translation: row.translation,
     source: row.sourceType,
-    provider: 'dictionary',
+    provider: "dictionary",
   };
 }

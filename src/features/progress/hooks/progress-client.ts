@@ -1,15 +1,15 @@
-"use client"
+"use client";
 
-import * as Sentry from "@sentry/nextjs"
-import { progressStatsResponseSchema } from "@/features/studio-panel/schemas/study-response.schema"
+import * as Sentry from "@sentry/nextjs";
+import { progressStatsResponseSchema } from "@/features/studio-panel/schemas/study.schema";
 
 /**
  * Fetch progress statistics for the current user.
  */
 export async function getProgressStats() {
-  const response = await fetch("/api/progress/stats")
-  const result: unknown = await response.json()
-  const parsed = progressStatsResponseSchema.safeParse(result)
+  const response = await fetch("/api/progress/stats");
+  const result: unknown = await response.json();
+  const parsed = progressStatsResponseSchema.safeParse(result);
 
   if (!parsed.success || "error" in parsed.data) {
     Sentry.addBreadcrumb({
@@ -17,9 +17,9 @@ export async function getProgressStats() {
       level: "error",
       message: "progress-stats-schema-error",
       data: { route: "/api/progress/stats" },
-    })
-    throw new Error("Failed to parse progress stats")
+    });
+    throw new Error("Failed to parse progress stats");
   }
 
-  return parsed.data.data
+  return parsed.data.data;
 }

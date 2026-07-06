@@ -2,16 +2,38 @@ import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 import { getUserId } from "@/services/clerk";
-import { getZodErrorMessage, isAuthenticationRequiredError, isOwnershipMissError } from "@/lib/http/route-errors";
-import { createRequestLogContext, createRequestLogger } from "@/services/logger";
-import { generateQuestionsForPassage, PassageStudyServiceError } from "@/features/passage/db/passage-study.service";
-import type { GeneratedStudyQuestionDto } from "@/features/studio-panel/schemas/study-response.schema";
-import type { StudioArtifact } from "@/features/studio-panel/schemas/studio-artifact-types";
+import {
+  getZodErrorMessage,
+  isAuthenticationRequiredError,
+  isOwnershipMissError,
+} from "@/lib/http/route-errors";
+import {
+  createRequestLogContext,
+  createRequestLogger,
+} from "@/services/logger";
+import {
+  generateQuestionsForPassage,
+  PassageStudyServiceError,
+} from "@/features/passage/db/passage-study.service";
+import type { GeneratedStudyQuestionDto } from "@/features/studio-panel/schemas/study.schema";
+import type { StudioArtifact } from "@/features/studio-panel/lib/studio-artifact-types";
 
-const studyQuestionsPostSchema = z.object({
-  passageId: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, "Invalid UUID"),
-  artifactId: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, "Invalid UUID"),
-}).strict();
+const studyQuestionsPostSchema = z
+  .object({
+    passageId: z
+      .string()
+      .regex(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+        "Invalid UUID",
+      ),
+    artifactId: z
+      .string()
+      .regex(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+        "Invalid UUID",
+      ),
+  })
+  .strict();
 
 export async function POST(request: NextRequest) {
   return handleStudioQuestionsPost(request);
@@ -38,17 +60,29 @@ async function handleStudioQuestionsPost(request: NextRequest) {
         () => request.json(),
       );
     } catch {
-      requestLog.warn("Invalid JSON payload received for study question generation");
-      return NextResponse.json({ error: "Invalid JSON payload." }, { status: 400 });
+      requestLog.warn(
+        "Invalid JSON payload received for study question generation",
+      );
+      return NextResponse.json(
+        { error: "Invalid JSON payload." },
+        { status: 400 },
+      );
     }
 
     const parsed = studyQuestionsPostSchema.safeParse(body);
     if (!parsed.success) {
       requestLog.warn(
-        { context: { issues: parsed.error.issues.map((issue) => issue.path.join(".")) } },
+        {
+          context: {
+            issues: parsed.error.issues.map((issue) => issue.path.join(".")),
+          },
+        },
         "Invalid study question request rejected",
       );
-      return NextResponse.json({ error: getZodErrorMessage(parsed.error) }, { status: 400 });
+      return NextResponse.json(
+        { error: getZodErrorMessage(parsed.error) },
+        { status: 400 },
+      );
     }
 
     const { passageId, artifactId } = parsed.data;
@@ -61,24 +95,43 @@ async function handleStudioQuestionsPost(request: NextRequest) {
       () => getUserId(),
     );
 
-    const { artifact, questions } = await generateQuestionsForPassage(userId, passageId, artifactId);
+    const { artifact, questions } = await generateQuestionsForPassage(
+      userId,
+      passageId,
+      artifactId,
+    );
     return createStudioQuestionsSuccessResponse({ artifact, questions });
   } catch (error) {
     if (isAuthenticationRequiredError(error)) {
-      return NextResponse.json({ error: "Authentication required." }, { status: 401 });
+      return NextResponse.json(
+        { error: "Authentication required." },
+        { status: 401 },
+      );
     }
 
     if (isOwnershipMissError(error, ["passage"])) {
-      return NextResponse.json({ error: "Passage not found." }, { status: 404 });
+      return NextResponse.json(
+        { error: "Passage not found." },
+        { status: 404 },
+      );
     }
 
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: getZodErrorMessage(error) }, { status: 400 });
+      return NextResponse.json(
+        { error: getZodErrorMessage(error) },
+        { status: 400 },
+      );
     }
 
     if (error instanceof PassageStudyServiceError) {
-      requestLog.warn({ err: error }, "Question generation rejected by study service");
-      return NextResponse.json({ error: error.message, code: error.code }, { status: 502 });
+      requestLog.warn(
+        { err: error },
+        "Question generation rejected by study service",
+      );
+      return NextResponse.json(
+        { error: error.message, code: error.code },
+        { status: 502 },
+      );
     }
 
     requestLog.error({ err: error }, "Failed to generate study questions");
@@ -92,6 +145,9 @@ async function handleStudioQuestionsPost(request: NextRequest) {
   }
 }
 
-function createStudioQuestionsSuccessResponse(data: { artifact: StudioArtifact; questions: GeneratedStudyQuestionDto[] }) {
+function createStudioQuestionsSuccessResponse(data: {
+  artifact: StudioArtifact;
+  questions: GeneratedStudyQuestionDto[];
+}) {
   return NextResponse.json({ success: true, data });
 }

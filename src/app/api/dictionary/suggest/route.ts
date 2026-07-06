@@ -6,7 +6,7 @@ import {
   createRequestLogContext,
   createRequestLogger,
 } from "@/services/logger";
-import { normalizeDictionaryTerm } from "@/features/dictionary/schemas/normalize-dictionary-term";
+import { normalizeDictionaryTerm } from "@/features/dictionary/lib/normalize-dictionary-term";
 import { suggestDictionaryTerms } from "@/features/dictionary/services/suggest-service";
 
 const suggestQuerySchema = z.object({

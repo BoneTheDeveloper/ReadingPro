@@ -3,7 +3,7 @@ import type {
   VocabularyOccurrenceDto,
   VocabularySetDto,
   VocabularyStatsDto,
-} from "@/features/vocabulary/model/vocabulary-response.schema";
+} from "@/features/vocabulary/vocabulary.schema";
 
 interface OccurrenceShape {
   id: string;
@@ -43,7 +43,9 @@ interface VocabularySetShape {
   _count: { setItems: number };
 }
 
-function buildOccurrenceDto(occurrence: OccurrenceShape): VocabularyOccurrenceDto {
+function buildOccurrenceDto(
+  occurrence: OccurrenceShape,
+): VocabularyOccurrenceDto {
   return {
     id: occurrence.id,
     vocabularyItemId: occurrence.vocabularyItemId,
@@ -54,7 +56,9 @@ function buildOccurrenceDto(occurrence: OccurrenceShape): VocabularyOccurrenceDt
   };
 }
 
-export function buildVocabularyItemDto(item: VocabularyItemShape): VocabularyItemDto {
+export function buildVocabularyItemDto(
+  item: VocabularyItemShape,
+): VocabularyItemDto {
   return {
     id: item.id,
     normalizedText: item.normalizedText,
@@ -66,20 +70,28 @@ export function buildVocabularyItemDto(item: VocabularyItemShape): VocabularyIte
     status: item.status as VocabularyItemDto["status"],
     source: item.source,
     savedCount: item.savedCount,
-    nextReviewAt: item.nextReviewAt ? new Date(item.nextReviewAt).toISOString() : null,
-    lastReviewedAt: item.lastReviewedAt ? new Date(item.lastReviewedAt).toISOString() : null,
+    nextReviewAt: item.nextReviewAt
+      ? new Date(item.nextReviewAt).toISOString()
+      : null,
+    lastReviewedAt: item.lastReviewedAt
+      ? new Date(item.lastReviewedAt).toISOString()
+      : null,
     createdAt: new Date(item.createdAt).toISOString(),
     updatedAt: new Date(item.updatedAt).toISOString(),
     occurrences: (item.occurrences ?? []).map(buildOccurrenceDto),
   } satisfies VocabularyItemDto;
 }
 
-export function buildVocabularySetDto(set: VocabularySetShape): VocabularySetDto {
+export function buildVocabularySetDto(
+  set: VocabularySetShape,
+): VocabularySetDto {
   return {
     id: set.id,
     name: set.name,
     type: set.type as VocabularySetDto["type"],
-    periodStart: set.periodStart ? new Date(set.periodStart).toISOString() : null,
+    periodStart: set.periodStart
+      ? new Date(set.periodStart).toISOString()
+      : null,
     periodEnd: set.periodEnd ? new Date(set.periodEnd).toISOString() : null,
     createdAt: new Date(set.createdAt).toISOString(),
     updatedAt: new Date(set.updatedAt).toISOString(),

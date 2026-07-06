@@ -6,10 +6,7 @@ import { Download, Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import type {
-  VocabularyItemDto,
-  VocabularyStatus,
-} from "../model/vocabulary-response.schema";
+import type { VocabularyItemDto, VocabularyStatus } from "../vocabulary.schema";
 
 interface VocabularyListProps {
   items: VocabularyItemDto[];

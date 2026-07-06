@@ -4,10 +4,7 @@ import { useTranslations } from "next-intl";
 import { ChevronDown, ChevronRight, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type {
-  VocabularySetDto,
-  VocabularySetType,
-} from "../model/vocabulary-response.schema";
+import type { VocabularySetDto, VocabularySetType } from "../vocabulary.schema";
 
 const SET_TYPE_TONE: Record<VocabularySetType, string> = {
   MANUAL: "bg-primary/10 text-primary",

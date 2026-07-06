@@ -1,6 +1,6 @@
-import 'server-only';
+import "server-only";
 import { findEntryByIdRaw } from "../db/entry-detail-repository";
-import { buildEntryDto } from "./dto-builders";
+import { buildEntryDto } from "../dictionary.schema";
 import { RUNTIME_STATUSES } from "../lib/dictionary-helpers";
 import { groupLookupRows } from "./lookup-service";
 
@@ -13,7 +13,11 @@ export async function getDictionaryEntryDetail(
   entryId: string,
   options: EntryDetailOptions,
 ) {
-  const rows = await findEntryByIdRaw(entryId, options.sourceLanguage, options.targetLanguage);
+  const rows = await findEntryByIdRaw(
+    entryId,
+    options.sourceLanguage,
+    options.targetLanguage,
+  );
   if (rows.length === 0) return null;
 
   const entry = groupLookupRows(rows);

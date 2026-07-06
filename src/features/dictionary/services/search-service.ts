@@ -1,7 +1,7 @@
-import 'server-only';
+import "server-only";
 import { getSourceLabel } from "@/features/dictionary/lib/dictionary-helpers";
-import type { DictionarySearchResultDto } from "@/features/dictionary/schemas/dictionary-response.schema";
-import { normalizeDictionaryTerm } from "../schemas/normalize-dictionary-term";
+import type { DictionarySearchResultDto } from "@/features/dictionary/dictionary.schema";
+import { normalizeDictionaryTerm } from "../lib/normalize-dictionary-term";
 import {
   searchDictionaryCandidates,
   type DictionarySearchCandidateRow,
@@ -32,7 +32,9 @@ export async function searchDictionary(
   return rows.map(toSearchResultDto);
 }
 
-function toSearchResultDto(row: DictionarySearchCandidateRow): DictionarySearchResultDto {
+function toSearchResultDto(
+  row: DictionarySearchCandidateRow,
+): DictionarySearchResultDto {
   return {
     id: row.id,
     headword: row.headword,
@@ -40,6 +42,8 @@ function toSearchResultDto(row: DictionarySearchCandidateRow): DictionarySearchR
     matchedText: row.matchedText,
     primaryTranslation: row.primaryTranslation,
     partOfSpeech: row.partOfSpeech,
-    sourceLabel: row.sourceType ? getSourceLabel(row.sourceType, row.sourceName) : null,
+    sourceLabel: row.sourceType
+      ? getSourceLabel(row.sourceType, row.sourceName)
+      : null,
   };
 }
