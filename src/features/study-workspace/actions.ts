@@ -4,8 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getUserId } from "@/server/auth/auth-utils";
 import { deletePassage } from "@/server/db/passage-queries";
-import { saveVocabularyItem } from "@/server/modules/vocabulary/vocabulary.service";
-import { toVocabularyDTO } from "@/app/api/vocabulary/vocabulary-dto-mapper";
+import { saveVocabularyItem } from "@/server/modules/vocabulary/items/vocabulary-items.service";
 
 export async function deletePassageAction(passageId: string) {
   const userId = await getUserId();
@@ -28,10 +27,9 @@ export async function saveVocabularyAction(
 ) {
   const parsed = saveVocabularySchema.parse(input);
   const userId = await getUserId();
-  const item = await saveVocabularyItem({
+  return saveVocabularyItem({
     ...parsed,
     source: "TRANSLATE",
     userId,
   });
-  return toVocabularyDTO(item);
 }

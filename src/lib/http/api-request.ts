@@ -11,7 +11,7 @@ export class RequestTimeoutError extends Error {
 }
 
 async function requestJson<TSchema extends z.ZodType>(
-  method: "POST" | "PATCH" | "PUT",
+  method: "POST" | "PATCH" | "PUT" | "DELETE",
   route: string,
   body: unknown,
   schema: TSchema,
@@ -22,8 +22,8 @@ async function requestJson<TSchema extends z.ZodType>(
   try {
     const response = await fetch(route, {
       method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      headers: body !== undefined ? { "Content-Type": "application/json" } : undefined,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
       signal: controller?.signal,
     });
     const payload = await response.json().catch(() => ({ error: "Invalid server response." }));
@@ -63,4 +63,12 @@ export function putJson<TSchema extends z.ZodType>(
   timeoutMs?: number,
 ): Promise<z.infer<TSchema>> {
   return requestJson("PUT", route, body, schema, timeoutMs);
+}
+
+export function deleteJson<TSchema extends z.ZodType>(
+  route: string,
+  schema: TSchema,
+  timeoutMs?: number,
+): Promise<z.infer<TSchema>> {
+  return requestJson("DELETE", route, undefined, schema, timeoutMs);
 }

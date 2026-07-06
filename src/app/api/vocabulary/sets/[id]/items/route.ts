@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
-import {
-  addItemToSet,
-  verifySetOwnership,
-} from "@/server/db/vocabulary/vocabulary-set-queries";
+import { addItemsToVocabularySet } from "@/server/modules/vocabulary/sets/vocabulary-sets.service";
 import { getUserId } from "@/server/auth/auth-utils";
 import {
   isAuthenticationRequiredError,
@@ -47,16 +44,14 @@ export async function POST(
     const userId = await getUserId();
     const { id } = await params;
 
-    await verifySetOwnership(userId, id);
-
     await Sentry.startSpan(
       { name: "db:vocabulary-set-add-items", op: "db" },
       async () =>
-        Promise.all(
-          parsed.data.itemIds.map((itemId) =>
-            addItemToSet({ setId: id, itemId }),
-          ),
-        ),
+        addItemsToVocabularySet({
+          userId: userId,
+          setId: id,
+          itemIds: parsed.data.itemIds,
+        }),
     );
 
     return NextResponse.json({ success: true });

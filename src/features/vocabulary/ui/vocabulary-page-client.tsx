@@ -9,6 +9,12 @@ import { PageErrorState } from "./vocabulary-page-ui";
 import { useVocabularyList } from "../hooks/use-vocabulary-list";
 import { useVocabularySets } from "../hooks/use-vocabulary-sets";
 import { useVocabularyStats } from "../hooks/use-vocabulary-stats";
+import {
+  updateVocabularyItemStatus,
+  deleteVocabularyItem,
+  createVocabularySet,
+  deleteVocabularySet,
+} from "../vocabulary-client";
 import type {
   VocabularyStatus,
   VocabularySet,
@@ -82,12 +88,7 @@ export function VocabularyPageClient() {
 
   const handleStatusChange = useCallback(async (id: string, status: VocabularyStatus) => {
     try {
-      const res = await fetch(`/api/vocabulary/${id}/status`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
-      });
-      if (!res.ok) throw new Error("Status update failed");
+      await updateVocabularyItemStatus(id, status);
       refetchList();
       refetchStats();
     } catch { /* item keeps current status */ }
@@ -95,8 +96,7 @@ export function VocabularyPageClient() {
 
   const handleDelete = useCallback(async (id: string) => {
     try {
-      const res = await fetch(`/api/vocabulary/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Delete failed");
+      await deleteVocabularyItem(id);
       refetchList();
       refetchStats();
     } catch { /* item stays */ }
@@ -105,13 +105,7 @@ export function VocabularyPageClient() {
   const handleCreateSet = useCallback(async (name: string) => {
     setCreating(true);
     try {
-      const res = await fetch("/api/vocabulary/sets", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name }),
-      });
-      if (!res.ok) throw new Error("Create set failed");
-      const _: unknown = await res.json();
+      await createVocabularySet(name);
       refetchSets();
     } catch { /* silently fail */ }
     finally { setCreating(false); }
@@ -119,8 +113,7 @@ export function VocabularyPageClient() {
 
   const handleDeleteSet = useCallback(async (id: string) => {
     try {
-      const res = await fetch(`/api/vocabulary/sets/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Delete set failed");
+      await deleteVocabularySet(id);
       refetchSets();
     } catch { /* silently fail */ }
   }, [refetchSets]);

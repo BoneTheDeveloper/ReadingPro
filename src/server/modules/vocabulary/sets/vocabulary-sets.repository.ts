@@ -6,6 +6,10 @@ import type {
   VocabularySetItem,
 } from "@/generated/prisma/client";
 
+export type VocabularySetWithCount = VocabularySet & {
+  _count: { setItems: number };
+};
+
 function getPeriodBounds(type: "DAILY" | "WEEKLY"): {
   periodStart: Date;
   periodEnd: Date;
@@ -49,12 +53,7 @@ async function findOrCreateSetByType(
   const { periodStart, periodEnd } = getPeriodBounds(type);
 
   const existing = await prisma.vocabularySet.findFirst({
-    where: {
-      userId,
-      type,
-      periodStart,
-      periodEnd,
-    },
+    where: { userId, type, periodStart, periodEnd },
   });
 
   if (existing) {
@@ -83,16 +82,10 @@ async function findOrCreateSetByType(
 export async function listVocabularySets(params: {
   userId: string;
   type?: "MANUAL" | "DAILY" | "WEEKLY";
-}): Promise<VocabularySet[]> {
+}): Promise<VocabularySetWithCount[]> {
   const query: Parameters<typeof prisma.vocabularySet.findMany>[0] = {
-    where: {
-      userId: params.userId,
-    },
-    include: {
-      setItems: {
-        select: { id: true, vocabularyItemId: true, addedAt: true },
-      },
-    },
+    where: { userId: params.userId },
+    include: { _count: { select: { setItems: true } } },
     orderBy: { updatedAt: "desc" },
   };
 
@@ -100,13 +93,13 @@ export async function listVocabularySets(params: {
     query.where = { ...query.where, type: params.type };
   }
 
-  return prisma.vocabularySet.findMany(query);
+  return prisma.vocabularySet.findMany(query) as Promise<VocabularySetWithCount[]>;
 }
 
 export async function createManualSet(params: {
   userId: string;
   name: string;
-}): Promise<VocabularySet> {
+}): Promise<VocabularySetWithCount> {
   return withUserProfile(params.userId, () =>
     prisma.vocabularySet.create({
       data: {
@@ -116,6 +109,7 @@ export async function createManualSet(params: {
         periodStart: null,
         periodEnd: null,
       },
+      include: { _count: { select: { setItems: true } } },
     }),
   );
 }
@@ -124,7 +118,7 @@ export async function updateVocabularySet(params: {
   userId: string;
   setId: string;
   name: string;
-}): Promise<VocabularySet> {
+}): Promise<VocabularySetWithCount> {
   const existing = await prisma.vocabularySet.findUnique({
     where: { id: params.setId },
   });
@@ -136,6 +130,7 @@ export async function updateVocabularySet(params: {
   return prisma.vocabularySet.update({
     where: { id: params.setId },
     data: { name: params.name },
+    include: { _count: { select: { setItems: true } } },
   });
 }
 

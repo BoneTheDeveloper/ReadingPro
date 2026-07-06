@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { getUserId } from "@/server/auth/auth-utils";
 import { isAuthenticationRequiredError } from "@/server/http/route-errors";
 import {
   createRequestLogContext,
   createRequestLogger,
 } from "@/server/observability/logger";
-import { getVocabularyStats } from "@/server/db/vocabulary/vocabulary-queries";
+import { getVocabularyItemStats } from "@/server/modules/vocabulary/items/vocabulary-items.service";
 
 export async function GET(request: NextRequest) {
   const requestLog = createRequestLogger(
@@ -15,7 +16,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const userId = await getUserId();
-    const stats = await getVocabularyStats(userId);
+    const stats = await getVocabularyItemStats(userId);
     return NextResponse.json({ success: true, data: stats });
   } catch (error) {
     if (isAuthenticationRequiredError(error)) {
@@ -25,6 +26,9 @@ export async function GET(request: NextRequest) {
       );
     }
     requestLog.error({ err: error }, "Failed to load vocabulary stats");
+    Sentry.captureException(error, {
+      tags: { route: "api:vocabulary:stats", method: "GET" },
+    });
     return NextResponse.json(
       { error: "Failed to load vocabulary stats." },
       { status: 500 },

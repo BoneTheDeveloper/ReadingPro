@@ -1,10 +1,32 @@
 "use client";
 
-import type {
-  VocabularyStatus,
-  VocabularyListResponse,
-  VocabularySetsResponse,
-} from "./model/vocabulary-types";
+import * as Sentry from "@sentry/nextjs";
+import { patchJson, deleteJson, postJson } from "@/lib/http/api-request";
+import {
+  vocabularyListResponseSchema,
+  vocabularySetsResponseSchema,
+  vocabularyItemResponseSchema,
+  vocabularySetResponseSchema,
+  vocabularyStatsResponseSchema,
+  vocabularyAckResponseSchema,
+} from "@/contracts/vocabulary/vocabulary-response-schema";
+import type { VocabularyStatus } from "./model/vocabulary-types";
+
+function assertNoError<T extends { error?: string } | Record<string, unknown>>(
+  result: T,
+  route: string,
+  fallbackMessage: string,
+): asserts result is Exclude<T, { error: string }> {
+  if ("error" in result && typeof result.error === "string") {
+    Sentry.addBreadcrumb({
+      category: "vocabulary",
+      level: "error",
+      message: "vocabulary-request-error",
+      data: { route },
+    });
+    throw new Error(result.error ?? fallbackMessage);
+  }
+}
 
 /**
  * Fetch paginated vocabulary items with optional filtering.
@@ -26,28 +48,105 @@ export async function getVocabularyList(params: {
     queryParams.set("search", params.search.trim());
   }
 
-  const res = await fetch(`/api/vocabulary/list?${queryParams}`, {
-    signal: params.signal,
-  });
+  const route = `/api/vocabulary/list?${queryParams}`;
+  const res = await fetch(route, { signal: params.signal });
+  const json: unknown = await res.json();
+  const parsed = vocabularyListResponseSchema.safeParse(json);
 
-  if (!res.ok) {
+  if (!parsed.success) {
+    Sentry.addBreadcrumb({
+      category: "vocabulary",
+      level: "error",
+      message: "vocabulary-list-schema-error",
+      data: { route },
+    });
     throw new Error("Failed to load vocabulary");
   }
 
-  const json: unknown = await res.json();
-  return json as VocabularyListResponse;
+  assertNoError(parsed.data, route, "Failed to load vocabulary");
+  return parsed.data;
 }
 
 /**
  * Fetch all vocabulary sets.
  */
 export async function getVocabularySets() {
-  const res = await fetch("/api/vocabulary/sets");
+  const route = "/api/vocabulary/sets";
+  const res = await fetch(route);
+  const json: unknown = await res.json();
+  const parsed = vocabularySetsResponseSchema.safeParse(json);
 
-  if (!res.ok) {
+  if (!parsed.success) {
+    Sentry.addBreadcrumb({
+      category: "vocabulary",
+      level: "error",
+      message: "vocabulary-sets-schema-error",
+      data: { route },
+    });
     throw new Error("Failed to load vocabulary sets");
   }
 
+  assertNoError(parsed.data, route, "Failed to load vocabulary sets");
+  return parsed.data;
+}
+
+/**
+ * Fetch vocabulary progress stats for the current user.
+ */
+export async function getVocabularyStats() {
+  const route = "/api/vocabulary/stats";
+  const res = await fetch(route);
   const json: unknown = await res.json();
-  return json as VocabularySetsResponse;
+  const parsed = vocabularyStatsResponseSchema.safeParse(json);
+
+  if (!parsed.success) {
+    Sentry.addBreadcrumb({
+      category: "vocabulary",
+      level: "error",
+      message: "vocabulary-stats-schema-error",
+      data: { route },
+    });
+    throw new Error("Failed to load vocabulary stats");
+  }
+
+  assertNoError(parsed.data, route, "Failed to load vocabulary stats");
+  return parsed.data;
+}
+
+/**
+ * Update the review status of a vocabulary item.
+ */
+export async function updateVocabularyItemStatus(id: string, status: VocabularyStatus) {
+  const result = await patchJson(
+    `/api/vocabulary/${id}/status`,
+    { status },
+    vocabularyItemResponseSchema,
+  );
+  assertNoError(result, `/api/vocabulary/${id}/status`, "Failed to update status");
+  return result;
+}
+
+/**
+ * Delete a saved vocabulary item.
+ */
+export async function deleteVocabularyItem(id: string) {
+  const result = await deleteJson(`/api/vocabulary/${id}`, vocabularyAckResponseSchema);
+  assertNoError(result, `/api/vocabulary/${id}`, "Failed to delete vocabulary item");
+}
+
+/**
+ * Create a manual vocabulary set.
+ */
+export async function createVocabularySet(name: string) {
+  const result = await postJson("/api/vocabulary/sets", { name }, vocabularySetResponseSchema);
+  assertNoError(result, "/api/vocabulary/sets", "Failed to create set");
+  return result;
+}
+
+/**
+ * Delete a vocabulary set.
+ */
+export async function deleteVocabularySet(id: string) {
+  const result = await deleteJson(`/api/vocabulary/sets/${id}`, vocabularyAckResponseSchema);
+  assertNoError(result, `/api/vocabulary/sets/${id}`, "Failed to delete set");
 }

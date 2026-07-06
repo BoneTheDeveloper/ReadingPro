@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { removeItemFromSet } from "@/server/db/vocabulary/vocabulary-set-queries";
+import { removeItemFromVocabularySet } from "@/server/modules/vocabulary/sets/vocabulary-sets.service";
 import { getUserId } from "@/server/auth/auth-utils";
 import {
   isAuthenticationRequiredError,
@@ -27,7 +27,7 @@ export async function DELETE(
     const userId = await getUserId();
     const { id, itemId } = await params;
 
-    await removeItemFromSet({ userId: userId, setId: id, itemId });
+    await removeItemFromVocabularySet({ userId: userId, setId: id, itemId });
 
     return NextResponse.json({ success: true });
   } catch (error) {

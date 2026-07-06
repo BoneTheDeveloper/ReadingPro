@@ -6,7 +6,7 @@ import {
   createRequestLogContext,
   createRequestLogger,
 } from "@/server/observability/logger";
-import { listVocabularyItems } from "@/server/db/vocabulary/vocabulary-queries";
+import { getVocabularyItemList } from "@/server/modules/vocabulary/items/vocabulary-items.service";
 import { isAuthenticationRequiredError } from "@/server/http/route-errors";
 
 const vocabularyListQuerySchema = z.object({
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
     const result = await Sentry.startSpan(
       { name: "db:vocabulary-list", op: "db" },
       async () =>
-        listVocabularyItems({ userId: userId, status, search, page, pageSize }),
+        getVocabularyItemList({ userId: userId, status, search, page, pageSize }),
     );
 
     return NextResponse.json({

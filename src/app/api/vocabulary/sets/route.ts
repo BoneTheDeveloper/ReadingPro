@@ -8,9 +8,9 @@ import {
   createRequestLogger,
 } from "@/server/observability/logger";
 import {
-  listVocabularySets,
-  createManualSet,
-} from "@/server/db/vocabulary/vocabulary-set-queries";
+  getVocabularySetList,
+  createVocabularyManualSet,
+} from "@/server/modules/vocabulary/sets/vocabulary-sets.service";
 
 const createSetSchema = z.object({
   name: z.string().trim().min(1).max(100),
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const type = searchParams.get("type") ?? undefined;
 
-    const sets = await listVocabularySets({
+    const sets = await getVocabularySetList({
       userId: userId,
       type: type as "MANUAL" | "DAILY" | "WEEKLY" | undefined,
     });
@@ -43,6 +43,9 @@ export async function GET(request: NextRequest) {
     }
 
     requestLog.error({ err: error }, "Failed to list vocabulary sets");
+    Sentry.captureException(error, {
+      tags: { route: "api:vocabulary:sets", method: "GET" },
+    });
     return NextResponse.json(
       { error: "Failed to list vocabulary sets." },
       { status: 500 },
@@ -77,7 +80,7 @@ export async function POST(request: NextRequest) {
     const set = await Sentry.startSpan(
       { name: "db:vocabulary-set-create", op: "db" },
       async () =>
-        createManualSet({
+        createVocabularyManualSet({
           userId: userId,
           name: parsed.data.name,
         }),

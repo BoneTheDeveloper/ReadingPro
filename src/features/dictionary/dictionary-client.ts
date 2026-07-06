@@ -6,7 +6,7 @@ import {
   dictionarySuggestResponseSchema,
   dictionaryEntryDetailResponseSchema,
 } from "@/contracts/dictionary/dictionary-response-schema";
-import { vocabularyResponseSchema } from "@/contracts/translation/translation-response-schema";
+import { vocabularyItemResponseSchema } from "@/contracts/vocabulary/vocabulary-response-schema";
 import type {
   DictionaryEntryDto,
   DictionarySenseDto,
@@ -103,7 +103,7 @@ export async function saveDictionaryVocabulary(
   const result = await postJson(
     "/api/vocabulary",
     payload,
-    vocabularyResponseSchema,
+    vocabularyItemResponseSchema,
   );
   if ("error" in result) {
     throw new Error(result.error);

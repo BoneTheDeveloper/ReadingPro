@@ -10,8 +10,7 @@ import { isAuthenticationRequiredError } from "@/server/http/route-errors";
 import {
   VocabularyServiceError,
   saveVocabularyItem,
-} from "@/server/modules/vocabulary/vocabulary.service";
-import { toVocabularyDTO } from "./vocabulary-dto-mapper";
+} from "@/server/modules/vocabulary/items/vocabulary-items.service";
 
 const vocabularyRequestSchema = z.object({
   selectedText: z.string().trim().min(1).max(500),
@@ -64,9 +63,9 @@ export async function POST(request: NextRequest) {
     );
     requestLog = requestLog.child({ userId: userId });
 
-    const item = await saveVocabularyItem({ ...input, userId: userId });
+    const dto = await saveVocabularyItem({ ...input, userId: userId });
 
-    return NextResponse.json({ success: true, data: toVocabularyDTO(item) });
+    return NextResponse.json({ success: true, data: dto });
   } catch (error) {
     if (isAuthenticationRequiredError(error)) {
       requestLog.warn("Unauthenticated vocabulary request rejected");

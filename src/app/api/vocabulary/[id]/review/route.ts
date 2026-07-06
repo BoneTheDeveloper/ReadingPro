@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
-import { reviewVocabularyItem } from "@/server/db/vocabulary/vocabulary-queries";
+import { reviewVocabularyItemById } from "@/server/modules/vocabulary/items/vocabulary-items.service";
 import { getUserId } from "@/server/auth/auth-utils";
 import {
   isAuthenticationRequiredError,
@@ -44,17 +44,17 @@ export async function POST(
 
     const userId = await getUserId();
 
-    const item = await Sentry.startSpan(
+    const dto = await Sentry.startSpan(
       { name: "db:vocabulary-review", op: "db" },
       async () =>
-        reviewVocabularyItem({
+        reviewVocabularyItemById({
           userId: userId,
           itemId: id,
           isCorrect: parsed.data.isCorrect,
         }),
     );
 
-    return NextResponse.json({ success: true, data: item });
+    return NextResponse.json({ success: true, data: dto });
   } catch (error) {
     if (isAuthenticationRequiredError(error)) {
       return NextResponse.json(

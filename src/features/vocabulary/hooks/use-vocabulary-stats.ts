@@ -2,13 +2,8 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
-
-interface VocabularyStats {
-  total: number;
-  new: number;
-  learning: number;
-  known: number;
-}
+import { getVocabularyStats } from "../vocabulary-client";
+import type { VocabularyStatsDto as VocabularyStats } from "@/contracts/vocabulary/vocabulary-dtos";
 
 interface UseVocabularyStatsResult {
   stats: VocabularyStats;
@@ -37,11 +32,7 @@ export function useVocabularyStats(): UseVocabularyStatsResult {
     setError(null);
 
     try {
-      const res = await fetch("/api/vocabulary/stats");
-      if (!res.ok) throw new Error("Failed to load stats");
-
-      const json: unknown = await res.json();
-      const data = json as { success: true; data: VocabularyStats };
+      const data = await getVocabularyStats();
 
       if (requestIdRef.current !== requestId || !mountedRef.current) return;
       setStats(data.data);

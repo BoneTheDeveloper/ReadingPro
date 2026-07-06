@@ -3,7 +3,6 @@ import {
   apiErrorResponseSchema,
   makePerformanceEnvelopeSchema,
   makePerformanceResponseSchema,
-  makeResponseSchema,
   makeSuccessEnvelopeSchema,
 } from "@/contracts/http/api-response-schema";
 
@@ -39,21 +38,6 @@ export const translateResponseSchema = makePerformanceResponseSchema(translation
 export type TranslateSuccessResponse = z.infer<typeof translateSuccessResponseSchema>;
 export type TranslatePerformanceResponse = z.infer<typeof translatePerformanceResponseSchema>;
 export type TranslateResponse = z.infer<typeof translateResponseSchema>;
-
-export const vocabularyDataSchema = z.object({
-  id: z.string(),
-  displayText: z.string(),
-  translation: z.string(),
-  type: z.string().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-}).strict();
-
-export const vocabularySuccessResponseSchema = makeSuccessEnvelopeSchema(vocabularyDataSchema);
-export const vocabularyResponseSchema = makeResponseSchema(vocabularyDataSchema);
-
-export type VocabularySuccessResponse = z.infer<typeof vocabularySuccessResponseSchema>;
-export type VocabularyResponse = z.infer<typeof vocabularyResponseSchema>;
 
 export const translationErrorResponseSchema = apiErrorResponseSchema;
 export type TranslationErrorResponse = z.infer<typeof translationErrorResponseSchema>;

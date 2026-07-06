@@ -1,30 +1,26 @@
 import "server-only";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/server/lib/db";
-import { simpleSchedule } from "@/server/modules/spaced-repetition/scheduler";
+import { withUserProfile } from "@/server/auth/sync-user";
+import { getOwnedTranslationSource } from "@/server/db/translation-queries";
 import {
   findOrCreateDailySet,
   findOrCreateWeeklySet,
   addItemToSet,
-} from "./vocabulary-set-queries";
-import { withUserProfile } from "@/server/auth/sync-user";
+} from "@/server/modules/vocabulary/sets/vocabulary-sets.repository";
 import { normalizeText, detectType } from "./vocabulary-text-utils";
 import type {
   VocabularyItem,
   VocabularyOccurrence,
 } from "@/generated/prisma/client";
 
-// --- Helpers ---
-
 export { normalizeText, detectType } from "./vocabulary-text-utils";
-
-// --- Types ---
 
 export interface VocabularyItemWithOccurrences extends VocabularyItem {
   occurrences: VocabularyOccurrence[];
 }
 
-interface UpsertVocabularyItemParams {
+export interface UpsertVocabularyItemParams {
   userId: string;
   selectedText: string;
   translation: string;
@@ -37,7 +33,9 @@ interface UpsertVocabularyItemParams {
   dictionarySenseId?: string;
 }
 
-// --- Queries ---
+export async function findOwnedSource(userId: string, sourceId: string) {
+  return getOwnedTranslationSource(userId, sourceId);
+}
 
 export async function upsertVocabularyItem(
   params: UpsertVocabularyItemParams,
@@ -82,7 +80,6 @@ export async function upsertVocabularyItem(
     }),
   );
 
-  // Create occurrence (idempotent via unique constraint)
   await createOccurrence(
     item.id,
     params.selectedText.trim(),
@@ -90,7 +87,6 @@ export async function upsertVocabularyItem(
     params.contextSentence,
   );
 
-  // Add to daily + weekly sets
   const [dailySet, weeklySet] = await Promise.all([
     findOrCreateDailySet(params.userId),
     findOrCreateWeeklySet(params.userId),
@@ -179,68 +175,6 @@ export async function listVocabularyItems(params: {
   ]);
 
   return { items, total };
-}
-
-export async function updateVocabularyStatus(params: {
-  userId: string;
-  itemId: string;
-  status: "NEW" | "LEARNING" | "MASTERED";
-}): Promise<VocabularyItem> {
-  const item = await prisma.vocabularyItem.findUniqueOrThrow({
-    where: { id: params.itemId },
-  });
-
-  if (item.userId !== params.userId) {
-    throw new Error(`No vocabulary item found for user`);
-  }
-
-  return prisma.vocabularyItem.update({
-    where: { id: params.itemId },
-    data: { status: params.status },
-  });
-}
-
-export async function reviewVocabularyItem(params: {
-  userId: string;
-  itemId: string;
-  isCorrect: boolean;
-}): Promise<VocabularyItem> {
-  const item = await prisma.vocabularyItem.findUniqueOrThrow({
-    where: { id: params.itemId },
-  });
-
-  if (item.userId !== params.userId) {
-    throw new Error(`No vocabulary item found for user`);
-  }
-
-  const { nextStatus, nextReviewDate } = simpleSchedule(
-    item.status,
-    params.isCorrect,
-  );
-
-  return prisma.vocabularyItem.update({
-    where: { id: params.itemId },
-    data: {
-      status: nextStatus,
-      nextReviewAt: nextReviewDate,
-      lastReviewedAt: new Date(),
-    },
-  });
-}
-
-export async function getVocabularyStats(userId: string): Promise<{
-  total: number;
-  new: number;
-  learning: number;
-  known: number;
-}> {
-  const [total, newCount, learningCount, knownCount] = await Promise.all([
-    prisma.vocabularyItem.count({ where: { userId } }),
-    prisma.vocabularyItem.count({ where: { userId, status: "NEW" } }),
-    prisma.vocabularyItem.count({ where: { userId, status: "LEARNING" } }),
-    prisma.vocabularyItem.count({ where: { userId, status: "MASTERED" } }),
-  ]);
-  return { total, new: newCount, learning: learningCount, known: knownCount };
 }
 
 export async function deleteVocabularyItem(params: {
