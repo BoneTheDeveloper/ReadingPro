@@ -2,7 +2,7 @@ import 'server-only';
 import { generateObject } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
-import { createModuleLogger } from '@/server/observability/logger';
+import { createModuleLogger } from '@/services/observability/logger';
 import { wrapUserText } from './prompt-utils';
 
 const log = createModuleLogger('ai:question-generator');

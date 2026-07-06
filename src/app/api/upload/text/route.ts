@@ -2,9 +2,9 @@ import { z } from 'zod';
 import { NextRequest, NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
 import { validateTextContent } from '@/contracts/upload/upload-validation';
-import { getUserId } from '@/server/auth/auth-utils';
+import { getUserId } from '@/services/clerk';
 import { isAuthenticationRequiredError } from '@/server/http/route-errors';
-import { createRequestLogContext, createRequestLogger } from '@/server/observability/logger';
+import { createRequestLogContext, createRequestLogger } from '@/services/logger';
 import { analyzeAndPersistContent } from '@/features/upload/db/content-analysis/content-analysis.service';
 
 const textUploadSchema = z.object({

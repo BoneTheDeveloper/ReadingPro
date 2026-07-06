@@ -2,10 +2,10 @@ import "server-only";
 import { openai } from "@ai-sdk/openai";
 import { convertToModelMessages, streamText } from "ai";
 import * as Sentry from "@sentry/nextjs";
-import { prisma } from "@/server/lib/db";
-import { wrapUserText } from "@/server/ai/prompt-utils";
-import { getStudyChatModelId } from "@/server/lib/model-config";
-import { createModuleLogger } from "@/server/observability/logger";
+import { prisma } from "@/services/lib/db";
+import { wrapUserText } from "@/services/ai/prompt-utils";
+import { getStudyChatModelId } from "@/services/lib/model-config";
+import { createModuleLogger } from "@/services/observability/logger";
 import {
   MAX_PASSAGE_CHARS,
   type UiMessage,

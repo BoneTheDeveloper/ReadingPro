@@ -3,8 +3,8 @@ import * as Sentry from "@sentry/nextjs";
 import {
   generateComprehensionQuestions,
   type GeneratedQuestion,
-} from "@/server/ai/question-generator";
-import { createModuleLogger } from "@/server/observability/logger";
+} from "@/services/ai/question-generator";
+import { createModuleLogger } from "@/services/logger";
 import { questionDataSchema } from "@/features/passage/db/passage-queries";
 import type { GeneratedStudyQuestionDto } from "@/contracts/study/study-response-schema";
 import {

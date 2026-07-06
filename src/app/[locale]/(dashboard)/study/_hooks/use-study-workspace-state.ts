@@ -7,7 +7,7 @@ import type {
   DocumentItem,
   PassageData,
   StudyState,
-} from "@/features/reading/schemas/translation-response-schema";
+} from "@/features/study/shared/types";
 
 type PassagesAction =
   | { type: "add"; passage: PassageData }

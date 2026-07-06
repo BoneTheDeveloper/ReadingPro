@@ -3,11 +3,11 @@ import * as Sentry from "@sentry/nextjs";
 import {
   AuthenticationRequiredError,
   getUserId,
-} from "@/server/auth/auth-utils";
+} from "@/services/clerk";
 import {
   createRequestLogContext,
   createRequestLogger,
-} from "@/server/observability/logger";
+} from "@/services/logger";
 import {
   studyChatRequestSchema,
   type UiMessage,

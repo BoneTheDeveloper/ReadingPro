@@ -1,5 +1,5 @@
 import "server-only";
-import { prisma } from "@/server/lib/db";
+import { prisma } from "@/services/lib/db";
 
 // A day counts toward the streak only when total study time that day exceeds this.
 export const STREAK_MIN_DAILY_MS = 10 * 60 * 1000;

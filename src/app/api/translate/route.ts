@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
-import { getUserId } from "@/server/auth/auth-utils";
+import { getUserId } from "@/services/clerk";
 import {
   createRequestLogContext,
   createRequestLogger,
-} from "@/server/observability/logger";
+} from "@/services/logger";
 import { executeTranslate } from "@/server/modules/translation/inline/inline-translate.service";
 
 const SINGLE_WORD_REGEX = /^[A-Za-z]+(?:[-'][A-Za-z]+)*$/;

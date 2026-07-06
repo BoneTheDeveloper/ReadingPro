@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
-import { getUserId } from "@/server/auth/auth-utils";
+import { getUserId } from "@/services/clerk";
 import { isAuthenticationRequiredError } from "@/server/http/route-errors";
-import { createRequestLogContext, createRequestLogger } from "@/server/observability/logger";
+import { createRequestLogContext, createRequestLogger } from "@/services/logger";
 import { processFileUpload, UploadWorkflowError } from "@/features/upload/db/upload-workflow";
 
 export async function POST(request: NextRequest) {

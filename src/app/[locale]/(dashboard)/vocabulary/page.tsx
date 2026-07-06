@@ -1,4 +1,4 @@
-import { getPageUserId } from "@/server/auth/auth-utils";
+import { getPageUserId } from "@/services/clerk";
 import { VocabularyPageClient } from "@/features/vocabulary/ui/vocabulary-page-client";
 
 export const dynamic = "force-dynamic";

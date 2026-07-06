@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
-import { getUserId } from "@/types/services/clerk";
+import { getUserId } from "@/services/clerk";
 import {
   createRequestLogContext,
   createRequestLogger,
-} from "@/types/services/logger";
+} from "@/services/logger";
 import { normalizeDictionaryTerm } from "@/features/dictionary/schemas/normalize-dictionary-term";
 import { suggestDictionaryTerms } from "@/features/dictionary/services/suggest-service";
 

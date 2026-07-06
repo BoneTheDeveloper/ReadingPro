@@ -1,14 +1,14 @@
 "use server";
 
 import { z } from "zod";
-import { getUserId } from "@/server/auth/auth-utils";
+import { getUserId } from "@/services/auth/auth-utils";
 import {
   fetchStudioArtifacts,
   getArtifactQuestions,
   recordQuizResult,
   resetQuizResult,
 } from "@/features/passage/db/studio-artifacts-service";
-import { getChatHistory } from "@/server/modules/ai-chat/chat-service";
+import { getChatHistory } from "@/services/modules/ai-chat/chat-service";
 
 const passageIdSchema = z.string().uuid();
 

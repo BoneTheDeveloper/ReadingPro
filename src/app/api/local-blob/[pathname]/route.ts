@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readFileBuffer } from "@/server/storage/blob-storage";
+import { readFileBuffer } from "@/services/storage";
 
 export async function GET(
   _request: NextRequest,
