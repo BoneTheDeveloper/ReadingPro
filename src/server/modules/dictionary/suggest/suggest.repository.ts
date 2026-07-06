@@ -1,5 +1,4 @@
 import "server-only";
-import * as Sentry from "@sentry/nextjs";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/server/lib/db";
 import {
@@ -31,17 +30,7 @@ export async function findSuggestCandidates(
 
   const likePrefix = escapeLikeWildcards(normalized) + "%";
 
-  return Sentry.startSpan(
-    {
-      name: "db:dictionary-suggest-candidates",
-      op: "db",
-      attributes: {
-        "db.operation": "queryRaw",
-        "dictionary.prefix": normalized,
-      },
-    },
-    () =>
-      prisma.$queryRaw<SuggestCandidateRow[]>`
+  return prisma.$queryRaw<SuggestCandidateRow[]>`
         WITH headword_candidates AS (
           SELECT
             e.id,
@@ -127,6 +116,5 @@ export async function findSuggestCandidates(
           END,
           d."frequencyRank" ASC
         LIMIT ${limit}
-      `,
-  );
+      `;
 }

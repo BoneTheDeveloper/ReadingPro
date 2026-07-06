@@ -1,5 +1,4 @@
 import "server-only";
-import * as Sentry from "@sentry/nextjs";
 import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/server/lib/db";
 import type { CEFRLevel } from "@/contracts/domain/cefr";
@@ -30,38 +29,36 @@ export async function createPassageWithArtifacts(input: {
   artifactId: string;
   questions: QuestionCreateInput[];
 }) {
-  return Sentry.startSpan({ name: "db:passage-create", op: "db" }, async () => {
-    return prisma.passage.create({
-      data: {
-        userId: input.userId,
-        title: input.title,
-        content: input.text,
-        simplifiedContent: input.simplifiedContent,
-        originalLevel: input.originalLevel,
-        simplifiedLevel: input.simplifiedLevel,
-        wordCount: input.wordCount,
-        sourceType: input.sourceType,
-        filePath: input.filePath,
-        ...(input.questions.length > 0
-          ? {
-              studioArtifacts: {
-                create: {
-                  id: input.artifactId,
-                  userId: input.userId,
-                  type: "quiz",
-                  title: "Initial Quiz",
-                  status: "done",
-                },
+  return prisma.passage.create({
+    data: {
+      userId: input.userId,
+      title: input.title,
+      content: input.text,
+      simplifiedContent: input.simplifiedContent,
+      originalLevel: input.originalLevel,
+      simplifiedLevel: input.simplifiedLevel,
+      wordCount: input.wordCount,
+      sourceType: input.sourceType,
+      filePath: input.filePath,
+      ...(input.questions.length > 0
+        ? {
+            studioArtifacts: {
+              create: {
+                id: input.artifactId,
+                userId: input.userId,
+                type: "quiz",
+                title: "Initial Quiz",
+                status: "done",
               },
-              questions: {
-                create: input.questions.map((q) => ({
-                  ...q,
-                  artifactId: input.artifactId,
-                })) as Prisma.QuestionUncheckedCreateWithoutPassageInput[],
-              },
-            }
-          : {}),
-      },
-    });
+            },
+            questions: {
+              create: input.questions.map((q) => ({
+                ...q,
+                artifactId: input.artifactId,
+              })) as Prisma.QuestionUncheckedCreateWithoutPassageInput[],
+            },
+          }
+        : {}),
+    },
   });
 }

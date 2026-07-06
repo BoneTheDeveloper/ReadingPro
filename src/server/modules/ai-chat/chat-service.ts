@@ -25,23 +25,10 @@ export async function getOwnedPassageForChat(
   userId: string,
   passageId: string,
 ) {
-  const passage = await Sentry.startSpan(
-    {
-      name: "db:study-chat-passage-fetch",
-      op: "db",
-      attributes: {
-        "db.operation": "findUnique",
-        "db.model": "Passage",
-        "study.passage_id": passageId,
-        "user.id": userId,
-      },
-    },
-    () =>
-      prisma.passage.findUnique({
-        where: { id: passageId, userId, deletedAt: null },
-        select: { id: true, content: true, title: true },
-      }),
-  );
+  const passage = await prisma.passage.findUnique({
+    where: { id: passageId, userId, deletedAt: null },
+    select: { id: true, content: true, title: true },
+  });
 
   if (!passage) {
     throw new StudyChatServiceError("Passage not found.");
@@ -51,25 +38,12 @@ export async function getOwnedPassageForChat(
 }
 
 export async function loadPersistedMessages(userId: string, passageId: string) {
-  return Sentry.startSpan(
-    {
-      name: "db:study-chat-history-fetch",
-      op: "db",
-      attributes: {
-        "db.operation": "findMany",
-        "db.model": "StudyChatMessage",
-        "study.passage_id": passageId,
-        "user.id": userId,
-      },
-    },
-    () =>
-      prisma.studyChatMessage.findMany({
-        where: { userId, passageId },
-        orderBy: { createdAt: "asc" },
-        take: 20,
-        select: { role: true, content: true },
-      }),
-  );
+  return prisma.studyChatMessage.findMany({
+    where: { userId, passageId },
+    orderBy: { createdAt: "asc" },
+    take: 20,
+    select: { role: true, content: true },
+  });
 }
 
 export function toPersistedUiMessages(
@@ -95,23 +69,9 @@ export async function persistUserMessage(
 
   if (text.length === 0) return;
 
-  await Sentry.startSpan(
-    {
-      name: "db:study-chat-user-message-create",
-      op: "db",
-      attributes: {
-        "db.operation": "create",
-        "db.model": "StudyChatMessage",
-        "study.passage_id": passageId,
-        "study.message_length": text.length,
-        "user.id": userId,
-      },
-    },
-    () =>
-      prisma.studyChatMessage.create({
-        data: { userId, passageId, role: "user", content: text },
-      }),
-  );
+  await prisma.studyChatMessage.create({
+    data: { userId, passageId, role: "user", content: text },
+  });
 }
 
 export async function streamStudyChat(params: {
@@ -170,7 +130,6 @@ export async function streamStudyChat(params: {
         "study.persisted_message_count": persistedMessages.length,
         "study.recent_message_count": recentMessages.length,
         "study.passage_content_length": passageContent.length,
-        "user.id": userId,
       },
     },
     () =>
@@ -202,28 +161,14 @@ export async function streamStudyChat(params: {
           if (!assistantText) return;
 
           try {
-            await Sentry.startSpan(
-              {
-                name: "db:study-chat-assistant-message-create",
-                op: "db",
-                attributes: {
-                  "db.operation": "create",
-                  "db.model": "StudyChatMessage",
-                  "study.passage_id": passageId,
-                  "study.message_length": assistantText.length,
-                  "user.id": userId,
-                },
+            await prisma.studyChatMessage.create({
+              data: {
+                userId,
+                passageId,
+                role: "assistant",
+                content: assistantText,
               },
-              () =>
-                prisma.studyChatMessage.create({
-                  data: {
-                    userId,
-                    passageId,
-                    role: "assistant",
-                    content: assistantText,
-                  },
-                }),
-            );
+            });
           } catch (error) {
             onFinishPersistError(error);
             throw error;
@@ -234,23 +179,10 @@ export async function streamStudyChat(params: {
 }
 
 export async function getChatHistory(userId: string, passageId: string) {
-  return Sentry.startSpan(
-    {
-      name: "db:study-chat-history-list",
-      op: "db",
-      attributes: {
-        "db.operation": "findMany",
-        "db.model": "StudyChatMessage",
-        "study.passage_id": passageId,
-        "user.id": userId,
-      },
-    },
-    () =>
-      prisma.studyChatMessage.findMany({
-        where: { userId, passageId },
-        orderBy: { createdAt: "asc" },
-        take: 40,
-        select: { id: true, role: true, content: true },
-      }),
-  );
+  return prisma.studyChatMessage.findMany({
+    where: { userId, passageId },
+    orderBy: { createdAt: "asc" },
+    take: 40,
+    select: { id: true, role: true, content: true },
+  });
 }

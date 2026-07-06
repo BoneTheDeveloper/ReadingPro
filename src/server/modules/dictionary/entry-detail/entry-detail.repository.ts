@@ -1,5 +1,4 @@
 import "server-only";
-import * as Sentry from "@sentry/nextjs";
 import { prisma } from "@/server/lib/db";
 import type { LookupRawRow } from "../lookup/lookup.repository";
 
@@ -8,17 +7,7 @@ export async function findEntryByIdRaw(
   sourceLanguage: string,
   targetLanguage: string = "vi",
 ): Promise<LookupRawRow[]> {
-  return Sentry.startSpan(
-    {
-      name: "db:dictionary-entry-detail",
-      op: "db",
-      attributes: {
-        "db.operation": "queryRaw",
-        "dictionary.entry_id": entryId,
-      },
-    },
-    () =>
-      prisma.$queryRaw<LookupRawRow[]>`
+  return prisma.$queryRaw<LookupRawRow[]>`
         SELECT
           e.id AS "entryId",
           e.headword,
@@ -49,6 +38,5 @@ export async function findEntryByIdRaw(
         WHERE e.id = ${entryId}
           AND e."sourceLanguage" = ${sourceLanguage}
         ORDER BY s."usageRank" ASC, t.rank ASC
-      `,
-  );
+      `;
 }

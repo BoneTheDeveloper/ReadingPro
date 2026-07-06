@@ -5,12 +5,6 @@
 Single source of truth for application use cases. Each use case lists its actor,
 preconditions, main flow, and—where it maps to an HTTP endpoint—the primary route(s).
 
-**Lens:** black box, actor-centric — *what* the user does and how the system responds.
-This doc deliberately omits file/function names and internal call chains. For the
-white-box code path of any use case, see the matching flow in
-[`../Flows/`](../Flows/README.md).
-
-
 ## UC-01: Upload and Analyze Content
 
 **Actor:** Authenticated User

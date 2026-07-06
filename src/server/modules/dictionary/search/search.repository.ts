@@ -1,5 +1,4 @@
 import "server-only";
-import * as Sentry from "@sentry/nextjs";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/server/lib/db";
 import { RUNTIME_STATUSES } from "@/contracts/dictionary/dictionary-dtos";
@@ -28,18 +27,7 @@ const SEARCH_STATUSES = Prisma.join(RUNTIME_STATUSES);
 export async function searchDictionaryCandidates(
   input: DictionarySearchCandidateInput,
 ): Promise<DictionarySearchCandidateRow[]> {
-  return Sentry.startSpan(
-    {
-      name: "db:dictionary-search-candidates",
-      op: "db",
-      attributes: {
-        "db.operation": "queryRaw",
-        "dictionary.query_length": input.normalizedQuery.length,
-        "dictionary.limit": input.limit,
-      },
-    },
-    () => searchDictionaryCandidatesSql(input),
-  );
+  return searchDictionaryCandidatesSql(input);
 }
 
 async function searchDictionaryCandidatesSql({

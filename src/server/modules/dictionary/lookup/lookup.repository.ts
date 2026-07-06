@@ -1,5 +1,4 @@
 import "server-only";
-import * as Sentry from "@sentry/nextjs";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/server/lib/db";
 import { RUNTIME_STATUSES } from "@/contracts/dictionary/dictionary-dtos";
@@ -33,17 +32,7 @@ export async function findDictionaryLookupEntry(
   sourceLanguage: string,
   targetLanguage: string = "vi",
 ): Promise<LookupRawRow[]> {
-  return Sentry.startSpan(
-    {
-      name: "db:dictionary-lookup",
-      op: "db",
-      attributes: {
-        "db.operation": "queryRaw",
-        "dictionary.normalized_term_length": normalizedTerm.length,
-      },
-    },
-    () =>
-      prisma.$queryRaw<LookupRawRow[]>`
+  return prisma.$queryRaw<LookupRawRow[]>`
         WITH matching_entry AS (
           SELECT e.id, 0 AS match_priority
           FROM dictionary_entries e
@@ -90,8 +79,7 @@ export async function findDictionaryLookupEntry(
         LEFT JOIN dictionary_translations t ON t."senseId" = s.id
           AND t."targetLanguage" = ${targetLanguage}
         ORDER BY s."usageRank" ASC, t.rank ASC
-      `,
-  );
+      `;
 }
 
 export interface QuickLookupRow {
@@ -120,17 +108,7 @@ export async function findQuickLookupTranslation(
   normalizedTerm: string,
   options: QuickLookupOptions,
 ): Promise<QuickLookupRow[]> {
-  return Sentry.startSpan(
-    {
-      name: "db:dictionary-quick-lookup",
-      op: "db",
-      attributes: {
-        "db.operation": "queryRaw",
-        "dictionary.normalized_term_length": normalizedTerm.length,
-      },
-    },
-    () =>
-      prisma.$queryRaw<QuickLookupRow[]>`
+  return prisma.$queryRaw<QuickLookupRow[]>`
         SELECT
           t.id,
           t."senseId",
@@ -157,6 +135,5 @@ export async function findQuickLookupTranslation(
           AND (e."normalizedHeadword" = ${normalizedTerm} OR a.id IS NOT NULL)
         ORDER BY "matchType" ASC, s."usageRank" ASC, t.rank ASC
         LIMIT 1
-      `,
-  );
+      `;
 }

@@ -17,7 +17,6 @@ export async function resolveWordTranslate(
         "translation.text_length": input.text.length,
         "translation.context_length": input.context.length,
         "translation.target_language": input.targetLanguage,
-        "user.id": ctx.userId,
       },
     },
     () =>

@@ -1,5 +1,6 @@
 import "server-only";
 import { auth, clerkClient } from "@clerk/nextjs/server";
+import * as Sentry from "@sentry/nextjs";
 import { cache } from "react";
 import { createModuleLogger } from "@/server/observability/logger";
 import { syncUser } from "./sync-user";
@@ -15,6 +16,8 @@ export class AuthenticationRequiredError extends Error {
 export const getCurrentUser = cache(async () => {
   const { userId } = await auth();
   if (!userId) return null;
+
+  Sentry.setUser({ id: userId });
 
   const client = await clerkClient();
   const clerkUser = await client.users.getUser(userId);
@@ -62,6 +65,7 @@ export async function getUserId(): Promise<string> {
   if (!userId) {
     throw new AuthenticationRequiredError();
   }
+  Sentry.setUser({ id: userId });
   return userId;
 }
 
@@ -76,5 +80,6 @@ export async function getUserId(): Promise<string> {
  */
 export async function getPageUserId(): Promise<string> {
   const { userId } = await auth.protect();
+  Sentry.setUser({ id: userId });
   return userId;
 }
