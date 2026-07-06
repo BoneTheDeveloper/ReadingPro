@@ -1,7 +1,6 @@
 import 'server-only';
 import * as Sentry from "@sentry/nextjs";
-import type { QuickTranslation } from "@/server/ai/translator";
-import { resolveQuickDictionaryTranslation } from "@/server/modules/dictionary/lookup/lookup-quick.service";
+import { resolveQuickDictionaryTranslation, type QuickTranslation } from "@/server/modules/dictionary/lookup/lookup-quick.service";
 import type { TranslateServiceInput, TranslateServiceContext } from "./inline-translate.service";
 
 export async function resolveWordTranslate(

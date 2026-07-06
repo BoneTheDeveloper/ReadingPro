@@ -1,5 +1,5 @@
 import type { TranslationSelection } from "@/features/study/shared/types";
-import { countWords } from "@/contracts/translation/text-utils";
+import { countWords } from "@/features/reading/schemas/text-utils";
 
 type SelectionRect = TranslationSelection["selectionRect"];
 type SelectionPoint = { x: number; y: number };

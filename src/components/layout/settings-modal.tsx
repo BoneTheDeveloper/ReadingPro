@@ -9,7 +9,7 @@ import { Check, X, Globe, BookOpen, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/provider/theme-provider";
-import { getCEFRBadgeVariant } from "@/features/content-panel/lib/cefr-style";
+import { getCEFRBadgeVariant } from "@/features/reading/lib/cefr-style";
 import { getCEFRLabel } from "@/contracts/domain/cefr";
 import { Badge } from "@/components/ui/badge";
 

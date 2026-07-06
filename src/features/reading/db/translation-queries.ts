@@ -26,10 +26,6 @@ function stableHash(value: unknown) {
   return createHash("sha256").update(JSON.stringify(value)).digest("hex");
 }
 
-export function normalizeDictionaryTerm(value: string) {
-  return value.toLowerCase().replace(/\s+/g, " ").trim();
-}
-
 export function buildTranslationCacheKey(input: TranslationKeyInput) {
   return stableHash({
     userId: input.userId,
@@ -37,16 +33,6 @@ export function buildTranslationCacheKey(input: TranslationKeyInput) {
     selectedText: input.selectedText,
     contextSentence: input.contextSentence,
     targetLanguage: input.targetLanguage,
-  });
-}
-
-export async function getOwnedTranslationSource(
-  userId: string,
-  sourceId: string,
-) {
-  return prisma.passage.findUnique({
-    where: { id: sourceId, userId, deletedAt: null },
-    select: { id: true, title: true },
   });
 }
 

@@ -27,7 +27,6 @@ export function VocabularySetList({
   sets,
   loading,
   onCreateSet,
-  onDeleteSet,
   creating,
 }: VocabularySetListProps) {
   const t = useTranslations("Vocabulary");
@@ -111,7 +110,6 @@ function SetCard({
   set: VocabularySet;
   colorIndex: number;
 }) {
-  const t = useTranslations("Vocabulary");
   const col = SET_COLORS[colorIndex % SET_COLORS.length];
   const itemCount = set._count.items;
 

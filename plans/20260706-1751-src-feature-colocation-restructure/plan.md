@@ -28,20 +28,20 @@ Chuyển `src/` từ kiến trúc layer (`app/`, `server/`, `contracts/`, `featu
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 1 | [Foundation: types/](./phase-01-foundation-types.md) | Pending |
-| 2 | [Foundation: services/](./phase-02-services.md) | Pending |
-| 3 | [Foundation: lib/](./phase-03-lib.md) | Pending |
-| 4 | [Progress feature](./phase-04-progress-feature.md) | Pending |
-| 5 | [Learning-session feature](./phase-05-learning-session-feature.md) | Pending |
-| 6 | [Dictionary feature](./phase-06-dictionary-feature.md) | Pending |
-| 7 | [Vocabulary feature](./phase-07-vocabulary-feature.md) | Pending |
-| 8 | [Passage entity](./phase-08-passage-entity.md) | Pending |
-| 9 | [Upload feature](./phase-09-upload-feature.md) | Pending |
-| 10 | [Users feature](./phase-10-users-feature.md) | Pending |
-| 11 | [Reading feature (content-panel + inline translate)](./phase-11-reading-feature.md) | Pending |
-| 12 | [Studio feature (quiz/chat/lookup)](./phase-12-studio-feature.md) | Pending |
-| 13 | [Study page compose (colocate vào route)](./phase-13-study-workspace-compose.md) | Pending |
-| 14 | [Cleanup old dirs](./phase-14-cleanup-old-dirs.md) | Pending |
+| 1 | [Foundation: types/](./phase-01-foundation-types.md) | Completed |
+| 2 | [Foundation: services/](./phase-02-services.md) | Completed |
+| 3 | [Foundation: lib/](./phase-03-lib.md) | Completed |
+| 4 | [Progress feature](./phase-04-progress-feature.md) | Completed |
+| 5 | [Learning-session feature](./phase-05-learning-session-feature.md) | Completed |
+| 6 | [Dictionary feature](./phase-06-dictionary-feature.md) | Completed |
+| 7 | [Vocabulary feature](./phase-07-vocabulary-feature.md) | Completed |
+| 8 | [Passage entity](./phase-08-passage-entity.md) | Completed |
+| 9 | [Upload feature](./phase-09-upload-feature.md) | Completed |
+| 10 | [Users feature](./phase-10-users-feature.md) | Completed |
+| 11 | [Reading feature (content-panel + inline translate)](./phase-11-reading-feature.md) | Completed |
+| 12 | [Studio feature (quiz/chat/lookup)](./phase-12-studio-feature.md) | Completed |
+| 13 | [Study page compose (colocate vào route)](./phase-13-study-workspace-compose.md) | Completed |
+| 14 | [Cleanup old dirs](./phase-14-cleanup-old-dirs.md) | In Progress |
 
 ## Dependencies
 

@@ -5,7 +5,7 @@ import {
   buildTranslationCacheKey,
   createTranslationHistory,
   upsertTranslationCache,
-} from "@/server/db/translation-queries";
+} from "@/features/reading/db/translation-queries";
 
 export { buildTranslationCacheKey };
 

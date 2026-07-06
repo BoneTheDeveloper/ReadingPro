@@ -17,7 +17,6 @@ import {
 } from "../vocabulary-client";
 import type {
   VocabularyStatus,
-  VocabularySet,
 } from "../model/vocabulary-types";
 
 type ViewTab = "words" | "sets";
@@ -25,7 +24,6 @@ type ViewTab = "words" | "sets";
 const TAB_BASE =
   "flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer";
 const TAB_ON = "bg-[#5A4FE0] text-white shadow-sm";
-const TAB_OFF = "text-[#908B98] hover:text-[#221F2B]";
 
 // Stats card component
 function StatCard({

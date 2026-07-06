@@ -6,7 +6,7 @@ import {
   createRequestLogContext,
   createRequestLogger,
 } from "@/services/logger";
-import { executeTranslate } from "@/server/modules/translation/inline/inline-translate.service";
+import { executeTranslate } from "@/features/reading/db/inline-translate.service";
 
 const SINGLE_WORD_REGEX = /^[A-Za-z]+(?:[-'][A-Za-z]+)*$/;
 

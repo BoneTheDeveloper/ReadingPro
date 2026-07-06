@@ -1,7 +1,7 @@
 ---
 phase: 13
 title: "Study page compose (colocate workspace vào route)"
-status: pending
+status: complete
 priority: P2
 effort: "3h"
 dependencies: [4, 5, 6, 7, 8, 9, 10, 11, 12]

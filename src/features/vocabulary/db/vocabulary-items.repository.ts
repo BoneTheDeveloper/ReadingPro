@@ -2,7 +2,7 @@ import "server-only";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { withUserProfile } from "@/features/users/db/sync-user";
-import { getOwnedTranslationSource } from "@/server/db/translation-queries";
+import { findOwnedPassage } from "@/features/passage/db/passage-study.repository";
 import {
   findOrCreateDailySet,
   findOrCreateWeeklySet,
@@ -34,7 +34,7 @@ export interface UpsertVocabularyItemParams {
 }
 
 export async function findOwnedSource(userId: string, sourceId: string) {
-  return getOwnedTranslationSource(userId, sourceId);
+  return findOwnedPassage(userId, sourceId);
 }
 
 export async function upsertVocabularyItem(

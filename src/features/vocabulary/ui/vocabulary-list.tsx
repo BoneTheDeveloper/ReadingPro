@@ -189,7 +189,6 @@ export function VocabularyList({
           totalPages={totalPages}
           total={total}
           filter={statusFilter}
-          t={t}
           onPageChange={onPageChange}
         />
       )}
@@ -387,14 +386,12 @@ function PaginationBar({
   totalPages,
   total,
   filter,
-  t,
   onPageChange,
 }: {
   page: number;
   totalPages: number;
   total: number;
   filter: VocabularyStatus | "ALL";
-  t: ReturnType<typeof useTranslations>;
   onPageChange: (page: number) => void;
 }) {
   const filterSuffix = filter !== "ALL" ? ` (${filter})` : "";

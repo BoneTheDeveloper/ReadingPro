@@ -5,14 +5,14 @@ import { useTranslations } from "next-intl";
 import { FileText, FileSearch, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getCEFRShortLabel } from "@/contracts/domain/cefr";
-import { getCEFRBadgeVariant } from "@/features/content-panel/lib/cefr-style";
+import { getCEFRBadgeVariant } from "@/features/reading/lib/cefr-style";
 import { Badge } from "@/components/ui/badge";
-import { useScrollProgress } from "@/features/content-panel/hooks/use-scroll-progress";
+import { useScrollProgress } from "@/features/reading/hooks/use-scroll-progress";
 import type {
   PassageData,
   TranslationSelection,
 } from "@/features/study/shared/types";
-import { extractSelectionInfo } from "@/features/content-panel/hooks/selection-utils";
+import { extractSelectionInfo } from "@/features/reading/hooks/selection-utils";
 
 type ViewMode = "original" | "simplified";
 

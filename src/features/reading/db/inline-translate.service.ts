@@ -1,10 +1,9 @@
 import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
 import * as Sentry from "@sentry/nextjs";
-import type { QuickTranslation } from "@/server/ai/translator";
-import { quickTranslationSchema } from "@/server/ai/translator";
 import { createRequestLogger } from "@/server/observability/logger";
-import type { TranslateResolutionSource } from "@/contracts/translation/text-utils";
+import type { TranslateResolutionSource } from "@/features/reading/schemas/text-utils";
+import { quickTranslationSchema, type QuickTranslation } from "@/server/modules/dictionary/lookup/lookup-quick.service";
 import {
   buildTranslationCacheKey,
   fetchCacheAndSource,
@@ -89,24 +88,27 @@ export async function executeTranslate(
 
   const result = await resolveWordTranslate(input, ctx);
 
-  void persistAsync(ctx.userId, input, result, ctx.requestLog, { cacheKey });
+  if (!result.translation) {
+    return { ok: false, status: 404 };
+  }
 
   ctx.requestLog.info(
     {
       context: {
-        cacheHit: false,
         provider: result.provider,
         selectedTextLength: input.text.length,
         contextLength: input.context.length,
       },
     },
-    "Translation request completed",
+    "Translation resolved",
   );
+
+  void persistAsync(ctx.userId, input, result, ctx.requestLog);
 
   return {
     ok: true,
     data: result,
-    resolutionSource: result.provider as TranslateResolutionSource,
+    resolutionSource: result.provider === "dictionary" ? "dictionary" : "fallback",
   };
 }
 
@@ -115,45 +117,37 @@ async function persistAsync(
   input: TranslateServiceInput,
   result: QuickTranslation,
   requestLog: RequestLogger,
-  cache?: { cacheKey: string },
 ) {
-  const historyPromise = writeTranslationHistory({
-    userId,
-    sourceId: input.sourceId,
-    selectedText: input.text,
-    contextSentence: input.context,
-    sourceLanguage: input.sourceLanguage,
-    targetLanguage: input.targetLanguage,
-    provider: result.provider,
-    translation: result.translation,
-    response: toJsonValue(result),
-  }).catch((error) => {
-    requestLog.warn({ err: error }, "Failed to persist translation history");
-    Sentry.captureException(error, {
-      tags: { route: "api:translate", component: "historyCreate" },
-      level: "warning",
-    });
-  });
-
-  if (cache) {
-    await Promise.all([
-      historyPromise,
-      writeTranslationCache({
-        userId,
-        sourceId: input.sourceId,
-        selectedText: input.text,
-        contextSentence: input.context,
-        sourceLanguage: input.sourceLanguage,
-        targetLanguage: input.targetLanguage,
-        provider: result.provider,
-        response: toJsonValue(result),
-      }).catch((error) => {
-        requestLog.warn({ err: error }, "Failed to persist translation cache");
-        Sentry.captureException(error, {
-          tags: { route: "api:translate", component: "cacheWrite" },
-          level: "warning",
-        });
-      }),
-    ]);
+  try {
+    await Sentry.startSpan(
+      { name: "translation:persist", op: "db" },
+      async () => {
+        await Promise.all([
+          writeTranslationCache({
+            userId,
+            sourceId: input.sourceId,
+            selectedText: input.text,
+            contextSentence: input.context,
+            sourceLanguage: input.sourceLanguage,
+            targetLanguage: input.targetLanguage,
+            provider: result.provider,
+            response: toJsonValue(result),
+          }),
+          writeTranslationHistory({
+            userId,
+            sourceId: input.sourceId,
+            selectedText: input.text,
+            contextSentence: input.context,
+            sourceLanguage: input.sourceLanguage,
+            targetLanguage: input.targetLanguage,
+            provider: result.provider,
+            translation: result.translation,
+            response: toJsonValue(result),
+          }),
+        ]);
+      },
+    );
+  } catch (error) {
+    requestLog.error({ err: error }, "Failed to persist translation");
   }
 }

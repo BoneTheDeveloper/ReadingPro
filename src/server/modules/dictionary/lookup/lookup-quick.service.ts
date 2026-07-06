@@ -3,6 +3,7 @@ import { normalizeDictionaryTerm } from "@/features/dictionary/schemas/normalize
 import { RUNTIME_STATUSES } from "@/features/dictionary/lib/dictionary-helpers";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated/prisma/client";
+import { z } from "zod";
 
 export interface QuickTranslationInput {
   text: string;
@@ -16,6 +17,12 @@ export interface QuickTranslation {
   source: string;
   provider: string;
 }
+
+export const quickTranslationSchema = z.object({
+  translation: z.string(),
+  source: z.string(),
+  provider: z.string(),
+});
 
 const RUNTIME_STATUS_LIST = Prisma.join(RUNTIME_STATUSES);
 
