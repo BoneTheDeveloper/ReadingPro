@@ -1,9 +1,9 @@
 import { z } from 'zod';
 import { NextRequest, NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
-import { validateTextContent } from '@/contracts/upload/upload-validation';
+import { validateTextContent } from '@/features/upload/schemas/upload-validation';
 import { getUserId } from '@/services/clerk';
-import { isAuthenticationRequiredError } from '@/server/http/route-errors';
+import { isAuthenticationRequiredError } from '@/lib/http/route-errors';
 import { createRequestLogContext, createRequestLogger } from '@/services/logger';
 import { analyzeAndPersistContent } from '@/features/upload/db/content-analysis/content-analysis.service';
 

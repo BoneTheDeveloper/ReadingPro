@@ -6,7 +6,7 @@ import { Upload, FileText, AlertCircle, Loader2 } from "lucide-react";
 import {
   validateFile,
   formatFileSize,
-} from "@/contracts/upload/upload-validation";
+} from "@/features/upload/schemas/upload-validation";
 import { cn } from "@/lib/utils";
 
 interface UploadZoneProps {

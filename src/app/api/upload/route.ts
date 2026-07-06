@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { getUserId } from "@/services/clerk";
-import { isAuthenticationRequiredError } from "@/server/http/route-errors";
+import { isAuthenticationRequiredError } from "@/lib/http/route-errors";
 import { createRequestLogContext, createRequestLogger } from "@/services/logger";
 import { processFileUpload, UploadWorkflowError } from "@/features/upload/db/upload-workflow";
 

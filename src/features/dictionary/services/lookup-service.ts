@@ -6,7 +6,7 @@ import {
   type DictionaryTranslationDto,
   RUNTIME_STATUSES,
   getSourceLabel,
-} from "@/contracts/dictionary/dictionary-dtos";
+} from "@/features/dictionary/schemas/dictionary-dtos";
 import { buildEntryDto } from "./dto-builders";
 import {
   findDictionaryLookupEntry,

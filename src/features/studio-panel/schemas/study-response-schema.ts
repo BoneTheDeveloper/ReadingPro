@@ -2,7 +2,7 @@ import { z } from "zod";
 import {
   makeResponseSchema,
   makeSuccessEnvelopeSchema,
-} from "@/contracts/http/api-response-schema";
+} from "@/lib/http/api-response-schema";
 
 export const studyQuestionOptionSchema = z
   .object({

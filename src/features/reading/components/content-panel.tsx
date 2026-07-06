@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { FileText, FileSearch, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getCEFRShortLabel } from "@/contracts/domain/cefr";
+import { getCEFRShortLabel } from "@/lib/domain-cefr";
 import { getCEFRBadgeVariant } from "@/features/reading/lib/cefr-style";
 import { Badge } from "@/components/ui/badge";
 import { useScrollProgress } from "@/features/reading/hooks/use-scroll-progress";

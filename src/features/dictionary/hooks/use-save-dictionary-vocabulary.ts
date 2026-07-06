@@ -6,7 +6,7 @@ import { saveDictionaryVocabulary } from "../dictionary-client";
 import type {
   DictionaryEntryDto,
   DictionarySenseDto,
-} from "@/contracts/dictionary/dictionary-dtos";
+} from "@/features/dictionary/schemas/dictionary-dtos";
 
 export type SaveStatus = "idle" | "saving" | "saved" | "error";
 

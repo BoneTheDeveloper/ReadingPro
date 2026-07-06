@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { getVocabularyStats } from "../vocabulary-client";
-import type { VocabularyStatsDto as VocabularyStats } from "@/contracts/vocabulary/vocabulary-dtos";
+import type { VocabularyStatsDto as VocabularyStats } from "@/features/vocabulary/model/vocabulary-dtos";
 
 interface UseVocabularyStatsResult {
   stats: VocabularyStats;

@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getDictionarySuggestions } from "../dictionary-client";
-import type { DictionarySuggestItemDto } from "@/contracts/dictionary/dictionary-dtos";
-import { normalizeDictionaryTerm } from "@/contracts/dictionary/normalize-dictionary-term";
+import type { DictionarySuggestItemDto } from "@/features/dictionary/schemas/dictionary-dtos";
+import { normalizeDictionaryTerm } from "@/features/dictionary/schemas/normalize-dictionary-term";
 
 const DEBOUNCE_MS = 250;
 const MIN_SUGGEST_LENGTH = 2;

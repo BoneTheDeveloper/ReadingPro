@@ -4,7 +4,7 @@ import {
   type DictionarySenseDto,
   type DictionaryTranslationDto,
   getSourceLabel,
-} from "@/contracts/dictionary/dictionary-dtos";
+} from "@/features/dictionary/schemas/dictionary-dtos";
 
 type EntryWithSenses = {
   id: string;

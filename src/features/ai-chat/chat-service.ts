@@ -9,7 +9,7 @@ import { createModuleLogger } from "@/services/logger";
 import {
   MAX_PASSAGE_CHARS,
   type UiMessage,
-} from "@/contracts/study/chat-schema";
+} from "@/features/studio-panel/schemas/chat-schema";
 import { truncateToRecentTurns, extractTextContent } from "./chat-utils";
 
 const log = createModuleLogger("lib:study:chat-service");

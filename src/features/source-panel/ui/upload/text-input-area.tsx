@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { FileText, AlertCircle, Loader2 } from "lucide-react";
-import { validateTextContent } from "@/contracts/upload/upload-validation";
+import { validateTextContent } from "@/features/upload/schemas/upload-validation";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 

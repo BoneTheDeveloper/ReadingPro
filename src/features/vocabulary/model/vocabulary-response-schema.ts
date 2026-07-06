@@ -3,7 +3,7 @@ import {
   apiErrorResponseSchema,
   makeResponseSchema,
   makeSuccessEnvelopeSchema,
-} from "@/contracts/http/api-response-schema";
+} from "@/lib/http/api-response-schema";
 
 export const vocabularyStatusSchema = z.enum(["NEW", "LEARNING", "MASTERED"]);
 export const vocabularySourceSchema = z.enum(["TRANSLATE", "DICTIONARY"]);

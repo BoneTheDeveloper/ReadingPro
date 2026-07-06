@@ -1,9 +1,9 @@
 import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
 import * as Sentry from "@sentry/nextjs";
-import { createRequestLogger } from "@/server/observability/logger";
+import { createRequestLogger } from "@/services/logger";
 import type { TranslateResolutionSource } from "@/features/reading/schemas/text-utils";
-import { quickTranslationSchema, type QuickTranslation } from "@/server/modules/dictionary/lookup/lookup-quick.service";
+import { quickTranslationSchema, type QuickTranslation } from "@/features/dictionary/services/lookup-quick.service";
 import {
   buildTranslationCacheKey,
   fetchCacheAndSource,

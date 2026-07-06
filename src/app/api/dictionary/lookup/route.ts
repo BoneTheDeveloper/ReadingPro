@@ -10,7 +10,7 @@ import { resolveDictionaryLookup } from "@/features/dictionary/services/lookup-s
 import type {
   DictionaryEntryDto,
   DictionaryMissDto,
-} from "@/contracts/dictionary/dictionary-response-schema";
+} from "@/features/dictionary/schemas/dictionary-response-schema";
 
 const dictionaryLookupQuerySchema = z.object({
   q: z.string().trim().min(1).max(200),

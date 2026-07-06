@@ -1,13 +1,13 @@
 import type { TranslationData } from "@/features/reading/schemas/translation-response-schema";
-import type { StudioArtifact } from "@/contracts/study/studio-artifact-types";
+import type { StudioArtifact } from "@/features/studio-panel/schemas/studio-artifact-types";
 export type {
   StudioArtifact,
   StudioArtifactStatus,
   StudioArtifactType,
   StudioArtifactErrorCode,
   QuizResult,
-} from "@/contracts/study/studio-artifact-types";
-export { ARTIFACT_STALE_TIME, STUDIO_GENERATION_TIMEOUT_MS } from "@/contracts/study/studio-artifact-types";
+} from "@/features/studio-panel/schemas/studio-artifact-types";
+export { ARTIFACT_STALE_TIME, STUDIO_GENERATION_TIMEOUT_MS } from "@/features/studio-panel/schemas/studio-artifact-types";
 
 export type StudyStatus =
   | "idle"

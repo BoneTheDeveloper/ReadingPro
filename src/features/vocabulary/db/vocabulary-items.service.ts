@@ -1,6 +1,6 @@
 import "server-only";
 import { createModuleLogger } from "@/services/logger";
-import type { VocabularyItemDto, VocabularyStatsDto, VocabularyStatus } from "@/contracts/vocabulary/vocabulary-dtos";
+import type { VocabularyItemDto, VocabularyStatsDto, VocabularyStatus } from "@/features/vocabulary/model/vocabulary-dtos";
 import { buildVocabularyItemDto, buildVocabularyStatsDto } from "@/features/vocabulary/db/shared/vocabulary-dto-builders";
 import {
   findOwnedSource,

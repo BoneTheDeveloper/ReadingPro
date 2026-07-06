@@ -6,14 +6,14 @@ import {
 } from "@/services/ai/question-generator";
 import { createModuleLogger } from "@/services/logger";
 import { questionDataSchema } from "@/features/passage/db/passage-queries";
-import type { GeneratedStudyQuestionDto } from "@/contracts/study/study-response-schema";
+import type { GeneratedStudyQuestionDto } from "@/features/studio-panel/schemas/study-response-schema";
 import {
   STUDIO_GENERATION_TIMEOUT_MS,
   type StudioArtifact,
   type StudioArtifactErrorCode,
   type StudioArtifactStatus,
   type StudioArtifactType,
-} from "@/contracts/study/studio-artifact-types";
+} from "@/features/studio-panel/schemas/studio-artifact-types";
 import {
   createStudioArtifactWithQuestions,
   findExistingStudioArtifact,

@@ -7,4 +7,4 @@ export type {
   VocabularySetDto as VocabularySet,
   VocabularyListResponse,
   VocabularySetsResponse,
-} from "@/contracts/vocabulary/vocabulary-dtos";
+} from "@/features/vocabulary/model/vocabulary-dtos";

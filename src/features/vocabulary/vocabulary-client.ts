@@ -9,7 +9,7 @@ import {
   vocabularySetResponseSchema,
   vocabularyStatsResponseSchema,
   vocabularyAckResponseSchema,
-} from "@/contracts/vocabulary/vocabulary-response-schema";
+} from "@/features/vocabulary/model/vocabulary-response-schema";
 import type { VocabularyStatus } from "./model/vocabulary-types";
 
 function assertNoError<T extends { error?: string } | Record<string, unknown>>(

@@ -1,5 +1,5 @@
 import "server-only";
-import type { VocabularySetDto, VocabularySetType } from "@/contracts/vocabulary/vocabulary-dtos";
+import type { VocabularySetDto, VocabularySetType } from "@/features/vocabulary/model/vocabulary-dtos";
 import { buildVocabularySetDto } from "@/features/vocabulary/db/shared/vocabulary-dto-builders";
 import {
   listVocabularySets,

@@ -2,7 +2,7 @@ import 'server-only';
 import {
   getSourceLabel,
   type DictionarySearchResultDto,
-} from "@/contracts/dictionary/dictionary-dtos";
+} from "@/features/dictionary/schemas/dictionary-dtos";
 import { normalizeDictionaryTerm } from "../schemas/normalize-dictionary-term";
 import {
   searchDictionaryCandidates,

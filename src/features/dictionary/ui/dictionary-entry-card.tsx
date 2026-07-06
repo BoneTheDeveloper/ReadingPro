@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import type {
   DictionaryEntryDto,
   DictionarySenseDto,
-} from "@/contracts/dictionary/dictionary-dtos";
+} from "@/features/dictionary/schemas/dictionary-dtos";
 import { useTranslations } from "next-intl";
 import type { SaveStatus } from "../hooks/use-save-dictionary-vocabulary";
 

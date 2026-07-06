@@ -1,7 +1,7 @@
 "use client"
 
 import * as Sentry from "@sentry/nextjs"
-import { progressStatsResponseSchema } from "@/contracts/study/study-response-schema"
+import { progressStatsResponseSchema } from "@/features/studio-panel/schemas/study-response-schema"
 
 /**
  * Fetch progress statistics for the current user.

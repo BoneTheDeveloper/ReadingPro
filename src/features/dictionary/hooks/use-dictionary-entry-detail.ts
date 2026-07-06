@@ -5,7 +5,7 @@ import { getDictionaryEntryDetail } from "../dictionary-client";
 import type {
   DictionaryEntryDto,
   DictionarySuggestItemDto,
-} from "@/contracts/dictionary/dictionary-dtos";
+} from "@/features/dictionary/schemas/dictionary-dtos";
 
 export type DetailStatus = "idle" | "loading" | "found" | "not-found" | "error";
 

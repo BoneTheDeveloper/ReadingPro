@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 import { getUserId } from "@/services/clerk";
-import { getZodErrorMessage, isAuthenticationRequiredError, isOwnershipMissError } from "@/server/http/route-errors";
+import { getZodErrorMessage, isAuthenticationRequiredError, isOwnershipMissError } from "@/lib/http/route-errors";
 import { createRequestLogContext, createRequestLogger } from "@/services/logger";
 import { generateQuestionsForPassage, PassageStudyServiceError } from "@/features/passage/db/passage-study.service";
-import type { GeneratedStudyQuestionDto } from "@/contracts/study/study-response-schema";
-import type { StudioArtifact } from "@/contracts/study/studio-artifact-types";
+import type { GeneratedStudyQuestionDto } from "@/features/studio-panel/schemas/study-response-schema";
+import type { StudioArtifact } from "@/features/studio-panel/schemas/studio-artifact-types";
 
 const studyQuestionsPostSchema = z.object({
   passageId: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, "Invalid UUID"),

@@ -1,9 +1,9 @@
-import { generatedStudyQuestionsResponseSchema } from "@/contracts/study/study-response-schema";
+import { generatedStudyQuestionsResponseSchema } from "@/features/studio-panel/schemas/study-response-schema";
 import {
   STUDIO_GENERATION_TIMEOUT_MS,
   type StudioArtifact,
   type StudioArtifactErrorCode,
-} from "@/contracts/study/studio-artifact-types";
+} from "@/features/studio-panel/schemas/studio-artifact-types";
 import type { QuestionData } from "@/features/study/shared/types";
 import {
   postJson,

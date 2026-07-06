@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/provider/theme-provider";
 import { getCEFRBadgeVariant } from "@/features/reading/lib/cefr-style";
-import { getCEFRLabel } from "@/contracts/domain/cefr";
+import { getCEFRLabel } from "@/lib/domain-cefr";
 import { Badge } from "@/components/ui/badge";
 
 const CEFR_LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"] as const;

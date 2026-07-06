@@ -5,12 +5,12 @@ import { postJson } from "@/lib/http/api-request";
 import {
   dictionarySuggestResponseSchema,
   dictionaryEntryDetailResponseSchema,
-} from "@/contracts/dictionary/dictionary-response-schema";
-import { vocabularyItemResponseSchema } from "@/contracts/vocabulary/vocabulary-response-schema";
+} from "@/features/dictionary/schemas/dictionary-response-schema";
+import { vocabularyItemResponseSchema } from "@/features/vocabulary/model/vocabulary-response-schema";
 import type {
   DictionaryEntryDto,
   DictionarySenseDto,
-} from "@/contracts/dictionary/dictionary-dtos";
+} from "@/features/dictionary/schemas/dictionary-dtos";
 
 /**
  * Fetch suggestions for a dictionary search query.
