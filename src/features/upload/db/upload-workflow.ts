@@ -1,6 +1,6 @@
 import * as Sentry from "@sentry/nextjs";
 import { parsePDF } from "@/features/upload/db/parsers/pdf";
-import { deleteFile, uploadFile } from "@/server/storage/blob-storage";
+import { deleteFile, uploadFile } from "@/services/storage";
 import {
   sanitizeFilename,
   sanitizeTitle,

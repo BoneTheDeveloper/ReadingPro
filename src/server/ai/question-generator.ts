@@ -1,1 +1,1 @@
-export * from "@/types/services/ai/question-generator";
+export * from "@/services/ai/question-generator";

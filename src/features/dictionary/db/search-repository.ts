@@ -1,6 +1,6 @@
 import "server-only";
 import { Prisma } from "@/generated/prisma/client";
-import { prisma } from "@/server/lib/db";
+import { prisma } from "@/lib/prisma";
 import { RUNTIME_STATUSES } from "../lib/dictionary-helpers";
 import { escapeLikeWildcards } from "../schemas/normalize-dictionary-term";
 

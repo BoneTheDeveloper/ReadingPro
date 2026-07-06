@@ -12,7 +12,7 @@ import {
   studyChatRequestSchema,
   type UiMessage,
 } from "@/contracts/study/chat-schema";
-import { validateMessageSizeLimits } from "@/server/modules/ai-chat/chat-utils";
+import { validateMessageSizeLimits } from "@/features/ai-chat/chat-utils";
 import {
   StudyChatServiceError,
   getOwnedPassageForChat,
@@ -20,7 +20,7 @@ import {
   toPersistedUiMessages,
   persistUserMessage,
   streamStudyChat,
-} from "@/server/modules/ai-chat/chat-service";
+} from "@/features/ai-chat/chat-service";
 
 function isUnauthenticatedError(error: unknown) {
   return error instanceof AuthenticationRequiredError;

@@ -1,6 +1,6 @@
 import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
-import { prisma } from "@/server/lib/db";
+import { prisma } from "@/lib/prisma";
 import type { CEFRLevel } from "@/contracts/domain/cefr";
 
 type SourceType = "TEXT" | "PDF";

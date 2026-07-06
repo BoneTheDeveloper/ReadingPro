@@ -1,6 +1,6 @@
 import "server-only";
 import { z } from "zod";
-import { AuthenticationRequiredError } from "@/types/services/clerk";
+import { AuthenticationRequiredError } from "@/services/clerk";
 
 export function isAuthenticationRequiredError(error: unknown) {
   return (

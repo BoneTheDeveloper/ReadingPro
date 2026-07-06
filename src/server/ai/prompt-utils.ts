@@ -1,1 +1,1 @@
-export * from "@/types/services/ai/prompt-utils";
+export * from "@/services/ai/prompt-utils";

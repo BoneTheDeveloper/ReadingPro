@@ -1,5 +1,5 @@
 import "server-only";
-import { prisma } from "@/server/lib/db";
+import { prisma } from "@/lib/prisma";
 import { withUserProfile } from "@/features/users/db/sync-user";
 import type {
   VocabularySet,

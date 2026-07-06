@@ -1,5 +1,5 @@
 import "server-only";
-import { prisma } from "@/server/lib/db";
+import { prisma } from "@/lib/prisma";
 
 export async function findStudioArtifacts(userId: string, passageId: string) {
   return prisma.studioArtifact.findMany({

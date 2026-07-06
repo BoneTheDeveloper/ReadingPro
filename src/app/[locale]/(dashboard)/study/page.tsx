@@ -1,6 +1,6 @@
 import { getPageUserId } from "@/services/clerk";
 import { getUserPassages } from "@/features/passage/db/passage-queries";
-import { StudyPageClient } from "@/features/study-workspace/ui/study-workspace-client";
+import { StudyPageClient } from "./_components/study-workspace-client";
 import type { PassageData } from "@/features/study/shared/types";
 
 export const dynamic = "force-dynamic";

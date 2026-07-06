@@ -19,10 +19,10 @@ import { StudyContentPanel } from "@/features/content-panel/ui/content-panel";
 import { StudyStudioPanel } from "@/features/studio-panel/ui/studio-panel";
 import { StudyTranslationPopup } from "@/features/studio-panel/ui/studio/translate/translation-popup";
 import { StudyUploadModal } from "@/features/source-panel/ui/upload-modal";
-import { useStudyActions } from "./_hooks/use-study-actions";
-import { useStudyPanelLayout } from "./_hooks/use-study-panel-layout";
-import { useStudyWorkspaceState } from "./_hooks/use-study-workspace-state";
-import { useStudyArtifacts } from "@/features/studio-panel/_hooks/use-study-artifacts";
+import { useStudyActions } from "../_hooks/use-study-actions";
+import { useStudyPanelLayout } from "../_hooks/use-study-panel-layout";
+import { useStudyWorkspaceState } from "../_hooks/use-study-workspace-state";
+import { useStudyArtifacts } from "@/features/studio-panel/hooks/use-study-artifacts";
 
 let quickTranslationRequestCounter = 0;
 

@@ -1,7 +1,7 @@
 import 'server-only';
 import { normalizeDictionaryTerm } from "@/features/dictionary/schemas/normalize-dictionary-term";
 import { RUNTIME_STATUSES } from "@/features/dictionary/lib/dictionary-helpers";
-import { prisma } from "@/server/lib/db";
+import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated/prisma/client";
 
 export interface QuickTranslationInput {

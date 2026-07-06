@@ -1,6 +1,6 @@
 import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
-import { prisma } from "@/server/lib/db";
+import { prisma } from "@/lib/prisma";
 
 export interface QuestionCreateInput {
   questionText: string;

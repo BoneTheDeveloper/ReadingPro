@@ -3,9 +3,9 @@ import * as Sentry from "@sentry/nextjs";
 import {
   generateComprehensionQuestions,
   type GeneratedQuestion,
-} from "@/server/ai/question-generator";
-import { simplifyContent } from "@/server/ai/content-simplifier";
-import { createModuleLogger } from "@/server/observability/logger";
+} from "@/services/ai/question-generator";
+import { simplifyContent } from "@/services/ai/content-simplifier";
+import { createModuleLogger } from "@/services/logger";
 import {
   getHeuristicCEFR,
   getTargetCEFRLevel,

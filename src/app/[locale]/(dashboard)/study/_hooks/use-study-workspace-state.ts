@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useOptimistic, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { deletePassageAction } from "./actions";
+import { deletePassageAction } from "../_components/actions";
 import type {
   DocumentItem,
   PassageData,
@@ -48,9 +48,11 @@ export function useStudyWorkspaceState(initialPassages: PassageData[]) {
   const [state, setState] = useState<StudyState>(() => {
     const initialId = getMostRecentPassageId(initialPassages);
     return {
+      passages: initialPassages,
       activePassageId: initialId,
       status: initialId ? "ready" : "idle",
       error: null,
+      simplifying: false,
       uploadModalOpen: false,
       artifactsByPassageId: {},
       viewingArtifactByPassageId: {},

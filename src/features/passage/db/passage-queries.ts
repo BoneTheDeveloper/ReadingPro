@@ -1,7 +1,7 @@
 import "server-only";
 import { z } from "zod";
 import { Prisma } from "@/generated/prisma/client";
-import { prisma } from "@/server/lib/db";
+import { prisma } from "@/lib/prisma";
 export const questionOptionSchema = z.object({
   id: z.string(),
   text: z.string(),

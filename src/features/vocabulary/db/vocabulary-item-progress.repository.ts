@@ -1,5 +1,5 @@
 import "server-only";
-import { prisma } from "@/services/lib/db";
+import { prisma } from "@/lib/prisma";
 import { simpleSchedule } from "@/features/vocabulary/db/scheduler";
 import type { VocabularyItem } from "@/generated/prisma/client";
 

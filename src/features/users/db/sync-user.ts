@@ -1,6 +1,6 @@
 import "server-only";
 import { Prisma } from "@/generated/prisma/client";
-import { prisma } from "@/services/lib/db";
+import { prisma } from "@/lib/prisma";
 import { createModuleLogger } from "@/services/logger";
 
 const log = createModuleLogger("auth:sync-user");

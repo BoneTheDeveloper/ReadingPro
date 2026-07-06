@@ -1,8 +1,8 @@
 import "server-only";
 import { Prisma } from "@/generated/prisma/client";
-import { prisma } from "@/services/lib/db";
+import { prisma } from "@/lib/prisma";
 import { withUserProfile } from "@/features/users/db/sync-user";
-import { getOwnedTranslationSource } from "@/services/db/translation-queries";
+import { getOwnedTranslationSource } from "@/server/db/translation-queries";
 import {
   findOrCreateDailySet,
   findOrCreateWeeklySet,

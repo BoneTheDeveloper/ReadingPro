@@ -1,5 +1,5 @@
 import "server-only";
-import { prisma } from "@/server/lib/db";
+import { prisma } from "@/lib/prisma";
 import type { LookupRawRow } from "./lookup-repository";
 
 export async function findEntryByIdRaw(
