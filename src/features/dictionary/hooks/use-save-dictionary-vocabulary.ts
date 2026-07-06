@@ -2,7 +2,7 @@
 
 import { useCallback, useRef, useState } from "react";
 import * as Sentry from "@sentry/nextjs";
-import { saveDictionaryVocabulary } from "../api-client/dictionary-client";
+import { saveDictionaryVocabulary } from "../dictionary-client";
 import type {
   DictionaryEntryDto,
   DictionarySenseDto,
@@ -20,7 +20,8 @@ export function useSaveDictionaryVocabulary() {
   const [errorSenseId, setErrorSenseId] = useState<string | null>(null);
   const pendingRef = useRef(false);
 
-  const buildKey = (entryId: string, senseId: string) => `${entryId}:${senseId}`;
+  const buildKey = (entryId: string, senseId: string) =>
+    `${entryId}:${senseId}`;
 
   const saveSense = useCallback(
     async (entry: DictionaryEntryDto, sense: DictionarySenseDto) => {

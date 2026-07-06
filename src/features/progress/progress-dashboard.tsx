@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getProgressStats } from "./api-client/progress-client";
+import { getProgressStats } from "./progress-client";
 import {
   TrendingUp,
   Clock,

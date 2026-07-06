@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
-import { getVocabularySets } from "../api-client/vocabulary-client";
+import { getVocabularySets } from "../vocabulary-client";
 import type { VocabularySet } from "../model/vocabulary-types";
 
 interface UseVocabularySetsResult {
@@ -12,7 +12,9 @@ interface UseVocabularySetsResult {
   refetch: () => void;
 }
 
-export function useVocabularySets(enabled: boolean = false): UseVocabularySetsResult {
+export function useVocabularySets(
+  enabled: boolean = false,
+): UseVocabularySetsResult {
   const t = useTranslations("Vocabulary");
   const requestIdRef = useRef(0);
   const mountedRef = useRef(true);
@@ -23,7 +25,9 @@ export function useVocabularySets(enabled: boolean = false): UseVocabularySetsRe
 
   useEffect(() => {
     mountedRef.current = true;
-    return () => { mountedRef.current = false; };
+    return () => {
+      mountedRef.current = false;
+    };
   }, []);
 
   const fetchSets = useCallback(async () => {

@@ -8,7 +8,7 @@ import type { QuestionData } from "@/features/study/shared/types";
 import {
   postJson,
   RequestTimeoutError,
-} from "@/contracts/http/api-client-utils";
+} from "@/lib/http/api-request";
 
 export type GenerateStudioQuestionsResult =
   | { artifact: StudioArtifact; questions: QuestionData[] }

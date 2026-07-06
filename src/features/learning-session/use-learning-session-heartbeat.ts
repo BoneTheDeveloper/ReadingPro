@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import * as Sentry from "@sentry/nextjs";
-import { ensureStudySession } from "../api-client/learning-session-client";
+import { ensureStudySession } from "./learning-session-client";
 
 const STUDY_SESSION_HEARTBEAT_MS = 60_000;
 

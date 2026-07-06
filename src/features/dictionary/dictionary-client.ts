@@ -1,7 +1,7 @@
 "use client";
 
 import * as Sentry from "@sentry/nextjs";
-import { postJson } from "@/contracts/http/api-client-utils";
+import { postJson } from "@/lib/http/api-request";
 import {
   dictionarySuggestResponseSchema,
   dictionaryEntryDetailResponseSchema,

@@ -1,6 +1,6 @@
 "use client";
 
-import { postJson } from "@/contracts/http/api-client-utils";
+import { postJson } from "@/lib/http/api-request";
 import { learningSessionResponseSchema } from "@/contracts/learning-session/learning-session-response-schema";
 
 /**

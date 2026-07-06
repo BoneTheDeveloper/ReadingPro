@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
-import { getVocabularyList } from "../api-client/vocabulary-client";
+import { getVocabularyList } from "../vocabulary-client";
 import type {
   VocabularyItem,
   VocabularyStatus,
@@ -34,41 +34,46 @@ export function useVocabularyList(
 
   useEffect(() => {
     mountedRef.current = true;
-    return () => { mountedRef.current = false; };
+    return () => {
+      mountedRef.current = false;
+    };
   }, []);
 
-  const fetchItems = useCallback(async (
-    pageArg: number,
-    statusArg: VocabularyStatus | "ALL",
-    searchArg: string,
-  ) => {
-    const requestId = ++requestIdRef.current;
-    abortRef.current?.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
+  const fetchItems = useCallback(
+    async (
+      pageArg: number,
+      statusArg: VocabularyStatus | "ALL",
+      searchArg: string,
+    ) => {
+      const requestId = ++requestIdRef.current;
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
 
-    setLoading(true);
-    setError(null);
+      setLoading(true);
+      setError(null);
 
-    try {
-      const data = await getVocabularyList({
-        page: pageArg,
-        status: statusArg,
-        search: searchArg,
-        signal: controller.signal,
-      });
+      try {
+        const data = await getVocabularyList({
+          page: pageArg,
+          status: statusArg,
+          search: searchArg,
+          signal: controller.signal,
+        });
 
-      if (requestIdRef.current !== requestId || !mountedRef.current) return;
-      setItems(data.data.items);
-      setTotal(data.data.total);
-      setLoading(false);
-    } catch (err) {
-      if (err instanceof DOMException && err.name === "AbortError") return;
-      if (requestIdRef.current !== requestId || !mountedRef.current) return;
-      setError(t("loadError"));
-      setLoading(false);
-    }
-  }, [t]);
+        if (requestIdRef.current !== requestId || !mountedRef.current) return;
+        setItems(data.data.items);
+        setTotal(data.data.total);
+        setLoading(false);
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        if (requestIdRef.current !== requestId || !mountedRef.current) return;
+        setError(t("loadError"));
+        setLoading(false);
+      }
+    },
+    [t],
+  );
 
   // Fetch on dependency change using setTimeout (same pattern as dictionary page)
   useEffect(() => {
@@ -84,5 +89,11 @@ export function useVocabularyList(
     };
   }, [enabled, page, statusFilter, search, fetchItems]);
 
-  return { items, total, loading, error, refetch: () => fetchItems(page, statusFilter, search) };
+  return {
+    items,
+    total,
+    loading,
+    error,
+    refetch: () => fetchItems(page, statusFilter, search),
+  };
 }
