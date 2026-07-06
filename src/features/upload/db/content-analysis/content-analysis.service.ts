@@ -11,7 +11,7 @@ import {
   getTargetCEFRLevel,
   isSimplifiableCEFRLevel,
   type CEFRLevel,
-} from "@/lib/domain-cefr";
+} from "@/types/cefr";
 import { createPassageWithArtifacts } from "./content-analysis.repository";
 
 const log = createModuleLogger("features:upload:content-analysis");

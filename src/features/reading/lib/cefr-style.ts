@@ -1,4 +1,4 @@
-import type { CEFRLevel } from "@/lib/domain-cefr";
+import type { CEFRLevel } from "@/types/cefr";
 import { CEFR_BADGE_VARIANT, type BadgeVariant } from "@/components/ui/badge";
 
 // CEFR visual mapping per design.md §6:
