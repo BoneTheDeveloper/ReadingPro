@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/nextjs";
-import { parsePDF } from "@/features/upload/db/parsers/pdf";
+import { parsePDF } from "@/features/upload/lib/parsers/pdf";
 import { deleteFile, uploadFile } from "@/services/storage";
 import {
   sanitizeFilename,

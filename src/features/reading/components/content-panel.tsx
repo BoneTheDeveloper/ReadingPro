@@ -12,7 +12,7 @@ import type {
   PassageData,
   TranslationSelection,
 } from "@/features/study/shared/types";
-import { extractSelectionInfo } from "@/features/reading/hooks/selection-utils";
+import { extractSelectionInfo } from "@/features/reading/lib/selection-utils";
 
 type ViewMode = "original" | "simplified";
 

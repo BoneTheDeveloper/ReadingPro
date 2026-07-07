@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Link, usePathname } from "@/i18n/navigation";
+import { Link, usePathname } from "@/services/i18n/navigation";
 import {
   BookOpen,
   BookMarked,
