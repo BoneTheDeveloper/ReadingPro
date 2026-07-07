@@ -4,7 +4,7 @@ import { z } from "zod";
 import {
   renameVocabularySet,
   deleteVocabularySetById,
-} from "@/features/vocabulary/db/sets/vocabulary-sets.service";
+} from "@/features/vocabulary/services/sets/vocabulary-sets.service";
 import { getUserId } from "@/services/clerk";
 import {
   isAuthenticationRequiredError,

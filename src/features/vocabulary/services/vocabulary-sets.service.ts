@@ -2,7 +2,7 @@ import "server-only";
 import type {
   VocabularySetDto,
   VocabularySetType,
-} from "@/features/vocabulary/vocabulary.schema";
+} from "@/features/vocabulary/schemas/vocabulary.schema";
 import { buildVocabularySetDto } from "@/features/vocabulary/db/shared/vocabulary-dto-builders";
 import {
   listVocabularySets,
@@ -12,7 +12,7 @@ import {
   verifySetOwnership,
   addItemToSet,
   removeItemFromSet,
-} from "./vocabulary-sets.repository";
+} from "../../db/sets/vocabulary-sets.repository";
 
 export async function getVocabularySetList(params: {
   userId: string;

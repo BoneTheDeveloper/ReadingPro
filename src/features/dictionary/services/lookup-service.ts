@@ -4,12 +4,12 @@ import {
   type DictionaryEntryDto,
   type DictionaryMissDto,
   type DictionaryTranslationDto,
-} from "@/features/dictionary/dictionary.schema";
+} from "@/features/dictionary/schemas/dictionary.schema";
 import {
   RUNTIME_STATUSES,
   getSourceLabel,
 } from "@/features/dictionary/lib/dictionary-helpers";
-import { buildEntryDto } from "../dictionary.schema";
+import { buildEntryDto } from "../schemas/dictionary.schema";
 import {
   findDictionaryLookupEntry,
   findQuickLookupTranslation,

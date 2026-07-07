@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
-import { reviewVocabularyItemById } from "@/features/vocabulary/db/vocabulary-items.service";
+import { reviewVocabularyItemById } from "@/features/vocabulary/services/vocabulary-items.service";
 import { getUserId } from "@/services/clerk";
 import {
   isAuthenticationRequiredError,

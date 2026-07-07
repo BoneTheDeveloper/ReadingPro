@@ -10,7 +10,7 @@ import {
   vocabularyStatsResponseSchema,
   vocabularyAckResponseSchema,
   type VocabularyStatus,
-} from "@/features/vocabulary/vocabulary.schema";
+} from "@/features/vocabulary/schemas/vocabulary.schema";
 
 function assertNoError<T extends { error?: string } | Record<string, unknown>>(
   result: T,

@@ -7,7 +7,7 @@ import {
   validateFile,
   validateTextContent,
 } from "@/features/upload/lib/upload-validation";
-import { analyzeAndPersistContent } from "@/features/upload/db/content-analysis/content-analysis.service";
+import { analyzeAndPersistContent } from "@/features/upload/services/content-analysis.service";
 
 export interface FileUploadWorkflowResult {
   filename: string;

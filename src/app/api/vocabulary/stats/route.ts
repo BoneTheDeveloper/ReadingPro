@@ -6,7 +6,7 @@ import {
   createRequestLogContext,
   createRequestLogger,
 } from "@/services/logger";
-import { getVocabularyItemStats } from "@/features/vocabulary/db/vocabulary-items.service";
+import { getVocabularyItemStats } from "@/features/vocabulary/services/vocabulary-items.service";
 
 export async function GET(request: NextRequest) {
   const requestLog = createRequestLogger(

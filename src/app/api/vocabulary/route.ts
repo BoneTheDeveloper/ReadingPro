@@ -10,7 +10,7 @@ import { isAuthenticationRequiredError } from "@/lib/http/route-errors";
 import {
   VocabularyServiceError,
   saveVocabularyItem,
-} from "@/features/vocabulary/db/vocabulary-items.service";
+} from "@/features/vocabulary/services/vocabulary-items.service";
 
 const vocabularyRequestSchema = z.object({
   selectedText: z.string().trim().min(1).max(500),

@@ -3,19 +3,19 @@
 import { useCallback, useState } from "react";
 import { Group, Panel, Separator } from "react-resizable-panels";
 import * as Sentry from "@sentry/nextjs";
-import { translateResponseSchema } from "@/features/reading/schemas/translation-response.schema";
+import { translateResponseSchema } from "@/features/reading/schemas/translation.schema";
 import { saveVocabularyAction } from "./actions";
 import {
   clampTranslationContext,
   isTranslateTextWithinLimit,
-} from "@/features/reading/schemas/translation-limits";
+} from "@/features/reading/lib/translation-limits";
 import type {
   PassageData,
   TranslationSelection,
   QuickTranslationData,
 } from "@/features/study/shared/types";
 import { StudySourcesPanel } from "@/features/source-panel/ui/sources-panel";
-import { StudyContentPanel } from "@/features/reading/components/content-panel";
+import { StudyContentPanel } from "@/features/reading/ui/content-panel";
 import { StudyStudioPanel } from "@/features/studio-panel/ui/studio-panel";
 import { StudyTranslationPopup } from "@/features/studio-panel/ui/studio/translate/translation-popup";
 import { StudyUploadModal } from "@/features/source-panel/ui/upload-modal";

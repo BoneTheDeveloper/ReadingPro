@@ -7,7 +7,7 @@ import {
   createRequestLogger,
 } from "@/services/logger";
 import { isAuthenticationRequiredError } from "@/lib/http/route-errors";
-import { getVocabularyItemList } from "@/features/vocabulary/db/vocabulary-items.service";
+import { getVocabularyItemList } from "@/features/vocabulary/services/vocabulary-items.service";
 
 const vocabularyListQuerySchema = z.object({
   status: z.enum(["NEW", "LEARNING", "MASTERED"]).optional(),

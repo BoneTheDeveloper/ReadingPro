@@ -4,7 +4,7 @@ import type {
   VocabularyItemDto,
   VocabularyStatsDto,
   VocabularyStatus,
-} from "@/features/vocabulary/vocabulary.schema";
+} from "@/features/vocabulary/schemas/vocabulary.schema";
 import {
   buildVocabularyItemDto,
   buildVocabularyStatsDto,
@@ -14,12 +14,12 @@ import {
   upsertVocabularyItem,
   listVocabularyItems,
   deleteVocabularyItem,
-} from "./vocabulary-items.repository";
+} from "../db/vocabulary-items.repository";
 import {
   updateVocabularyStatus,
   reviewVocabularyItem,
   getVocabularyStats,
-} from "./vocabulary-item-progress.repository";
+} from "../db/vocabulary-item-progress.repository";
 
 const log = createModuleLogger("lib:vocabulary-service");
 

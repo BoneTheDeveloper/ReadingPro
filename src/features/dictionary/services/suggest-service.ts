@@ -1,7 +1,7 @@
 import "server-only";
 import { normalizeDictionaryTerm } from "../lib/normalize-dictionary-term";
 import { getSourceLabel } from "@/features/dictionary/lib/dictionary-helpers";
-import type { DictionarySuggestItemDto } from "@/features/dictionary/dictionary.schema";
+import type { DictionarySuggestItemDto } from "@/features/dictionary/schemas/dictionary.schema";
 import {
   findSuggestCandidates,
   type SuggestCandidateRow,

@@ -14,7 +14,7 @@ import {
 import {
   generateQuestionsForPassage,
   PassageStudyServiceError,
-} from "@/features/passage/db/passage-study.service";
+} from "@/features/passage/services/passage-study.service";
 import type { GeneratedStudyQuestionDto } from "@/features/studio-panel/schemas/study.schema";
 import type { StudioArtifact } from "@/features/studio-panel/lib/studio-artifact-types";
 

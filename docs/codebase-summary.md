@@ -79,8 +79,10 @@ features/dictionary/
 └── ui/                       # React components (dictionary-page-client.tsx, ...)
 ```
 
-Not every feature has every layer — thinner slices only carry what they need (e.g. `users/`
-is just `db/sync-user.ts`; `study/` is just `shared/types.ts`).
+Thinner slices carry only what they need. `users/` is just `db/sync-user.ts`; `study/shared/` 
+holds shared domain types. As of the feature-slice-internal-format-standardization refactor,
+core features (vocabulary, reading, dictionary, upload, passage, learning-session, progress, ai-chat)
+now follow the full pattern with separated `db/`, `services/`, and `schemas/` layers.
 
 ## Features (`src/features/`)
 
@@ -89,17 +91,17 @@ is just `db/sync-user.ts`; `study/` is just `shared/types.ts`).
 | Feature | Layers present | Responsibility |
 |---------|----------------|----------------|
 | **dictionary** | db, services, schemas, hooks, lib, ui, client | Lookup / search / suggest / entry-detail. Canonical full-stack slice. |
-| **vocabulary** | db, hooks, model, ui, client | Save & manage user vocabulary (list, sets, stats). |
-| **reading** | components, db, hooks, lib, schemas | Reading view + inline / word translation, scroll progress, CEFR styling. |
-| **studio-panel** | actions, api-client, hooks, schemas, ui | Studio workspace (AI chat, generated questions/artifacts). |
-| **source-panel** | api-client, hooks, ui | Source/document management panel. |
-| **learning-session** | db, hooks, schemas, ui, client | Learning session lifecycle & tracking. |
-| **upload** | db (content-analysis, parsers/pdf, workflow), schemas | File upload → text extraction → content analysis. |
-| **progress** | components, db, hooks | Progress stats & tracking UI. |
-| **passage** | db (queries, study repo/service, studio-artifacts) | Passage persistence & study-artifact operations. |
-| **ai-chat** | chat-service, chat-utils | AI chat service for learning assistance. |
-| **users** | db (sync-user) | User sync (Clerk → DB). |
-| **study** | shared (types) | Shared study-domain types. |
+| **vocabulary** | db, services, schemas, hooks, ui, client | Save & manage user vocabulary (list, sets, stats). |
+| **reading** | db, services, schemas, hooks, lib, ui | Reading view + inline/word translation, scroll progress, CEFR styling. |
+| **studio-panel** | hooks, schemas, lib, ui | Studio workspace (AI chat, generated questions/artifacts). |
+| **source-panel** | hooks, ui | Source/document management panel. |
+| **learning-session** | db, schemas, hooks, ui, client | Learning session lifecycle & tracking. |
+| **upload** | db, services, schemas, lib, ui | File upload → text extraction → content analysis. |
+| **progress** | db, hooks, ui | Progress stats & tracking UI. |
+| **passage** | db, services | Passage persistence & study-artifact operations. |
+| **ai-chat** | services, lib | AI chat service for learning assistance. |
+| **users** | db | User sync (Clerk → DB). |
+| **study** | shared | Shared study-domain types. |
 
 ## API Endpoints
 

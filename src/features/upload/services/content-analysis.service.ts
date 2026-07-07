@@ -12,7 +12,7 @@ import {
   isSimplifiableCEFRLevel,
   type CEFRLevel,
 } from "@/types/cefr";
-import { createPassageWithArtifacts } from "./content-analysis.repository";
+import { createPassageWithArtifacts } from "../db/content-analysis/content-analysis.repository";
 
 const log = createModuleLogger("features:upload:content-analysis");
 

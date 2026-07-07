@@ -11,7 +11,7 @@ import {
   findStudioArtifactForOwnership,
   findStudioArtifacts,
   upsertQuizResult,
-} from "./studio-artifacts.repository";
+} from "../db/studio-artifacts.repository";
 
 export class ArtifactNotFoundError extends Error {
   constructor(artifactId: string) {

@@ -2,15 +2,15 @@ import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
 import * as Sentry from "@sentry/nextjs";
 import { createRequestLogger } from "@/services/logger";
-import type { TranslateResolutionSource } from "@/features/reading/schemas/text-utils";
+import type { TranslateResolutionSource } from "@/features/reading/lib/text-utils";
 import { quickTranslationSchema, type QuickTranslation } from "@/features/dictionary/services/lookup-quick.service";
 import {
   buildTranslationCacheKey,
   fetchCacheAndSource,
   writeTranslationCache,
   writeTranslationHistory,
-} from "./inline-translate.repository";
-import { resolveWordTranslate } from "./word-translate";
+} from "../db/inline-translate.repository";
+import { resolveWordTranslate } from "../db/word-translate";
 
 export interface TranslateServiceInput {
   text: string;

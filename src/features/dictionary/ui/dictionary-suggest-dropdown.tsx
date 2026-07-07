@@ -1,7 +1,7 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
-import type { DictionarySuggestItemDto } from "@/features/dictionary/dictionary.schema";
+import type { DictionarySuggestItemDto } from "@/features/dictionary/schemas/dictionary.schema";
 
 interface DictionarySuggestDropdownProps {
   suggestions: DictionarySuggestItemDto[];

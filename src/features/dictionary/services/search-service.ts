@@ -1,6 +1,6 @@
 import "server-only";
 import { getSourceLabel } from "@/features/dictionary/lib/dictionary-helpers";
-import type { DictionarySearchResultDto } from "@/features/dictionary/dictionary.schema";
+import type { DictionarySearchResultDto } from "@/features/dictionary/schemas/dictionary.schema";
 import { normalizeDictionaryTerm } from "../lib/normalize-dictionary-term";
 import {
   searchDictionaryCandidates,

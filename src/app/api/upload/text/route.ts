@@ -8,7 +8,7 @@ import {
   createRequestLogContext,
   createRequestLogger,
 } from "@/services/logger";
-import { analyzeAndPersistContent } from "@/features/upload/db/content-analysis/content-analysis.service";
+import { analyzeAndPersistContent } from "@/features/upload/services/content-analysis.service";
 
 const textUploadSchema = z.object({
   text: z.string().min(1),

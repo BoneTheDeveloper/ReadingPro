@@ -7,8 +7,8 @@ import {
   getArtifactQuestions,
   recordQuizResult,
   resetQuizResult,
-} from "@/features/passage/db/studio-artifacts-service";
-import { getChatHistory } from "@/features/ai-chat/chat-service";
+} from "@/features/passage/services/studio-artifacts.service";
+import { getChatHistory } from "@/features/ai-chat/services/chat-service";
 
 const passageIdSchema = z.string().uuid();
 

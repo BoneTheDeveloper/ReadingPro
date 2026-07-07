@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import type { Dispatch, SetStateAction } from "react";
-import { generateStudioQuestions } from "@/features/studio-panel/api-client/studio-questions-client";
+import { generateStudioQuestions } from "@/features/studio-panel/studio-questions-client";
 import { getArtifactQuestionsAction } from "@/features/studio-panel/actions";
 import type {
   ArtifactsCacheEntry,

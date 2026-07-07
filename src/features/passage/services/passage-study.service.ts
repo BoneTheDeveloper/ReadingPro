@@ -18,7 +18,7 @@ import {
   createStudioArtifactWithQuestions,
   findExistingStudioArtifact,
   findOwnedPassage,
-} from "./passage-study.repository";
+} from "../db/passage-study.repository";
 
 const log = createModuleLogger("lib:study:passage-service");
 

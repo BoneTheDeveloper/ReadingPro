@@ -7,8 +7,8 @@ import {
   dictionaryEntryDetailResponseSchema,
   type DictionaryEntryDto,
   type DictionarySenseDto,
-} from "@/features/dictionary/dictionary.schema";
-import { vocabularyItemResponseSchema } from "@/features/vocabulary/vocabulary.schema";
+} from "@/features/dictionary/schemas/dictionary.schema";
+import { vocabularyItemResponseSchema } from "@/features/vocabulary/schemas/vocabulary.schema";
 
 /**
  * Fetch suggestions for a dictionary search query.

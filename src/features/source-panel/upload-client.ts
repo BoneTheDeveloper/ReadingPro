@@ -1,7 +1,7 @@
 "use client";
 
 import * as Sentry from "@sentry/nextjs";
-import { uploadResponseSchema } from "@/features/upload/upload.schema";
+import { uploadResponseSchema } from "@/features/upload/schemas/upload.schema";
 
 /**
  * Upload a file to be processed.

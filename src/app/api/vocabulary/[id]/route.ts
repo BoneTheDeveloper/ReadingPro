@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { deleteVocabularyItemById } from "@/features/vocabulary/db/vocabulary-items.service";
+import { deleteVocabularyItemById } from "@/features/vocabulary/services/vocabulary-items.service";
 import { getUserId } from "@/services/clerk";
 import {
   isAuthenticationRequiredError,

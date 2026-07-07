@@ -10,8 +10,8 @@ import {
   createRequestLogContext,
   createRequestLogger,
 } from "@/services/logger";
-import { ensureActiveSession } from "@/features/learning-session/learning-session-queries";
-import { toLearningSessionDto } from "@/features/learning-session/learning-session.schema";
+import { ensureActiveSession } from "@/features/learning-session/db/learning-session-queries";
+import { toLearningSessionDto } from "@/features/learning-session/schemas/learning-session.schema";
 
 const learningSessionPostSchema = z.object({}).strict();
 

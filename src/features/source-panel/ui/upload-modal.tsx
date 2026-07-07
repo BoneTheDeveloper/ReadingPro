@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import {
   uploadFile,
   uploadText,
-} from "@/features/source-panel/api-client/upload-client";
+} from "@/features/source-panel/upload-client";
 import {
   Dialog,
   DialogContent,

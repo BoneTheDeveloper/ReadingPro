@@ -1,7 +1,7 @@
 "use client";
 
 import { postJson } from "@/lib/http/api-request";
-import { learningSessionResponseSchema } from "./learning-session.schema";
+import { learningSessionResponseSchema } from "./schemas/learning-session.schema";
 
 /**
  * Ensure an active learning session exists, creating one if needed.
