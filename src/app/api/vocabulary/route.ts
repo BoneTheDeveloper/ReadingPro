@@ -6,7 +6,7 @@ import {
   createRequestLogContext,
   createRequestLogger,
 } from "@/services/logger";
-import { isAuthenticationRequiredError } from "@/lib/http/route-errors";
+import { toHttp } from "@/lib/http/route-errors";
 import {
   VocabularyServiceError,
   saveVocabularyItem,
@@ -67,19 +67,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, data: dto });
   } catch (error) {
-    if (isAuthenticationRequiredError(error)) {
-      requestLog.warn("Unauthenticated vocabulary request rejected");
-      return NextResponse.json({ error: "Authentication required." }, { status: 401 });
-    }
-
     if (error instanceof VocabularyServiceError) {
       return NextResponse.json({ error: error.message }, { status: 404 });
     }
-
-    requestLog.error({ err: error }, "Vocabulary save failed");
-    Sentry.captureException(error, {
-      tags: { route: "api:vocabulary", method: "POST" },
-    });
-    return NextResponse.json({ error: "Unable to save vocabulary." }, { status: 500 });
+    return toHttp(error, requestLog, "api:vocabulary");
   }
 }

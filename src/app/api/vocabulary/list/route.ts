@@ -6,7 +6,7 @@ import {
   createRequestLogContext,
   createRequestLogger,
 } from "@/services/logger";
-import { isAuthenticationRequiredError } from "@/lib/http/route-errors";
+import { toHttp } from "@/lib/http/route-errors";
 import { getVocabularyItemList } from "@/features/vocabulary/services/vocabulary-items.service";
 
 const vocabularyListQuerySchema = z.object({
@@ -55,20 +55,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    if (isAuthenticationRequiredError(error)) {
-      return NextResponse.json(
-        { error: "Authentication required." },
-        { status: 401 },
-      );
-    }
-
-    requestLog.error({ err: error }, "Failed to list vocabulary items");
-    Sentry.captureException(error, {
-      tags: { route: "api:vocabulary:list", method: "GET" },
-    });
-    return NextResponse.json(
-      { error: "Failed to list vocabulary items." },
-      { status: 500 },
-    );
+    return toHttp(error, requestLog, "api:vocabulary:list");
   }
 }

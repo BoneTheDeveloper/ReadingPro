@@ -2,10 +2,7 @@ import { z } from "zod";
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { getUserId } from "@/services/clerk";
-import {
-  getZodErrorMessage,
-  isAuthenticationRequiredError,
-} from "@/lib/http/route-errors";
+import { toHttp } from "@/lib/http/route-errors";
 import {
   createRequestLogContext,
   createRequestLogger,
@@ -49,25 +46,6 @@ export async function POST(request: NextRequest) {
       data: toLearningSessionDto(session),
     });
   } catch (error) {
-    if (isAuthenticationRequiredError(error)) {
-      return NextResponse.json(
-        { error: "Authentication required." },
-        { status: 401 },
-      );
-    }
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: getZodErrorMessage(error) },
-        { status: 400 },
-      );
-    }
-    requestLog.error({ err: error }, "Failed to ensure active session");
-    Sentry.captureException(error, {
-      tags: { route: "api:learning-session", method: "POST" },
-    });
-    return NextResponse.json(
-      { error: "Failed to ensure active session" },
-      { status: 500 },
-    );
+    return toHttp(error, requestLog, "api:learning-session");
   }
 }

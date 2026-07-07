@@ -1,7 +1,7 @@
 ---
 title: "Error Handling Layering: Typed Errors + toHttp"
 description: "Replace fragile string-match error classification with typed domain errors raised at repo/service and a single toHttp() boundary that maps them to HTTP. Pure refactor, no new endpoints."
-status: pending
+status: completed
 priority: P2
 branch: "preview"
 tags: [refactor, error-handling, api]
@@ -51,10 +51,10 @@ Prisma/raw → [repo/service: raise NotFoundError] → route (thin try/catch) �
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 1 | [NotFoundError class and toHttp boundary](./phase-01-notfounderror-class-and-tohttp-boundary.md) | Pending |
-| 2 | [Repo and service raise typed errors](./phase-02-repo-and-service-raise-typed-errors.md) | Pending |
-| 3 | [Migrate ownership routes and delete string matchers](./phase-03-migrate-ownership-routes-and-delete-string-matchers.md) | Pending |
-| 4 | [Broaden toHttp to remaining routes](./phase-04-broaden-tohttp-to-remaining-routes.md) | Pending |
+| 1 | [NotFoundError class and toHttp boundary](./phase-01-notfounderror-class-and-tohttp-boundary.md) | Completed |
+| 2 | [Repo and service raise typed errors](./phase-02-repo-and-service-raise-typed-errors.md) | Completed |
+| 3 | [Migrate ownership routes and delete string matchers](./phase-03-migrate-ownership-routes-and-delete-string-matchers.md) | Completed |
+| 4 | [Broaden toHttp to remaining routes](./phase-04-broaden-tohttp-to-remaining-routes.md) | Completed |
 
 ## Dependencies
 

@@ -52,11 +52,17 @@ Frontend client            API route (app/api/**)      Service (features/<f>/ser
 
 ## Error Handling
 
-API routes should:
+Domain errors are raised as typed exceptions at the repo/service layer:
+- `NotFoundError` (in `lib/http/route-errors.ts`) — thrown when a resource does not exist or is not owned by the caller; merges both cases so non-owners cannot distinguish missing from forbidden.
+- Service-specific errors (e.g., `VocabularyServiceError`, `UploadWorkflowError`) — carry domain-specific status codes.
 
-1. Parse the request with zod; return 400 if invalid.
-2. Call the service; translate known service errors to the right status code (helpers in `lib/http/route-errors.ts`, e.g. `isAuthenticationRequiredError`, `isOwnershipMissError`).
-3. Wrap all other exceptions in 500 and report to Sentry.
+API routes catch errors in a thin try/catch:
+1. `instanceof` check for domain errors with non-standard status codes, map them explicitly.
+2. Call `toHttp(error, requestLog, "api:<route-id>")` — the single boundary that translates:
+   - `AuthenticationRequiredError` → 401
+   - `NotFoundError` → 404
+   - `ZodError` → 400
+   - Everything else → log + Sentry + 500 `{ error: "Internal error." }`
 
 ## Type Safety
 

@@ -1,7 +1,7 @@
 ---
 phase: 4
 title: "Broaden toHttp to remaining routes"
-status: pending
+status: completed
 priority: P3
 effort: "1h"
 dependencies: [3]
@@ -42,9 +42,9 @@ Migrate (auth/zod-only routes, grep-verified — the 15 total minus the 7 done i
 
 ## Success Criteria
 
-- [ ] Listed routes route their catch through `toHttp` (or documented why a route keeps a bespoke branch)
-- [ ] No status-code regression — manual walk done
-- [ ] `pnpm run typecheck && pnpm run lint` pass
+- [x] Listed routes route their catch through `toHttp` (or documented why a route keeps a bespoke branch)
+- [x] No status-code regression — manual walk done
+- [x] `pnpm run typecheck && pnpm run lint` pass
 
 ## Risk Assessment
 

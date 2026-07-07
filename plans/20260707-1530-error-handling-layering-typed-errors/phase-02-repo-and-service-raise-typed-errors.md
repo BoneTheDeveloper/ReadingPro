@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Repo and service raise typed errors"
-status: pending
+status: completed
 priority: P2
 effort: "1.5h"
 dependencies: [1]
@@ -64,11 +64,11 @@ Leave untouched (NOT ownership/404):
 
 ## Success Criteria
 
-- [ ] All listed vocabulary throw-sites raise `NotFoundError`; `findUniqueOrThrow` replaced by `findUnique`+null-check in those paths
-- [ ] `studio-artifacts.service.ts` uses `ArtifactNotFoundError` at both sites (no plain `Error`)
-- [ ] `passage-queries.ts` and `translation-provider.ts` untouched
-- [ ] `pnpm run typecheck && pnpm run lint` pass
-- [ ] Existing routes still return 404 on not-found (string-match still matches `NotFoundError.message`) — spot-check one vocabulary delete
+- [x] All listed vocabulary throw-sites raise `NotFoundError`; `findUniqueOrThrow` replaced by `findUnique`+null-check in those paths
+- [x] `studio-artifacts.service.ts` uses `ArtifactNotFoundError` at both sites (no plain `Error`)
+- [x] `passage-queries.ts` and `translation-provider.ts` untouched
+- [x] `pnpm run typecheck && pnpm run lint` pass
+- [x] Existing routes still return 404 on not-found (string-match still matches `NotFoundError.message`) — spot-check one vocabulary delete
 
 ## Risk Assessment
 

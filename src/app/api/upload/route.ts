@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import * as Sentry from "@sentry/nextjs";
 import { getUserId } from "@/services/clerk";
-import { isAuthenticationRequiredError } from "@/lib/http/route-errors";
+import { toHttp } from "@/lib/http/route-errors";
 import { createRequestLogContext, createRequestLogger } from "@/services/logger";
 import { processFileUpload, UploadWorkflowError } from "@/features/upload/db/upload-workflow";
 
@@ -33,20 +32,9 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    if (isAuthenticationRequiredError(error)) {
-      return NextResponse.json({ error: "Authentication required." }, { status: 401 });
-    }
-
     if (error instanceof UploadWorkflowError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
-    requestLog.error({ err: error }, "Upload failed");
-    Sentry.captureException(error, {
-      tags: { route: "api:upload", method: "POST" },
-    });
-    return NextResponse.json(
-      { error: "Failed to process file" },
-      { status: 500 },
-    );
+    return toHttp(error, requestLog, "api:upload");
   }
 }

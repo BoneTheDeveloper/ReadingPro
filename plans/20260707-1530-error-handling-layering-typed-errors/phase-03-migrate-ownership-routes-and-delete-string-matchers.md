@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "Migrate ownership routes and delete string matchers"
-status: pending
+status: completed
 priority: P2
 effort: "1.5h"
 dependencies: [2]
@@ -62,11 +62,11 @@ Delete:
 
 ## Success Criteria
 
-- [ ] All 7 ownership routes route their catch through `toHttp`
-- [ ] `ArtifactNotFoundError` handled (via extends `NotFoundError` or explicit branch in `toHttp`)
-- [ ] `isOwnershipMissError` + `isOwnershipMissMessage` deleted; grep shows 0 references
-- [ ] Status codes unchanged per route (401/404/400/500) — manual walk done
-- [ ] `pnpm run typecheck && pnpm run lint` pass
+- [x] All 7 ownership routes route their catch through `toHttp`
+- [x] `ArtifactNotFoundError` handled (via extends `NotFoundError` or explicit branch in `toHttp`)
+- [x] `isOwnershipMissError` + `isOwnershipMissMessage` deleted; grep shows 0 references
+- [x] Status codes unchanged per route (401/404/400/500) — manual walk done
+- [x] `pnpm run typecheck && pnpm run lint` pass
 
 ## Risk Assessment
 

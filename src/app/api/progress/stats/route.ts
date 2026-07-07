@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
 import { getUserProgress } from '@/features/progress/db/progress-queries';
 import { getUserId } from '@/services/clerk';
-import { isAuthenticationRequiredError } from '@/lib/http/route-errors';
+import { toHttp } from '@/lib/http/route-errors';
 import { createRequestLogContext, createRequestLogger } from '@/services/logger';
 
 export async function GET(request: NextRequest) {
@@ -20,17 +20,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ success: true, data: stats });
   } catch (error) {
-    if (isAuthenticationRequiredError(error)) {
-      return NextResponse.json({ error: 'Authentication required.' }, { status: 401 });
-    }
-
-    requestLog.error({ err: error }, 'Failed to fetch progress stats');
-    Sentry.captureException(error, {
-      tags: { route: 'api:progress:stats', method: 'GET' },
-    });
-    return NextResponse.json(
-      { error: 'Failed to fetch progress' },
-      { status: 500 },
-    );
+    return toHttp(error, requestLog, 'api:progress:stats');
   }
 }

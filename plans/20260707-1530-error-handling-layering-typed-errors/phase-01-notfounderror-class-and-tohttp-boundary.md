@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: "NotFoundError class and toHttp boundary"
-status: pending
+status: completed
 priority: P2
 effort: "1h"
 dependencies: []
@@ -74,10 +74,10 @@ without a runtime dependency.
 
 ## Success Criteria
 
-- [ ] `NotFoundError` and `toHttp` exported from `route-errors.ts`
-- [ ] `isAuthenticationRequiredError` no longer has the string-message branch
-- [ ] `pnpm run typecheck && pnpm run lint` pass
-- [ ] No caller changed yet (this phase is additive + one dead-branch deletion)
+- [x] `NotFoundError` and `toHttp` exported from `route-errors.ts`
+- [x] `isAuthenticationRequiredError` no longer has the string-message branch
+- [x] `pnpm run typecheck && pnpm run lint` pass
+- [x] No caller changed yet (this phase is additive + one dead-branch deletion)
 
 ## Risk Assessment
 
