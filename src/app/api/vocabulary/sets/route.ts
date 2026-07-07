@@ -10,7 +10,7 @@ import {
 import {
   getVocabularySetList,
   createVocabularyManualSet,
-} from "@/features/vocabulary/services/sets/vocabulary-sets.service";
+} from "@/features/vocabulary/services/vocabulary-sets.service";
 
 const createSetSchema = z.object({
   name: z.string().trim().min(1).max(100),

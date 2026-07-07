@@ -2,11 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 import { getUserId } from "@/services/clerk";
-import {
-  getZodErrorMessage,
-  isAuthenticationRequiredError,
-  isOwnershipMissError,
-} from "@/lib/http/route-errors";
+import { getZodErrorMessage, toHttp } from "@/lib/http/route-errors";
 import {
   createRequestLogContext,
   createRequestLogger,
@@ -102,27 +98,6 @@ async function handleStudioQuestionsPost(request: NextRequest) {
     );
     return createStudioQuestionsSuccessResponse({ artifact, questions });
   } catch (error) {
-    if (isAuthenticationRequiredError(error)) {
-      return NextResponse.json(
-        { error: "Authentication required." },
-        { status: 401 },
-      );
-    }
-
-    if (isOwnershipMissError(error, ["passage"])) {
-      return NextResponse.json(
-        { error: "Passage not found." },
-        { status: 404 },
-      );
-    }
-
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: getZodErrorMessage(error) },
-        { status: 400 },
-      );
-    }
-
     if (error instanceof PassageStudyServiceError) {
       requestLog.warn(
         { err: error },
@@ -134,14 +109,7 @@ async function handleStudioQuestionsPost(request: NextRequest) {
       );
     }
 
-    requestLog.error({ err: error }, "Failed to generate study questions");
-    Sentry.captureException(error, {
-      tags: { route: "api:study:studio:questions", method: "POST" },
-    });
-    return NextResponse.json(
-      { error: "Question generation failed — try again", code: "UNKNOWN" },
-      { status: 500 },
-    );
+    return toHttp(error, requestLog, "api:study:studio:questions");
   }
 }
 

@@ -4,6 +4,7 @@ import {
   type StudioArtifactType,
 } from "@/features/studio-panel/lib/studio-artifact-types";
 import type { QuestionData } from "@/features/study/shared/types";
+import { NotFoundError } from "@/lib/http/route-errors";
 import {
   deleteQuizResults,
   findArtifactQuestions,
@@ -13,9 +14,12 @@ import {
   upsertQuizResult,
 } from "../db/studio-artifacts.repository";
 
-export class ArtifactNotFoundError extends Error {
+// Extends NotFoundError so the toHttp boundary maps it to 404 via a single
+// instanceof check, while keeping the artifact-specific message + name.
+export class ArtifactNotFoundError extends NotFoundError {
   constructor(artifactId: string) {
-    super(`Artifact not found or access denied: ${artifactId}`);
+    super("Artifact");
+    this.message = `Artifact not found or access denied: ${artifactId}`;
     this.name = "ArtifactNotFoundError";
   }
 }
@@ -89,7 +93,7 @@ export async function recordQuizResult(
   const artifact = await findStudioArtifactForOwnership(artifactId, userId);
 
   if (!artifact) {
-    throw new Error("Artifact not found or access denied");
+    throw new ArtifactNotFoundError(artifactId);
   }
 
   await upsertQuizResult(artifactId, {
@@ -107,7 +111,7 @@ export async function resetQuizResult(
   const artifact = await findStudioArtifactForOwnership(artifactId, userId);
 
   if (!artifact) {
-    throw new Error("Artifact not found or access denied");
+    throw new ArtifactNotFoundError(artifactId);
   }
 
   await deleteQuizResults(artifactId);

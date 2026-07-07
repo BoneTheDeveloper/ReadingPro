@@ -5,6 +5,7 @@ import {
   type GeneratedQuestion,
 } from "@/services/ai/question-generator";
 import { createModuleLogger } from "@/services/logger";
+import { NotFoundError } from "@/lib/http/route-errors";
 import { questionDataSchema } from "@/features/passage/db/passage-queries";
 import type { GeneratedStudyQuestionDto } from "@/features/studio-panel/schemas/study.schema";
 import {
@@ -104,7 +105,7 @@ async function getOwnedPassage(userId: string, passageId: string) {
   const passage = await findOwnedPassage(userId, passageId);
 
   if (!passage) {
-    throw new PassageStudyServiceError("Passage not found");
+    throw new NotFoundError("Passage");
   }
   return passage;
 }

@@ -4,12 +4,9 @@ import { z } from "zod";
 import {
   renameVocabularySet,
   deleteVocabularySetById,
-} from "@/features/vocabulary/services/sets/vocabulary-sets.service";
+} from "@/features/vocabulary/services/vocabulary-sets.service";
 import { getUserId } from "@/services/clerk";
-import {
-  isAuthenticationRequiredError,
-  isOwnershipMissError,
-} from "@/lib/http/route-errors";
+import { toHttp } from "@/lib/http/route-errors";
 import {
   createRequestLogContext,
   createRequestLogger,
@@ -59,28 +56,7 @@ export async function PATCH(
 
     return NextResponse.json({ success: true, data: set });
   } catch (error) {
-    if (isAuthenticationRequiredError(error)) {
-      return NextResponse.json(
-        { error: "Authentication required." },
-        { status: 401 },
-      );
-    }
-
-    if (isOwnershipMissError(error, ["vocabulary set", "set"])) {
-      return NextResponse.json(
-        { error: "Vocabulary set not found." },
-        { status: 404 },
-      );
-    }
-
-    requestLog.error({ err: error }, "Failed to update vocabulary set");
-    Sentry.captureException(error, {
-      tags: { route: "api:vocabulary:sets:update", method: "PATCH" },
-    });
-    return NextResponse.json(
-      { error: "Failed to update vocabulary set." },
-      { status: 500 },
-    );
+    return toHttp(error, requestLog, "api:vocabulary:sets:update");
   }
 }
 
@@ -101,24 +77,6 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    if (isAuthenticationRequiredError(error)) {
-      return NextResponse.json(
-        { error: "Authentication required." },
-        { status: 401 },
-      );
-    }
-
-    if (isOwnershipMissError(error, ["vocabulary set", "set"])) {
-      return NextResponse.json(
-        { error: "Vocabulary set not found." },
-        { status: 404 },
-      );
-    }
-
-    requestLog.error({ err: error }, "Failed to delete vocabulary set");
-    return NextResponse.json(
-      { error: "Failed to delete vocabulary set." },
-      { status: 500 },
-    );
+    return toHttp(error, requestLog, "api:vocabulary:sets:delete");
   }
 }

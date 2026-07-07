@@ -12,7 +12,7 @@ import {
   verifySetOwnership,
   addItemToSet,
   removeItemFromSet,
-} from "../../db/sets/vocabulary-sets.repository";
+} from "../db/sets/vocabulary-sets.repository";
 
 export async function getVocabularySetList(params: {
   userId: string;

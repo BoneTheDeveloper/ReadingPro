@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
-import { addItemsToVocabularySet } from "@/features/vocabulary/services/sets/vocabulary-sets.service";
+import { addItemsToVocabularySet } from "@/features/vocabulary/services/vocabulary-sets.service";
 import { getUserId } from "@/services/clerk";
-import {
-  isAuthenticationRequiredError,
-  isOwnershipMissError,
-} from "@/lib/http/route-errors";
+import { toHttp } from "@/lib/http/route-errors";
 import {
   createRequestLogContext,
   createRequestLogger,
@@ -56,27 +53,6 @@ export async function POST(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    if (isAuthenticationRequiredError(error)) {
-      return NextResponse.json(
-        { error: "Authentication required." },
-        { status: 401 },
-      );
-    }
-
-    if (isOwnershipMissError(error, ["vocabulary set"])) {
-      return NextResponse.json(
-        { error: "Vocabulary set not found." },
-        { status: 404 },
-      );
-    }
-
-    requestLog.error({ err: error }, "Failed to add items to vocabulary set");
-    Sentry.captureException(error, {
-      tags: { route: "api:vocabulary:sets:add-items", method: "POST" },
-    });
-    return NextResponse.json(
-      { error: "Failed to add items to set." },
-      { status: 500 },
-    );
+    return toHttp(error, requestLog, "api:vocabulary:sets:add-items");
   }
 }

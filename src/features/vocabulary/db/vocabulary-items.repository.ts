@@ -1,6 +1,7 @@
 import "server-only";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
+import { NotFoundError } from "@/lib/http/route-errors";
 import { withUserProfile } from "@/features/users/db/sync-user";
 import { findOwnedPassage } from "@/features/passage/db/passage-study.repository";
 import {
@@ -181,12 +182,12 @@ export async function deleteVocabularyItem(params: {
   userId: string;
   itemId: string;
 }): Promise<void> {
-  const item = await prisma.vocabularyItem.findUniqueOrThrow({
+  const item = await prisma.vocabularyItem.findUnique({
     where: { id: params.itemId },
   });
 
-  if (item.userId !== params.userId) {
-    throw new Error(`No vocabulary item found for user`);
+  if (!item || item.userId !== params.userId) {
+    throw new NotFoundError("Vocabulary item");
   }
 
   await prisma.vocabularyItem.delete({

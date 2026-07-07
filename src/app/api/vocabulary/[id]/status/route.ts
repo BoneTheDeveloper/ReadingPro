@@ -3,10 +3,7 @@ import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 import { updateVocabularyItemStatus } from "@/features/vocabulary/services/vocabulary-items.service";
 import { getUserId } from "@/services/clerk";
-import {
-  isAuthenticationRequiredError,
-  isOwnershipMissError,
-} from "@/lib/http/route-errors";
+import { toHttp } from "@/lib/http/route-errors";
 import {
   createRequestLogContext,
   createRequestLogger,
@@ -56,27 +53,6 @@ export async function PATCH(
 
     return NextResponse.json({ success: true, data: dto });
   } catch (error) {
-    if (isAuthenticationRequiredError(error)) {
-      return NextResponse.json(
-        { error: "Authentication required." },
-        { status: 401 },
-      );
-    }
-
-    if (isOwnershipMissError(error, ["vocabulary item", "vocabulary"])) {
-      return NextResponse.json(
-        { error: "Vocabulary item not found." },
-        { status: 404 },
-      );
-    }
-
-    requestLog.error({ err: error }, "Failed to update vocabulary status");
-    Sentry.captureException(error, {
-      tags: { route: "api:vocabulary:status", method: "PATCH" },
-    });
-    return NextResponse.json(
-      { error: "Failed to update vocabulary status." },
-      { status: 500 },
-    );
+    return toHttp(error, requestLog, "api:vocabulary:status");
   }
 }

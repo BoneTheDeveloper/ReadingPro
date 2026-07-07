@@ -1,5 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
+import { NotFoundError } from "@/lib/http/route-errors";
 import { withUserProfile } from "@/features/users/db/sync-user";
 import type {
   VocabularySet,
@@ -124,7 +125,7 @@ export async function updateVocabularySet(params: {
   });
 
   if (!existing || existing.userId !== params.userId) {
-    throw new Error(`No vocabulary set found for user`);
+    throw new NotFoundError("Vocabulary set");
   }
 
   return prisma.vocabularySet.update({
@@ -143,7 +144,7 @@ export async function deleteVocabularySet(params: {
   });
 
   if (!existing || existing.userId !== params.userId) {
-    throw new Error(`No vocabulary set found for user`);
+    throw new NotFoundError("Vocabulary set");
   }
 
   await prisma.vocabularySet.delete({
@@ -160,7 +161,7 @@ export async function verifySetOwnership(
   });
 
   if (!existing || existing.userId !== userId) {
-    throw new Error(`No vocabulary set found for user`);
+    throw new NotFoundError("Vocabulary set");
   }
 }
 
