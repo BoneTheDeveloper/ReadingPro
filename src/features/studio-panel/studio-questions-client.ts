@@ -4,11 +4,11 @@ import {
   type StudioArtifact,
   type StudioArtifactErrorCode,
 } from "@/features/studio-panel/lib/studio-artifact-types";
-import type { QuestionData } from "@/features/study/shared/types";
+import type { GeneratedStudyQuestionDto } from "@/features/studio-panel/schemas/study.schema";
 import { postJson, RequestTimeoutError } from "@/lib/http/api-request";
 
 export type GenerateStudioQuestionsResult =
-  | { artifact: StudioArtifact; questions: QuestionData[] }
+  | { artifact: StudioArtifact; questions: GeneratedStudyQuestionDto[] }
   | { error: string; code: StudioArtifactErrorCode };
 
 export async function generateStudioQuestions(input: {

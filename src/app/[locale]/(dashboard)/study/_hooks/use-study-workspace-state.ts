@@ -3,11 +3,22 @@
 import { useCallback, useMemo, useOptimistic, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { deletePassageAction } from "../_components/actions";
-import type {
-  DocumentItem,
-  PassageData,
-  StudyState,
-} from "@/features/study/shared/types";
+import type { PassageData } from "@/features/passage/schemas/passage.schema";
+import type { DocumentItem } from "@/features/source-panel/ui/sources-panel";
+
+export type StudyStatus = "idle" | "uploading" | "analyzing" | "ready" | "error";
+
+export interface StudyState {
+  passages: PassageData[];
+  activePassageId: string | null;
+  status: StudyStatus;
+  error: string | null;
+  simplifying: boolean;
+  uploadModalOpen: boolean;
+  artifactsByPassageId: Record<string, import("@/features/studio-panel/actions").ArtifactsCacheEntry>;
+  viewingArtifactByPassageId: Record<string, import("@/features/studio-panel/actions").ArtifactRef | null>;
+  artifactDetailById: Record<string, import("@/features/studio-panel/actions").ArtifactDetailCacheEntry>;
+}
 
 type PassagesAction =
   | { type: "add"; passage: PassageData }

@@ -1,4 +1,4 @@
-import type { TranslationSelection } from "@/features/study/shared/types";
+import type { TranslationSelection } from "@/features/reading/schemas/translation.schema";
 import { countWords } from "./text-utils";
 
 type SelectionRect = TranslationSelection["selectionRect"];

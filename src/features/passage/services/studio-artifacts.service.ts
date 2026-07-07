@@ -3,7 +3,7 @@ import {
   type StudioArtifact,
   type StudioArtifactType,
 } from "@/features/studio-panel/lib/studio-artifact-types";
-import type { QuestionData } from "@/features/study/shared/types";
+import type { GeneratedStudyQuestionDto } from "@/features/studio-panel/schemas/study.schema";
 import { NotFoundError } from "@/lib/http/route-errors";
 import {
   deleteQuizResults,
@@ -24,15 +24,15 @@ export class ArtifactNotFoundError extends NotFoundError {
   }
 }
 
-function parseQuestionOptions(value: unknown): QuestionData["options"] {
+function parseQuestionOptions(value: unknown): GeneratedStudyQuestionDto["options"] {
   if (typeof value === "string") {
     try {
-      return JSON.parse(value) as QuestionData["options"];
+      return JSON.parse(value) as GeneratedStudyQuestionDto["options"];
     } catch {
       return [];
     }
   }
-  return (value ?? []) as QuestionData["options"];
+  return (value ?? []) as GeneratedStudyQuestionDto["options"];
 }
 
 function toStudioArtifact(row: {
@@ -120,7 +120,7 @@ export async function resetQuizResult(
 export async function getArtifactQuestions(
   userId: string,
   artifactId: string,
-): Promise<{ questions: QuestionData[] }> {
+): Promise<{ questions: GeneratedStudyQuestionDto[] }> {
   // Scope through the parent artifact's owner so a user can only read
   // questions for artifacts they own (prevents cross-user id probing).
   const questions = await findArtifactQuestions(artifactId, userId);
@@ -133,7 +133,7 @@ export async function getArtifactQuestions(
     }
   }
 
-  const mapped: QuestionData[] = questions.map((q, i) => ({
+  const mapped: GeneratedStudyQuestionDto[] = questions.map((q, i) => ({
     id: q.id,
     number: i + 1,
     questionText: q.questionText,

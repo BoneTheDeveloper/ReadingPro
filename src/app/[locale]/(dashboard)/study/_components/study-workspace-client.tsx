@@ -9,11 +9,8 @@ import {
   clampTranslationContext,
   isTranslateTextWithinLimit,
 } from "@/features/reading/lib/translation-limits";
-import type {
-  PassageData,
-  TranslationSelection,
-  QuickTranslationData,
-} from "@/features/study/shared/types";
+import type { PassageData } from "@/features/passage/schemas/passage.schema";
+import type { TranslationSelection, QuickTranslationData } from "@/features/reading/schemas/translation.schema";
 import { StudySourcesPanel } from "@/features/source-panel/ui/sources-panel";
 import { StudyContentPanel } from "@/features/reading/ui/content-panel";
 import { StudyStudioPanel } from "@/features/studio-panel/ui/studio-panel";

@@ -12,11 +12,11 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import type { QuestionData } from "@/features/study/shared/types";
+import type { GeneratedStudyQuestionDto } from "@/features/studio-panel/schemas/study.schema";
 import { QuizResults } from "./quiz-results";
 
 interface QuizContentProps {
-  questions: QuestionData[];
+  questions: GeneratedStudyQuestionDto[];
   passageTitle: string;
   artifactId: string | null;
   onReset: () => void;

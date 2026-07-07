@@ -17,17 +17,18 @@ import {
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import type { PassageData } from "@/features/passage/schemas/passage.schema";
+import type { QuickTranslationData, TranslationSelection } from "@/features/reading/schemas/translation.schema";
 import type {
-  PassageData,
-  QuickTranslationData,
   ArtifactsCacheEntry,
   ArtifactRef,
   ArtifactDetailCacheEntry,
+  StudioActionId,
+} from "@/features/studio-panel/actions";
+import type {
   StudioArtifactType,
   StudioArtifactErrorCode,
-  StudioActionId,
-  TranslationSelection,
-} from "@/features/study/shared/types";
+} from "@/features/studio-panel/lib/studio-artifact-types";
 import { QuizContent } from "./studio/quiz/quiz-content";
 import { StudyChatPanel } from "./studio/chat/chat-panel";
 import { StudyLookupPanel } from "./studio/lookup/lookup-panel";

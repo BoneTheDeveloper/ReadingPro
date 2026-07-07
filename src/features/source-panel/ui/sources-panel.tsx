@@ -21,7 +21,17 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { DocumentItem } from "@/features/study/shared/types";
+// DocumentItem is defined inline in this file
+export type SourceType = "TEXT" | "PDF" | "URL" | "YOUTUBE";
+
+export interface DocumentItem {
+  id: string;
+  title: string;
+  date: string;
+  level: string | null;
+  wordCount: number;
+  sourceType: SourceType;
+}
 
 interface StudySourcesPanelProps {
   documents: DocumentItem[];

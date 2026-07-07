@@ -8,14 +8,20 @@ import {
   findOrCreateDailySet,
   findOrCreateWeeklySet,
   addItemToSet,
-} from "@/features/vocabulary/db/sets/vocabulary-sets.repository";
-import { normalizeText, detectType } from "./vocabulary-text-utils";
+} from "@/features/vocabulary/db/vocabulary-sets.repository";
+
+// Text normalization helpers (vocabulary-specific, used locally)
+function normalizeText(text: string): string {
+  return text.toLowerCase().replace(/\s+/g, " ").trim();
+}
+function detectType(text: string): "WORD" | "PHRASE" {
+  return text.includes(" ") ? "PHRASE" : "WORD";
+}
 import type {
   VocabularyItem,
   VocabularyOccurrence,
 } from "@/generated/prisma/client";
 
-export { normalizeText, detectType } from "./vocabulary-text-utils";
 
 export interface VocabularyItemWithOccurrences extends VocabularyItem {
   occurrences: VocabularyOccurrence[];

@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { getUserId } from "@/services/clerk";
+import type { StudioArtifactType, StudioArtifactErrorCode } from "@/features/studio-panel/lib/studio-artifact-types";
 import {
   fetchStudioArtifacts,
   getArtifactQuestions,
@@ -9,6 +10,40 @@ import {
   resetQuizResult,
 } from "@/features/passage/services/studio-artifacts.service";
 import { getChatHistory } from "@/features/ai-chat/services/chat-service";
+import type { TranslationSelection } from "@/features/reading/schemas/translation.schema";
+import type { PassageData } from "@/features/passage/schemas/passage.schema";
+
+// Studio action types
+export type StudioActionId = "quiz" | "flashcard" | "summary" | "chat" | "mindmap" | "lookup";
+
+export interface StudioAction {
+  id: StudioActionId;
+  label: string;
+  description: string;
+  iconName: string;
+  disabled?: boolean;
+}
+
+// Artifacts cache types
+export type ArtifactsCacheStatus = "idle" | "loading" | "success" | "error";
+
+export interface ArtifactsCacheEntry {
+  status: ArtifactsCacheStatus;
+  data: import("@/features/studio-panel/lib/studio-artifact-types").StudioArtifact[];
+  fetchedAt?: number;
+  error?: string;
+}
+
+export interface ArtifactRef {
+  type: StudioArtifactType;
+  id: string;
+}
+
+export interface ArtifactDetailCacheEntry {
+  questions?: import("@/features/studio-panel/schemas/study.schema").GeneratedStudyQuestionDto[];
+  simplifiedContent?: string | null;
+  simplifiedLevel?: string | null;
+}
 
 const passageIdSchema = z.string().uuid();
 

@@ -11,7 +11,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { StudioActionId } from "@/features/study/shared/types";
+import type { StudioActionId } from "@/features/studio-panel/actions";
 
 // All 6 wireframe tiles. Only quiz / chat / lookup are wired in this build;
 // the rest stay visible but disabled per scope decision. Translate and lookup

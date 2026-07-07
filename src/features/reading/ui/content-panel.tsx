@@ -8,10 +8,8 @@ import { getCEFRShortLabel } from "@/types/cefr";
 import { getCEFRBadgeVariant } from "@/features/reading/lib/cefr-style";
 import { Badge } from "@/components/ui/badge";
 import { useScrollProgress } from "@/features/reading/hooks/use-scroll-progress";
-import type {
-  PassageData,
-  TranslationSelection,
-} from "@/features/study/shared/types";
+import type { PassageData } from "@/features/passage/schemas/passage.schema";
+import type { TranslationSelection } from "@/features/reading/schemas/translation.schema";
 import { extractSelectionInfo } from "@/features/reading/lib/selection-utils";
 
 type ViewMode = "original" | "simplified";

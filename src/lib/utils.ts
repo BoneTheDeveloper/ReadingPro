@@ -6,3 +6,9 @@ import { twMerge } from "tailwind-merge";
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+/** Convert Date or string to ISO string. Null-safe. */
+export function toIsoString(date: Date | string | null | undefined): string | null {
+  if (!date) return null;
+  return new Date(date).toISOString();
+}

@@ -1,14 +1,11 @@
 import "server-only";
 import { createModuleLogger } from "@/services/logger";
+import { toIsoString } from "@/lib/utils";
 import type {
   VocabularyItemDto,
   VocabularyStatsDto,
   VocabularyStatus,
 } from "@/features/vocabulary/schemas/vocabulary.schema";
-import {
-  buildVocabularyItemDto,
-  buildVocabularyStatsDto,
-} from "@/features/vocabulary/db/shared/vocabulary-dto-builders";
 import {
   findOwnedSource,
   upsertVocabularyItem,
@@ -43,6 +40,33 @@ export interface SaveVocabularyItemInput {
   dictionarySenseId?: string;
 }
 
+function toVocabularyItemDto(item: { id: string; normalizedText: string; displayText: string; type: string | null; translation: string; sourceLanguage: string; targetLanguage: string; status: string; source: string; savedCount: number; nextReviewAt: Date | null; lastReviewedAt: Date | null; createdAt: Date; updatedAt: Date; occurrences?: { id: string; vocabularyItemId: string; sourceId: string | null; selectedText: string; contextSentence: string | null; createdAt: Date }[] }): VocabularyItemDto {
+  return {
+    id: item.id,
+    normalizedText: item.normalizedText,
+    displayText: item.displayText,
+    type: item.type,
+    translation: item.translation,
+    sourceLanguage: item.sourceLanguage,
+    targetLanguage: item.targetLanguage,
+    status: item.status as VocabularyItemDto["status"],
+    source: item.source,
+    savedCount: item.savedCount,
+    nextReviewAt: toIsoString(item.nextReviewAt),
+    lastReviewedAt: toIsoString(item.lastReviewedAt),
+    createdAt: toIsoString(item.createdAt) ?? "",
+    updatedAt: toIsoString(item.updatedAt) ?? "",
+    occurrences: (item.occurrences ?? []).map(o => ({
+      id: o.id,
+      vocabularyItemId: o.vocabularyItemId,
+      sourceId: o.sourceId,
+      selectedText: o.selectedText,
+      contextSentence: o.contextSentence,
+      createdAt: toIsoString(o.createdAt) ?? "",
+    })),
+  };
+}
+
 export async function saveVocabularyItem(
   input: SaveVocabularyItemInput,
 ): Promise<VocabularyItemDto> {
@@ -66,7 +90,7 @@ export async function saveVocabularyItem(
     "Vocabulary item saved",
   );
 
-  return buildVocabularyItemDto({ ...item, occurrences: [] });
+  return toVocabularyItemDto({ ...item, occurrences: [] });
 }
 
 export async function getVocabularyItemList(params: {
@@ -77,14 +101,19 @@ export async function getVocabularyItemList(params: {
   pageSize?: number;
 }): Promise<{ items: VocabularyItemDto[]; total: number }> {
   const { items, total } = await listVocabularyItems(params);
-  return { items: items.map(buildVocabularyItemDto), total };
+  return { items: items.map(toVocabularyItemDto), total };
 }
 
 export async function getVocabularyItemStats(
   userId: string,
 ): Promise<VocabularyStatsDto> {
   const stats = await getVocabularyStats(userId);
-  return buildVocabularyStatsDto(stats);
+  return {
+    total: stats.total,
+    new: stats.new,
+    learning: stats.learning,
+    known: stats.known,
+  };
 }
 
 export async function updateVocabularyItemStatus(params: {
@@ -93,7 +122,7 @@ export async function updateVocabularyItemStatus(params: {
   status: VocabularyStatus;
 }): Promise<VocabularyItemDto> {
   const item = await updateVocabularyStatus(params);
-  return buildVocabularyItemDto({ ...item, occurrences: [] });
+  return toVocabularyItemDto({ ...item, occurrences: [] });
 }
 
 export async function reviewVocabularyItemById(params: {
@@ -102,7 +131,7 @@ export async function reviewVocabularyItemById(params: {
   isCorrect: boolean;
 }): Promise<VocabularyItemDto> {
   const item = await reviewVocabularyItem(params);
-  return buildVocabularyItemDto({ ...item, occurrences: [] });
+  return toVocabularyItemDto({ ...item, occurrences: [] });
 }
 
 export async function deleteVocabularyItemById(params: {

@@ -5,10 +5,7 @@ import * as Sentry from "@sentry/nextjs";
 import { Bookmark, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type {
-  TranslationSelection,
-  QuickTranslationData,
-} from "@/features/study/shared/types";
+import type { TranslationSelection, QuickTranslationData } from "@/features/reading/schemas/translation.schema";
 
 interface StudyLookupPanelProps {
   selection: TranslationSelection;

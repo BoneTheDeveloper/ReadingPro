@@ -2,13 +2,11 @@
 
 import { useEffect } from "react";
 import * as Sentry from "@sentry/nextjs";
-import type {
-  ArtifactsCacheEntry,
-  StudyState,
-} from "@/features/study/shared/types";
-import { ARTIFACT_STALE_TIME } from "@/features/study/shared/types";
+import type { ArtifactsCacheEntry } from "@/features/studio-panel/actions";
+import { ARTIFACT_STALE_TIME } from "@/features/studio-panel/lib/studio-artifact-types";
 import { getStudioArtifactsAction } from "@/features/studio-panel/actions";
 import type { Dispatch, SetStateAction } from "react";
+import type { StudyState } from "@/app/[locale]/(dashboard)/study/_hooks/use-study-workspace-state";
 
 type ArtifactsState = Record<string, ArtifactsCacheEntry>;
 

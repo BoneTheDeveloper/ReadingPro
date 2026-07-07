@@ -1,9 +1,9 @@
 import "server-only";
+import { toIsoString } from "@/lib/utils";
 import type {
   VocabularySetDto,
   VocabularySetType,
 } from "@/features/vocabulary/schemas/vocabulary.schema";
-import { buildVocabularySetDto } from "@/features/vocabulary/db/shared/vocabulary-dto-builders";
 import {
   listVocabularySets,
   createManualSet,
@@ -12,14 +12,28 @@ import {
   verifySetOwnership,
   addItemToSet,
   removeItemFromSet,
-} from "../db/sets/vocabulary-sets.repository";
+  type VocabularySetWithCount,
+} from "@/features/vocabulary/db/vocabulary-sets.repository";
+
+function toVocabularySetDto(set: VocabularySetWithCount): VocabularySetDto {
+  return {
+    id: set.id,
+    name: set.name,
+    type: set.type as VocabularySetDto["type"],
+    periodStart: toIsoString(set.periodStart),
+    periodEnd: toIsoString(set.periodEnd),
+    createdAt: toIsoString(set.createdAt) ?? "",
+    updatedAt: toIsoString(set.updatedAt) ?? "",
+    _count: { items: set._count.setItems },
+  };
+}
 
 export async function getVocabularySetList(params: {
   userId: string;
   type?: VocabularySetType;
 }): Promise<VocabularySetDto[]> {
   const sets = await listVocabularySets(params);
-  return sets.map(buildVocabularySetDto);
+  return sets.map(toVocabularySetDto);
 }
 
 export async function createVocabularyManualSet(params: {
@@ -27,7 +41,7 @@ export async function createVocabularyManualSet(params: {
   name: string;
 }): Promise<VocabularySetDto> {
   const set = await createManualSet(params);
-  return buildVocabularySetDto(set);
+  return toVocabularySetDto(set);
 }
 
 export async function renameVocabularySet(params: {
@@ -36,7 +50,7 @@ export async function renameVocabularySet(params: {
   name: string;
 }): Promise<VocabularySetDto> {
   const set = await updateVocabularySet(params);
-  return buildVocabularySetDto(set);
+  return toVocabularySetDto(set);
 }
 
 export async function deleteVocabularySetById(params: {

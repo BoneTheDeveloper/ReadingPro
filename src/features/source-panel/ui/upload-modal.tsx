@@ -23,11 +23,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import type {
-  PassageData,
-  SourceType,
-  StudyUploadModalProps,
-} from "@/features/study/shared/types";
+import type { PassageData, SourceType } from "@/features/passage/schemas/passage.schema";
+
+export interface StudyUploadModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onUploadStart: (fileName: string) => void;
+  onUploadComplete: (passage: PassageData) => void;
+  onUploadError: (error: string) => void;
+}
 
 type InputMode = "file" | "text" | null;
 

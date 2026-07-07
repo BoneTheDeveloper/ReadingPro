@@ -1,7 +1,7 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
 import { NotFoundError } from "@/lib/http/route-errors";
-import { simpleSchedule } from "@/features/vocabulary/db/scheduler";
+import { simpleSchedule } from "@/features/vocabulary/services/vocabulary-scheduler.service";
 import type { VocabularyItem } from "@/generated/prisma/client";
 
 export async function updateVocabularyStatus(params: {

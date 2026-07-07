@@ -8,12 +8,11 @@ import { getArtifactQuestionsAction } from "@/features/studio-panel/actions";
 import type {
   ArtifactsCacheEntry,
   ArtifactRef,
-  PassageData,
   StudioActionId,
-  StudioArtifact,
-  StudioArtifactErrorCode,
-  StudyState,
-} from "@/features/study/shared/types";
+} from "@/features/studio-panel/actions";
+import type { PassageData } from "@/features/passage/schemas/passage.schema";
+import type { StudioArtifact, StudioArtifactErrorCode } from "@/features/studio-panel/lib/studio-artifact-types";
+import type { StudyState } from "./use-study-workspace-state";
 
 interface UseStudyActionsInput {
   state: StudyState;
