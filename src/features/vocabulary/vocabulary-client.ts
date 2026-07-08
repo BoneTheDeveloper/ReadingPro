@@ -12,19 +12,19 @@ import {
   type VocabularyStatus,
 } from "@/features/vocabulary/schemas/vocabulary.schema";
 
-function assertNoError<T extends { error?: string } | Record<string, unknown>>(
+function assertNoError<T>(
   result: T,
   route: string,
   fallbackMessage: string,
-): asserts result is Exclude<T, { error: string }> {
-  if ("error" in result && typeof result.error === "string") {
+): asserts result is T & Record<string, unknown> {
+  if (result && typeof result === "object" && "error" in result && typeof (result as { error: unknown }).error === "string") {
     Sentry.addBreadcrumb({
       category: "vocabulary",
       level: "error",
       message: "vocabulary-request-error",
       data: { route },
     });
-    throw new Error(result.error ?? fallbackMessage);
+    throw new Error((result as { error: string }).error ?? fallbackMessage);
   }
 }
 

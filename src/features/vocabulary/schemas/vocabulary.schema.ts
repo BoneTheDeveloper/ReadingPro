@@ -1,7 +1,6 @@
 import { z } from "zod";
 import {
   apiErrorResponseSchema,
-  makeResponseSchema,
   makeSuccessEnvelopeSchema,
 } from "@/lib/http/api-response.schema";
 
@@ -63,11 +62,11 @@ export const vocabularyListDataSchema = z.object({
   pageSize: z.number(),
 }).strict();
 
-export const vocabularyListResponseSchema = makeResponseSchema(vocabularyListDataSchema);
-export const vocabularySetsResponseSchema = makeResponseSchema(z.array(vocabularySetSchema));
-export const vocabularySetResponseSchema = makeResponseSchema(vocabularySetSchema);
-export const vocabularyItemResponseSchema = makeResponseSchema(vocabularyItemSchema);
-export const vocabularyStatsResponseSchema = makeResponseSchema(vocabularyStatsSchema);
+export const vocabularyListResponseSchema = vocabularyListDataSchema;
+export const vocabularySetsResponseSchema = z.array(vocabularySetSchema);
+export const vocabularySetResponseSchema = vocabularySetSchema;
+export const vocabularyItemResponseSchema = vocabularyItemSchema;
+export const vocabularyStatsResponseSchema = vocabularyStatsSchema;
 export const vocabularyAckResponseSchema = z.union([
   z.object({ success: z.literal(true) }).strict(),
   apiErrorResponseSchema,

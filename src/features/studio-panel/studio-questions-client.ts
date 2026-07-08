@@ -23,15 +23,15 @@ export async function generateStudioQuestions(input: {
       STUDIO_GENERATION_TIMEOUT_MS,
     );
     if ("error" in payload) {
+      const errPayload = payload as { error: string; code?: string };
       return {
-        error: payload.error,
-        code:
-          (payload.code as StudioArtifactErrorCode | undefined) ?? "UNKNOWN",
+        error: String(errPayload.error),
+        code: (errPayload.code as StudioArtifactErrorCode | undefined) ?? "UNKNOWN",
       };
     }
     return {
-      artifact: payload.data.artifact as StudioArtifact,
-      questions: payload.data.questions,
+      artifact: payload.artifact as StudioArtifact,
+      questions: payload.questions,
     };
   } catch (err) {
     // A client abort (timeout) always settles here so the caller never hangs.

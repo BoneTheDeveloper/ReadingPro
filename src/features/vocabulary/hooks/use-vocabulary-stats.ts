@@ -42,7 +42,7 @@ export function useVocabularyStats(): UseVocabularyStatsResult {
       const data = await getVocabularyStats();
 
       if (requestIdRef.current !== requestId || !mountedRef.current) return;
-      setStats(data.data);
+      setStats(data);
       setLoading(false);
     } catch {
       if (requestIdRef.current !== requestId || !mountedRef.current) return;

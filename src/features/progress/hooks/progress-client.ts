@@ -21,5 +21,5 @@ export async function getProgressStats() {
     throw new Error("Failed to parse progress stats");
   }
 
-  return parsed.data.data;
+  return parsed.data;
 }

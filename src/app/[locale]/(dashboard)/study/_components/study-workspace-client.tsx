@@ -207,7 +207,7 @@ export function StudyPageClient({
         }
         if (!r.ok || "error" in parsed.data)
           throw new Error("Quick translation failed");
-        return parsed.data.data;
+        return parsed.data;
       })
       .then((data) => {
         setQuickTranslationState((prev) => {

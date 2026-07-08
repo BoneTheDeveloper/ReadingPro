@@ -1,8 +1,5 @@
 import { z } from "zod";
-import {
-  makeResponseSchema,
-  makeSuccessEnvelopeSchema,
-} from "@/lib/http/api-response.schema";
+import { apiErrorResponseSchema } from "@/lib/http/api-response.schema";
 
 export const studyQuestionOptionSchema = z
   .object({
@@ -46,10 +43,9 @@ export const generatedStudyQuestionsSchema = z
   .strict();
 
 export const generatedStudyQuestionsSuccessResponseSchema =
-  makeSuccessEnvelopeSchema(generatedStudyQuestionsSchema);
-export const generatedStudyQuestionsResponseSchema = makeResponseSchema(
-  generatedStudyQuestionsSchema,
-);
+  generatedStudyQuestionsSchema;
+export const generatedStudyQuestionsResponseSchema =
+  generatedStudyQuestionsSchema;
 
 export const studyCardPassageSchema = z
   .object({
@@ -83,10 +79,8 @@ export const progressStatsSchema = z
   })
   .strict();
 
-export const progressStatsSuccessResponseSchema =
-  makeSuccessEnvelopeSchema(progressStatsSchema);
-export const progressStatsResponseSchema =
-  makeResponseSchema(progressStatsSchema);
+export const progressStatsSuccessResponseSchema = progressStatsSchema;
+export const progressStatsResponseSchema = progressStatsSchema;
 
 export const studyChatMessageSchema = z
   .object({
@@ -110,7 +104,7 @@ export const studyChatHistorySuccessResponseSchema = z
   .strict();
 export const studyChatHistoryResponseSchema = z.union([
   studyChatHistorySuccessResponseSchema,
-  z.object({ error: z.string() }).strict(),
+  apiErrorResponseSchema,
 ]);
 
 export type StudyQuestionOptionDto = z.infer<typeof studyQuestionOptionSchema>;

@@ -160,12 +160,6 @@ import { logger } from "@/lib/logger";
 logger.info("app booted");
 ```
 
-### Environment Behavior
-
-- **Development:** `pino-pretty` with colorized output, timestamps
-- **Production:** ISO timestamps, JSON format, compact stack traces (max 6 lines)
-
-**Current coverage:** 24/24 API routes use `createRequestLogger`.
 
 ## Error Handling (toHttp)
 
@@ -232,7 +226,3 @@ Client config enables:
 - `replayIntegration` — session replay (10% sample, 100% on error)
 - `browserTracingIntegration` — page load and navigation traces
 - `spotlightBrowserIntegration` — dev-only local trace viewer
-
-### Disabling Sentry
-
-Set `NEXT_PUBLIC_SENTRY_DISABLED=1` to disable all Sentry initialization.

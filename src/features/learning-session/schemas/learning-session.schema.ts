@@ -1,8 +1,5 @@
 import { z } from "zod";
-import {
-  makeResponseSchema,
-  makeSuccessEnvelopeSchema,
-} from "@/lib/http/api-response.schema";
+import { apiErrorResponseSchema } from "@/lib/http/api-response.schema";
 
 const nullableIsoDateSchema = z.string().nullable();
 
@@ -14,12 +11,7 @@ export const learningSessionSchema = z
   })
   .strict();
 
-export const learningSessionSuccessResponseSchema = makeSuccessEnvelopeSchema(
-  learningSessionSchema,
-);
-export const learningSessionResponseSchema = makeResponseSchema(
-  learningSessionSchema,
-);
+export const learningSessionSuccessResponseSchema = learningSessionSchema;
 
 export type LearningSessionDto = z.infer<typeof learningSessionSchema>;
 

@@ -1,7 +1,7 @@
 "use client";
 
 import * as Sentry from "@sentry/nextjs";
-import { uploadResponseSchema } from "@/features/upload/schemas/upload.schema";
+import { uploadSuccessResponseSchema } from "@/features/upload/schemas/upload.schema";
 
 /**
  * Upload a file to be processed.
@@ -16,7 +16,7 @@ export async function uploadFile(file: File) {
   });
 
   const json: unknown = await response.json();
-  const result = uploadResponseSchema.safeParse(json);
+  const result = uploadSuccessResponseSchema.safeParse(json);
 
   if (!result.success) {
     Sentry.addBreadcrumb({
@@ -31,14 +31,14 @@ export async function uploadFile(file: File) {
   }
 
   if ("error" in result.data) {
-    throw new Error(result.data.error);
+    throw new Error(String(result.data.error));
   }
 
   if (!response.ok) {
     throw new Error("Upload failed");
   }
 
-  return result.data.data;
+  return result.data;
 }
 
 /**
@@ -52,7 +52,7 @@ export async function uploadText(text: string) {
   });
 
   const json: unknown = await response.json();
-  const result = uploadResponseSchema.safeParse(json);
+  const result = uploadSuccessResponseSchema.safeParse(json);
 
   if (!result.success) {
     Sentry.addBreadcrumb({
@@ -67,12 +67,12 @@ export async function uploadText(text: string) {
   }
 
   if ("error" in result.data) {
-    throw new Error(result.data.error);
+    throw new Error(String(result.data.error));
   }
 
   if (!response.ok) {
     throw new Error("Processing failed");
   }
 
-  return result.data.data;
+  return result.data;
 }

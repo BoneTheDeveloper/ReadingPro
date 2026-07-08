@@ -59,8 +59,8 @@ export function useVocabularyList(
         });
 
         if (requestIdRef.current !== requestId || !mountedRef.current) return;
-        setItems(data.data.items);
-        setTotal(data.data.total);
+        setItems(data.items);
+        setTotal(data.total);
         setLoading(false);
       } catch (err) {
         if (err instanceof DOMException && err.name === "AbortError") return;

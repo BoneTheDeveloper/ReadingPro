@@ -39,7 +39,7 @@ export function useVocabularySets(
       const data = await getVocabularySets();
 
       if (requestIdRef.current !== requestId || !mountedRef.current) return;
-      setSets(data.data);
+      setSets(data);
       setLoading(false);
     } catch {
       if (requestIdRef.current !== requestId || !mountedRef.current) return;

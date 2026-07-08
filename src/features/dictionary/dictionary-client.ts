@@ -37,7 +37,7 @@ export async function getDictionarySuggestions(
     throw new Error("Failed to parse dictionary suggestions");
   }
 
-  return parsed.data.data;
+  return parsed.data;
 }
 
 /**
@@ -71,7 +71,7 @@ export async function getDictionaryEntryDetail(
     throw new Error("Failed to parse dictionary entry detail");
   }
 
-  return parsed.data.data;
+  return parsed.data;
 }
 
 /**
@@ -104,7 +104,7 @@ export async function saveDictionaryVocabulary(
     vocabularyItemResponseSchema,
   );
   if ("error" in result) {
-    throw new Error(result.error);
+    throw new Error(String(result.error));
   }
-  return result.data;
+  return result;
 }

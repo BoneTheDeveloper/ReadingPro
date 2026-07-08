@@ -1,7 +1,7 @@
 "use client";
 
 import { postJson } from "@/lib/http/api-request";
-import { learningSessionResponseSchema } from "./schemas/learning-session.schema";
+import { learningSessionSuccessResponseSchema } from "./schemas/learning-session.schema";
 
 /**
  * Ensure an active learning session exists, creating one if needed.
@@ -10,10 +10,10 @@ export async function ensureStudySession() {
   const result = await postJson(
     "/api/learning-session",
     {},
-    learningSessionResponseSchema,
+    learningSessionSuccessResponseSchema,
   );
   if ("error" in result) {
-    throw new Error(result.error);
+    throw new Error(String(result.error));
   }
-  return { sessionId: result.data.id };
+  return { sessionId: result.id };
 }
