@@ -6,18 +6,22 @@ import { BookOpen, Library } from "lucide-react";
 import { VocabularyList } from "./vocabulary-list";
 import { VocabularySetList } from "./vocabulary-set-list";
 import { PageErrorState } from "./vocabulary-page-ui";
-import { useVocabularyList } from "../hooks/use-vocabulary-list";
-import { useVocabularySets } from "../hooks/use-vocabulary-sets";
-import { useVocabularyStats } from "../hooks/use-vocabulary-stats";
 import {
   updateVocabularyItemStatus,
   deleteVocabularyItem,
   createVocabularySet,
   deleteVocabularySet,
 } from "../vocabulary-client";
-import type { VocabularyStatus } from "../schemas/vocabulary.schema";
+import type { VocabularyStatus, VocabularyItemDto, VocabularyStatsDto, VocabularySetDto } from "../schemas/vocabulary.schema";
 
 type ViewTab = "words" | "sets";
+
+interface VocabularyPageClientProps {
+  initialList: VocabularyItemDto[];
+  initialTotal: number;
+  initialStats: VocabularyStatsDto;
+  initialSets: VocabularySetDto[];
+}
 
 const TAB_BASE =
   "flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer";
@@ -61,7 +65,12 @@ function StatCard({
   );
 }
 
-export function VocabularyPageClient() {
+export function VocabularyPageClient({
+  initialList,
+  initialTotal,
+  initialStats,
+  initialSets,
+}: VocabularyPageClientProps) {
   const t = useTranslations("Vocabulary");
 
   const [page, setPage] = useState(1);
@@ -72,52 +81,35 @@ export function VocabularyPageClient() {
   const [activeTab, setActiveTab] = useState<ViewTab>("words");
   const [creating, setCreating] = useState(false);
 
-  const {
-    stats,
-    loading: statsLoading,
-    error: statsError,
-    refetch: refetchStats,
-  } = useVocabularyStats();
-
-  const {
-    items,
-    total,
-    loading: listLoading,
-    error: listError,
-    refetch: refetchList,
-  } = useVocabularyList(page, statusFilter, search);
-
-  const {
-    sets,
-    loading: setsLoading,
-    error: setsError,
-    refetch: refetchSets,
-  } = useVocabularySets(activeTab === "sets");
+  // Server-fetched initial data (no loading state - data already loaded)
+  const [items, setItems] = useState(initialList);
+  const [total, setTotal] = useState(initialTotal);
+  const [stats, setStats] = useState(initialStats);
+  const [sets, setSets] = useState(initialSets);
 
   const handleStatusChange = useCallback(
     async (id: string, status: VocabularyStatus) => {
       try {
         await updateVocabularyItemStatus(id, status);
-        refetchList();
-        refetchStats();
+        // revalidatePath in action will refresh on next navigation
       } catch {
         /* item keeps current status */
       }
     },
-    [refetchList, refetchStats],
+    [],
   );
 
   const handleDelete = useCallback(
     async (id: string) => {
       try {
         await deleteVocabularyItem(id);
-        refetchList();
-        refetchStats();
+        setItems((prev) => prev.filter((item) => item.id !== id));
+        setStats((prev) => ({ ...prev, total: prev.total - 1 }));
       } catch {
         /* item stays */
       }
     },
-    [refetchList, refetchStats],
+    [],
   );
 
   const handleCreateSet = useCallback(
@@ -125,26 +117,26 @@ export function VocabularyPageClient() {
       setCreating(true);
       try {
         await createVocabularySet(name);
-        refetchSets();
+        // revalidatePath in action will refresh on next navigation
       } catch {
         /* silently fail */
       } finally {
         setCreating(false);
       }
     },
-    [refetchSets],
+    [],
   );
 
   const handleDeleteSet = useCallback(
     async (id: string) => {
       try {
         await deleteVocabularySet(id);
-        refetchSets();
+        setSets((prev) => prev.filter((s) => s.id !== id));
       } catch {
         /* silently fail */
       }
     },
-    [refetchSets],
+    [],
   );
 
   const wOn = activeTab === "words";
@@ -163,58 +155,36 @@ export function VocabularyPageClient() {
           </p>
         </div>
 
-        {/* Stats row */}
-        {!statsLoading && !statsError ? (
-          <div
-            className="grid gap-3 mb-8"
-            style={{ gridTemplateColumns: "repeat(4, 1fr)" }}
-          >
-            <StatCard
-              label={t("total")}
-              value={stats.total}
-              sublabel={t("totalWordsSaved")}
-              accent="#221F2B"
-            />
-            <StatCard
-              label={t("newWords")}
-              value={stats.new}
-              sublabel={t("notStudiedYet")}
-              accent="#EEA63C"
-            />
-            <StatCard
-              label={t("learningWords")}
-              value={stats.learning}
-              sublabel={t("inProgress")}
-              accent="#5A4FE0"
-            />
-            <StatCard
-              label={t("known")}
-              value={stats.known}
-              sublabel={t("masteredWords")}
-              accent="#2FA66A"
-            />
-          </div>
-        ) : statsError ? (
-          <div className="mb-8">
-            <PageErrorState
-              message={statsError}
-              onRetry={refetchStats}
-              retryLabel={t("retry")}
-            />
-          </div>
-        ) : (
-          <div
-            className="grid gap-3 mb-8"
-            style={{ gridTemplateColumns: "repeat(4, 1fr)" }}
-          >
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div
-                key={i}
-                className="h-[88px] bg-white border border-[#EAE5DB] rounded-lg animate-pulse"
-              />
-            ))}
-          </div>
-        )}
+        {/* Stats row - server-fetched, no loading state */}
+        <div
+          className="grid gap-3 mb-8"
+          style={{ gridTemplateColumns: "repeat(4, 1fr)" }}
+        >
+          <StatCard
+            label={t("total")}
+            value={stats.total}
+            sublabel={t("totalWordsSaved")}
+            accent="#221F2B"
+          />
+          <StatCard
+            label={t("newWords")}
+            value={stats.new}
+            sublabel={t("notStudiedYet")}
+            accent="#EEA63C"
+          />
+          <StatCard
+            label={t("learningWords")}
+            value={stats.learning}
+            sublabel={t("inProgress")}
+            accent="#5A4FE0"
+          />
+          <StatCard
+            label={t("known")}
+            value={stats.known}
+            sublabel={t("masteredWords")}
+            accent="#2FA66A"
+          />
+        </div>
 
         {/* Tab control */}
         <div className="flex bg-white border border-[#EAE5DB] rounded-xl p-0.5 max-w-xs mb-6">
@@ -254,54 +224,40 @@ export function VocabularyPageClient() {
           </button>
         </div>
 
-        {/* Words tab */}
-        {activeTab === "words" &&
-          (listError ? (
-            <PageErrorState
-              message={listError}
-              onRetry={refetchList}
-              retryLabel={t("retry")}
-            />
-          ) : (
-            <VocabularyList
-              items={items}
-              total={total}
-              page={page}
-              pageSize={20}
-              search={search}
-              statusFilter={statusFilter}
-              loading={listLoading}
-              onSearchChange={(v) => {
-                setSearch(v);
-                setPage(1);
-              }}
-              onStatusFilterChange={(s) => {
-                setStatusFilter(s);
-                setPage(1);
-              }}
-              onPageChange={setPage}
-              onStatusChange={handleStatusChange}
-              onDelete={handleDelete}
-            />
-          ))}
+        {/* Words tab - server-fetched */}
+        {activeTab === "words" && (
+          <VocabularyList
+            items={items}
+            total={total}
+            page={page}
+            pageSize={20}
+            search={search}
+            statusFilter={statusFilter}
+            loading={false}
+            onSearchChange={(v) => {
+              setSearch(v);
+              setPage(1);
+            }}
+            onStatusFilterChange={(s) => {
+              setStatusFilter(s);
+              setPage(1);
+            }}
+            onPageChange={setPage}
+            onStatusChange={handleStatusChange}
+            onDelete={handleDelete}
+          />
+        )}
 
-        {/* Sets tab */}
-        {activeTab === "sets" &&
-          (setsError ? (
-            <PageErrorState
-              message={setsError}
-              onRetry={refetchSets}
-              retryLabel={t("retry")}
-            />
-          ) : (
-            <VocabularySetList
-              sets={sets}
-              loading={setsLoading}
-              onCreateSet={handleCreateSet}
-              onDeleteSet={handleDeleteSet}
-              creating={creating}
-            />
-          ))}
+        {/* Sets tab - server-fetched */}
+        {activeTab === "sets" && (
+          <VocabularySetList
+            sets={sets}
+            loading={false}
+            onCreateSet={handleCreateSet}
+            onDeleteSet={handleDeleteSet}
+            creating={creating}
+          />
+        )}
       </div>
     </div>
   );

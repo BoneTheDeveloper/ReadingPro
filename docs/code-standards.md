@@ -3,16 +3,40 @@
 For source layout, features, and API inventory, see `codebase-summary.md`.
 For observability patterns, see [`observability-architecture.md`](./Architecture/observability-architecture.md).
 
-## Layered Architecture
+## Data Access Patterns
 
-API data flows through fixed layers inside feature slices (`src/features/<feature>/`):
+### 1. Server Actions (mutations)
 
 ```
-Client → API Route → Service → Repository → DB
-Client ← Response ← Envelope ← DTO ←
+Client (useActionState) → Server Action → Service → Repository → DB
 ```
 
-### Layers
+| Layer | Location | Key Rule |
+|-------|----------|----------|
+| Schema | `features/<f>/schemas/*.schema.ts` | Zod validation. Types from `z.infer`. |
+| Action | `features/<f>/actions.ts` | `"use server"`, validates input, calls service, calls `revalidatePath()`. |
+| Service | `features/<f>/services/*-service.ts` | Business logic. Converts DB output to DTO. Throws domain errors. |
+| Repository | `features/<f>/db/*-repository.ts` | Prisma/SQL only. Never imports schemas. |
+
+### 2. Server Components (reads)
+
+```
+Server Component → Service → Repository → DB → props → Client Component
+```
+
+| Layer | Location | Key Rule |
+|-------|----------|----------|
+| Page | `app/[locale]/(dashboard)/<feature>/page.tsx` | Fetches data at render time via direct service calls. |
+| Service | `features/<f>/services/*-service.ts` | Business logic. |
+| Repository | `features/<f>/db/*-repository.ts` | Prisma/SQL only. |
+
+### 3. API Routes (legacy / external)
+
+```
+Client → fetch() → API Route → Service → Repository → DB
+```
+
+Still used for dictionary lookups. Will migrate to Server Actions over time.
 
 | Layer | Location | Key Rule |
 |-------|----------|----------|
@@ -24,12 +48,23 @@ Client ← Response ← Envelope ← DTO ←
 
 ## Envelope Format
 
+API Routes use envelope format:
+
 ```typescript
 // Success
 { success: true, data: <SchemaType> }
 
 // Error
 { error: "Human-readable message", code?: "ERROR_CODE" }
+```
+
+Server Actions return directly (no envelope):
+
+```typescript
+// Success
+{ success: true, data: <SchemaType> }
+
+// Error - throw or return { success: false, error: "..." }
 ```
 
 ## Naming Conventions
