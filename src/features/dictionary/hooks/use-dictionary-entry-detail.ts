@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { getDictionaryEntryDetail } from "../dictionary-client";
+import { getDictionaryEntryDetailAction } from "../actions";
 import type {
   DictionaryEntryDto,
   DictionarySuggestItemDto,
@@ -22,19 +22,20 @@ export function useDictionaryEntryDetail() {
     setSelectedEntry(null);
 
     try {
-      const data = await getDictionaryEntryDetail(item.id);
+      const data = await getDictionaryEntryDetailAction(item.id);
 
       if (detailRequestIdRef.current !== thisRequestId) return;
+
+      if (!data) {
+        setStatus("not-found");
+        return;
+      }
 
       setSelectedEntry(data);
       setStatus("found");
-    } catch (err) {
+    } catch {
       if (detailRequestIdRef.current !== thisRequestId) return;
-      if (err instanceof Error && err.message.includes("Entry not found")) {
-        setStatus("not-found");
-      } else {
-        setStatus("error");
-      }
+      setStatus("error");
     }
   }, []);
 

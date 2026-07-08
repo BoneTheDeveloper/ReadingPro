@@ -46,9 +46,9 @@ The page is centered with `max-w-2xl`, vertical spacing, and a compact dictionar
 - Suggestions debounce at 250ms.
 - Suggestions require normalized query length of at least 2.
 - Suggest results are cached in browser memory by normalized term.
-- Suggest API: `/api/dictionary/suggest`.
-- Entry detail API: `/api/dictionary/entries/:entryId`.
-- API responses are parsed with shared dictionary Zod schemas.
+- Suggest read: `suggestDictionaryTermsAction` (Server Action, `dictionary/actions.ts`).
+- Entry detail read: `getDictionaryEntryDetailAction` (Server Action; returns `null` on miss → "not-found").
+- Actions validate input with shared dictionary Zod schemas and return typed DTOs.
 - Saving vocabulary is delegated to `useSaveDictionaryVocabulary`.
 
 ## UI Rules

@@ -259,8 +259,8 @@ boundary, and race-condition resolutions.
 
 **Preconditions:** Seeded English-Vietnamese dictionary exists
 
-**Primary routes:** `GET /api/dictionary/lookup`, `GET /api/dictionary/search`,
-`GET /api/dictionary/suggest`, `GET /api/dictionary/entries/[entryId]`
+**Primary entry points:** `suggestDictionaryTermsAction`,
+`getDictionaryEntryDetailAction` (Server Actions in `features/dictionary/actions.ts`)
 
 ### Main Flow
 

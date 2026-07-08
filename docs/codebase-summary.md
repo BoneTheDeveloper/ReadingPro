@@ -35,7 +35,7 @@ src/
 │       └── (dashboard)/      # dictionary, study, upload, vocabulary, progress, processing
 │
 ├── features/                 # Vertical feature slices (see pattern below)
-│   └── <feature>/            # e.g. dictionary/, vocabulary/, reading/ ...
+│   └── <feature>/            
 │       ├── actions.ts        # Server Actions for mutations ("use server")
 │       ├── db/               # Repositories: raw Prisma access
 │       ├── services/         # Business logic + DTO builders
@@ -71,23 +71,6 @@ src/
 └── sentry.*.config.ts        # Sentry edge/server config
 ```
 
-### Feature slice pattern
-
-A feature folder repeats the same shape. `vocabulary/` is the canonical example with Server Actions:
-
-```
-features/vocabulary/
-├── actions.ts                # Server Actions for mutations ("use server")
-├── db/                       # Repositories: raw Prisma access
-├── services/                 # Business logic + DTO builders
-├── schemas/                  # Zod schemas + inferred types
-├── hooks/                    # React hooks (useActionState for mutations)
-├── ui/                       # React components
-└── *-client.ts              # Client API wrapper (calls actions / services)
-```
-
-Thinner slices carry only what they need. `users/` is just `db/sync-user.ts`; `study/shared/`
-holds shared domain types.
 
 ## Features (`src/features/`)
 
@@ -133,21 +116,27 @@ export async function saveVocabularyAction(input: SaveVocabularyInput) {
 - Data passed to Client Component via props
 - No client-side fetch for reads
 
-### API Routes (legacy / external clients)
+### Server Actions for interaction-time reads
+
+Reads triggered by user interaction (typeahead, click-to-load) can't run in a
+Server Component (which only runs at render time), so they use a **read Server
+Action** instead of a client `fetch` to an API route. Same `"use server"` +
+Zod + `getUserId()` shape as mutation actions, but no `revalidatePath()`.
+
+Example (`dictionary/actions.ts`):
+- `suggestDictionaryTermsAction` — as-you-type suggestions
+- `getDictionaryEntryDetailAction` — full entry on click (returns `null` on miss)
+
+### API Routes
 
 | Feature | Route | Method | Responsibility |
 |---------|-------|--------|-----------------|
-| **Dictionary Lookup** | `/api/dictionary/lookup` | GET | Find entry by term |
-| **Dictionary Search** | `/api/dictionary/search` | GET | Full-text search entries |
-| **Dictionary Suggest** | `/api/dictionary/suggest` | GET | Prefix/fuzzy suggest |
-| **Dictionary Entry Detail** | `/api/dictionary/entries/[entryId]` | GET | Get single entry by ID |
 | **Translate** | `/api/translate` | POST | Inline text/word translation |
 | **Studio Chat** | `/api/studio/chat` | POST | AI chat for learning help |
 | **Studio Questions** | `/api/studio/questions` | POST | Generate study questions |
 | **Upload** | `/api/upload` | POST | Upload file; extract content |
 | **Upload Text** | `/api/upload/text` | POST | Ingest raw text |
 | **Learning Session** | `/api/learning-session` | POST | Create/advance a learning session |
-| **Progress Stats** | `/api/progress/stats` | GET | Reading/learning progress metrics |
 | **Local Blob** | `/api/local-blob/[pathname]` | GET | Serve locally stored blobs |
 | **Health** | `/api/health` | GET | Health check |
 | **Clerk Webhook** | `/api/webhooks/clerk` | POST | Clerk user sync webhook |
@@ -168,9 +157,10 @@ export async function saveVocabularyAction(input: SaveVocabularyInput) {
 - `revalidatePath()` for cache invalidation
 - Client uses `useActionState` to invoke
 
-**Queries → API Routes (legacy):**
-- Still used for dictionary lookups
-- Will migrate to Server Actions over time
+**Interaction-time reads → Server Actions:**
+- Typeahead / click-to-load reads that can't run in a Server Component
+- `"use server"` + Zod + `getUserId()`, no `revalidatePath()`
+- e.g. `dictionary/actions.ts` (suggest, entry detail)
 
 ### 2. Request/Response Layering (see `code-standards.md`)
 - API routes (`app/api/**/route.ts`) parse + validate requests (zod)
@@ -198,6 +188,6 @@ export async function saveVocabularyAction(input: SaveVocabularyInput) {
 
 - **Frontend:** `src/app/[locale]/` (Next.js App Router pages)
 - **Server Actions:** `src/features/<feature>/actions.ts`
-- **API:** `src/app/api/**/route.ts` (legacy)
+- **API:** `src/app/api/**/route.ts` 
 - **Database:** Prisma schema (not listed here; see `prisma/schema.prisma`)
 - **Features (full slice):** `src/features/<feature>/` — actions, db, services, schemas, hooks, UI colocated

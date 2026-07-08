@@ -71,7 +71,7 @@ Server Actions return directly (no envelope):
 
 | Item | Pattern |
 |------|---------|
-| Files | kebab-case (`lookup-service.ts`, `dictionary-client.ts`) |
+| Files | kebab-case (`lookup-service.ts`, `entry-detail-service.ts`) |
 | Entity schema | `<name>Schema` + `type <Name>Dto = z.infer<...>` |
 | Request schema | `<entity>RequestSchema` |
 | Response schema | `<entity>ResponseSchema` = `makeResponseSchema(<entity>Schema)` |

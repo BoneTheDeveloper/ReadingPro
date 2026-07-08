@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { getDictionarySuggestions } from "../dictionary-client";
+import { suggestDictionaryTermsAction } from "../actions";
 import type { DictionarySuggestItemDto } from "@/features/dictionary/schemas/dictionary.schema";
 import { normalizeDictionaryTerm } from "@/features/dictionary/lib/normalize-dictionary-term";
 
@@ -59,7 +59,7 @@ export function useDictionarySuggest() {
 
       const thisRequestId = requestIdRef.current;
       try {
-        const data = await getDictionarySuggestions(trimmed);
+        const data = await suggestDictionaryTermsAction(trimmed);
 
         if (requestIdRef.current === thisRequestId) {
           setSuggestions(data);
