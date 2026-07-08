@@ -39,7 +39,7 @@ type PassageOverview = {
     content: string;
     wordCount: number;
     createdAt: Date;
-    originalLevel: string | null;
+    cefrLevel: string | null;
   }>;
 };
 
@@ -69,7 +69,7 @@ const mockPassageOverview: PassageOverview = {
         "A short environmental article about compact urban forests, community volunteers, and how dense native planting can cool streets while restoring local biodiversity.",
       wordCount: 930,
       createdAt: new Date("2026-05-18T09:00:00"),
-      originalLevel: "B1",
+      cefrLevel: "B1",
     },
     {
       id: "mock-passage-2",
@@ -78,7 +78,7 @@ const mockPassageOverview: PassageOverview = {
         "A reading passage on circadian rhythm, evening habits, and practical changes that help learners protect focus and memory during busy study weeks.",
       wordCount: 1240,
       createdAt: new Date("2026-05-16T14:30:00"),
-      originalLevel: "B2",
+      cefrLevel: "B2",
     },
     {
       id: "mock-passage-3",
@@ -87,7 +87,7 @@ const mockPassageOverview: PassageOverview = {
         "An essay-style passage about exhibition design, object labels, visitor pathways, and the quiet choices that turn historical artifacts into a memorable narrative.",
       wordCount: 1115,
       createdAt: new Date("2026-05-12T17:15:00"),
-      originalLevel: "C1",
+      cefrLevel: "C1",
     },
   ],
 };
@@ -449,9 +449,9 @@ export default async function DashboardPage() {
                           <h3 className="text-base font-semibold text-foreground group-hover:text-primary">
                             {passage.title}
                           </h3>
-                          {passage.originalLevel && (
+                          {passage.cefrLevel && (
                             <span className="rounded-full bg-success-soft px-2.5 py-1 text-xs font-semibold text-success">
-                              {passage.originalLevel}
+                              {passage.cefrLevel}
                             </span>
                           )}
                         </div>

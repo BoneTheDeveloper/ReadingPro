@@ -20,13 +20,11 @@ export async function createPassageWithArtifacts(input: {
   userId: string;
   title: string;
   text: string;
-  simplifiedContent: string | null;
-  originalLevel: CEFRLevel;
-  simplifiedLevel: CEFRLevel | null;
+  cefrLevel: CEFRLevel;
   wordCount: number;
   sourceType: SourceType;
   filePath?: string;
-  artifactId: string;
+  artifactId?: string;
   questions: QuestionCreateInput[];
 }) {
   return prisma.passage.create({
@@ -34,13 +32,11 @@ export async function createPassageWithArtifacts(input: {
       userId: input.userId,
       title: input.title,
       content: input.text,
-      simplifiedContent: input.simplifiedContent,
-      originalLevel: input.originalLevel,
-      simplifiedLevel: input.simplifiedLevel,
+      cefrLevel: input.cefrLevel,
       wordCount: input.wordCount,
       sourceType: input.sourceType,
       filePath: input.filePath,
-      ...(input.questions.length > 0
+      ...(input.artifactId && input.questions.length > 0
         ? {
             studioArtifacts: {
               create: {

@@ -51,7 +51,7 @@ export async function getUserPassageOverview(userId: string) {
         id: true,
         title: true,
         content: true,
-        originalLevel: true,
+        cefrLevel: true,
         wordCount: true,
         createdAt: true,
       },

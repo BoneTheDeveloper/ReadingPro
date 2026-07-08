@@ -44,8 +44,6 @@ export interface ArtifactRef {
 
 export interface ArtifactDetailCacheEntry {
   questions?: import("@/features/studio-panel/schemas/study.schema").GeneratedStudyQuestionDto[];
-  simplifiedContent?: string | null;
-  simplifiedLevel?: string | null;
 }
 
 const passageIdSchema = z.string().uuid();

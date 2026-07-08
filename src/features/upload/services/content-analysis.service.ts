@@ -1,20 +1,6 @@
 import "server-only";
-import * as Sentry from "@sentry/nextjs";
-import {
-  generateComprehensionQuestions,
-  type GeneratedQuestion,
-} from "@/services/ai/question-generator";
-import { simplifyContent } from "@/services/ai/content-simplifier";
-import { createModuleLogger } from "@/lib/logger";
-import {
-  getHeuristicCEFR,
-  getTargetCEFRLevel,
-  isSimplifiableCEFRLevel,
-  type CEFRLevel,
-} from "@/types/cefr";
+import type { CEFRLevel } from "@/types/cefr";
 import { createPassageWithArtifacts } from "../db/content-analysis/content-analysis.repository";
-
-const log = createModuleLogger("features:upload:content-analysis");
 
 type SourceType = "TEXT" | "PDF";
 
@@ -28,8 +14,7 @@ export interface AnalyzeAndPersistContentInput {
 
 export interface AnalyzeAndPersistContentResult {
   passageId: string;
-  originalLevel: CEFRLevel;
-  simplifiedLevel: CEFRLevel | null;
+  cefrLevel: CEFRLevel;
   questionCount: number;
 }
 
@@ -40,114 +25,23 @@ export async function analyzeAndPersistContent({
   sourceType,
   filePath,
 }: AnalyzeAndPersistContentInput): Promise<AnalyzeAndPersistContentResult> {
-  const truncatedText = text.slice(0, 10000);
+  const wordCount = text.split(/\s+/).filter((w) => w.length > 0).length;
 
-  Sentry.addBreadcrumb({
-    category: "analysis",
-    message: "Computing CEFR level",
-    level: "info",
-  });
-  const originalLevel = getHeuristicCEFR(truncatedText);
-  const targetLevel = isSimplifiableCEFRLevel(originalLevel)
-    ? getTargetCEFRLevel(originalLevel)
-    : null;
-
-  let simplifiedContent: string | null = null;
-  let simplifiedLevel: CEFRLevel | null = null;
-
-  if (targetLevel) {
-    try {
-      Sentry.addBreadcrumb({
-        category: "ai",
-        message: `Simplifying to ${targetLevel}`,
-        level: "info",
-      });
-      const simplified = await Sentry.startSpan(
-        { name: "ai:content-simplify", op: "ai" },
-        async () => {
-          return simplifyContent(truncatedText, targetLevel);
-        },
-      );
-      if (simplified) {
-        simplifiedContent = simplified.simplifiedText;
-        simplifiedLevel = targetLevel;
-      }
-    } catch (error) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      log.warn(
-        { err, context: { targetLevel, originalLevel } },
-        "Content simplification failed; saving original text",
-      );
-    }
-  }
-
-  const questions = await generateQuestionsForContent(
-    simplifiedContent || text,
-  );
-  const wordCount = text.split(/\s+/).filter((word) => word.length > 0).length;
-
-  const artifactId = crypto.randomUUID();
-
-  Sentry.addBreadcrumb({
-    category: "db",
-    message: "Creating passage with questions",
-    level: "info",
-  });
   const passage = await createPassageWithArtifacts({
     userId,
     title,
     text,
-    simplifiedContent,
-    originalLevel,
-    simplifiedLevel,
+    cefrLevel: "B2", // TODO: replace with AI CEFR detection
     wordCount,
     sourceType,
     filePath,
-    artifactId,
-    questions: questions.map((q) => toQuestionCreateInput(q)),
+    artifactId: undefined,
+    questions: [],
   });
 
   return {
     passageId: passage.id,
-    originalLevel,
-    simplifiedLevel,
-    questionCount: questions.length,
-  };
-}
-
-async function generateQuestionsForContent(content: string) {
-  try {
-    Sentry.addBreadcrumb({
-      category: "ai",
-      message: "Generating comprehension questions",
-      level: "info",
-    });
-    const questionResult = await Sentry.startSpan(
-      { name: "ai:question-gen", op: "ai" },
-      async () => {
-        return generateComprehensionQuestions(content.slice(0, 10000), 5);
-      },
-    );
-    return questionResult?.questions ?? [];
-  } catch (error) {
-    const err = error instanceof Error ? error : new Error(String(error));
-    log.warn(
-      { err, context: { contentLength: content.length } },
-      "Question generation failed; passage saved without questions",
-    );
-    return [];
-  }
-}
-
-function toQuestionCreateInput(question: GeneratedQuestion) {
-  return {
-    questionText: question.questionText,
-    options: JSON.stringify(question.options),
-    correctOption: question.correctAnswer,
-    sourceText: question.sourceText,
-    sourceLine: question.sourceLine,
-    explanation: question.explanation,
-    questionType: question.questionType,
-    difficulty: question.difficulty,
+    cefrLevel: "B2", // TODO: replace with AI CEFR detection
+    questionCount: 0,
   };
 }

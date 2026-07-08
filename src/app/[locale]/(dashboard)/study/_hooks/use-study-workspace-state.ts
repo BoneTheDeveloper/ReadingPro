@@ -20,7 +20,6 @@ export interface StudyState {
   activePassageId: string | null;
   status: StudyStatus;
   error: string | null;
-  simplifying: boolean;
   uploadModalOpen: boolean;
   artifactsByPassageId: Record<
     string,
@@ -78,7 +77,6 @@ export function useStudyWorkspaceState(initialPassages: PassageData[]) {
       activePassageId: initialId,
       status: initialId ? "ready" : "idle",
       error: null,
-      simplifying: false,
       uploadModalOpen: false,
       artifactsByPassageId: {},
       viewingArtifactByPassageId: {},
@@ -106,7 +104,7 @@ export function useStudyWorkspaceState(initialPassages: PassageData[]) {
             day: "numeric",
             year: "numeric",
           }),
-          level: passage.originalLevel,
+          level: passage.cefrLevel,
           wordCount: passage.wordCount,
           sourceType: passage.sourceType,
         })),

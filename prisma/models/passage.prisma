@@ -1,3 +1,24 @@
+// [Upload] Short-lived records that authorize private file (PDF) uploads.
+
+/// A pending upload authorization: grants temporary, expiring access to a private
+/// Blob pathname before the file becomes a Passage. Server-only; consumed/expired
+/// after the upload completes. Client: backs the upload flow's signed access.
+model FileUploadIntent {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String
+  /// Reserved Blob pathname for the upload; unique. Server-only.
+  pathname  String   @unique
+  /// Deadline after which the intent (and its access) is no longer valid.
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+  @@index([userId, expiresAt])
+  @@map("file_upload_intents")
+}
+
 // [Study · Sources] Reading material the learner studies, plus the chat thread
 // attached to a passage. A passage is the root entity the study workspace loads;
 // studio artifacts, translations, and chat all hang off it.
@@ -9,19 +30,15 @@ model Passage {
   id                String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId            String
   title             String
+  /// Extracted text used for quiz generation.
   content           String
-  /// AI-simplified rewrite of `content`; null until the learner simplifies.
-  simplifiedContent String?
-  /// CEFR level of `content`; null until analyzed.
-  originalLevel     CEFRLevel?
-  /// CEFR level of `simplifiedContent`; null until simplified.
-  simplifiedLevel   CEFRLevel?
-  /// Word count of original `content`.
+  /// CEFR level of `content`; set at upload via AI or heuristic.
+  cefrLevel         CEFRLevel?
   wordCount         Int
   sourceType        SourceType
-  /// Blob pathname of the source PDF (PDF sources only); unique. Server-only.
+  /// Blob pathname of the source (PDF in blob, YouTube as embed URL).
+  /// Used for Source view rendering. Null for TEXT sources.
   filePath          String?    @unique
-  /// Soft-delete timestamp; non-null rows are hidden from the sources list.
   deletedAt         DateTime?
   createdAt         DateTime   @default(now())
   updatedAt         DateTime   @updatedAt
@@ -44,7 +61,6 @@ model StudyChatMessage {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId    String
   passageId String   @db.Uuid
-  /// Author role: 'user' or 'assistant'.
   role      String
   content   String
   createdAt DateTime @default(now())

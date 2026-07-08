@@ -43,17 +43,14 @@ function toPassageData(input: {
   title: string;
   text: string;
   sourceType: SourceType;
-  originalLevel: string;
-  simplifiedLevel: string | null;
+  cefrLevel: string;
 }): PassageData {
   const wordCount = input.text.split(/\s+/).filter((w) => w.length > 0).length;
   return {
     id: input.passageId,
     title: input.title,
     content: input.text,
-    simplifiedContent: null,
-    originalLevel: input.originalLevel,
-    simplifiedLevel: input.simplifiedLevel,
+    cefrLevel: input.cefrLevel,
     wordCount,
     createdAt: Date.now(),
     sourceType: input.sourceType,
@@ -130,8 +127,7 @@ export function StudyUploadModal({
           title: fileName,
           text,
           sourceType: fileType,
-          originalLevel: result.originalLevel,
-          simplifiedLevel: result.simplifiedLevel,
+          cefrLevel: result.cefrLevel,
         }),
       );
     } catch (err) {
@@ -153,8 +149,7 @@ export function StudyUploadModal({
           title,
           text: pastedText,
           sourceType: "TEXT",
-          originalLevel: result.originalLevel,
-          simplifiedLevel: result.simplifiedLevel,
+          cefrLevel: result.cefrLevel,
         }),
       );
     } catch (err) {

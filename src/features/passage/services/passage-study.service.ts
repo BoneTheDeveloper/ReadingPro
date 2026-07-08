@@ -43,7 +43,7 @@ export async function generateQuestionsForPassage(
     };
   }
 
-  const contentToAnalyze = passage.simplifiedContent || passage.content;
+  const contentToAnalyze = passage.content;
 
   Sentry.addBreadcrumb({
     category: "ai",

@@ -4,9 +4,7 @@ export interface PassageData {
   id: string;
   title: string;
   content: string;
-  simplifiedContent: string | null;
-  originalLevel: string | null;
-  simplifiedLevel: string | null;
+  cefrLevel: string | null;
   wordCount: number;
   createdAt: number;
   sourceType: SourceType;

@@ -69,8 +69,8 @@ export function StudyPageClient({
 
   // Translation state (lifted from StudyContentPanel)
   const [contentViewMode, setContentViewMode] = useState<
-    "original" | "simplified"
-  >("simplified");
+    "source" | "passage"
+  >("passage");
   const [selection, setSelection] = useState<TranslationSelection | null>(null);
   const [quickTranslationState, setQuickTranslationState] =
     useState<QuickTranslationState>({

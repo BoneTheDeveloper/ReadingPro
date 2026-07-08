@@ -15,8 +15,7 @@ function ProcessingPageContent() {
 
   useEffect(() => {
     const stages = [
-      { status: "analyzing" as const, progress: 20 },
-      { status: "simplifying" as const, progress: 40 },
+      { status: "analyzing" as const, progress: 40 },
       { status: "generating" as const, progress: 70 },
       { status: "complete" as const, progress: 100 },
     ]
@@ -26,7 +25,7 @@ function ProcessingPageContent() {
     const interval = setInterval(() => {
       currentStage++
       if (currentStage < stages.length) {
-        setStatus(stages[currentStage].status === "simplifying" ? "analyzing" : "generating")
+        setStatus(stages[currentStage].status)
         setProgress(stages[currentStage].progress)
       } else {
         clearInterval(interval)

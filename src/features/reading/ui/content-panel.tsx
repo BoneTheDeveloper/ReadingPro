@@ -12,7 +12,7 @@ import type { PassageData } from "@/features/passage/schemas/passage.schema";
 import type { TranslationSelection } from "@/features/reading/schemas/translation.schema";
 import { extractSelectionInfo } from "@/features/reading/lib/selection-utils";
 
-type ViewMode = "original" | "simplified";
+type ViewMode = "source" | "passage";
 
 interface StudyContentPanelProps {
   passage: PassageData | null;
@@ -101,13 +101,7 @@ export function StudyContentPanel({
     );
   }
 
-  const currentContent =
-    viewMode === "simplified" && passage.simplifiedContent
-      ? passage.simplifiedContent
-      : passage.content;
-  const currentLevel =
-    viewMode === "simplified" ? passage.simplifiedLevel : passage.originalLevel;
-  const level = (currentLevel || passage.originalLevel || "B2") as Parameters<
+  const level = (passage.cefrLevel || "B2") as Parameters<
     typeof getCEFRBadgeVariant
   >[0];
 
@@ -146,14 +140,12 @@ export function StudyContentPanel({
             onChange={onViewModeChange}
             options={[
               {
-                value: "original",
-                label: `${t("original")} (${getCEFRShortLabel((passage.originalLevel ?? level) as Parameters<typeof getCEFRBadgeVariant>[0])})`,
+                value: "source",
+                label: t("source"),
               },
               {
-                value: "simplified",
-                label: passage.simplifiedContent
-                  ? `${t("simplified")} (${getCEFRShortLabel((passage.simplifiedLevel ?? level) as Parameters<typeof getCEFRBadgeVariant>[0])})`
-                  : t("simplified"),
+                value: "passage",
+                label: `${t("passage")} (${getCEFRShortLabel(level)})`,
               },
             ]}
           />
@@ -175,7 +167,7 @@ export function StudyContentPanel({
             onMouseDown={handleContentMouseDown}
             onMouseUp={handleContentMouseUp}
           >
-            {currentContent.split("\n\n").map((paragraph, i) => (
+            {passage.content.split("\n\n").map((paragraph, i) => (
               <p key={i} className="mb-6 last:mb-0">
                 {paragraph}
               </p>

@@ -15,8 +15,7 @@ export async function uploadFileAction(file: File) {
     success: true,
     data: {
       passageId: result.passageId,
-      originalLevel: result.originalLevel,
-      simplifiedLevel: result.simplifiedLevel,
+      cefrLevel: result.cefrLevel,
       questionCount: result.questionCount,
     },
   };
