@@ -9,7 +9,7 @@ import { toLearningSessionDto } from "@/features/learning-session/schemas/learni
 const learningSessionPostSchema = z.object({}).strict();
 
 export async function POST(request: NextRequest) {
-  const requestLog = createRequestLogger(
+  const log = createRequestLogger(
     "api:learning-session",
     createRequestLogContext(request, "POST", "/api/learning-session"),
   );
@@ -37,6 +37,6 @@ export async function POST(request: NextRequest) {
       data: toLearningSessionDto(session),
     });
   } catch (error) {
-    return toHttp(error, requestLog, "api:learning-session");
+    return toHttp(error, log, "api:learning-session");
   }
 }

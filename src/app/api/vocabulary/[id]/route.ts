@@ -8,7 +8,7 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const requestLog = createRequestLogger(
+  const log = createRequestLogger(
     "api:vocabulary:delete",
     createRequestLogContext(request, "DELETE", "/api/vocabulary/[id]"),
   );
@@ -21,6 +21,6 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    return toHttp(error, requestLog, "api:vocabulary:delete");
+    return toHttp(error, log, "api:vocabulary:delete");
   }
 }

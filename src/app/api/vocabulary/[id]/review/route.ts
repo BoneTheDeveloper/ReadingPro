@@ -14,7 +14,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const requestLog = createRequestLogger(
+  const log = createRequestLogger(
     "api:vocabulary:review",
     createRequestLogContext(request, "POST", `/api/vocabulary/${id}/review`),
   );
@@ -45,6 +45,6 @@ export async function POST(
 
     return NextResponse.json({ success: true, data: dto });
   } catch (error) {
-    return toHttp(error, requestLog, "api:vocabulary:review");
+    return toHttp(error, log, "api:vocabulary:review");
   }
 }

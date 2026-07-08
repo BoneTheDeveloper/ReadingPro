@@ -7,7 +7,7 @@ import { createRequestLogContext, createRequestLogger } from "@/lib/logger";
 const MODULE = "api:webhooks:clerk";
 
 export async function POST(req: NextRequest) {
-  const requestLog = createRequestLogger(
+  const log = createRequestLogger(
     MODULE,
     createRequestLogContext(req, "POST", "/api/webhooks/clerk"),
   );
@@ -16,11 +16,11 @@ export async function POST(req: NextRequest) {
   try {
     evt = await verifyWebhook(req);
   } catch {
-    requestLog.warn("invalid webhook signature");
+    log.warn("invalid webhook signature");
     return new Response("Invalid signature", { status: 400 });
   }
 
-  requestLog.debug({ context: { eventType: evt.type } }, "processing webhook");
+  log.debug({ context: { eventType: evt.type } }, "processing webhook");
 
   switch (evt.type) {
     case "user.created":
@@ -40,6 +40,6 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  requestLog.info({ context: { eventType: evt.type } }, "webhook processed");
+  log.info({ context: { eventType: evt.type } }, "webhook processed");
   return new Response("ok", { status: 200 });
 }

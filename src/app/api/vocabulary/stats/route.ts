@@ -5,7 +5,7 @@ import { createRequestLogContext, createRequestLogger } from "@/lib/logger";
 import { getVocabularyItemStats } from "@/features/vocabulary/services/vocabulary-items.service";
 
 export async function GET(request: NextRequest) {
-  const requestLog = createRequestLogger(
+  const log = createRequestLogger(
     "api:vocabulary:stats",
     createRequestLogContext(request, "GET", "/api/vocabulary/stats"),
   );
@@ -15,6 +15,6 @@ export async function GET(request: NextRequest) {
     const stats = await getVocabularyItemStats(userId);
     return NextResponse.json({ success: true, data: stats });
   } catch (error) {
-    return toHttp(error, requestLog, "api:vocabulary:stats");
+    return toHttp(error, log, "api:vocabulary:stats");
   }
 }

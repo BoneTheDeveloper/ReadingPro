@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 const MODULE = "api:health";
 
 export async function GET() {
-  const requestLog = createRequestLogger(
+  const log = createRequestLogger(
     MODULE,
     createRequestLogContext({}, "GET", "/api/health"),
   );
@@ -30,7 +30,7 @@ export async function GET() {
   const allOk = Object.values(checks).every((c) => c.status === "ok");
   const httpStatus = allOk ? 200 : 503;
 
-  requestLog.debug({ context: { checks } }, "health check completed");
+  log.debug({ context: { checks } }, "health check completed");
   return NextResponse.json(
     {
       success: allOk,

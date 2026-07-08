@@ -13,7 +13,7 @@ const createSetSchema = z.object({
 });
 
 export async function GET(request: NextRequest) {
-  const requestLog = createRequestLogger(
+  const log = createRequestLogger(
     "api:vocabulary:sets",
     createRequestLogContext(request, "GET", "/api/vocabulary/sets"),
   );
@@ -31,12 +31,12 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ success: true, data: sets });
   } catch (error) {
-    return toHttp(error, requestLog, "api:vocabulary:sets");
+    return toHttp(error, log, "api:vocabulary:sets");
   }
 }
 
 export async function POST(request: NextRequest) {
-  const requestLog = createRequestLogger(
+  const log = createRequestLogger(
     "api:vocabulary:sets",
     createRequestLogContext(request, "POST", "/api/vocabulary/sets"),
   );
@@ -66,6 +66,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, data: set });
   } catch (error) {
-    return toHttp(error, requestLog, "api:vocabulary:sets");
+    return toHttp(error, log, "api:vocabulary:sets");
   }
 }

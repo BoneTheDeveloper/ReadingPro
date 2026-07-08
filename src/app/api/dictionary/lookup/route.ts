@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 import { getUserId } from "@/services/clerk";
 import { createRequestLogContext, createRequestLogger } from "@/lib/logger";
+import { toHttp } from "@/lib/http/route-errors";
 import { resolveDictionaryLookup } from "@/features/dictionary/services/lookup-service";
 import type {
   DictionaryEntryDto,
   DictionaryMissDto,
 } from "@/features/dictionary/schemas/dictionary.schema";
+
+const MODULE = "api:dictionary:lookup";
 
 const dictionaryLookupQuerySchema = z.object({
   q: z.string().trim().min(1).max(200),
@@ -20,7 +22,7 @@ function isAuthenticationError(error: unknown) {
 }
 
 export async function GET(request: NextRequest) {
-  const requestLog = createRequestLogger(
+  const log = createRequestLogger(
     "api:dictionary-lookup",
     createRequestLogContext(request, "GET", "/api/dictionary/lookup"),
   );
@@ -35,7 +37,7 @@ export async function GET(request: NextRequest) {
 
     const parsed = dictionaryLookupQuerySchema.safeParse(raw);
     if (!parsed.success) {
-      requestLog.warn(
+      log.warn(
         {
           context: { issues: parsed.error.issues.map((i) => i.path.join(".")) },
         },
@@ -54,7 +56,7 @@ export async function GET(request: NextRequest) {
       targetLanguage: parsed.data.targetLanguage,
     })) as DictionaryEntryDto | DictionaryMissDto;
 
-    requestLog.info(
+    log.info(
       {
         context: {
           queryLength: parsed.data.q.length,
@@ -73,13 +75,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    requestLog.error({ err: error }, "Dictionary lookup failed");
-    Sentry.captureException(error, {
-      tags: { route: "api:dictionary-lookup", method: "GET" },
-    });
-    return NextResponse.json(
-      { error: "Dictionary lookup failed." },
-      { status: 500 },
-    );
+    return toHttp(error, log, MODULE);
   }
 }

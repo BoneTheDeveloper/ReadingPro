@@ -13,7 +13,7 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const requestLog = createRequestLogger(
+  const log = createRequestLogger(
     "api:vocabulary:sets:add-items",
     createRequestLogContext(request, "POST", "/api/vocabulary/sets/[id]/items"),
   );
@@ -45,6 +45,6 @@ export async function POST(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    return toHttp(error, requestLog, "api:vocabulary:sets:add-items");
+    return toHttp(error, log, "api:vocabulary:sets:add-items");
   }
 }

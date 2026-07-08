@@ -13,7 +13,7 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const requestLog = createRequestLogger(
+  const log = createRequestLogger(
     "api:vocabulary:status",
     createRequestLogContext(request, "PATCH", "/api/vocabulary/[id]/status"),
   );
@@ -45,6 +45,6 @@ export async function PATCH(
 
     return NextResponse.json({ success: true, data: dto });
   } catch (error) {
-    return toHttp(error, requestLog, "api:vocabulary:status");
+    return toHttp(error, log, "api:vocabulary:status");
   }
 }

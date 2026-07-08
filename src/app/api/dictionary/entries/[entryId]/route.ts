@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 import { getUserId } from "@/services/clerk";
 import { createRequestLogContext, createRequestLogger } from "@/lib/logger";
+import { toHttp } from "@/lib/http/route-errors";
 import { getDictionaryEntryDetail } from "@/features/dictionary/services/entry-detail-service";
+
+const MODULE = "api:dictionary:entry";
+
 const entryIdSchema = z.string().uuid();
 
 const entryDetailQuerySchema = z.object({
@@ -19,7 +22,7 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ entryId: string }> },
 ) {
-  const requestLog = createRequestLogger(
+  const log = createRequestLogger(
     "api:dictionary-entry-detail",
     createRequestLogContext(request, "GET", "/api/dictionary/entries/:entryId"),
   );
@@ -40,7 +43,7 @@ export async function GET(
 
     const parsed = entryDetailQuerySchema.safeParse(raw);
     if (!parsed.success) {
-      requestLog.warn(
+      log.warn(
         {
           context: { issues: parsed.error.issues.map((i) => i.path.join(".")) },
         },
@@ -60,11 +63,11 @@ export async function GET(
     });
 
     if (!dto) {
-      requestLog.info({ context: { entryId } }, "Dictionary entry not found");
+      log.info({ context: { entryId } }, "Dictionary entry not found");
       return NextResponse.json({ error: "Entry not found." }, { status: 404 });
     }
 
-    requestLog.info(
+    log.info(
       { context: { entryId, found: true } },
       "Dictionary entry detail completed",
     );
@@ -78,13 +81,6 @@ export async function GET(
       );
     }
 
-    requestLog.error({ err: error }, "Dictionary entry detail failed");
-    Sentry.captureException(error, {
-      tags: { route: "api:dictionary-entry-detail", method: "GET" },
-    });
-    return NextResponse.json(
-      { error: "Entry detail failed." },
-      { status: 500 },
-    );
+    return toHttp(error, log, MODULE);
   }
 }

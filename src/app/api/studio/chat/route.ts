@@ -21,7 +21,7 @@ function isUnauthenticatedError(error: unknown) {
 }
 
 export async function POST(request: NextRequest) {
-  let requestLog = createRequestLogger(
+  let log = createRequestLogger(
     "api:study:studio:chat",
     createRequestLogContext(request, "POST", "/api/study/studio/chat"),
   );
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     try {
       body = await request.json();
     } catch {
-      requestLog.warn("Invalid JSON payload received for study chat");
+      log.warn("Invalid JSON payload received for study chat");
       return NextResponse.json(
         { error: "Invalid JSON payload." },
         { status: 400 },
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     const messageLimitsError = validateMessageSizeLimits(rawMessages);
 
     if (messageLimitsError) {
-      requestLog.warn(
+      log.warn(
         { context: { messageCount: rawMessages.length } },
         "Study chat request exceeded message limits",
       );
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
     const parsed = studyChatRequestSchema.safeParse(body);
 
     if (!parsed.success) {
-      requestLog.warn(
+      log.warn(
         {
           context: {
             issues: parsed.error.issues.map((issue) => issue.path.join(".")),
@@ -75,10 +75,10 @@ export async function POST(request: NextRequest) {
     }
 
     const { messages, passageId } = parsed.data;
-    requestLog = requestLog.child({ passageId });
+    log = log.child({ passageId });
 
     const userId = await getUserId();
-    requestLog = requestLog.child({ userId: userId });
+    log = log.child({ userId: userId });
 
     const passage = await getOwnedPassageForChat(userId, passageId);
 
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
       incomingMessages: messages,
       persistedMessages: persistedUiMessages,
       onFinishPersistError: (error) => {
-        requestLog.error(
+        log.error(
           { err: error },
           "Failed to persist study chat assistant message",
         );
@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
     return result.toUIMessageStreamResponse();
   } catch (error) {
     if (isUnauthenticatedError(error)) {
-      requestLog.warn("Unauthenticated study chat request rejected");
+      log.warn("Unauthenticated study chat request rejected");
       return NextResponse.json(
         { error: "Authentication required." },
         { status: 401 },
@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 404 });
     }
 
-    requestLog.error({ err: error }, "Study chat streaming failed");
+    log.error({ err: error }, "Study chat streaming failed");
     Sentry.captureException(error, {
       tags: { route: "api:study:studio:chat", method: "POST" },
     });

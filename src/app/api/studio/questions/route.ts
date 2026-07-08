@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
 }
 
 async function handleStudioQuestionsPost(request: NextRequest) {
-  const requestLog = createRequestLogger(
+  const log = createRequestLogger(
     "api:study:studio:questions",
     createRequestLogContext(request, "POST", "/api/study/studio/questions"),
   );
@@ -42,7 +42,7 @@ async function handleStudioQuestionsPost(request: NextRequest) {
     try {
       body = await request.json();
     } catch {
-      requestLog.warn(
+      log.warn(
         "Invalid JSON payload received for study question generation",
       );
       return NextResponse.json(
@@ -53,7 +53,7 @@ async function handleStudioQuestionsPost(request: NextRequest) {
 
     const parsed = studyQuestionsPostSchema.safeParse(body);
     if (!parsed.success) {
-      requestLog.warn(
+      log.warn(
         {
           context: {
             issues: parsed.error.issues.map((issue) => issue.path.join(".")),
@@ -78,7 +78,7 @@ async function handleStudioQuestionsPost(request: NextRequest) {
     return createStudioQuestionsSuccessResponse({ artifact, questions });
   } catch (error) {
     if (error instanceof PassageStudyServiceError) {
-      requestLog.warn(
+      log.warn(
         { err: error },
         "Question generation rejected by study service",
       );
@@ -88,7 +88,7 @@ async function handleStudioQuestionsPost(request: NextRequest) {
       );
     }
 
-    return toHttp(error, requestLog, "api:study:studio:questions");
+    return toHttp(error, log, "api:study:studio:questions");
   }
 }
 

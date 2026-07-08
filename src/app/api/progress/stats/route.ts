@@ -5,7 +5,7 @@ import { toHttp } from "@/lib/http/route-errors";
 import { createRequestLogContext, createRequestLogger } from "@/lib/logger";
 
 export async function GET(request: NextRequest) {
-  const requestLog = createRequestLogger(
+  const log = createRequestLogger(
     "api:progress:stats",
     createRequestLogContext(request, "GET", "/api/progress/stats"),
   );
@@ -16,6 +16,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ success: true, data: stats });
   } catch (error) {
-    return toHttp(error, requestLog, "api:progress:stats");
+    return toHttp(error, log, "api:progress:stats");
   }
 }

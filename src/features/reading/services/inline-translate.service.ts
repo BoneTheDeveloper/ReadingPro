@@ -27,7 +27,7 @@ type RequestLogger = ReturnType<typeof createRequestLogger>;
 
 export interface TranslateServiceContext {
   userId: string;
-  requestLog: RequestLogger;
+  log: RequestLogger;
 }
 
 export type TranslateResult =
@@ -63,7 +63,7 @@ export async function executeTranslate(
   const row = rows[0];
 
   if (!row?.sourceId) {
-    ctx.requestLog.warn("Translation source not found");
+    ctx.log.warn("Translation source not found");
     return { ok: false, status: 404 };
   }
 
@@ -71,7 +71,7 @@ export async function executeTranslate(
     const cachedResult = quickTranslationSchema.safeParse(row.cacheResponse);
     if (cachedResult.success) {
       const data = asCacheProvider(cachedResult.data);
-      ctx.requestLog.info(
+      ctx.log.info(
         {
           context: {
             cacheHit: true,
@@ -83,7 +83,7 @@ export async function executeTranslate(
         "Translation cache hit",
       );
 
-      void persistAsync(ctx.userId, input, data, ctx.requestLog);
+      void persistAsync(ctx.userId, input, data, ctx.log);
 
       return { ok: true, data, resolutionSource: "cache" };
     }
@@ -95,7 +95,7 @@ export async function executeTranslate(
     return { ok: false, status: 404 };
   }
 
-  ctx.requestLog.info(
+  ctx.log.info(
     {
       context: {
         provider: result.provider,
@@ -106,7 +106,7 @@ export async function executeTranslate(
     "Translation resolved",
   );
 
-  void persistAsync(ctx.userId, input, result, ctx.requestLog);
+  void persistAsync(ctx.userId, input, result, ctx.log);
 
   return {
     ok: true,
@@ -120,7 +120,7 @@ async function persistAsync(
   userId: string,
   input: TranslateServiceInput,
   result: QuickTranslation,
-  requestLog: RequestLogger,
+  log: RequestLogger,
 ) {
   try {
     await Sentry.startSpan(
@@ -152,6 +152,6 @@ async function persistAsync(
       },
     );
   } catch (error) {
-    requestLog.error({ err: error }, "Failed to persist translation");
+    log.error({ err: error }, "Failed to persist translation");
   }
 }

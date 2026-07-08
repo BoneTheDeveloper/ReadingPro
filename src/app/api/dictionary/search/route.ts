@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 import { getUserId } from "@/services/clerk";
 import { createRequestLogContext, createRequestLogger } from "@/lib/logger";
+import { toHttp } from "@/lib/http/route-errors";
 import { normalizeDictionaryTerm } from "@/features/dictionary/lib/normalize-dictionary-term";
 import { searchDictionary } from "@/features/dictionary/services/search-service";
 import type { DictionarySearchResultDto } from "@/features/dictionary/schemas/dictionary.schema";
+
+const MODULE = "api:dictionary:search";
 
 const dictionarySearchQuerySchema = z.object({
   q: z.string().trim().min(1).max(200),
@@ -19,7 +21,7 @@ function isAuthenticationError(error: unknown) {
 }
 
 export async function GET(request: NextRequest) {
-  const requestLog = createRequestLogger(
+  const log = createRequestLogger(
     "api:dictionary-search",
     createRequestLogContext(request, "GET", "/api/dictionary/search"),
   );
@@ -35,7 +37,7 @@ export async function GET(request: NextRequest) {
 
     const parsed = dictionarySearchQuerySchema.safeParse(raw);
     if (!parsed.success) {
-      requestLog.warn(
+      log.warn(
         {
           context: { issues: parsed.error.issues.map((i) => i.path.join(".")) },
         },
@@ -57,7 +59,7 @@ export async function GET(request: NextRequest) {
       limit: parsed.data.limit,
     })) as DictionarySearchResultDto[];
 
-    requestLog.info(
+    log.info(
       {
         context: {
           queryLength: normalizedQuery.length,
@@ -76,13 +78,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    requestLog.error({ err: error }, "Dictionary search failed");
-    Sentry.captureException(error, {
-      tags: { route: "api:dictionary-search", method: "GET" },
-    });
-    return NextResponse.json(
-      { error: "Dictionary search failed." },
-      { status: 500 },
-    );
+    return toHttp(error, log, MODULE);
   }
 }

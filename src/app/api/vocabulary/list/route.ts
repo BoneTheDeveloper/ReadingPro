@@ -13,7 +13,7 @@ const vocabularyListQuerySchema = z.object({
 });
 
 export async function GET(request: NextRequest) {
-  const requestLog = createRequestLogger(
+  const log = createRequestLogger(
     "api:vocabulary:list",
     createRequestLogContext(request, "GET", "/api/vocabulary/list"),
   );
@@ -53,6 +53,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    return toHttp(error, requestLog, "api:vocabulary:list");
+    return toHttp(error, log, "api:vocabulary:list");
   }
 }

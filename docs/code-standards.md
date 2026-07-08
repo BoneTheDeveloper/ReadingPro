@@ -147,7 +147,7 @@ try {
   if (error instanceof UploadWorkflowError) {
     return NextResponse.json({ error: error.message }, { status: error.status });
   }
-  return toHttp(error, requestLog, "api:route-name");
+  return toHttp(error, log, "api:route-name");
 }
 ```
 
@@ -165,7 +165,7 @@ Domain errors are raised as typed exceptions at the repo/service layer:
 
 API routes catch errors in a thin try/catch:
 1. `instanceof` check for domain errors with non-standard status codes, map them explicitly.
-2. Call `toHttp(error, requestLog, "api:<route-id>")` — the single boundary that translates:
+2. Call `toHttp(error, log, "api:<route-id>")` — the single boundary that translates:
    - `AuthenticationRequiredError` → 401
    - `NotFoundError` → 404
    - `ZodError` → 400

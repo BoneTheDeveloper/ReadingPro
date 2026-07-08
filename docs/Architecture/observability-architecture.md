@@ -33,33 +33,42 @@ const nextConfig = {
 
 ### Route Handler Pattern
 
-Create module logger once at top-level, request logger per handler:
+**Mandatory structure** — every API route handler MUST follow this exact pattern:
 
 ```typescript
 import { NextRequest, NextResponse } from "next/server";
 import { createRequestLogContext, createRequestLogger } from "@/lib/logger";
 import { toHttp } from "@/lib/http/route-errors";
 
-const MODULE = "api/vocabulary";
+// (1) MODULE constant — top-level, separator = `:`
+const MODULE = "api:vocabulary";
 
 export async function POST(request: NextRequest) {
+  // (2) Logger init — variable name = `log`
   const log = createRequestLogger(
     MODULE,
     createRequestLogContext(request, "POST", "/api/vocabulary"),
   );
 
   try {
-    const body = await request.json();
-    log.info({ context: { bodySize: JSON.stringify(body).length } }, "processing request");
+    // ... business logic (Zod, auth, JSON parse — optional per route) ...
 
-    // ... business logic ...
-
+    // (3) Success shape — always `{ success: true, data }`
     return NextResponse.json({ success: true, data: result });
   } catch (error) {
-    log.error(error as Error, "request failed");
+    // (4) Error handling — always `toHttp(error, log, MODULE)`
     return toHttp(error, log, MODULE);
   }
 }
+```
+
+**Flexible middle section** — what goes inside `try` is per-route:
+- Zod schema validation (optional)
+- Auth checks (optional)
+- JSON parse guards (optional)
+- Business logic (required)
+
+These are NOT enforced by convention — include when needed.
 ```
 
 ### Request Context
@@ -156,23 +165,11 @@ logger.info("app booted");
 - **Development:** `pino-pretty` with colorized output, timestamps
 - **Production:** ISO timestamps, JSON format, compact stack traces (max 6 lines)
 
-**Current coverage:** 21/24 API routes use `createRequestLogger`.
+**Current coverage:** 24/24 API routes use `createRequestLogger`.
 
 ## Error Handling (toHttp)
 
 All API routes route unexpected errors through `toHttp`:
-
-```typescript
-import { toHttp } from "@/lib/http/route-errors";
-
-export async function POST(request: Request) {
-  try {
-    // ...
-  } catch (error) {
-    return toHttp(error, requestLog, "api:vocabulary");
-  }
-}
-```
 
 **`toHttp` translation table:**
 
@@ -190,11 +187,8 @@ export async function POST(request: Request) {
 if (error instanceof UploadWorkflowError) {
   return NextResponse.json({ error: error.message }, { status: error.status });
 }
-return toHttp(error, requestLog, "api:upload");
+return toHttp(error, log, "api:upload");
 ```
-
-**Current coverage:** 15/24 API routes use `toHttp`.
-
 ## Sentry Tracing
 
 Sentry auto-instruments:
@@ -231,45 +225,6 @@ Sentry auto-instruments:
 - **AI operations:** `ai:<operation-name>` (e.g., `ai:content-simplify`, `ai:question-gen`)
 - **DB operations:** `db:<entity>-<operation>` (e.g., `db:vocabulary-save`, `db:session-ensure-active`)
 - **Storage/File:** `<operation-type>:<description>` (e.g., `storage-upload`, `pdf-parse`)
-
-#### Examples (High-Value Spans Only)
-
-```typescript
-import * as Sentry from "@sentry/nextjs";
-
-// AI/LLM call — variable latency, worth tracking separately
-const simplified = await Sentry.startSpan(
-  { name: "ai:content-simplify", op: "ai" },
-  async () => simplifyContent(text, targetLevel),
-);
-
-// Database service call — slow query, separate p99 visibility
-const dto = await Sentry.startSpan(
-  { name: "db:vocabulary-save", op: "db" },
-  () => saveVocabularyItem({ ...input, userId }),
-);
-
-// File operations — operationally critical
-const result = await Sentry.startSpan(
-  { name: "storage-upload", op: "function" },
-  () => uploadFile(filename, buffer, safeType),
-);
-```
-
-#### Current Status
-
-**Removed 24 low-value spans** (auth, body parsing, single-query DB).
-
-| File | Remaining Spans |
-|------|-----------------|
-| `features/ai-chat/services/chat-service.ts` | `ai:study-chat-stream` |
-| `features/upload/services/content-analysis.service.ts` | `ai:content-simplify`, `ai:question-gen` |
-| `features/upload/db/upload-workflow.ts` | `storage-upload`, `pdf-parse` |
-| `features/reading/db/word-translate.ts` | `word-translate:resolve` |
-| `features/reading/services/inline-translate.service.ts` | `translation:persist` |
-| `features/passage/services/passage-study.service.ts` | `ai:question-gen` |
-
-**Total: 7 manual spans** — all high-value (AI calls, file I/O, external APIs).
 
 ### Client Instrumentation
 

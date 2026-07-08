@@ -12,7 +12,7 @@ const textUploadSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  const requestLog = createRequestLogger(
+  const log = createRequestLogger(
     "api:upload:text",
     createRequestLogContext(request, "POST", "/api/upload/text"),
   );
@@ -51,6 +51,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, data: result });
   } catch (error) {
-    return toHttp(error, requestLog, "api:upload:text");
+    return toHttp(error, log, "api:upload:text");
   }
 }

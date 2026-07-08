@@ -16,7 +16,7 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const requestLog = createRequestLogger(
+  const log = createRequestLogger(
     "api:vocabulary:sets:update",
     createRequestLogContext(request, "PATCH", "/api/vocabulary/sets/[id]"),
   );
@@ -48,7 +48,7 @@ export async function PATCH(
 
     return NextResponse.json({ success: true, data: set });
   } catch (error) {
-    return toHttp(error, requestLog, "api:vocabulary:sets:update");
+    return toHttp(error, log, "api:vocabulary:sets:update");
   }
 }
 
@@ -56,7 +56,7 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const requestLog = createRequestLogger(
+  const log = createRequestLogger(
     "api:vocabulary:sets:delete",
     createRequestLogContext(request, "DELETE", "/api/vocabulary/sets/[id]"),
   );
@@ -69,6 +69,6 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    return toHttp(error, requestLog, "api:vocabulary:sets:delete");
+    return toHttp(error, log, "api:vocabulary:sets:delete");
   }
 }

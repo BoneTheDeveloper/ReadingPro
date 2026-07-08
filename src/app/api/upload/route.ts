@@ -8,7 +8,7 @@ import {
 } from "@/features/upload/db/upload-workflow";
 
 export async function POST(request: NextRequest) {
-  const requestLog = createRequestLogger(
+  const log = createRequestLogger(
     "api:upload",
     createRequestLogContext(request, "POST", "/api/upload"),
   );
@@ -41,6 +41,6 @@ export async function POST(request: NextRequest) {
         { status: error.status },
       );
     }
-    return toHttp(error, requestLog, "api:upload");
+    return toHttp(error, log, "api:upload");
   }
 }

@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 import { getUserId } from "@/services/clerk";
 import { createRequestLogContext, createRequestLogger } from "@/lib/logger";
+import { toHttp } from "@/lib/http/route-errors";
 import { executeTranslate } from "@/features/reading/services/inline-translate.service";
+
+const MODULE = "api:translate";
 
 const SINGLE_WORD_REGEX = /^[A-Za-z]+(?:[-'][A-Za-z]+)*$/;
 
@@ -32,7 +34,7 @@ function isAuthenticationError(error: unknown) {
 }
 
 export async function POST(request: NextRequest) {
-  const requestLog = createRequestLogger(
+  const log = createRequestLogger(
     "api:translate",
     createRequestLogContext(request, "POST", "/api/translate"),
   );
@@ -42,7 +44,7 @@ export async function POST(request: NextRequest) {
     try {
       body = await request.json();
     } catch {
-      requestLog.warn("Invalid JSON payload received for translation");
+      log.warn("Invalid JSON payload received for translation");
       return NextResponse.json(
         { error: "Invalid JSON payload." },
         { status: 400 },
@@ -51,7 +53,7 @@ export async function POST(request: NextRequest) {
 
     const parsed = translateRequestSchema.safeParse(body);
     if (!parsed.success) {
-      requestLog.warn(
+      log.warn(
         {
           context: {
             issues: parsed.error.issues.map((issue) => issue.path.join(".")),
@@ -66,7 +68,7 @@ export async function POST(request: NextRequest) {
     }
 
     const input = parsed.data;
-    requestLog.child({
+    log.child({
       sourceId: input.sourceId,
       targetLanguage: input.targetLanguage,
     });
@@ -83,7 +85,7 @@ export async function POST(request: NextRequest) {
       },
       {
         userId: userId,
-        requestLog: requestLog.child({ userId: userId }),
+        log: log.child({ userId: userId }),
       },
     );
 
@@ -97,20 +99,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, data: result.data });
   } catch (error) {
     if (isAuthenticationError(error)) {
-      requestLog.warn("Unauthenticated translation request rejected");
+      log.warn("Unauthenticated translation request rejected");
       return NextResponse.json(
         { error: "Authentication required." },
         { status: 401 },
       );
     }
 
-    requestLog.error({ err: error }, "Translation request failed");
-    Sentry.captureException(error, {
-      tags: { route: "api:translate", method: "POST" },
-    });
-    return NextResponse.json(
-      { error: "Unable to translate the selection." },
-      { status: 500 },
-    );
+    return toHttp(error, log, MODULE);
   }
 }

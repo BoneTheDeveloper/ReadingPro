@@ -21,7 +21,7 @@ const vocabularyRequestSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  let requestLog = createRequestLogger(
+  let log = createRequestLogger(
     "api:vocabulary",
     createRequestLogContext(request, "POST", "/api/vocabulary"),
   );
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     try {
       body = await request.json();
     } catch {
-      requestLog.warn("Invalid JSON payload received for vocabulary save");
+      log.warn("Invalid JSON payload received for vocabulary save");
       return NextResponse.json(
         { error: "Invalid JSON payload." },
         { status: 400 },
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
 
     const parsed = vocabularyRequestSchema.safeParse(body);
     if (!parsed.success) {
-      requestLog.warn(
+      log.warn(
         {
           context: {
             issues: parsed.error.issues.map((issue) => issue.path.join(".")),
@@ -55,13 +55,13 @@ export async function POST(request: NextRequest) {
     }
 
     const input = parsed.data;
-    requestLog = requestLog.child({
+    log = log.child({
       targetLanguage: input.targetLanguage,
       source: input.source,
     });
 
     const userId = await getUserId();
-    requestLog = requestLog.child({ userId: userId });
+    log = log.child({ userId: userId });
 
     const dto = await saveVocabularyItem({ ...input, userId: userId });
 
@@ -70,6 +70,6 @@ export async function POST(request: NextRequest) {
     if (error instanceof VocabularyServiceError) {
       return NextResponse.json({ error: error.message }, { status: 404 });
     }
-    return toHttp(error, requestLog, "api:vocabulary");
+    return toHttp(error, log, "api:vocabulary");
   }
 }
