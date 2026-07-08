@@ -1,9 +1,8 @@
 ## Start Here
 
-1. Read `docs/docs-index.md` for the current documentation map.
-2. Read `docs/codebase-summary.md` when you need the source layout or feature map.
-3. Read `docs/code-standards.md` for broad code and file placement conventions.
-4. Read the most relevant detailed doc before editing code.
+1. Read `docs/codebase-summary.md` when you need the source layout or feature map.
+2. Read `docs/code-standards.md` for broad code and file placement conventions.
+3. Read the most relevant detailed doc before editing code.
 
 ## Navigation
 
