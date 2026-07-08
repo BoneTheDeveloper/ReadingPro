@@ -2,10 +2,7 @@ import { z } from "zod";
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { getUserId } from "@/services/clerk";
-import {
-  createRequestLogContext,
-  createRequestLogger,
-} from "@/services/logger";
+import { createRequestLogContext, createRequestLogger } from "@/lib/logger";
 import { toHttp } from "@/lib/http/route-errors";
 import { getVocabularyItemList } from "@/features/vocabulary/services/vocabulary-items.service";
 
@@ -42,7 +39,13 @@ export async function GET(request: NextRequest) {
     const result = await Sentry.startSpan(
       { name: "db:vocabulary-list", op: "db" },
       async () =>
-        getVocabularyItemList({ userId: userId, status, search, page, pageSize }),
+        getVocabularyItemList({
+          userId: userId,
+          status,
+          search,
+          page,
+          pageSize,
+        }),
     );
 
     return NextResponse.json({

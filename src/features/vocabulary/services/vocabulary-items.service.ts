@@ -1,5 +1,5 @@
 import "server-only";
-import { createModuleLogger } from "@/services/logger";
+import { createModuleLogger } from "@/lib/logger";
 import { toIsoString } from "@/lib/utils";
 import type {
   VocabularyItemDto,
@@ -40,7 +40,30 @@ export interface SaveVocabularyItemInput {
   dictionarySenseId?: string;
 }
 
-function toVocabularyItemDto(item: { id: string; normalizedText: string; displayText: string; type: string | null; translation: string; sourceLanguage: string; targetLanguage: string; status: string; source: string; savedCount: number; nextReviewAt: Date | null; lastReviewedAt: Date | null; createdAt: Date; updatedAt: Date; occurrences?: { id: string; vocabularyItemId: string; sourceId: string | null; selectedText: string; contextSentence: string | null; createdAt: Date }[] }): VocabularyItemDto {
+function toVocabularyItemDto(item: {
+  id: string;
+  normalizedText: string;
+  displayText: string;
+  type: string | null;
+  translation: string;
+  sourceLanguage: string;
+  targetLanguage: string;
+  status: string;
+  source: string;
+  savedCount: number;
+  nextReviewAt: Date | null;
+  lastReviewedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  occurrences?: {
+    id: string;
+    vocabularyItemId: string;
+    sourceId: string | null;
+    selectedText: string;
+    contextSentence: string | null;
+    createdAt: Date;
+  }[];
+}): VocabularyItemDto {
   return {
     id: item.id,
     normalizedText: item.normalizedText,
@@ -56,7 +79,7 @@ function toVocabularyItemDto(item: { id: string; normalizedText: string; display
     lastReviewedAt: toIsoString(item.lastReviewedAt),
     createdAt: toIsoString(item.createdAt) ?? "",
     updatedAt: toIsoString(item.updatedAt) ?? "",
-    occurrences: (item.occurrences ?? []).map(o => ({
+    occurrences: (item.occurrences ?? []).map((o) => ({
       id: o.id,
       vocabularyItemId: o.vocabularyItemId,
       sourceId: o.sourceId,

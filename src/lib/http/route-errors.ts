@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import * as Sentry from "@sentry/nextjs";
 import { AuthenticationRequiredError } from "@/services/clerk";
-import type { createRequestLogger } from "@/services/logger";
+import type { createRequestLogger } from "@/lib/logger";
 
 // Domain error raised by repo/service when a resource does not exist or is not
 // owned by the caller. The two cases are merged deliberately so a non-owner
@@ -52,4 +52,3 @@ export function getZodErrorMessage(
 ) {
   return error.issues[0]?.message ?? fallback;
 }
-

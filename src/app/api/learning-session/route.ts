@@ -3,10 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { getUserId } from "@/services/clerk";
 import { toHttp } from "@/lib/http/route-errors";
-import {
-  createRequestLogContext,
-  createRequestLogger,
-} from "@/services/logger";
+import { createRequestLogContext, createRequestLogger } from "@/lib/logger";
 import { ensureActiveSession } from "@/features/learning-session/db/learning-session-queries";
 import { toLearningSessionDto } from "@/features/learning-session/schemas/learning-session.schema";
 

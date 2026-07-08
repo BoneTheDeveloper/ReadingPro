@@ -4,10 +4,7 @@ import { z } from "zod";
 import { reviewVocabularyItemById } from "@/features/vocabulary/services/vocabulary-items.service";
 import { getUserId } from "@/services/clerk";
 import { toHttp } from "@/lib/http/route-errors";
-import {
-  createRequestLogContext,
-  createRequestLogger,
-} from "@/services/logger";
+import { createRequestLogContext, createRequestLogger } from "@/lib/logger";
 
 const reviewSchema = z.object({
   isCorrect: z.boolean(),

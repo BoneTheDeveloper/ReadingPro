@@ -3,10 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { validateTextContent } from "@/features/upload/lib/upload-validation";
 import { getUserId } from "@/services/clerk";
 import { toHttp } from "@/lib/http/route-errors";
-import {
-  createRequestLogContext,
-  createRequestLogger,
-} from "@/services/logger";
+import { createRequestLogContext, createRequestLogger } from "@/lib/logger";
 import { analyzeAndPersistContent } from "@/features/upload/services/content-analysis.service";
 
 const textUploadSchema = z.object({

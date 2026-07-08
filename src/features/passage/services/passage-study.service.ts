@@ -4,7 +4,7 @@ import {
   generateComprehensionQuestions,
   type GeneratedQuestion,
 } from "@/services/ai/question-generator";
-import { createModuleLogger } from "@/services/logger";
+import { createModuleLogger } from "@/lib/logger";
 import { NotFoundError } from "@/lib/http/route-errors";
 import { questionDataSchema } from "@/features/passage/db/passage-queries";
 import type { GeneratedStudyQuestionDto } from "@/features/studio-panel/schemas/study.schema";

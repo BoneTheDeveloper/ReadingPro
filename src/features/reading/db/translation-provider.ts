@@ -1,5 +1,5 @@
 import "server-only";
-import { createModuleLogger } from "@/services/logger";
+import { createModuleLogger } from "@/lib/logger";
 
 const log = createModuleLogger("translation:provider");
 

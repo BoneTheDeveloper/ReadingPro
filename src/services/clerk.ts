@@ -3,7 +3,7 @@ import { auth, clerkClient } from "@clerk/nextjs/server";
 import * as Sentry from "@sentry/nextjs";
 import { cache } from "react";
 import { syncUser } from "@/features/users/db/sync-user";
-import { createModuleLogger } from "@/services/logger";
+import { createModuleLogger } from "@/lib/logger";
 
 const log = createModuleLogger("auth:utils");
 

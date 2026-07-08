@@ -3,10 +3,7 @@ import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 import { getUserId } from "@/services/clerk";
 import { getZodErrorMessage, toHttp } from "@/lib/http/route-errors";
-import {
-  createRequestLogContext,
-  createRequestLogger,
-} from "@/services/logger";
+import { createRequestLogContext, createRequestLogger } from "@/lib/logger";
 import {
   generateQuestionsForPassage,
   PassageStudyServiceError,

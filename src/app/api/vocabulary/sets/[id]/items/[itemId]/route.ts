@@ -2,10 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { removeItemFromVocabularySet } from "@/features/vocabulary/services/vocabulary-sets.service";
 import { getUserId } from "@/services/clerk";
 import { toHttp } from "@/lib/http/route-errors";
-import {
-  createRequestLogContext,
-  createRequestLogger,
-} from "@/services/logger";
+import { createRequestLogContext, createRequestLogger } from "@/lib/logger";
 
 export async function DELETE(
   request: NextRequest,

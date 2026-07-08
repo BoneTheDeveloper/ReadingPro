@@ -5,7 +5,7 @@ import * as Sentry from "@sentry/nextjs";
 import { prisma } from "@/lib/prisma";
 import { wrapUserText } from "@/services/ai/prompt-utils";
 import { getStudyChatModelId } from "@/services/ai/model-config";
-import { createModuleLogger } from "@/services/logger";
+import { createModuleLogger } from "@/lib/logger";
 import {
   MAX_PASSAGE_CHARS,
   type UiMessage,

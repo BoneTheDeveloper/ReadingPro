@@ -1,13 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
-import {
-  AuthenticationRequiredError,
-  getUserId,
-} from "@/services/clerk";
-import {
-  createRequestLogContext,
-  createRequestLogger,
-} from "@/services/logger";
+import { AuthenticationRequiredError, getUserId } from "@/services/clerk";
+import { createRequestLogContext, createRequestLogger } from "@/lib/logger";
 import {
   studyChatRequestSchema,
   type UiMessage,

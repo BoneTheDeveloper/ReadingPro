@@ -7,10 +7,7 @@ import {
 } from "@/features/vocabulary/services/vocabulary-sets.service";
 import { getUserId } from "@/services/clerk";
 import { toHttp } from "@/lib/http/route-errors";
-import {
-  createRequestLogContext,
-  createRequestLogger,
-} from "@/services/logger";
+import { createRequestLogContext, createRequestLogger } from "@/lib/logger";
 
 const renameSetSchema = z.object({
   name: z.string().trim().min(1).max(100),

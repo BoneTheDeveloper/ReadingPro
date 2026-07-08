@@ -4,10 +4,7 @@ import { z } from "zod";
 import { addItemsToVocabularySet } from "@/features/vocabulary/services/vocabulary-sets.service";
 import { getUserId } from "@/services/clerk";
 import { toHttp } from "@/lib/http/route-errors";
-import {
-  createRequestLogContext,
-  createRequestLogger,
-} from "@/services/logger";
+import { createRequestLogContext, createRequestLogger } from "@/lib/logger";
 
 const addItemsSchema = z.object({
   itemIds: z.array(z.string().uuid()).min(1).max(50),

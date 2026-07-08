@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUserId } from "@/services/clerk";
 import { toHttp } from "@/lib/http/route-errors";
-import {
-  createRequestLogContext,
-  createRequestLogger,
-} from "@/services/logger";
+import { createRequestLogContext, createRequestLogger } from "@/lib/logger";
 import { getVocabularyItemStats } from "@/features/vocabulary/services/vocabulary-items.service";
 
 export async function GET(request: NextRequest) {

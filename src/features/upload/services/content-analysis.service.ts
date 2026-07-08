@@ -5,7 +5,7 @@ import {
   type GeneratedQuestion,
 } from "@/services/ai/question-generator";
 import { simplifyContent } from "@/services/ai/content-simplifier";
-import { createModuleLogger } from "@/services/logger";
+import { createModuleLogger } from "@/lib/logger";
 import {
   getHeuristicCEFR,
   getTargetCEFRLevel,

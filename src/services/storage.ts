@@ -1,8 +1,8 @@
-import 'server-only';
+import "server-only";
 import { put, del, head } from "@vercel/blob";
 import { writeFile, mkdir, readFile, unlink } from "node:fs/promises";
 import path from "node:path";
-import { createModuleLogger } from "@/services/logger";
+import { createModuleLogger } from "@/lib/logger";
 
 const log = createModuleLogger("storage:blob");
 
@@ -94,7 +94,10 @@ async function ensureDir() {
 function localPath(pathname: string) {
   const normalized = path.posix.normalize(`/${pathname}`).slice(1);
   const fullPath = path.resolve(LOCAL_STORAGE_DIR, normalized);
-  if (!fullPath.startsWith(`${LOCAL_STORAGE_DIR}${path.sep}`) && fullPath !== LOCAL_STORAGE_DIR) {
+  if (
+    !fullPath.startsWith(`${LOCAL_STORAGE_DIR}${path.sep}`) &&
+    fullPath !== LOCAL_STORAGE_DIR
+  ) {
     throw new Error("Invalid storage pathname");
   }
   return fullPath;

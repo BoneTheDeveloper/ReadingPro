@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUserId } from "@/services/clerk";
 import { toHttp } from "@/lib/http/route-errors";
-import { createRequestLogContext, createRequestLogger } from "@/services/logger";
-import { processFileUpload, UploadWorkflowError } from "@/features/upload/db/upload-workflow";
+import { createRequestLogContext, createRequestLogger } from "@/lib/logger";
+import {
+  processFileUpload,
+  UploadWorkflowError,
+} from "@/features/upload/db/upload-workflow";
 
 export async function POST(request: NextRequest) {
   const requestLog = createRequestLogger(
@@ -33,7 +36,10 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     if (error instanceof UploadWorkflowError) {
-      return NextResponse.json({ error: error.message }, { status: error.status });
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status },
+      );
     }
     return toHttp(error, requestLog, "api:upload");
   }

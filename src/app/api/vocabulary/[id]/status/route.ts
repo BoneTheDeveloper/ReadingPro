@@ -4,10 +4,7 @@ import { z } from "zod";
 import { updateVocabularyItemStatus } from "@/features/vocabulary/services/vocabulary-items.service";
 import { getUserId } from "@/services/clerk";
 import { toHttp } from "@/lib/http/route-errors";
-import {
-  createRequestLogContext,
-  createRequestLogger,
-} from "@/services/logger";
+import { createRequestLogContext, createRequestLogger } from "@/lib/logger";
 
 const statusUpdateSchema = z.object({
   status: z.enum(["NEW", "LEARNING", "MASTERED"]),

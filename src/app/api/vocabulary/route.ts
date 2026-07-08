@@ -2,10 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 import { getUserId } from "@/services/clerk";
-import {
-  createRequestLogContext,
-  createRequestLogger,
-} from "@/services/logger";
+import { createRequestLogContext, createRequestLogger } from "@/lib/logger";
 import { toHttp } from "@/lib/http/route-errors";
 import {
   VocabularyServiceError,
@@ -39,16 +36,26 @@ export async function POST(request: NextRequest) {
       );
     } catch {
       requestLog.warn("Invalid JSON payload received for vocabulary save");
-      return NextResponse.json({ error: "Invalid JSON payload." }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid JSON payload." },
+        { status: 400 },
+      );
     }
 
     const parsed = vocabularyRequestSchema.safeParse(body);
     if (!parsed.success) {
       requestLog.warn(
-        { context: { issues: parsed.error.issues.map((issue) => issue.path.join(".")) } },
+        {
+          context: {
+            issues: parsed.error.issues.map((issue) => issue.path.join(".")),
+          },
+        },
         "Invalid vocabulary request rejected",
       );
-      return NextResponse.json({ error: "Invalid vocabulary request." }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid vocabulary request." },
+        { status: 400 },
+      );
     }
 
     const input = parsed.data;

@@ -1,9 +1,12 @@
 import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
 import * as Sentry from "@sentry/nextjs";
-import { createRequestLogger } from "@/services/logger";
+import { createRequestLogger } from "@/lib/logger";
 import type { TranslateResolutionSource } from "@/features/reading/lib/text-utils";
-import { quickTranslationSchema, type QuickTranslation } from "@/features/dictionary/services/lookup-quick.service";
+import {
+  quickTranslationSchema,
+  type QuickTranslation,
+} from "@/features/dictionary/services/lookup-quick.service";
 import {
   buildTranslationCacheKey,
   fetchCacheAndSource,
@@ -108,7 +111,8 @@ export async function executeTranslate(
   return {
     ok: true,
     data: result,
-    resolutionSource: result.provider === "dictionary" ? "dictionary" : "fallback",
+    resolutionSource:
+      result.provider === "dictionary" ? "dictionary" : "fallback",
   };
 }
 

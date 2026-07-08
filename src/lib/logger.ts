@@ -1,4 +1,4 @@
-import 'server-only';
+import "server-only";
 import pino from "pino";
 
 const isDev = process.env.NODE_ENV !== "production";
@@ -7,18 +7,20 @@ type LogContext = Record<string, unknown>;
 type LogFields = Record<string, unknown> & {
   context?: LogContext;
 };
-type LogValue = LogFields | string;
-type LogLevel = "trace" | "debug" | "info" | "warn" | "error" | "fatal";
+type LogValue = LogFields | Error | string;
+type LogLevel = "debug" | "info" | "warn" | "error";
 
 type LoggableError = {
   message?: unknown;
   name?: unknown;
   type?: unknown;
   code?: unknown;
+  meta?: unknown;
   statusCode?: unknown;
-  stack?: unknown;
   clientVersion?: unknown;
 };
+
+const PROD_STACK_MAX_LINES = 6;
 
 function toStringValue(value: unknown) {
   return typeof value === "string" ? value : undefined;
@@ -28,10 +30,10 @@ function toNumberValue(value: unknown) {
   return typeof value === "number" ? value : undefined;
 }
 
-function removeUndefined<T extends Record<string, unknown>>(obj: T) {
+function removeUndefined<T extends Record<string, unknown>>(obj: T): T {
   return Object.fromEntries(
     Object.entries(obj).filter(([, value]) => value !== undefined),
-  );
+  ) as T;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -57,14 +59,24 @@ function compactErrorMessage(message: string) {
   );
 }
 
+function compactStack(stack: string | undefined) {
+  if (!stack || isDev) return stack;
+  const lines = stack.split("\n");
+  if (lines.length <= PROD_STACK_MAX_LINES) return stack;
+  return [
+    ...lines.slice(0, PROD_STACK_MAX_LINES),
+    `    ... ${lines.length - PROD_STACK_MAX_LINES} more lines`,
+  ].join("\n");
+}
+
 function isPrismaError(error: LoggableError, serialized: LoggableError) {
   const code = toStringValue(error.code);
   const name = toStringValue(error.name);
   const type = toStringValue(serialized.type);
   return Boolean(
     (code?.startsWith("P") && error.clientVersion) ||
-      name?.startsWith("PrismaClient") ||
-      type?.startsWith("PrismaClient"),
+    name?.startsWith("PrismaClient") ||
+    type?.startsWith("PrismaClient"),
   );
 }
 
@@ -73,32 +85,30 @@ export function compactError(error: unknown) {
   const loggable = error as LoggableError;
   const rawMessage =
     toStringValue(serialized.message) ??
-    toStringValue(loggable?.message) ??
+    toStringValue(loggable.message) ??
     String(error);
   const prismaError = isPrismaError(loggable, serialized);
 
   return removeUndefined({
     ...serialized,
     message: prismaError ? compactErrorMessage(rawMessage) : rawMessage,
+    // Keep code + meta of Prisma (P2002, target fields, model name...)
+    code: toStringValue(loggable.code) ?? toStringValue(serialized.code),
+    meta: isRecord(loggable.meta) ? loggable.meta : undefined,
     statusCode:
       toNumberValue(serialized.statusCode) ??
-      toNumberValue(loggable?.statusCode),
-    stack: isDev || !prismaError ? serialized.stack : undefined,
+      toNumberValue(loggable.statusCode),
+    // Production: keep stack but minimize
+    stack: compactStack(toStringValue(serialized.stack)),
   });
 }
-
-export function serializeError(error: unknown) {
-  return compactError(error);
-}
-
-export const serializeErrorForLog = serializeError;
 
 const logger = pino({
   base: undefined,
   level: process.env.LOG_LEVEL ?? (isDev ? "debug" : "info"),
   serializers: {
-    err: serializeError,
-    error: serializeError,
+    err: compactError,
+    error: compactError,
   },
   ...(isDev
     ? {
@@ -121,7 +131,7 @@ const logger = pino({
       }),
 });
 
-function createModuleLogger(module: string, context?: Record<string, unknown>) {
+function createModuleLogger(module: string, context?: LogContext) {
   return logger.child({ module, ...context });
 }
 
@@ -136,10 +146,39 @@ function mergeLogFields(baseContext: LogContext, fields?: LogFields) {
   });
 }
 
-function createContextLogger(parent: pino.Logger, baseContext: LogContext) {
+type ContextLogger = {
+  child(context?: LogContext): ContextLogger;
+  bindings(): Record<string, unknown>;
+  debug: LogFn;
+  info: LogFn;
+  warn: LogFn;
+  error: LogFn;
+};
+
+type LogFn = (value: LogValue, message?: string, ...args: unknown[]) => void;
+
+function createContextLogger(
+  parent: pino.Logger,
+  baseContext: LogContext,
+): ContextLogger {
   const cleanBaseContext = removeUndefined(baseContext);
 
-  function write(level: LogLevel, value: LogValue, message?: string, ...args: unknown[]) {
+  function write(
+    level: LogLevel,
+    value: LogValue,
+    message?: string,
+    ...args: unknown[]
+  ) {
+    // log.error(err) or log.error(err, "msg") — group to { err }
+    if (value instanceof Error) {
+      parent[level](
+        mergeLogFields(cleanBaseContext, { err: value }),
+        message ?? value.message,
+        ...args,
+      );
+      return;
+    }
+
     if (isRecord(value)) {
       parent[level](mergeLogFields(cleanBaseContext, value), message, ...args);
       return;
@@ -161,12 +200,10 @@ function createContextLogger(parent: pino.Logger, baseContext: LogContext) {
         context: cleanBaseContext,
       };
     },
-    trace: (value: LogValue, message?: string, ...args: unknown[]) => write("trace", value, message, ...args),
-    debug: (value: LogValue, message?: string, ...args: unknown[]) => write("debug", value, message, ...args),
-    info: (value: LogValue, message?: string, ...args: unknown[]) => write("info", value, message, ...args),
-    warn: (value: LogValue, message?: string, ...args: unknown[]) => write("warn", value, message, ...args),
-    error: (value: LogValue, message?: string, ...args: unknown[]) => write("error", value, message, ...args),
-    fatal: (value: LogValue, message?: string, ...args: unknown[]) => write("fatal", value, message, ...args),
+    debug: (value, message, ...args) => write("debug", value, message, ...args),
+    info: (value, message, ...args) => write("info", value, message, ...args),
+    warn: (value, message, ...args) => write("warn", value, message, ...args),
+    error: (value, message, ...args) => write("error", value, message, ...args),
   };
 }
 
@@ -186,7 +223,8 @@ function createRequestLogContext(
     requestId:
       request.headers?.get("x-request-id") ??
       request.headers?.get("x-vercel-id") ??
-      undefined,
+      // Handle request can be trace even missing header.
+      crypto.randomUUID(),
     path: request.nextUrl?.pathname ?? fallbackPath,
     method,
   });
@@ -203,4 +241,10 @@ function createRequestLogger(
   );
 }
 
-export { logger, createModuleLogger, createRequestLogger, createRequestLogContext };
+export type { ContextLogger, LogContext };
+export {
+  logger,
+  createModuleLogger,
+  createRequestLogger,
+  createRequestLogContext,
+};

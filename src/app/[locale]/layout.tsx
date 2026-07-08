@@ -4,7 +4,7 @@ import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Plus_Jakarta_Sans, JetBrains_Mono, Lora } from "next/font/google";
 import { ThemeProvider } from "@/components/provider/theme-provider";
-import { routing } from "@/services/i18n/routing";
+import { routing } from "@/i18n/routing";
 import "../globals.css";
 
 const jakarta = Plus_Jakarta_Sans({

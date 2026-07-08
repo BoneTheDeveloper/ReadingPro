@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { getUserId } from "@/services/clerk";
-import type { StudioArtifactType, StudioArtifactErrorCode } from "@/features/studio-panel/lib/studio-artifact-types";
+import type { StudioArtifactType } from "@/features/studio-panel/lib/studio-artifact-types";
 import {
   fetchStudioArtifacts,
   getArtifactQuestions,
@@ -10,11 +10,10 @@ import {
   resetQuizResult,
 } from "@/features/passage/services/studio-artifacts.service";
 import { getChatHistory } from "@/features/ai-chat/services/chat-service";
-import type { TranslationSelection } from "@/features/reading/schemas/translation.schema";
-import type { PassageData } from "@/features/passage/schemas/passage.schema";
 
 // Studio action types
-export type StudioActionId = "quiz" | "flashcard" | "summary" | "chat" | "mindmap" | "lookup";
+export type StudioActionId =
+  "quiz" | "flashcard" | "summary" | "chat" | "mindmap" | "lookup";
 
 export interface StudioAction {
   id: StudioActionId;
