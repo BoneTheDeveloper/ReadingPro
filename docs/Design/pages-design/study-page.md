@@ -402,7 +402,7 @@ Do not move ownership checks, persistence rules, or route response contracts int
 | Delete passage | `StudySourcesPanel` callback | `deletePassageAction` (src/features/study-workspace/actions.ts) |
 | Save vocabulary | `StudyTranslatePanel` callback | `saveVocabularyAction` (src/features/study-workspace/actions.ts) |
 | List artifacts | `StudyStudioPanel` effect | `getStudioArtifactsAction` (src/features/studio-panel/actions.ts) |
-| Generate quiz | `StudyStudioPanel` action card | `POST /api/studio/questions` via studio-questions-client.ts |
+| Generate quiz | `StudyStudioPanel` action card | `generateStudioQuestionsAction` (src/features/studio-panel/actions.ts) via studio-questions-client.ts |
 | Fetch artifact questions | Quiz open | `getArtifactQuestionsAction` (src/features/studio-panel/actions.ts) |
 | Record quiz result | Quiz complete | `recordQuizResultAction` (src/features/studio-panel/actions.ts) |
 | Reset quiz result | Quiz retry | `resetQuizResultAction` (src/features/studio-panel/actions.ts) |

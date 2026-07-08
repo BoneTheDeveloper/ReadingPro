@@ -11,7 +11,7 @@ preconditions, main flow, and—where it maps to an HTTP endpoint—the primary 
 
 **Preconditions:** User is signed in, on `/study` or `/upload` page
 
-**Primary routes:** `POST /api/upload/text` (text paste), `POST /api/upload` (PDF file)
+**Primary entry points:** `uploadTextAction` (text paste), `uploadFileAction` (PDF file) — Server Actions in src/features/source-panel/actions.ts
 
 ### Main Flow
 

@@ -106,13 +106,13 @@ Upload methods:
 File upload:
 
 - Builds `FormData`.
-- Posts to `/api/upload`.
+- Calls `uploadFileAction` Server Action.
 - Parses with `uploadResponseSchema`.
 - On success, routes to `/study`.
 
 Text upload:
 
-- Posts JSON to `/api/upload/text`.
+- Calls `uploadTextAction` Server Action.
 - Parses with `uploadResponseSchema`.
 - On success, routes to `/study`.
 

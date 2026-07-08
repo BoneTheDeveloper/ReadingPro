@@ -1,46 +1,56 @@
-import { generatedStudyQuestionsResponseSchema } from "@/features/studio-panel/schemas/study.schema";
+"use client";
+
 import {
   STUDIO_GENERATION_TIMEOUT_MS,
   type StudioArtifact,
   type StudioArtifactErrorCode,
 } from "@/features/studio-panel/lib/studio-artifact-types";
 import type { GeneratedStudyQuestionDto } from "@/features/studio-panel/schemas/study.schema";
-import { postJson, RequestTimeoutError } from "@/lib/http/api-request";
+import { generateStudioQuestionsAction } from "./actions";
 
 export type GenerateStudioQuestionsResult =
   | { artifact: StudioArtifact; questions: GeneratedStudyQuestionDto[] }
   | { error: string; code: StudioArtifactErrorCode };
+
+const TIMEOUT_SENTINEL = Symbol("studio-questions-timeout");
 
 export async function generateStudioQuestions(input: {
   passageId: string;
   artifactId: string;
 }): Promise<GenerateStudioQuestionsResult> {
   try {
-    const payload = await postJson(
-      "/api/studio/questions",
-      input,
-      generatedStudyQuestionsResponseSchema,
+    // Race the action against the generation budget so the caller always
+    // settles, even if the server invocation hangs.
+    const result = await raceWithTimeout(
+      generateStudioQuestionsAction(input),
       STUDIO_GENERATION_TIMEOUT_MS,
     );
-    if ("error" in payload) {
-      const errPayload = payload as { error: string; code?: string };
-      return {
-        error: String(errPayload.error),
-        code: (errPayload.code as StudioArtifactErrorCode | undefined) ?? "UNKNOWN",
-      };
+    if (result === TIMEOUT_SENTINEL) {
+      return { error: "Request timed out", code: "TIMEOUT" };
     }
-    return {
-      artifact: payload.artifact as StudioArtifact,
-      questions: payload.questions,
-    };
+    if (!result.success) {
+      return { error: result.error, code: result.code };
+    }
+    return { artifact: result.artifact, questions: result.questions };
   } catch (err) {
-    // A client abort (timeout) always settles here so the caller never hangs.
-    if (err instanceof RequestTimeoutError) {
-      return { error: err.message, code: "TIMEOUT" };
-    }
     return {
       error: err instanceof Error ? err.message : "Generation failed",
       code: "UNKNOWN",
     };
+  }
+}
+
+async function raceWithTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+): Promise<T | typeof TIMEOUT_SENTINEL> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<typeof TIMEOUT_SENTINEL>((resolve) => {
+    timer = setTimeout(() => resolve(TIMEOUT_SENTINEL), timeoutMs);
+  });
+  try {
+    return await Promise.race([promise, timeout]);
+  } finally {
+    clearTimeout(timer);
   }
 }

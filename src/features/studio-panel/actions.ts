@@ -10,6 +10,10 @@ import {
   resetQuizResult,
 } from "@/features/passage/services/studio-artifacts.service";
 import { getChatHistory } from "@/features/ai-chat/services/chat-service";
+import {
+  generateQuestionsForPassage,
+  PassageStudyServiceError,
+} from "@/features/passage/services/passage-study.service";
 
 // Studio action types
 export type StudioActionId =
@@ -79,6 +83,36 @@ export async function recordQuizResultAction(
 export async function resetQuizResultAction(artifactId: string) {
   const userId = await getUserId();
   await resetQuizResult(artifactId, userId);
+}
+
+const generateStudioQuestionsSchema = z
+  .object({
+    passageId: z.string().uuid(),
+    artifactId: z.string().uuid(),
+  })
+  .strict();
+
+export async function generateStudioQuestionsAction(input: {
+  passageId: string;
+  artifactId: string;
+}) {
+  const { passageId, artifactId } = generateStudioQuestionsSchema.parse(input);
+  const userId = await getUserId();
+  try {
+    const { artifact, questions } = await generateQuestionsForPassage(
+      userId,
+      passageId,
+      artifactId,
+    );
+    return { success: true as const, artifact, questions };
+  } catch (error) {
+    // Service rejections carry a stable error code the UI localizes; keep it
+    // instead of letting Next.js replace the error with an opaque digest.
+    if (error instanceof PassageStudyServiceError) {
+      return { success: false as const, error: error.message, code: error.code };
+    }
+    throw error;
+  }
 }
 
 export async function getChatHistoryAction(passageId: string) {

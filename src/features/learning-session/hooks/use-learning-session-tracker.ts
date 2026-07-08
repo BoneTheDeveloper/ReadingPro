@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import * as Sentry from "@sentry/nextjs";
-import { ensureStudySession } from "../learning-session-client";
+import { ensureStudySessionAction } from "../actions";
 
 const PING_THROTTLE_MS = 60_000;
 
@@ -19,7 +19,7 @@ export function useLearningSessionTracker() {
       lastPingAt.current = now;
 
       try {
-        await ensureStudySession();
+        await ensureStudySessionAction();
       } catch {
         Sentry.addBreadcrumb({
           category: "learning-session",

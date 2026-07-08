@@ -129,17 +129,18 @@ Example (`dictionary/actions.ts`):
 
 ### API Routes
 
-| Feature | Route | Method | Responsibility |
-|---------|-------|--------|-----------------|
-| **Translate** | `/api/translate` | POST | Inline text/word translation |
-| **Studio Chat** | `/api/studio/chat` | POST | AI chat for learning help |
-| **Studio Questions** | `/api/studio/questions` | POST | Generate study questions |
-| **Upload** | `/api/upload` | POST | Upload file; extract content |
-| **Upload Text** | `/api/upload/text` | POST | Ingest raw text |
-| **Learning Session** | `/api/learning-session` | POST | Create/advance a learning session |
-| **Local Blob** | `/api/local-blob/[pathname]` | GET | Serve locally stored blobs |
-| **Health** | `/api/health` | GET | Health check |
-| **Clerk Webhook** | `/api/webhooks/clerk` | POST | Clerk user sync webhook |
+Only endpoints that a Server Action cannot replace remain as API routes:
+streaming responses, URL-addressed resources, and external callers.
+Everything else (upload, learning session, studio questions, vocabulary,
+dictionary) goes through Server Actions.
+
+| Feature | Route | Method | Why it stays a route |
+|---------|-------|--------|-----------------------|
+| **Translate** | `/api/translate` | POST | Selection-driven; fetch keeps abort/cancel option |
+| **Studio Chat** | `/api/studio/chat` | POST | Streams tokens to the AI SDK chat hook |
+| **Local Blob** | `/api/local-blob/[pathname]` | GET | URL-addressed blob serving (`<img src>`) |
+| **Health** | `/api/health` | GET | Called by infra, not the app |
+| **Clerk Webhook** | `/api/webhooks/clerk` | POST | Called by Clerk's servers |
 
 ## Key Design Patterns
 

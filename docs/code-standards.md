@@ -36,7 +36,10 @@ Server Component → Service → Repository → DB → props → Client Componen
 Client → fetch() → API Route → Service → Repository → DB
 ```
 
-Still used for dictionary lookups. Will migrate to Server Actions over time.
+Only for endpoints a Server Action cannot replace: streaming (`/api/studio/chat`),
+URL-addressed resources (`/api/local-blob`), external callers (`/api/webhooks/clerk`,
+`/api/health`), and abortable selection-driven fetches (`/api/translate`).
+Everything else uses Server Actions.
 
 | Layer | Location | Key Rule |
 |-------|----------|----------|

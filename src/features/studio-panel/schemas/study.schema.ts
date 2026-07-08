@@ -42,11 +42,6 @@ export const generatedStudyQuestionsSchema = z
   })
   .strict();
 
-export const generatedStudyQuestionsSuccessResponseSchema =
-  generatedStudyQuestionsSchema;
-export const generatedStudyQuestionsResponseSchema =
-  generatedStudyQuestionsSchema;
-
 export const studyCardPassageSchema = z
   .object({
     id: z.string(),
