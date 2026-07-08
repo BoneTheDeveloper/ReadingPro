@@ -9,11 +9,6 @@ import { Check, X, Globe, BookOpen, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/provider/theme-provider";
-import { getCEFRBadgeVariant } from "@/features/reading/lib/cefr-style";
-import { getCEFRLabel } from "@/types/cefr";
-import { Badge } from "@/components/ui/badge";
-
-const CEFR_LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"] as const;
 
 const localeLabels: Record<string, string> = {
   en: "English",
@@ -126,44 +121,6 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
                 />
               }
             />
-          </SettingsSection>
-
-          <SettingsSection title={t("level")}>
-            <div className="border border-border bg-surface p-4">
-              <div className="text-[13px] font-semibold text-foreground">
-                {t("targetLevel")}
-              </div>
-              <div className="text-[11px] text-muted-foreground mt-0.5 mb-3">
-                {t("targetLevelHint")}
-              </div>
-              <div className="grid grid-cols-6 gap-1.5">
-                {CEFR_LEVELS.map((level) => (
-                  <button
-                    key={level}
-                    type="button"
-                    className={cn(
-                      "rounded-[10px] py-2 text-[12.5px] font-semibold transition-all",
-                      level === "B2"
-                        ? "bg-primary text-primary-foreground shadow-indigo"
-                        : "bg-muted text-ink-2 hover:bg-muted/70",
-                    )}
-                    onClick={() => {
-                      /* hook to user preferences in future */
-                    }}
-                  >
-                    {level}
-                  </button>
-                ))}
-              </div>
-              <div className="mt-3 flex items-center gap-2">
-                <Badge variant={getCEFRBadgeVariant("B2")}>
-                  {getCEFRLabel("B2")}
-                </Badge>
-                <span className="text-[11px] text-muted-foreground">
-                  {t("currentLevelHint")}
-                </span>
-              </div>
-            </div>
           </SettingsSection>
 
           <SettingsSection title={t("goals")}>

@@ -140,12 +140,12 @@ export function StudyContentPanel({
             onChange={onViewModeChange}
             options={[
               {
-                value: "source",
-                label: t("source"),
+                value: "passage",
+                label: t("passage"),
               },
               {
-                value: "passage",
-                label: `${t("passage")} (${getCEFRShortLabel(level)})`,
+                value: "source",
+                label: t("source"),
               },
             ]}
           />
