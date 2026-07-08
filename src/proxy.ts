@@ -6,22 +6,27 @@ import { routing } from "@/i18n/routing";
 const intlMiddleware = createMiddleware(routing);
 
 const isPublicRoute = createRouteMatcher([
-  "/:locale", // trang chủ
+  "/",
+  "/:locale",
+  "/sign-in(.*)",
   "/:locale/sign-in(.*)",
+  "/sign-up(.*)",
   "/:locale/sign-up(.*)",
-  "/:locale/about(.*)", // thêm route public khác nếu có
+  "/about(.*)",
+  "/:locale/about(.*)",
+]);
+
+const isAuthPage = createRouteMatcher([
+  "/sign-in(.*)",
+  "/:locale/sign-in(.*)",
+  "/sign-up(.*)",
+  "/:locale/sign-up(.*)",
 ]);
 
 export default clerkMiddleware(async (auth, request) => {
   const { pathname } = request.nextUrl;
 
-  if (
-    pathname.startsWith("/api/") ||
-    pathname.startsWith("/_next/") ||
-    pathname.startsWith("/favicon") ||
-    pathname.startsWith("/monitoring") ||
-    pathname.startsWith("/__clerk/")
-  ) {
+  if (pathname.startsWith("/api/") || pathname.startsWith("/monitoring")) {
     return NextResponse.next();
   }
 
@@ -30,16 +35,13 @@ export default clerkMiddleware(async (auth, request) => {
   const localePattern = new RegExp(`^/(${routing.locales.join("|")})(?:/|$)`);
   const locale = pathname.match(localePattern)?.[1] ?? routing.defaultLocale;
 
-  const isAuthPage =
-    pathname.includes("/sign-in") || pathname.includes("/sign-up");
-
   if (!userId && !isPublicRoute(request)) {
     const signInUrl = new URL(`/${locale}/sign-in`, request.url);
     signInUrl.searchParams.set("redirect_url", request.url);
     return NextResponse.redirect(signInUrl);
   }
 
-  if (userId && isAuthPage) {
+  if (userId && isAuthPage(request)) {
     return NextResponse.redirect(new URL(`/${locale}`, request.url));
   }
 
@@ -48,8 +50,7 @@ export default clerkMiddleware(async (auth, request) => {
 
 export const config = {
   matcher: [
-    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
-    "/__clerk/:path*",
+    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|json|xml|txt|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
     "/(api|trpc)(.*)",
   ],
 };

@@ -4,48 +4,157 @@
 
 | Component | File | Purpose |
 |-----------|------|---------|
-| Pino Logger | `src/services/logger.ts` | Structured server logs with request context |
+| Pino Logger | `src/lib/logger.ts` | Structured server logs with request context |
 | Sentry Server | `src/sentry.server.config.ts` | Node.js runtime: error capture + Prisma auto-instrumentation |
 | Sentry Edge | `src/sentry.edge.config.ts` | Edge runtime: error capture |
 | Sentry Client | `src/instrumentation-client.ts` | Browser: errors, Replay (10% sample), Browser Tracing |
 | Error Boundary | `src/lib/http/route-errors.ts` | `toHttp()` — error → HTTP status + Sentry tag |
 
-## Request Logging (Pino)
+## Configuration
 
-Every API route creates a request logger at the top of the handler:
+### next.config.ts
+
+Pino uses worker threads — exclude from bundling:
 
 ```typescript
-import { createRequestLogContext, createRequestLogger } from "@/services/logger";
+const nextConfig = {
+  serverExternalPackages: ["pino", "pino-pretty"],
+};
+```
 
-export async function POST(request: Request) {
-  let requestLog = createRequestLogger(
-    "api:vocabulary",
+### Environment
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `LOG_LEVEL` | `debug` (dev), `info` (prod) | Minimum log level |
+| `NEXT_PUBLIC_SENTRY_DISABLED` | `false` | Disable Sentry when set to `1` |
+
+## Request Logging (Pino)
+
+### Route Handler Pattern
+
+Create module logger once at top-level, request logger per handler:
+
+```typescript
+import { NextRequest, NextResponse } from "next/server";
+import { createRequestLogContext, createRequestLogger } from "@/lib/logger";
+import { toHttp } from "@/lib/http/route-errors";
+
+const MODULE = "api/vocabulary";
+
+export async function POST(request: NextRequest) {
+  const log = createRequestLogger(
+    MODULE,
     createRequestLogContext(request, "POST", "/api/vocabulary"),
   );
+
+  try {
+    const body = await request.json();
+    log.info({ context: { bodySize: JSON.stringify(body).length } }, "processing request");
+
+    // ... business logic ...
+
+    return NextResponse.json({ success: true, data: result });
+  } catch (error) {
+    log.error(error as Error, "request failed");
+    return toHttp(error, log, MODULE);
+  }
+}
+```
+
+### Request Context
+
+Auto-includes:
+- `requestId` — from `x-request-id` / `x-vercel-id` headers, or `crypto.randomUUID()`
+- `path` — from `request.nextUrl.pathname`
+- `method` — HTTP verb
+
+### Adding Domain Context
+
+```typescript
+const log = createRequestLogger(MODULE, context);
+const scopedLog = log.child({ userId: userId, targetLanguage: "vi" });
+```
+
+### Log Levels
+
+| Level | When to Use |
+|-------|-------------|
+| `debug` | Detailed flow, payload traces (dev only) |
+| `info` | Successful business events |
+| `warn` | Recoverable anomalies (validation fail, retry, fallback) |
+| `error` | Exceptions needing human attention |
+
+### Log Conventions
+
+- **Pass Error directly:** `log.error(error, "message")` — logger auto-serializes
+- **Context data in fields:** `log.info({ context: { orderId } }, "order created")`
+- **Messages lowercase:** `"order created"`, `"payment failed"`, `"validation failed"`
+- **No PII in logs:** Skip passwords, full emails, tokens
+
+### Passing Logger to Service Layer
+
+Don't create loggers inside services — receive from caller to preserve requestId:
+
+```typescript
+// lib/services/order-service.ts
+import type { ContextLogger } from "@/lib/logger";
+
+export async function createOrder(data: OrderInput, log: ContextLogger) {
+  const serviceLog = log.child({ service: "order" });
+  serviceLog.debug({ context: { sku: data.sku } }, "validating order");
   // ...
 }
 ```
 
-**Request context includes:**
-- `requestId` — from `x-request-id` or `x-vercel-id` headers (Vercel)
-- `path` — from `request.nextUrl.pathname` or fallback string
-- `method` — HTTP verb
-
-Request loggers are child-loggers scoped to the request. Add domain context via `.child()`:
-
 ```typescript
-requestLog = requestLog.child({ userId: userId, targetLanguage: "vi" });
+// app/api/orders/route.ts
+const order = await createOrder(body, log);
 ```
 
-**Log levels:** `debug`, `info`, `warn`, `error`
-- `warn` — invalid JSON, validation failures (Zod issues)
-- `error` — unexpected exceptions (caught by `toHttp`)
-- `info` — for explicit success markers if needed
-- `debug` — detailed development traces (dev only)
+### Server Actions
 
-**Environment behavior:**
-- Development: `pino-pretty` with colorized output, timestamps
-- Production: ISO timestamps, JSON format
+Server actions have no `NextRequest` — extract headers manually:
+
+```typescript
+"use server";
+import { headers } from "next/headers";
+import { createRequestLogger } from "@/lib/logger";
+
+export async function updateProfile(formData: FormData) {
+  const h = await headers();
+  const log = createRequestLogger("actions/update-profile", {
+    requestId: h.get("x-request-id") ?? crypto.randomUUID(),
+    method: "ACTION",
+  });
+
+  log.info("updating profile");
+  // ...
+}
+```
+
+### Module-Level Logs (No Request Context)
+
+For scripts, cron jobs, or module init:
+
+```typescript
+import { createModuleLogger } from "@/lib/logger";
+
+const log = createModuleLogger("jobs/cleanup");
+log.info({ deleted: 42 }, "cleanup finished");
+```
+
+Or use the root logger for one-time boot events:
+
+```typescript
+import { logger } from "@/lib/logger";
+logger.info("app booted");
+```
+
+### Environment Behavior
+
+- **Development:** `pino-pretty` with colorized output, timestamps
+- **Production:** ISO timestamps, JSON format, compact stack traces (max 6 lines)
 
 **Current coverage:** 21/24 API routes use `createRequestLogger`.
 
