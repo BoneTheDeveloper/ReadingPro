@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 import { getUserId } from "@/services/clerk";
 import { createRequestLogContext, createRequestLogger } from "@/lib/logger";
@@ -30,10 +29,7 @@ export async function POST(request: NextRequest) {
   try {
     let body: unknown;
     try {
-      body = await Sentry.startSpan(
-        { name: "api:vocabulary-parse-body", op: "http.server" },
-        () => request.json(),
-      );
+      body = await request.json();
     } catch {
       requestLog.warn("Invalid JSON payload received for vocabulary save");
       return NextResponse.json(
@@ -64,10 +60,7 @@ export async function POST(request: NextRequest) {
       source: input.source,
     });
 
-    const userId = await Sentry.startSpan(
-      { name: "api:vocabulary-authenticate", op: "auth" },
-      () => getUserId(),
-    );
+    const userId = await getUserId();
     requestLog = requestLog.child({ userId: userId });
 
     const dto = await saveVocabularyItem({ ...input, userId: userId });

@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { NextRequest, NextResponse } from "next/server";
-import * as Sentry from "@sentry/nextjs";
 import { getUserId } from "@/services/clerk";
 import { toHttp } from "@/lib/http/route-errors";
 import { createRequestLogContext, createRequestLogger } from "@/lib/logger";
@@ -32,12 +31,7 @@ export async function POST(request: NextRequest) {
       );
     }
     const userId = await getUserId();
-    const session = await Sentry.startSpan(
-      { name: "db:session-ensure-active", op: "db" },
-      async () => {
-        return ensureActiveSession(userId);
-      },
-    );
+    const session = await ensureActiveSession(userId);
     return NextResponse.json({
       success: true,
       data: toLearningSessionDto(session),

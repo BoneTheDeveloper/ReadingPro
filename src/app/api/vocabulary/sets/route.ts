@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 import { getUserId } from "@/services/clerk";
 import { toHttp } from "@/lib/http/route-errors";
@@ -60,14 +59,10 @@ export async function POST(request: NextRequest) {
 
     const userId = await getUserId();
 
-    const set = await Sentry.startSpan(
-      { name: "db:vocabulary-set-create", op: "db" },
-      async () =>
-        createVocabularyManualSet({
-          userId: userId,
-          name: parsed.data.name,
-        }),
-    );
+    const set = await createVocabularyManualSet({
+      userId: userId,
+      name: parsed.data.name,
+    });
 
     return NextResponse.json({ success: true, data: set });
   } catch (error) {

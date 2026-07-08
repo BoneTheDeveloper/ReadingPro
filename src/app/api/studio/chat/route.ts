@@ -29,17 +29,7 @@ export async function POST(request: NextRequest) {
   try {
     let body: unknown;
     try {
-      body = await Sentry.startSpan(
-        {
-          name: "api:study:studio:chat-parse-body",
-          op: "http.server",
-          attributes: {
-            "http.request.method": "POST",
-            "url.path": "/api/study/studio/chat",
-          },
-        },
-        () => request.json(),
-      );
+      body = await request.json();
     } catch {
       requestLog.warn("Invalid JSON payload received for study chat");
       return NextResponse.json(
@@ -87,17 +77,7 @@ export async function POST(request: NextRequest) {
     const { messages, passageId } = parsed.data;
     requestLog = requestLog.child({ passageId });
 
-    const userId = await Sentry.startSpan(
-      {
-        name: "api:study:studio:chat-authenticate",
-        op: "auth",
-        attributes: {
-          "study.passage_id": passageId,
-          "study.message_count": messages.length,
-        },
-      },
-      () => getUserId(),
-    );
+    const userId = await getUserId();
     requestLog = requestLog.child({ userId: userId });
 
     const passage = await getOwnedPassageForChat(userId, passageId);

@@ -52,23 +52,12 @@ export async function GET(
       );
     }
 
-    await Sentry.startSpan(
-      { name: "api:dictionary-entry-detail-authenticate", op: "auth" },
-      () => getUserId(),
-    );
+    await getUserId();
 
-    const dto = await Sentry.startSpan(
-      {
-        name: "db:dictionary-entry-detail",
-        op: "db",
-        attributes: { "dictionary.entry_id": entryId },
-      },
-      () =>
-        getDictionaryEntryDetail(entryId, {
-          sourceLanguage: parsed.data.sourceLanguage,
-          targetLanguage: parsed.data.targetLanguage,
-        }),
-    );
+    const dto = await getDictionaryEntryDetail(entryId, {
+      sourceLanguage: parsed.data.sourceLanguage,
+      targetLanguage: parsed.data.targetLanguage,
+    });
 
     if (!dto) {
       requestLog.info({ context: { entryId } }, "Dictionary entry not found");

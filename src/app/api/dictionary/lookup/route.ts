@@ -47,25 +47,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    await Sentry.startSpan(
-      { name: "api:dictionary-lookup-authenticate", op: "auth" },
-      () => getUserId(),
-    );
+    await getUserId();
 
-    const result = (await Sentry.startSpan(
-      {
-        name: "db:dictionary-lookup",
-        op: "db",
-        attributes: {
-          "dictionary.query_length": parsed.data.q.length,
-        },
-      },
-      () =>
-        resolveDictionaryLookup(parsed.data.q, {
-          sourceLanguage: parsed.data.sourceLanguage,
-          targetLanguage: parsed.data.targetLanguage,
-        }),
-    )) as DictionaryEntryDto | DictionaryMissDto;
+    const result = (await resolveDictionaryLookup(parsed.data.q, {
+      sourceLanguage: parsed.data.sourceLanguage,
+      targetLanguage: parsed.data.targetLanguage,
+    })) as DictionaryEntryDto | DictionaryMissDto;
 
     requestLog.info(
       {

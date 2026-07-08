@@ -49,26 +49,13 @@ export async function GET(request: NextRequest) {
 
     const normalizedQuery = normalizeDictionaryTerm(parsed.data.q);
 
-    await Sentry.startSpan(
-      { name: "api:dictionary-search-authenticate", op: "auth" },
-      () => getUserId(),
-    );
+    await getUserId();
 
-    const results = (await Sentry.startSpan(
-      {
-        name: "db:dictionary-search",
-        op: "db",
-        attributes: {
-          "dictionary.query_length": normalizedQuery.length,
-        },
-      },
-      () =>
-        searchDictionary(parsed.data.q, {
-          sourceLanguage: parsed.data.sourceLanguage,
-          targetLanguage: parsed.data.targetLanguage,
-          limit: parsed.data.limit,
-        }),
-    )) as DictionarySearchResultDto[];
+    const results = (await searchDictionary(parsed.data.q, {
+      sourceLanguage: parsed.data.sourceLanguage,
+      targetLanguage: parsed.data.targetLanguage,
+      limit: parsed.data.limit,
+    })) as DictionarySearchResultDto[];
 
     requestLog.info(
       {

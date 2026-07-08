@@ -45,25 +45,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: true, data: [] });
     }
 
-    await Sentry.startSpan(
-      { name: "api:dictionary-suggest-auth", op: "auth" },
-      () => getUserId(),
-    );
+    await getUserId();
 
-    const merged = await Sentry.startSpan(
-      {
-        name: "db:dictionary-suggest",
-        op: "db",
-        attributes: {
-          "dictionary.query_length": normalizedQuery.length,
-        },
-      },
-      () =>
-        suggestDictionaryTerms(parsed.data.q, {
-          sourceLanguage: parsed.data.sourceLanguage,
-          targetLanguage: parsed.data.targetLanguage,
-        }),
-    );
+    const merged = await suggestDictionaryTerms(parsed.data.q, {
+      sourceLanguage: parsed.data.sourceLanguage,
+      targetLanguage: parsed.data.targetLanguage,
+    });
 
     requestLog.info(
       {

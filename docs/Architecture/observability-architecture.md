@@ -203,35 +203,73 @@ Sentry auto-instruments:
 - React component rendering (client config)
 - Console logs (both configs)
 
-### Manual Spans
+### Manual Spans (Value Over Coverage)
 
-For key operations, wrap with `Sentry.startSpan`:
+**Rule: Only span operations that are slow, external, or operationally significant.** Do NOT span auto-instrumented or trivially fast operations.
+
+#### When NOT to span
+
+| Skip | Reason |
+|------|--------|
+| `request.json()` | Auto-instrumented by Next.js/Sentry HTTP handling |
+| `getUserId()` | Auth is fast; Clerk may auto-instrument |
+| JSON parsing | Already covered by HTTP auto-instrumentation |
+| Synchronous validation | Microseconds, adds noise not signal |
+
+#### When TO span
+
+| Include | Reason |
+|---------|--------|
+| **Database service calls** | Long-running queries need separate p99 tracking |
+| **AI/LLM calls** | Variable latency (500ms–30s), high failure risk |
+| **File I/O** (upload, parse) | Slow, failure-prone, operationally critical |
+| **External API calls** | Network latency and errors need separate visibility |
+| **Complex business logic** | Multi-step operations needing granular waterfall |
+
+#### Naming Convention
+
+- **AI operations:** `ai:<operation-name>` (e.g., `ai:content-simplify`, `ai:question-gen`)
+- **DB operations:** `db:<entity>-<operation>` (e.g., `db:vocabulary-save`, `db:session-ensure-active`)
+- **Storage/File:** `<operation-type>:<description>` (e.g., `storage-upload`, `pdf-parse`)
+
+#### Examples (High-Value Spans Only)
 
 ```typescript
 import * as Sentry from "@sentry/nextjs";
 
-// Body parsing
-const body = await Sentry.startSpan(
-  { name: "api:vocabulary-parse-body", op: "http.server" },
-  () => request.json(),
+// AI/LLM call — variable latency, worth tracking separately
+const simplified = await Sentry.startSpan(
+  { name: "ai:content-simplify", op: "ai" },
+  async () => simplifyContent(text, targetLevel),
 );
 
-// Auth
-const userId = await Sentry.startSpan(
-  { name: "api:vocabulary-authenticate", op: "auth" },
-  () => getUserId(),
-);
-
-// Service call
+// Database service call — slow query, separate p99 visibility
 const dto = await Sentry.startSpan(
-  { name: "vocabulary-save", op: "db.write" },
-  () => saveVocabularyItem(input),
+  { name: "db:vocabulary-save", op: "db" },
+  () => saveVocabularyItem({ ...input, userId }),
+);
+
+// File operations — operationally critical
+const result = await Sentry.startSpan(
+  { name: "storage-upload", op: "function" },
+  () => uploadFile(filename, buffer, safeType),
 );
 ```
 
-Span naming convention: `api:<route>[-<sub-operation>]`
+#### Current Status
 
-**Current coverage:** 16/24 API routes have manual `Sentry.startSpan`.
+**Removed 24 low-value spans** (auth, body parsing, single-query DB).
+
+| File | Remaining Spans |
+|------|-----------------|
+| `features/ai-chat/services/chat-service.ts` | `ai:study-chat-stream` |
+| `features/upload/services/content-analysis.service.ts` | `ai:content-simplify`, `ai:question-gen` |
+| `features/upload/db/upload-workflow.ts` | `storage-upload`, `pdf-parse` |
+| `features/reading/db/word-translate.ts` | `word-translate:resolve` |
+| `features/reading/services/inline-translate.service.ts` | `translation:persist` |
+| `features/passage/services/passage-study.service.ts` | `ai:question-gen` |
+
+**Total: 7 manual spans** — all high-value (AI calls, file I/O, external APIs).
 
 ### Client Instrumentation
 
@@ -243,20 +281,3 @@ Client config enables:
 ### Disabling Sentry
 
 Set `NEXT_PUBLIC_SENTRY_DISABLED=1` to disable all Sentry initialization.
-
-## Route Coverage Summary
-
-| Route | Logger | toHttp | Sentry Spans |
-|-------|--------|--------|--------------|
-| `/api/dictionary/*` | ✅ | ✅ | ✅ |
-| `/api/vocabulary/*` | ✅ | ✅ | ✅ |
-| `/api/studio/*` | ✅ | ❌ | ❌ |
-| `/api/upload/*` | ✅ | ❌ | ❌ |
-| `/api/translate` | ✅ | ✅ | ✅ |
-| `/api/learning-session` | ✅ | ✅ | ✅ |
-| `/api/progress/*` | ✅ | ❌ | ❌ |
-| `/api/health` | ❌ | ❌ | ❌ |
-| `/api/local-blob/*` | ❌ | ❌ | ❌ |
-| `/api/webhooks/clerk` | ❌ | ❌ | ❌ |
-
-**Coverage:** 21/24 routes have request logging, 15/24 have error boundaries, 16/24 have manual spans.

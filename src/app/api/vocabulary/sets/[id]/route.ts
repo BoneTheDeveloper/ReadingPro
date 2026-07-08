@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 import {
   renameVocabularySet,
@@ -41,15 +40,11 @@ export async function PATCH(
     const userId = await getUserId();
     const { id } = await params;
 
-    const set = await Sentry.startSpan(
-      { name: "db:vocabulary-set-update", op: "db" },
-      async () =>
-        renameVocabularySet({
-          userId: userId,
-          setId: id,
-          name: parsed.data.name,
-        }),
-    );
+    const set = await renameVocabularySet({
+      userId: userId,
+      setId: id,
+      name: parsed.data.name,
+    });
 
     return NextResponse.json({ success: true, data: set });
   } catch (error) {

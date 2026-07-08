@@ -40,10 +40,7 @@ export async function POST(request: NextRequest) {
   try {
     let body: unknown;
     try {
-      body = await Sentry.startSpan(
-        { name: "api:translate-parse-body", op: "http.server" },
-        () => request.json(),
-      );
+      body = await request.json();
     } catch {
       requestLog.warn("Invalid JSON payload received for translation");
       return NextResponse.json(
@@ -74,14 +71,7 @@ export async function POST(request: NextRequest) {
       targetLanguage: input.targetLanguage,
     });
 
-    const userId = await Sentry.startSpan(
-      {
-        name: "api:translate-authenticate",
-        op: "auth",
-        attributes: { "translation.source_id": input.sourceId },
-      },
-      () => getUserId(),
-    );
+    const userId = await getUserId();
 
     const result = await executeTranslate(
       {

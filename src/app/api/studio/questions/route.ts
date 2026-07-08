@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 import { getUserId } from "@/services/clerk";
 import { getZodErrorMessage, toHttp } from "@/lib/http/route-errors";
@@ -41,17 +40,7 @@ async function handleStudioQuestionsPost(request: NextRequest) {
   try {
     let body: unknown;
     try {
-      body = await Sentry.startSpan(
-        {
-          name: "api:study:studio:questions-parse-body",
-          op: "http.server",
-          attributes: {
-            "http.request.method": "POST",
-            "url.path": "/api/study/studio/questions",
-          },
-        },
-        () => request.json(),
-      );
+      body = await request.json();
     } catch {
       requestLog.warn(
         "Invalid JSON payload received for study question generation",
@@ -79,14 +68,7 @@ async function handleStudioQuestionsPost(request: NextRequest) {
     }
 
     const { passageId, artifactId } = parsed.data;
-    const userId = await Sentry.startSpan(
-      {
-        name: "api:study:studio:questions-authenticate",
-        op: "auth",
-        attributes: { "study.passage_id": passageId },
-      },
-      () => getUserId(),
-    );
+    const userId = await getUserId();
 
     const { artifact, questions } = await generateQuestionsForPassage(
       userId,

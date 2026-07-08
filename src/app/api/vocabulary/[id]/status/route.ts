@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 import { updateVocabularyItemStatus } from "@/features/vocabulary/services/vocabulary-items.service";
 import { getUserId } from "@/services/clerk";
@@ -38,15 +37,11 @@ export async function PATCH(
     const userId = await getUserId();
     const { id } = await params;
 
-    const dto = await Sentry.startSpan(
-      { name: "db:vocabulary-status-update", op: "db" },
-      async () =>
-        updateVocabularyItemStatus({
-          userId: userId,
-          itemId: id,
-          status: parsed.data.status,
-        }),
-    );
+    const dto = await updateVocabularyItemStatus({
+      userId: userId,
+      itemId: id,
+      status: parsed.data.status,
+    });
 
     return NextResponse.json({ success: true, data: dto });
   } catch (error) {
