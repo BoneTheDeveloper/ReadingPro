@@ -1,6 +1,9 @@
 import { auth } from "@clerk/nextjs/server";
-import { VocabularyPageClient } from "@/features/vocabulary/ui/vocabulary-page-client";
-import { getVocabularyItemList, getVocabularyItemStats } from "@/features/vocabulary/services/vocabulary-items.service";
+import { VocabularyPageClient } from "@/features/vocabulary/ui/vocabulary-page";
+import {
+  getVocabularyItemList,
+  getVocabularyItemStats,
+} from "@/features/vocabulary/services/vocabulary-items.service";
 import { getVocabularySetList } from "@/features/vocabulary/services/vocabulary-sets.service";
 
 export const dynamic = "force-dynamic";

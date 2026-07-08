@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import {
   uploadFile,
   uploadText,
-} from "@/features/source-panel/upload-client"
+} from "@/features/upload/services/upload-service";
 import {
   Dialog,
   DialogContent,
@@ -23,7 +23,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import type { PassageData, SourceType } from "@/features/passage/schemas/passage.schema";
+import type {
+  PassageData,
+  SourceType,
+} from "@/features/passage/schemas/passage.schema";
 
 export interface StudyUploadModalProps {
   isOpen: boolean;

@@ -6,10 +6,6 @@ import { processFileUpload } from "@/features/upload/db/upload-workflow";
 import { analyzeAndPersistContent } from "@/features/upload/services/content-analysis.service";
 import { validateTextContent } from "@/features/upload/lib/upload-validation";
 
-const uploadFileSchema = z.object({
-  file: z.instanceof(File),
-});
-
 export async function uploadFileAction(file: File) {
   const userId = await getUserId();
 
@@ -31,7 +27,9 @@ const uploadTextSchema = z.object({
   title: z.string().optional(),
 });
 
-export async function uploadTextAction(input: z.infer<typeof uploadTextSchema>) {
+export async function uploadTextAction(
+  input: z.infer<typeof uploadTextSchema>,
+) {
   const parsed = uploadTextSchema.parse(input);
   const userId = await getUserId();
 

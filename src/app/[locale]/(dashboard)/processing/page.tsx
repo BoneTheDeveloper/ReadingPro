@@ -1,4 +1,4 @@
-import { ProcessingPageClient } from "@/features/source-panel/ui/upload/processing-page-client";
+import { ProcessingPageClient } from "@/features/upload/ui/pages/processing-page";
 
 export default function ProcessingPage() {
   return <ProcessingPageClient />;

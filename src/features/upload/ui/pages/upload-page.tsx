@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { UploadZone } from "./upload-zone";
-import { TextInputArea } from "./text-input-area";
+import { UploadZone } from "../upload-zone";
+import { TextInputArea } from "../text-input-area";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useUploadSubmit } from "@/features/source-panel/hooks/use-upload-submit";
+import { useUploadSubmit } from "@/features/upload/hooks/use-upload-submit";
 
 export function UploadPageClient() {
   const [uploadMethod, setUploadMethod] = useState<"file" | "text">("file");

@@ -1,5 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
-import { DictionaryPageClient } from "@/features/dictionary/ui/dictionary-page-client";
+import { DictionaryPageClient } from "@/features/dictionary/ui/dictionary-page";
 
 export const dynamic = "force-dynamic";
 

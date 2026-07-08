@@ -10,12 +10,15 @@ import {
   isTranslateTextWithinLimit,
 } from "@/features/reading/lib/translation-limits";
 import type { PassageData } from "@/features/passage/schemas/passage.schema";
-import type { TranslationSelection, QuickTranslationData } from "@/features/reading/schemas/translation.schema";
-import { StudySourcesPanel } from "@/features/source-panel/ui/sources-panel";
+import type {
+  TranslationSelection,
+  QuickTranslationData,
+} from "@/features/reading/schemas/translation.schema";
+import { StudySourcesPanel } from "@/features/upload/ui/sources-panel";
 import { StudyContentPanel } from "@/features/reading/ui/content-panel";
 import { StudyStudioPanel } from "@/features/studio-panel/ui/studio-panel";
 import { StudyTranslationPopup } from "@/features/studio-panel/ui/studio/translate/translation-popup";
-import { StudyUploadModal } from "@/features/source-panel/ui/upload-modal";
+import { StudyUploadModal } from "@/features/upload/ui/upload-modal";
 import { useStudyActions } from "../_hooks/use-study-actions";
 import { useStudyPanelLayout } from "../_hooks/use-study-panel-layout";
 import { useStudyWorkspaceState } from "../_hooks/use-study-workspace-state";

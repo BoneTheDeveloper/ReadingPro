@@ -1,12 +1,19 @@
 "use client";
 
-import { useCallback, useMemo, useOptimistic, useState, useTransition } from "react";
+import {
+  useCallback,
+  useMemo,
+  useOptimistic,
+  useState,
+  useTransition,
+} from "react";
 import { useRouter } from "next/navigation";
 import { deletePassageAction } from "../_components/actions";
 import type { PassageData } from "@/features/passage/schemas/passage.schema";
-import type { DocumentItem } from "@/features/source-panel/ui/sources-panel";
+import type { DocumentItem } from "@/features/upload/ui/sources-panel";
 
-export type StudyStatus = "idle" | "uploading" | "analyzing" | "ready" | "error";
+export type StudyStatus =
+  "idle" | "uploading" | "analyzing" | "ready" | "error";
 
 export interface StudyState {
   passages: PassageData[];
@@ -15,14 +22,22 @@ export interface StudyState {
   error: string | null;
   simplifying: boolean;
   uploadModalOpen: boolean;
-  artifactsByPassageId: Record<string, import("@/features/studio-panel/actions").ArtifactsCacheEntry>;
-  viewingArtifactByPassageId: Record<string, import("@/features/studio-panel/actions").ArtifactRef | null>;
-  artifactDetailById: Record<string, import("@/features/studio-panel/actions").ArtifactDetailCacheEntry>;
+  artifactsByPassageId: Record<
+    string,
+    import("@/features/studio-panel/actions").ArtifactsCacheEntry
+  >;
+  viewingArtifactByPassageId: Record<
+    string,
+    import("@/features/studio-panel/actions").ArtifactRef | null
+  >;
+  artifactDetailById: Record<
+    string,
+    import("@/features/studio-panel/actions").ArtifactDetailCacheEntry
+  >;
 }
 
 type PassagesAction =
-  | { type: "add"; passage: PassageData }
-  | { type: "remove"; id: string };
+  { type: "add"; passage: PassageData } | { type: "remove"; id: string };
 
 function passagesReducer(
   passages: PassageData[],

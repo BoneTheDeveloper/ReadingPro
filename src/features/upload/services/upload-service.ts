@@ -1,7 +1,7 @@
 "use client";
 
 import * as Sentry from "@sentry/nextjs";
-import { uploadFileAction, uploadTextAction } from "./actions";
+import { uploadFileAction, uploadTextAction } from "../actions";
 
 /**
  * Upload a file to be processed.

@@ -6,7 +6,7 @@ import {
   type StudioArtifactErrorCode,
 } from "@/features/studio-panel/lib/studio-artifact-types";
 import type { GeneratedStudyQuestionDto } from "@/features/studio-panel/schemas/study.schema";
-import { generateStudioQuestionsAction } from "./actions";
+import { generateStudioQuestionsAction } from "../actions";
 
 export type GenerateStudioQuestionsResult =
   | { artifact: StudioArtifact; questions: GeneratedStudyQuestionDto[] }

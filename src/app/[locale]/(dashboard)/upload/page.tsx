@@ -1,4 +1,4 @@
-import { UploadPageClient } from "@/features/source-panel/ui/upload/upload-page-client";
+import { UploadPageClient } from "@/features/upload/ui/pages/upload-page";
 
 export default function UploadPage() {
   return <UploadPageClient />;

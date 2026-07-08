@@ -42,7 +42,7 @@ src/
 │       ├── schemas/          # Zod schemas + inferred types
 │       ├── hooks/            # React hooks (mutations via useActionState)
 │       ├── ui/              # React components
-│       └── *-client.ts      # Client API wrapper (reads + mutations)
+│       
 │
 ├── components/               # Shared React components (cross-feature)
 │   ├── ui/                   # Shadcn/ui primitives 

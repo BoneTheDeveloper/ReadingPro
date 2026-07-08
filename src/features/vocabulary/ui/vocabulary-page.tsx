@@ -87,7 +87,7 @@ export function VocabularyPageClient({
 
   // Server-fetched initial data (no loading state - data already loaded)
   const [items, setItems] = useState(initialList);
-  const [total, setTotal] = useState(initialTotal);
+  const [total] = useState(initialTotal);
   const [stats, setStats] = useState(initialStats);
   const [sets, setSets] = useState(initialSets);
 
