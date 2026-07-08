@@ -3,16 +3,8 @@ import { auth, clerkClient } from "@clerk/nextjs/server";
 import * as Sentry from "@sentry/nextjs";
 import { cache } from "react";
 import { syncUser } from "@/features/users/db/sync-user";
-import { createModuleLogger } from "@/lib/logger";
 
-const log = createModuleLogger("auth:utils");
-
-export class AuthenticationRequiredError extends Error {
-  constructor() {
-    super("Authentication required");
-    this.name = "AuthenticationRequiredError";
-  }
-}
+// Returns null if not authenticated (for pages that handle auth state)
 export const getCurrentUser = cache(async () => {
   const { userId } = await auth();
   if (!userId) return null;
@@ -34,34 +26,12 @@ export const getCurrentUser = cache(async () => {
   );
 });
 
-export async function requireAuth() {
-  const user = await getCurrentUser();
-  if (!user) {
-    throw new AuthenticationRequiredError();
-  }
-  return user;
-}
-
-export async function getAuthenticatedUser() {
-  const user = await requireAuth();
-  log.info(
-    { authenticated: true, userPresent: true },
-    "Authenticated user retrieved",
-  );
-  return user;
-}
-
+// Throws if not authenticated (for API routes and protected pages)
 export async function getUserId(): Promise<string> {
   const { userId } = await auth();
   if (!userId) {
-    throw new AuthenticationRequiredError();
+    throw new Error("Authentication required");
   }
-  Sentry.setUser({ id: userId });
-  return userId;
-}
-
-export async function getPageUserId(): Promise<string> {
-  const { userId } = await auth.protect();
   Sentry.setUser({ id: userId });
   return userId;
 }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
-import { AuthenticationRequiredError, getUserId } from "@/services/clerk";
+import { getUserId } from "@/services/clerk";
 import { createRequestLogContext, createRequestLogger } from "@/lib/logger";
 import {
   studyChatRequestSchema,
@@ -15,10 +15,7 @@ import {
   persistUserMessage,
   streamStudyChat,
 } from "@/features/ai-chat/services/chat-service";
-
-function isUnauthenticatedError(error: unknown) {
-  return error instanceof AuthenticationRequiredError;
-}
+import { toHttp } from "@/lib/http/route-errors";
 
 export async function POST(request: NextRequest) {
   let log = createRequestLogger(
@@ -114,25 +111,9 @@ export async function POST(request: NextRequest) {
 
     return result.toUIMessageStreamResponse();
   } catch (error) {
-    if (isUnauthenticatedError(error)) {
-      log.warn("Unauthenticated study chat request rejected");
-      return NextResponse.json(
-        { error: "Authentication required." },
-        { status: 401 },
-      );
-    }
-
     if (error instanceof StudyChatServiceError) {
       return NextResponse.json({ error: error.message }, { status: 404 });
     }
-
-    log.error({ err: error }, "Study chat streaming failed");
-    Sentry.captureException(error, {
-      tags: { route: "api:study:studio:chat", method: "POST" },
-    });
-    return NextResponse.json(
-      { error: "Unable to start the study chat stream." },
-      { status: 500 },
-    );
+    return toHttp(error, log, "api:study:studio:chat");
   }
 }

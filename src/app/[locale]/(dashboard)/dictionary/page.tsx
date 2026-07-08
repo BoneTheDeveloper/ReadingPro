@@ -1,9 +1,10 @@
-import { getPageUserId } from "@/services/clerk";
+import { auth } from "@clerk/nextjs/server";
 import { DictionaryPageClient } from "@/features/dictionary/ui/dictionary-page-client";
 
 export const dynamic = "force-dynamic";
 
 export default async function DictionaryPage() {
-  await getPageUserId();
+  // Authoritative auth gate — redirects to sign-in if unauthenticated.
+  await auth.protect();
   return <DictionaryPageClient />;
 }

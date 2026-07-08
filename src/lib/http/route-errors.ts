@@ -2,7 +2,6 @@ import "server-only";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import * as Sentry from "@sentry/nextjs";
-import { AuthenticationRequiredError } from "@/services/clerk";
 import type { createRequestLogger } from "@/lib/logger";
 
 // Domain error raised by repo/service when a resource does not exist or is not
@@ -15,10 +14,6 @@ export class NotFoundError extends Error {
   }
 }
 
-export function isAuthenticationRequiredError(error: unknown) {
-  return error instanceof AuthenticationRequiredError;
-}
-
 // Single boundary translating a caught error into an HTTP response. Takes the
 // request logger + a route id so 500s keep their per-route logging + Sentry tag.
 export function toHttp(
@@ -26,7 +21,7 @@ export function toHttp(
   log: ReturnType<typeof createRequestLogger>,
   route: string,
 ): NextResponse {
-  if (isAuthenticationRequiredError(error)) {
+  if (error instanceof Error && error.message === "Authentication required") {
     return NextResponse.json(
       { error: "Authentication required." },
       { status: 401 },
