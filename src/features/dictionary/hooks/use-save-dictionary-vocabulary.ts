@@ -2,7 +2,7 @@
 
 import { useCallback, useRef, useState } from "react";
 import * as Sentry from "@sentry/nextjs";
-import { saveDictionaryVocabulary } from "../dictionary-client";
+import { saveVocabularyAction } from "@/features/vocabulary/actions";
 import type {
   DictionaryEntryDto,
   DictionarySenseDto,
@@ -41,14 +41,31 @@ export function useSaveDictionaryVocabulary() {
           data: { entryId: entry.id, senseId: sense.id },
         });
 
-        const data = await saveDictionaryVocabulary(entry, sense);
+        const primary =
+          sense.translations.find((t) => t.isPrimary) ?? sense.translations[0];
+        if (!primary) {
+          throw new Error("No primary translation found for sense");
+        }
+
+        const result = await saveVocabularyAction({
+          selectedText: entry.headword,
+          translation: primary.translation,
+          contextSentence: sense.example ?? undefined,
+          sourceLanguage: "en",
+          targetLanguage: "vi",
+          source: "DICTIONARY",
+          dictionaryEntryId: entry.id,
+          dictionarySenseId: sense.id,
+        });
+
+        if (!result.success) throw new Error("Failed to save");
 
         setSavedSenses((prev) => new Set(prev).add(key));
         Sentry.addBreadcrumb({
           category: "dictionary-vocabulary",
           level: "info",
           message: "dictionary-vocabulary-save-success",
-          data: { vocabularyItemId: data.id },
+          data: { vocabularyItemId: result.data.id },
         });
       } catch {
         Sentry.addBreadcrumb({

@@ -45,7 +45,7 @@ src/
 │       └── *-client.ts      # Client API wrapper (reads + mutations)
 │
 ├── components/               # Shared React components (cross-feature)
-│   ├── ui/                   # Shadcn/ui primitives (button, dialog, ... — 14 files)
+│   ├── ui/                   # Shadcn/ui primitives 
 │   ├── layout/               # dashboard-sidebar, auth-controls, ...
 │   ├── provider/             # theme-provider
 │   └── system/               # error-boundary

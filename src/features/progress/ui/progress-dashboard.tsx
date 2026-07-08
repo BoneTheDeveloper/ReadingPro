@@ -1,13 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getProgressStats } from "../hooks/progress-client";
 import {
   TrendingUp,
   Clock,
   ChevronLeft,
-  Loader2,
   Flame,
   Calendar,
 } from "lucide-react";
@@ -16,32 +13,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import type { ProgressStatsDto } from "@/features/studio-panel/schemas/study.schema";
 
-export function ProgressDashboard() {
+interface ProgressDashboardProps {
+  initialStats: ProgressStatsDto;
+}
+
+export function ProgressDashboard({ initialStats }: ProgressDashboardProps) {
   const router = useRouter();
-  const [stats, setStats] = useState<ProgressStatsDto | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchStats() {
-      try {
-        const data = await getProgressStats();
-        setStats(data);
-      } catch (error) {
-        console.error("Error fetching stats:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchStats();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="min-h-dvh bg-muted flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-primary animate-spin" />
-      </div>
-    );
-  }
 
   const formatTime = (seconds?: number) => {
     if (seconds == null) return "0m";
@@ -56,26 +33,26 @@ export function ProgressDashboard() {
     {
       icon: <Flame className="w-5 h-5" />,
       label: "Current Streak",
-      value: `${stats?.streakDays ?? 0} days`,
+      value: `${initialStats.streakDays ?? 0} days`,
       color: "bg-gold-soft text-gold",
-      highlight: (stats?.streakDays ?? 0) > 0,
+      highlight: (initialStats.streakDays ?? 0) > 0,
     },
     {
       icon: <Clock className="w-5 h-5" />,
       label: "Today's Study",
-      value: formatTime(stats?.timeStudiedTodaySeconds),
+      value: formatTime(initialStats.timeStudiedTodaySeconds),
       color: "bg-primary/10 text-primary",
     },
     {
       icon: <TrendingUp className="w-5 h-5" />,
       label: "Weekly Study",
-      value: formatTime(stats?.timeStudiedWeekSeconds),
+      value: formatTime(initialStats.timeStudiedWeekSeconds),
       color: "bg-success-soft text-success",
     },
     {
       icon: <Calendar className="w-5 h-5" />,
       label: "Active Days",
-      value: `${stats?.activeDaysThisWeek ?? 0}/7`,
+      value: `${initialStats.activeDaysThisWeek ?? 0}/7`,
       color: "bg-primary/10 text-primary",
     },
   ];

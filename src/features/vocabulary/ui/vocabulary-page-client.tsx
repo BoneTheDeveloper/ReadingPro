@@ -5,14 +5,18 @@ import { useTranslations } from "next-intl";
 import { BookOpen, Library } from "lucide-react";
 import { VocabularyList } from "./vocabulary-list";
 import { VocabularySetList } from "./vocabulary-set-list";
-import { PageErrorState } from "./vocabulary-page-ui";
 import {
-  updateVocabularyItemStatus,
-  deleteVocabularyItem,
-  createVocabularySet,
-  deleteVocabularySet,
-} from "../vocabulary-client";
-import type { VocabularyStatus, VocabularyItemDto, VocabularyStatsDto, VocabularySetDto } from "../schemas/vocabulary.schema";
+  updateVocabularyStatusAction,
+  deleteVocabularyItemAction,
+  createVocabularySetAction,
+  deleteVocabularySetAction,
+} from "../actions";
+import type {
+  VocabularyStatus,
+  VocabularyItemDto,
+  VocabularyStatsDto,
+  VocabularySetDto,
+} from "../schemas/vocabulary.schema";
 
 type ViewTab = "words" | "sets";
 
@@ -90,8 +94,11 @@ export function VocabularyPageClient({
   const handleStatusChange = useCallback(
     async (id: string, status: VocabularyStatus) => {
       try {
-        await updateVocabularyItemStatus(id, status);
-        // revalidatePath in action will refresh on next navigation
+        const result = await updateVocabularyStatusAction({
+          itemId: id,
+          status,
+        });
+        if (!result.success) throw new Error("Failed to update status");
       } catch {
         /* item keeps current status */
       }
@@ -99,45 +106,38 @@ export function VocabularyPageClient({
     [],
   );
 
-  const handleDelete = useCallback(
-    async (id: string) => {
-      try {
-        await deleteVocabularyItem(id);
-        setItems((prev) => prev.filter((item) => item.id !== id));
-        setStats((prev) => ({ ...prev, total: prev.total - 1 }));
-      } catch {
-        /* item stays */
-      }
-    },
-    [],
-  );
+  const handleDelete = useCallback(async (id: string) => {
+    try {
+      const result = await deleteVocabularyItemAction(id);
+      if (!result.success) throw new Error("Failed to delete");
+      setItems((prev) => prev.filter((item) => item.id !== id));
+      setStats((prev) => ({ ...prev, total: prev.total - 1 }));
+    } catch {
+      /* item stays */
+    }
+  }, []);
 
-  const handleCreateSet = useCallback(
-    async (name: string) => {
-      setCreating(true);
-      try {
-        await createVocabularySet(name);
-        // revalidatePath in action will refresh on next navigation
-      } catch {
-        /* silently fail */
-      } finally {
-        setCreating(false);
-      }
-    },
-    [],
-  );
+  const handleCreateSet = useCallback(async (name: string) => {
+    setCreating(true);
+    try {
+      const result = await createVocabularySetAction({ name });
+      if (!result.success) throw new Error("Failed to create set");
+    } catch {
+      /* silently fail */
+    } finally {
+      setCreating(false);
+    }
+  }, []);
 
-  const handleDeleteSet = useCallback(
-    async (id: string) => {
-      try {
-        await deleteVocabularySet(id);
-        setSets((prev) => prev.filter((s) => s.id !== id));
-      } catch {
-        /* silently fail */
-      }
-    },
-    [],
-  );
+  const handleDeleteSet = useCallback(async (id: string) => {
+    try {
+      const result = await deleteVocabularySetAction({ setId: id });
+      if (!result.success) throw new Error("Failed to delete set");
+      setSets((prev) => prev.filter((s) => s.id !== id));
+    } catch {
+      /* silently fail */
+    }
+  }, []);
 
   const wOn = activeTab === "words";
   const sOn = activeTab === "sets";

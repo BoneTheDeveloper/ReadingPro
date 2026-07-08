@@ -1,14 +1,10 @@
 "use client";
 
 import * as Sentry from "@sentry/nextjs";
-import { postJson } from "@/lib/http/api-request";
 import {
   dictionarySuggestResponseSchema,
   dictionaryEntryDetailResponseSchema,
-  type DictionaryEntryDto,
-  type DictionarySenseDto,
 } from "@/features/dictionary/schemas/dictionary.schema";
-import { vocabularyItemResponseSchema } from "@/features/vocabulary/schemas/vocabulary.schema";
 
 /**
  * Fetch suggestions for a dictionary search query.
@@ -74,37 +70,3 @@ export async function getDictionaryEntryDetail(
   return parsed.data;
 }
 
-/**
- * Save a dictionary sense to the vocabulary system.
- */
-export async function saveDictionaryVocabulary(
-  entry: DictionaryEntryDto,
-  sense: DictionarySenseDto,
-) {
-  const primary =
-    sense.translations.find((t) => t.isPrimary) ?? sense.translations[0];
-  if (!primary) {
-    throw new Error("No primary translation found for sense");
-  }
-
-  const payload = {
-    selectedText: entry.headword,
-    translation: primary.translation,
-    contextSentence: sense.example ?? undefined,
-    sourceLanguage: "en" as const,
-    targetLanguage: "vi" as const,
-    source: "DICTIONARY" as const,
-    dictionaryEntryId: entry.id,
-    dictionarySenseId: sense.id,
-  };
-
-  const result = await postJson(
-    "/api/vocabulary",
-    payload,
-    vocabularyItemResponseSchema,
-  );
-  if ("error" in result) {
-    throw new Error(String(result.error));
-  }
-  return result;
-}

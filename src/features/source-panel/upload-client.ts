@@ -1,78 +1,48 @@
 "use client";
 
 import * as Sentry from "@sentry/nextjs";
-import { uploadSuccessResponseSchema } from "@/features/upload/schemas/upload.schema";
+import { uploadFileAction, uploadTextAction } from "./actions";
 
 /**
  * Upload a file to be processed.
  */
 export async function uploadFile(file: File) {
-  const formData = new FormData();
-  formData.append("file", file);
+  try {
+    const result = await uploadFileAction(file);
 
-  const response = await fetch("/api/upload", {
-    method: "POST",
-    body: formData,
-  });
+    if (!result.success) {
+      throw new Error("Upload failed");
+    }
 
-  const json: unknown = await response.json();
-  const result = uploadSuccessResponseSchema.safeParse(json);
-
-  if (!result.success) {
+    return result.data;
+  } catch (error) {
     Sentry.addBreadcrumb({
       category: "upload",
       level: "error",
-      message: "upload-file-schema-error",
-      data: {
-        route: "/api/upload",
-      },
+      message: "upload-file-error",
     });
-    throw new Error("Upload failed");
+    throw error;
   }
-
-  if ("error" in result.data) {
-    throw new Error(String(result.data.error));
-  }
-
-  if (!response.ok) {
-    throw new Error("Upload failed");
-  }
-
-  return result.data;
 }
 
 /**
  * Submit raw text to be processed.
  */
 export async function uploadText(text: string) {
-  const response = await fetch("/api/upload/text", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text, isText: true }),
-  });
+  try {
+    const result = await uploadTextAction({ text });
 
-  const json: unknown = await response.json();
-  const result = uploadSuccessResponseSchema.safeParse(json);
+    if (!result.success) {
+      throw new Error("Processing failed");
+    }
 
-  if (!result.success) {
+    return result.data;
+  } catch (error) {
     Sentry.addBreadcrumb({
       category: "upload",
       level: "error",
-      message: "upload-text-schema-error",
-      data: {
-        route: "/api/upload/text",
-      },
+      message: "upload-text-error",
     });
-    throw new Error("Processing failed");
+    throw error;
   }
-
-  if ("error" in result.data) {
-    throw new Error(String(result.data.error));
-  }
-
-  if (!response.ok) {
-    throw new Error("Processing failed");
-  }
-
-  return result.data;
 }
