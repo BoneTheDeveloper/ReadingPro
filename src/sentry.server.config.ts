@@ -5,7 +5,6 @@ if (!process.env.NEXT_PUBLIC_SENTRY_DISABLED) {
     dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
     spotlight: process.env.NODE_ENV === "development",
     integrations: [
-      Sentry.prismaIntegration(),
       Sentry.pinoIntegration({
         error: { levels: [] },
         log: { levels: ["info", "warn", "error"] },
