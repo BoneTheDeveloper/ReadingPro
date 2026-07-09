@@ -1,6 +1,6 @@
 # Observability Architecture
 
-Hybrid model (Template B / B1): Pino is the primary logger on Node; `pinoIntegration`
+Hybrid model: Pino is the primary logger on Node; `pinoIntegration`
 bridges pino output into Sentry Logs. Sentry **Issues** are created only at explicit
 boundaries — never automatically from log lines — to avoid double-capture.
 

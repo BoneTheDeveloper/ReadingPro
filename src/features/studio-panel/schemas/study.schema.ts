@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { apiErrorResponseSchema } from "@/lib/http/api-response.schema";
+import { apiErrorResponseSchema } from "@/lib/http/api-envelope-schema";
 
 export const studyQuestionOptionSchema = z
   .object({

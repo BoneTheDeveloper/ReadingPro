@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { captureClientError } from "@/lib/observability/capture-client-error";
 import { uploadFile, uploadText } from "../services/upload-service";
 
 export function useUploadSubmit() {
@@ -14,7 +15,7 @@ export function useUploadSubmit() {
       await uploadFile(file);
       router.push(`/study`);
     } catch (error) {
-      console.error("Upload error:", error);
+      captureClientError(error, { scope: "upload:file" });
       alert(error instanceof Error ? error.message : "Upload failed");
     } finally {
       setIsProcessing(false);
@@ -27,7 +28,7 @@ export function useUploadSubmit() {
       await uploadText(text);
       router.push(`/study`);
     } catch (error) {
-      console.error("Text processing error:", error);
+      captureClientError(error, { scope: "upload:text" });
       alert(error instanceof Error ? error.message : "Processing failed");
     } finally {
       setIsProcessing(false);

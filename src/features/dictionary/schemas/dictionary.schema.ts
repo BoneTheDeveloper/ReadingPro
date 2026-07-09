@@ -1,7 +1,7 @@
 import { z } from "zod";
 import {
   apiErrorResponseSchema,
-} from "@/lib/http/api-response.schema";
+} from "@/lib/http/api-envelope-schema";
 import { getSourceLabel } from "@/features/dictionary/lib/dictionary-helpers";
 
 const dictionaryTranslationStatusSchema = z.enum([

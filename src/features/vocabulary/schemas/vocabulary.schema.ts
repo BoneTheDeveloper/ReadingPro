@@ -2,7 +2,7 @@ import { z } from "zod";
 import {
   apiErrorResponseSchema,
   makeSuccessEnvelopeSchema,
-} from "@/lib/http/api-response.schema";
+} from "@/lib/http/api-envelope-schema";
 
 export const vocabularyStatusSchema = z.enum(["NEW", "LEARNING", "MASTERED"]);
 export const vocabularySourceSchema = z.enum(["TRANSLATE", "DICTIONARY"]);
