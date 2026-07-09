@@ -1,8 +1,6 @@
 "use client";
 
-import { useSession } from "@/hooks/use-session";
 import { authClient } from "@/lib/auth-client";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -25,8 +23,7 @@ export function AuthControls({
   compact = false,
   variant = "default",
 }: AuthControlsProps) {
-  const router = useRouter();
-  const { session, loading } = useSession();
+  const { data: session, isPending: loading } = authClient.useSession();
   const isRail = variant === "rail";
 
   const handleSignOut = async () => {

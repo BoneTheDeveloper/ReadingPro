@@ -10,6 +10,7 @@ Authentication is handled by **Better Auth** — a self-hosted auth framework pr
 |-----------|------------|
 | Auth Framework | [Better Auth](https://better-auth.com) v1.6.x |
 | Database Adapter | `@better-auth/adapters/prisma` |
+| Client | `@better-auth/react` (built-in hooks) |
 | Session Storage | PostgreSQL (via Prisma) |
 | OAuth Provider | Google (configurable) |
 
@@ -21,7 +22,8 @@ Authentication is handled by **Better Auth** — a self-hosted auth framework pr
 ├─────────────────────────────────────────────────────────────────┤
 │  ┌──────────────────┐    ┌──────────────────┐                   │
 │  │ AuthControls     │    │ SignInForm       │                   │
-│  │ (useSession)    │    │ SignUpForm       │                   │
+│  │ (authClient.    │    │ SignUpForm       │                   │
+│  │  useSession)    │    │                  │                   │
 │  └────────┬────────┘    └────────┬────────┘                   │
 │           │                       │                             │
 │           │    authClient         │                             │
@@ -64,16 +66,14 @@ Authentication is handled by **Better Auth** — a self-hosted auth framework pr
 src/
 ├── lib/
 │   ├── auth.ts           # Better Auth server instance
-│   ├── auth-client.ts    # Client auth client
+│   ├── auth-client.ts    # Client auth + useSession hook
 │   └── auth-server.ts    # Server utilities (getUserId, getCurrentUser)
-├── hooks/
-│   └── use-session.ts    # React hook for session state
-├── services/
-│   └── clerk.ts          # Re-exports for backward compat
 ├── components/
-│   └── auth/
-│       ├── sign-in-form.tsx
-│       └── sign-up-form.tsx
+│   ├── auth/
+│   │   ├── sign-in-form.tsx
+│   │   └── sign-up-form.tsx
+│   └── layout/
+│       └── auth-controls.tsx
 └── proxy.ts              # Middleware for route protection
 ```
 
@@ -174,16 +174,38 @@ return intlMiddleware(request);
 
 ## Client Session Hook
 
+Better Auth provides a built-in React hook via `@better-auth/react`:
+
 ```tsx
-import { useSession } from "@/hooks/use-session";
+import { authClient } from "@/lib/auth-client";
 
 function AuthControls() {
-  const { session, loading } = useSession();
+  const { data: session, isPending: loading } = authClient.useSession();
 
   if (loading) return <Skeleton />;
   if (!session?.user) return <SignInButton />;
 
   return <UserButton user={session.user} />;
+}
+```
+
+### Using signIn/signUp (if needed)
+```tsx
+import { authClient } from "@/lib/auth-client";
+
+async function handleSignIn(email: string, password: string) {
+  const { data, error } = await authClient.signIn.email({
+    email,
+    password,
+  });
+
+  if (error) {
+    console.error(error.message);
+    return;
+  }
+
+  // Success - redirect handled by onSuccess callback or manually
+  router.push("/dashboard");
 }
 ```
 
@@ -237,4 +259,5 @@ GOOGLE_CLIENT_SECRET=xxx
 - `auth.protect()` → `getUserId()` (throws, must be caught)
 - `<ClerkProvider>` → Removed (next-intl only)
 - `<SignInButton>` → Custom `SignInForm` component
-- `<UserButton>` → Custom dropdown with session state
+- `<UserButton>` → Custom dropdown with `authClient.useSession()`
+- Custom `useSession` hook → Built-in `authClient.useSession()`
