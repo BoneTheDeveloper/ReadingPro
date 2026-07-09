@@ -17,6 +17,18 @@ export function makeSuccessEnvelopeSchema<T extends z.ZodType>(dataSchema: T) {
   }).strict();
 }
 
+/**
+ * Factory to create API response contracts (success envelope + error envelope).
+ * Usage:
+ *   const translateResponseSchema = makeApiResponseSchema(translationDataSchema);
+ */
+export function makeApiResponseSchema<T extends z.ZodType>(dataSchema: T) {
+  return z.discriminatedUnion("success", [
+    makeSuccessEnvelopeSchema(dataSchema),
+    apiErrorResponseSchema,
+  ]);
+}
+
 // A helper type to extract the success shape using a plain TypeScript type
 export type ApiSuccessResponse<T> = {
   success: true;

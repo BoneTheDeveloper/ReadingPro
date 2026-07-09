@@ -169,17 +169,15 @@ export function StudyPageClient({
       .then(async (r) => {
         const json: unknown = await r.json();
         const parsed = translateResponseSchema.safeParse(json);
-        if (!parsed.success) {
+        if (!parsed.success || !parsed.data.success || "error" in parsed.data) {
           throw new Error("Quick translation failed");
         }
-        if (!r.ok || "error" in parsed.data)
-          throw new Error("Quick translation failed");
-        return parsed.data;
+        return parsed.data.data;
       })
       .then((data) => {
         setQuickTranslationState((prev) => {
           if (prev.requestId !== requestId) return prev;
-          return { requestId, data, status: "success" };
+          return { requestId, data: data as QuickTranslationData, status: "success" };
         });
       })
       .catch(() => {

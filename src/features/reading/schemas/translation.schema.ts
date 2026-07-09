@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { apiErrorResponseSchema } from "@/lib/http/api-envelope-schema";
+import { makeApiResponseSchema } from "@/lib/http/api-envelope-schema";
 
 export const translationDataSchema = z
   .object({
@@ -17,14 +17,10 @@ export const translationDataSchema = z
 
 export type TranslationData = z.infer<typeof translationDataSchema>;
 
-export const translateResponseSchema = translationDataSchema;
+// Response contract: data wrapped in envelope + error envelope
+export const translateResponseSchema = makeApiResponseSchema(translationDataSchema);
 
 export type TranslateResponse = z.infer<typeof translateResponseSchema>;
-
-export const translationErrorResponseSchema = apiErrorResponseSchema;
-export type TranslationErrorResponse = z.infer<
-  typeof translationErrorResponseSchema
->;
 
 // Shared selection types used across features
 export interface TranslationSelection {

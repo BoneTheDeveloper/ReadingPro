@@ -1,8 +1,4 @@
 import { z } from "zod";
-import {
-  apiErrorResponseSchema,
-  makeSuccessEnvelopeSchema,
-} from "@/lib/http/api-envelope-schema";
 
 export const vocabularyStatusSchema = z.enum(["NEW", "LEARNING", "MASTERED"]);
 export const vocabularySourceSchema = z.enum(["TRANSLATE", "DICTIONARY"]);
@@ -62,20 +58,14 @@ export const vocabularyListDataSchema = z.object({
   pageSize: z.number(),
 }).strict();
 
+// Response aliases (data schemas used as-is for responses)
 export const vocabularyListResponseSchema = vocabularyListDataSchema;
 export const vocabularySetsResponseSchema = z.array(vocabularySetSchema);
 export const vocabularySetResponseSchema = vocabularySetSchema;
 export const vocabularyItemResponseSchema = vocabularyItemSchema;
 export const vocabularyStatsResponseSchema = vocabularyStatsSchema;
-export const vocabularyAckResponseSchema = z.union([
-  z.object({ success: z.literal(true) }).strict(),
-  apiErrorResponseSchema,
-]);
 
-export const vocabularyErrorResponseSchema = apiErrorResponseSchema;
-
-export const vocabularyItemSuccessResponseSchema = makeSuccessEnvelopeSchema(vocabularyItemSchema);
-
+// Types
 export type VocabularyStatus = z.infer<typeof vocabularyStatusSchema>;
 export type VocabularySource = z.infer<typeof vocabularySourceSchema>;
 export type VocabularySetType = z.infer<typeof vocabularySetTypeSchema>;
@@ -88,4 +78,3 @@ export type VocabularySetsResponse = z.infer<typeof vocabularySetsResponseSchema
 export type VocabularySetResponse = z.infer<typeof vocabularySetResponseSchema>;
 export type VocabularyItemResponse = z.infer<typeof vocabularyItemResponseSchema>;
 export type VocabularyStatsResponse = z.infer<typeof vocabularyStatsResponseSchema>;
-export type VocabularyAckResponse = z.infer<typeof vocabularyAckResponseSchema>;
