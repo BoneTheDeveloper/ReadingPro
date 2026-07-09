@@ -1,7 +1,8 @@
 import "server-only";
 import * as Sentry from "@sentry/nextjs";
 import { headers } from "next/headers";
-import { createModuleLogger, AppError } from "@/lib/logger";
+import { createModuleLogger } from "@/lib/logger";
+import { AppError } from "@/lib/errors";
 
 export type ActionContext = {
   logger: ReturnType<typeof createModuleLogger>;
