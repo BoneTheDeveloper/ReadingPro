@@ -1,35 +1,27 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { getUserId } from "@/lib/auth/auth-server";
-import { createRequestLogContext, createRequestLogger } from "@/lib/logger";
+import { withRoute } from "@/lib/http/with-route";
 import {
   studyChatRequestSchema,
   type UiMessage,
 } from "@/features/studio-panel/schemas/chat.schema";
 import { validateMessageSizeLimits } from "@/features/ai-chat/lib/chat-utils";
 import {
-  StudyChatServiceError,
   getOwnedPassageForChat,
   loadPersistedMessages,
   toPersistedUiMessages,
   persistUserMessage,
   streamStudyChat,
 } from "@/features/ai-chat/services/chat-service";
-import { toHttp } from "@/lib/http/route-errors";
 
-export async function POST(request: NextRequest) {
-  let log = createRequestLogger(
-    "api:study:studio:chat",
-    createRequestLogContext(request, "POST", "/api/study/studio/chat"),
-  );
-
-  try {
+export const POST = withRoute("api:study:studio:chat", "/api/studio/chat")(
+  async (req: NextRequest, _ctx, log) => {
     let body: unknown;
     try {
-      body = await request.json();
+      body = await req.json();
     } catch {
-      log.warn("Invalid JSON payload received for study chat");
-      return NextResponse.json(
+      return Response.json(
         { error: "Invalid JSON payload." },
         { status: 400 },
       );
@@ -45,25 +37,13 @@ export async function POST(request: NextRequest) {
     const messageLimitsError = validateMessageSizeLimits(rawMessages);
 
     if (messageLimitsError) {
-      log.warn(
-        { context: { messageCount: rawMessages.length } },
-        "Study chat request exceeded message limits",
-      );
-      return NextResponse.json({ error: messageLimitsError }, { status: 400 });
+      return Response.json({ error: messageLimitsError }, { status: 400 });
     }
 
     const parsed = studyChatRequestSchema.safeParse(body);
 
     if (!parsed.success) {
-      log.warn(
-        {
-          context: {
-            issues: parsed.error.issues.map((issue) => issue.path.join(".")),
-          },
-        },
-        "Invalid study chat request rejected",
-      );
-      return NextResponse.json(
+      return Response.json(
         {
           error: "Invalid chat request. Select a passage and enter a message.",
         },
@@ -72,10 +52,10 @@ export async function POST(request: NextRequest) {
     }
 
     const { messages, passageId } = parsed.data;
-    log = log.child({ passageId });
+    const logWithContext = log.child({ passageId });
 
     const userId = await getUserId();
-    log = log.child({ userId: userId });
+    const logWithUser = logWithContext.child({ userId });
 
     const passage = await getOwnedPassageForChat(userId, passageId);
 
@@ -88,13 +68,13 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await streamStudyChat({
-      userId: userId,
+      userId,
       passageId,
       passage,
       incomingMessages: messages,
       persistedMessages: persistedUiMessages,
       onFinishPersistError: (error) => {
-        log.error(
+        logWithUser.error(
           { err: error },
           "Failed to persist study chat assistant message",
         );
@@ -104,16 +84,11 @@ export async function POST(request: NextRequest) {
             method: "POST",
             operation: "assistant-message-create",
           },
-          extra: { userId: userId, passageId },
+          extra: { userId, passageId },
         });
       },
     });
 
     return result.toUIMessageStreamResponse();
-  } catch (error) {
-    if (error instanceof StudyChatServiceError) {
-      return NextResponse.json({ error: error.message }, { status: 404 });
-    }
-    return toHttp(error, log, "api:study:studio:chat");
-  }
-}
+  },
+);

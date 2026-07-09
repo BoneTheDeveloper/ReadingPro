@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { wrapUserText } from "@/services/ai/prompt-utils";
 import { getStudyChatModelId } from "@/services/ai/model-config";
 import { createModuleLogger } from "@/lib/logger";
+import { NotFoundError } from "@/lib/errors";
 import {
   MAX_PASSAGE_CHARS,
   type UiMessage,
@@ -12,13 +13,6 @@ import {
 import { truncateToRecentTurns, extractTextContent } from "../lib/chat-utils";
 
 const log = createModuleLogger("lib:study:chat-service");
-
-export class StudyChatServiceError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "StudyChatServiceError";
-  }
-}
 
 export async function getOwnedPassageForChat(
   userId: string,
@@ -30,7 +24,7 @@ export async function getOwnedPassageForChat(
   });
 
   if (!passage) {
-    throw new StudyChatServiceError("Passage not found.");
+    throw new NotFoundError("Passage");
   }
 
   return passage;
