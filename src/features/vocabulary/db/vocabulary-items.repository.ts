@@ -1,7 +1,7 @@
 import "server-only";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
-import { NotFoundError } from "@/lib/http/route-errors";
+import { NotFoundError } from "@/lib/errors";
 import { withUserProfile } from "@/features/users/db/sync-user";
 import { findOwnedPassage } from "@/features/passage/db/passage-study.repository";
 import {

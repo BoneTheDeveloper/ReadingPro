@@ -1,6 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
-import { NotFoundError } from "@/lib/http/route-errors";
+import { NotFoundError } from "@/lib/errors";
 import { withUserProfile } from "@/features/users/db/sync-user";
 import type {
   VocabularySet,

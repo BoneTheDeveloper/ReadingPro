@@ -4,7 +4,7 @@ import {
   type StudioArtifactType,
 } from "@/features/studio-panel/lib/studio-artifact-types";
 import type { GeneratedStudyQuestionDto } from "@/features/studio-panel/schemas/study.schema";
-import { NotFoundError } from "@/lib/http/route-errors";
+import { NotFoundError } from "@/lib/errors";
 import {
   deleteQuizResults,
   findArtifactQuestions,

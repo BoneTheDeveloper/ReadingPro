@@ -1,6 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
-import { NotFoundError } from "@/lib/http/route-errors";
+import { NotFoundError } from "@/lib/errors";
 import { simpleSchedule } from "@/features/vocabulary/services/vocabulary-scheduler.service";
 import type { VocabularyItem } from "@/generated/prisma/client";
 
