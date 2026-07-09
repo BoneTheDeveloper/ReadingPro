@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { getUserId } from "@/lib/auth-server";
 import { getUserPassages } from "@/features/passage/db/passage-queries";
 import { StudyPageClient } from "./_components/study-workspace";
 import type { PassageData } from "@/features/passage/schemas/passage.schema";
@@ -6,7 +6,7 @@ import type { PassageData } from "@/features/passage/schemas/passage.schema";
 export const dynamic = "force-dynamic";
 
 export default async function StudyPage() {
-  const { userId } = await auth.protect();
+  const userId = await getUserId();
   const rows = await getUserPassages(userId);
 
   const initialPassages: PassageData[] = rows.map((p) => ({

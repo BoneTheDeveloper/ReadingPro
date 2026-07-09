@@ -6,3 +6,483 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+// ============================================================
+// Enums
+// ============================================================
+
+enum CEFRLevel {
+  A1
+  A2
+  B1
+  B2
+  C1
+  C2
+}
+
+enum SourceType {
+  TEXT
+  PDF
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+}
+
+enum Tier {
+  FREE
+  PRO
+}
+
+enum VocabularySetType {
+  MANUAL
+  DAILY
+  WEEKLY
+}
+
+// ============================================================
+// Better Auth Models (authentication)
+// ============================================================
+
+/// Better Auth user table - stores auth credentials, OAuth accounts
+model User {
+  id               String    @id
+  name             String
+  email            String
+  emailVerified    Boolean   @default(false)
+  image            String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  tier             String?   @default("FREE")
+  stripeCustomerId String?
+
+  sessions Session[]
+  accounts Account[]
+
+  @@unique([email])
+  @@map("user")
+}
+
+/// Better Auth session table - stores active user sessions
+model Session {
+  id         String   @id
+  expiresAt  DateTime
+  token      String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  ipAddress  String?
+  userAgent  String?
+  userId     String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
+}
+
+/// Better Auth account table - stores OAuth/email provider links
+model Account {
+  id                     String    @id
+  accountId              String
+  providerId             String
+  userId                 String
+  accessToken            String?
+  refreshToken           String?
+  idToken                String?
+  accessTokenExpiresAt   DateTime?
+  refreshTokenExpiresAt   DateTime?
+  scope                  String?
+  password               String?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("account")
+}
+
+/// Better Auth verification table - stores email verification, password reset tokens
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+// ============================================================
+// Application Models
+// ============================================================
+
+/// Learner account - keyed by Better Auth user id (same as User.id)
+model UserProfile {
+  id               String    @id
+  email            String?
+  name             String?
+  avatarUrl        String?
+  bio              String?
+  targetLevel      CEFRLevel @default(B2)
+  tier             Tier      @default(FREE)
+  stripeCustomerId String?   @unique
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  passages             Passage[]
+  studySessions        StudySession[]
+  chatMessages         StudyChatMessage[]
+  translationCaches    TranslationCache[]
+  translationHistories TranslationHistory[]
+  vocabularyItems      VocabularyItem[]
+  vocabularySets       VocabularySet[]
+  fileUploadIntents    FileUploadIntent[]
+  studioArtifacts      StudioArtifact[]
+
+  @@map("profiles")
+}
+
+/// [Upload] Pending upload authorizations
+model FileUploadIntent {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String
+  pathname  String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+  @@index([userId, expiresAt])
+  @@map("file_upload_intents")
+}
+
+/// [Study] Reading passages
+model Passage {
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String
+  title       String
+  content     String
+  cefrLevel   CEFRLevel?
+  wordCount   Int
+  sourceType  SourceType
+  filePath    String?    @unique
+  deletedAt   DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  user               UserProfile          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questions          Question[]
+  chatMessages       StudyChatMessage[]
+  translationCaches TranslationCache[]
+  translationHistories TranslationHistory[]
+  studioArtifacts    StudioArtifact[]
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([userId, deletedAt])
+  @@map("passages")
+}
+
+/// [Study] Chat messages
+model StudyChatMessage {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String
+  passageId String   @db.Uuid
+  role      String
+  content   String
+  createdAt DateTime @default(now())
+
+  user    UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  passage Passage     @relation(fields: [passageId], references: [id], onDelete: Cascade)
+
+  @@index([userId, passageId, createdAt])
+  @@map("study_chat_messages")
+}
+
+// [Dictionary] ============================================
+
+/// Dictionary headwords
+model DictionaryEntry {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  headword           String
+  normalizedHeadword String
+  sourceLanguage     String   @default("en")
+  frequencyRank      Int      @default(0)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  senses  DictionarySense[]
+  aliases DictionaryAlias[]
+
+  @@unique([normalizedHeadword, sourceLanguage])
+  @@index([sourceLanguage, frequencyRank])
+  @@map("dictionary_entries")
+}
+
+model DictionarySense {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  entryId      String   @db.Uuid
+  partOfSpeech String?
+  definition   String?
+  example      String?
+  tags         String[]
+  usageRank    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  entry        DictionaryEntry         @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  translations DictionaryTranslation[]
+
+  @@index([entryId, usageRank])
+  @@map("dictionary_senses")
+}
+
+model DictionaryTranslation {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  senseId        String    @db.Uuid
+  targetLanguage String    @default("vi")
+  translation    String
+  isPrimary      Boolean   @default(false)
+  rank           Int
+  confidence     Float?
+  status         String    @default("draft")
+  sourceType    String
+  sourceName    String?
+  reviewedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  sense DictionarySense @relation(fields: [senseId], references: [id], onDelete: Cascade)
+
+  @@index([senseId, targetLanguage, status, isPrimary])
+  @@index([targetLanguage, status, rank])
+  @@map("dictionary_translations")
+}
+
+model DictionaryAlias {
+  id              String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  entryId         String @db.Uuid
+  normalizedAlias String
+  aliasType       String @default("variant")
+
+  entry DictionaryEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+
+  @@unique([normalizedAlias, entryId])
+  @@index([normalizedAlias])
+  @@map("dictionary_aliases")
+}
+
+model DictionarySourceAudit {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  batchName  String
+  entityType String
+  entityId   String   @db.Uuid
+  note       String?
+  createdAt  DateTime @default(now())
+
+  @@index([batchName])
+  @@index([entityType, entityId])
+  @@map("dictionary_source_audits")
+}
+
+// [Translation] ============================================
+
+model TranslationCache {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  cacheKey        String   @unique
+  userId          String
+  sourceId        String   @db.Uuid
+  selectedText    String
+  contextSentence String
+  sourceLanguage  String
+  targetLanguage  String
+  mode            String
+  provider        String
+  response        Json
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user    UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  passage Passage     @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  @@index([userId, sourceId, targetLanguage])
+  @@index([userId, createdAt])
+  @@map("translation_caches")
+}
+
+model TranslationHistory {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String
+  sourceId        String   @db.Uuid
+  selectedText    String
+  contextSentence String
+  sourceLanguage  String
+  targetLanguage  String
+  mode            String
+  provider        String
+  translation     String
+  response        Json
+  createdAt       DateTime @default(now())
+
+  user    UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  passage Passage     @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  @@index([userId, sourceId, createdAt])
+  @@map("translation_histories")
+}
+
+// [Studio] ============================================
+
+model StudioArtifact {
+  id        String   @id @db.Uuid
+  passageId String   @db.Uuid
+  userId    String
+  type      String
+  title     String
+  status    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  passage    Passage     @relation(fields: [passageId], references: [id], onDelete: Cascade)
+  user       UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questions  Question[]
+  quizResult QuizResult?
+
+  @@index([passageId, createdAt(sort: Desc)])
+  @@index([userId])
+  @@map("studio_artifacts")
+}
+
+model Question {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  passageId     String       @db.Uuid
+  artifactId    String       @db.Uuid
+  questionText  String
+  options       Json
+  correctOption String
+  sourceText    String
+  sourceLine    Int
+  explanation   String
+  questionType  QuestionType @default(MULTIPLE_CHOICE)
+  difficulty    Int          @default(3)
+  createdAt     DateTime     @default(now())
+
+  passage  Passage        @relation(fields: [passageId], references: [id], onDelete: Cascade)
+  artifact StudioArtifact @relation(fields: [artifactId], references: [id], onDelete: Cascade)
+
+  @@index([passageId])
+  @@index([artifactId])
+  @@map("questions")
+}
+
+model QuizResult {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  artifactId     String   @unique @db.Uuid
+  completedAt    DateTime @default(now())
+  correctCount   Int
+  totalQuestions Int
+  accuracyRate   Float
+
+  artifact StudioArtifact @relation(fields: [artifactId], references: [id], onDelete: Cascade)
+
+  @@map("quiz_results")
+}
+
+// [Vocabulary] ============================================
+
+model VocabularyItem {
+  id                     String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId                 String
+  translation            String
+  sourceLanguage         String
+  targetLanguage         String
+  type                   String    @default("WORD")
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+  normalizedText         String    @default("")
+  displayText            String    @default("")
+  normalizedTranslation  String    @default("")
+  status                 String    @default("NEW")
+  source                 String    @default("TRANSLATE")
+  savedCount             Int       @default(1)
+  nextReviewAt           DateTime?
+  lastReviewedAt          DateTime?
+  dictionaryEntryId      String?   @db.Uuid
+  dictionarySenseId      String?   @db.Uuid
+
+  user        UserProfile            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  occurrences VocabularyOccurrence[]
+  setItems    VocabularySetItem[]
+
+  @@unique([userId, normalizedText, targetLanguage, normalizedTranslation])
+  @@index([userId, nextReviewAt])
+  @@index([userId, status])
+  @@map("vocabulary_items")
+}
+
+model VocabularyOccurrence {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  vocabularyItemId  String    @db.Uuid
+  sourceId         String?   @db.Uuid
+  selectedText     String
+  contextSentence  String?
+  createdAt        DateTime  @default(now())
+
+  vocabularyItem VocabularyItem @relation(fields: [vocabularyItemId], references: [id], onDelete: Cascade)
+
+  @@unique([vocabularyItemId, sourceId, contextSentence])
+  @@index([sourceId])
+  @@map("vocabulary_occurrences")
+}
+
+model VocabularySet {
+  id           String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String
+  name         String
+  type         VocabularySetType
+  periodStart DateTime?
+  periodEnd   DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user     UserProfile         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  setItems VocabularySetItem[]
+
+  @@unique([userId, type, periodStart, periodEnd])
+  @@index([userId, type])
+  @@map("vocabulary_sets")
+}
+
+model VocabularySetItem {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  vocabularySetId  String   @db.Uuid
+  vocabularyItemId String   @db.Uuid
+  addedAt          DateTime @default(now())
+
+  vocabularySet  VocabularySet  @relation(fields: [vocabularySetId], references: [id], onDelete: Cascade)
+  vocabularyItem VocabularyItem @relation(fields: [vocabularyItemId], references: [id], onDelete: Cascade)
+
+  @@unique([vocabularySetId, vocabularyItemId])
+  @@map("vocabulary_set_items")
+}
+
+// [Study Sessions] ============================================
+
+model StudySession {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String
+  startedAt       DateTime  @default(now())
+  lastActivityAt  DateTime  @default(now())
+  completedAt     DateTime?
+
+  user UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, startedAt])
+  @@map("study_sessions")
+}

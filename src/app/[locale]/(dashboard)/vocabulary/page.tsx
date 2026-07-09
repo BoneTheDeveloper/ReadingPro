@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { getUserId } from "@/lib/auth-server";
 import { VocabularyPageClient } from "@/features/vocabulary/ui/vocabulary-page";
 import {
   getVocabularyItemList,
@@ -9,9 +9,8 @@ import { getVocabularySetList } from "@/features/vocabulary/services/vocabulary-
 export const dynamic = "force-dynamic";
 
 export default async function VocabularyPage() {
-  // Authoritative auth gate — redirects to sign-in if unauthenticated.
-  // Not delegated to middleware alone (optimistic only; cf. CVE-2025-29927).
-  const { userId } = await auth.protect();
+  // Auth gate - middleware handles redirect, but we verify userId exists
+  const userId = await getUserId();
 
   const [list, stats, sets] = await Promise.all([
     getVocabularyItemList({ userId, page: 1, pageSize: 20 }),

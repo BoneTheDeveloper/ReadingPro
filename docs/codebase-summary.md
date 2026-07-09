@@ -11,7 +11,7 @@ English Reading Training App — Full-stack Next.js application for language lea
 | **Runtime** | Node.js 24, pnpm |
 | **Backend** | Next.js Server Actions + API routes |
 | **Database** | PostgreSQL (`pg`), Prisma ORM 7 |
-| **Auth** | Clerk |
+| **Auth** | Better Auth |
 | **Validation** | Zod 4 |
 | **AI** | Vercel AI SDK v6 (`@ai-sdk/google` Gemini, `@ai-sdk/openai`) |
 | **Storage** | Vercel Blob |
@@ -52,13 +52,16 @@ src/
 │
 ├── services/                 # Cross-cutting integrations (not feature-specific)
 │   ├── ai/                   # Gemini helpers: model-config, question-generator, ...
-│   ├── clerk.ts              # Auth (Clerk)
+│   ├── clerk.ts              # Auth (re-exports from lib/auth-server)
 │   ├── storage.ts            # Blob storage
 │   └── logger.ts             # Request logging
 │
 ├── lib/                      # Shared low-level utilities
-│   ├── http/                 # api-request, api-response.schema, route-errors
-│   ├── prisma.ts             # Prisma client singleton
+│   ├── auth.ts              # Better Auth server instance
+│   ├── auth-client.ts       # Better Auth client
+│   ├── auth-server.ts      # Server auth utilities (getUserId, getCurrentUser)
+│   ├── http/               # api-request, api-response.schema, route-errors
+│   ├── prisma.ts           # Prisma client singleton
 │   └── utils.ts
 │
 ├── types/                    # Shared domain types (e.g. cefr.ts)
@@ -140,7 +143,7 @@ dictionary) goes through Server Actions.
 | **Studio Chat** | `/api/studio/chat` | POST | Streams tokens to the AI SDK chat hook |
 | **Local Blob** | `/api/local-blob/[pathname]` | GET | URL-addressed blob serving (`<img src>`) |
 | **Health** | `/api/health` | GET | Called by infra, not the app |
-| **Clerk Webhook** | `/api/webhooks/clerk` | POST | Called by Clerk's servers |
+| **Better Auth API** | `/api/auth/[...all]` | GET/POST | All auth endpoints |
 
 ## Key Design Patterns
 
@@ -175,9 +178,9 @@ dictionary) goes through Server Actions.
 - Request logging with context (userId, feature, method, path)
 
 ### 4. Authentication
-- Clerk (`services/clerk.ts`); user sync via `features/users/db/sync-user.ts`
-- Most routes require authentication; returns 401 if missing
-- Session management via Next.js middleware
+- Better Auth (`lib/auth.ts`, `lib/auth-client.ts`); user sync via `afterSignUp`/`afterSignIn` callbacks
+- Most routes require authentication; middleware redirects to sign-in if missing
+- Session management via cookie-based sessions stored in PostgreSQL
 
 ### 5. Logging
 - Every action and query logs with structured context

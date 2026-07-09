@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { getUserId } from "@/services/clerk";
+import { getUserId } from "@/lib/auth-server";
 import type { VocabularyStatus } from "./schemas/vocabulary.schema";
 import {
   saveVocabularyItem,

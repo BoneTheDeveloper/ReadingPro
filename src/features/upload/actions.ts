@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { getUserId } from "@/services/clerk";
+import { getUserId } from "@/lib/auth-server";
 import { processFileUpload } from "@/features/upload/db/upload-workflow";
 import { analyzeAndPersistContent } from "@/features/upload/services/content-analysis.service";
 import { validateTextContent } from "@/features/upload/lib/upload-validation";

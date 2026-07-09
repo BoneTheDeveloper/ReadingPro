@@ -1,6 +1,6 @@
 "use server";
 
-import { getUserId } from "@/services/clerk";
+import { getUserId } from "@/lib/auth-server";
 import { ensureActiveSession } from "./db/learning-session-queries";
 import { toLearningSessionDto } from "./schemas/learning-session.schema";
 

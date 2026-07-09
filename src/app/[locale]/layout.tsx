@@ -1,4 +1,3 @@
-import { ClerkProvider } from "@clerk/nextjs";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -49,17 +48,11 @@ export default async function LocaleLayout({
       suppressHydrationWarning
     >
       <body className="h-full overflow-hidden flex flex-col font-sans">
-        <ClerkProvider
-          signInUrl={`/${locale}/sign-in`}
-          signUpUrl={`/${locale}/sign-up`}
-          afterSignOutUrl={`/${locale}/sign-in`}
-        >
-          <ThemeProvider>
-            <NextIntlClientProvider messages={messages}>
-              {children}
-            </NextIntlClientProvider>
-          </ThemeProvider>
-        </ClerkProvider>
+        <ThemeProvider>
+          <NextIntlClientProvider messages={messages}>
+            {children}
+          </NextIntlClientProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

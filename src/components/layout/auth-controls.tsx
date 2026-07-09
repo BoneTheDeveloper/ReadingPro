@@ -1,8 +1,20 @@
 "use client";
 
-import { Show, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
+import { useSession } from "@/hooks/use-session";
+import { authClient } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { User, LogOut, Settings } from "lucide-react";
+import Link from "next/link";
+import Image from "next/image";
 
 interface AuthControlsProps {
   compact?: boolean;
@@ -13,42 +25,87 @@ export function AuthControls({
   compact = false,
   variant = "default",
 }: AuthControlsProps) {
+  const router = useRouter();
+  const { session, loading } = useSession();
   const isRail = variant === "rail";
-  const iconClass = isRail
-    ? "text-white/60 hover:text-white hover:bg-white/[0.08]"
-    : "text-muted-foreground hover:bg-accent/60";
 
-  return (
-    <>
-      <Show when="signed-out">
-        <SignInButton mode="modal">
-          <Button
-            variant="ghost"
-            size={compact || isRail ? "icon" : "sm"}
-            className={cn(isRail ? "w-10 h-10" : "", iconClass)}
-          >
+  const handleSignOut = async () => {
+    try {
+      await authClient.signOut();
+    } catch {
+      // Ignore errors, redirect anyway
+    }
+    // Full page reload to clear state and redirect
+    window.location.href = "/";
+  };
+
+  if (loading) {
+    return (
+      <div className="w-10 h-10 animate-pulse rounded-full bg-muted" />
+    );
+  }
+
+  if (!session?.user) {
+    return (
+      <>
+        <Link href="/sign-in">
+          <Button variant="ghost" size={compact || isRail ? "icon" : "sm"}>
             Sign in
           </Button>
-        </SignInButton>
+        </Link>
         {!compact && !isRail && (
-          <SignUpButton mode="modal">
+          <Link href="/sign-up">
             <Button size="sm">Sign up</Button>
-          </SignUpButton>
+          </Link>
         )}
-      </Show>
-      <Show when="signed-in">
-        <div
-          className={cn(isRail && "w-10 h-10 flex items-center justify-center")}
+      </>
+    );
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          className={cn("rounded-full gap-2", isRail ? "w-10 h-10 p-0" : "px-3")}
         >
-          <UserButton
-            appearance={{
-              elements: {
-                avatarBox: isRail ? "size-9" : "size-9",
-              },
-            }}
-          />
-        </div>
-      </Show>
-    </>
+          {session.user.image ? (
+            <Image
+              src={session.user.image}
+              alt={session.user.name || "User"}
+              width={36}
+              height={36}
+              className="w-9 h-9 rounded-full"
+            />
+          ) : (
+            <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center">
+              {session.user.name ? (
+                <span className="text-sm font-medium">{session.user.name[0]}</span>
+              ) : (
+                <User className="w-4 h-4" />
+              )}
+            </div>
+          )}
+          {!isRail && (
+            <span className="text-sm font-medium max-w-[100px] truncate">
+              {session.user.name || "User"}
+            </span>
+          )}
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuItem asChild>
+          <Link href="/settings" className="cursor-pointer">
+            <Settings className="w-4 h-4 mr-2" />
+            Settings
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
+          <LogOut className="w-4 h-4 mr-2" />
+          Sign out
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
