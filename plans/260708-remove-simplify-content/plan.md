@@ -1,7 +1,7 @@
 ---
 name: remove-simplify-content
 description: Strip simplification from upload pipeline, rename Original/Simplified toggle to Source/Passage in content panel
-status: pending
+status: complete
 created: 2026-07-08
 ---
 

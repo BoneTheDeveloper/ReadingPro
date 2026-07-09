@@ -1,6 +1,6 @@
 ---
 name: upload-feature-analysis
-description: Comprehensive analysis of src/features/upload/ — component flow, background logic, and utilities
+description: Analysis of src/features/upload/ — component flow, background logic, and utilities
 metadata:
   type: report
 ---
@@ -9,7 +9,7 @@ metadata:
 
 ## Summary
 
-The upload feature handles two input modes — file (PDF/TXT) and text paste — runs AI analysis (CEFR detection, simplification, quiz generation), persists everything to PostgreSQL via Prisma, and surfaces results in the `/study` workspace. Three notable gaps exist: the `/processing` page is decoupled from real state, `FileUploadIntent` model is defined but unused, and two separate entry points share similar logic with minor divergence.
+The upload feature handles file (PDF/TXT) and text paste inputs, extracts content, detects CEFR level, and persists passages. After the simplification removal, the pipeline is streamlined: upload → extract → persist → display. Quiz generation moved to on-demand studio action.
 
 ---
 
@@ -24,9 +24,9 @@ The upload feature handles two input modes — file (PDF/TXT) and text paste —
 | `lib/parsers/pdf.ts` | PDF text extraction via `pdf-parse` |
 | `lib/upload-validation.ts` | All validators: file size/type, text length, filename/title sanitization, format helpers |
 | `schemas/upload.schema.ts` | Zod schema: `uploadResultSchema` / `UploadResultDto` |
-| `services/content-analysis.service.ts` | Core analysis: CEFR heuristic, AI simplification, AI question generation, DB write |
+| `services/content-analysis.service.ts` | Core analysis: extracts text, sets placeholder CEFR level, persists Passage |
 | `services/upload-service.ts` | Client-side wrapper calling server actions + Sentry breadcrumbs |
-| `ui/pages/processing-page.tsx` | Full-screen animated spinner (auto-redirects `/study` after 6s) |
+| `ui/pages/processing-page.tsx` | Full-screen animated spinner (animation updated, simplifying stage removed) |
 | `ui/pages/upload-page.tsx` | `UploadPageClient` — tab switcher (file vs. text) |
 | `ui/sources-panel.tsx` | `StudySourcesPanel` — document list sidebar for study workspace |
 | `ui/text-input-area.tsx` | Textarea with word-count footer + validation errors |
@@ -35,41 +35,7 @@ The upload feature handles two input modes — file (PDF/TXT) and text paste —
 
 ---
 
-## 2. Component Hierarchy
-
-```
-/study page (RSC)
-└── StudyPageClient
-    ├── StudySourcesPanel
-    │     ├── StreamingUploadRow (inline)
-    │     └── SourceRow (inline)
-    ├── StudyContentPanel
-    ├── StudyStudioPanel
-    └── StudyUploadModal          ← modal entry point in study workspace
-          ├── InputMode: null → drag-drop + source buttons
-          │               → file mode (dropzone)
-          │               → text mode (textarea + submit)
-          └── InputMode: "file" | "text"
-
-/upload page (RSC)
-└── UploadPageClient              ← standalone page entry point
-    ├── UploadZone (drag-drop)
-    └── TextInputArea (textarea)
-
-/processing page (RSC)
-└── ProcessingPageClient
-    └── ProcessingPageContent     ← spinner only, no real state
-
-DashboardSidebar (layout shell for all)
-```
-
-**Critical**: `StudyUploadModal` is always mounted in `/study` (driven by `useStudyWorkspaceState`). Standalone `/upload` uses `useUploadSubmit` hook with different routing (navigates to `/study` on success).
-
----
-
-## 3. Server Actions / Background Logic
-
-### Upload pipeline
+## 2. Current Pipeline
 
 ```
 Client: UploadZone / StudyUploadModal
@@ -84,106 +50,87 @@ processFileUpload() or analyzeAndPersistContent()
   ├─ uploadFile() → storage adapter (Vercel Blob or local fs)
   ├─ parsePDF() if PDF
   ├─ validateTextContent() on extracted text
-  ├─ getHeuristicCEFR() → originalLevel
-  │     └─ isSimplifiableCEFRLevel() + getTargetCEFRLevel()
-  │           └─ simplifyContent() [AI — gpt-4o-mini, optional, skipped for A1/A2]
-  ├─ generateComprehensionQuestions() [AI — gpt-4o-mini]
   └─ createPassageWithArtifacts() [Prisma — single transaction]
-        ├─ Passage
-        ├─ StudioArtifact (type=quiz, status=done)
-        └─ Question[] (5 questions)
+        → Passage (with cefrLevel, no simplified fields)
 
-  ↓
 [Client] toPassageData() → PassageData DTO
   ↓
 useStudyWorkspaceState
   ├─ applyOptimistic: passages.push(newPassage)
   ├─ activePassageId = newPassage.id
-  ├─ router.refresh() → RSC re-fetch
-  └─ documents[] updated → SourcesPanel re-renders
+  └─ router.refresh() → RSC re-fetch
 ```
 
-### AI services
-- `simplifyContent()` from `src/services/ai/content-simplifier.ts` — `gpt-4o-mini` via Vercel AI SDK (`generateObject`), maps original CEFR to target (C2→C1, C1→B2, etc.)
-- `generateComprehensionQuestions()` from `src/services/ai/question-generator.ts` — `gpt-4o-mini`, produces 5 MCQs with line citations
-- Both instrumented with Sentry spans (`ai:content-simplify`, `ai:question-gen`), wrapped in `server-only`
-
-### Storage
-Dual-adapter in `src/services/storage.ts`: local dev uses `node:fs/promises` (`.local-blob-storage/`), Vercel uses `@vercel/blob`. Both implement `upload`, `delete`, `getSignedUrl`.
+**Quiz generation** moved to `src/features/passage/services/passage-study.service.ts` — on-demand via `generateStudioQuestionsAction`.
 
 ---
 
-## 4. Database Layer
+## 3. Database Model (Prisma)
 
-| Model | Role |
-|-------|------|
-| `Passage` | Core entity: raw text, simplified text, CEFR levels, word count, source type, file path |
-| `Question` | Nested under Passage: questionText, options (JSON), correctOption, sourceText, sourceLine, explanation, questionType, difficulty |
-| `StudioArtifact` | Nested under Passage: initial quiz artifact with status `done` |
-| `FileUploadIntent` | **Defined but unused** — planned for signed-URL direct upload (client → blob), not yet wired |
-| `UserProfile` | Related via `userId` on Passage and FileUploadIntent |
-
-Repository: `createPassageWithArtifacts` in `db/content-analysis/` uses a single Prisma transaction to create `Passage` + `StudioArtifact` + `Question[]` atomically.
-
----
-
-## 5. Utilities
-
-### `lib/upload-validation.ts`
-- `validateFile(file)` — max 10MB, MIME types `text/plain` / `application/pdf`, or extensions `.txt` / `.pdf`
-- `validateTextContent(text)` — trimmed length 50–100,000 chars
-- `sanitizeFilename(name)` — strips non-alphanumeric, blocks `..` and leading slashes, max 100 chars
-- `sanitizeTitle(name)` — removes extension, strips special chars, collapses `_-`, max 200 chars, defaults to "Untitled"
-- `formatFileSize(bytes)` — human-readable (Bytes/KB/MB/GB)
-- Constants: `MAX_FILE_SIZE` = 10MB, `ALLOWED_TEXT_TYPES`, `ALLOWED_PDF_TYPES`
-
-### `lib/parsers/pdf.ts`
-- `parsePDF(buffer)` — wraps `pdf-parse`, cleans form-feeds/whitespace, returns `{ text, pages, metadata }`
-- `extractTitleFromPDF(pdf, filename)` — prefers PDF metadata title, then first short line, else sanitized filename
+```prisma
+model Passage {
+  id          String    @id @default(dbgenerated("gen_random_uuid()"))
+  userId      String
+  title       String
+  content     String    // Extracted text used for quiz generation
+  cefrLevel   CEFRLevel? // CEFR level of content
+  wordCount   Int
+  sourceType  SourceType // TEXT | PDF | URL | YOUTUBE
+  filePath    String?    // Blob pathname (PDF), embed URL (YouTube)
+  // Removed: simplifiedContent, simplifiedLevel
+}
+```
 
 ---
 
-## 6. Cross-Cutting Dependencies
+## 4. Key Changes (2026-07-08)
 
-| External feature | Used by | What is used |
-|-----------------|---------|-------------|
-| `@/services/clerk` | `actions.ts` | `getUserId()` |
+| Change | Files Modified |
+|--------|--------------|
+| Removed simplification from pipeline | `content-analysis.service.ts`, `upload-workflow.ts`, `content-analysis.repository.ts` |
+| Deleted content-simplifier.ts | `src/services/ai/content-simplifier.ts` |
+| Renamed `originalLevel` → `cefrLevel` | All upload/reading files, Prisma schema |
+| Toggle: Original/Simplified → Source/Passage | `content-panel.tsx`, `study-workspace.tsx`, messages |
+| Removed level from settings | `settings-modal.tsx` |
+| Fixed local storage fallback | `storage.ts` — uses local when no BLOB_TOKEN |
+| Added i18n keys | `en.json`, `vi.json` — `source`, `passage` |
+
+---
+
+## 5. Cross-Cutting Dependencies
+
+| Feature | Used by | What |
+|---------|---------|------|
 | `@/services/storage` | `upload-workflow.ts` | `uploadFile`, `deleteFile` |
-| `@/services/ai/question-generator` | `content-analysis.service.ts` | `generateComprehensionQuestions`, `GeneratedQuestion` type |
-| `@/services/ai/content-simplifier` | `content-analysis.service.ts` | `simplifyContent` |
-| `@/lib/logger` | `content-analysis.service.ts`, `storage.ts` | `createModuleLogger` |
-| `@/types/cefr` | `content-analysis.service.ts`, `content-analysis.repository.ts` | `CEFRLevel`, `getHeuristicCEFR`, `getTargetCEFRLevel`, `isSimplifiableCEFRLevel` |
 | `@/lib/prisma` | `content-analysis.repository.ts` | `prisma` client |
-| `@/features/passage/schemas/passage.schema` | `upload-modal.tsx` | `PassageData`, `SourceType`, `toPassageData()` |
-| `@/features/studio-panel/actions` | `use-study-workspace-state.ts` | artifact cache types |
+| `@/features/passage/schemas/passage.schema` | `upload-modal.tsx` | `PassageData`, `SourceType` |
+| `@/types/cefr` | `content-analysis.service.ts` | `CEFRLevel` type |
 
 ---
 
-## 7. App Router Entries
+## 6. UI Components
 
-| Route | File | Notes |
-|-------|------|-------|
-| `/upload` | `src/app/[locale]/(dashboard)/upload/page.tsx` | RSC wrapper → `UploadPageClient` |
-| `/processing` | `src/app/[locale]/(dashboard)/processing/page.tsx` | RSC wrapper → `ProcessingPageClient` — spinner only |
-| `/study` | `src/app/[locale]/(dashboard)/study/` | Main workspace: `StudyPageClient` + `StudySourcesPanel` + `StudyUploadModal` |
-| `/` | `src/app/[locale]/page.tsx` | Dashboard with passage links to `/study` |
+### Content Panel Toggle
+- **Left**: Passage (extracted text) — default view
+- **Right**: Source (PDF blob / YouTube embed placeholder)
+- **Meta bar**: CEFR badge + word count
 
----
-
-## 8. Notable Gaps
-
-1. **`/processing` page is disconnected from real state.** It animates a spinner via hardcoded `setInterval` — never receives actual processing state from the server action. Upload redirects directly to `/study` without visiting `/processing`.
-
-2. **`FileUploadIntent` Prisma model is defined but unused.** Intended for signed-URL direct upload (client → blob with pre-authorized intent), but current code streams the full file through the server action. Likely a planned future optimization.
-
-3. **Dual entry points with divergent hooks.** `StudyUploadModal` (in `/study`) and `UploadPageClient` (at `/upload`) implement the same upload logic but use different hooks (`useStudyWorkspaceState` vs. `useUploadSubmit`). The standalone page navigates to `/study` on success; the modal stays in the workspace.
-
-4. **AI calls truncate to 10,000 chars.** Both `analyzeAndPersistContent` and `generateQuestionsForContent` slice text before sending to OpenAI, but the full text is stored in `Passage.content`.
+### Settings Modal
+- Target level selector **removed**
+- Level section deleted entirely
 
 ---
 
-## Unresolved Questions
+## 7. Storage
 
-- Should the `/processing` page be wired to real processing state, or deprecated in favor of inline `/study` feedback?
-- Is `FileUploadIntent` still part of the roadmap, or safe to remove?
-- Should `StudyUploadModal` and `UploadPageClient` share a single hook to avoid divergence?
+Fixed dual-adapter storage:
+- **Local dev**: Falls back to `.local-blob-storage/` when `BLOB_READ_WRITE_TOKEN` is not set
+- **Vercel**: Uses `@vercel/blob` when token is configured
+
+---
+
+## 8. Notes
+
+- `cefrLevel` is currently hardcoded to `"B2"` — needs AI CEFR detection (UC-2A step 5)
+- Quiz generation is now **on-demand** in studio (UC-3b), not during upload
+- Source view rendering (PDF blob, YouTube embed) is a placeholder — actual implementation pending
