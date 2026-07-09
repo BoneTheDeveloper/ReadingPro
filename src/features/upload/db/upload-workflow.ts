@@ -1,4 +1,3 @@
-import * as Sentry from "@sentry/nextjs";
 import { parsePDF } from "@/features/upload/lib/parsers/pdf";
 import { deleteFile, uploadFile } from "@/services/storage";
 import {
@@ -35,11 +34,6 @@ export async function processFileUpload(
   let storedInStorage = false;
 
   try {
-    Sentry.addBreadcrumb({
-      category: "upload",
-      message: "Uploading file to blob storage",
-      level: "info",
-    });
     const buffer = Buffer.from(await file.arrayBuffer());
 
     // Derive safe MIME type from the validated and sanitized extension instead of trusting user's file.type
@@ -51,12 +45,7 @@ export async function processFileUpload(
       safeType = "text/plain";
     }
 
-    const storageResult = await Sentry.startSpan(
-      { name: "storage-upload", op: "function" },
-      async () => {
-        return uploadFile(filename, buffer, safeType);
-      },
-    );
+    const storageResult = await uploadFile(filename, buffer, safeType);
 
     if (!storageResult) {
       throw new UploadWorkflowError("Failed to store file", 500);
@@ -100,15 +89,8 @@ async function extractText(file: File, buffer: Buffer) {
     return buffer.toString("utf-8");
   }
 
-  Sentry.addBreadcrumb({
-    category: "parse",
-    message: "Parsing PDF file",
-    level: "info",
-  });
-  return Sentry.startSpan({ name: "pdf-parse", op: "function" }, async () => {
-    const pdf = await parsePDF(buffer);
-    return pdf.text;
-  });
+  const pdf = await parsePDF(buffer);
+  return pdf.text;
 }
 
 export class UploadWorkflowError extends Error {

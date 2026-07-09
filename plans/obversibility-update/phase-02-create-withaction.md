@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Create withAction() HOF"
-status: pending
+status: completed
 priority: P1
 effort: "1h"
 dependencies: [1]
@@ -10,6 +10,8 @@ dependencies: [1]
 # Phase 2: Create withAction() HOF
 
 ## Overview
+
+> **STATUS: DONE** — already at `src/lib/observability/with-action.ts` (matches design). Verify only.
 
 Create higher-order function wrapper for server actions that provides scoped logging, Sentry span, and selective error capture.
 

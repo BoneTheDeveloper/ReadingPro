@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: "Setup - Add AppError to logger.ts"
-status: pending
+status: completed
 priority: P1
 effort: "30m"
 dependencies: []
@@ -10,6 +10,8 @@ dependencies: []
 # Phase 1: Setup - Add AppError to logger.ts
 
 ## Overview
+
+> **STATUS: DONE** — already at `src/lib/logger.ts:27-33` (`AppError`, `isOperational=true`, exported L256). Verify only.
 
 Add AppError base class to logger.ts for use in withAction() to distinguish business errors from unexpected errors.
 

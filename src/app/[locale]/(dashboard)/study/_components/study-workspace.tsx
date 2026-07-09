@@ -2,7 +2,6 @@
 
 import { useCallback, useState } from "react";
 import { Group, Panel, Separator } from "react-resizable-panels";
-import * as Sentry from "@sentry/nextjs";
 import { translateResponseSchema } from "@/features/reading/schemas/translation.schema";
 import { saveVocabularyAction } from "./actions";
 import {
@@ -124,15 +123,6 @@ export function StudyPageClient({
           data: null,
           status: "idle",
         }));
-        Sentry.addBreadcrumb({
-          category: "study-translation",
-          level: "info",
-          message: "study-translation-selection-too-long",
-          data: {
-            sourceId: sel.sourceId,
-            selectedTextLength: sel.selectedText.length,
-          },
-        });
         return;
       }
 
@@ -141,16 +131,6 @@ export function StudyPageClient({
         data: null,
         status: "ready",
       }));
-
-      Sentry.addBreadcrumb({
-        category: "study-translation",
-        level: "info",
-        message: "study-translation-selection-captured",
-        data: {
-          sourceId: sel.sourceId,
-          selectedTextLength: sel.selectedText.length,
-        },
-      });
     },
     [],
   );
@@ -171,16 +151,6 @@ export function StudyPageClient({
       status: "loading",
     }));
 
-    Sentry.addBreadcrumb({
-      category: "study-translation",
-      level: "info",
-      message: "study-translation-request",
-      data: {
-        sourceId: selection.sourceId,
-        selectedTextLength: selection.selectedText.length,
-      },
-    });
-
     fetch("/api/translate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -200,12 +170,6 @@ export function StudyPageClient({
         const json: unknown = await r.json();
         const parsed = translateResponseSchema.safeParse(json);
         if (!parsed.success) {
-          Sentry.addBreadcrumb({
-            category: "study-translation",
-            level: "error",
-            message: "study-translation-schema-error",
-            data: { route: "/api/translate" },
-          });
           throw new Error("Quick translation failed");
         }
         if (!r.ok || "error" in parsed.data)
@@ -215,23 +179,12 @@ export function StudyPageClient({
       .then((data) => {
         setQuickTranslationState((prev) => {
           if (prev.requestId !== requestId) return prev;
-          Sentry.addBreadcrumb({
-            category: "study-translation",
-            level: "info",
-            message: "study-translation-success",
-            data: { provider: data.provider },
-          });
           return { requestId, data, status: "success" };
         });
       })
       .catch(() => {
         setQuickTranslationState((prev) => {
           if (prev.requestId !== requestId) return prev;
-          Sentry.addBreadcrumb({
-            category: "study-translation",
-            level: "error",
-            message: "study-translation-error",
-          });
           return { requestId, data: null, status: "error" };
         });
       });
@@ -240,16 +193,6 @@ export function StudyPageClient({
   const handleSaveVocabulary = useCallback(async () => {
     const quickTranslation = quickTranslationState.data;
     if (!selection || !quickTranslation) return;
-
-    Sentry.addBreadcrumb({
-      category: "study-vocabulary",
-      level: "info",
-      message: "study-vocabulary-save-click",
-      data: {
-        sourceId: selection.sourceId,
-        selectedTextLength: selection.selectedText.length,
-      },
-    });
 
     try {
       const vocabularyPayload: {
@@ -272,22 +215,12 @@ export function StudyPageClient({
         vocabularyPayload.type = quickTranslation.type;
       }
 
-      const savedItem = await saveVocabularyAction(vocabularyPayload);
+      await saveVocabularyAction(vocabularyPayload);
       setSavedVocabularyIds((prev) =>
         new Set(prev).add(buildTranslationSelectionKey(selection)),
       );
-      Sentry.addBreadcrumb({
-        category: "study-vocabulary",
-        level: "info",
-        message: "study-vocabulary-save-success",
-        data: { vocabularyItemId: savedItem.id },
-      });
     } catch {
-      Sentry.addBreadcrumb({
-        category: "study-vocabulary",
-        level: "error",
-        message: "study-vocabulary-save-error",
-      });
+      // Swallow: save failure surfaces via unsaved state, no error UI needed here.
     }
   }, [selection, quickTranslationState.data]);
 
@@ -358,12 +291,6 @@ export function StudyPageClient({
                   onTranslate={handleQuickTranslate}
                   onOpenDetails={() => {
                     setViewingLookup(true);
-                    Sentry.addBreadcrumb({
-                      category: "study-translation",
-                      level: "info",
-                      message: "study-translation-details-opened",
-                      data: { sourceId: selection.sourceId },
-                    });
                   }}
                   onDismiss={() => setSelection(null)}
                 />

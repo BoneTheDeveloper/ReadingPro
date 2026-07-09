@@ -1,16 +1,41 @@
 # Observability Architecture
 
+Hybrid model (Template B / B1): Pino is the primary logger on Node; `pinoIntegration`
+bridges pino output into Sentry Logs. Sentry **Issues** are created only at explicit
+boundaries — never automatically from log lines — to avoid double-capture.
+
 ## Components
 
 | Component | File | Purpose |
 |-----------|------|---------|
 | Pino Logger | `src/lib/logger.ts` | Structured server logs with request context |
-| Sentry Server | `src/sentry.server.config.ts` | Node.js runtime: error capture + Prisma auto-instrumentation |
-| Sentry Edge | `src/sentry.edge.config.ts` | Edge runtime: error capture |
+| Sentry Server | `src/sentry.server.config.ts` | Node.js runtime: `prismaIntegration` + `pinoIntegration` (pino → Sentry Logs, no auto-Issue) |
+| Sentry Edge | `src/sentry.edge.config.ts` | Edge runtime: error capture (no pino — Node-only) |
 | Sentry Client | `src/instrumentation-client.ts` | Browser: errors, Replay (10% sample), Browser Tracing |
-| Error Boundary | `src/lib/http/route-errors.ts` | `toHttp()` — error → HTTP status + Sentry tag |
+| Server Boundary | `src/lib/http/route-errors.ts` | `toHttp()` — error → HTTP status + Sentry Issue (500s only) |
+| Server Action Boundary | `src/lib/observability/with-action.ts` | `withAction()` HOF — logs + Sentry Issue for unexpected action errors |
+| Client Helper | `src/lib/observability/capture-client-error.ts` | `captureClientError(err, ctx)` — standardized client capture for ad-hoc error paths |
 
 ## Configuration
+
+### sentry.server.config.ts (Node-only)
+
+```typescript
+integrations: [
+  Sentry.prismaIntegration(),
+  Sentry.pinoIntegration({
+    // B1: pino -> Sentry Logs only. Boundaries (toHttp/withAction) own Issue creation.
+    error: { levels: [] },
+    log: { levels: ["info", "warn", "error"] },
+  }),
+],
+```
+
+`pinoIntegration` ships in `@sentry/nextjs` (≥10.18, no separate `@sentry/pino`
+package). It is **Node-only** — do not add it to `sentry.edge.config.ts` or
+`instrumentation-client.ts`. `consoleLoggingIntegration` was removed from the
+server config since pino covers server-side logging; it is still present on
+edge/client configs where pino does not run.
 
 ### next.config.ts
 
@@ -36,19 +61,20 @@ Auto-includes:
 - `path` — from `request.nextUrl.pathname`
 - `method` — HTTP verb
 
-## Error Handling (toHttp)
+## Where errors become Issues (boundary map)
 
-`toHttp()` is the single boundary that translates all errors:
+Sentry Issues are created **only** at these boundaries — no other code should call
+`Sentry.captureException` directly.
 
-| Error Type | HTTP Status | Action |
-|------------|-------------|--------|
-| `AuthenticationRequiredError` | 401 | `{ error: "Authentication required." }` |
-| `NotFoundError` | 404 | `{ error: "<resource> not found." }` |
-| `ZodError` | 400 | `{ error: getZodErrorMessage(error) }` |
-| Service-specific errors | per class | handled before `toHttp` |
-| Everything else | 500 | log + Sentry + `{ error: "Internal error." }` |
-
-For non-standard service errors, catch and handle explicitly before `toHttp`:
+| Boundary | File | Behavior |
+|----------|------|----------|
+| Server route | `toHttp()` (`src/lib/http/route-errors.ts`) | `AuthenticationRequiredError`→401, `NotFoundError`→404, `ZodError`→400 (no Issue); everything else → log.error + Issue + 500 |
+| Server action | `withAction()` (`src/lib/observability/with-action.ts`) | `AppError` with `isOperational: true` → warn only, no Issue; unexpected errors → log.error + Issue |
+| Server stream callback | `src/app/api/studio/chat/route.ts` (`onFinishPersistError`) | Fire-and-forget persist failure during an AI stream — logged + captured inline (single call site, no helper needed) |
+| Client root boundary | `src/app/global-error.tsx` | React root error boundary → Issue |
+| Client route boundary | `src/app/[locale]/(dashboard)/error.tsx` | Route-level error boundary → Issue |
+| Client component boundary | `src/components/system/error-boundary.tsx` | `ErrorBoundary` with componentStack → Issue |
+| Client ad-hoc capture | `captureClientError(err, ctx)` | Used in async/handler error paths outside a boundary (e.g. `use-study-artifacts.ts`, `chat-panel.tsx`) — attaches `{ scope, tags, extra }` |
 
 ```typescript
 if (error instanceof UploadWorkflowError) {
@@ -62,33 +88,29 @@ return toHttp(error, log, "api:upload");
 ### Auto-Instrumentation
 
 Sentry auto-instruments:
-- Prisma queries (server config)
+- Prisma queries (server config, `prismaIntegration`)
 - HTTP requests (browser tracing)
 - React component rendering (client config)
-- Console logs (both configs)
+- Console logs (edge/client configs); server logs via `pinoIntegration`
 
-### Manual Spans
+### Manual spans/breadcrumbs — removed
 
-**Rule: Only span operations that are slow, external, or operationally significant.** Do NOT span auto-instrumented or trivially fast operations.
+Hand-written `Sentry.startSpan` / `Sentry.addBreadcrumb` calls have been removed
+across the codebase (upload workflow, study chat, translation, dictionary save,
+study workspace, etc.). Auto-instrumentation (HTTP, Prisma, browser tracing)
+provides sufficient signal for the current scope; re-add targeted spans later
+only if a specific performance question requires it.
 
-#### When NOT to Span
+The one exception is `Sentry.startSpan` in `with-action.ts` — this wraps every
+server action as a named `server.action` span and is intentional infrastructure,
+not ad-hoc instrumentation.
 
-| Skip | Reason |
-|------|--------|
-| `request.json()` | Auto-instrumented by Next.js/Sentry HTTP handling |
-| `getUserId()` | Auth is fast; Clerk may auto-instrument |
-| JSON parsing | Already covered by HTTP auto-instrumentation |
-| Synchronous validation | Microseconds, adds noise not signal |
+### User context
 
-#### When TO Span
-
-| Include | Reason |
-|---------|--------|
-| **Database service calls** | Long-running queries need separate p99 tracking |
-| **AI/LLM calls** | Variable latency (500ms–30s), high failure risk |
-| **File I/O** (upload, parse) | Slow, failure-prone, operationally critical |
-| **External API calls** | Network latency and errors need separate visibility |
-| **Complex business logic** | Multi-step operations needing granular waterfall |
+`Sentry.setUser({ id })` in `src/lib/auth/auth-server.ts` is retained. It enables
+triage ("how many users affected", filter Issues by user) and is not a manual
+span/breadcrumb — `sendDefaultPii` only attaches IP/headers, it does not map the
+app's user id.
 
 ### Client Instrumentation
 

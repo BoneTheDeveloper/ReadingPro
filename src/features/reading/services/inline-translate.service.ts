@@ -1,6 +1,5 @@
 import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
-import * as Sentry from "@sentry/nextjs";
 import { createRequestLogger } from "@/lib/logger";
 import type { TranslateResolutionSource } from "@/features/reading/lib/text-utils";
 import {
@@ -123,34 +122,29 @@ async function persistAsync(
   log: RequestLogger,
 ) {
   try {
-    await Sentry.startSpan(
-      { name: "translation:persist", op: "db" },
-      async () => {
-        await Promise.all([
-          writeTranslationCache({
-            userId,
-            sourceId: input.sourceId,
-            selectedText: input.text,
-            contextSentence: input.context,
-            sourceLanguage: input.sourceLanguage,
-            targetLanguage: input.targetLanguage,
-            provider: result.provider,
-            response: toJsonValue(result),
-          }),
-          writeTranslationHistory({
-            userId,
-            sourceId: input.sourceId,
-            selectedText: input.text,
-            contextSentence: input.context,
-            sourceLanguage: input.sourceLanguage,
-            targetLanguage: input.targetLanguage,
-            provider: result.provider,
-            translation: result.translation,
-            response: toJsonValue(result),
-          }),
-        ]);
-      },
-    );
+    await Promise.all([
+      writeTranslationCache({
+        userId,
+        sourceId: input.sourceId,
+        selectedText: input.text,
+        contextSentence: input.context,
+        sourceLanguage: input.sourceLanguage,
+        targetLanguage: input.targetLanguage,
+        provider: result.provider,
+        response: toJsonValue(result),
+      }),
+      writeTranslationHistory({
+        userId,
+        sourceId: input.sourceId,
+        selectedText: input.text,
+        contextSentence: input.context,
+        sourceLanguage: input.sourceLanguage,
+        targetLanguage: input.targetLanguage,
+        provider: result.provider,
+        translation: result.translation,
+        response: toJsonValue(result),
+      }),
+    ]);
   } catch (error) {
     log.error({ err: error }, "Failed to persist translation");
   }

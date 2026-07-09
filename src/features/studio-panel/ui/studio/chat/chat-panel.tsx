@@ -4,11 +4,11 @@ import { useRef, useEffect, useMemo, useState, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
-import * as Sentry from "@sentry/nextjs";
 import { Send, Loader2, AlertCircle, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getChatHistoryAction } from "@/features/studio-panel/actions";
+import { captureClientError } from "@/lib/observability/capture-client-error";
 interface StudyChatPanelProps {
   passageId: string;
   prefilledQuestion?: string | null;
@@ -47,31 +47,13 @@ export function StudyChatPanel({
 
     async function bootstrapMessages() {
       try {
-        const messages = await Sentry.startSpan(
-          {
-            name: "ui:study-chat-history-fetch",
-            op: "function",
-            attributes: {
-              "study.passage_id": passageId,
-            },
-          },
-          () => getChatHistoryAction(passageId),
-        );
+        const messages = await getChatHistoryAction(passageId);
         if (isMounted) {
-          Sentry.addBreadcrumb({
-            category: "study-chat",
-            level: "info",
-            message: "Study chat history loaded",
-            data: {
-              passageId,
-              messageCount: messages.length,
-            },
-          });
           setMessages(messages);
         }
       } catch (error) {
-        Sentry.captureException(error, {
-          tags: { component: "StudyChatPanel", operation: "history-fetch" },
+        captureClientError(error, {
+          scope: "study.chat.history-fetch",
           extra: { passageId },
         });
         if (isMounted) setMessages([]);
@@ -89,70 +71,15 @@ export function StudyChatPanel({
     const text = input.trim();
     if (!text || isStreaming) return;
     setInput("");
-    Sentry.addBreadcrumb({
-      category: "study-chat",
-      level: "info",
-      message: "Learner submitted a study chat message",
-      data: {
-        passageId,
-        messageLength: text.length,
-      },
-    });
-    Sentry.startSpan(
-      {
-        name: "ui:study-chat-send",
-        op: "ui.action",
-        attributes: {
-          "study.passage_id": passageId,
-          "study.message_length": text.length,
-        },
-      },
-      () => {
-        sendMessage({ text });
-      },
-    );
+    sendMessage({ text });
   };
 
   const handleRetry = () => {
-    Sentry.addBreadcrumb({
-      category: "study-chat",
-      level: "info",
-      message: "Learner retried study chat message",
-      data: { passageId },
-    });
-    Sentry.startSpan(
-      {
-        name: "ui:study-chat-retry",
-        op: "ui.action",
-        attributes: {
-          "study.passage_id": passageId,
-        },
-      },
-      () => {
-        sendMessage();
-      },
-    );
+    sendMessage();
   };
 
   const handleStop = () => {
-    Sentry.addBreadcrumb({
-      category: "study-chat",
-      level: "info",
-      message: "Learner stopped study chat stream",
-      data: { passageId },
-    });
-    Sentry.startSpan(
-      {
-        name: "ui:study-chat-stop",
-        op: "ui.action",
-        attributes: {
-          "study.passage_id": passageId,
-        },
-      },
-      () => {
-        stop();
-      },
-    );
+    stop();
   };
 
   return (

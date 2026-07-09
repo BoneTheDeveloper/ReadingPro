@@ -4,7 +4,13 @@ if (!process.env.NEXT_PUBLIC_SENTRY_DISABLED) {
   Sentry.init({
     dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
     spotlight: process.env.NODE_ENV === "development",
-    integrations: [Sentry.consoleLoggingIntegration(), Sentry.prismaIntegration()],
+    integrations: [
+      Sentry.prismaIntegration(),
+      Sentry.pinoIntegration({
+        error: { levels: [] },
+        log: { levels: ["info", "warn", "error"] },
+      }),
+    ],
     sendDefaultPii: true,
     tracesSampleRate: 1,
     enableLogs: true,

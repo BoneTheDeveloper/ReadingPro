@@ -1,7 +1,6 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import * as Sentry from "@sentry/nextjs";
 import { Bookmark, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -26,12 +25,6 @@ export function StudyLookupPanel({
 
   const handleAskAi = () => {
     const question = `Explain "${selection.selectedText}" in this context: "${selection.contextSentence.slice(0, 150)}..."`;
-    Sentry.addBreadcrumb({
-      category: "study-translation",
-      level: "info",
-      message: "study-translation-ask-ai-opened",
-      data: { sourceId: selection.sourceId },
-    });
     onAskAi(question);
   };
 

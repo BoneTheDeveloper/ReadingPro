@@ -1,5 +1,4 @@
 import "server-only";
-import * as Sentry from "@sentry/nextjs";
 import {
   generateComprehensionQuestions,
   type GeneratedQuestion,
@@ -45,20 +44,10 @@ export async function generateQuestionsForPassage(
 
   const contentToAnalyze = passage.content;
 
-  Sentry.addBreadcrumb({
-    category: "ai",
-    message: "Generating comprehension questions",
-    level: "info",
-  });
-  const questionResult = await Sentry.startSpan(
-    { name: "ai:question-gen", op: "ai" },
-    async () => {
-      // Bound the LLM call so a hung upstream cannot hold the serverless invocation
-      // open. Mirrors the client AbortController budget; surfaces as a TIMEOUT code.
-      return withGenerationTimeout(
-        generateComprehensionQuestions(contentToAnalyze.slice(0, 10000), 5),
-      );
-    },
+  // Bound the LLM call so a hung upstream cannot hold the serverless invocation
+  // open. Mirrors the client AbortController budget; surfaces as a TIMEOUT code.
+  const questionResult = await withGenerationTimeout(
+    generateComprehensionQuestions(contentToAnalyze.slice(0, 10000), 5),
   );
 
   if (!questionResult) {

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import * as Sentry from "@sentry/nextjs";
 import { ensureStudySessionAction } from "../actions";
 
 const PING_THROTTLE_MS = 60_000;
@@ -21,11 +20,7 @@ export function useLearningSessionTracker() {
       try {
         await ensureStudySessionAction();
       } catch {
-        Sentry.addBreadcrumb({
-          category: "learning-session",
-          level: "error",
-          message: "learning-session-ping-failed",
-        });
+        // Swallow: presence heartbeat failures should never disrupt the study session.
       }
     };
 

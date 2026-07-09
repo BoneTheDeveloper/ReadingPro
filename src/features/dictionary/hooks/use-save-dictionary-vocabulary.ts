@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import * as Sentry from "@sentry/nextjs";
 import { saveVocabularyAction } from "@/features/vocabulary/actions";
 import type {
   DictionaryEntryDto,
@@ -34,13 +33,6 @@ export function useSaveDictionaryVocabulary() {
       setErrorSenseId(null);
 
       try {
-        Sentry.addBreadcrumb({
-          category: "dictionary-vocabulary",
-          level: "info",
-          message: "dictionary-vocabulary-save-click",
-          data: { entryId: entry.id, senseId: sense.id },
-        });
-
         const primary =
           sense.translations.find((t) => t.isPrimary) ?? sense.translations[0];
         if (!primary) {
@@ -61,18 +53,7 @@ export function useSaveDictionaryVocabulary() {
         if (!result.success) throw new Error("Failed to save");
 
         setSavedSenses((prev) => new Set(prev).add(key));
-        Sentry.addBreadcrumb({
-          category: "dictionary-vocabulary",
-          level: "info",
-          message: "dictionary-vocabulary-save-success",
-          data: { vocabularyItemId: result.data.id },
-        });
       } catch {
-        Sentry.addBreadcrumb({
-          category: "dictionary-vocabulary",
-          level: "error",
-          message: "dictionary-vocabulary-save-error",
-        });
         setErrorSenseId(sense.id);
       } finally {
         setSavingSenseId(null);
