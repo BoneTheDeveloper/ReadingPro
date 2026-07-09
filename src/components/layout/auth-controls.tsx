@@ -1,6 +1,6 @@
 "use client";
 
-import { authClient } from "@/lib/auth-client";
+import { authClient } from "@/lib/auth/auth-client";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {

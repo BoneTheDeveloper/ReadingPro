@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { getUserId } from "@/lib/auth-server";
+import { getUserId } from "@/lib/auth/auth-server";
 import type { StudioArtifactType } from "@/features/studio-panel/lib/studio-artifact-types";
 import {
   fetchStudioArtifacts,

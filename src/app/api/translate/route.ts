@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { getUserId } from "@/lib/auth-server";
+import { getUserId } from "@/lib/auth/auth-server";
 import { createRequestLogContext, createRequestLogger } from "@/lib/logger";
 import { toHttp } from "@/lib/http/route-errors";
 import { executeTranslate } from "@/features/reading/services/inline-translate.service";

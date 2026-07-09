@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
-import { getUserId } from "@/lib/auth-server";
+import { getUserId } from "@/lib/auth/auth-server";
 import { createRequestLogContext, createRequestLogger } from "@/lib/logger";
 import {
   studyChatRequestSchema,

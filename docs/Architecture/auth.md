@@ -214,7 +214,7 @@ async function handleSignIn(email: string, password: string) {
 For Server Components and Server Actions:
 
 ```tsx
-import { getUserId, getCurrentUser } from "@/lib/auth-server";
+import { getUserId, getCurrentUser } from "@/lib/auth/auth-server";
 
 export default async function DashboardPage() {
   // Throws if not authenticated

@@ -1,6 +1,6 @@
 import "server-only";
 import { headers } from "next/headers";
-import { auth } from "@/lib/auth";
+import { auth } from "./auth";
 import { prisma } from "@/lib/prisma";
 import * as Sentry from "@sentry/nextjs";
 import { cache } from "react";

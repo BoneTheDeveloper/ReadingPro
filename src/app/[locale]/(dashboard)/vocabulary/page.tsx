@@ -1,4 +1,4 @@
-import { getUserId } from "@/lib/auth-server";
+import { getUserId } from "@/lib/auth/auth-server";
 import { VocabularyPageClient } from "@/features/vocabulary/ui/vocabulary-page";
 import {
   getVocabularyItemList,

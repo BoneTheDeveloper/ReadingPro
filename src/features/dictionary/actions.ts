@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { getUserId } from "@/lib/auth-server";
+import { getUserId } from "@/lib/auth/auth-server";
 import { suggestDictionaryTerms } from "./services/suggest-service";
 import { getDictionaryEntryDetail } from "./services/entry-detail-service";
 import type {

@@ -22,6 +22,16 @@ type LoggableError = {
 
 const PROD_STACK_MAX_LINES = 6;
 
+// Base error class for operational errors (business logic).
+// withAction() uses isOperational to distinguish business errors from unexpected errors.
+class AppError extends Error {
+  isOperational = true;
+  constructor(message: string) {
+    super(message);
+    this.name = "AppError";
+  }
+}
+
 function toStringValue(value: unknown) {
   return typeof value === "string" ? value : undefined;
 }
@@ -243,6 +253,7 @@ function createRequestLogger(
 
 export type { ContextLogger, LogContext };
 export {
+  AppError,
   logger,
   createModuleLogger,
   createRequestLogger,

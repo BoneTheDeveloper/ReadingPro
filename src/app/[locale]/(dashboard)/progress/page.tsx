@@ -1,4 +1,4 @@
-import { getUserId } from "@/lib/auth-server";
+import { getUserId } from "@/lib/auth/auth-server";
 import { getUserProgress } from "@/features/progress/db/progress-queries";
 import { ProgressDashboard } from "@/features/progress/ui/progress-dashboard";
 
