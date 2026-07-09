@@ -9,10 +9,7 @@ import {
   formatFileSize,
 } from "@/features/upload/lib/upload-validation";
 import { cn } from "@/lib/utils";
-import {
-  uploadFile,
-  uploadText,
-} from "@/features/upload/services/upload-service";
+import { uploadFileAction, uploadTextAction } from "../actions";
 import {
   Dialog,
   DialogContent,
@@ -120,14 +117,14 @@ export function StudyUploadModal({
     setError(null);
     try {
       const text = fileType === "TEXT" ? await file.text() : "";
-      const result = await uploadFile(file);
+      const result = await uploadFileAction(file);
       onUploadComplete(
         toPassageData({
-          passageId: result.passageId,
+          passageId: result.data.passageId,
           title: fileName,
           text,
           sourceType: fileType,
-          cefrLevel: result.cefrLevel,
+          cefrLevel: result.data.cefrLevel,
         }),
       );
     } catch (err) {
@@ -142,14 +139,14 @@ export function StudyUploadModal({
     onClose();
     setError(null);
     try {
-      const result = await uploadText(pastedText);
+      const result = await uploadTextAction({ text: pastedText });
       onUploadComplete(
         toPassageData({
-          passageId: result.passageId,
+          passageId: result.data.passageId,
           title,
           text: pastedText,
           sourceType: "TEXT",
-          cefrLevel: result.cefrLevel,
+          cefrLevel: result.data.cefrLevel,
         }),
       );
     } catch (err) {

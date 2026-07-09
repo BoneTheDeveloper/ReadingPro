@@ -1,6 +1,6 @@
 import "server-only";
 import type { CEFRLevel } from "@/types/cefr";
-import { createPassageWithArtifacts } from "../db/content-analysis/content-analysis.repository";
+import { createPassageWithArtifacts } from "../db/content-analysis.repository";
 
 type SourceType = "TEXT" | "PDF";
 

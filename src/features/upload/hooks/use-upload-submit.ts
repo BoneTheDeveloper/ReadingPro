@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { captureClientError } from "@/lib/observability/capture-client-error";
-import { uploadFile, uploadText } from "../services/upload-service";
+import { uploadFileAction, uploadTextAction } from "../actions";
 
 export function useUploadSubmit() {
   const router = useRouter();
@@ -12,7 +12,7 @@ export function useUploadSubmit() {
   const handleFileUpload = async (file: File) => {
     setIsProcessing(true);
     try {
-      await uploadFile(file);
+      await uploadFileAction(file);
       router.push(`/study`);
     } catch (error) {
       captureClientError(error, { scope: "upload:file" });
@@ -25,7 +25,7 @@ export function useUploadSubmit() {
   const handleTextSubmit = async (text: string) => {
     setIsProcessing(true);
     try {
-      await uploadText(text);
+      await uploadTextAction({ text });
       router.push(`/study`);
     } catch (error) {
       captureClientError(error, { scope: "upload:text" });

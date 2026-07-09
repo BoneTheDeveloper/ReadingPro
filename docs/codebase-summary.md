@@ -16,7 +16,7 @@ src/
 │   └── <feature>/
 │       ├── actions.ts        # Server Actions
 │       ├── db/              # Repositories
-│       ├── services/         # Business logic
+│       ├── services/         # Business logic (Server)
 │       ├── schemas/         # Zod schemas
 │       ├── errors/          # Feature errors
 │       ├── hooks/           # React hooks
