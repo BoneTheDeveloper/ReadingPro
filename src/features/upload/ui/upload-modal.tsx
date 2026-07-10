@@ -25,7 +25,7 @@ export interface StudyUploadModalProps {
   isOpen: boolean;
   onClose: () => void;
   onUploadStart?: (fileName: string) => void;
-  onUploadComplete?: (passage: import("@/features/passage/schemas/passage.schema").PassageData) => void;
+  onUploadComplete?: (passageId: string) => void;
   onUploadError?: (error: string) => void;
 }
 
@@ -78,13 +78,14 @@ export function StudyUploadModal({
   isOpen,
   onClose,
   onUploadStart,
+  onUploadComplete,
 }: StudyUploadModalProps) {
   const t = useTranslations("Study");
   const [activeMode, setActiveMode] = useState<InputMode>(null);
   const [error, setError] = useState<string | null>(null);
   const [pastedText, setPastedText] = useState("");
   const { isProcessing, uploadProgress, handleFileUpload, handleTextSubmit } =
-    useUploadSubmit();
+    useUploadSubmit({ onComplete: onUploadComplete });
 
   const handleFileUploadWrapper = async (file: File) => {
     setError(null);

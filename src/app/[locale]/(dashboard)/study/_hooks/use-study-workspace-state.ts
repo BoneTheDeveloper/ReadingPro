@@ -133,24 +133,24 @@ export function useStudyWorkspaceState(initialPassages: PassageData[]) {
   }, []);
 
   const handleUploadComplete = useCallback(
-    (passage: PassageData) => {
-      startTransition(() => {
-        applyPassagesAction({ type: "add", passage });
-      });
+    (passageId: string) => {
+      // Don't add optimistically - router.refresh() will fetch from RSC
+      // The passage already exists in DB after Inngest processing
       setState((prev) => ({
         ...prev,
-        activePassageId: passage.id,
+        activePassageId: passageId,
         uploadModalOpen: false,
         status: "ready",
         error: null,
       }));
       setIsUploading(false);
       setUploadingFileName("");
-      // Kicks off a fresh RSC fetch so the client-synthesized passage above is
-      // replaced by the server-authoritative row (full content, real levels).
-      router.refresh();
+      // Trigger RSC re-fetch to sync the new passage into the list
+      startTransition(() => {
+        router.refresh();
+      });
     },
-    [applyPassagesAction, router],
+    [router],
   );
 
   const handleUploadError = useCallback((error: string) => {

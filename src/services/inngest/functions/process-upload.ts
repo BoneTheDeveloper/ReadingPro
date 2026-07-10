@@ -1,6 +1,6 @@
-import { inngest, step, UPLOAD_PROCESS_EVENT, UploadProcessEventData } from "@/services/inngest/client";
+import { inngest,UPLOAD_PROCESS_EVENT, UploadProcessEventData } from "@/services/inngest/client";
 import { prisma } from "@/lib/prisma";
-
+import { step } from "inngest";
 export const processUploadJob = inngest.createFunction(
   {
     id: "process-upload-job",

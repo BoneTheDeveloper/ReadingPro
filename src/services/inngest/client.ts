@@ -1,7 +1,5 @@
-import { Inngest, step } from "inngest";
+import { Inngest } from "inngest";
 import { z } from "zod";
-
-export { step };
 
 export const inngest = new Inngest({
   id: "english-reading-training",

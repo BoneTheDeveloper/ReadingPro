@@ -1,14 +1,17 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import { captureClientError } from "@/lib/observability/capture-client-error";
 import { uploadFileAction, getUploadStatus } from "../actions";
 
 type UploadStatus = "PENDING" | "PROCESSING" | "DONE" | "FAILED";
 
-export function useUploadSubmit() {
-  const router = useRouter();
+export interface UseUploadSubmitOptions {
+  onComplete?: (passageId: string) => void;
+}
+
+export function useUploadSubmit(options: UseUploadSubmitOptions = {}) {
+  const { onComplete } = options;
   const [isProcessing, setIsProcessing] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<string>("");
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -45,8 +48,10 @@ export function useUploadSubmit() {
             if (status === "DONE" && result.data.passageId) {
               clearPoll();
               setIsProcessing(false);
+              const passageId = result.data.passageId;
+              onComplete?.(passageId);
               resolve({
-                passageId: result.data.passageId,
+                passageId,
                 cefrLevel: "B2",
               });
             } else if (status === "DONE") {
@@ -74,7 +79,7 @@ export function useUploadSubmit() {
         }, 2000);
       });
     },
-    [clearPoll]
+    [clearPoll, onComplete]
   );
 
   const handleFileUpload = useCallback(
@@ -93,14 +98,14 @@ export function useUploadSubmit() {
         });
 
         const { passageId } = await pollJobStatus(result.data.jobId);
-        router.push(`/study?passageId=${passageId}`);
+        return passageId;
       } catch (error) {
         captureClientError(error, { scope: "upload:file" });
         setIsProcessing(false);
         throw error;
       }
     },
-    [pollJobStatus, router]
+    [pollJobStatus]
   );
 
   const handleTextSubmit = useCallback(
@@ -114,14 +119,14 @@ export function useUploadSubmit() {
         });
 
         const { passageId } = await pollJobStatus(result.data.jobId);
-        router.push(`/study?passageId=${passageId}`);
+        return passageId;
       } catch (error) {
         captureClientError(error, { scope: "upload:text" });
         setIsProcessing(false);
         throw error;
       }
     },
-    [pollJobStatus, router]
+    [pollJobStatus]
   );
 
   return {
