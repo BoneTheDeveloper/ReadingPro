@@ -93,16 +93,3 @@ Ba điều quan trọng nhất chốt ở giai đoạn dev này
 Discriminated union cho đầu vào — để validate không lẫn lộn giữa 4 loại, và dễ thêm nguồn mới.
 Hai điểm validate: một theo-nguồn trước khi lấy text, một chung sau khi có text. Flow hiện tại thiếu cái sau ở các nhánh không phải file.
 Side-effect (store file) là có điều kiện, không phải mặc định — chỉ nhóm B. Điều này quyết định nhánh nào cần rollback.
-
-
-
-kiến trúc thực tế 
-UI ──Server Action──► uploadFileAction()   (store file, tạo job, return jobId)
-                            │
-                            └─► enqueue job (Inngest/QStash)
-                                     │
-Queue ──HTTP POST──► /api/jobs/process   ◄── Route Handler (AI chạy ở đây)
-                                     │
-                                     └─► cập nhật UploadJob.status = DONE
-UI ──fetch poll──► /api/upload-status?jobId=   ◄── Route Handler (trả status)
-ViệcDùng cái gìTại saoUpload file / paste (mutation từ UI)Server Action uploadFileActionKích hoạt từ form, tiện, giữ nguyên như hiện tạiHỏi trạng thái job (?jobId=)Route Handler GET /api/upload-statusClient cần fetch để poll — Server Action không hợp cho GET/pollingBackground xử lý AIRoute Handler mà queue gọi tới, vd POST /api/jobs/processInngest/QStash gọi endpoint này qua HTTP, nên phải là route thật

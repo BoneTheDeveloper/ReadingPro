@@ -41,6 +41,13 @@ enum VocabularySetType {
   WEEKLY
 }
 
+enum UploadStatus {
+  PENDING
+  PROCESSING
+  DONE
+  FAILED
+}
+
 // ============================================================
 // Better Auth Models (authentication)
 // ============================================================
@@ -143,6 +150,7 @@ model UserProfile {
   vocabularySets       VocabularySet[]
   fileUploadIntents    FileUploadIntent[]
   studioArtifacts      StudioArtifact[]
+  uploadJobs           UploadJob[]
 
   @@map("profiles")
 }
@@ -160,6 +168,25 @@ model FileUploadIntent {
   @@index([expiresAt])
   @@index([userId, expiresAt])
   @@map("file_upload_intents")
+}
+
+/// [Upload] Background job tracking for AI processing
+model UploadJob {
+  id         String       @id                    // = jobId, idempotency key
+  userId     String
+  status     UploadStatus @default(PENDING)      // PENDING | PROCESSING | DONE | FAILED
+  sourceType String                                // paste | txt | pdf | youtube
+  blobPath   String?                               // to cleanup file if need
+  passageId  String?                               // Fill when DONE
+  error      String?                               // Why FAILED
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  user UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([createdAt])
+  @@map("upload_jobs")
 }
 
 /// [Study] Reading passages

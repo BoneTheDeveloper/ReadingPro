@@ -9,7 +9,7 @@ import {
   formatFileSize,
 } from "@/features/upload/lib/upload-validation";
 import { cn } from "@/lib/utils";
-import { uploadFileAction, uploadTextAction } from "../actions";
+import { useUploadSubmit } from "../hooks/use-upload-submit";
 import {
   Dialog,
   DialogContent,
@@ -20,39 +20,16 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import type {
-  PassageData,
-  SourceType,
-} from "@/features/passage/schemas/passage.schema";
 
 export interface StudyUploadModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onUploadStart: (fileName: string) => void;
-  onUploadComplete: (passage: PassageData) => void;
-  onUploadError: (error: string) => void;
+  onUploadStart?: (fileName: string) => void;
+  onUploadComplete?: (passage: import("@/features/passage/schemas/passage.schema").PassageData) => void;
+  onUploadError?: (error: string) => void;
 }
 
 type InputMode = "file" | "text" | null;
-
-function toPassageData(input: {
-  passageId: string;
-  title: string;
-  text: string;
-  sourceType: SourceType;
-  cefrLevel: string;
-}): PassageData {
-  const wordCount = input.text.split(/\s+/).filter((w) => w.length > 0).length;
-  return {
-    id: input.passageId,
-    title: input.title,
-    content: input.text,
-    cefrLevel: input.cefrLevel,
-    wordCount,
-    createdAt: Date.now(),
-    sourceType: input.sourceType,
-  };
-}
 
 function SourceButton({
   icon: Icon,
@@ -108,49 +85,30 @@ export function StudyUploadModal({
   const [activeMode, setActiveMode] = useState<InputMode>(null);
   const [error, setError] = useState<string | null>(null);
   const [pastedText, setPastedText] = useState("");
+  const { isProcessing, uploadProgress, handleFileUpload, handleTextSubmit } =
+    useUploadSubmit();
 
-  const handleFileUpload = async (file: File) => {
-    const fileName = file.name.replace(/\.(txt|pdf)$/, "");
-    const fileType: SourceType = file.name.endsWith(".pdf") ? "PDF" : "TEXT";
-    onUploadStart(fileName);
-    onClose();
+  const handleFileUploadWrapper = async (file: File) => {
     setError(null);
+    onUploadStart?.(file.name);
     try {
-      const text = fileType === "TEXT" ? await file.text() : "";
-      const result = await uploadFileAction(file);
-      onUploadComplete(
-        toPassageData({
-          passageId: result.data.passageId,
-          title: fileName,
-          text,
-          sourceType: fileType,
-          cefrLevel: result.data.cefrLevel,
-        }),
-      );
+      await handleFileUpload(file);
+      onClose();
     } catch (err) {
-      onUploadError(err instanceof Error ? err.message : t("uploadFailed"));
+      setError(err instanceof Error ? err.message : t("uploadFailed"));
     }
   };
 
-  const handleTextSubmit = async () => {
+  const handleTextSubmitWrapper = async () => {
     if (!pastedText.trim()) return;
     const title = t("pastedTextTitle");
-    onUploadStart(title);
-    onClose();
     setError(null);
+    onUploadStart?.(title);
     try {
-      const result = await uploadTextAction({ text: pastedText });
-      onUploadComplete(
-        toPassageData({
-          passageId: result.data.passageId,
-          title,
-          text: pastedText,
-          sourceType: "TEXT",
-          cefrLevel: result.data.cefrLevel,
-        }),
-      );
+      await handleTextSubmit(pastedText);
+      onClose();
     } catch (err) {
-      onUploadError(err instanceof Error ? err.message : t("uploadFailed"));
+      setError(err instanceof Error ? err.message : t("uploadFailed"));
     }
   };
 
@@ -171,7 +129,7 @@ export function StudyUploadModal({
           setError(validation.error ?? t("invalidFile"));
           return;
         }
-        handleFileUpload(acceptedFiles[0]);
+        handleFileUploadWrapper(acceptedFiles[0]);
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -328,11 +286,11 @@ export function StudyUploadModal({
                     })}
                   </span>
                   <Button
-                    onClick={handleTextSubmit}
-                    disabled={pastedText.trim().length === 0}
+                    onClick={handleTextSubmitWrapper}
+                    disabled={pastedText.trim().length === 0 || isProcessing}
                     size="sm"
                   >
-                    {t("continue")}
+                    {isProcessing ? uploadProgress : t("continue")}
                   </Button>
                 </div>
               </div>

@@ -100,11 +100,9 @@
 |----|----------|-------------|
 | NFR-01 | Performance | AI analysis completes under 30s |
 | NFR-02 | Performance | Page load under 2s |
-| NFR-03 | Usability | Keyboard accessible, mobile responsive |
+| NFR-03 | Usability | Keyboard accessible |
 | NFR-04 | Usability | WCAG 2.1 AA compliance |
-| NFR-05 | Security | Clerk auth for all protected routes |
+| NFR-05 | Security |  Auth for all protected routes |
 | NFR-06 | Security | Input validation at API boundaries with Zod |
-| NFR-07 | Observability | Sentry error tracking + performance spans |
-| NFR-08 | Observability | Pino structured logging |
 
 **Last Updated:** 2026-06-21
