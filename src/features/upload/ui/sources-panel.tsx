@@ -31,6 +31,7 @@ export interface DocumentItem {
   level: string | null;
   wordCount: number;
   sourceType: SourceType;
+  status?: "processing" | "ready";
 }
 
 interface StudySourcesPanelProps {
@@ -51,7 +52,6 @@ export function StudySourcesPanel({
   onSelect,
   onOpenUploadModal,
   isUploading,
-  uploadingFileName,
   onDelete,
   collapsed = false,
   onToggleCollapse,
@@ -89,7 +89,6 @@ export function StudySourcesPanel({
               variant="ghost"
               size="icon"
               onClick={onOpenUploadModal}
-              disabled={isUploading}
               className="h-9 w-9 text-muted-foreground hover:text-foreground"
               title={t("addSource")}
             >
@@ -167,30 +166,30 @@ export function StudySourcesPanel({
             <button
               type="button"
               onClick={onOpenUploadModal}
-              disabled={isUploading}
               className="w-full mb-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-[13px] border-[1.5px] border-dashed border-border-strong text-xs font-semibold text-muted-foreground hover:border-primary hover:text-primary hover:bg-surface transition-all disabled:opacity-50"
             >
               <Plus className="w-3.5 h-3.5" />
               {t("addSource")}
             </button>
 
-            {isUploading && (
-              <StreamingUploadRow
-                fileName={uploadingFileName ?? t("processing")}
-                analyzingLabel={t("analyzingContent")}
-              />
+            {filteredDocs.map((doc) =>
+              doc.status === "processing" ? (
+                <ProcessingRow
+                  key={doc.id}
+                  title={doc.title}
+                  onSelect={() => onSelect(doc.id)}
+                />
+              ) : (
+                <SourceRow
+                  key={doc.id}
+                  doc={doc}
+                  active={activeId === doc.id}
+                  onSelect={() => onSelect(doc.id)}
+                  onDelete={() => onDelete(doc.id)}
+                  deleteLabel={t("deleteSource")}
+                />
+              )
             )}
-
-            {filteredDocs.map((doc) => (
-              <SourceRow
-                key={doc.id}
-                doc={doc}
-                active={activeId === doc.id}
-                onSelect={() => onSelect(doc.id)}
-                onDelete={() => onDelete(doc.id)}
-                deleteLabel={t("deleteSource")}
-              />
-            ))}
 
             {!isUploading &&
               filteredDocs.length === 0 &&
@@ -214,27 +213,33 @@ export function StudySourcesPanel({
   );
 }
 
-function StreamingUploadRow({
-  fileName,
-  analyzingLabel,
+function ProcessingRow({
+  title,
 }: {
-  fileName: string;
-  analyzingLabel: string;
+  title: string;
+  onSelect: () => void;
 }) {
   return (
-    <div className="w-full p-3 flex items-center gap-3 rounded-xl border border-border bg-background relative overflow-hidden">
+    <div
+      className="w-full p-2.5 flex items-center gap-2.5 rounded-[13px] border border-transparent relative overflow-hidden cursor-not-allowed opacity-70"
+    >
+      {/* Full shimmer overlay */}
       <div className="absolute inset-0 z-0 bg-accent animate-[upload-fill_2.8s_ease-in-out_forwards]">
         <div className="absolute inset-y-0 w-16 right-0 bg-linear-to-r from-transparent via-white/55 to-transparent animate-[upload-shimmer_1.4s_ease-in-out_infinite]" />
       </div>
-      <div className="relative z-10 w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-accent text-primary">
+
+      {/* Icon */}
+      <div className="relative z-10 w-8 h-8 rounded-[10px] flex items-center justify-center shrink-0 bg-accent text-primary">
         <FileText className="w-4 h-4" />
       </div>
+
+      {/* Text */}
       <div className="relative z-10 flex-1 overflow-hidden">
         <h4 className="text-[13px] font-medium truncate leading-tight text-foreground">
-          {fileName}
+          {title}
         </h4>
         <p className="text-[11px] truncate mt-0.5 text-muted-foreground">
-          {analyzingLabel}
+          Processing...
         </p>
       </div>
     </div>

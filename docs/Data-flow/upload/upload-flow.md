@@ -2,9 +2,9 @@
 
 ## Overview
 
-Start: User selects a file on the UI component.
-End: UI displays the result (success -> new passage, or error -> error state).
-The data flow uses event-driven architecture with Inngest for background processing.
+Technical architecture for the upload feature. Covers server actions, Inngest processing, and database operations.
+
+**Related:** [Passage Render When Upload](./passage-render-when-upload.md) - UI rendering flow.
 
 ---
 
@@ -29,7 +29,7 @@ flowchart TD
 
     J --> P{Poll status}
     P -->|PENDING/PROCESSING| Q[Show progress]
-    P -->|DONE| R[Navigate to study]
+    P -->|DONE| R[Passage ready]
     P -->|FAILED| S[Show error]
 
     Q --> P
@@ -51,7 +51,7 @@ sequenceDiagram
     participant F as Inngest Function
 
     U->>U: validateFile(file)
-    U->>A: uploadFileAction({title, text, sourceType})
+    U->>A: uploadFileAction({passageId, title, text, sourceType, startedAt})
     A->>J: prisma.uploadJob.create({status: PENDING})
     J-->>A: job created
     A->>I: inngest.send({name: "upload/process", data: {...}})
@@ -63,12 +63,11 @@ sequenceDiagram
     I->>F: trigger "upload/process" event
     F->>J: update status to PROCESSING
     F->>F: detect CEFR level (TODO: AI)
-    F->>F: create passage
+    F->>F: create passage with passageId
     F->>J: update status to DONE, passageId
 
     U->>J: getUploadStatus(jobId)
-    J-->>U: status: DONE, passageId
-    U->>U: navigate to /study?passageId=xxx
+    J-->>U: status: DONE, passageId, passage
 ```
 
 ---
@@ -87,7 +86,7 @@ sequenceDiagram
     S->>S: detect CEFR level
     Note over S: TODO: Implement with AI
 
-    S->>P: create passage
+    S->>P: create passage (using client-provided passageId)
     P-->>S: passage created
 
     S->>P: update job to DONE, passageId
@@ -109,71 +108,52 @@ stateDiagram-v2
 
 ---
 
-## File Structure
-
-```
-src/features/upload/
-├── actions.ts                     # Server Action (create job, send event)
-├── db/
-│   └── content-analysis.repository.ts  # Prisma helpers 
-├── hooks/
-│   └── use-upload-submit.ts       # Polling hook
-├── ui/
-│   └── upload-modal.tsx           # Upload modal UI
-├── lib/
-    ├── upload-validation.ts      # Client-side validation
-    └── parsers/pdf.ts            # PDF text extraction
-
-src/services/inngest/
-├── client.ts                     # Inngest client + event types
-└── functions/
-    └── process-upload.ts         # Background job handler
-
-src/app/api/inngest/
-└── route.ts                     # Inngest webhook endpoint
-```
-
 ## Layer Responsibilities
 
 | Layer | File | Responsibility |
 |-------|------|----------------|
-| UI | `upload-modal.tsx` | User interaction, error display |
-| UI | `use-upload-submit.ts` | Polling job status |
+| UI | `upload-modal.tsx` | User interaction, file selection |
+| Hook | `use-upload-submit.ts` | Client UUID, polling, callbacks |
 | Action | `actions.ts` | Create job, send event |
 | Queue | `inngest/client.ts` | Event definitions |
 | Worker | `process-upload.ts` | Background processing |
 | Database | `prisma/uploadJob` | Job status tracking |
+
+---
 
 ## API Contracts
 
 ### uploadFileAction Input
 ```typescript
 {
+  passageId: string,        // Client-generated UUID
   title: string,
   text: string,
   sourceType: "paste" | "txt" | "pdf" | "youtube",
+  startedAt: number,        // Client timestamp for ordering
   blobPath?: string
 }
 ```
 
 ### uploadFileAction Response
 ```typescript
-// Success
 { success: true, data: { jobId: string } }
 ```
 
 ### getUploadStatus Response
 ```typescript
-// Success
 {
   success: true,
   data: {
     status: "PENDING" | "PROCESSING" | "DONE" | "FAILED",
     passageId?: string,
+    passage?: PassageData,   // Included when DONE
     error?: string
   }
 }
 ```
+
+---
 
 ## Error Handling
 
@@ -184,12 +164,3 @@ src/app/api/inngest/
 | Send Event | Inngest error | Show error toast |
 | Poll Status | Job not found | Show error |
 | Inngest Processing | Exception | Update job to FAILED |
-
-## Data Flow Closure at UI
-
-```
-User Action -> [Async Processing] -> UI Response -> User Sees Result
-     ^                                              |
-     -------------------------------------------------
-                    (Closure via polling)
-```

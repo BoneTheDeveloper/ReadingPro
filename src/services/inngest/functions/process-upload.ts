@@ -8,7 +8,7 @@ export const processUploadJob = inngest.createFunction(
     triggers: [{ event: UPLOAD_PROCESS_EVENT }],
   },
   async ({ event }: { event: { data: UploadProcessEventData } }) => {
-    const { jobId, userId, text, title, sourceType, blobPath } = event.data;
+    const { jobId, userId, text, title, sourceType, blobPath, passageId, startedAt } = event.data;
 
     const failJob = async (error: string) => {
       await prisma.uploadJob.update({
@@ -42,6 +42,7 @@ export const processUploadJob = inngest.createFunction(
         const passageSourceType = sourceTypeMap[sourceType] ?? "TEXT";
         return prisma.passage.create({
           data: {
+            id: passageId, // Use client-provided UUID for stable key
             userId,
             title,
             content: text,
@@ -49,6 +50,7 @@ export const processUploadJob = inngest.createFunction(
             wordCount,
             sourceType: passageSourceType,
             filePath: blobPath || undefined,
+            createdAt: new Date(startedAt), // Use client timestamp for ordering
           },
         });
       });

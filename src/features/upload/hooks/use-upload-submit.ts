@@ -3,15 +3,18 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { captureClientError } from "@/lib/observability/capture-client-error";
 import { uploadFileAction, getUploadStatus } from "../actions";
+import type { PassageData } from "@/features/passage/schemas/passage.schema";
 
 type UploadStatus = "PENDING" | "PROCESSING" | "DONE" | "FAILED";
 
 export interface UseUploadSubmitOptions {
-  onComplete?: (passageId: string) => void;
+  onUploadStart?: (fileName: string, jobId: string, passageId: string) => void;
+  onComplete?: (data: { passage: PassageData; jobId: string }) => void;
+  onError?: (error: string, jobId?: string, passageId?: string) => void;
 }
 
 export function useUploadSubmit(options: UseUploadSubmitOptions = {}) {
-  const { onComplete } = options;
+  const { onUploadStart, onComplete, onError } = options;
   const [isProcessing, setIsProcessing] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<string>("");
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -28,7 +31,7 @@ export function useUploadSubmit(options: UseUploadSubmitOptions = {}) {
   }, [clearPoll]);
 
   const pollJobStatus = useCallback(
-    (jobId: string): Promise<{ passageId: string; cefrLevel: string }> => {
+    (jobId: string): Promise<{ passage: PassageData; jobId: string }> => {
       return new Promise((resolve, reject) => {
         let retries = 0;
         const maxRetries = 60; // 2 minutes max
@@ -45,15 +48,13 @@ export function useUploadSubmit(options: UseUploadSubmitOptions = {}) {
             const result = await getUploadStatus(jobId);
             const status = result.data.status as UploadStatus;
 
-            if (status === "DONE" && result.data.passageId) {
+            if (status === "DONE" && result.data.passage) {
               clearPoll();
               setIsProcessing(false);
-              const passageId = result.data.passageId;
-              onComplete?.(passageId);
-              resolve({
-                passageId,
-                cefrLevel: "B2",
-              });
+              const passage = result.data.passage as PassageData;
+              const data = { passage, jobId };
+              onComplete?.(data);
+              resolve(data);
             } else if (status === "DONE") {
               clearPoll();
               setIsProcessing(false);
@@ -85,48 +86,73 @@ export function useUploadSubmit(options: UseUploadSubmitOptions = {}) {
   const handleFileUpload = useCallback(
     async (file: File) => {
       setIsProcessing(true);
+      const startedAt = Date.now();
+      const passageId = crypto.randomUUID(); // Client generates UUID for stable key
       try {
         const text = file.name.endsWith(".pdf")
           ? ""
           : await file.text();
 
+        const fileTitle = file.name.replace(/\.(txt|pdf)$/, "");
         const result = await uploadFileAction({
-          title: file.name.replace(/\.(txt|pdf)$/, ""),
+          passageId, // Client-provided UUID
+          title: fileTitle,
           text: text || "PDF uploaded",
           sourceType: file.name.endsWith(".pdf") ? "pdf" : "txt",
           blobPath: undefined,
+          startedAt,
         });
 
-        const { passageId } = await pollJobStatus(result.data.jobId);
-        return passageId;
+        const jobId = result.data.jobId;
+        onUploadStart?.(fileTitle, jobId, passageId);
+
+        const { passage } = await pollJobStatus(jobId);
+        return { passageId: passage.id, jobId };
       } catch (error) {
         captureClientError(error, { scope: "upload:file" });
         setIsProcessing(false);
+        onError?.(
+          error instanceof Error ? error.message : "Upload failed",
+          undefined,
+          passageId
+        );
         throw error;
       }
     },
-    [pollJobStatus]
+    [pollJobStatus, onUploadStart, onError]
   );
 
   const handleTextSubmit = useCallback(
     async (text: string) => {
       setIsProcessing(true);
+      const startedAt = Date.now();
+      const passageId = crypto.randomUUID(); // Client generates UUID for stable key
       try {
         const result = await uploadFileAction({
+          passageId, // Client-provided UUID
           title: "Pasted Text",
           text,
           sourceType: "paste",
+          startedAt,
         });
 
-        const { passageId } = await pollJobStatus(result.data.jobId);
-        return passageId;
+        const jobId = result.data.jobId;
+        onUploadStart?.("Pasted Text", jobId, passageId);
+
+        const { passage } = await pollJobStatus(jobId);
+        return { passageId: passage.id, jobId };
       } catch (error) {
         captureClientError(error, { scope: "upload:text" });
         setIsProcessing(false);
+        onError?.(
+          error instanceof Error ? error.message : "Upload failed",
+          undefined,
+          passageId
+        );
         throw error;
       }
     },
-    [pollJobStatus]
+    [pollJobStatus, onUploadStart, onError]
   );
 
   return {

@@ -17,6 +17,8 @@ export const uploadProcessEventSchema = z.object({
   text: z.string(),
   title: z.string(),
   sourceType: z.enum(["paste", "txt", "pdf", "youtube"]),
+  passageId: z.string().uuid(), // Client-provided UUID for stable key
+  startedAt: z.number(), // Client timestamp for createdAt ordering
 });
 
 export type UploadProcessEventData = z.infer<typeof uploadProcessEventSchema>;

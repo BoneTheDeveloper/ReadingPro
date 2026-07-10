@@ -20,13 +20,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import type { PassageData } from "@/features/passage/schemas/passage.schema";
 
 export interface StudyUploadModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onUploadStart?: (fileName: string) => void;
-  onUploadComplete?: (passageId: string) => void;
-  onUploadError?: (error: string) => void;
+  onUploadStart?: (fileName: string, jobId: string, passageId: string) => void;
+  onUploadComplete?: (data: { passage: PassageData; jobId: string }) => void;
+  onUploadError?: (error: string, jobId?: string) => void;
 }
 
 type InputMode = "file" | "text" | null;
@@ -79,33 +80,32 @@ export function StudyUploadModal({
   onClose,
   onUploadStart,
   onUploadComplete,
+  onUploadError,
 }: StudyUploadModalProps) {
   const t = useTranslations("Study");
   const [activeMode, setActiveMode] = useState<InputMode>(null);
   const [error, setError] = useState<string | null>(null);
   const [pastedText, setPastedText] = useState("");
   const { isProcessing, uploadProgress, handleFileUpload, handleTextSubmit } =
-    useUploadSubmit({ onComplete: onUploadComplete });
+    useUploadSubmit({ onUploadStart, onComplete: onUploadComplete, onError: onUploadError });
 
   const handleFileUploadWrapper = async (file: File) => {
+    if (isProcessing) return; // Prevent double-submit
     setError(null);
-    onUploadStart?.(file.name);
+    onClose(); // Close modal immediately when upload starts
     try {
       await handleFileUpload(file);
-      onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : t("uploadFailed"));
     }
   };
 
   const handleTextSubmitWrapper = async () => {
-    if (!pastedText.trim()) return;
-    const title = t("pastedTextTitle");
+    if (!pastedText.trim() || isProcessing) return;
     setError(null);
-    onUploadStart?.(title);
+    onClose(); // Close modal immediately when upload starts
     try {
       await handleTextSubmit(pastedText);
-      onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : t("uploadFailed"));
     }

@@ -3,7 +3,6 @@
 import {
   useCallback,
   useMemo,
-  useOptimistic,
   useState,
   useTransition,
 } from "react";
@@ -35,21 +34,6 @@ export interface StudyState {
   >;
 }
 
-type PassagesAction =
-  { type: "add"; passage: PassageData } | { type: "remove"; id: string };
-
-function passagesReducer(
-  passages: PassageData[],
-  action: PassagesAction,
-): PassageData[] {
-  switch (action.type) {
-    case "add":
-      return [...passages, action.passage];
-    case "remove":
-      return passages.filter((p) => p.id !== action.id);
-  }
-}
-
 function getMostRecentPassageId(passages: PassageData[]): string | null {
   return (
     passages.reduce<PassageData | null>((latest, passage) => {
@@ -63,12 +47,9 @@ function getMostRecentPassageId(passages: PassageData[]): string | null {
 export function useStudyWorkspaceState(initialPassages: PassageData[]) {
   const router = useRouter();
   const [, startTransition] = useTransition();
-  // Server-authoritative list: `initialPassages` (RSC) is the source of truth;
-  // this overlay only exists so add/remove feel instant before revalidation lands.
-  const [passages, applyPassagesAction] = useOptimistic(
-    initialPassages,
-    passagesReducer,
-  );
+
+  // Replace useOptimistic with regular state
+  const [passages, setPassages] = useState<PassageData[]>(initialPassages);
 
   const [state, setState] = useState<StudyState>(() => {
     const initialId = getMostRecentPassageId(initialPassages);
@@ -99,14 +80,17 @@ export function useStudyWorkspaceState(initialPassages: PassageData[]) {
         .map((passage) => ({
           id: passage.id,
           title: passage.title,
-          date: new Date(passage.createdAt).toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          }),
+          date: passage.status === "processing"
+            ? ""
+            : new Date(passage.createdAt).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              }),
           level: passage.cefrLevel,
           wordCount: passage.wordCount,
           sourceType: passage.sourceType,
+          status: passage.status,
         })),
     [passages],
   );
@@ -120,32 +104,56 @@ export function useStudyWorkspaceState(initialPassages: PassageData[]) {
   }, []);
 
   const handleOpenUploadModal = useCallback(() => {
+    if (isUploading) return; // Prevent opening during upload
     setState((prev) => ({ ...prev, uploadModalOpen: true }));
-  }, []);
+  }, [isUploading]);
 
   const handleCloseUploadModal = useCallback(() => {
     setState((prev) => ({ ...prev, uploadModalOpen: false }));
   }, []);
 
-  const handleUploadStart = useCallback((fileName: string) => {
-    setIsUploading(true);
-    setUploadingFileName(fileName);
-  }, []);
+  const handleUploadStart = useCallback(
+    (fileName: string, jobId: string, passageId: string) => {
+      // Create temp passage with processing status
+      const tempPassage: PassageData = {
+        id: passageId,
+        title: fileName,
+        content: "",
+        cefrLevel: null,
+        wordCount: 0,
+        createdAt: Date.now(),
+        sourceType: "TEXT",
+        status: "processing",
+      };
+      setPassages((prev) => [tempPassage, ...prev]);
+      setIsUploading(true);
+      setUploadingFileName(fileName);
+    },
+    [],
+  );
 
   const handleUploadComplete = useCallback(
-    (passageId: string) => {
-      // Don't add optimistically - router.refresh() will fetch from RSC
-      // The passage already exists in DB after Inngest processing
+    (data: { passage: PassageData; jobId: string }) => {
+      const { passage } = data;
+
+      // In-place replace: same ID, status becomes ready
+      setPassages((prev) =>
+        prev.map((p) => (p.id === passage.id ? passage : p)),
+      );
+
+      // Only switch if no active passage (preserve user's reading)
       setState((prev) => ({
         ...prev,
-        activePassageId: passageId,
+        activePassageId: prev.activePassageId ?? passage.id,
         uploadModalOpen: false,
         status: "ready",
         error: null,
       }));
+
       setIsUploading(false);
       setUploadingFileName("");
-      // Trigger RSC re-fetch to sync the new passage into the list
+
+      // Background sync from RSC
       startTransition(() => {
         router.refresh();
       });
@@ -153,22 +161,32 @@ export function useStudyWorkspaceState(initialPassages: PassageData[]) {
     [router],
   );
 
-  const handleUploadError = useCallback((error: string) => {
-    setState((prev) => ({ ...prev, error }));
-    setIsUploading(false);
-    setUploadingFileName("");
-  }, []);
+  const handleUploadError = useCallback(
+    (error: string, _jobId?: string, passageId?: string) => {
+      // Remove temporary passage if exists
+      if (passageId) {
+        setPassages((prev) => prev.filter((p) => p.id !== passageId));
+      }
+      setState((prev) => ({ ...prev, error }));
+      setIsUploading(false);
+      setUploadingFileName("");
+    },
+    [],
+  );
 
   const handleDeletePassage = useCallback(
     (passageId: string) => {
       startTransition(async () => {
-        applyPassagesAction({ type: "remove", id: passageId });
+        // Remove from local state
+        setPassages((prev) => prev.filter((p) => p.id !== passageId));
+
         setState((prev) => {
           const restArtifactsByPassageId = { ...prev.artifactsByPassageId };
           const restViewingByPassageId = { ...prev.viewingArtifactByPassageId };
           delete restArtifactsByPassageId[passageId];
           delete restViewingByPassageId[passageId];
           if (prev.activePassageId === passageId) {
+            // Re-read from current passages state (already updated above)
             const remaining = passages.filter((p) => p.id !== passageId);
             const replacementId = getMostRecentPassageId(remaining);
             return {
@@ -198,7 +216,7 @@ export function useStudyWorkspaceState(initialPassages: PassageData[]) {
         }
       });
     },
-    [applyPassagesAction, passages],
+    [passages],
   );
 
   return {

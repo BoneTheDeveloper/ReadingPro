@@ -274,6 +274,7 @@ export function StudyPageClient({
           <Panel id="content" minSize={550}>
             <div className="h-full bg-surface flex flex-col overflow-hidden">
               <StudyContentPanel
+                key={activePassage?.id ?? "empty"}
                 passage={activePassage}
                 error={state.error}
                 viewMode={contentViewMode}
