@@ -7,33 +7,9 @@ through a simplified view, comprehension questions, and a flashcard self-test.
 
 ---
 
-## US-06 · Toggle a simplified view
-
-**Priority:** Should **Status:** Implemented
-
-**As a** learner, **I want** to toggle a simplified version of a passage, **so that** I can
-read it at an easier level when the original is too hard.
-
-**Acceptance criteria**
-
-```gherkin
-Scenario: Simplified content available
-  Given a passage has a simplified version
-  When I toggle the simplified view
-  Then the system shows the simplified text alongside the original level
-
-Scenario: No simplified content
-  Given a passage has no simplified version
-  When I open it
-  Then the simplified toggle is disabled
-```
-
-**Traceability:** Use case [UC-02](../use-cases.md#uc-02-read-passage-with-simplified-view) ·
-Scope: Study · Tests: [test-scenarios.md](../../Testing/test-scenarios.md)
-
 ---
 
-## US-07 · Answer comprehension questions
+## US-06 · Answer comprehension questions
 
 **Priority:** Must **Status:** Implemented
 
@@ -60,7 +36,7 @@ Scope: Study · Tests: [test-scenarios.md](../../Testing/test-scenarios.md)
 
 ---
 
-## US-08 · Take a flashcard test
+## US-07 · Take a flashcard test
 
 **Priority:** Should **Status:** Implemented
 
@@ -85,24 +61,3 @@ Scenario: All questions answered
 Scope: Study · Tests: [test-scenarios.md](../../Testing/test-scenarios.md)
 
 ---
-
-## US-09 · Manage the study workspace
-
-**Priority:** Could **Status:** Implemented
-
-**As a** learner, **I want** a resizable multi-panel study workspace, **so that** I can read,
-quiz, translate, and chat in one place.
-
-**Acceptance criteria**
-
-```gherkin
-Scenario: Resize panels
-  Given I am in the study workspace
-  When I drag a panel divider
-  Then the panel resizes and the layout persists across sessions
-```
-
-- The workspace hosts reading content, the question/quiz studio, and the translate panel.
-
-**Traceability:** Use case [UC-08](../use-cases.md#uc-08-manage-study-workspace) ·
-Scope: Study · Tests: [test-scenarios.md](../../Testing/test-scenarios.md)

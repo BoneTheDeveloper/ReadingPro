@@ -17,7 +17,7 @@ flowchart TD
     C -->|No| D[Show error]
     C -->|Yes| E[Call uploadFileAction]
     E --> F[Server Action]
-    F --> G[Upload Workflow]
+    F --> G[Upload Service]
     G --> H[Storage Service]
     H --> I[Extract text]
     I --> J[Analyze and Persist]
@@ -41,7 +41,7 @@ flowchart TD
 sequenceDiagram
     participant U as UI
     participant A as Server Action
-    participant W as Upload Workflow
+    participant W as Upload Service
     participant S as Storage
 
     U->>U: validateFile(file)
@@ -61,7 +61,7 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    participant W as Upload Workflow
+    participant W as Upload Service
     participant P as PDF Parser
     participant V as Validation
     participant A as Content Analysis
@@ -99,7 +99,7 @@ sequenceDiagram
     participant A as Content Analysis
     participant R as Repository
     participant D as Database
-    participant W as Workflow
+    participant W as Service
     participant S as Storage
 
     A->>R: createPassageWithArtifacts({...})
@@ -114,7 +114,7 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    participant W as Workflow
+    participant W as Service
     participant S as Storage
 
     W->>S: uploadFile
@@ -181,10 +181,10 @@ src/features/upload/
 
 ```typescript
 // Success
-{ success: true, data: { passageId, cefrLevel, questionCount } }
+{ success: true, data: { passageId, cefrLevel } }
 
 // Error
-throw new UploadWorkflowError(message, status)
+throw new UploadServiceError(message, status)
 ```
 
 ## Data Flow Closure at UI

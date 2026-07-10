@@ -16,7 +16,6 @@ export async function uploadFileAction(file: File) {
     data: {
       passageId: result.passageId,
       cefrLevel: result.cefrLevel,
-      questionCount: result.questionCount,
     },
   };
 }

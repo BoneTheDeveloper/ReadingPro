@@ -13,7 +13,6 @@ export interface FileUploadWorkflowResult {
   filePath: string;
   passageId: string;
   cefrLevel: string;
-  questionCount: number;
 }
 
 export async function processFileUpload(
@@ -74,7 +73,6 @@ export async function processFileUpload(
       filePath: storageResult.pathname,
       passageId: analysis.passageId,
       cefrLevel: analysis.cefrLevel,
-      questionCount: analysis.questionCount,
     };
   } catch (error) {
     if (storedInStorage) {

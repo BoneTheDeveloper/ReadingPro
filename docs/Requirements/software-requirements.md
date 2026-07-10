@@ -20,26 +20,15 @@
 | FR-02.2 | Fall back to heuristic analysis (avg sentence length + complex word ratio) if AI fails |
 | FR-02.3 | Store detected level on Passage record |
 
-### FR-03: Content Simplification
+### FR-03: Question Generation
+
+**Status:** Deferred — handled via Studio workflow (separate from upload)
 
 | ID | Requirement |
 |----|-------------|
-| FR-03.1 | Simplify content to one CEFR level below original |
-| FR-03.2 | Preserve core meaning and logical flow |
-| FR-03.3 | Store simplified version alongside original |
+| FR-03.1 | Generate comprehension questions per passage (triggered from Studio, not upload) |
 
-### FR-04: Question Generation
-
-| ID | Requirement |
-|----|-------------|
-| FR-04.1 | Generate 5 comprehension questions per passage |
-| FR-04.2 | Support MULTIPLE_CHOICE and TRUE_FALSE question types |
-| FR-04.3 | Include source text citation with line number for each question |
-| FR-04.4 | Provide explanation for correct answer |
-| FR-04.5 | Assign difficulty rating (1-5) to each question |
-| FR-04.6 | Generate plausible distractors for wrong answers |
-
-### FR-05: Flashcard Test
+### FR-04: Flashcard Test
 
 | ID | Requirement |
 |----|-------------|
@@ -49,16 +38,16 @@
 | FR-05.4 | Track streak of consecutive correct answers |
 | FR-05.5 | Display final score summary |
 
-### FR-05b: Vocabulary Capture
+### FR-05: Vocabulary Capture
 
 | ID | Requirement |
 |----|-------------|
-| FR-05b.1 | Save a selected term + translation from the translate or dictionary surface (`POST /api/vocabulary`) |
-| FR-05b.2 | Deduplicate items by identity key `userId + normalizedText + targetLanguage + normalizedTranslation`; the translation is normalized (lowercase + collapse-spaces + trim) before keying so casing/whitespace variants do not create duplicates |
-| FR-05b.3 | Same term + same meaning re-saved → update in place and increment `savedCount`; same term + different meaning → create a separate item |
-| FR-05b.4 | Record a `VocabularyOccurrence` per passage/context; same term+meaning in a new passage adds an occurrence without duplicating the item |
-| FR-05b.5 | Return the saved item as the documented `vocabularyDataSchema` DTO (raw Prisma records must be mapped at the route boundary) |
-| FR-05b.6 | Preserve review progress (`status`, `nextReviewAt`, `lastReviewedAt`) and the first-saved `displayText`/`translation` on re-save |
+| FR-05.1 | Save a selected term + translation from the translate or dictionary surface (`POST /api/vocabulary`) |
+| FR-05.2 | Deduplicate items by identity key `userId + normalizedText + targetLanguage + normalizedTranslation`; the translation is normalized (lowercase + collapse-spaces + trim) before keying so casing/whitespace variants do not create duplicates |
+| FR-05.3 | Same term + same meaning re-saved → update in place and increment `savedCount`; same term + different meaning → create a separate item |
+| FR-05.4 | Record a `VocabularyOccurrence` per passage/context; same term+meaning in a new passage adds an occurrence without duplicating the item |
+| FR-05.5 | Return the saved item as the documented `vocabularyDataSchema` DTO (raw Prisma records must be mapped at the route boundary) |
+| FR-05.6 | Preserve review progress (`status`, `nextReviewAt`, `lastReviewedAt`) and the first-saved `displayText`/`translation` on re-save |
 
 ### FR-06: Vocabulary Spaced Repetition
 

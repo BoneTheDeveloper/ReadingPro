@@ -113,7 +113,7 @@ export const translateResponseSchema = makeApiResponseSchema(translationDataSche
 | Data schema | `<name>Schema` + `type <Name>Dto = z.infer<...>` |
 | Input schema | `<entity>RequestSchema` |
 | Response contract | `<entity>ResponseSchema = makeApiResponseSchema(<entity>Schema)` |
-| Error class | `<Feature>Error` hoặc extends base |
+| Error class | `<Feature>Error` or extends base |
 
 All schemas use `.strict()` to catch extra fields.
 

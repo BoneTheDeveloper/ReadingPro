@@ -15,7 +15,6 @@ export interface AnalyzeAndPersistContentInput {
 export interface AnalyzeAndPersistContentResult {
   passageId: string;
   cefrLevel: CEFRLevel;
-  questionCount: number;
 }
 
 export async function analyzeAndPersistContent({
@@ -42,6 +41,5 @@ export async function analyzeAndPersistContent({
   return {
     passageId: passage.id,
     cefrLevel: "B2", // TODO: replace with AI CEFR detection
-    questionCount: 0,
   };
 }
