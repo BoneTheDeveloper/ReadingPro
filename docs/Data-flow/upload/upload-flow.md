@@ -155,6 +155,36 @@ stateDiagram-v2
 
 ---
 
+## File Structure
+
+```
+src/features/upload/
+├── actions.ts                     # Server Action (create job, send event)
+├── hooks/
+│   └── use-upload-submit.ts     # Client polling + UUID generation
+└── ui/
+    ├── upload-modal.tsx          # Upload modal UI
+    └── sources-panel.tsx         # Sources panel + ProcessingRow
+
+src/services/inngest/
+├── client.ts                     # Inngest client + event types
+└── functions/
+    └── process-upload.ts         # Background job handler
+
+src/features/passage/
+└── schemas/
+    └── passage.schema.ts         # Types + toPassageData mapper
+
+src/app/[locale]/(dashboard)/study/
+├── page.tsx                      # RSC: fetches passages
+├── _components/
+│   └── study-workspace.tsx       # Main UI container
+└── _hooks/
+    └── use-study-workspace-state.ts  # Client state management
+```
+
+---
+
 ## Error Handling
 
 | Stage | Error | UI Response |
