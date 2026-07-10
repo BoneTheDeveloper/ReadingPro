@@ -37,7 +37,7 @@ export async function uploadFileAction(
       text: parsed.text,
       title: parsed.title,
       sourceType: parsed.sourceType,
-      blobPath: parsed.blobPath || "",
+      blobPath: parsed.blobPath || undefined,
     })
   );
 

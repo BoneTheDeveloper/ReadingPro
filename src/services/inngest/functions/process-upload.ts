@@ -48,7 +48,7 @@ export const processUploadJob = inngest.createFunction(
             cefrLevel: cefrLevel as "B1" | "B2" | "C1" | "C2" | "A1" | "A2",
             wordCount,
             sourceType: passageSourceType,
-            filePath: blobPath,
+            filePath: blobPath || undefined,
           },
         });
       });

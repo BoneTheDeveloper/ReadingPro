@@ -14,7 +14,9 @@
     "lint": "eslint",
     "postinstall": "prisma generate --generator client",
     "db:generate": "prisma generate --generator client",
-    "db:seed:dictionary": "tsx prisma/seed.ts"
+    "db:seed:dictionary": "tsx prisma/seed.ts",
+    "dev:inngest": "inngest-cli@latest dev -u http://localhost:3000/api/inngest"
+
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.63",

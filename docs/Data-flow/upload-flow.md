@@ -4,7 +4,7 @@
 
 Start: User selects a file on the UI component.
 End: UI displays the result (success -> new passage, or error -> error state).
-The data flow now uses event-driven architecture with Inngest for background processing.
+The data flow uses event-driven architecture with Inngest for background processing.
 
 ---
 
@@ -21,17 +21,17 @@ flowchart TD
     G --> H[Send Inngest event]
     H --> I[Return jobId to UI]
     I --> J[UI polls status]
-    
+
     K[Inngest processes async] --> L[Update job status to PROCESSING]
     L --> M[Detect CEFR level]
     M --> N[Create Passage]
     N --> O[Update job status to DONE]
-    
+
     J --> P{Poll status}
     P -->|PENDING/PROCESSING| Q[Show progress]
     P -->|DONE| R[Navigate to study]
     P -->|FAILED| S[Show error]
-    
+
     Q --> P
     style D fill:#ff6b6b,color:#fff
     style S fill:#ff6b6b,color:#fff
@@ -58,14 +58,14 @@ sequenceDiagram
     I-->>A: event sent
     A-->>U: {success: true, data: {jobId}}
     U->>U: start polling getUploadStatus(jobId)
-    
+
     Note over I,F: Async processing
     I->>F: trigger "upload/process" event
     F->>J: update status to PROCESSING
     F->>F: detect CEFR level (TODO: AI)
     F->>F: create passage
     F->>J: update status to DONE, passageId
-    
+
     U->>J: getUploadStatus(jobId)
     J-->>U: status: DONE, passageId
     U->>U: navigate to /study?passageId=xxx
@@ -83,13 +83,13 @@ sequenceDiagram
 
     I->>S: trigger upload/process
     S->>P: update job status to PROCESSING
-    
+
     S->>S: detect CEFR level
     Note over S: TODO: Implement with AI
-    
+
     S->>P: create passage
     P-->>S: passage created
-    
+
     S->>P: update job to DONE, passageId
     S-->>I: return {jobId, passageId, cefrLevel}
 ```
@@ -113,27 +113,24 @@ stateDiagram-v2
 
 ```
 src/features/upload/
-├── actions.ts                     # Server Action entry point
-├── services/
-│   ├── upload-service.ts       # Legacy - not used in new flow
-│   └── content-analysis.service.ts
+├── actions.ts                     # Server Action (create job, send event)
+├── db/
+│   └── content-analysis.repository.ts  # Prisma helpers 
 ├── hooks/
-│   └── use-upload-submit.ts   # Polling hook
+│   └── use-upload-submit.ts       # Polling hook
 ├── ui/
-│   └── upload-modal.tsx
+│   └── upload-modal.tsx           # Upload modal UI
 ├── lib/
-│   ├── upload-validation.ts
-│   └── parsers/pdf.ts
-└── schemas/
-    └── upload.schema.ts
+    ├── upload-validation.ts      # Client-side validation
+    └── parsers/pdf.ts            # PDF text extraction
 
 src/services/inngest/
-├── client.ts                   # Inngest client + event types
+├── client.ts                     # Inngest client + event types
 └── functions/
-    └── process-upload.ts       # Inngest function handler
+    └── process-upload.ts         # Background job handler
 
 src/app/api/inngest/
-└── route.ts                   # Inngest webhook endpoint
+└── route.ts                     # Inngest webhook endpoint
 ```
 
 ## Layer Responsibilities
@@ -168,13 +165,13 @@ src/app/api/inngest/
 ### getUploadStatus Response
 ```typescript
 // Success
-{ 
-  success: true, 
-  data: { 
+{
+  success: true,
+  data: {
     status: "PENDING" | "PROCESSING" | "DONE" | "FAILED",
     passageId?: string,
     error?: string
-  } 
+  }
 }
 ```
 

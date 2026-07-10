@@ -78,8 +78,6 @@ export function StudyUploadModal({
   isOpen,
   onClose,
   onUploadStart,
-  onUploadComplete,
-  onUploadError,
 }: StudyUploadModalProps) {
   const t = useTranslations("Study");
   const [activeMode, setActiveMode] = useState<InputMode>(null);
