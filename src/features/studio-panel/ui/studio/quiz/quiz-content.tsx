@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import type { GeneratedStudyQuestionDto } from "@/features/studio-panel/schemas/study.schema";
+import type { GeneratedStudyQuestionDto } from "@/features/studio-panel/schemas/question.schema";
 import { QuizResults } from "./quiz-results";
 
 interface QuizContentProps {

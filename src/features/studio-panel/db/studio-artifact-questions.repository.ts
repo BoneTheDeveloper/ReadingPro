@@ -1,32 +1,7 @@
 import "server-only";
-import { z } from "zod";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
-
-export const questionOptionSchema = z.object({
-  id: z.string(),
-  text: z.string(),
-});
-
-export const questionDataSchema = z
-  .object({
-    artifactId: z
-      .string()
-      .regex(
-        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
-        "Invalid UUID",
-      ),
-    questionText: z.string(),
-    options: z.array(questionOptionSchema).min(2),
-    correctOption: z.string(),
-    sourceText: z.string(),
-    sourceLine: z.number().int().positive(),
-    explanation: z.string(),
-  })
-  .refine((q) => q.options.some((opt) => opt.id === q.correctOption), {
-    message: "correctOption must match one of the option ids",
-    path: ["correctOption"],
-  });
+import { questionDataSchema } from "@/features/studio-panel/schemas/question.schema";
 
 export interface QuestionCreateInput {
   questionText: string;
@@ -67,18 +42,6 @@ export async function createQuestion(data: {
   }
   return prisma.question.create({
     data: data as unknown as Prisma.QuestionUncheckedCreateInput,
-  });
-}
-
-export async function getNewCards(userId: string, passageId: string) {
-  return prisma.question.findMany({
-    where: {
-      passageId,
-      reviews: {
-        none: { userId },
-      },
-    },
-    take: 5,
   });
 }
 

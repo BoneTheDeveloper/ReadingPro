@@ -10,6 +10,7 @@ import {
   resetQuizResult,
 } from "./services/studio-artifacts.service";
 import { getChatHistory } from "@/features/ai-chat/services/chat.service";
+import { studyChatHistoryDataSchema } from "./schemas/chat.schema";
 import {
   generateQuestionsForPassage,
   PassageStudyServiceError,
@@ -43,7 +44,7 @@ export interface ArtifactRef {
 }
 
 export interface ArtifactDetailCacheEntry {
-  questions?: import("@/features/studio-panel/schemas/study.schema").GeneratedStudyQuestionDto[];
+  questions?: import("@/features/studio-panel/schemas/question.schema").GeneratedStudyQuestionDto[];
 }
 
 const passageIdSchema = z.string().uuid();
@@ -116,10 +117,15 @@ export async function generateStudioQuestionsAction(input: {
 export async function getChatHistoryAction(passageId: string) {
   const parsedPassageId = passageIdSchema.parse(passageId);
   const userId = await getUserId();
-  const messages = await getChatHistory(userId, parsedPassageId);
-  return messages.map((message) => ({
-    id: message.id,
-    role: message.role as "user" | "assistant",
-    parts: [{ type: "text" as const, text: message.content }],
-  }));
+  const rows = await getChatHistory(userId, parsedPassageId);
+  // Validate the mapped shape against the schema instead of an `as` cast, so a
+  // future DB role value outside "user"/"assistant" fails loudly here.
+  const { messages } = studyChatHistoryDataSchema.parse({
+    messages: rows.map((row) => ({
+      id: row.id,
+      role: row.role,
+      parts: [{ type: "text" as const, text: row.content }],
+    })),
+  });
+  return messages;
 }

@@ -10,8 +10,8 @@ import {
   validateTextContent,
 } from "@/features/upload/lib/upload-validation";
 import {
-  uploadFileFieldsSchema,
-  uploadTextInputSchema,
+  uploadFileRequestSchema,
+  uploadTextRequestSchema,
 } from "@/features/upload/schemas/upload.schema";
 import { toPassageData, type PassageRow } from "@/types/passage";
 
@@ -34,7 +34,7 @@ export async function uploadFileAction(formData: FormData) {
     throw new Error(validation.error ?? "Invalid file");
   }
 
-  const parsed = uploadFileFieldsSchema.parse({
+  const parsed = uploadFileRequestSchema.parse({
     passageId: formData.get("passageId"),
     title: formData.get("title"),
     sourceType: formData.get("sourceType"),
@@ -88,8 +88,8 @@ export async function uploadFileAction(formData: FormData) {
 // ---------- Pasted text ----------
 // No file, no parsing, no blob — the text rides inline in the event.
 
-export async function uploadTextAction(input: z.infer<typeof uploadTextInputSchema>) {
-  const parsed = uploadTextInputSchema.parse(input);
+export async function uploadTextAction(input: z.infer<typeof uploadTextRequestSchema>) {
+  const parsed = uploadTextRequestSchema.parse(input);
   const contentCheck = validateTextContent(parsed.text);
   if (!contentCheck.valid) {
     throw new Error(contentCheck.error ?? "Invalid text content");

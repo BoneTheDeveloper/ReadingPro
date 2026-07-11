@@ -1,5 +1,6 @@
 import { Inngest } from "inngest";
 import { z } from "zod";
+import { uploadSourceTypeSchema } from "@/features/upload/schemas/upload.schema";
 
 export const inngest = new Inngest({
   id: "english-reading-training",
@@ -16,17 +17,19 @@ export const UPLOAD_PROCESS_EVENT = "upload/process";
 //   - paste   → text (inline, safe, no parse)
 //   - txt/pdf → blobPath (raw file persisted by the action; worker parses)
 //   - youtube → url (transcript fetched by the worker)
-export const uploadProcessEventSchema = z.object({
-  jobId: z.string(),
-  userId: z.string(),
-  blobPath: z.string().optional(),
-  text: z.string().optional(),
-  url: z.string().optional(),
-  title: z.string(),
-  sourceType: z.enum(["paste", "txt", "pdf", "youtube"]),
-  passageId: z.string().uuid(), // Client-provided UUID for stable key
-  startedAt: z.number(), // Client timestamp for createdAt ordering
-});
+export const uploadProcessEventSchema = z
+  .object({
+    jobId: z.string(),
+    userId: z.string(),
+    blobPath: z.string().optional(),
+    text: z.string().optional(),
+    url: z.string().optional(),
+    title: z.string(),
+    sourceType: uploadSourceTypeSchema,
+    passageId: z.string().uuid(), // Client-provided UUID for stable key
+    startedAt: z.number(), // Client timestamp for createdAt ordering
+  })
+  .strict();
 
 export type UploadProcessEventData = z.infer<typeof uploadProcessEventSchema>;
 

@@ -20,50 +20,66 @@ import {
 
 // ============== Validation Schemas ==============
 
-const saveVocabularySchema = z.object({
-  selectedText: z.string().trim().min(1).max(500),
-  translation: z.string().trim().min(1).max(500),
-  contextSentence: z.string().trim().max(4000).optional(),
-  sourceId: z.string().uuid().optional(),
-  sourceLanguage: z.literal("en"),
-  targetLanguage: z.literal("vi"),
-  source: z.enum(["TRANSLATE", "DICTIONARY"]).default("TRANSLATE"),
-  dictionaryEntryId: z.string().uuid().optional(),
-  dictionarySenseId: z.string().uuid().optional(),
-});
+const saveVocabularySchema = z
+  .object({
+    selectedText: z.string().trim().min(1).max(500),
+    translation: z.string().trim().min(1).max(500),
+    contextSentence: z.string().trim().max(4000).optional(),
+    sourceId: z.string().uuid().optional(),
+    sourceLanguage: z.literal("en"),
+    targetLanguage: z.literal("vi"),
+    source: z.enum(["TRANSLATE", "DICTIONARY"]).default("TRANSLATE"),
+    dictionaryEntryId: z.string().uuid().optional(),
+    dictionarySenseId: z.string().uuid().optional(),
+  })
+  .strict();
 
-const updateStatusSchema = z.object({
-  itemId: z.string().uuid(),
-  status: z.enum(["NEW", "LEARNING", "MASTERED"]),
-});
+const updateStatusSchema = z
+  .object({
+    itemId: z.string().uuid(),
+    status: z.enum(["NEW", "LEARNING", "MASTERED"]),
+  })
+  .strict();
 
-const reviewSchema = z.object({
-  itemId: z.string().uuid(),
-  isCorrect: z.boolean(),
-});
+const reviewSchema = z
+  .object({
+    itemId: z.string().uuid(),
+    isCorrect: z.boolean(),
+  })
+  .strict();
 
-const createSetSchema = z.object({
-  name: z.string().trim().min(1).max(100),
-});
+const createSetSchema = z
+  .object({
+    name: z.string().trim().min(1).max(100),
+  })
+  .strict();
 
-const updateSetSchema = z.object({
-  setId: z.string().uuid(),
-  name: z.string().trim().min(1).max(100),
-});
+const updateSetSchema = z
+  .object({
+    setId: z.string().uuid(),
+    name: z.string().trim().min(1).max(100),
+  })
+  .strict();
 
-const deleteSetSchema = z.object({
-  setId: z.string().uuid(),
-});
+const deleteSetSchema = z
+  .object({
+    setId: z.string().uuid(),
+  })
+  .strict();
 
-const addItemsToSetSchema = z.object({
-  setId: z.string().uuid(),
-  itemIds: z.array(z.string().uuid()).min(1),
-});
+const addItemsToSetSchema = z
+  .object({
+    setId: z.string().uuid(),
+    itemIds: z.array(z.string().uuid()).min(1),
+  })
+  .strict();
 
-const removeItemFromSetSchema = z.object({
-  setId: z.string().uuid(),
-  itemId: z.string().uuid(),
-});
+const removeItemFromSetSchema = z
+  .object({
+    setId: z.string().uuid(),
+    itemId: z.string().uuid(),
+  })
+  .strict();
 
 // ============== Vocabulary Item Actions ==============
 

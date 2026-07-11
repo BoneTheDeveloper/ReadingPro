@@ -11,7 +11,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import type { ProgressStatsDto } from "@/features/studio-panel/schemas/study.schema";
+import type { ProgressStatsDto } from "@/features/progress/schemas/progress.schema";
 
 interface ProgressDashboardProps {
   initialStats: ProgressStatsDto;

@@ -3,7 +3,7 @@ import {
   type StudioArtifact,
   type StudioArtifactType,
 } from "../lib/studio-artifact-types";
-import type { GeneratedStudyQuestionDto } from "../schemas/study.schema";
+import type { GeneratedStudyQuestionDto } from "../schemas/question.schema";
 import { NotFoundError } from "@/lib/errors";
 import {
   deleteQuizResults,

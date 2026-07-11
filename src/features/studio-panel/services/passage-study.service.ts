@@ -2,11 +2,14 @@ import "server-only";
 import {
   generateComprehensionQuestions,
   type GeneratedQuestion,
-} from "@/services/ai/question-generator";
+} from "./question-generator.service";
 import { createModuleLogger } from "@/lib/logger";
 import { NotFoundError } from "@/lib/errors";
 import { findOwnedPassage } from "@/features/passage/db/passage.repository";
-import type { GeneratedStudyQuestionDto } from "../schemas/study.schema";
+import {
+  questionDataSchema,
+  type GeneratedStudyQuestionDto,
+} from "../schemas/question.schema";
 import {
   STUDIO_GENERATION_TIMEOUT_MS,
   type StudioArtifact,
@@ -15,7 +18,6 @@ import {
   type StudioArtifactType,
 } from "../lib/studio-artifact-types";
 import {
-  questionDataSchema,
   createStudioArtifactWithQuestions,
   findExistingStudioArtifact,
 } from "../db/studio-artifact-questions.repository";

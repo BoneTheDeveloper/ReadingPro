@@ -18,11 +18,13 @@ export interface QuickTranslation {
   provider: string;
 }
 
-export const quickTranslationSchema = z.object({
-  translation: z.string(),
-  source: z.string(),
-  provider: z.string(),
-});
+export const quickTranslationSchema = z
+  .object({
+    translation: z.string(),
+    source: z.string(),
+    provider: z.string(),
+  })
+  .strict();
 
 const RUNTIME_STATUS_LIST = Prisma.join(RUNTIME_STATUSES);
 

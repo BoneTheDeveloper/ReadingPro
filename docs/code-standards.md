@@ -110,12 +110,37 @@ export const translateResponseSchema = makeApiResponseSchema(translationDataSche
 | Item | Pattern |
 |------|---------|
 | Files | kebab-case |
-| Data schema | `<name>Schema` + `type <Name>Dto = z.infer<...>` |
-| Input schema | `<entity>RequestSchema` |
-| Response contract | `<entity>ResponseSchema = makeApiResponseSchema(<entity>Schema)` |
 | Error class | `<Feature>Error` or extends base |
 
-All schemas use `.strict()` to catch extra fields.
+---
+
+## Schema Conventions
+
+Every validation schema plays **exactly one role**, and the role is encoded by the
+**name suffix** so it is obvious at a glance and hard to misfile. This is the guard
+against fragmentation ("many hand-written copies") and misfiling ("wrong kind of
+schema in the wrong file").
+
+### Roles (suffix = role)
+
+| Role | Name pattern | Direction | Lives in | Example |
+|------|--------------|-----------|----------|---------|
+| Vocabulary / enum | `<name>Schema` (a `z.enum` or reusable sub-object) | — | feature `schemas/`, or `src/types/` if shared | `uploadSourceTypeSchema`, `questionOptionSchema` |
+| Request (input to action/route) | `<entity>RequestSchema` | client → server | feature `schemas/` | `studyChatRequestSchema` |
+| Query params | `<entity>QuerySchema` | client → server | feature `schemas/` | `studyChatQuerySchema` |
+| Event / queue payload | `<entity>EventSchema` | async | `services/inngest/` or feature | `uploadProcessEventSchema` |
+| Data payload (body of a response) | `<entity>DataSchema` + `type <Entity>Dto` | server → client | feature `schemas/` | `translationDataSchema` |
+| Response contract | `<entity>ResponseSchema = makeApiResponseSchema(<entity>DataSchema)` | server → client | feature `schemas/` | `translateResponseSchema` |
+| Shared output model / DTO | `type <Entity>` / `<Entity>Data` | output | `src/types/<entity>.ts` (used by 2+ features) | `PassageData` |
+
+### Rules
+
+1. **Schema → type, never the reverse.** Derive with `z.infer<typeof schema>`; no hand-written parallel type.
+2. **DB is the source of truth for STORED data.** Derive stored enums/shapes from Prisma (`import type { X } from "@/generated/prisma/client"`), never re-type by hand.
+3. **Derive, don't redefine.** Build related schemas from a base via `.pick()/.omit()/.extend()/.partial()/.extract()` — e.g. `fileSourceTypeSchema = uploadSourceTypeSchema.extract(["txt", "pdf"])`.
+4. **One role per name.** Input = `Request`, output = `Data`/`Dto`/`Response`, allowed values = vocab `Schema`/enum, async payload = `Event`. Never a grab-bag suffix like `Fields`, `Input`, or `Payload`.
+5. **`.strict()` on every object schema** to reject extra fields.
+6. **Declare file scope.** A feature `*.schema.ts` holds that feature's vocabulary + request + response only. Shared output MODELS go to `src/types/`; stored enums come from `@/generated/prisma`. Add a one-line header comment stating the file's scope.
 
 ---
 
@@ -127,7 +152,7 @@ All schemas use `.strict()` to catch extra fields.
 4. **Clients validate.** Always `safeParse`; never casts.
 5. **Domain errors are typed.** Service throws specific errors; route catches via `toHttp()`.
 6. **Pass logger to services.** Don't create loggers inside services — preserves `requestId`.
-7. **No cross-feature re-exports.** Types stay in their owning feature.
+7. **Shared models live in `src/types/`; feature-only types stay in the feature.** A model imported by 2+ features (e.g. `PassageData`) belongs in `src/types/`, not inside a feature. Never re-export one feature's internal types from another feature.
 8. **`lib/errors/` is HTTP-free.** Domain errors must not import from `lib/http/` or `@sentry/nextjs`.
 9. **withRoute for non-streaming.** Use wrapper for clean routes.
 

@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import { Group, Panel, Separator } from "react-resizable-panels";
 import { translateResponseSchema } from "@/features/reading/schemas/translation.schema";
-import { saveVocabularyAction } from "./actions";
+import { saveVocabularyAction } from "@/features/vocabulary/actions";
 import {
   clampTranslationContext,
   isTranslateTextWithinLimit,
@@ -193,27 +193,15 @@ export function StudyPageClient({
     if (!selection || !quickTranslation) return;
 
     try {
-      const vocabularyPayload: {
-        sourceId: string;
-        selectedText: string;
-        translation: string;
-        contextSentence: string;
-        sourceLanguage: "en";
-        targetLanguage: "vi";
-        type?: string;
-      } = {
+      await saveVocabularyAction({
+        source: "TRANSLATE",
         sourceId: selection.sourceId,
         selectedText: selection.selectedText,
         translation: quickTranslation.translation,
         contextSentence: selection.contextSentence,
         sourceLanguage: "en",
         targetLanguage: "vi",
-      };
-      if (quickTranslation.type) {
-        vocabularyPayload.type = quickTranslation.type;
-      }
-
-      await saveVocabularyAction(vocabularyPayload);
+      });
       setSavedVocabularyIds((prev) =>
         new Set(prev).add(buildTranslationSelectionKey(selection)),
       );

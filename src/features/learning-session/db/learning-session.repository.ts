@@ -1,17 +1,11 @@
 import "server-only";
-import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { studySessionRequestSchema } from "../schemas/learning-session.schema";
 
 export const SESSION_IDLE_MS = 10 * 60 * 1000;
 
-const userIdSchema = z.string().min(1, "userId is required");
-
-export const createStudySessionSchema = z.object({
-  userId: userIdSchema,
-});
-
 export async function createStudySession(userId: string) {
-  const validated = createStudySessionSchema.parse({ userId });
+  const validated = studySessionRequestSchema.parse({ userId });
 
   const now = new Date();
 

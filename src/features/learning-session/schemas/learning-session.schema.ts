@@ -1,5 +1,11 @@
 import { z } from "zod";
 
+export const studySessionRequestSchema = z
+  .object({
+    userId: z.string().min(1, "userId is required"),
+  })
+  .strict();
+
 const nullableIsoDateSchema = z.string().nullable();
 
 export const learningSessionSchema = z
