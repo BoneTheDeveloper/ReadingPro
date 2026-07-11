@@ -1,10 +1,14 @@
-# Passage Render When Upload
+# Upload Feature — Passage Render Flow
 
 ## Overview
 
-How a newly uploaded passage appears in the UI during and after processing.
+How a newly uploaded passage appears in the UI **during and after** processing:
+the client-generated key, the temp→real swap, status-based rendering, and study
+workspace state.
 
-**Related:** [Upload Flow](./upload-flow.md) - Technical architecture (Inngest, DB, API).
+This document covers **UI/render concerns only**. For the server action, event
+queue, worker, and `UploadJob` lifecycle, see
+[Upload Data Flow](./upload-data-flow.md).
 
 ---
 
@@ -15,7 +19,7 @@ How a newly uploaded passage appears in the UI during and after processing.
 The client generates a stable passage ID before upload starts:
 - Stable React keys for smooth transitions
 - No duplicate rows from ID mismatch
-- Same ID used throughout the flow
+- Same ID used throughout the flow (client temp row → worker `Passage.id`)
 
 ```typescript
 // use-upload-submit.ts
@@ -27,7 +31,7 @@ await uploadFileAction({ passageId, title, text, sourceType, startedAt });
 
 ### 2. Status Field
 
-PassageData includes a `status` field:
+`PassageData` includes a UI-only `status` field:
 
 ```typescript
 interface PassageData {
@@ -49,7 +53,8 @@ interface PassageData {
 
 ### 3. toPassageData Mapper
 
-Maps Prisma rows to PassageData at the schema boundary:
+Maps Prisma rows to `PassageData` at the schema boundary; always emits
+`status: "ready"` because a row from the DB is, by definition, done:
 
 ```typescript
 export function toPassageData(row: PassageRow): PassageData {
@@ -217,7 +222,7 @@ setState((prev) => ({
 
 ---
 
-## File Structure
+## File Structure (render layer)
 
 ```
 src/app/[locale]/(dashboard)/study/
@@ -229,7 +234,7 @@ src/app/[locale]/(dashboard)/study/
 
 src/features/upload/
 ├── hooks/
-│   └── use-upload-submit.ts         # Upload + polling + UUID
+│   └── use-upload-submit.ts          # Upload trigger + polling + UUID
 └── ui/
     ├── upload-modal.tsx              # Upload UI
     └── sources-panel.tsx             # Sources list + ProcessingRow
@@ -245,9 +250,9 @@ src/features/passage/
 
 | File | Purpose |
 |------|---------|
-| `upload-flow.md` | Technical architecture (Inngest, DB, API) |
+| [`upload-data-flow.md`](./upload-data-flow.md) | Logic/service architecture (action, Inngest, DB, worker) |
 | `use-study-workspace-state.ts` | Client state management |
-| `use-upload-submit.ts` | Upload + polling + UUID generation |
+| `use-upload-submit.ts` | Upload trigger + polling + UUID generation |
 | `sources-panel.tsx` | Sources list with ProcessingRow |
 | `passage.schema.ts` | Types + toPassageData mapper |
 
