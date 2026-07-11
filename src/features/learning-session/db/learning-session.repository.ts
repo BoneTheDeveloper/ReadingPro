@@ -1,7 +1,6 @@
 import "server-only";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { withUserProfile } from "@/features/users/db/sync-user.repository";
 
 export const SESSION_IDLE_MS = 10 * 60 * 1000;
 
@@ -16,15 +15,13 @@ export async function createStudySession(userId: string) {
 
   const now = new Date();
 
-  return withUserProfile(validated.userId, () =>
-    prisma.studySession.create({
-      data: {
-        userId: validated.userId,
-        startedAt: now,
-        lastActivityAt: now,
-      },
-    }),
-  );
+  return prisma.studySession.create({
+    data: {
+      userId: validated.userId,
+      startedAt: now,
+      lastActivityAt: now,
+    },
+  });
 }
 
 export async function closeStaleStudySessions(
@@ -45,11 +42,10 @@ export async function closeStaleStudySessions(
 export async function ensureActiveSession(userId: string) {
   const now = new Date();
 
-  return withUserProfile(userId, () =>
-    prisma.$transaction(async (tx) => {
-      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`study_session:${userId}`})::bigint)`;
+  return prisma.$transaction(async (tx) => {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`study_session:${userId}`})::bigint)`;
 
-      await tx.$executeRaw`
+    await tx.$executeRaw`
       UPDATE "study_sessions"
       SET "completedAt" = "lastActivityAt"
       WHERE "userId" = ${userId}
@@ -57,25 +53,24 @@ export async function ensureActiveSession(userId: string) {
         AND "lastActivityAt" < ${new Date(now.getTime() - SESSION_IDLE_MS)}
     `;
 
-      const openSession = await tx.studySession.findFirst({
-        where: { userId, completedAt: null },
-        orderBy: [{ lastActivityAt: "desc" }, { startedAt: "desc" }],
-      });
+    const openSession = await tx.studySession.findFirst({
+      where: { userId, completedAt: null },
+      orderBy: [{ lastActivityAt: "desc" }, { startedAt: "desc" }],
+    });
 
-      if (openSession) {
-        return tx.studySession.update({
-          where: { id: openSession.id },
-          data: { lastActivityAt: now },
-        });
-      }
-
-      return tx.studySession.create({
-        data: {
-          userId,
-          startedAt: now,
-          lastActivityAt: now,
-        },
+    if (openSession) {
+      return tx.studySession.update({
+        where: { id: openSession.id },
+        data: { lastActivityAt: now },
       });
-    }),
-  );
+    }
+
+    return tx.studySession.create({
+      data: {
+        userId,
+        startedAt: now,
+        lastActivityAt: now,
+      },
+    });
+  });
 }

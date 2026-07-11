@@ -2,7 +2,6 @@ import "server-only";
 import { createHash } from "node:crypto";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
-import { withUserProfile } from "@/features/users/db/sync-user.repository";
 
 interface TranslationKeyInput {
   userId: string;
@@ -46,44 +45,40 @@ export async function getTranslationCache(cacheKey: string) {
 export async function upsertTranslationCache(input: TranslationCacheInput) {
   const cacheKey = buildTranslationCacheKey(input);
 
-  return withUserProfile(input.userId, () =>
-    prisma.translationCache.upsert({
-      where: { cacheKey },
-      update: {
-        provider: input.provider,
-        response: input.response,
-      },
-      create: {
-        cacheKey,
-        userId: input.userId,
-        sourceId: input.sourceId,
-        selectedText: input.selectedText,
-        contextSentence: input.contextSentence,
-        sourceLanguage: input.sourceLanguage,
-        targetLanguage: input.targetLanguage,
-        mode: "quick",
-        provider: input.provider,
-        response: input.response,
-      },
-    }),
-  );
+  return prisma.translationCache.upsert({
+    where: { cacheKey },
+    update: {
+      provider: input.provider,
+      response: input.response,
+    },
+    create: {
+      cacheKey,
+      userId: input.userId,
+      sourceId: input.sourceId,
+      selectedText: input.selectedText,
+      contextSentence: input.contextSentence,
+      sourceLanguage: input.sourceLanguage,
+      targetLanguage: input.targetLanguage,
+      mode: "quick",
+      provider: input.provider,
+      response: input.response,
+    },
+  });
 }
 
 export async function createTranslationHistory(input: TranslationHistoryInput) {
-  return withUserProfile(input.userId, () =>
-    prisma.translationHistory.create({
-      data: {
-        userId: input.userId,
-        sourceId: input.sourceId,
-        selectedText: input.selectedText,
-        contextSentence: input.contextSentence,
-        sourceLanguage: input.sourceLanguage,
-        targetLanguage: input.targetLanguage,
-        mode: "quick",
-        provider: input.provider,
-        translation: input.translation,
-        response: input.response,
-      },
-    }),
-  );
+  return prisma.translationHistory.create({
+    data: {
+      userId: input.userId,
+      sourceId: input.sourceId,
+      selectedText: input.selectedText,
+      contextSentence: input.contextSentence,
+      sourceLanguage: input.sourceLanguage,
+      targetLanguage: input.targetLanguage,
+      mode: "quick",
+      provider: input.provider,
+      translation: input.translation,
+      response: input.response,
+    },
+  });
 }

@@ -1,7 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
 import { NotFoundError } from "@/lib/errors";
-import { withUserProfile } from "@/features/users/db/sync-user.repository";
 import type {
   VocabularySet,
   VocabularySetItem,
@@ -67,17 +66,15 @@ async function findOrCreateSetByType(
     day: "numeric",
   });
 
-  return withUserProfile(userId, () =>
-    prisma.vocabularySet.create({
-      data: {
-        userId,
-        name: `${prefix} - ${dateStr}`,
-        type,
-        periodStart,
-        periodEnd,
-      },
-    }),
-  );
+  return prisma.vocabularySet.create({
+    data: {
+      userId,
+      name: `${prefix} - ${dateStr}`,
+      type,
+      periodStart,
+      periodEnd,
+    },
+  });
 }
 
 export async function listVocabularySets(params: {
@@ -101,18 +98,16 @@ export async function createManualSet(params: {
   userId: string;
   name: string;
 }): Promise<VocabularySetWithCount> {
-  return withUserProfile(params.userId, () =>
-    prisma.vocabularySet.create({
-      data: {
-        userId: params.userId,
-        name: params.name,
-        type: "MANUAL",
-        periodStart: null,
-        periodEnd: null,
-      },
-      include: { _count: { select: { setItems: true } } },
-    }),
-  );
+  return prisma.vocabularySet.create({
+    data: {
+      userId: params.userId,
+      name: params.name,
+      type: "MANUAL",
+      periodStart: null,
+      periodEnd: null,
+    },
+    include: { _count: { select: { setItems: true } } },
+  });
 }
 
 export async function updateVocabularySet(params: {

@@ -32,8 +32,9 @@ export function AuthControls({
     } catch {
       // Ignore errors, redirect anyway
     }
-    // Full page reload to clear state and redirect
-    window.location.href = "/";
+    // Full page reload to clear state and redirect straight to sign-in
+    // (avoids a dashboard flash + extra proxy bounce through "/").
+    window.location.href = "/sign-in";
   };
 
   if (loading) {

@@ -7,9 +7,9 @@ import { routing } from "@/i18n/routing";
 // next-intl middleware for locale handling
 const intlMiddleware = createMiddleware(routing);
 
-// Public routes that don't require authentication
+// Public routes that don't require authentication.
+// The home route (/, /:locale) is the dashboard and stays protected.
 const PUBLIC_PATHS = [
-  "/",
   "/sign-in",
   "/sign-up",
   "/about",
@@ -25,7 +25,6 @@ function isPublicRoute(pathname: string): boolean {
         return true;
       }
     }
-    if (pathname === `/${locale}`) return true;
   }
 
   return false;

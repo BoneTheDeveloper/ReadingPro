@@ -2,7 +2,6 @@ import "server-only";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { NotFoundError } from "@/lib/errors";
-import { withUserProfile } from "@/features/users/db/sync-user.repository";
 import { findOwnedPassage } from "@/features/passage/db/passage-study.repository";
 import {
   findOrCreateDailySet,
@@ -52,40 +51,36 @@ export async function upsertVocabularyItem(
   const type = detectType(normalized);
   const normalizedTranslation = normalizeText(params.translation);
 
-  // Only this write carries the userId FK; the occurrence + set writes below
-  // self-heal via their own wrappers, so wrap just the item upsert.
-  const item = await withUserProfile(params.userId, () =>
-    prisma.vocabularyItem.upsert({
-      where: {
-        userId_normalizedText_targetLanguage_normalizedTranslation: {
-          userId: params.userId,
-          normalizedText: normalized,
-          targetLanguage: params.targetLanguage,
-          normalizedTranslation,
-        },
-      },
-      update: {
-        savedCount: { increment: 1 },
-        updatedAt: new Date(),
-        // Preserve status, nextReviewAt, lastReviewedAt on re-save
-      },
-      create: {
+  const item = await prisma.vocabularyItem.upsert({
+    where: {
+      userId_normalizedText_targetLanguage_normalizedTranslation: {
         userId: params.userId,
         normalizedText: normalized,
-        displayText: display,
-        type,
-        translation: params.translation,
-        normalizedTranslation,
-        sourceLanguage: params.sourceLanguage,
         targetLanguage: params.targetLanguage,
-        source: params.source ?? "TRANSLATE",
-        dictionaryEntryId: params.dictionaryEntryId ?? null,
-        dictionarySenseId: params.dictionarySenseId ?? null,
-        status: "NEW",
-        savedCount: 1,
+        normalizedTranslation,
       },
-    }),
-  );
+    },
+    update: {
+      savedCount: { increment: 1 },
+      updatedAt: new Date(),
+      // Preserve status, nextReviewAt, lastReviewedAt on re-save
+    },
+    create: {
+      userId: params.userId,
+      normalizedText: normalized,
+      displayText: display,
+      type,
+      translation: params.translation,
+      normalizedTranslation,
+      sourceLanguage: params.sourceLanguage,
+      targetLanguage: params.targetLanguage,
+      source: params.source ?? "TRANSLATE",
+      dictionaryEntryId: params.dictionaryEntryId ?? null,
+      dictionarySenseId: params.dictionarySenseId ?? null,
+      status: "NEW",
+      savedCount: 1,
+    },
+  });
 
   await createOccurrence(
     item.id,
