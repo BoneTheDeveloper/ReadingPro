@@ -45,7 +45,7 @@ const eslintConfig = defineConfig([
   },
   {
     // Cross-layer imports must go through the @/ alias, not relative paths.
-    // Top-level layers: app, components, features, lib, services.
+    // Top-level layers: app, components, features, i18n, lib, services, types.
     files: ["src/**"],
     rules: {
       "no-restricted-imports": [
@@ -57,8 +57,10 @@ const eslintConfig = defineConfig([
                 "../../app/**",
                 "../../components/**",
                 "../../features/**",
+                "../../i18n/**",
                 "../../lib/**",
                 "../../services/**",
+                "../../types/**",
                 "../../../**",
               ],
               message:

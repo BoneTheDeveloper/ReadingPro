@@ -1,0 +1,17 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "next": true,
+  "project": [
+    "src/**/*.{ts,tsx}",
+    "prisma/**/*.ts"
+  ],
+  "ignore": [
+    "src/components/ui/**"
+  ],
+  "ignoreDependencies": [
+    "pino-pretty",
+    "tailwindcss",
+    "tw-animate-css",
+    "shadcn"
+  ]
+}
