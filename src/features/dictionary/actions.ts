@@ -2,8 +2,8 @@
 
 import { z } from "zod";
 import { getUserId } from "@/lib/auth/auth-server";
-import { suggestDictionaryTerms } from "./services/suggest-service";
-import { getDictionaryEntryDetail } from "./services/entry-detail-service";
+import { suggestDictionaryTerms } from "./services/suggest.service";
+import { getDictionaryEntryDetail } from "./services/entry-detail.service";
 import type {
   DictionaryEntryDto,
   DictionarySuggestItemDto,

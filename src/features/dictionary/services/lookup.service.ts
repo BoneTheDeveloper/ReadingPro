@@ -14,7 +14,7 @@ import {
   findDictionaryLookupEntry,
   findQuickLookupTranslation,
   type LookupRawRow,
-} from "../db/lookup-repository";
+} from "../db/lookup.repository";
 
 export interface LookupOptions {
   sourceLanguage: string;

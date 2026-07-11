@@ -1,5 +1,5 @@
 import { getUserId } from "@/lib/auth/auth-server";
-import { getUserPassages } from "@/features/passage/db/passage-queries";
+import { getUserPassages } from "@/features/passage/db/passage.repository";
 import { StudyPageClient } from "./_components/study-workspace";
 import type { PassageData } from "@/features/passage/schemas/passage.schema";
 

@@ -9,7 +9,7 @@ import {
   recordQuizResult,
   resetQuizResult,
 } from "@/features/passage/services/studio-artifacts.service";
-import { getChatHistory } from "@/features/ai-chat/services/chat-service";
+import { getChatHistory } from "@/features/ai-chat/services/chat.service";
 import {
   generateQuestionsForPassage,
   PassageStudyServiceError,

@@ -1,7 +1,7 @@
 "use server";
 
 import { getUserId } from "@/lib/auth/auth-server";
-import { ensureActiveSession } from "./db/learning-session-queries";
+import { ensureActiveSession } from "./db/learning-session.repository";
 import { toLearningSessionDto } from "./schemas/learning-session.schema";
 
 /**

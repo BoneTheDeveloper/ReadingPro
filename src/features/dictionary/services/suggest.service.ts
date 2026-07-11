@@ -5,7 +5,7 @@ import type { DictionarySuggestItemDto } from "@/features/dictionary/schemas/dic
 import {
   findSuggestCandidates,
   type SuggestCandidateRow,
-} from "../db/suggest-repository";
+} from "../db/suggest.repository";
 
 export interface SuggestOptions {
   sourceLanguage: string;

@@ -5,7 +5,7 @@ import { normalizeDictionaryTerm } from "../lib/normalize-dictionary-term";
 import {
   searchDictionaryCandidates,
   type DictionarySearchCandidateRow,
-} from "../db/search-repository";
+} from "../db/search.repository";
 
 export interface DictionarySearchOptions {
   sourceLanguage: string;

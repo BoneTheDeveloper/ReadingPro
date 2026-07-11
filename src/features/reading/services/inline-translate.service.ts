@@ -12,7 +12,7 @@ import {
   writeTranslationCache,
   writeTranslationHistory,
 } from "../db/inline-translate.repository";
-import { resolveWordTranslate } from "../db/word-translate";
+import { resolveWordTranslate } from "./word-translate.service";
 
 export interface TranslateServiceInput {
   text: string;

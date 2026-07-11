@@ -1,8 +1,8 @@
 import "server-only";
-import { findEntryByIdRaw } from "../db/entry-detail-repository";
+import { findEntryByIdRaw } from "../db/entry-detail.repository";
 import { buildEntryDto } from "../schemas/dictionary.schema";
 import { RUNTIME_STATUSES } from "../lib/dictionary-helpers";
-import { groupLookupRows } from "./lookup-service";
+import { groupLookupRows } from "./lookup.service";
 
 export interface EntryDetailOptions {
   sourceLanguage: string;

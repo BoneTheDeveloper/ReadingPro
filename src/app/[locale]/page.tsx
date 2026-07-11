@@ -17,7 +17,7 @@ import { DashboardSidebar } from "@/components/layout/dashboard-sidebar";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { getCurrentUser } from "@/lib/auth/auth-server";
-import { getUserProgress } from "@/features/progress/db/progress-queries";
+import { getUserProgress } from "@/features/progress/db/progress.repository";
 
 type UserProgress = {
   totalCards: number;

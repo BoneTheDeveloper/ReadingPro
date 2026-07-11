@@ -5,7 +5,7 @@ import {
 } from "@/services/ai/question-generator";
 import { createModuleLogger } from "@/lib/logger";
 import { NotFoundError } from "@/lib/errors";
-import { questionDataSchema } from "@/features/passage/db/passage-queries";
+import { questionDataSchema } from "@/features/passage/db/passage.repository";
 import type { GeneratedStudyQuestionDto } from "@/features/studio-panel/schemas/study.schema";
 import {
   STUDIO_GENERATION_TIMEOUT_MS,

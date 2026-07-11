@@ -13,7 +13,7 @@ import {
   toPersistedUiMessages,
   persistUserMessage,
   streamStudyChat,
-} from "@/features/ai-chat/services/chat-service";
+} from "@/features/ai-chat/services/chat.service";
 
 export const POST = withRoute("api:study:studio:chat", "/api/studio/chat")(
   async (req: NextRequest, _ctx, log) => {

@@ -13,22 +13,30 @@ const eslintConfig = defineConfig([
     "build/**",
     "coverage/**",
     "next-env.d.ts",
+    // Prisma client is generated code.
+    "src/generated/**",
   ]),
   {
-    files: [
-      "src/features/**/ui/**",
-      "src/features/**/hooks/**",
-      "src/contracts/**",
-    ],
+    // Client-side feature code (components + hooks) must not reach into the
+    // server-only layers. Server logic lives in each feature's `services/`
+    // (Business logic - Server) and `db/` (Repositories), plus the top-level
+    // `services/` cross-cutting integrations (AI, Inngest, storage).
+    files: ["src/features/**/ui/**", "src/features/**/hooks/**"],
     rules: {
       "no-restricted-imports": [
         "error",
         {
           patterns: [
             {
-              group: ["@/server/**", "**/server/**"],
+              group: [
+                "@/services/**",
+                "@/features/*/services/**",
+                "@/features/*/db/**",
+                "**/services/**",
+                "**/db/**",
+              ],
               message:
-                "Frontend features and shared contracts must not import from the server directory. Use standard API routes instead.",
+                "Frontend feature code (ui, hooks) must not import server-only layers (services, db). Use Server Actions or API routes instead.",
             },
           ],
         },
@@ -36,6 +44,8 @@ const eslintConfig = defineConfig([
     },
   },
   {
+    // Cross-layer imports must go through the @/ alias, not relative paths.
+    // Top-level layers: app, components, features, lib, services.
     files: ["src/**"],
     rules: {
       "no-restricted-imports": [
@@ -44,11 +54,11 @@ const eslintConfig = defineConfig([
           patterns: [
             {
               group: [
-                "../../app/*",
-                "../../server/*",
-                "../../contracts/*",
-                "../../features/*",
-                "../../ui/*",
+                "../../app/**",
+                "../../components/**",
+                "../../features/**",
+                "../../lib/**",
+                "../../services/**",
                 "../../../**",
               ],
               message:

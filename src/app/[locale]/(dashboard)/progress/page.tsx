@@ -1,5 +1,5 @@
 import { getUserId } from "@/lib/auth/auth-server";
-import { getUserProgress } from "@/features/progress/db/progress-queries";
+import { getUserProgress } from "@/features/progress/db/progress.repository";
 import { ProgressDashboard } from "@/features/progress/ui/progress-dashboard";
 
 export const dynamic = "force-dynamic";

@@ -2,7 +2,7 @@ import "server-only";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { NotFoundError } from "@/lib/errors";
-import { withUserProfile } from "@/features/users/db/sync-user";
+import { withUserProfile } from "@/features/users/db/sync-user.repository";
 import { findOwnedPassage } from "@/features/passage/db/passage-study.repository";
 import {
   findOrCreateDailySet,

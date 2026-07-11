@@ -15,8 +15,8 @@ Client (useActionState) → Server Action → Service → Repository → DB
 |-------|----------|----------|
 | Schema | `features/<f>/schemas/*.schema.ts` | Zod validation. Types from `z.infer`. |
 | Action | `features/<f>/actions.ts` | `"use server"`, validates input, calls service, calls `revalidatePath()`. |
-| Service | `features/<f>/services/*-service.ts` | Business logic. Throws domain errors. |
-| Repository | `features/<f>/db/*-repository.ts` | Prisma/SQL only. Never imports schemas. |
+| Service | `features/<f>/services/*.service.ts` | Business logic. Throws domain errors. |
+| Repository | `features/<f>/db/*.repository.ts` | Prisma/SQL only. Never imports schemas. |
 
 ### Server Components (reads)
 
@@ -27,8 +27,8 @@ Server Component → Service → Repository → DB → props → Client Componen
 | Layer | Location | Key Rule |
 |-------|----------|----------|
 | Page | `app/[locale]/(dashboard)/<feature>/page.tsx` | Fetches data at render time. |
-| Service | `features/<f>/services/*-service.ts` | Business logic. |
-| Repository | `features/<f>/db/*-repository.ts` | Prisma/SQL only. |
+| Service | `features/<f>/services/*.service.ts` | Business logic. |
+| Repository | `features/<f>/db/*.repository.ts` | Prisma/SQL only. |
 
 ### API Routes
 
@@ -41,8 +41,8 @@ Use `withRoute()` wrapper for non-streaming routes.
 | Layer | Location | Key Rule |
 |-------|----------|----------|
 | Input schema | Route (`route.ts`) | Parse request body |
-| Service | `features/<f>/services/*-service.ts` | Business logic. Throws domain errors. |
-| Repository | `features/<f>/db/*-repository.ts` | Prisma/SQL only. |
+| Service | `features/<f>/services/*.service.ts` | Business logic. Throws domain errors. |
+| Repository | `features/<f>/db/*.repository.ts` | Prisma/SQL only. |
 | Route | `app/api/**/route.ts` | Use `withRoute()`. Returns envelope. |
 | Client | `features/<f>/` | `safeParse()` response with contract schema. |
 
