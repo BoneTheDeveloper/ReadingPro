@@ -1,5 +1,5 @@
 import "server-only";
-import { put, del, head } from "@vercel/blob";
+import { put, del, head, get } from "@vercel/blob";
 import { writeFile, mkdir, readFile, unlink } from "node:fs/promises";
 import path from "node:path";
 import { createModuleLogger } from "@/lib/logger";
@@ -100,6 +100,27 @@ export async function readFileBuffer(pathname: string): Promise<Buffer | null> {
   try {
     return await readFile(localPath(pathname));
   } catch {
+    return null;
+  }
+}
+
+/**
+ * Download a stored file's raw bytes. Works in both storage modes so the
+ * background worker can read a file the upload action persisted:
+ *   - local dev  → read from the on-disk fallback store
+ *   - production → stream the private blob via the Blob read/write token
+ */
+export async function downloadFile(pathname: string): Promise<Buffer | null> {
+  try {
+    if (isLocalStorage()) {
+      return await readFileBuffer(pathname);
+    }
+    const result = await get(pathname, { access: "private" });
+    if (!result || result.statusCode !== 200) return null;
+    const arrayBuffer = await new Response(result.stream).arrayBuffer();
+    return Buffer.from(arrayBuffer);
+  } catch (err) {
+    log.error({ err, pathname }, "Download failed");
     return null;
   }
 }

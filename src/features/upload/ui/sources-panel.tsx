@@ -21,8 +21,9 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-// DocumentItem is defined inline in this file
-export type SourceType = "TEXT" | "PDF" | "URL" | "YOUTUBE";
+// Single source of truth for the stored source type lives in the passage model.
+import type { SourceType } from "@/types/passage";
+export type { SourceType };
 
 export interface DocumentItem {
   id: string;

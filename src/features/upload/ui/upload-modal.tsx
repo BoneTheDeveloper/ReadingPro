@@ -20,7 +20,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import type { PassageData } from "@/features/passage/schemas/passage.schema";
+import type { PassageData } from "@/types/passage";
 
 export interface StudyUploadModalProps {
   isOpen: boolean;

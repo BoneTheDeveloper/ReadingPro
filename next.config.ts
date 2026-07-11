@@ -55,7 +55,16 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   distDir: process.env.NEXT_DIST_DIR ?? ".next",
   poweredByHeader: false,
-  serverExternalPackages: ["pino", "pino-pretty"],
+  // pdf-parse is a Node-only lib used by the upload worker; keep it external so
+  // it is not bundled/traced into the server build.
+  serverExternalPackages: ["pino", "pino-pretty", "pdf-parse"],
+  experimental: {
+    // Raw file uploads flow through a Server Action; the validation cap is 10MB
+    // while the Server Action body default is 1MB.
+    serverActions: {
+      bodySizeLimit: "10mb",
+    },
+  },
   allowedDevOrigins: ["host.docker.internal"],
   turbopack: {
     root: process.cwd(),

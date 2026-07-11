@@ -239,9 +239,8 @@ src/features/upload/
     ├── upload-modal.tsx              # Upload UI
     └── sources-panel.tsx             # Sources list + ProcessingRow
 
-src/features/passage/
-└── schemas/
-    └── passage.schema.ts            # Types + toPassageData mapper
+src/types/
+└── passage.ts                       # Types + toPassageData mapper (shared model)
 ```
 
 ---
@@ -254,7 +253,7 @@ src/features/passage/
 | `use-study-workspace-state.ts` | Client state management |
 | `use-upload-submit.ts` | Upload trigger + polling + UUID generation |
 | `sources-panel.tsx` | Sources list with ProcessingRow |
-| `passage.schema.ts` | Types + toPassageData mapper |
+| `src/types/passage.ts` | Types + toPassageData mapper (shared model) |
 
 ---
 

@@ -23,6 +23,7 @@ enum CEFRLevel {
 enum SourceType {
   TEXT
   PDF
+  YOUTUBE
 }
 
 enum QuestionType {

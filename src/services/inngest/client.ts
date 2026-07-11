@@ -10,11 +10,18 @@ export const inngest = new Inngest({
 export const UPLOAD_PROCESS_EVENT = "upload/process";
 
 // Event payload schema
+// The event carries a lightweight "source descriptor". The worker resolves the
+// actual text from whichever field matches `sourceType`, so only one of
+// `text` / `blobPath` / `url` is populated per event:
+//   - paste   → text (inline, safe, no parse)
+//   - txt/pdf → blobPath (raw file persisted by the action; worker parses)
+//   - youtube → url (transcript fetched by the worker)
 export const uploadProcessEventSchema = z.object({
   jobId: z.string(),
   userId: z.string(),
   blobPath: z.string().optional(),
-  text: z.string(),
+  text: z.string().optional(),
+  url: z.string().optional(),
   title: z.string(),
   sourceType: z.enum(["paste", "txt", "pdf", "youtube"]),
   passageId: z.string().uuid(), // Client-provided UUID for stable key

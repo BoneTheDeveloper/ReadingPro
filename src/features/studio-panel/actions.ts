@@ -8,12 +8,12 @@ import {
   getArtifactQuestions,
   recordQuizResult,
   resetQuizResult,
-} from "@/features/passage/services/studio-artifacts.service";
+} from "./services/studio-artifacts.service";
 import { getChatHistory } from "@/features/ai-chat/services/chat.service";
 import {
   generateQuestionsForPassage,
   PassageStudyServiceError,
-} from "@/features/passage/services/passage-study.service";
+} from "./services/passage-study.service";
 
 // Studio action types
 export type StudioActionId =

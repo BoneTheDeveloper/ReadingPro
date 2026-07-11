@@ -4,11 +4,11 @@ import { useCallback, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { FileText, FileSearch, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getCEFRShortLabel } from "@/types/cefr";
+import { getCEFRShortLabel } from "@/lib/cefr";
 import { getCEFRBadgeVariant } from "@/features/reading/lib/cefr-style";
 import { Badge } from "@/components/ui/badge";
 import { useScrollProgress } from "@/features/reading/hooks/use-scroll-progress";
-import type { PassageData } from "@/features/passage/schemas/passage.schema";
+import type { PassageData } from "@/types/passage";
 import type { TranslationSelection } from "@/features/reading/schemas/translation.schema";
 import { extractSelectionInfo } from "@/features/reading/lib/selection-utils";
 

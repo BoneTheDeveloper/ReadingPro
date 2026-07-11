@@ -17,7 +17,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import type { PassageData } from "@/features/passage/schemas/passage.schema";
+import type { PassageData } from "@/types/passage";
 import type { QuickTranslationData, TranslationSelection } from "@/features/reading/schemas/translation.schema";
 import type {
   ArtifactsCacheEntry,

@@ -2,8 +2,8 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { captureClientError } from "@/lib/observability/capture-client-error";
-import { uploadFileAction, getUploadStatus } from "../actions";
-import type { PassageData } from "@/features/passage/schemas/passage.schema";
+import { uploadFileAction, uploadTextAction, getUploadStatus } from "../actions";
+import type { PassageData } from "@/types/passage";
 
 type UploadStatus = "PENDING" | "PROCESSING" | "DONE" | "FAILED";
 
@@ -89,19 +89,18 @@ export function useUploadSubmit(options: UseUploadSubmitOptions = {}) {
       const startedAt = Date.now();
       const passageId = crypto.randomUUID(); // Client generates UUID for stable key
       try {
-        const text = file.name.endsWith(".pdf")
-          ? ""
-          : await file.text();
-
+        // Send the raw file only — the worker reads it back from storage and
+        // parses it. No client-side text extraction (PDFs can't be read here).
+        const isPdf = file.name.endsWith(".pdf");
         const fileTitle = file.name.replace(/\.(txt|pdf)$/, "");
-        const result = await uploadFileAction({
-          passageId, // Client-provided UUID
-          title: fileTitle,
-          text: text || "PDF uploaded",
-          sourceType: file.name.endsWith(".pdf") ? "pdf" : "txt",
-          blobPath: undefined,
-          startedAt,
-        });
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("passageId", passageId); // Client-provided UUID
+        formData.append("title", fileTitle);
+        formData.append("sourceType", isPdf ? "pdf" : "txt");
+        formData.append("startedAt", String(startedAt));
+
+        const result = await uploadFileAction(formData);
 
         const jobId = result.data.jobId;
         onUploadStart?.(fileTitle, jobId, passageId);
@@ -128,11 +127,10 @@ export function useUploadSubmit(options: UseUploadSubmitOptions = {}) {
       const startedAt = Date.now();
       const passageId = crypto.randomUUID(); // Client generates UUID for stable key
       try {
-        const result = await uploadFileAction({
+        const result = await uploadTextAction({
           passageId, // Client-provided UUID
           title: "Pasted Text",
           text,
-          sourceType: "paste",
           startedAt,
         });
 

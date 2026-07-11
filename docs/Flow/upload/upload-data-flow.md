@@ -15,11 +15,29 @@ management, `SourcesPanel`), see [Upload Render Flow](./upload-render-flow.md).
 
 | Layer | File | Responsibility |
 |-------|------|----------------|
-| Action | `src/features/upload/actions.ts` | Auth, create `UploadJob`, emit event, expose status |
-| Queue | `src/services/inngest/client.ts` | Inngest client + `upload/process` event schema |
-| Worker | `src/services/inngest/functions/process-upload.ts` | Async job: detect CEFR → create passage → mark done |
+| Action | `src/features/upload/actions.ts` | Auth, create `UploadJob`, persist raw file (files only), emit event, expose status |
+| Storage | `src/services/storage.ts` | `uploadFile` (action) + `downloadFile` (worker) — local FS in dev, Vercel Blob in prod |
+| Queue | `src/services/inngest/client.ts` | Inngest client + `upload/process` event schema (source descriptor) |
+| Worker | `src/services/inngest/functions/process-upload.ts` | Async job: resolve+parse text → detect CEFR → create passage → mark done |
+| Parser | `src/features/upload/lib/pdf-parsers.ts` | `parsePDF` — invoked by the worker for `pdf` uploads |
 | Database | `prisma.uploadJob` / `prisma.passage` | Job status tracking + persisted passage (called directly from the worker) |
-| Mapper | `src/features/passage/schemas/passage.schema.ts` | `toPassageData` — Prisma row → DTO at read boundary |
+| Mapper | `src/types/passage.ts` | `toPassageData` — Prisma row → DTO at read boundary (shared model) |
+
+**Parsing lives in the worker.** The action carries only a lightweight source
+descriptor; the worker resolves the passage text from it. This keeps a
+crash-prone parse (malformed PDF) inside the retryable job — a failure becomes a
+`FAILED` job, never a crashed action/client. Blob storage is a **conditional
+side effect**: only file uploads (`txt`/`pdf`) persist a raw file; `paste`
+(and future `youtube`) skip storage entirely and the flow still runs.
+
+Text resolution by `sourceType` (`resolve-text` step):
+
+| `sourceType` | Event carries | Blob? | Worker resolves text via |
+|--------------|---------------|-------|--------------------------|
+| `paste`  | `text` (inline) | ❌ | uses `text` directly |
+| `txt`    | `blobPath`      | ✅ | `downloadFile` → utf-8 |
+| `pdf`    | `blobPath`      | ✅ | `downloadFile` → `parsePDF().text` |
+| `youtube`| `url`           | ❌ | fetch transcript (TODO, not implemented) |
 
 > Upload creates a **passage only** — it does not generate questions. Question
 > generation is a separate, on-demand study feature (`src/features/passage/`).
@@ -49,7 +67,8 @@ flowchart TD
     F --> G[Return jobId]
 
     H[Inngest triggers worker] --> I[Update job to PROCESSING]
-    I --> J[Detect CEFR level - TODO AI]
+    I --> R[resolve-text by sourceType: downloadFile + parsePDF]
+    R --> J[Detect CEFR level - TODO AI]
     J --> K[Create Passage with client passageId]
     K --> L[Update job to DONE + passageId]
 
@@ -66,24 +85,38 @@ flowchart TD
 
 ## 2. Server Action Sequence
 
-`uploadFileAction` is thin: validate, authorize, persist a job, emit an event.
+Two actions split by transport. Both are thin — neither parses.
+
+- `uploadTextAction(input)` — paste: validate, auth, create job, emit event with
+  inline `text`. No storage.
+- `uploadFileAction(formData)` — `txt`/`pdf`: **job-first** ordering so a blob
+  write failure surfaces as `FAILED` (not a silent disruption). The raw file is
+  the only synchronous side effect; all parsing is deferred to the worker.
 
 ```mermaid
 sequenceDiagram
-    participant A as Server Action
+    participant A as uploadFileAction
     participant Auth as getUserId
     participant J as UploadJob (DB)
+    participant S as Storage (uploadFile)
     participant I as Inngest
 
-    A->>A: uploadFileSchema.parse(input)
+    A->>A: validateFile(file) + parse fields
     A->>Auth: getUserId()
     Auth-->>A: userId
-    A->>A: jobId = upload_{ts}_{rand}
-    A->>J: prisma.uploadJob.create({ id: jobId, userId, status: PENDING, sourceType, blobPath })
-    J-->>A: job created
-    A->>I: inngest.send(createUploadProcessEvent({ jobId, userId, text, title, sourceType, passageId, startedAt }))
-    I-->>A: event queued
-    A-->>A: return { success: true, data: { jobId } }
+    A->>A: jobId, blobPath = uploads/{userId}/{passageId}.{ext}
+    A->>J: create({ id: jobId, status: PENDING, sourceType, blobPath })
+    Note over A,J: job exists BEFORE any fallible IO
+    A->>S: uploadFile(blobPath, bytes)
+    alt store fails
+        S-->>A: null / throw
+        A->>J: update({ status: FAILED, error })
+        A-->>A: return { jobId }  (client polls → FAILED)
+    else store ok
+        S-->>A: stored
+        A->>I: inngest.send({ jobId, userId, blobPath, sourceType, title, passageId, startedAt })
+        A-->>A: return { jobId }
+    end
 ```
 
 ---
@@ -102,6 +135,9 @@ sequenceDiagram
     I->>S: trigger upload/process
     S->>P: step "update-job-status-to-processing" → status PROCESSING
 
+    S->>S: step "resolve-text" → dispatch by sourceType (downloadFile + parsePDF for pdf)
+    Note over S: empty result → throw → FAILED
+
     S->>S: step "detect-cefr-level" → "B2" (TODO: AI)
 
     S->>P: step "create-passage"
@@ -117,11 +153,15 @@ sequenceDiagram
 **Worker steps:**
 
 1. `update-job-status-to-processing` — flips `UploadJob.status` to `PROCESSING`.
-2. `detect-cefr-level` — currently returns hardcoded `"B2"`; AI detection is a TODO.
-3. `create-passage` — computes `wordCount`, maps the upload `sourceType`
+2. `resolve-text` — dispatches on `sourceType`: `paste` uses inline `text`;
+   `txt`/`pdf` call `downloadFile(blobPath)` then decode utf-8 / `parsePDF`;
+   `youtube` is not implemented (throws). Empty result throws → `FAILED`.
+3. `detect-cefr-level` — currently returns hardcoded `"B2"`; AI detection is a TODO.
+4. `create-passage` — computes `wordCount`, maps the upload `sourceType`
    (`paste`/`txt`/`youtube` → `TEXT`, `pdf` → `PDF`), and creates the `Passage`
-   using the client-provided `passageId` and `createdAt = new Date(startedAt)`.
-4. `update-job-status-to-done` — sets `status: DONE` and stores `passageId`.
+   using the client-provided `passageId`, the resolved text as `content`,
+   `filePath = blobPath`, and `createdAt = new Date(startedAt)`.
+5. `update-job-status-to-done` — sets `status: DONE` and stores `passageId`.
 
 ### Per-step service calls (current state)
 
@@ -132,6 +172,7 @@ service call.
 | Step | What it calls now | Module | State |
 |------|-------------------|--------|-------|
 | `update-job-status-to-processing` | `prisma.uploadJob.update({ status: PROCESSING })` | Direct Prisma | Implemented |
+| `resolve-text` | `downloadFile(blobPath)` + `parsePDF` (pdf) / utf-8 (txt) / inline (paste) | Storage + parser | Implemented (youtube TODO) |
 | `detect-cefr-level` | returns `"B2"` inline | None — hardcoded stub | ⚠️ TODO: AI service |
 | `create-passage` | `prisma.passage.create({ ... })` inline | Direct Prisma | Implemented (passage only) |
 | `update-job-status-to-done` | `prisma.uploadJob.update({ status: DONE, passageId })` | Direct Prisma | Implemented |
@@ -162,22 +203,32 @@ and a `passageId` exists, it fetches the passage row and maps it through
 
 ## API Contracts
 
-### `uploadFileAction` — input
+### `uploadFileAction(formData)` — input (txt / pdf)
+`FormData` fields:
+```
+file:       File            // raw .txt or .pdf (validated, ≤10MB)
+passageId:  string          // Client-generated UUID (becomes Passage.id)
+title:      string          // min length 1
+sourceType: "txt" | "pdf"
+startedAt:  string          // number as string → Passage.createdAt (ordering)
+```
+
+### `uploadTextAction(input)` — input (paste)
 ```typescript
 {
   passageId: string,   // Client-generated UUID (becomes Passage.id)
   title: string,       // min length 1
-  text: string,        // min length 1
-  sourceType: "paste" | "txt" | "pdf" | "youtube",
+  text: string,        // validated by validateTextContent (50..100k chars)
   startedAt: number,   // Client timestamp → Passage.createdAt (ordering)
-  blobPath?: string
 }
 ```
 
-### `uploadFileAction` — response
+### response (both)
 ```typescript
 { success: true, data: { jobId: string } }
 ```
+> A blob-write failure in `uploadFileAction` still returns `{ jobId }` — the job
+> is marked `FAILED` and surfaced through `getUploadStatus` polling.
 
 ### `getUploadStatus` — response
 ```typescript
@@ -193,16 +244,18 @@ and a `passageId` exists, it fetches the passage row and maps it through
 ```
 
 ### `upload/process` — event payload
+Source descriptor: exactly one of `text` / `blobPath` / `url` is set per `sourceType`.
 ```typescript
 {
   jobId: string,
   userId: string,
-  text: string,
   title: string,
   sourceType: "paste" | "txt" | "pdf" | "youtube",
   passageId: string,   // Client UUID
   startedAt: number,
-  blobPath?: string
+  text?: string,       // paste
+  blobPath?: string,   // txt / pdf
+  url?: string,        // youtube (future)
 }
 ```
 
@@ -232,9 +285,8 @@ src/services/inngest/
 └── functions/
     └── process-upload.ts            # Background worker (step functions)
 
-src/features/passage/
-└── schemas/
-    └── passage.schema.ts            # PassageData type + toPassageData mapper
+src/types/
+└── passage.ts                       # PassageData type + toPassageData mapper (shared model)
 
 prisma/
 └── UploadJob, Passage models        # Job status tracking + persisted passage

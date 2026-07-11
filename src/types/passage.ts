@@ -1,4 +1,7 @@
-export type SourceType = "TEXT" | "PDF" | "URL" | "YOUTUBE";
+// Single source of truth: the stored passage source type is the Prisma enum
+// (TEXT | PDF | YOUTUBE). Type-only import — erased at compile, safe on client.
+import type { SourceType } from "@/generated/prisma/client";
+export type { SourceType };
 
 export interface PassageData {
   id: string;
@@ -24,7 +27,7 @@ export type PassageRow = {
 
 /**
  * Maps raw Prisma record to PassageData.
- * Centralized mapping at schema boundary - FR-05b.5 pattern.
+ * Centralized mapping at the read boundary.
  */
 export function toPassageData(row: PassageRow): PassageData {
   return {

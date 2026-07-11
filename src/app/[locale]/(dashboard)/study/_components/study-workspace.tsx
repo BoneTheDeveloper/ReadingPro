@@ -8,7 +8,7 @@ import {
   clampTranslationContext,
   isTranslateTextWithinLimit,
 } from "@/features/reading/lib/translation-limits";
-import type { PassageData } from "@/features/passage/schemas/passage.schema";
+import type { PassageData } from "@/types/passage";
 import type {
   TranslationSelection,
   QuickTranslationData,

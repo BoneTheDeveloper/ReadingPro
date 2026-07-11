@@ -1,6 +1,8 @@
 import { inngest,UPLOAD_PROCESS_EVENT, UploadProcessEventData } from "@/services/inngest/client";
 import { prisma } from "@/lib/prisma";
 import { step } from "inngest";
+import { downloadFile } from "@/services/storage";
+import { parsePDF } from "@/features/upload/lib/pdf-parsers";
 export const processUploadJob = inngest.createFunction(
   {
     id: "process-upload-job",
@@ -25,13 +27,44 @@ export const processUploadJob = inngest.createFunction(
         });
       });
 
+      // Resolve the passage text from whichever source this upload used. This is
+      // where parsing lives (moved off the client/action): a malformed PDF throws
+      // here and the catch below marks the job FAILED — it never crashes upstream.
+      const resolvedText = await step.run("resolve-text", async () => {
+        switch (sourceType) {
+          case "paste":
+            return text ?? "";
+          case "txt":
+          case "pdf": {
+            if (!blobPath) throw new Error(`Missing blobPath for ${sourceType} upload`);
+            const buffer = await downloadFile(blobPath);
+            if (!buffer) throw new Error("Failed to read uploaded file from storage");
+            if (sourceType === "pdf") {
+              const parsed = await parsePDF(buffer);
+              return parsed.text;
+            }
+            return buffer.toString("utf-8");
+          }
+          case "youtube":
+            // TODO: fetch transcript from event.data.url
+            throw new Error("YouTube upload not implemented");
+          default:
+            throw new Error(`Unsupported sourceType: ${sourceType}`);
+        }
+      });
+
+      const content = resolvedText.trim();
+      if (!content) {
+        throw new Error("Resolved text is empty");
+      }
+
       const cefrLevel = await step.run("detect-cefr-level", async () => {
         // TODO: Implement CEFR detection with AI
         return "B2";
       });
 
       const passage = await step.run("create-passage", async () => {
-        const wordCount = text.split(/\s+/).filter((w: string) => w.length > 0).length;
+        const wordCount = content.split(/\s+/).filter((w: string) => w.length > 0).length;
         // Map upload source types to passage source types (Prisma: TEXT | PDF)
         const sourceTypeMap: Record<string, "TEXT" | "PDF"> = {
           paste: "TEXT",
@@ -45,7 +78,7 @@ export const processUploadJob = inngest.createFunction(
             id: passageId, // Use client-provided UUID for stable key
             userId,
             title,
-            content: text,
+            content,
             cefrLevel: cefrLevel as "B1" | "B2" | "C1" | "C2" | "A1" | "A2",
             wordCount,
             sourceType: passageSourceType,

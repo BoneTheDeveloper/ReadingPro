@@ -8,7 +8,7 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import { deletePassageAction } from "../_components/actions";
-import type { PassageData } from "@/features/passage/schemas/passage.schema";
+import type { PassageData } from "@/types/passage";
 import type { DocumentItem } from "@/features/upload/ui/sources-panel";
 
 export type StudyStatus =

@@ -10,7 +10,7 @@ import type {
   ArtifactRef,
   StudioActionId,
 } from "@/features/studio-panel/actions";
-import type { PassageData } from "@/features/passage/schemas/passage.schema";
+import type { PassageData } from "@/types/passage";
 import type { StudioArtifact, StudioArtifactErrorCode } from "@/features/studio-panel/lib/studio-artifact-types";
 import type { StudyState } from "./use-study-workspace-state";
 

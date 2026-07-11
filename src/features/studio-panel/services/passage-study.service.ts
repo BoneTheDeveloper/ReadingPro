@@ -5,20 +5,20 @@ import {
 } from "@/services/ai/question-generator";
 import { createModuleLogger } from "@/lib/logger";
 import { NotFoundError } from "@/lib/errors";
-import { questionDataSchema } from "@/features/passage/db/passage.repository";
-import type { GeneratedStudyQuestionDto } from "@/features/studio-panel/schemas/study.schema";
+import { findOwnedPassage } from "@/features/passage/db/passage.repository";
+import type { GeneratedStudyQuestionDto } from "../schemas/study.schema";
 import {
   STUDIO_GENERATION_TIMEOUT_MS,
   type StudioArtifact,
   type StudioArtifactErrorCode,
   type StudioArtifactStatus,
   type StudioArtifactType,
-} from "@/features/studio-panel/lib/studio-artifact-types";
+} from "../lib/studio-artifact-types";
 import {
+  questionDataSchema,
   createStudioArtifactWithQuestions,
   findExistingStudioArtifact,
-  findOwnedPassage,
-} from "../db/passage-study.repository";
+} from "../db/studio-artifact-questions.repository";
 
 const log = createModuleLogger("lib:study:passage-service");
 
