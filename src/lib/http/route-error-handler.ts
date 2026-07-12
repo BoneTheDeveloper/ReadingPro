@@ -11,8 +11,6 @@ import {
 } from "@/lib/errors";
 import type { ApiErrorResponse } from "./api-envelope-schema";
 
-export { NotFoundError } from "@/lib/errors";
-
 export function toHttp(
   error: unknown,
   log: ReturnType<typeof createRequestLogger>,

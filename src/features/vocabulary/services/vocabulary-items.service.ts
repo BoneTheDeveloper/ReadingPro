@@ -1,4 +1,5 @@
 import "server-only";
+import { NotFoundError } from "@/lib/errors";
 import { createModuleLogger } from "@/lib/logger";
 import { toIsoString } from "@/lib/utils";
 import type {
@@ -19,13 +20,6 @@ import {
 } from "../db/vocabulary-item-progress.repository";
 
 const log = createModuleLogger("lib:vocabulary-service");
-
-export class VocabularyServiceError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "VocabularyServiceError";
-  }
-}
 
 export interface SaveVocabularyItemInput {
   userId: string;
@@ -97,7 +91,7 @@ export async function saveVocabularyItem(
     const passage = await findOwnedSource(input.userId, input.sourceId);
 
     if (!passage) {
-      throw new VocabularyServiceError("Source not found.");
+      throw new NotFoundError("Source");
     }
   }
 
