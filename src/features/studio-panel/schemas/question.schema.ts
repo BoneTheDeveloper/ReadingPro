@@ -1,5 +1,16 @@
 import { z } from "zod";
 
+// ---------------------------------------------------------------------------
+// Server-action input schema — validated in studio-panel/actions.ts
+// ---------------------------------------------------------------------------
+
+export const generateStudioQuestionsInputSchema = z
+  .object({
+    passageId: z.string().uuid(),
+    artifactId: z.string().uuid(),
+  })
+  .strict();
+
 // Single source of truth for the question-option vocabulary — every question
 // shape (AI-generation output, DB-persistence input) reuses this.
 export const questionOptionSchema = z

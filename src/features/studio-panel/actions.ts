@@ -11,6 +11,8 @@ import {
 } from "./services/studio-artifacts.service";
 import { getChatHistory } from "@/features/ai-chat/services/chat.service";
 import { studyChatHistoryDataSchema } from "./schemas/chat.schema";
+import { recordQuizResultInputSchema } from "./schemas/studio-artifact.schema";
+import { generateStudioQuestionsInputSchema } from "./schemas/question.schema";
 import {
   generateQuestionsForPassage,
   PassageStudyServiceError,
@@ -49,16 +51,6 @@ export interface ArtifactDetailCacheEntry {
 
 const passageIdSchema = z.string().uuid();
 
-const recordQuizResultSchema = z
-  .object({
-    correctCount: z.number().int().nonnegative(),
-    totalQuestions: z.number().int().positive(),
-  })
-  .refine((data) => data.correctCount <= data.totalQuestions, {
-    message: "correctCount cannot exceed totalQuestions",
-    path: ["correctCount"],
-  });
-
 export async function getStudioArtifactsAction(passageId: string) {
   const parsedPassageId = passageIdSchema.parse(passageId);
   const userId = await getUserId();
@@ -74,7 +66,7 @@ export async function recordQuizResultAction(
   artifactId: string,
   stats: { correctCount: number; totalQuestions: number },
 ) {
-  const parsedStats = recordQuizResultSchema.parse(stats);
+  const parsedStats = recordQuizResultInputSchema.parse(stats);
   const userId = await getUserId();
   await recordQuizResult(artifactId, userId, parsedStats);
 }
@@ -84,18 +76,11 @@ export async function resetQuizResultAction(artifactId: string) {
   await resetQuizResult(artifactId, userId);
 }
 
-const generateStudioQuestionsSchema = z
-  .object({
-    passageId: z.string().uuid(),
-    artifactId: z.string().uuid(),
-  })
-  .strict();
-
 export async function generateStudioQuestionsAction(input: {
   passageId: string;
   artifactId: string;
 }) {
-  const { passageId, artifactId } = generateStudioQuestionsSchema.parse(input);
+  const { passageId, artifactId } = generateStudioQuestionsInputSchema.parse(input);
   const userId = await getUserId();
   try {
     const { artifact, questions } = await generateQuestionsForPassage(

@@ -1,21 +1,16 @@
 "use server";
 
-import { z } from "zod";
 import { getUserId } from "@/lib/auth/auth-server";
 import { suggestDictionaryTerms } from "./services/suggest.service";
 import { getDictionaryEntryDetail } from "./services/entry-detail.service";
+import {
+  suggestInputSchema,
+  entryDetailInputSchema,
+} from "./schemas/dictionary.schema";
 import type {
   DictionaryEntryDto,
   DictionarySuggestItemDto,
 } from "./schemas/dictionary.schema";
-
-const suggestInputSchema = z
-  .object({
-    query: z.string().trim().min(1).max(200),
-    sourceLanguage: z.literal("en"),
-    targetLanguage: z.literal("vi"),
-  })
-  .strict();
 
 /**
  * Server Action powering the as-you-type dictionary search box.
@@ -39,14 +34,6 @@ export async function suggestDictionaryTermsAction(
     targetLanguage: parsed.targetLanguage,
   });
 }
-
-const entryDetailInputSchema = z
-  .object({
-    entryId: z.string().uuid(),
-    sourceLanguage: z.literal("en"),
-    targetLanguage: z.literal("vi"),
-  })
-  .strict();
 
 /**
  * Server Action powering full-entry load when a suggestion is clicked.

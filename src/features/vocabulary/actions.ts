@@ -5,6 +5,16 @@ import { z } from "zod";
 import { getUserId } from "@/lib/auth/auth-server";
 import type { VocabularyStatus } from "./schemas/vocabulary.schema";
 import {
+  saveVocabularyInputSchema,
+  updateVocabularyStatusInputSchema,
+  reviewVocabularyInputSchema,
+  createVocabularySetInputSchema,
+  updateVocabularySetInputSchema,
+  deleteVocabularySetInputSchema,
+  addItemsToVocabularySetInputSchema,
+  removeItemFromVocabularySetInputSchema,
+} from "./schemas/vocabulary.schema";
+import {
   saveVocabularyItem,
   deleteVocabularyItemById,
   updateVocabularyItemStatus,
@@ -18,75 +28,12 @@ import {
   removeItemFromVocabularySet,
 } from "./services/vocabulary-sets.service";
 
-// ============== Validation Schemas ==============
-
-const saveVocabularySchema = z
-  .object({
-    selectedText: z.string().trim().min(1).max(500),
-    translation: z.string().trim().min(1).max(500),
-    contextSentence: z.string().trim().max(4000).optional(),
-    sourceId: z.string().uuid().optional(),
-    sourceLanguage: z.literal("en"),
-    targetLanguage: z.literal("vi"),
-    source: z.enum(["TRANSLATE", "DICTIONARY"]).default("TRANSLATE"),
-    dictionaryEntryId: z.string().uuid().optional(),
-    dictionarySenseId: z.string().uuid().optional(),
-  })
-  .strict();
-
-const updateStatusSchema = z
-  .object({
-    itemId: z.string().uuid(),
-    status: z.enum(["NEW", "LEARNING", "MASTERED"]),
-  })
-  .strict();
-
-const reviewSchema = z
-  .object({
-    itemId: z.string().uuid(),
-    isCorrect: z.boolean(),
-  })
-  .strict();
-
-const createSetSchema = z
-  .object({
-    name: z.string().trim().min(1).max(100),
-  })
-  .strict();
-
-const updateSetSchema = z
-  .object({
-    setId: z.string().uuid(),
-    name: z.string().trim().min(1).max(100),
-  })
-  .strict();
-
-const deleteSetSchema = z
-  .object({
-    setId: z.string().uuid(),
-  })
-  .strict();
-
-const addItemsToSetSchema = z
-  .object({
-    setId: z.string().uuid(),
-    itemIds: z.array(z.string().uuid()).min(1),
-  })
-  .strict();
-
-const removeItemFromSetSchema = z
-  .object({
-    setId: z.string().uuid(),
-    itemId: z.string().uuid(),
-  })
-  .strict();
-
 // ============== Vocabulary Item Actions ==============
 
 export async function saveVocabularyAction(
-  input: z.infer<typeof saveVocabularySchema>
+  input: z.infer<typeof saveVocabularyInputSchema>
 ) {
-  const parsed = saveVocabularySchema.parse(input);
+  const parsed = saveVocabularyInputSchema.parse(input);
   const userId = await getUserId();
 
   const result = await saveVocabularyItem({
@@ -109,9 +56,9 @@ export async function deleteVocabularyItemAction(itemId: string) {
 }
 
 export async function updateVocabularyStatusAction(
-  input: z.infer<typeof updateStatusSchema>
+  input: z.infer<typeof updateVocabularyStatusInputSchema>
 ) {
-  const parsed = updateStatusSchema.parse(input);
+  const parsed = updateVocabularyStatusInputSchema.parse(input);
   const userId = await getUserId();
 
   const result = await updateVocabularyItemStatus({
@@ -125,9 +72,9 @@ export async function updateVocabularyStatusAction(
 }
 
 export async function submitVocabularyReviewAction(
-  input: z.infer<typeof reviewSchema>
+  input: z.infer<typeof reviewVocabularyInputSchema>
 ) {
-  const parsed = reviewSchema.parse(input);
+  const parsed = reviewVocabularyInputSchema.parse(input);
   const userId = await getUserId();
 
   const result = await reviewVocabularyItemById({
@@ -143,9 +90,9 @@ export async function submitVocabularyReviewAction(
 // ============== Vocabulary Set Actions ==============
 
 export async function createVocabularySetAction(
-  input: z.infer<typeof createSetSchema>
+  input: z.infer<typeof createVocabularySetInputSchema>
 ) {
-  const parsed = createSetSchema.parse(input);
+  const parsed = createVocabularySetInputSchema.parse(input);
   const userId = await getUserId();
 
   const result = await createVocabularyManualSet({
@@ -158,9 +105,9 @@ export async function createVocabularySetAction(
 }
 
 export async function updateVocabularySetAction(
-  input: z.infer<typeof updateSetSchema>
+  input: z.infer<typeof updateVocabularySetInputSchema>
 ) {
-  const parsed = updateSetSchema.parse(input);
+  const parsed = updateVocabularySetInputSchema.parse(input);
   const userId = await getUserId();
 
   const result = await renameVocabularySet({
@@ -174,9 +121,9 @@ export async function updateVocabularySetAction(
 }
 
 export async function deleteVocabularySetAction(
-  input: z.infer<typeof deleteSetSchema>
+  input: z.infer<typeof deleteVocabularySetInputSchema>
 ) {
-  const parsed = deleteSetSchema.parse(input);
+  const parsed = deleteVocabularySetInputSchema.parse(input);
   const userId = await getUserId();
 
   await deleteVocabularySetById({ userId, setId: parsed.setId });
@@ -186,9 +133,9 @@ export async function deleteVocabularySetAction(
 }
 
 export async function addItemsToVocabularySetAction(
-  input: z.infer<typeof addItemsToSetSchema>
+  input: z.infer<typeof addItemsToVocabularySetInputSchema>
 ) {
-  const parsed = addItemsToSetSchema.parse(input);
+  const parsed = addItemsToVocabularySetInputSchema.parse(input);
   const userId = await getUserId();
 
   await addItemsToVocabularySet({
@@ -202,9 +149,9 @@ export async function addItemsToVocabularySetAction(
 }
 
 export async function removeItemFromVocabularySetAction(
-  input: z.infer<typeof removeItemFromSetSchema>
+  input: z.infer<typeof removeItemFromVocabularySetInputSchema>
 ) {
-  const parsed = removeItemFromSetSchema.parse(input);
+  const parsed = removeItemFromVocabularySetInputSchema.parse(input);
   const userId = await getUserId();
 
   await removeItemFromVocabularySet({

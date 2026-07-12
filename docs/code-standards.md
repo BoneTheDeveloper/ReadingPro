@@ -126,7 +126,8 @@ schema in the wrong file").
 | Role | Name pattern | Direction | Lives in | Example |
 |------|--------------|-----------|----------|---------|
 | Vocabulary / enum | `<name>Schema` (a `z.enum` or reusable sub-object) | — | feature `schemas/`, or `src/types/` if shared | `uploadSourceTypeSchema`, `questionOptionSchema` |
-| Request (input to action/route) | `<entity>RequestSchema` | client → server | feature `schemas/` | `studyChatRequestSchema` |
+| Route request body | `<entity>RequestSchema` | client → server (HTTP) | feature `schemas/` or `route.ts` | `translateRequestSchema` |
+| Server-action args | `<verb><Entity>InputSchema` | client → server (action) | feature `schemas/`, imported by `actions.ts` | `saveVocabularyInputSchema` |
 | Query params | `<entity>QuerySchema` | client → server | feature `schemas/` | `studyChatQuerySchema` |
 | Event / queue payload | `<entity>EventSchema` | async | `services/inngest/` or feature | `uploadProcessEventSchema` |
 | Data payload (body of a response) | `<entity>DataSchema` + `type <Entity>Dto` | server → client | feature `schemas/` | `translationDataSchema` |
@@ -138,9 +139,9 @@ schema in the wrong file").
 1. **Schema → type, never the reverse.** Derive with `z.infer<typeof schema>`; no hand-written parallel type.
 2. **DB is the source of truth for STORED data.** Derive stored enums/shapes from Prisma (`import type { X } from "@/generated/prisma/client"`), never re-type by hand.
 3. **Derive, don't redefine.** Build related schemas from a base via `.pick()/.omit()/.extend()/.partial()/.extract()` — e.g. `fileSourceTypeSchema = uploadSourceTypeSchema.extract(["txt", "pdf"])`.
-4. **One role per name.** Input = `Request`, output = `Data`/`Dto`/`Response`, allowed values = vocab `Schema`/enum, async payload = `Event`. Never a grab-bag suffix like `Fields`, `Input`, or `Payload`.
+4. **One role per name.** Route request body = `Request`, server-action args = `Input`, output = `Data`/`Dto`/`Response`, allowed values = vocab `Schema`/enum, async payload = `Event`. Never a grab-bag suffix like `Fields` or `Payload`. `Request` and `Input` both mark a client→server input; the suffix records the transport — HTTP route vs server action — so the two never get filed in the wrong layer.
 5. **`.strict()` on every object schema** to reject extra fields.
-6. **Declare file scope.** A feature `*.schema.ts` holds that feature's vocabulary + request + response only. Shared output MODELS go to `src/types/`; stored enums come from `@/generated/prisma`. Add a one-line header comment stating the file's scope.
+6. **Declare file scope.** A feature `*.schema.ts` holds that feature's vocabulary + request + action input + response only. Server-action input schemas live here (exported) and are imported by `actions.ts` — never declared inline in a `"use server"` file, which can only export async functions and so can never share the schema with a client. Shared output MODELS go to `src/types/`; stored enums come from `@/generated/prisma`. Add a one-line header comment stating the file's scope.
 
 ---
 

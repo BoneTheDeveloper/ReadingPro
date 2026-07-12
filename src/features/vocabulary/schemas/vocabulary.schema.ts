@@ -4,6 +4,71 @@ export const vocabularyStatusSchema = z.enum(["NEW", "LEARNING", "MASTERED"]);
 export const vocabularySourceSchema = z.enum(["TRANSLATE", "DICTIONARY"]);
 export const vocabularySetTypeSchema = z.enum(["MANUAL", "DAILY", "WEEKLY"]);
 
+// ---------------------------------------------------------------------------
+// Server-action input schemas — validated in vocabulary/actions.ts
+// ---------------------------------------------------------------------------
+
+export const saveVocabularyInputSchema = z
+  .object({
+    selectedText: z.string().trim().min(1).max(500),
+    translation: z.string().trim().min(1).max(500),
+    contextSentence: z.string().trim().max(4000).optional(),
+    sourceId: z.string().uuid().optional(),
+    sourceLanguage: z.literal("en"),
+    targetLanguage: z.literal("vi"),
+    source: vocabularySourceSchema.default("TRANSLATE"),
+    dictionaryEntryId: z.string().uuid().optional(),
+    dictionarySenseId: z.string().uuid().optional(),
+  })
+  .strict();
+
+export const updateVocabularyStatusInputSchema = z
+  .object({
+    itemId: z.string().uuid(),
+    status: vocabularyStatusSchema,
+  })
+  .strict();
+
+export const reviewVocabularyInputSchema = z
+  .object({
+    itemId: z.string().uuid(),
+    isCorrect: z.boolean(),
+  })
+  .strict();
+
+export const createVocabularySetInputSchema = z
+  .object({
+    name: z.string().trim().min(1).max(100),
+  })
+  .strict();
+
+export const updateVocabularySetInputSchema = z
+  .object({
+    setId: z.string().uuid(),
+    name: z.string().trim().min(1).max(100),
+  })
+  .strict();
+
+export const deleteVocabularySetInputSchema = z
+  .object({
+    setId: z.string().uuid(),
+  })
+  .strict();
+
+export const addItemsToVocabularySetInputSchema = z
+  .object({
+    setId: z.string().uuid(),
+    itemIds: z.array(z.string().uuid()).min(1),
+  })
+  .strict();
+
+export const removeItemFromVocabularySetInputSchema = z
+  .object({
+    setId: z.string().uuid(),
+    itemId: z.string().uuid(),
+  })
+  .strict();
+
 export const vocabularyOccurrenceSchema = z.object({
   id: z.string(),
   vocabularyItemId: z.string(),

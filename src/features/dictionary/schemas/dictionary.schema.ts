@@ -1,8 +1,25 @@
 import { z } from "zod";
-import {
-  apiErrorResponseSchema,
-} from "@/lib/http/api-envelope-schema";
 import { getSourceLabel } from "@/features/dictionary/lib/dictionary-helpers";
+
+// ---------------------------------------------------------------------------
+// Server-action input schemas — validated in dictionary/actions.ts
+// ---------------------------------------------------------------------------
+
+export const suggestInputSchema = z
+  .object({
+    query: z.string().trim().min(1).max(200),
+    sourceLanguage: z.literal("en"),
+    targetLanguage: z.literal("vi"),
+  })
+  .strict();
+
+export const entryDetailInputSchema = z
+  .object({
+    entryId: z.string().uuid(),
+    sourceLanguage: z.literal("en"),
+    targetLanguage: z.literal("vi"),
+  })
+  .strict();
 
 const dictionaryTranslationStatusSchema = z.enum([
   "draft",
@@ -97,8 +114,6 @@ export const dictionarySearchResponseSchema = z.array(dictionarySearchResultSche
 export const dictionarySuggestResponseSchema = z.array(dictionarySuggestItemSchema);
 export const dictionaryEntryDetailResponseSchema = dictionaryEntrySchema;
 
-export const dictionaryErrorResponseSchema = apiErrorResponseSchema;
-
 export type DictionaryTranslationDto = z.infer<
   typeof dictionaryTranslationSchema
 >;
@@ -123,9 +138,6 @@ export type DictionarySuggestResponse = z.infer<
 >;
 export type DictionaryEntryDetailResponse = z.infer<
   typeof dictionaryEntryDetailResponseSchema
->;
-export type DictionaryErrorResponse = z.infer<
-  typeof dictionaryErrorResponseSchema
 >;
 
 // ---------------------------------------------------------------------------
