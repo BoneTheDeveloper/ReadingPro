@@ -130,12 +130,9 @@ model UserProfile {
   id          String    @id
   user        User      @relation(fields: [id], references: [id], onDelete: Cascade)
   bio         String?
-  targetLevel CEFRLevel @default(B2)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-
   passages             Passage[]
-  studySessions        StudySession[]
   chatMessages         StudyChatMessage[]
   translationCaches    TranslationCache[]
   translationHistories TranslationHistory[]
@@ -492,17 +489,3 @@ model VocabularySetItem {
   @@map("vocabulary_set_items")
 }
 
-// [Study Sessions] ============================================
-
-model StudySession {
-  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId          String
-  startedAt       DateTime  @default(now())
-  lastActivityAt  DateTime  @default(now())
-  completedAt     DateTime?
-
-  user UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId, startedAt])
-  @@map("study_sessions")
-}

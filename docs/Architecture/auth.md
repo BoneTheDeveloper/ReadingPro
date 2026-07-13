@@ -17,46 +17,46 @@ Authentication is handled by **Better Auth** — a self-hosted auth framework pr
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                         Client Layer                             │
-├─────────────────────────────────────────────────────────────────┤
-│  ┌──────────────────┐    ┌──────────────────┐                   │
-│  │ AuthControls     │    │ SignInForm       │                   │
-│  │ (authClient.    │    │ SignUpForm       │                   │
-│  │  useSession)    │    │                  │                   │
-│  └────────┬────────┘    └────────┬────────┘                   │
-│           │                       │                             │
-│           │    authClient         │                             │
-│           ▼                       ▼                             │
+┌────────────────────────────────────────────────────────────────┐
+│                         Client Layer                           │
+├────────────────────────────────────────────────────────────────┤
+│  ┌──────────────────┐    ┌──────────────────┐                  │
+│  │ AuthControls     │    │ SignInForm       │                  │
+│  │ (authClient.     │    │ SignUpForm       │                  │
+│  │  useSession)     │    │                  │                  │
+│  └────────┬─────────┘    └────────┬─────────┘                  │
+│           │                       │                            │
+│           │    authClient         │                            │
+│           ▼                       ▼                           │
 │  ┌─────────────────────────────────────────────┐               │
 │  │         /api/auth/[...all]                  │               │
-│  │  POST /sign-in  GET /session  POST /sign-out │            │
+│  │  POST /sign-in  GET /session  POST /sign-out│               │
 │  └─────────────────────┬───────────────────────┘               │
 └────────────────────────┼───────────────────────────────────────┘
                          │
                          ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                         Server Layer                             │
+│                         Server Layer                            │
 ├─────────────────────────────────────────────────────────────────┤
-│  ┌─────────────────────────────────────────────┐               │
-│  │          auth.ts (Better Auth)            │               │
-│  │  - emailAndPassword                       │               │
-│  │  - socialProviders.google                │               │
-│  │  - callbacks: afterSignUp, afterSignIn    │               │
-│  └─────────────────────┬───────────────────┘               │
-│                        │                                     │
-│                        ▼                                     │
-│  ┌─────────────────────────────────────────────┐               │
-│  │          Prisma Adapter                     │               │
-│  │  - prismaAdapter(prisma, { provider })    │               │
-│  └─────────────────────┬───────────────────────┘               │
-│                        │                                     │
-│                        ▼                                     │
-│  ┌─────────────────────────────────────────────┐               │
-│  │          PostgreSQL                         │               │
-│  │  Tables: user, session, account,            │               │
-│  │          verification                      │               │
-│  └─────────────────────────────────────────────┘               │
+│  ┌─────────────────────────────────────────────┐                │
+│  │          auth.ts (Better Auth)              │                │
+│  │  - emailAndPassword                         │                │
+│  │  - socialProviders.google                   │                │
+│  │  - databaseHooks.user.create.after          │                │
+│  └─────────────────────┬───────────────────────┘                │
+│                        │                                        │
+│                        ▼                                        │
+│  ┌─────────────────────────────────────────────┐                │
+│  │          Prisma Adapter                     │                │
+│  │  - prismaAdapter(prisma, { provider })      │                │
+│  └─────────────────────┬───────────────────────┘                │
+│                        │                                        │
+│                        ▼                                        │
+│  ┌─────────────────────────────────────────────┐                │
+│  │          PostgreSQL                         │                │
+│  │  Tables: user, session, account,            │                │
+│  │          verification                       │                │
+│  └─────────────────────────────────────────────┘                │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -103,7 +103,9 @@ Better Auth User ────────── App UserProfile
     └────────┘              └───────────┘
 ```
 
-The `User.id` matches `UserProfile.id` — they are linked by the same value, not a foreign key.
+The `User.id` matches `UserProfile.id`. `UserProfile.id` is a **foreign key** to
+`User.id` (`@relation(fields: [id], references: [id], onDelete: Cascade)`) — same
+value, and a real FK so deleting the auth user cascades to the profile.
 
 ## Session Flow
 
@@ -112,7 +114,7 @@ The `User.id` matches `UserProfile.id` — they are linked by the same value, no
 authClient.signUp.email({ email, password, name })
   → POST /api/auth/sign-up
     → Creates user in `user` table
-    → Creates UserProfile via afterSignUp callback
+    → Creates UserProfile via databaseHooks.user.create.after (upsert)
     → Creates session cookie
     → Redirect to dashboard
 ```
@@ -122,7 +124,7 @@ authClient.signUp.email({ email, password, name })
 authClient.signIn.email({ email, password })
   → POST /api/auth/sign-in
     → Validates credentials
-    → Ensures UserProfile via afterSignIn callback
+    → UserProfile already exists (created at sign-up via the user.create hook)
     → Creates session
     → Redirect to dashboard
 ```
@@ -133,7 +135,7 @@ authClient.signIn.social({ provider: "google" })
   → Redirect to Google OAuth
     → Callback to /api/auth/callback/google
     → Creates/links account in `account` table
-    → Creates/updates user via afterSignUp/afterSignIn
+    → On first login: creates user + UserProfile via databaseHooks.user.create.after
     → Redirect to dashboard
 ```
 
@@ -246,18 +248,3 @@ GOOGLE_CLIENT_SECRET=xxx
 3. **Rate limiting** — Built-in for auth endpoints
 4. **Password hashing** — Argon2 by default
 5. **OAuth state** — PKCE + state parameter validation
-
-## Migration Notes
-
-### From Clerk
-- Clerk user IDs are **not** compatible with Better Auth IDs
-- Existing users must re-register (clean slate migration)
-- `UserProfile.id` now references Better Auth's `User.id`
-- Custom fields (tier, stripeCustomerId) moved to Better Auth's `User` table
-
-### Breaking Changes
-- `auth.protect()` → `getUserId()` (throws, must be caught)
-- `<ClerkProvider>` → Removed (next-intl only)
-- `<SignInButton>` → Custom `SignInForm` component
-- `<UserButton>` → Custom dropdown with `authClient.useSession()`
-- Custom `useSession` hook → Built-in `authClient.useSession()`

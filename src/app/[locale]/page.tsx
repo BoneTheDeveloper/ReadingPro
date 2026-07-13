@@ -16,8 +16,6 @@ import { buttonVariants } from "@/components/ui/button";
 import { DashboardSidebar } from "@/components/layout/dashboard-sidebar";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
-import { getCurrentUser } from "@/lib/auth/auth-server";
-import { getUserProgress } from "@/features/progress/db/progress.repository";
 
 type UserProgress = {
   totalCards: number;
@@ -272,19 +270,7 @@ function getMomentumCopy(stats: UserProgress, passages: PassageOverview) {
 
 export default async function DashboardPage() {
   const t = await getTranslations("Dashboard");
-  const user = await getCurrentUser();
-  const progress = user ? await getUserProgress(user.id) : null;
-  // Only streak + study-time come from real data for now; the remaining cards
-  // intentionally stay on mockStats until they are wired in a later effort.
-  const stats: UserProgress = progress
-    ? {
-        ...mockStats,
-        streakDays: progress.streakDays,
-        timeStudiedTodaySeconds: progress.timeStudiedTodaySeconds,
-        timeStudiedWeekSeconds: progress.timeStudiedWeekSeconds,
-        activeDaysThisWeek: progress.activeDaysThisWeek,
-      }
-    : mockStats;
+  const stats: UserProgress = mockStats;
   const passageOverview = mockPassageOverview;
   const { recentPassages } = passageOverview;
   const displayName = mockDashboardProfile.firstName;

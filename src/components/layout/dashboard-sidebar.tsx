@@ -47,7 +47,7 @@ export function DashboardSidebar({ children }: { children: React.ReactNode }) {
   const isActive = useCallback(
     (href: string) => {
       if (href === "/") {
-        return pathname === "/" || pathname === "/progress";
+        return pathname === "/";
       }
       if (href === "/study") {
         return (
