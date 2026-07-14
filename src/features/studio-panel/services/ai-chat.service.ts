@@ -9,8 +9,8 @@ import { NotFoundError } from "@/lib/errors";
 import {
   MAX_PASSAGE_CHARS,
   type UiMessage,
-} from "@/features/studio-panel/schemas/chat.schema";
-import { truncateToRecentTurns, extractTextContent } from "../lib/chat-utils";
+} from "../schemas/ai-chat.schema";
+import { truncateToRecentTurns, extractTextContent } from "../lib/ai-chat-utils";
 
 const log = createModuleLogger("lib:study:chat-service");
 

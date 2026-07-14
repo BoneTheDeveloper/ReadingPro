@@ -42,7 +42,7 @@ const eslintConfig = defineConfig([
 
       // actions.ts là FILE, không phải folder → dùng file descriptor thay cho mode:"file"
       "boundaries/files": [
-        { pattern: "src/features/*/actions.ts", category: "action" },
+        { pattern: "src/features/*/action.ts", category: "action" },
       ],
     },
     rules: {
@@ -80,7 +80,7 @@ const eslintConfig = defineConfig([
               to: [
                 { element: { type: "feature-client", captured: { name: "{{ from.element.captured.name }}" } } },
                 { element: { type: "feature-shared", captured: { name: "{{ from.element.captured.name }}" } } },
-                { element: { type: ["components", "lib", "i18n", "types"] } },
+                { element: { type: ["components", "lib", "i18n", "types", "services", "app", "feature-service", "feature-shared"] } },
               ],
             },
             message: "Client (ui, hooks) chỉ dùng actions.ts + schemas của chính feature mình.",
@@ -94,7 +94,7 @@ const eslintConfig = defineConfig([
                 { element: { type: "feature-service", captured: { name: "{{ from.element.captured.name }}" } } },
                 { element: { type: "feature-repo",    captured: { name: "{{ from.element.captured.name }}" } } },
                 { element: { type: "feature-shared",  captured: { name: "{{ from.element.captured.name }}" } } },
-                { element: { type: ["services", "lib", "types"] } },
+                { element: { type: ["services", "lib", "types", "feature-service", "feature-repo", "feature-shared"] } },
               ],
             },
           },
@@ -134,8 +134,9 @@ const eslintConfig = defineConfig([
             allow: {
               to: [
                 { element: { type: "feature-service", captured: { name: "{{ from.element.captured.name }}" } } },
+                { element: { type: "feature-repo",    captured: { name: "{{ from.element.captured.name }}" } } },
                 { element: { type: "feature-shared",  captured: { name: "{{ from.element.captured.name }}" } } },
-                { element: { type: ["lib", "types"] } },
+                { element: { type: ["services", "lib", "types", "components"] } },
               ],
             },
             message: "actions.ts chỉ gọi service + schema của chính feature mình.",

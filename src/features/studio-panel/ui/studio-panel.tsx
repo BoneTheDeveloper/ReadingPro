@@ -24,7 +24,7 @@ import type {
   ArtifactRef,
   ArtifactDetailCacheEntry,
   StudioActionId,
-} from "@/features/studio-panel/actions";
+} from "@/features/studio-panel/action";
 import type {
   StudioArtifactType,
   StudioArtifactErrorCode,
@@ -32,7 +32,7 @@ import type {
 import { QuizContent } from "./studio/quiz/quiz-content";
 import { StudyChatPanel } from "./studio/chat/chat-panel";
 import { StudyLookupPanel } from "./studio/lookup/lookup-panel";
-import { resetQuizResultAction } from "@/features/studio-panel/actions";
+import { resetQuizResultAction } from "@/features/studio-panel/action";
 import {
   StudioActionGrid,
   StudioEmptyState,

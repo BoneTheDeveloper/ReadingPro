@@ -2,7 +2,6 @@ import "server-only";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { NotFoundError } from "@/lib/errors";
-import { findOwnedPassage } from "@/features/passage/db/passage.repository";
 import {
   findOrCreateDailySet,
   findOrCreateWeeklySet,
@@ -38,10 +37,6 @@ export interface UpsertVocabularyItemParams {
   source?: VocabularySourceType;
   dictionaryEntryId?: string;
   dictionarySenseId?: string;
-}
-
-export async function findOwnedSource(userId: string, sourceId: string) {
-  return findOwnedPassage(userId, sourceId);
 }
 
 export async function upsertVocabularyItem(

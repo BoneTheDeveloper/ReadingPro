@@ -9,6 +9,7 @@ import {
 } from "./schemas/dictionary.schema";
 import type {
   DictionaryEntryDto,
+  DictionarySenseDto,
   DictionarySuggestItemDto,
 } from "./schemas/dictionary.schema";
 
@@ -55,5 +56,32 @@ export async function getDictionaryEntryDetailAction(
   return getDictionaryEntryDetail(parsed.entryId, {
     sourceLanguage: parsed.sourceLanguage,
     targetLanguage: parsed.targetLanguage,
+  });
+}
+
+/**
+ * Bridge action: dictionary feature saves vocabulary through vocabulary feature.
+ * This keeps the boundary clean - hooks only call their own feature's actions.
+ */
+export async function saveDictionarySenseToVocabularyAction(
+  entry: DictionaryEntryDto,
+  sense: DictionarySenseDto,
+) {
+  const primary =
+    sense.translations.find((t) => t.isPrimary) ?? sense.translations[0];
+  if (!primary) {
+    throw new Error("No primary translation found for sense");
+  }
+
+  const { saveVocabularyAction } = await import("@/features/vocabulary/actions");
+  return saveVocabularyAction({
+    selectedText: entry.headword,
+    translation: primary.translation,
+    contextSentence: sense.example ?? undefined,
+    sourceLanguage: "en",
+    targetLanguage: "vi",
+    source: "DICTIONARY",
+    dictionaryEntryId: entry.id,
+    dictionarySenseId: sense.id,
   });
 }

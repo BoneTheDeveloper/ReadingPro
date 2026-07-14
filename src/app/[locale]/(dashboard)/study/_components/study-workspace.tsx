@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import { Group, Panel, Separator } from "react-resizable-panels";
 import { translateResponseSchema } from "@/features/reading/schemas/translation.schema";
-import { saveVocabularyAction } from "@/features/vocabulary/actions";
+import { saveVocabularyAction } from "@/features/vocabulary/action";
 import {
   clampTranslationContext,
   isTranslateTextWithinLimit,

@@ -7,7 +7,7 @@ import { DefaultChatTransport } from "ai";
 import { Send, Loader2, AlertCircle, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { getChatHistoryAction } from "@/features/studio-panel/actions";
+import { getChatHistoryAction } from "@/features/studio-panel/action";
 import { captureClientError } from "@/lib/observability/capture-client-error";
 interface StudyChatPanelProps {
   passageId: string;

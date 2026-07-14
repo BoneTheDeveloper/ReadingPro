@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   recordQuizResultAction,
   resetQuizResultAction,
-} from "@/features/studio-panel/actions";
+} from "@/features/studio-panel/action";
 
 interface QuizResultsProps {
   correctCount: number;

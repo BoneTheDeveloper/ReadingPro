@@ -2,6 +2,7 @@ import "server-only";
 import { NotFoundError } from "@/lib/errors";
 import { createModuleLogger } from "@/lib/logger";
 import { toIsoString } from "@/lib/utils";
+import { findOwnedPassage } from "@/features/passage/db/passage.repository";
 import type { VocabularyStatus } from "@/generated/prisma/enums";
 import { VocabularySourceType } from "@/generated/prisma/enums";
 import type {
@@ -9,7 +10,6 @@ import type {
   VocabularyStatsDto,
 } from "@/features/vocabulary/schemas/vocabulary.schema";
 import {
-  findOwnedSource,
   upsertVocabularyItem,
   listVocabularyItems,
   deleteVocabularyItem,
@@ -89,7 +89,7 @@ export async function saveVocabularyItem(
   input: SaveVocabularyItemInput,
 ): Promise<VocabularyItemDto> {
   if (input.source === VocabularySourceType.TRANSLATE && input.sourceId) {
-    const passage = await findOwnedSource(input.userId, input.sourceId);
+    const passage = await findOwnedPassage(input.userId, input.sourceId);
 
     if (!passage) {
       throw new NotFoundError("Source");

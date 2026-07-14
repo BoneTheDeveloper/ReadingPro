@@ -1,9 +1,9 @@
 import "server-only";
-import type { UiMessage } from "@/features/studio-panel/schemas/chat.schema";
+import type { UiMessage } from "../schemas/ai-chat.schema";
 import {
   MAX_HISTORY_MESSAGES,
   MAX_USER_TEXT_PART_CHARS,
-} from "@/features/studio-panel/schemas/chat.schema";
+} from "../schemas/ai-chat.schema";
 
 export function truncateToRecentTurns(messages: UiMessage[]): UiMessage[] {
   if (messages.length <= MAX_HISTORY_MESSAGES) return messages;

@@ -4,12 +4,12 @@ import { useCallback, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import type { Dispatch, SetStateAction } from "react";
 import { generateStudioQuestions } from "@/features/studio-panel/services/studio-questions.service";
-import { getArtifactQuestionsAction } from "@/features/studio-panel/actions";
+import { getArtifactQuestionsAction } from "@/features/studio-panel/action";
 import type {
   ArtifactsCacheEntry,
   ArtifactRef,
   StudioActionId,
-} from "@/features/studio-panel/actions";
+} from "@/features/studio-panel/action";
 import type { PassageData } from "@/types/passage";
 import type { StudioArtifact, StudioArtifactErrorCode } from "@/features/studio-panel/lib/studio-artifact-types";
 import type { StudyState } from "./use-study-workspace-state";

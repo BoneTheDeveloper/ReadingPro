@@ -5,15 +5,15 @@ import { withRoute } from "@/lib/http/with-route";
 import {
   studyChatRequestSchema,
   type UiMessage,
-} from "@/features/studio-panel/schemas/chat.schema";
-import { validateMessageSizeLimits } from "@/features/ai-chat/lib/chat-utils";
+} from "@/features/studio-panel/schemas/ai-chat.schema";
+import { validateMessageSizeLimits } from "@/features/studio-panel/lib/ai-chat-utils";
 import {
   getOwnedPassageForChat,
   loadPersistedMessages,
   toPersistedUiMessages,
   persistUserMessage,
   streamStudyChat,
-} from "@/features/ai-chat/services/chat.service";
+} from "@/features/studio-panel/services/ai-chat.service";
 
 export const POST = withRoute("api:study:studio:chat", "/api/studio/chat")(
   async (req: NextRequest, _ctx, log) => {

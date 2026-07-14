@@ -2,15 +2,14 @@
 
 import { z } from "zod";
 import { getUserId } from "@/lib/auth/auth-server";
-import type { StudioArtifactType } from "@/features/studio-panel/lib/studio-artifact-types";
 import {
   fetchStudioArtifacts,
   getArtifactQuestions,
   recordQuizResult,
   resetQuizResult,
 } from "./services/studio-artifacts.service";
-import { getChatHistory } from "@/features/ai-chat/services/chat.service";
-import { studyChatHistoryDataSchema } from "./schemas/chat.schema";
+import { getChatHistory } from "./services/ai-chat.service";
+import { studyChatHistoryDataSchema } from "./schemas/ai-chat.schema";
 import { recordQuizResultInputSchema } from "./schemas/studio-artifact.schema";
 import { generateStudioQuestionsInputSchema } from "./schemas/question.schema";
 import {
@@ -18,28 +17,8 @@ import {
   PassageStudyServiceError,
 } from "./services/passage-study.service";
 
-// Studio action types
 export type StudioActionId =
   "quiz" | "flashcard" | "summary" | "chat" | "mindmap" | "lookup";
-
-// Artifacts cache types
-type ArtifactsCacheStatus = "idle" | "loading" | "success" | "error";
-
-export interface ArtifactsCacheEntry {
-  status: ArtifactsCacheStatus;
-  data: import("@/features/studio-panel/lib/studio-artifact-types").StudioArtifact[];
-  fetchedAt?: number;
-  error?: string;
-}
-
-export interface ArtifactRef {
-  type: StudioArtifactType;
-  id: string;
-}
-
-export interface ArtifactDetailCacheEntry {
-  questions?: import("@/features/studio-panel/schemas/question.schema").GeneratedStudyQuestionDto[];
-}
 
 const passageIdSchema = z.string().uuid();
 

@@ -7,7 +7,7 @@ import {
   useTransition,
 } from "react";
 import { useRouter } from "next/navigation";
-import { deletePassageAction } from "@/features/passage/actions";
+import { deletePassageAction } from "@/features/passage/action";
 import type { PassageData } from "@/types/passage";
 import type { DocumentItem } from "@/features/upload/ui/sources-panel";
 
@@ -20,18 +20,9 @@ export interface StudyState {
   status: StudyStatus;
   error: string | null;
   uploadModalOpen: boolean;
-  artifactsByPassageId: Record<
-    string,
-    import("@/features/studio-panel/actions").ArtifactsCacheEntry
-  >;
-  viewingArtifactByPassageId: Record<
-    string,
-    import("@/features/studio-panel/actions").ArtifactRef | null
-  >;
-  artifactDetailById: Record<
-    string,
-    import("@/features/studio-panel/actions").ArtifactDetailCacheEntry
-  >;
+  artifactsByPassageId: Record<string, import("@/types/studio-artifact").ArtifactsCacheEntry>;
+  viewingArtifactByPassageId: Record<string, import("@/types/studio-artifact").ArtifactRef | null>;
+  artifactDetailById: Record<string, import("@/types/studio-artifact").ArtifactDetailCacheEntry>;
 }
 
 function getMostRecentPassageId(passages: PassageData[]): string | null {

@@ -1,11 +1,11 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { saveVocabularyAction } from "@/features/vocabulary/actions";
+import { saveDictionarySenseToVocabularyAction } from "../actions";
 import type {
   DictionaryEntryDto,
   DictionarySenseDto,
-} from "@/features/dictionary/schemas/dictionary.schema";
+} from "../schemas/dictionary.schema";
 
 export type SaveStatus = "idle" | "saving" | "saved" | "error";
 
@@ -39,7 +39,7 @@ export function useSaveDictionaryVocabulary() {
           throw new Error("No primary translation found for sense");
         }
 
-        const result = await saveVocabularyAction({
+        const result = await saveDictionarySenseToVocabularyAction({
           selectedText: entry.headword,
           translation: primary.translation,
           contextSentence: sense.example ?? undefined,
