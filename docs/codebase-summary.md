@@ -21,21 +21,24 @@ src/
 │       ├── hooks/            # React hooks
 │       ├── ui/              # Components
 │       └── services/         # Business logic (Server)
-│           └── inngest/     # Feature-specific Inngest events
-│                ├── client.ts       # Generic Inngest init
+│           └── inngest/     # Feature-specific Inngest events               
 │                ├── events.ts       # Event registry
 │                └── functions/      # Inngest function handlers
 │
 ├── components/              # Shared components
 │
-└── lib/
+├── services
+│     ├── ingest.ts
+│     └── storage.ts
+│
+├── types
+│
+└─── lib/
     ├── errors/             # Domain errors
     ├── http/              # HTTP handling
     ├── auth/              # Auth utilities
     ├── prisma.ts          # Prisma client
     └── logger.ts          # Pino logger
-
-
      
 ```
 
