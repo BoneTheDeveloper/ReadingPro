@@ -21,7 +21,6 @@ export function getSourceLabel(sourceType: string, sourceName: string | null): s
 }
 
 export const RUNTIME_STATUSES = ["reviewed", "approved"] as const;
-export type RuntimeStatus = (typeof RUNTIME_STATUSES)[number];
 
 export const VALID_TRANSLATION_STATUSES = ["draft", "reviewed", "approved", "deprecated"] as const;
 export const VALID_SOURCE_TYPES = ["seed", "manual", "provider", "llm", "mixed"] as const;

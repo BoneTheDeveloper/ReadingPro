@@ -23,7 +23,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 // Single source of truth for the stored source type lives in the passage model.
 import type { SourceType } from "@/types/passage";
-export type { SourceType };
 
 export interface DocumentItem {
   id: string;

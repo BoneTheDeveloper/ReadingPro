@@ -1,8 +1,5 @@
 import "server-only";
 import pino from "pino";
-import { AppError } from "@/lib/errors";
-
-export type { AppError };
 
 const isDev = process.env.NODE_ENV !== "production";
 
@@ -244,7 +241,7 @@ function createRequestLogger(
   );
 }
 
-export type { ContextLogger, LogContext };
+export type { ContextLogger };
 export {
   logger,
   createModuleLogger,

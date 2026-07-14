@@ -22,16 +22,8 @@ import {
 export type StudioActionId =
   "quiz" | "flashcard" | "summary" | "chat" | "mindmap" | "lookup";
 
-export interface StudioAction {
-  id: StudioActionId;
-  label: string;
-  description: string;
-  iconName: string;
-  disabled?: boolean;
-}
-
 // Artifacts cache types
-export type ArtifactsCacheStatus = "idle" | "loading" | "success" | "error";
+type ArtifactsCacheStatus = "idle" | "loading" | "success" | "error";
 
 export interface ArtifactsCacheEntry {
   status: ArtifactsCacheStatus;

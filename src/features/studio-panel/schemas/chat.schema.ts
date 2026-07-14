@@ -42,5 +42,3 @@ export const studyChatHistoryDataSchema = z
     messages: z.array(uiMessageSchema),
   })
   .strict();
-
-export type StudyChatHistoryData = z.infer<typeof studyChatHistoryDataSchema>;

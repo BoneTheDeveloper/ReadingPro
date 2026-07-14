@@ -15,12 +15,10 @@ export const translationDataSchema = z
   })
   .strict();
 
-export type TranslationData = z.infer<typeof translationDataSchema>;
+type TranslationData = z.infer<typeof translationDataSchema>;
 
 // Response contract: data wrapped in envelope + error envelope
 export const translateResponseSchema = makeApiResponseSchema(translationDataSchema);
-
-export type TranslateResponse = z.infer<typeof translateResponseSchema>;
 
 // Shared selection types used across features
 export interface TranslationSelection {

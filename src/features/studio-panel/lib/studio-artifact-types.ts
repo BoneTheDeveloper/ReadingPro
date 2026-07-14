@@ -18,7 +18,7 @@ export type StudioArtifactErrorCode =
 // backend LLM-call race so a hung upstream cannot hold an invocation open.
 export const STUDIO_GENERATION_TIMEOUT_MS = 45_000;
 
-export interface QuizResult {
+interface QuizResult {
   completedAt: string;
   correctCount: number;
   totalQuestions: number;

@@ -11,11 +11,9 @@ import { z } from "zod";
  * derive from this — no hand-duplicated enums elsewhere.
  */
 export const uploadSourceTypeSchema = z.enum(["paste", "txt", "pdf", "youtube"]);
-export type UploadSourceType = z.infer<typeof uploadSourceTypeSchema>;
 
 /** File uploads are the subset that carry a binary file (derived, not re-typed). */
 export const fileSourceTypeSchema = uploadSourceTypeSchema.extract(["txt", "pdf"]);
-export type FileSourceType = z.infer<typeof fileSourceTypeSchema>;
 
 /** `uploadFileAction` FormData fields (parsed after the File itself). */
 export const uploadFileRequestSchema = z
@@ -26,7 +24,6 @@ export const uploadFileRequestSchema = z
     startedAt: z.coerce.number(),
   })
   .strict();
-export type UploadFileRequest = z.infer<typeof uploadFileRequestSchema>;
 
 /** `uploadTextAction` pasted-text input. */
 export const uploadTextRequestSchema = z
@@ -37,4 +34,3 @@ export const uploadTextRequestSchema = z
     startedAt: z.number(),
   })
   .strict();
-export type UploadTextRequest = z.infer<typeof uploadTextRequestSchema>;

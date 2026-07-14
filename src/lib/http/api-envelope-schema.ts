@@ -28,12 +28,3 @@ export function makeApiResponseSchema<T extends z.ZodType>(dataSchema: T) {
     apiErrorResponseSchema,
   ]);
 }
-
-// A helper type to extract the success shape using a plain TypeScript type
-export type ApiSuccessResponse<T> = {
-  success: true;
-  data: T;
-};
-
-// 3. Combined Combined API Response Type for your Frontend
-export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;

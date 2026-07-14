@@ -123,23 +123,9 @@ export const vocabularyListDataSchema = z.object({
   pageSize: z.number(),
 }).strict();
 
-// Response aliases (data schemas used as-is for responses)
-export const vocabularyListResponseSchema = vocabularyListDataSchema;
-export const vocabularySetsResponseSchema = z.array(vocabularySetSchema);
-export const vocabularySetResponseSchema = vocabularySetSchema;
-export const vocabularyItemResponseSchema = vocabularyItemSchema;
-export const vocabularyStatsResponseSchema = vocabularyStatsSchema;
-
 // Types
 export type VocabularyStatus = z.infer<typeof vocabularyStatusSchema>;
-export type VocabularySource = z.infer<typeof vocabularySourceSchema>;
 export type VocabularySetType = z.infer<typeof vocabularySetTypeSchema>;
-export type VocabularyOccurrenceDto = z.infer<typeof vocabularyOccurrenceSchema>;
 export type VocabularyItemDto = z.infer<typeof vocabularyItemSchema>;
 export type VocabularySetDto = z.infer<typeof vocabularySetSchema>;
 export type VocabularyStatsDto = z.infer<typeof vocabularyStatsSchema>;
-export type VocabularyListResponse = z.infer<typeof vocabularyListResponseSchema>;
-export type VocabularySetsResponse = z.infer<typeof vocabularySetsResponseSchema>;
-export type VocabularySetResponse = z.infer<typeof vocabularySetResponseSchema>;
-export type VocabularyItemResponse = z.infer<typeof vocabularyItemResponseSchema>;
-export type VocabularyStatsResponse = z.infer<typeof vocabularyStatsResponseSchema>;

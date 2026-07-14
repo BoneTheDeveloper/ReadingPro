@@ -11,7 +11,7 @@ import { deletePassageAction } from "../_components/actions";
 import type { PassageData } from "@/types/passage";
 import type { DocumentItem } from "@/features/upload/ui/sources-panel";
 
-export type StudyStatus =
+type StudyStatus =
   "idle" | "uploading" | "analyzing" | "ready" | "error";
 
 export interface StudyState {

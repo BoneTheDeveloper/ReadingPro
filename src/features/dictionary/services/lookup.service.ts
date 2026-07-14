@@ -16,7 +16,7 @@ import {
   type LookupRawRow,
 } from "../db/lookup.repository";
 
-export interface LookupOptions {
+interface LookupOptions {
   sourceLanguage: string;
   targetLanguage: string;
   includeDraft?: boolean;

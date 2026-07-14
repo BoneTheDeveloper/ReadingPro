@@ -109,35 +109,17 @@ export const dictionarySearchResultSchema = z
   })
   .strict();
 
-export const dictionaryLookupResponseSchema = dictionaryLookupDataSchema;
-export const dictionarySearchResponseSchema = z.array(dictionarySearchResultSchema);
-export const dictionarySuggestResponseSchema = z.array(dictionarySuggestItemSchema);
-export const dictionaryEntryDetailResponseSchema = dictionaryEntrySchema;
-
 export type DictionaryTranslationDto = z.infer<
   typeof dictionaryTranslationSchema
 >;
 export type DictionarySenseDto = z.infer<typeof dictionarySenseSchema>;
 export type DictionaryEntryDto = z.infer<typeof dictionaryEntrySchema>;
 export type DictionaryMissDto = z.infer<typeof dictionaryMissSchema>;
-export type DictionaryLookupResult = z.infer<typeof dictionaryLookupDataSchema>;
 export type DictionarySuggestItemDto = z.infer<
   typeof dictionarySuggestItemSchema
 >;
 export type DictionarySearchResultDto = z.infer<
   typeof dictionarySearchResultSchema
->;
-export type DictionaryLookupResponse = z.infer<
-  typeof dictionaryLookupResponseSchema
->;
-export type DictionarySearchResponse = z.infer<
-  typeof dictionarySearchResponseSchema
->;
-export type DictionarySuggestResponse = z.infer<
-  typeof dictionarySuggestResponseSchema
->;
-export type DictionaryEntryDetailResponse = z.infer<
-  typeof dictionaryEntryDetailResponseSchema
 >;
 
 // ---------------------------------------------------------------------------

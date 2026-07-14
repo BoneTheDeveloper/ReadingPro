@@ -48,6 +48,3 @@ export const auth = betterAuth({
     },
   },
 } satisfies BetterAuthOptions);
-
-// Type export for use in other files
-export type Auth = typeof auth;
