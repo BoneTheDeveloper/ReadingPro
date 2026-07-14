@@ -4,6 +4,7 @@ import { NotFoundError } from "@/lib/errors";
 import type {
   VocabularySet,
   VocabularySetItem,
+  VocabularySetType,
 } from "@/generated/prisma/client";
 
 export type VocabularySetWithCount = VocabularySet & {
@@ -79,7 +80,7 @@ async function findOrCreateSetByType(
 
 export async function listVocabularySets(params: {
   userId: string;
-  type?: "MANUAL" | "DAILY" | "WEEKLY";
+  type?: VocabularySetType;
 }): Promise<VocabularySetWithCount[]> {
   const query: Parameters<typeof prisma.vocabularySet.findMany>[0] = {
     where: { userId: params.userId },

@@ -165,6 +165,73 @@ export class ArtifactNotFoundError extends NotFoundError {
 
 ---
 
+## Type vs Schema
+
+This codebase distinguishes between **runtime validation** (Zod) and **compile-time types** (TypeScript).
+
+### Schema = Runtime Validation
+
+Used for **untrusted input** (client → server). Must use `const` with `.parse()`:
+
+```typescript
+// Input from client — validate at runtime
+export const saveVocabularyInputSchema = z.object({
+  itemId: z.string().uuid(),
+}).strict();
+
+export type SaveVocabularyInput = z.infer<typeof saveVocabularyInputSchema>;
+```
+
+### DTO = Compile-Time Only
+
+Used for **trusted output** (server → client). No schema needed:
+
+```typescript
+// Server output — trust the service, no runtime validation needed
+export type VocabularyItemDto = {
+  id: string;
+  status: VocabularyStatus;
+  word: string;
+};
+```
+
+### Enum = Prisma Native
+
+**Single source of truth = Prisma schema.** Never hardcode enums.
+
+```prisma
+// prisma/schema.prisma
+enum VocabularyStatus {
+  NEW
+  LEARNING
+  MASTERED
+}
+```
+
+```typescript
+// Import from generated Prisma client
+import { VocabularyStatus } from "@/generated/prisma/client";
+
+// Zod validation from Prisma enum
+export const vocabularyStatusSchema = z.nativeEnum(VocabularyStatus);
+```
+
+### Import Rules
+
+```typescript
+// Client imports Prisma enum → import type (prevents Prisma leakage)
+import type { VocabularyStatus } from "@/generated/prisma/client";
+
+// Client imports DTO → import type
+import type { VocabularyItemDto } from "@/features/vocabulary/schemas";
+
+// Server-only → regular import
+import { prisma } from "@/lib/prisma";
+import { vocabularyService } from "@/features/vocabulary/services/vocabulary.service";
+```
+
+---
+
 ## File & symbol naming
 
 | Item | Pattern |

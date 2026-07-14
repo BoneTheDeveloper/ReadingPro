@@ -1,14 +1,15 @@
 import "server-only";
+import type { VocabularyStatus } from "../schemas/vocabulary.schema";
 
 /**
  * Simple interval schedule for lightweight content (Vocabulary).
  * Per ADR 0005.
  */
 export function simpleSchedule(
-  currentStatus: string,
+  currentStatus: VocabularyStatus,
   isCorrect: boolean,
-): { intervalDays: number; nextReviewDate: Date | null; nextStatus: string } {
-  let nextStatus = currentStatus;
+): { intervalDays: number; nextReviewDate: Date | null; nextStatus: VocabularyStatus } {
+  let nextStatus: VocabularyStatus = currentStatus;
   let intervalDays = 0;
 
   if (isCorrect) {

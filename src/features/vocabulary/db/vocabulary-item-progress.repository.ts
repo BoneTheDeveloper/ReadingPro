@@ -3,11 +3,12 @@ import { prisma } from "@/lib/prisma";
 import { NotFoundError } from "@/lib/errors";
 import { simpleSchedule } from "@/features/vocabulary/services/vocabulary-scheduler.service";
 import type { VocabularyItem } from "@/generated/prisma/client";
+import type { VocabularyStatus } from "../schemas/vocabulary.schema";
 
 export async function updateVocabularyStatus(params: {
   userId: string;
   itemId: string;
-  status: "NEW" | "LEARNING" | "MASTERED";
+  status: VocabularyStatus;
 }): Promise<VocabularyItem> {
   const item = await prisma.vocabularyItem.findUnique({
     where: { id: params.itemId },

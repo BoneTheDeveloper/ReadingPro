@@ -1,8 +1,16 @@
 import { z } from "zod";
+import {
+  VocabularyStatus,
+  VocabularySourceType,
+  VocabularySetType,
+} from "@/generated/prisma/enums";
 
-export const vocabularyStatusSchema = z.enum(["NEW", "LEARNING", "MASTERED"]);
-export const vocabularySourceSchema = z.enum(["TRANSLATE", "DICTIONARY"]);
-export const vocabularySetTypeSchema = z.enum(["MANUAL", "DAILY", "WEEKLY"]);
+// Re-export enums for single source of truth
+export { VocabularyStatus, VocabularySourceType, VocabularySetType } from "@/generated/prisma/enums";
+
+export const vocabularyStatusSchema = z.nativeEnum(VocabularyStatus);
+export const vocabularySourceSchema = z.nativeEnum(VocabularySourceType);
+export const vocabularySetTypeSchema = z.nativeEnum(VocabularySetType);
 
 // ---------------------------------------------------------------------------
 // Server-action input schemas — validated in vocabulary/actions.ts
@@ -123,9 +131,7 @@ export const vocabularyListDataSchema = z.object({
   pageSize: z.number(),
 }).strict();
 
-// Types
-export type VocabularyStatus = z.infer<typeof vocabularyStatusSchema>;
-export type VocabularySetType = z.infer<typeof vocabularySetTypeSchema>;
+// DTOs - inferred from schema (trusted server output)
 export type VocabularyItemDto = z.infer<typeof vocabularyItemSchema>;
 export type VocabularySetDto = z.infer<typeof vocabularySetSchema>;
 export type VocabularyStatsDto = z.infer<typeof vocabularyStatsSchema>;

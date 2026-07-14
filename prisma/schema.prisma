@@ -44,6 +44,17 @@ enum UploadStatus {
   FAILED
 }
 
+enum VocabularyStatus {
+  NEW
+  LEARNING
+  MASTERED
+}
+
+enum VocabularySourceType {
+  TRANSLATE
+  DICTIONARY
+}
+
 // ============================================================
 // Better Auth Models (authentication)
 // ============================================================
@@ -425,8 +436,8 @@ model VocabularyItem {
   normalizedText         String    @default("")
   displayText            String    @default("")
   normalizedTranslation  String    @default("")
-  status                 String    @default("NEW")
-  source                 String    @default("TRANSLATE")
+  status                 VocabularyStatus    @default(NEW)
+  source                 VocabularySourceType @default(TRANSLATE)
   savedCount             Int       @default(1)
   nextReviewAt           DateTime?
   lastReviewedAt          DateTime?

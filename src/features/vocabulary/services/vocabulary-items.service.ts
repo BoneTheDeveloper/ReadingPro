@@ -2,10 +2,10 @@ import "server-only";
 import { NotFoundError } from "@/lib/errors";
 import { createModuleLogger } from "@/lib/logger";
 import { toIsoString } from "@/lib/utils";
+import type { VocabularyStatus, VocabularySourceType } from "../schemas/vocabulary.schema";
 import type {
   VocabularyItemDto,
   VocabularyStatsDto,
-  VocabularyStatus,
 } from "@/features/vocabulary/schemas/vocabulary.schema";
 import {
   findOwnedSource,
@@ -29,7 +29,7 @@ export interface SaveVocabularyItemInput {
   targetLanguage: string;
   sourceId?: string;
   contextSentence?: string;
-  source?: "TRANSLATE" | "DICTIONARY";
+  source?: VocabularySourceType;
   dictionaryEntryId?: string;
   dictionarySenseId?: string;
 }
@@ -112,7 +112,7 @@ export async function saveVocabularyItem(
 
 export async function getVocabularyItemList(params: {
   userId: string;
-  status?: string;
+  status?: VocabularyStatus;
   search?: string;
   page?: number;
   pageSize?: number;

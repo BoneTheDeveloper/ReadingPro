@@ -8,6 +8,7 @@ import {
   findOrCreateWeeklySet,
   addItemToSet,
 } from "@/features/vocabulary/db/vocabulary-sets.repository";
+import type { VocabularyStatus, VocabularySourceType } from "@/generated/prisma/enums";
 
 // Text normalization helpers (vocabulary-specific, used locally)
 function normalizeText(text: string): string {
@@ -34,7 +35,7 @@ export interface UpsertVocabularyItemParams {
   targetLanguage: string;
   sourceId?: string;
   contextSentence?: string;
-  source?: "TRANSLATE" | "DICTIONARY";
+  source?: VocabularySourceType;
   dictionaryEntryId?: string;
   dictionarySenseId?: string;
 }
@@ -131,7 +132,7 @@ async function createOccurrence(
 
 export async function listVocabularyItems(params: {
   userId: string;
-  status?: string;
+  status?: VocabularyStatus;
   search?: string;
   page?: number;
   pageSize?: number;
