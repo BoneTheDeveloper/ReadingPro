@@ -1,18 +1,7 @@
 import "server-only";
 import { Prisma } from "@/generated/prisma/client";
+import { QuestionType } from "@/generated/prisma/enums";
 import { prisma } from "@/lib/prisma";
-import { questionDataSchema } from "@/features/studio-panel/schemas/question.schema";
-
-export interface QuestionCreateInput {
-  questionText: string;
-  options: Prisma.InputJsonValue;
-  correctOption: string;
-  sourceText: string;
-  sourceLine: number;
-  explanation: string;
-  questionType: Prisma.QuestionCreateManyInput["questionType"];
-  difficulty: number;
-}
 
 export async function getPassageWithQuestions(
   passageId: string,
@@ -24,24 +13,9 @@ export async function getPassageWithQuestions(
   });
 }
 
-export async function createQuestion(data: {
-  passageId: string;
-  artifactId: string;
-  questionText: string;
-  options: { id: string; text: string }[];
-  correctOption: string;
-  sourceText: string;
-  sourceLine: number;
-  explanation: string;
-}) {
-  const result = questionDataSchema.safeParse(data);
-  if (!result.success) {
-    throw new Error(
-      `Invalid question data: ${result.error.issues.map((i) => i.message).join(", ")}`,
-    );
-  }
+export async function createQuestion(data: Prisma.QuestionUncheckedCreateInput) {
   return prisma.question.create({
-    data: data as unknown as Prisma.QuestionUncheckedCreateInput,
+    data,
   });
 }
 
@@ -60,7 +34,16 @@ export async function createStudioArtifactWithQuestions(input: {
   passageId: string;
   userId: string;
   title: string;
-  questions: QuestionCreateInput[];
+  questions: {
+    questionText: string;
+    options: Prisma.InputJsonValue;
+    correctOption: string;
+    sourceText: string;
+    sourceLine: number;
+    explanation: string;
+    questionType: QuestionType;
+    difficulty: number;
+  }[];
 }) {
   return prisma.$transaction(async (tx) => {
     const artifact = await tx.studioArtifact.create({
@@ -75,10 +58,17 @@ export async function createStudioArtifactWithQuestions(input: {
       include: { quizResult: true },
     });
     await tx.question.createMany({
-      data: input.questions.map((question) => ({
+      data: input.questions.map((q) => ({
         passageId: input.passageId,
         artifactId: input.artifactId,
-        ...question,
+        questionText: q.questionText,
+        options: q.options,
+        correctOption: q.correctOption,
+        sourceText: q.sourceText,
+        sourceLine: q.sourceLine,
+        explanation: q.explanation,
+        questionType: q.questionType,
+        difficulty: q.difficulty,
       })),
     });
     return { artifact };

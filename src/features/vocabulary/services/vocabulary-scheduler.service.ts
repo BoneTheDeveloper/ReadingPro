@@ -1,5 +1,5 @@
 import "server-only";
-import type { VocabularyStatus } from "../schemas/vocabulary.schema";
+import { VocabularyStatus } from "@/generated/prisma/enums";
 
 /**
  * Simple interval schedule for lightweight content (Vocabulary).
@@ -13,20 +13,20 @@ export function simpleSchedule(
   let intervalDays = 0;
 
   if (isCorrect) {
-    if (currentStatus === "NEW") {
-      nextStatus = "LEARNING";
+    if (currentStatus === VocabularyStatus.NEW) {
+      nextStatus = VocabularyStatus.LEARNING;
       intervalDays = 1;
-    } else if (currentStatus === "LEARNING") {
-      nextStatus = "MASTERED";
+    } else if (currentStatus === VocabularyStatus.LEARNING) {
+      nextStatus = VocabularyStatus.MASTERED;
       intervalDays = 0;
     }
   } else {
-    nextStatus = "LEARNING";
+    nextStatus = VocabularyStatus.LEARNING;
     intervalDays = 1;
   }
 
   let nextReviewDate: Date | null = null;
-  if (nextStatus !== "MASTERED") {
+  if (nextStatus !== VocabularyStatus.MASTERED) {
     nextReviewDate = new Date();
     nextReviewDate.setDate(nextReviewDate.getDate() + (intervalDays || 1));
   }

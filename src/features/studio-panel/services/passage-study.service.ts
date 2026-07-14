@@ -1,4 +1,6 @@
 import "server-only";
+import { Prisma } from "@/generated/prisma/client";
+import { QuestionType } from "@/generated/prisma/enums";
 import {
   generateComprehensionQuestions,
   type GeneratedQuestion,
@@ -21,6 +23,8 @@ import {
   createStudioArtifactWithQuestions,
   findExistingStudioArtifact,
 } from "../db/studio-artifact-questions.repository";
+
+export { type GeneratedStudyQuestionDto } from "../schemas/question.schema";
 
 const log = createModuleLogger("lib:study:passage-service");
 
@@ -157,14 +161,12 @@ function isValidGeneratedQuestion(
 function toQuestionCreateInput(question: GeneratedQuestion) {
   return {
     questionText: question.questionText,
-    // `options` is a Json column — store the array natively so reads get an array
-    // back. Stringifying here would persist a JSON string and break `.map` on load.
-    options: question.options,
+    options: question.options as unknown as Prisma.InputJsonValue,
     correctOption: question.correctAnswer,
     sourceText: question.sourceText,
     sourceLine: question.sourceLine,
     explanation: question.explanation,
-    questionType: question.questionType,
+    questionType: question.questionType as QuestionType,
     difficulty: question.difficulty,
   };
 }

@@ -2,7 +2,8 @@ import "server-only";
 import { NotFoundError } from "@/lib/errors";
 import { createModuleLogger } from "@/lib/logger";
 import { toIsoString } from "@/lib/utils";
-import type { VocabularyStatus, VocabularySourceType } from "../schemas/vocabulary.schema";
+import type { VocabularyStatus } from "@/generated/prisma/enums";
+import { VocabularySourceType } from "@/generated/prisma/enums";
 import type {
   VocabularyItemDto,
   VocabularyStatsDto,
@@ -87,7 +88,7 @@ function toVocabularyItemDto(item: {
 export async function saveVocabularyItem(
   input: SaveVocabularyItemInput,
 ): Promise<VocabularyItemDto> {
-  if (input.source === "TRANSLATE" && input.sourceId) {
+  if (input.source === VocabularySourceType.TRANSLATE && input.sourceId) {
     const passage = await findOwnedSource(input.userId, input.sourceId);
 
     if (!passage) {
