@@ -1,5 +1,5 @@
-import { inngest } from "@/services/inngest/client";
-import { UPLOAD_PROCESS_EVENT } from "@/features/upload/services/inngest/events";
+import { inngest } from "@/services/inngest";
+import { UPLOAD_PROCESS_EVENT } from "./events";
 import { prisma } from "@/lib/prisma";
 import { step } from "inngest";
 import {
@@ -66,7 +66,6 @@ export const processUploadJob = inngest.createFunction(
 
       // Step 3: Analyze content (AI call - expensive to retry)
       const analysis = await step.run("analyze-content", async () => {
-        // Normalize + analyze in one step (normalize is pure, no retry cost)
         const normalized = await normalizeTextPipeline(rawText, sourceType);
         const analysisResult = await analyzeContent(normalized);
         const wordCount = computeWordCount(normalized);

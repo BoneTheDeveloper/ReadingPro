@@ -1,6 +1,6 @@
 import { serve } from "inngest/next";
-import { inngest } from "@/services/inngest/client";
-import { processUploadJob } from "@/services/inngest/functions/process-upload";
+import { inngest } from "@/services/inngest";
+import { processUploadJob } from "@/features/upload/services/inngest/process-upload";
 
 export const { GET, POST, PUT } = serve({
   client: inngest,

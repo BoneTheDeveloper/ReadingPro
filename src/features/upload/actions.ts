@@ -3,8 +3,8 @@
 import { z } from "zod";
 import { getUserId } from "@/lib/auth/auth-server";
 import { prisma } from "@/lib/prisma";
-import { inngest } from "@/services/inngest/client";
-import { UPLOAD_PROCESS_EVENT, createUploadProcessEvent } from "@/features/upload/services/inngest/events";
+import { inngest } from "@/services/inngest";
+import { createUploadProcessEvent } from "@/features/upload/services/inngest/events";
 import { uploadFile } from "@/services/storage";
 import {
   validateFile,
