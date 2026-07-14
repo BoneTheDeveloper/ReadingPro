@@ -2,39 +2,40 @@
 
 For source layout and features, see `codebase-summary.md`.
 For observability, see `Architecture/observability.md`.
-
-There are **three ways data moves between client and DB**. Each is assembled from the
-same **layers** (defined once below) wired in a fixed order. To build a feature: pick the
-path that matches the interaction, then fill each layer by its rule. Cross-cutting
-concerns — schemas, errors, the response envelope — are each defined in exactly one place
-and linked from the paths; do not restate them inline.
+Import boundaries are **enforced by ESLint** (`eslint-plugin-boundaries`) — see
+`eslint.config.mjs`. This doc explains *why* the layers exist; the config is the
+source of truth for *what* can import *what*. Do not restate the rules here.
 
 ---
 
 ## Layers
 
-Every path is composed from these. A layer's responsibility is defined **here only** — the
-paths below just reference it.
-
 | Layer | Location | Responsibility |
 |-------|----------|----------------|
-| **Schema** | `features/<f>/schemas/*.schema.ts` | Zod validation + `z.infer` types. Single source of truth → [Schemas](#schemas). |
-| **Action** | `features/<f>/actions.ts` | `"use server"`. Validate args with an `InputSchema`, call **one** service, `revalidatePath()`, return `{ success, data }`. |
-| **Route** | `app/api/**/route.ts` | Parse body with a `RequestSchema`, call **one** service, return the [envelope](#response-envelope). Wrap non-streaming routes in `withRoute()`. |
-| **Page** | `app/[locale]/(dashboard)/<f>/page.tsx` | Server Component. Call a service at render time, pass DTOs as props to client components. |
-| **Service** | `features/<f>/services/*.service.ts` | Business logic. **Owns DTO building** (Prisma row → `Dto`; return type must equal the `Dto`). Throws typed [domain errors](#errors). Receives the request logger as an arg — never creates its own (preserves `requestId`). |
-| **Repository** | `features/<f>/db/*.repository.ts` | Prisma/SQL only. Never imports schemas. |
+| **Schema** | `features/<f>/schemas/*.schema.ts` | Zod validation + `z.infer` types → [Schemas](#schemas). |
+| **Action** | `features/<f>/actions.ts` | `"use server"`. Validate args with an `InputSchema`, call **one** service, `revalidatePath()`. |
+| **Route** | `app/api/**/route.ts` | Parse body with a `RequestSchema`, call **one** service, return the [envelope](#response-envelope). Wrap in `withRoute()`. |
+| **Page** | `app/[locale]/**/page.tsx` | Server Component. Call a service, pass DTOs as props. |
+| **Service** | `features/<f>/services/*.service.ts` | Business logic. **Owns DTO building** (Prisma row → `Dto`). Owns **authorization**. Throws [domain errors](#errors). |
+| **Repository** | `features/<f>/db/*.repository.ts` | Prisma only. No schemas, no auth checks, no business rules. |
 
-**Invariant for all paths:** the Action/Route is **thin** — one service call, no repository
-access, no business logic. The Service is the only layer that builds DTOs or throws domain
-errors.
+**Why these boundaries** (ESLint enforces them; here is the reasoning):
+
+- **Repo never calls Service** — avoids circular deps, and lets Service be tested without a DB.
+- **Action/Route never calls Repo** — mapping, authorization, and cascade logic must live in
+  exactly one place, or the second caller will duplicate it.
+- **Client never touches Service/Repo** — `server-only` throws at runtime; ESLint catches it earlier.
+- **Feature never imports Feature** — keeps a slice deletable as a unit. Need to communicate?
+  Use an Inngest event, lift the shared piece into `lib/`, or let `app/` compose both.
+
+**Invariant:** Action/Route is **thin** — one service call, nothing else. Service is the only
+layer that builds DTOs, checks ownership, or throws domain errors.
 
 ---
 
 ## The three paths
 
 ### 1. Server Action — mutations (form submit, button click)
-
 ```
 Client (useActionState) → Action → Service → Repository → DB
                                  ↘ revalidatePath()
@@ -43,19 +44,19 @@ Client (useActionState) → Action → Service → Repository → DB
 - Args validated by a `<verb><Entity>InputSchema`.
 - Errors **throw straight to the client's `try/catch`** — actions do not use the envelope.
 
-### 2. API Route — client `fetch()` (needs real HTTP, an external caller, or streaming)
+### 2. API Route — client `fetch()` (real HTTP, external caller, or streaming)
 
 ```
 Client fetch() → withRoute(Route) → Service → Repository → DB
                           ↘ throw → toHttp() → { success: false, error }
 ```
-
 - Body validated by an `<entity>RequestSchema`.
-- Returns the [response envelope](#response-envelope); the client re-validates it with the
-  matching `ResponseSchema` via `safeParse` (never an `as` cast).
-- Streaming routes (e.g. AI chat) skip `withRoute()` and stream directly.
+- Returns the [envelope](#response-envelope); the client re-validates with the matching
+  `ResponseSchema` via `safeParse` (never an `as` cast).
+- Streaming routes (AI chat) skip `withRoute()` and stream directly.
 
 ### 3. Server Component — reads (initial page render)
+
 
 ```
 Page (Server Component) → Service → Repository → DB → DTO props → Client Component
@@ -67,64 +68,59 @@ Page (Server Component) → Service → Repository → DB → DTO props → Clie
 
 ## Schemas
 
-Every schema plays **exactly one role**, and the role is encoded by the **name suffix** so
-it is obvious at a glance and hard to misfile. This is the guard against fragmentation
-(hand-written duplicates) and misfiling (wrong kind of schema in the wrong file).
+Every schema plays **exactly one role**, encoded by the name suffix.
 
-### Roles (suffix = role)
+| Role | Name pattern | Direction | Lives in |
+|------|--------------|-----------|----------|
+| Vocabulary / enum | `<name>Schema` | — | feature `schemas/` |
+| Route request body | `<entity>RequestSchema` | client → server (HTTP) | feature `schemas/` |
+| Server-action args | `<verb><Entity>InputSchema` | client → server (action) | feature `schemas/` |
+| Query params | `<entity>QuerySchema` | client → server | feature `schemas/` |
+| Event / queue payload | `<entity>EventSchema` | async | feature `services/inngest/` |
+| Response data | `<entity>DataSchema` + `type <Entity>Dto` | server → client (HTTP) | feature `schemas/` |
+| Response contract | `<entity>ResponseSchema = makeApiResponseSchema(<entity>DataSchema)` | server → client | feature `schemas/` |
+| Shared type across features | `type <Entity>` | — | `src/types/<entity>.ts` |
 
-| Role | Name pattern | Direction | Lives in | Example |
-|------|--------------|-----------|----------|---------|
-| Vocabulary / enum | `<name>Schema` (a `z.enum` or reusable sub-object) | — | feature `schemas/`, or `src/types/` if shared | `uploadSourceTypeSchema`, `questionOptionSchema` |
-| Route request body | `<entity>RequestSchema` | client → server (HTTP) | feature `schemas/` or `route.ts` | `translateRequestSchema` |
-| Server-action args | `<verb><Entity>InputSchema` | client → server (action) | feature `schemas/`, imported by `actions.ts` | `saveVocabularyInputSchema` |
-| Query params | `<entity>QuerySchema` | client → server | feature `schemas/` | `studyChatQuerySchema` |
-| Event / queue payload | `<entity>EventSchema` | async | `services/inngest/` or feature | `uploadProcessEventSchema` |
-| Data payload (body of a response) | `<entity>DataSchema` + `type <Entity>Dto` | server → client | feature `schemas/` | `translationDataSchema` |
-| Response contract | `<entity>ResponseSchema = makeApiResponseSchema(<entity>DataSchema)` | server → client | feature `schemas/` | `translateResponseSchema` |
-| Shared output model / DTO | `type <Entity>` / `<Entity>Data` | output | `src/types/<entity>.ts` (used by 2+ features) | `PassageData` |
+`Request` vs `Input` both mark client→server; the suffix records the **transport** (HTTP
+route vs server action).
 
-`Request` vs `Input` both mark a client→server input; the suffix records the **transport**
-(HTTP route vs server action) so the two never get filed in the wrong layer.
+### `src/types/` — when, and only when
+
+A type goes here **only** if two or more features consume it and neither owns it. It must be
+a **plain TypeScript type** — no Zod schema, no logic. If you find yourself wanting a schema
+there, the feature boundary is wrong: one feature owns the concept, and the other should be
+talking to it through an event or an action, not importing its shape.
+
+Stored enums come from `@/generated/prisma/client`, not from here.
 
 ### Rules
 
-1. **Schema → type, never the reverse.** Derive with `z.infer<typeof schema>`. No
-   hand-written parallel type; no `Omit<PrismaModel, ...>` for DTOs.
-2. **DB is the source of truth for STORED data.** Derive stored enums/shapes from Prisma
-   (`import type { X } from "@/generated/prisma/client"`), never re-type by hand.
-3. **Derive, don't redefine.** Build related schemas from a base via
-   `.pick()/.omit()/.extend()/.partial()/.extract()` — e.g.
+1. **Schema → type, never the reverse.** `z.infer<typeof schema>`. No hand-written parallel
+   type; no `Omit<PrismaModel, ...>` for DTOs.
+2. **Prisma is the source of truth for stored data.** Derive stored enums/shapes from
+   `@/generated/prisma/client`, never re-type by hand.
+3. **Derive, don't redefine.** `.pick()/.omit()/.extend()/.partial()/.extract()` — e.g.
    `fileSourceTypeSchema = uploadSourceTypeSchema.extract(["txt", "pdf"])`.
-4. **One role per name** (see table). Never a grab-bag suffix like `Fields` or `Payload`.
-5. **`.strict()` on every object schema** to reject extra fields.
-6. **Clients validate responses with `safeParse`** — never `as` casts.
-7. **File scope.** A feature `*.schema.ts` holds that feature's vocabulary + request +
-   action input + response only. Server-action input schemas live here (exported) and are
-   imported by `actions.ts` — never inline in a `"use server"` file, which can only export
-   async functions and so can never share the schema with a client. Shared output MODELS go
-   to `src/types/`; stored enums come from `@/generated/prisma`. Add a one-line header
-   comment stating the file's scope.
+4. **One role per name.** Never a grab-bag suffix like `Fields` or `Payload`.
+5. **`.strict()` on every object schema.**
+6. **Clients validate HTTP responses with `safeParse`** — never `as` casts.
+7. **Action input schemas live in `schemas/`, exported**, and are imported by `actions.ts` —
+   never inline in a `"use server"` file, which can only export async functions and so could
+   never share the schema with the client.
 
 ### Response envelope
 
-Routes return a uniform envelope; the client validates it with the role-matched
-`ResponseSchema`.
-
 ```typescript
-// success
-{ success: true, data: <result> }
-// error (produced by toHttp)
-{ success: false, error: "message" }
+{ success: true, data: <result> }              // success
+{ success: false, error: "message" }           // error, produced by toHttp
 ```
 
-Build the contract with the factory instead of hand-writing the envelope:
+Build the contract with the factory, never by hand:
 
 ```typescript
-// features/reading/schemas/translation.schema.ts
 import { makeApiResponseSchema } from "@/lib/http/api-envelope-schema";
 
-export const translationDataSchema = z.object({ /* ... */ });
+export const translationDataSchema = z.object({ /* ... */ }).strict();
 export const translateResponseSchema = makeApiResponseSchema(translationDataSchema);
 ```
 
@@ -132,23 +128,22 @@ export const translateResponseSchema = makeApiResponseSchema(translationDataSche
 
 ## Errors
 
-The Service throws typed **domain errors**; the Route boundary maps them to HTTP via
-`toHttp()`. Actions let them throw straight to the client.
+The **Service** throws typed domain errors. The **Route** boundary maps them to HTTP via
+`toHttp()`. **Actions** let them throw straight to the client.
 
 | Error | HTTP Status | Use When |
 |-------|-------------|----------|
 | `NotFoundError` | 404 | Resource missing or not owned |
 | `UnauthorizedError` | 401 | Authentication required |
+| `ForbiddenError` | 403 | Authenticated but not permitted |
 | `ValidationError` | 400 | Business validation failed |
-| `ConflictError` | 409 | Resource conflict (e.g., duplicate) |
+| `ConflictError` | 409 | Duplicate or state conflict |
 | `AppError` | base | Base class for feature-specific errors |
 
-Only subclass an error when it earns its place — it adds a **specific message** (like
-`ArtifactNotFoundError` below) or a **field the caller consumes** (like a
-`PassageStudyServiceError.code`). A subclass or re-export that merely renames a base error,
-without adding either, is redundant — throw or import the base directly. A wrapper over
-plain `Error` (instead of an `AppError` subclass) also misses `toHttp`'s mapping and falls
-through to 500; use a domain error so it maps to the right status.
+**Only subclass when it earns its place** — it adds a specific message, or a field the caller
+consumes. A subclass that merely renames a base error is redundant; throw the base directly.
+A wrapper over plain `Error` misses `toHttp`'s mapping and falls through to 500 — always
+extend `AppError`.
 
 ```typescript
 // features/passage/errors/passage-errors.ts
@@ -160,34 +155,35 @@ export class ArtifactNotFoundError extends NotFoundError {
 }
 ```
 
-**`lib/errors/` is HTTP-free** — domain errors must not import from `lib/http/` or
-`@sentry/nextjs`. The mapping to HTTP happens only at the route boundary (`toHttp()`).
+**`lib/errors/` is HTTP-free** — domain errors must not import `lib/http/` or `@sentry/nextjs`.
+Mapping to HTTP happens only at the route boundary.
+
+**Operational errors log at `warn` and never create a Sentry Issue.** Sentry Issues are
+created only at `toHttp()` and `withAction()` boundaries.
 
 ---
 
-## Type vs Schema
+## Type vs Schema vs Enum
 
-This codebase distinguishes between **runtime validation** (Zod) and **compile-time types** (TypeScript).
-
-### Schema = Runtime Validation
-
-Used for **untrusted input** (client → server). Must use `const` with `.parse()`:
+| Kind | Runtime validated? | When |
+|------|-------------------|------|
+| **Schema** (`const ...Schema` + `.parse()`) | Yes | Untrusted input: client → server (action args, route body, query params, event payload) |
+| **Response DTO** (`...DataSchema` + `type ...Dto`) | Yes, by the client | Server → client over HTTP. Client `safeParse`s the envelope. |
+| **Props DTO** (`type ...Dto` only) | No | Server Component → Client Component. Already typed; no boundary to cross. |
+| **Enum** | From Prisma | Stored values. Never hardcoded. |
 
 ```typescript
-// Input from client — validate at runtime
+// Untrusted input — validate
 export const saveVocabularyInputSchema = z.object({
-  itemId: z.string().uuid(),
+  itemId: z.uuid(),
 }).strict();
-
 export type SaveVocabularyInput = z.infer<typeof saveVocabularyInputSchema>;
-```
 
-### DTO = Compile-Time Only
+// Enum — Prisma is the source of truth (Zod 4: z.enum, not z.nativeEnum)
+import { VocabularyStatus } from "@/generated/prisma/client";
+export const vocabularyStatusSchema = z.enum(VocabularyStatus);
 
-Used for **trusted output** (server → client). No schema needed:
-
-```typescript
-// Server output — trust the service, no runtime validation needed
+// Props DTO — server → server, no schema needed
 export type VocabularyItemDto = {
   id: string;
   status: VocabularyStatus;
@@ -195,39 +191,17 @@ export type VocabularyItemDto = {
 };
 ```
 
-### Enum = Prisma Native
-
-**Single source of truth = Prisma schema.** Never hardcode enums.
-
-```prisma
-// prisma/schema.prisma
-enum VocabularyStatus {
-  NEW
-  LEARNING
-  MASTERED
-}
-```
+### Import rules
 
 ```typescript
-// Import from generated Prisma client
-import { VocabularyStatus } from "@/generated/prisma/client";
-
-// Zod validation from Prisma enum
-export const vocabularyStatusSchema = z.nativeEnum(VocabularyStatus);
-```
-
-### Import Rules
-
-```typescript
-// Client imports Prisma enum → import type (prevents Prisma leakage)
+// Prisma enum in client code → import type (prevents Prisma bundle leakage)
 import type { VocabularyStatus } from "@/generated/prisma/client";
 
-// Client imports DTO → import type
+// DTO in client code → import type
 import type { VocabularyItemDto } from "@/features/vocabulary/schemas";
 
-// Server-only → regular import
+// Server-only → regular import (and the file must have `import "server-only"`)
 import { prisma } from "@/lib/prisma";
-import { vocabularyService } from "@/features/vocabulary/services/vocabulary.service";
 ```
 
 ---
@@ -237,5 +211,6 @@ import { vocabularyService } from "@/features/vocabulary/services/vocabulary.ser
 | Item | Pattern |
 |------|---------|
 | Files | kebab-case |
-| Error class | `<Feature>Error`, or extends a base error |
+| Folders inside a slice | no feature-name prefix (`db/repo.ts`, not `db/passage.repository.ts` — the folder already says it) |
+| Error class | extends `AppError` or a base error |
 | Schemas | by role — see [Schemas](#schemas) |

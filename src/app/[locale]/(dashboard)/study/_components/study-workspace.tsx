@@ -34,7 +34,7 @@ interface QuickTranslationState {
   status: QuickTranslationStatus;
 }
 
-export function StudyPageClient({
+export function StudyWorkspace({
   initialPassages,
 }: {
   initialPassages: PassageData[];
