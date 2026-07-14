@@ -1,13 +1,13 @@
 # Upload Feature — Logic & Service Data Flow
 
+> **Doc scope:** This is the **current implementation** document.
+> For the target architecture and future roadmap, see [Upload AI Architecture](./upload-ai-architecture.md).
+> For UI rendering flow, see [Upload Render Flow](./upload-render-flow.md).
+
 ## Overview
 
 Server-side logic for the upload feature: the server action, the Inngest event
 queue, the background worker, and the `UploadJob` lifecycle in the database.
-
-This document covers **logic/service concerns only**. For how the passage
-appears in the UI while it is being processed (temp rows, status field, state
-management, `SourcesPanel`), see [Upload Render Flow](./upload-render-flow.md).
 
 ---
 
@@ -163,24 +163,41 @@ sequenceDiagram
    `filePath = blobPath`, and `createdAt = new Date(startedAt)`.
 5. `update-job-status-to-done` — sets `status: DONE` and stores `passageId`.
 
-### Per-step service calls (current state)
+### Service Layer
 
-The worker has **no service/repository layer** — every step calls
-`@/lib/prisma` directly inline. CEFR "detection" is a hardcoded stub, not a
-service call.
+Processing logic is organized into services under `src/features/upload/services/`:
 
-| Step | What it calls now | Module | State |
-|------|-------------------|--------|-------|
-| `update-job-status-to-processing` | `prisma.uploadJob.update({ status: PROCESSING })` | Direct Prisma | Implemented |
-| `resolve-text` | `downloadFile(blobPath)` + `parsePDF` (pdf) / utf-8 (txt) / inline (paste) | Storage + parser | Implemented (youtube TODO) |
-| `detect-cefr-level` | returns `"B2"` inline | None — hardcoded stub | ⚠️ TODO: AI service |
-| `create-passage` | `prisma.passage.create({ ... })` inline | Direct Prisma | Implemented (passage only) |
-| `update-job-status-to-done` | `prisma.uploadJob.update({ status: DONE, passageId })` | Direct Prisma | Implemented |
-| `catch → failJob` | `prisma.uploadJob.update({ status: FAILED, error })` | Direct Prisma | Implemented |
+| Service | Purpose |
+|---------|---------|
+| `upload-processor.service.ts` | Pipeline orchestrator (resolve → normalize → analyze) |
+| `normalizers/text-normalizer.service.ts` | Text normalization (trim, collapse whitespace) |
+| `normalizers/pdf-normalizer.service.ts` | PDF-specific cleanup |
+| `analyzers/cefr-detector.service.ts` | CEFR level — placeholder returns `"B2"` |
+| `analyzers/vocabulary-extractor.service.ts` | Vocabulary extraction — placeholder returns `[]` |
+| `analyzers/topic-tagger.service.ts` | Topic tagging — placeholder returns `[]` |
 
-`create-passage` writes a single `Passage` row — no `StudioArtifact` or
-`Question[]`. When AI CEFR detection lands, `detect-cefr-level` is the seam that
-would delegate to that service; `create-passage` stays a plain passage write.
+**Worker steps:**
+
+| Step | Implementation | State |
+|------|----------------|-------|
+| `update-job-status-to-processing` | Direct Prisma | ✅ Done |
+| `process-upload` | `upload-processor.service.ts` | ✅ Done |
+| `create-passage` | Direct Prisma | ✅ Done |
+| `update-job-status-to-done` | Direct Prisma | ✅ Done |
+| `catch → failJob` | Direct Prisma | ✅ Done |
+
+Processing logic is organized into services under `src/features/upload/services/`:
+
+| Service | Purpose |
+|---------|---------|
+| `upload-processor.service.ts` | Pipeline orchestrator (resolve → normalize → analyze) |
+| `normalizers/text-normalizer.service.ts` | Text normalization (trim, collapse whitespace) |
+| `normalizers/pdf-normalizer.service.ts` | PDF-specific cleanup |
+
+The `process-upload` step internally calls:
+- Text resolution (from blob/text/URL)
+- Normalization via normalizer services
+- Analysis via analyzer services (placeholders)
 
 ---
 
@@ -278,12 +295,25 @@ Source descriptor: exactly one of `text` / `blobPath` / `url` is set per `source
 
 ```
 src/features/upload/
-└── actions.ts                       # Server Action: create job, emit event, read status
+├── actions.ts                       # Server Action: create job, emit event, read status
+├── services/                        # Processing services (v2)
+│   ├── upload-processor.service.ts # Pipeline orchestrator
+│   ├── normalizers/
+│   │   ├── text-normalizer.service.ts
+│   │   └── pdf-normalizer.service.ts
+│   └── analyzers/
+│       ├── cefr-detector.service.ts
+│       ├── vocabulary-extractor.service.ts
+│       └── topic-tagger.service.ts
+├── lib/
+│   └── pdf-parsers.ts              # PDF parsing
+└── schemas/
+    └── upload.schema.ts             # Validation schemas
 
 src/services/inngest/
 ├── client.ts                        # Inngest client + upload/process event schema
 └── functions/
-    └── process-upload.ts            # Background worker (step functions)
+    └── process-upload.ts            # Background worker (thin orchestrator)
 
 src/types/
 └── passage.ts                       # PassageData type + toPassageData mapper (shared model)
