@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createRequestLogContext, createRequestLogger } from "@/lib/logger";
+import { createRequestLogContext, createRequestLogger } from "@/lib/observability/logger";
 import { prisma } from "@/lib/prisma";
 
 const MODULE = "api:health";

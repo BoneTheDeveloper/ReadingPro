@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { getUserId } from "@/lib/auth/auth-server";
 import { withRoute } from "@/lib/http/with-route";
-import { executeTranslate } from "@/features/reading/services/inline-translate.service";
+import { executeTranslate } from "@/features/reading/server/services/inline-translate";
 
 const SINGLE_WORD_REGEX = /^[A-Za-z]+(?:[-'][A-Za-z]+)*$/;
 

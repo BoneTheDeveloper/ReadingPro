@@ -3,9 +3,9 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import type { Dispatch, SetStateAction } from "react";
-import { generateStudioQuestions } from "@/features/studio-panel/services/studio-questions.service";
-import { getArtifactQuestionsAction } from "@/features/studio-panel/action";
-import type { StudioActionId } from "@/features/studio-panel/action";
+import { generateStudioQuestions } from "@/features/studio-panel/server/services/studio-questions";
+import { getArtifactQuestionsAction } from "@/features/studio-panel/server/actions/studio-panel";
+import type { StudioActionId } from "@/features/studio-panel/server/actions/studio-panel";
 import type { PassageData } from "@/types/passage";
 import type {
   StudioArtifact,

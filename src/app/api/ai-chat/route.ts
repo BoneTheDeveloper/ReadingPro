@@ -5,7 +5,7 @@ import { withRoute } from "@/lib/http/with-route";
 import {
   studyChatRequestSchema,
   type UiMessage,
-} from "@/features/studio-panel/schemas/ai-chat.schema";
+} from "@/features/studio-panel/schemas/ai-chat";
 import { validateMessageSizeLimits } from "@/features/studio-panel/lib/ai-chat-utils";
 import {
   getOwnedPassageForChat,
@@ -13,7 +13,7 @@ import {
   toPersistedUiMessages,
   persistUserMessage,
   streamStudyChat,
-} from "@/features/studio-panel/services/ai-chat.service";
+} from "@/features/studio-panel/server/services/ai-chat";
 
 export const POST = withRoute("api:study:studio:chat", "/api/studio/chat")(
   async (req: NextRequest, _ctx, log) => {

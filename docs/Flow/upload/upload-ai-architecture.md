@@ -56,7 +56,7 @@ Clean and standardize text before AI analysis.
 | Empty lines | ✅ Done | Trim leading/trailing |
 
 **Current implementation:** Basic cleanup in `parsePDF` + worker steps.
-**Target:** Dedicated `text-normalizer.service.ts`
+**Target:** Dedicated `text-normalizer.ts`
 
 ### Stage 4: AI Analysis
 
@@ -83,16 +83,16 @@ src/features/upload/
 ├── schemas/                               # Validation schemas (current)
 ├── services/
 │   ├── normalizers/
-│   │   ├── text-normalizer.service.ts    # Core text normalization
-│   │   └── pdf-normalizer.service.ts     # PDF-specific cleanup
+│   │   ├── text-normalizer.ts    # Core text normalization
+│   │   └── pdf-normalizer.ts     # PDF-specific cleanup
 │   ├── analyzers/                         # AI analysis services
-│   │   ├── cefr-detector.service.ts       # CEFR level detection
+│   │   ├── cefr-detector.ts       # CEFR level detection
 │   │   │                                    - placeholder: returns "B2"
-│   │   ├── vocabulary-extractor.service.ts # Vocabulary extraction
+│   │   ├── vocabulary-extractor.ts # Vocabulary extraction
 │   │   │                                    - placeholder: returns []
-│   │   └── topic-tagger.service.ts        # Topic/concept tagging
+│   │   └── topic-tagger.ts        # Topic/concept tagging
 │   │                                        - placeholder: returns []
-│   └── upload-processor.service.ts        # Pipeline orchestrator
+│   └── upload-processor.ts        # Pipeline orchestrator
 │                                             - orchestrates all stages
 │
 src/services/ai/                          # AI service layer (current: minimal)
@@ -104,7 +104,7 @@ src/services/inngest/
 ├── client.ts                              # Inngest client + event schemas
 └── functions/
     └── process-upload.ts                 # Background worker (thin orchestrator)
-                                              - calls upload-processor.service
+                                              - calls upload-processor
 ```
 
 ### Service Design
@@ -130,7 +130,7 @@ export async function analyzeWithAI(
 #### Pipeline Orchestrator
 
 ```typescript
-// upload-processor.service.ts
+// upload-processor.ts
 export async function processUpload(
   input: UploadInput,
 ): Promise<ProcessedPassage> {
@@ -164,7 +164,7 @@ export async function processUpload(
 - Direct Prisma calls in each step
 
 **Target worker**:
-- Thin orchestrator, calls `upload-processor.service`
+- Thin orchestrator, calls `upload-processor`
 - Services handle business logic
 - Testable, replaceable components
 
@@ -189,7 +189,7 @@ export async function processUpload(
 
 As of this implementation:
 - [x] `services/` directory created with normalizers and analyzers
-- [x] `upload-processor.service.ts` orchestrates pipeline
+- [x] `upload-processor.ts` orchestrates pipeline
 - [x] Worker refactored to use pipeline orchestrator
 - [ ] YouTube transcript fetch (Phase 1)
 - [ ] AI CEFR detection (Phase 4)

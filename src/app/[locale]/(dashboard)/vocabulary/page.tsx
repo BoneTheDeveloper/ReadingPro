@@ -1,10 +1,10 @@
 import { getUserId } from "@/lib/auth/auth-server";
-import { VocabularyPageClient } from "@/features/vocabulary/ui/vocabulary-page";
+import { VocabularyPageClient } from "@/features/vocabulary/components/vocabulary-page";
 import {
   getVocabularyItemList,
   getVocabularyItemStats,
-} from "@/features/vocabulary/services/vocabulary-items.service";
-import { getVocabularySetList } from "@/features/vocabulary/services/vocabulary-sets.service";
+} from "@/features/vocabulary/server/services/vocabulary-items";
+import { getVocabularySetList } from "@/features/vocabulary/server/services/vocabulary-sets";
 
 export const dynamic = "force-dynamic";
 

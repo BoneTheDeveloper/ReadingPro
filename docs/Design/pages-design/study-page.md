@@ -32,9 +32,9 @@ The Study page is a full-height three-panel workspace inside the dashboard shell
 StudyPageClient
 +-- Fixed top reading progress bar
 +-- Study panel group
-|   +-- Left: StudySourcesPanel
-|   +-- Center: StudyContentPanel
-|   +-- Right: StudyStudioPanel
+|   +-- Left: SourcesPanel
+|   +-- Center: ContentPanel
+|   +-- Right: StudioPanel
 +-- StudyUploadModal
 ```
 
@@ -63,12 +63,12 @@ src/app/[locale]/(dashboard)/study/page.tsx
     +-- useStudyPanelLayout
     +-- react-resizable-panels Group#study-panels
     |   +-- Panel#source
-    |   |   +-- StudySourcesPanel (from src/features/source-panel/ui/sources-panel.tsx)
+    |   |   +-- SourcesPanel (from src/features/source-panel/ui/sources-panel.tsx)
     |   +-- Panel#content
-    |   |   +-- StudyContentPanel (from src/features/content-panel/ui/content-panel.tsx)
-    |   |   +-- StudyTranslationPopup
+    |   |   +-- ContentPanel (from src/features/content-panel/ui/content-panel.tsx)
+    |   |   +-- TranslationPopup
     |   +-- Panel#studio
-    |       +-- StudyStudioPanel (from src/features/studio-panel/ui/studio-panel.tsx)
+    |       +-- StudioPanel (from src/features/studio-panel/ui/studio-panel.tsx)
     |           +-- StudyChatPanel (from src/features/studio-panel/ui/studio/chat/chat-panel.tsx)
     |           +-- StudyTranslatePanel
     |           +-- QuizContent
@@ -123,9 +123,9 @@ src/server/db/
 - `StudyPageClient` is the only root Client Component for the Study route.
 - `StudyPageClient` composes panels, owns cross-panel state, and wires handlers.
 - Panel components own their visual layout and panel-local interaction.
-- Studio detail views are children of `StudyStudioPanel`; do not mount them beside the studio panel.
+- Studio detail views are children of `StudioPanel`; do not mount them beside the studio panel.
 - Reader selection UI belongs to the center panel area; the selection state is lifted to `StudyPageClient` because studio translation details also need it.
-- Study-specific upload composition belongs in `StudyUploadModal`; upload state is surfaced to `StudySourcesPanel` as an upload row.
+- Study-specific upload composition belongs in `StudyUploadModal`; upload state is surfaced to `SourcesPanel` as an upload row.
 - Upload form pieces, input validation, file/text normalization, and upload-specific workflow should move to `src/features/upload` instead of being duplicated inside Study.
 - Reusable Passage domain logic should live in `src/server/modules`, not in Study or Upload UI.
 - Quiz runtime state belongs in `QuizContent`; quiz completion display belongs in `QuizResults`.
@@ -136,10 +136,10 @@ When adding a Study subcomponent, place it by ownership:
 
 | New UI concern | Put it under |
 |----------------|--------------|
-| Source list, source search, source row, source menu | `StudySourcesPanel` or `src/features/source-panel/ui/*` |
-| Passage reading, reader metadata, selection capture | `StudyContentPanel` or `src/features/content-panel/ui/*` |
-| Floating selected-text action | `StudyTranslationPopup` or `src/features/studio-panel/ui/studio/lookup/*` |
-| Studio action grid, results list, collapsed studio rail | `StudyStudioPanel` in `src/features/studio-panel/ui/studio-panel.tsx` |
+| Source list, source search, source row, source menu | `SourcesPanel` or `src/features/source-panel/ui/*` |
+| Passage reading, reader metadata, selection capture | `ContentPanel` or `src/features/content-panel/ui/*` |
+| Floating selected-text action | `TranslationPopup` or `src/features/studio-panel/ui/studio/lookup/*` |
+| Studio action grid, results list, collapsed studio rail | `StudioPanel` in `src/features/studio-panel/ui/studio-panel.tsx` |
 | Chat messages, chat input, stream controls | `src/features/studio-panel/ui/studio/chat/*` |
 | Translation detail, save vocabulary, ask AI from selection | `src/features/studio-panel/ui/studio/lookup/*` |
 | Quiz taking and quiz results | `src/features/studio-panel/ui/studio/quiz/*` |
@@ -264,7 +264,7 @@ Component boundary:
 
 Translation popup:
 
-- `StudyTranslationPopup` is mounted by `StudyPageClient` inside the center panel container.
+- `TranslationPopup` is mounted by `StudyPageClient` inside the center panel container.
 - It owns only popup/icon positioning, dismissal, and translate/details button UI.
 - It does not own selected-text state or the translation request.
 
@@ -325,13 +325,13 @@ Nested studio views:
 
 | View | Component | Owner |
 |------|-----------|-------|
-| Default studio action grid | `StudyStudioPanel` | `StudyStudioPanel` |
-| Results list | `StudyStudioPanel` | `StudyStudioPanel` |
-| Chat detail | `StudyChatPanel` | `StudyStudioPanel` mounts it |
-| Translation detail | `StudyTranslatePanel` | `StudyStudioPanel` mounts it |
-| Quiz artifact detail | `QuizContent` | `StudyStudioPanel` mounts it |
+| Default studio action grid | `StudyStudioPanel` |
+| Results list | `StudioPanel` |
+| Chat detail | `StudyChatPanel` | `StudioPanel` mounts it |
+| Translation detail | `StudyTranslatePanel` | `StudioPanel` mounts it |
+| Quiz artifact detail | `QuizContent` | `StudioPanel` mounts it |
 | Quiz completion | `QuizResults` | `QuizContent` mounts it |
-| Summary artifact detail | Inline summary block | `StudyStudioPanel` |
+| Summary artifact detail | Inline summary block | `StudioPanel` |
 
 ## Upload Modal
 
@@ -384,7 +384,7 @@ Workspace state is split by responsibility:
 | Artifact list caching | `useStudyArtifacts` (src/features/studio-panel/hooks/) |
 | Selected text, quick translation, saved vocabulary keys | `StudyPageClient` |
 | Selection geometry and context extraction | `selection-utils.ts` (src/features/study/shared/) |
-| Source panel local search | `StudySourcesPanel` (src/features/source-panel/ui/) |
+| Source panel local search | `SourcesPanel` (src/features/source-panel/ui/) |
 | Reader DOM ref and selection start tracking | `StudyContentPanel` (src/features/content-panel/ui/) |
 | Studio chat/detail local view switches | `StudyStudioPanel` (src/features/studio-panel/ui/) |
 | Chat messages, stream status, chat input | `StudyChatPanel` (src/features/studio-panel/ui/studio/chat/) |
@@ -398,15 +398,15 @@ Do not move ownership checks, persistence rules, or route response contracts int
 | Flow | UI entry | Boundary module |
 |------|----------|-----------------|
 | Initial passage load | Route page | `getUserId`, `getUserPassages` |
-| Select passage | `StudySourcesPanel` callback | `useStudyWorkspaceState` |
-| Delete passage | `StudySourcesPanel` callback | `deletePassageAction` (src/features/study-workspace/actions.ts) |
-| Save vocabulary | `StudyTranslatePanel` callback | `saveVocabularyAction` (src/features/study-workspace/actions.ts) |
-| List artifacts | `StudyStudioPanel` effect | `getStudioArtifactsAction` (src/features/studio-panel/actions.ts) |
+| Select passage | `SourcesPanel` callback | `useStudyWorkspaceState` |
+| Delete passage | `SourcesPanel` callback | `deletePassageAction` (src/features/study-workspace/actions.ts) |
+| Save vocabulary | `TranslatePanel` callback | `saveVocabularyAction` (src/features/study-workspace/actions.ts) |
+| List artifacts | `StudioPanel` effect | `getStudioArtifactsAction` (src/features/studio-panel/actions.ts) |
 | Generate quiz | `StudyStudioPanel` action card | `generateStudioQuestionsAction` (src/features/studio-panel/actions.ts) via studio-questions-client.ts |
 | Fetch artifact questions | Quiz open | `getArtifactQuestionsAction` (src/features/studio-panel/actions.ts) |
 | Record quiz result | Quiz complete | `recordQuizResultAction` (src/features/studio-panel/actions.ts) |
 | Reset quiz result | Quiz retry | `resetQuizResultAction` (src/features/studio-panel/actions.ts) |
-| Quick translate | `StudyTranslationPopup` callback | `POST /api/translate` route handler |
+| Quick translate | `TranslationPopup` callback | `POST /api/translate` route handler |
 | Chat history load | `StudyChatPanel` mount | `getChatHistoryAction` (src/features/studio-panel/actions.ts) |
 | Chat stream | `StudyChatPanel` message send | `POST /api/studio/chat` route handler |
 

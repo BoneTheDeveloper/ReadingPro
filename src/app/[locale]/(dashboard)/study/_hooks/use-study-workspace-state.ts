@@ -7,9 +7,9 @@ import {
   useTransition,
 } from "react";
 import { useRouter } from "next/navigation";
-import { deletePassageAction } from "@/features/passage/action";
+import { deletePassageAction } from "@/features/passage/server/actions/passage";
 import type { PassageData } from "@/types/passage";
-import type { DocumentItem } from "@/features/upload/ui/sources-panel";
+import type { DocumentItem } from "@/features/upload/components/panel/sources-panel";
 
 type StudyStatus =
   "idle" | "uploading" | "analyzing" | "ready" | "error";

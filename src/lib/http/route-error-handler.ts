@@ -2,7 +2,7 @@ import "server-only";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import * as Sentry from "@sentry/nextjs";
-import type { createRequestLogger } from "@/lib/logger";
+import type { createRequestLogger } from "@/lib/observability/logger";
 import {
   NotFoundError,
   UnauthorizedError,

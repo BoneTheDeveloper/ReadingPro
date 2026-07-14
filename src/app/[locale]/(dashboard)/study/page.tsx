@@ -1,6 +1,6 @@
 // app/[locale]/(dashboard)/study/page.tsx
 import { getUserId } from "@/lib/auth/auth-server";
-import { listUserPassages } from "@/features/passage/services/passage.service";
+import { listUserPassages } from "@/features/passage/server/services/passage";
 import { StudyWorkspace } from "./_components/study-workspace";
 
 export const dynamic = "force-dynamic";

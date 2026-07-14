@@ -40,7 +40,7 @@ src/features/upload
 +-- actions
 |   +-- create-uploaded-passage.action.ts
 +-- model
-|   +-- upload.schema.ts
+|   +-- upload.ts
 |   +-- upload.types.ts
 +-- services
     +-- create-uploaded-passage.ts

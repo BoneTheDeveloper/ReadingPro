@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
-import type { ContextLogger } from "@/lib/logger";
-import { createRequestLogger, createRequestLogContext } from "@/lib/logger";
+import type { ContextLogger } from "@/lib/observability/logger";
+import { createRequestLogger, createRequestLogContext } from "@/lib/observability/logger";
 import { toHttp } from "./route-error-handler";
 
 type RouteContext = Record<string, unknown>;

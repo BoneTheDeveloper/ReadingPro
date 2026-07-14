@@ -171,13 +171,13 @@ Processing logic organized into services under `src/features/upload/services/`:
 
 | Service | Purpose |
 |---------|---------|
-| `upload-processor.service.ts` | Individual pipeline functions |
+| `upload-processor.ts` | Individual pipeline functions |
 | `inngest/events.ts` | Event schemas (upload-specific) |
-| `normalizers/text-normalizer.service.ts` | Text normalization |
-| `normalizers/pdf-normalizer.service.ts` | PDF cleanup |
-| `analyzers/cefr-detector.service.ts` | CEFR — placeholder `"B2"` |
-| `analyzers/vocabulary-extractor.service.ts` | Vocabulary — placeholder `[]` |
-| `analyzers/topic-tagger.service.ts` | Topics — placeholder `[]` |
+| `normalizers/text-normalizer.ts` | Text normalization |
+| `normalizers/pdf-normalizer.ts` | PDF cleanup |
+| `analyzers/cefr-detector.ts` | CEFR — placeholder `"B2"` |
+| `analyzers/vocabulary-extractor.ts` | Vocabulary — placeholder `[]` |
+| `analyzers/topic-tagger.ts` | Topics — placeholder `[]` |
 
 **Step → Service mapping:**
 
@@ -186,7 +186,7 @@ Processing logic organized into services under `src/features/upload/services/`:
 | `resolve-text` | Inline in worker (I/O) |
 | `analyze-content` | `normalizeTextPipeline` + `analyzeContent` |
 | `create-passage` | Direct Prisma |
-| `normalizers/pdf-normalizer.service.ts` | PDF-specific cleanup |
+| `normalizers/pdf-normalizer.ts` | PDF-specific cleanup |
 
 The `process-upload` step internally calls:
 - Text resolution (from blob/text/URL)
@@ -291,18 +291,18 @@ Source descriptor: exactly one of `text` / `blobPath` / `url` is set per `source
 src/features/upload/
 ├── actions.ts                       # Server Action: create job, emit event, read status
 ├── services/                        # Processing services (v2)
-│   ├── upload-processor.service.ts # Pipeline orchestrator
+│   ├── upload-processor.ts # Pipeline orchestrator
 │   ├── normalizers/
-│   │   ├── text-normalizer.service.ts
-│   │   └── pdf-normalizer.service.ts
+│   │   ├── text-normalizer.ts
+│   │   └── pdf-normalizer.ts
 │   └── analyzers/
-│       ├── cefr-detector.service.ts
-│       ├── vocabulary-extractor.service.ts
-│       └── topic-tagger.service.ts
+│       ├── cefr-detector.ts
+│       ├── vocabulary-extractor.ts
+│       └── topic-tagger.ts
 ├── lib/
 │   └── pdf-parsers.ts              # PDF parsing
 └── schemas/
-    └── upload.schema.ts             # Validation schemas
+    └── upload.ts             # Validation schemas
 
 src/services/inngest/
 ├── client.ts                        # Inngest client + upload/process event schema

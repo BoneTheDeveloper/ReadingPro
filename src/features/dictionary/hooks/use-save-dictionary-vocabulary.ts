@@ -1,11 +1,11 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { saveDictionarySenseToVocabularyAction } from "../action";
+import { saveDictionarySenseToVocabularyAction } from "../server/actions/dictionary";
 import type {
   DictionaryEntryDto,
   DictionarySenseDto,
-} from "../schemas/dictionary.schema";
+} from "../schemas/dictionary";
 
 export type SaveStatus = "idle" | "saving" | "saved" | "error";
 

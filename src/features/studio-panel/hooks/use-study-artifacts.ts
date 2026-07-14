@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { captureClientError } from "@/lib/observability/capture-client-error";
 import type { ArtifactsCacheEntry } from "@/types/studio-artifact";
 import { ARTIFACT_STALE_TIME } from "@/features/studio-panel/lib/studio-artifact-types";
-import { getStudioArtifactsAction } from "@/features/studio-panel/action";
+import { getStudioArtifactsAction } from "@/features/studio-panel/server/actions/studio-panel";
 import type { Dispatch, SetStateAction } from "react";
 import type { StudyState } from "@/app/[locale]/(dashboard)/study/_hooks/use-study-workspace-state";
 

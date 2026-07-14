@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readFileBuffer } from "@/services/storage";
-import { createRequestLogContext, createRequestLogger } from "@/lib/logger";
+import { createRequestLogContext, createRequestLogger } from "@/lib/observability/logger";
 
 const MODULE = "api:local-blob";
 

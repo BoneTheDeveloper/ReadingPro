@@ -1,11 +1,11 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { getDictionaryEntryDetailAction } from "../action";
+import { getDictionaryEntryDetailAction } from "../server/actions/dictionary";
 import type {
   DictionaryEntryDto,
   DictionarySuggestItemDto,
-} from "@/features/dictionary/schemas/dictionary.schema";
+} from "@/features/dictionary/schemas/dictionary";
 
 export type DetailStatus = "idle" | "loading" | "found" | "not-found" | "error";
 

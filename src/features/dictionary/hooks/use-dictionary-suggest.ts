@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { suggestDictionaryTermsAction } from "../action";
-import type { DictionarySuggestItemDto } from "@/features/dictionary/schemas/dictionary.schema";
+import { suggestDictionaryTermsAction } from "../server/actions/dictionary";
+import type { DictionarySuggestItemDto } from "@/features/dictionary/schemas/dictionary";
 import { normalizeDictionaryTerm } from "@/features/dictionary/lib/normalize-dictionary-term";
 
 const DEBOUNCE_MS = 250;

@@ -1,5 +1,5 @@
 import { getUserId } from "@/lib/auth/auth-server";
-import { DictionaryPageClient } from "@/features/dictionary/ui/dictionary-page";
+import { DictionaryPageClient } from "@/features/dictionary/components/dictionary-page";
 
 export const dynamic = "force-dynamic";
 

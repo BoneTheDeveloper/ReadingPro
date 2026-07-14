@@ -2,8 +2,8 @@
 
 import { useCallback, useState } from "react";
 import { Group, Panel, Separator } from "react-resizable-panels";
-import { translateResponseSchema } from "@/features/reading/schemas/translation.schema";
-import { saveVocabularyAction } from "@/features/vocabulary/action";
+import { translateResponseSchema } from "@/features/reading/schemas/translation";
+import { saveVocabularyAction } from "@/features/vocabulary/server/actions/vocabulary"
 import {
   clampTranslationContext,
   isTranslateTextWithinLimit,
@@ -12,12 +12,12 @@ import type { PassageData } from "@/types/passage";
 import type {
   TranslationSelection,
   QuickTranslationData,
-} from "@/features/reading/schemas/translation.schema";
-import { StudySourcesPanel } from "@/features/upload/ui/sources-panel";
-import { StudyContentPanel } from "@/features/reading/ui/content-panel";
-import { StudyStudioPanel } from "@/features/studio-panel/ui/studio-panel";
-import { StudyTranslationPopup } from "@/features/reading/ui/translate/translation-popup";
-import { StudyUploadModal } from "@/features/upload/ui/upload-modal";
+} from "@/features/reading/schemas/translation";
+import { SourcesPanel } from "@/features/upload/components/panel/sources-panel";
+import { ContentPanel } from "@/features/reading/components/content-panel";
+import { StudioPanel } from "@/features/studio-panel/components/studio-panel";
+import { TranslationPopup } from "@/features/reading/components/translate/translation-popup";
+import { UploadModal } from "@/features/upload/components/model/upload-modal";
 import { useStudyActions } from "../_hooks/use-study-actions";
 import { useStudyPanelLayout } from "../_hooks/use-study-panel-layout";
 import { useStudyWorkspaceState } from "../_hooks/use-study-workspace-state";
@@ -66,7 +66,7 @@ export function StudyWorkspace({
   // Presence heartbeat is mounted app-wide in DashboardSidebar; the study page is
   // wrapped by it, so no per-page heartbeat is needed here.
 
-  // Translation state (lifted from StudyContentPanel)
+  // Translation state (lifted from ContentPanel)
   const [contentViewMode, setContentViewMode] = useState<
     "source" | "passage"
   >("passage");
@@ -244,7 +244,7 @@ export function StudyWorkspace({
             maxSize="800px"
             onResize={layout.handleLeftResize}
           >
-            <StudySourcesPanel
+            <SourcesPanel
               documents={documents}
               activeId={state.activePassageId}
               onSelect={handleSelectDocument}
@@ -260,7 +260,7 @@ export function StudyWorkspace({
           <Separator className="w-0.25" />
           <Panel id="content" minSize={550}>
             <div className="h-full bg-surface flex flex-col overflow-hidden">
-              <StudyContentPanel
+              <ContentPanel
                 key={activePassage?.id ?? "empty"}
                 passage={activePassage}
                 error={state.error}
@@ -270,7 +270,7 @@ export function StudyWorkspace({
                 onOpenUploadModal={handleOpenUploadModal}
               />
               {selection && activePassage && (
-                <StudyTranslationPopup
+                <TranslationPopup
                   selection={selection}
                   translation={quickTranslationState.data}
                   status={quickTranslationState.status}
@@ -294,7 +294,7 @@ export function StudyWorkspace({
             minSize="200px"
             onResize={layout.handleRightResize}
           >
-            <StudyStudioPanel
+            <StudioPanel
               artifactsCache={
                 state.artifactsByPassageId[state.activePassageId ?? ""] ?? {
                   status: "idle",
@@ -339,7 +339,7 @@ export function StudyWorkspace({
       </div>
 
       {/* Upload modal */}
-      <StudyUploadModal
+      <UploadModal
         isOpen={state.uploadModalOpen}
         onClose={handleCloseUploadModal}
         onUploadStart={handleUploadStart}

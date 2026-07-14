@@ -12,12 +12,12 @@ source of truth for *what* can import *what*. Do not restate the rules here.
 
 | Layer | Location | Responsibility |
 |-------|----------|----------------|
-| **Schema** | `features/<f>/schemas/*.schema.ts` | Zod validation + `z.infer` types → [Schemas](#schemas). |
-| **Action** | `features/<f>/actions.ts` | `"use server"`. Validate args with an `InputSchema`, call **one** service, `revalidatePath()`. |
+| **Schema** | `features/<f>/schemas/*.ts` | Zod validation + `z.infer` types → [Schemas](#schemas). |
+| **Action** | `features/<f>/server/actions/*.ts` | `"use server"`. Validate args with an `InputSchema`, call **one** service, `revalidatePath()`. |
 | **Route** | `app/api/**/route.ts` | Parse body with a `RequestSchema`, call **one** service, return the [envelope](#response-envelope). Wrap in `withRoute()`. |
 | **Page** | `app/[locale]/**/page.tsx` | Server Component. Call a service, pass DTOs as props. |
-| **Service** | `features/<f>/services/*.service.ts` | Business logic. **Owns DTO building** (Prisma row → `Dto`). Owns **authorization**. Throws [domain errors](#errors). |
-| **Repository** | `features/<f>/db/*.repository.ts` | Prisma only. No schemas, no auth checks, no business rules. |
+| **Service** | `features/<f>/server/services/*.ts` | Business logic. **Owns DTO building** (Prisma row → `Dto`). Owns **authorization**. Throws [domain errors](#errors). |
+| **Repository** | `features/<f>/server/db/*.ts` | Prisma only. No schemas, no auth checks, no business rules. |
 
 **Why these boundaries** (ESLint enforces them; here is the reasoning):
 
@@ -30,6 +30,25 @@ source of truth for *what* can import *what*. Do not restate the rules here.
 
 **Invariant:** Action/Route is **thin** — one service call, nothing else. Service is the only
 layer that builds DTOs, checks ownership, or throws domain errors.
+
+---
+
+## Feature Structure
+
+Each feature lives in `src/features/<feature>/`:
+
+```
+features/<f>/
+├── components/        # React components (client)
+├── hooks/            # React hooks
+├── lib/              # Feature-specific utilities
+├── schemas/          # Zod schemas
+└── server/           # Server-side code
+    ├── actions/      # Server Actions
+    ├── db/          # Repositories
+    ├── services/    # Business logic
+    └── inngest/    # Async event handlers
+```
 
 ---
 
@@ -76,7 +95,7 @@ Every schema plays **exactly one role**, encoded by the name suffix.
 | Route request body | `<entity>RequestSchema` | client → server (HTTP) | feature `schemas/` |
 | Server-action args | `<verb><Entity>InputSchema` | client → server (action) | feature `schemas/` |
 | Query params | `<entity>QuerySchema` | client → server | feature `schemas/` |
-| Event / queue payload | `<entity>EventSchema` | async | feature `services/inngest/` |
+| Event / queue payload | `<entity>EventSchema` | async | feature `server/inngest/` |
 | Response data | `<entity>DataSchema` + `type <Entity>Dto` | server → client (HTTP) | feature `schemas/` |
 | Response contract | `<entity>ResponseSchema = makeApiResponseSchema(<entity>DataSchema)` | server → client | feature `schemas/` |
 | Shared type across features | `type <Entity>` | — | `src/types/<entity>.ts` |
@@ -146,7 +165,7 @@ A wrapper over plain `Error` misses `toHttp`'s mapping and falls through to 500 
 extend `AppError`.
 
 ```typescript
-// features/passage/errors/passage-errors.ts
+// features/passage/server/errors/passage-errors.ts
 export class ArtifactNotFoundError extends NotFoundError {
   constructor(artifactId: string) {
     super("Artifact");
@@ -211,6 +230,6 @@ import { prisma } from "@/lib/prisma";
 | Item | Pattern |
 |------|---------|
 | Files | kebab-case |
-| Folders inside a slice | no feature-name prefix (`db/repo.ts`, not `db/passage.repository.ts` — the folder already says it) |
+| Folders inside a slice | no feature-name prefix (`db/repo.ts`, not `db/passage.ts` — the folder already says it) |
 | Error class | extends `AppError` or a base error |
 | Schemas | by role — see [Schemas](#schemas) |
