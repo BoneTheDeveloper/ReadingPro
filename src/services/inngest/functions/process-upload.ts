@@ -1,10 +1,16 @@
-import { inngest, UPLOAD_PROCESS_EVENT } from "@/services/inngest/client";
+import { inngest } from "@/services/inngest/client";
+import { UPLOAD_PROCESS_EVENT } from "@/features/upload/services/inngest/events";
 import { prisma } from "@/lib/prisma";
 import { step } from "inngest";
 import {
-  processUpload,
-  type UploadProcessorInput,
+  normalizeTextPipeline,
+  analyzeContent,
+  computeWordCount,
+  sourceTypeToPassageSourceType,
 } from "@/features/upload/services/upload-processor.service";
+import { downloadFile } from "@/services/storage";
+import { parsePDF } from "@/features/upload/lib/pdf-parsers";
+import type { UploadProcessorInput } from "@/features/upload/services/upload-processor.service";
 
 export const processUploadJob = inngest.createFunction(
   {
@@ -13,7 +19,7 @@ export const processUploadJob = inngest.createFunction(
     triggers: [{ event: UPLOAD_PROCESS_EVENT }],
   },
   async ({ event }: { event: { data: UploadProcessorInput } }) => {
-    const { jobId, userId } = event.data;
+    const { jobId, userId, sourceType, blobPath, text, startedAt, passageId, title } = event.data;
 
     const failJob = async (error: string) => {
       await prisma.uploadJob.update({
@@ -23,7 +29,7 @@ export const processUploadJob = inngest.createFunction(
     };
 
     try {
-      // Stage 1: Update status to PROCESSING
+      // Step 1: Update status to PROCESSING
       await step.run("update-job-status-to-processing", async () => {
         await prisma.uploadJob.update({
           where: { id: jobId },
@@ -31,40 +37,78 @@ export const processUploadJob = inngest.createFunction(
         });
       });
 
-      // Stage 2: Process upload (orchestrates resolve → normalize → analyze)
-      const processedPassage = await step.run("process-upload", async () => {
-        return processUpload(event.data);
+      // Step 2: Resolve text from source (I/O - can retry cheaply)
+      const rawText = await step.run("resolve-text", async () => {
+        switch (sourceType) {
+          case "paste":
+            return text ?? "";
+          case "txt":
+          case "pdf": {
+            if (!blobPath) throw new Error(`Missing blobPath for ${sourceType} upload`);
+            const buffer = await downloadFile(blobPath);
+            if (!buffer) throw new Error("Failed to read uploaded file from storage");
+            if (sourceType === "pdf") {
+              const parsed = await parsePDF(buffer);
+              return parsed.text;
+            }
+            return buffer.toString("utf-8");
+          }
+          case "youtube":
+            throw new Error("YouTube upload not implemented");
+          default:
+            throw new Error(`Unsupported sourceType: ${sourceType}`);
+        }
       });
 
-      // Stage 3: Create passage in database
+      if (!rawText.trim()) {
+        throw new Error("Resolved text is empty");
+      }
+
+      // Step 3: Analyze content (AI call - expensive to retry)
+      const analysis = await step.run("analyze-content", async () => {
+        // Normalize + analyze in one step (normalize is pure, no retry cost)
+        const normalized = await normalizeTextPipeline(rawText, sourceType);
+        const analysisResult = await analyzeContent(normalized);
+        const wordCount = computeWordCount(normalized);
+        const passageSourceType = sourceTypeToPassageSourceType(sourceType);
+
+        return {
+          content: normalized,
+          wordCount,
+          passageSourceType,
+          ...analysisResult,
+        };
+      });
+
+      // Step 4: Create passage in database
       await step.run("create-passage", async () => {
         await prisma.passage.create({
           data: {
-            id: processedPassage.id,
+            id: passageId,
             userId,
-            title: processedPassage.title,
-            content: processedPassage.content,
-            cefrLevel: processedPassage.cefrLevel as "B1" | "B2" | "C1" | "C2" | "A1" | "A2",
-            wordCount: processedPassage.wordCount,
-            sourceType: processedPassage.sourceType,
-            filePath: processedPassage.filePath,
-            createdAt: processedPassage.createdAt,
+            title,
+            content: analysis.content,
+            cefrLevel: analysis.cefrLevel as "B1" | "B2" | "C1" | "C2" | "A1" | "A2",
+            wordCount: analysis.wordCount,
+            sourceType: analysis.passageSourceType,
+            filePath: blobPath || undefined,
+            createdAt: new Date(startedAt),
           },
         });
       });
 
-      // Stage 4: Update status to DONE
+      // Step 5: Update status to DONE
       await step.run("update-job-status-to-done", async () => {
         await prisma.uploadJob.update({
           where: { id: jobId },
-          data: { status: "DONE", passageId: processedPassage.id },
+          data: { status: "DONE", passageId },
         });
       });
 
       return {
         jobId,
-        passageId: processedPassage.id,
-        cefrLevel: processedPassage.cefrLevel,
+        passageId,
+        cefrLevel: analysis.cefrLevel,
       };
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown error";

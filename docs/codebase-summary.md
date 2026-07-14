@@ -2,7 +2,7 @@
 
 ## Tech Stack
 
-Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4, Prisma ORM 7, PostgreSQL, Better Auth, Zod 4, Vercel AI SDK, Sentry, Pino.
+Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4, Prisma ORM 7, PostgreSQL, Better Auth, Zod 4, Vercel AI SDK, Sentry, Pino, Inngest.
 
 ## Source Layout
 
@@ -16,22 +16,27 @@ src/
 │   └── <feature>/
 │       ├── actions.ts        # Server Actions
 │       ├── db/              # Repositories
-│       ├── services/         # Business logic (Server)
 │       ├── schemas/         # Zod schemas
 │       ├── errors/          # Feature errors
-│       ├── hooks/           # React hooks
-│       └── ui/              # Components
+│       ├── hooks/            # React hooks
+│       ├── ui/              # Components
+│       └── services/         # Business logic (Server)
+│           └── inngest/     # Feature-specific Inngest events
+│                ├── client.ts       # Generic Inngest init
+│                ├── events.ts       # Event registry
+│                └── functions/      # Inngest function handlers
 │
 ├── components/              # Shared components
 │
-├── lib/
-│   ├── errors/             # Domain errors
-│   ├── http/              # HTTP handling
-│   ├── auth/              # Auth utilities
-│   ├── prisma.ts          # Prisma client
-│   └── logger.ts          # Pino logger
-│
-└── services/              # Cross-cutting integrations
+└── lib/
+    ├── errors/             # Domain errors
+    ├── http/              # HTTP handling
+    ├── auth/              # Auth utilities
+    ├── prisma.ts          # Prisma client
+    └── logger.ts          # Pino logger
+
+
+     
 ```
 
 ## Features
@@ -42,7 +47,7 @@ src/
 | vocabulary | Save & manage vocabulary |
 | reading | Reading view + inline translation |
 | studio-panel | AI chat + questions |
-| upload | File upload → text extraction |
+| upload | Upload → normalize → AI analyze → passage |
 | passage | Passage persistence |
 | ai-chat | AI chat service |
 | users | User sync |

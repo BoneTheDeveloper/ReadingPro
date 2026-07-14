@@ -1,11 +1,9 @@
 /**
- * Upload processing pipeline orchestrator.
- * Coordinates all processing stages: resolve text → normalize → analyze → output.
+ * Upload processing pipeline.
+ * Individual functions exported for use by Inngest worker steps.
  */
 
 import "server-only";
-import { downloadFile } from "@/services/storage";
-import { parsePDF } from "@/features/upload/lib/pdf-parsers";
 import { normalizeText } from "./normalizers/text-normalizer.service";
 import { normalizePdfText } from "./normalizers/pdf-normalizer.service";
 import { detectCefrLevel } from "./analyzers/cefr-detector.service";
@@ -26,97 +24,60 @@ export interface UploadProcessorInput {
   startedAt: number;
 }
 
-export interface ProcessedPassage {
-  id: string;
-  title: string;
-  content: string;
-  sourceType: "TEXT" | "PDF";
-  wordCount: number;
+export interface AnalysisResult {
   cefrLevel: string;
   vocabulary: string[];
   topics: string[];
-  filePath?: string;
-  createdAt: Date;
 }
 
-// ---------- Pipeline ----------
-
-/**
- * Main entry point for upload processing.
- * Orchestrates all stages: resolve → normalize → analyze → output
- */
-export async function processUpload(
-  input: UploadProcessorInput
-): Promise<ProcessedPassage> {
-  // Stage 1: Resolve text from source
-  const rawText = await resolveText(input);
-  if (!rawText.trim()) {
-    throw new Error("Resolved text is empty");
-  }
-
-  // Stage 2: Normalize text
-  const content = await normalizeTextPipeline(rawText, input.sourceType);
-
-  // Stage 3: Analyze content (placeholder — returns hardcoded values)
-  const analysis = await analyzeContent(content);
-
-  // Stage 4: Compute word count
-  const wordCount = content.split(/\s+/).filter((w) => w.length > 0).length;
-
-  // Stage 5: Map source type
-  const passageSourceType = sourceTypeToPassageSourceType(input.sourceType);
-
-  return {
-    id: input.passageId,
-    title: input.title,
-    content,
-    sourceType: passageSourceType,
-    wordCount,
-    cefrLevel: analysis.cefrLevel,
-    vocabulary: analysis.vocabulary,
-    topics: analysis.topics,
-    filePath: input.blobPath,
-    createdAt: new Date(input.startedAt),
-  };
+export interface ProcessedContent {
+  content: string;
+  wordCount: number;
+  passageSourceType: "TEXT" | "PDF";
+  cefrLevel: string;
+  vocabulary: string[];
+  topics: string[];
 }
+
+// ---------- Pipeline Steps ----------
 
 /**
  * Resolve text from upload source.
+ * This is I/O-bound (file download) — retry is cheap.
  */
-async function resolveText(input: UploadProcessorInput): Promise<string> {
-  switch (input.sourceType) {
+export async function resolveText(
+  sourceType: string,
+  text: string | undefined,
+  blobPath: string | undefined
+): Promise<string> {
+  switch (sourceType) {
     case "paste":
-      return input.text ?? "";
+      return text ?? "";
 
     case "txt":
     case "pdf": {
-      if (!input.blobPath) {
-        throw new Error(`Missing blobPath for ${input.sourceType} upload`);
+      // blobPath download is done in the Inngest step
+      // This function just returns the already-downloaded content
+      if (!blobPath) {
+        throw new Error(`Missing blobPath for ${sourceType} upload`);
       }
-      const buffer = await downloadFile(input.blobPath);
-      if (!buffer) {
-        throw new Error("Failed to read uploaded file from storage");
-      }
-      if (input.sourceType === "pdf") {
-        const parsed = await parsePDF(buffer);
-        return parsed.text;
-      }
-      return buffer.toString("utf-8");
+      // Content should be passed from the step that downloaded it
+      return text ?? "";
     }
 
     case "youtube":
-      // Placeholder: YouTube not implemented
       throw new Error("YouTube upload not implemented");
 
     default:
-      throw new Error(`Unsupported sourceType: ${input.sourceType}`);
+      throw new Error(`Unsupported sourceType: ${sourceType}`);
   }
 }
 
 /**
  * Normalize text based on source type.
+ * This is a pure function — retry has no side effects.
  */
-async function normalizeTextPipeline(
+export async function normalizeTextPipeline(
   text: string,
   sourceType: string
 ): Promise<string> {
@@ -129,8 +90,9 @@ async function normalizeTextPipeline(
 
 /**
  * Run all content analyzers in parallel.
+ * AI call will be here when implemented — retry is expensive.
  */
-async function analyzeContent(text: string) {
+export async function analyzeContent(text: string): Promise<AnalysisResult> {
   const [cefr, vocab, topics] = await Promise.all([
     detectCefrLevel(text),
     extractVocabulary(text),
@@ -145,10 +107,52 @@ async function analyzeContent(text: string) {
 }
 
 /**
+ * Compute word count from text.
+ */
+export function computeWordCount(text: string): number {
+  return text.split(/\s+/).filter((w) => w.length > 0).length;
+}
+
+/**
  * Map upload source type to passage source type.
  */
-function sourceTypeToPassageSourceType(
+export function sourceTypeToPassageSourceType(
   sourceType: string
 ): "TEXT" | "PDF" {
   return sourceType === "pdf" ? "PDF" : "TEXT";
+}
+
+// ---------- Convenience Orchestrator ----------
+
+/**
+ * Convenience function that orchestrates all pipeline steps.
+ * Use this for simple cases; for Inngest, call individual steps.
+ */
+export async function processUpload(
+  input: UploadProcessorInput,
+  resolvedText: string
+): Promise<ProcessedContent> {
+  // Validate
+  if (!resolvedText.trim()) {
+    throw new Error("Resolved text is empty");
+  }
+
+  // Normalize
+  const normalized = await normalizeTextPipeline(resolvedText, input.sourceType);
+
+  // Analyze
+  const analysis = await analyzeContent(normalized);
+
+  // Compute
+  const wordCount = computeWordCount(normalized);
+  const passageSourceType = sourceTypeToPassageSourceType(input.sourceType);
+
+  return {
+    content: normalized,
+    wordCount,
+    passageSourceType,
+    cefrLevel: analysis.cefrLevel,
+    vocabulary: analysis.vocabulary,
+    topics: analysis.topics,
+  };
 }

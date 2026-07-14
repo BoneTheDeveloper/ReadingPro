@@ -126,6 +126,11 @@ sequenceDiagram
 `process-upload.ts` runs the job in ordered, retryable `step.run` blocks. Any
 thrown error is caught by `failJob`, which marks the job `FAILED` and re-throws.
 
+**Step design rationale:**
+- `resolve-text` = I/O (file download) — retry is cheap, isolated
+- `analyze-content` = AI call — retry is expensive, separated from resolve
+- `normalizeText` = pure function, no step needed — runs inside analyze-content step
+
 ```mermaid
 sequenceDiagram
     participant I as Inngest
@@ -135,63 +140,52 @@ sequenceDiagram
     I->>S: trigger upload/process
     S->>P: step "update-job-status-to-processing" → status PROCESSING
 
-    S->>S: step "resolve-text" → dispatch by sourceType (downloadFile + parsePDF for pdf)
-    Note over S: empty result → throw → FAILED
+    S->>S: step "resolve-text" → downloadFile + parsePDF (I/O)
+    Note over S: empty → throw → FAILED
 
-    S->>S: step "detect-cefr-level" → "B2" (TODO: AI)
+    S->>S: step "analyze-content" → normalize + analyze (AI)
+    Note over S: placeholder returns "B2", [], []
 
     S->>P: step "create-passage"
-    Note over S,P: wordCount = text split on whitespace<br/>sourceType map: paste/txt/youtube→TEXT, pdf→PDF<br/>id = client passageId, createdAt = new Date(startedAt)
     P-->>S: passage created
 
-    S->>P: step "update-job-status-to-done" → status DONE, passageId
+    S->>P: step "update-job-status-to-done" → status DONE
     S-->>I: return { jobId, passageId, cefrLevel }
 
-    Note over S,P: On any throw → failJob() sets status FAILED, error message
+    Note over S,P: On throw → failJob() → status FAILED
 ```
 
-**Worker steps:**
+**Worker steps (5 total):**
 
-1. `update-job-status-to-processing` — flips `UploadJob.status` to `PROCESSING`.
-2. `resolve-text` — dispatches on `sourceType`: `paste` uses inline `text`;
-   `txt`/`pdf` call `downloadFile(blobPath)` then decode utf-8 / `parsePDF`;
-   `youtube` is not implemented (throws). Empty result throws → `FAILED`.
-3. `detect-cefr-level` — currently returns hardcoded `"B2"`; AI detection is a TODO.
-4. `create-passage` — computes `wordCount`, maps the upload `sourceType`
-   (`paste`/`txt`/`youtube` → `TEXT`, `pdf` → `PDF`), and creates the `Passage`
-   using the client-provided `passageId`, the resolved text as `content`,
-   `filePath = blobPath`, and `createdAt = new Date(startedAt)`.
-5. `update-job-status-to-done` — sets `status: DONE` and stores `passageId`.
+| Step | Type | Retry Cost | Purpose |
+|------|------|-----------|---------|
+| `update-job-status-to-processing` | DB write | Low | Status update |
+| `resolve-text` | I/O | Low | Download + parse file |
+| `analyze-content` | CPU/AI | High | Normalize + analyze |
+| `create-passage` | DB write | Low | Persist passage |
+| `update-job-status-to-done` | DB write | Low | Final status |
 
 ### Service Layer
 
-Processing logic is organized into services under `src/features/upload/services/`:
+Processing logic organized into services under `src/features/upload/services/`:
 
 | Service | Purpose |
 |---------|---------|
-| `upload-processor.service.ts` | Pipeline orchestrator (resolve → normalize → analyze) |
-| `normalizers/text-normalizer.service.ts` | Text normalization (trim, collapse whitespace) |
-| `normalizers/pdf-normalizer.service.ts` | PDF-specific cleanup |
-| `analyzers/cefr-detector.service.ts` | CEFR level — placeholder returns `"B2"` |
-| `analyzers/vocabulary-extractor.service.ts` | Vocabulary extraction — placeholder returns `[]` |
-| `analyzers/topic-tagger.service.ts` | Topic tagging — placeholder returns `[]` |
+| `upload-processor.service.ts` | Individual pipeline functions |
+| `inngest/events.ts` | Event schemas (upload-specific) |
+| `normalizers/text-normalizer.service.ts` | Text normalization |
+| `normalizers/pdf-normalizer.service.ts` | PDF cleanup |
+| `analyzers/cefr-detector.service.ts` | CEFR — placeholder `"B2"` |
+| `analyzers/vocabulary-extractor.service.ts` | Vocabulary — placeholder `[]` |
+| `analyzers/topic-tagger.service.ts` | Topics — placeholder `[]` |
 
-**Worker steps:**
+**Step → Service mapping:**
 
-| Step | Implementation | State |
-|------|----------------|-------|
-| `update-job-status-to-processing` | Direct Prisma | ✅ Done |
-| `process-upload` | `upload-processor.service.ts` | ✅ Done |
-| `create-passage` | Direct Prisma | ✅ Done |
-| `update-job-status-to-done` | Direct Prisma | ✅ Done |
-| `catch → failJob` | Direct Prisma | ✅ Done |
-
-Processing logic is organized into services under `src/features/upload/services/`:
-
-| Service | Purpose |
-|---------|---------|
-| `upload-processor.service.ts` | Pipeline orchestrator (resolve → normalize → analyze) |
-| `normalizers/text-normalizer.service.ts` | Text normalization (trim, collapse whitespace) |
+| Step | Service Function |
+|------|------------------|
+| `resolve-text` | Inline in worker (I/O) |
+| `analyze-content` | `normalizeTextPipeline` + `analyzeContent` |
+| `create-passage` | Direct Prisma |
 | `normalizers/pdf-normalizer.service.ts` | PDF-specific cleanup |
 
 The `process-upload` step internally calls:
