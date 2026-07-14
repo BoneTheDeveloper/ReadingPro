@@ -16,7 +16,7 @@ import type {
 import { StudySourcesPanel } from "@/features/upload/ui/sources-panel";
 import { StudyContentPanel } from "@/features/reading/ui/content-panel";
 import { StudyStudioPanel } from "@/features/studio-panel/ui/studio-panel";
-import { StudyTranslationPopup } from "@/features/studio-panel/ui/studio/translate/translation-popup";
+import { StudyTranslationPopup } from "@/features/reading/ui/translate/translation-popup";
 import { StudyUploadModal } from "@/features/upload/ui/upload-modal";
 import { useStudyActions } from "../_hooks/use-study-actions";
 import { useStudyPanelLayout } from "../_hooks/use-study-panel-layout";
@@ -80,7 +80,6 @@ export function StudyWorkspace({
   const [savedVocabularyIds, setSavedVocabularyIds] = useState<Set<string>>(
     new Set(),
   );
-  const [viewingLookup, setViewingLookup] = useState(false);
 
   // Clear stale selection on passage/mode change (adjust during rendering, not in effect)
   const [prevPassageId, setPrevPassageId] = useState(state.activePassageId);
@@ -276,9 +275,8 @@ export function StudyWorkspace({
                   translation={quickTranslationState.data}
                   status={quickTranslationState.status}
                   onTranslate={handleQuickTranslate}
-                  onOpenDetails={() => {
-                    setViewingLookup(true);
-                  }}
+                  onSave={handleSaveVocabulary}
+                  saved={isVocabularySaved}
                   onDismiss={() => setSelection(null)}
                 />
               )}
@@ -322,12 +320,6 @@ export function StudyWorkspace({
               onActionClick={handleActionClick}
               collapsed={layout.rightPanelCollapsed}
               onToggleCollapse={layout.toggleRight}
-              translationSelection={selection}
-              quickTranslation={quickTranslationState.data}
-              viewingLookup={viewingLookup}
-              onSetViewingLookup={setViewingLookup}
-              onSaveVocabulary={handleSaveVocabulary}
-              vocabularySaved={isVocabularySaved}
               onRecordQuizResult={(artifactId, stats) => {
                 if (state.activePassageId)
                   handleRecordQuizResult(

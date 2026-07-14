@@ -10,7 +10,7 @@ import {
   deleteVocabularyItemAction,
   createVocabularySetAction,
   deleteVocabularySetAction,
-} from "../actions";
+} from "../action";
 import type {
   VocabularyStatus,
   VocabularyItemDto,

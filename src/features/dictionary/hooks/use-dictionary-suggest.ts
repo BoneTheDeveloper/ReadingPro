@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { suggestDictionaryTermsAction } from "../actions";
+import { suggestDictionaryTermsAction } from "../action";
 import type { DictionarySuggestItemDto } from "@/features/dictionary/schemas/dictionary.schema";
 import { normalizeDictionaryTerm } from "@/features/dictionary/lib/normalize-dictionary-term";
 

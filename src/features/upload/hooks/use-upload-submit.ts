@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { captureClientError } from "@/lib/observability/capture-client-error";
-import { uploadFileAction, uploadTextAction, getUploadStatus } from "../actions";
+import { uploadFileAction, uploadTextAction, getUploadStatus } from "../action";
 import type { PassageData } from "@/types/passage";
 
 type UploadStatus = "PENDING" | "PROCESSING" | "DONE" | "FAILED";

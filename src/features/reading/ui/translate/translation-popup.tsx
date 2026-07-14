@@ -15,7 +15,8 @@ interface StudyTranslationPopupProps {
   translation: QuickTranslationData | null;
   status: QuickTranslationStatus;
   onTranslate: () => void;
-  onOpenDetails: () => void;
+  onSave: () => void;
+  saved: boolean;
   onDismiss: () => void;
 }
 
@@ -92,7 +93,8 @@ export function StudyTranslationPopup({
   translation,
   status,
   onTranslate,
-  onOpenDetails,
+  onSave,
+  saved,
   onDismiss,
 }: StudyTranslationPopupProps) {
   const t = useTranslations("Study");
@@ -256,20 +258,24 @@ export function StudyTranslationPopup({
 
           <div className="h-px bg-border/30 mx-4" />
 
-          {/* Save / Details buttons */}
+          {/* Save button */}
           <div className="px-4 pt-3 pb-4 flex items-center gap-2">
             <Button
-              variant="ghost"
+              variant={saved ? "ghost" : "outline"}
               size="sm"
-              className="h-8 flex-1 text-[13px] font-semibold gap-1.5"
-              onClick={onOpenDetails}
+              className={cn(
+                "h-8 flex-1 text-[13px] font-semibold gap-1.5",
+                saved && "text-muted-foreground",
+              )}
+              onClick={saved ? undefined : onSave}
+              disabled={saved}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="14"
                 height="14"
                 viewBox="0 0 24 24"
-                fill="none"
+                fill={saved ? "currentColor" : "none"}
                 stroke="currentColor"
                 strokeWidth="2"
                 strokeLinecap="round"
@@ -277,28 +283,7 @@ export function StudyTranslationPopup({
               >
                 <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
               </svg>
-              {t("save")}
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 flex-1 text-[13px] font-semibold gap-1.5 text-primary"
-              onClick={onOpenDetails}
-            >
-              {t("openDetails")}
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="m9 18 6-6-6-6" />
-              </svg>
+              {saved ? t("vocabularySaved") : t("saveVocabulary")}
             </Button>
           </div>
         </>

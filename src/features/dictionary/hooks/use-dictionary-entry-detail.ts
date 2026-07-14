@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { getDictionaryEntryDetailAction } from "../actions";
+import { getDictionaryEntryDetailAction } from "../action";
 import type {
   DictionaryEntryDto,
   DictionarySuggestItemDto,

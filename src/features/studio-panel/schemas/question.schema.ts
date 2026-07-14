@@ -60,8 +60,8 @@ export const generatedStudyQuestionSchema = z
     options: z.array(questionOptionSchema),
     correctAnswer: z.string(),
     explanation: z.string(),
-    sourceText: z.string(),
-    sourceLine: z.number().int().positive(),
+    sourceText: z.string().optional(),
+    sourceLine: z.number().int().positive().optional(),
     questionType: z.string(),
     difficulty: z.number(),
   })

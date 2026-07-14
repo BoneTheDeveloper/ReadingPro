@@ -10,7 +10,6 @@ import {
   X,
   ArrowLeft,
   MessageCircle,
-  Languages,
   RefreshCw,
   Loader2,
 } from "lucide-react";
@@ -18,20 +17,16 @@ import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import type { PassageData } from "@/types/passage";
-import type { QuickTranslationData, TranslationSelection } from "@/features/reading/schemas/translation.schema";
 import type {
   ArtifactsCacheEntry,
   ArtifactRef,
   ArtifactDetailCacheEntry,
-  StudioActionId,
-} from "@/features/studio-panel/action";
-import type {
   StudioArtifactType,
   StudioArtifactErrorCode,
 } from "@/features/studio-panel/lib/studio-artifact-types";
+import type { StudioActionId } from "@/features/studio-panel/action";
 import { QuizContent } from "./studio/quiz/quiz-content";
-import { StudyChatPanel } from "./studio/chat/chat-panel";
-import { StudyLookupPanel } from "./studio/lookup/lookup-panel";
+import { StudyChatPanel } from "./studio/ai-chat/chat-panel";
 import { resetQuizResultAction } from "@/features/studio-panel/action";
 import {
   StudioActionGrid,
@@ -49,12 +44,6 @@ interface StudyStudioPanelProps {
   onActionClick: (actionId: StudioActionId) => void;
   collapsed?: boolean;
   onToggleCollapse: () => void;
-  translationSelection: TranslationSelection | null;
-  quickTranslation: QuickTranslationData | null;
-  viewingLookup: boolean;
-  onSetViewingLookup: (viewing: boolean) => void;
-  onSaveVocabulary: () => void;
-  vocabularySaved: boolean;
   onRecordQuizResult: (
     artifactId: string,
     stats: { correctCount: number; totalQuestions: number },
@@ -114,53 +103,38 @@ export function StudyStudioPanel({
   onActionClick,
   collapsed = false,
   onToggleCollapse,
-  translationSelection,
-  quickTranslation,
-  viewingLookup,
-  onSetViewingLookup,
-  onSaveVocabulary,
-  vocabularySaved,
   onRecordQuizResult,
   onResetQuizResult,
   onRetryArtifact,
 }: StudyStudioPanelProps) {
   const t = useTranslations("Study");
   const [chatPrefill, setChatPrefill] = useState<string | null>(null);
-  // When the slide-in opens, this captures which entry point launched it.
-  // The parent only knows "is the overlay open?"; the studio panel knows
-  // whether to render the chat or the lookup view inside.
-  const [overlayMode, setOverlayMode] = useState<"chat" | "lookup" | null>(
-    null,
-  );
+  const [chatOpen, setChatOpen] = useState(false);
 
   const artifacts = artifactsCache.data ?? [];
   const viewingArtifact = viewingArtifactRef
     ? (artifacts.find((r) => r.id === viewingArtifactRef.id) ?? null)
     : null;
 
-  // Esc closes the slide-in overlay
+  // Esc closes the chat overlay
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
-      if (e.key === "Escape" && (viewingLookup || chatPrefill)) {
-        onSetViewingLookup(false);
+      if (e.key === "Escape" && (chatOpen || chatPrefill)) {
+        setChatOpen(false);
         setChatPrefill(null);
-        setOverlayMode(null);
       }
     }
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
-  }, [viewingLookup, chatPrefill, onSetViewingLookup]);
+  }, [chatOpen, chatPrefill]);
 
-  // Reset overlay state when the parent closes the overlay.
-  // This is intentional: we mirror the parent's open/close into local state
-  // so the next time the overlay opens it doesn't carry over the previous mode.
+  // Reset chat state when closing
   useEffect(() => {
-    if (!viewingLookup) {
+    if (!chatOpen) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setOverlayMode(null);
       setChatPrefill(null);
     }
-  }, [viewingLookup]);
+  }, [chatOpen]);
 
   // Artifact detail view (taken from the library list) — shown in the panel
   if (viewingArtifact) {
@@ -235,7 +209,7 @@ export function StudyStudioPanel({
             </Button>
           </div>
 
-          {/* Icon-only action chips for the three wired actions */}
+          {/* Icon-only action chips for the two wired actions */}
           <div className="w-full px-2 py-2 flex flex-col items-center gap-1">
             {[
               {
@@ -248,11 +222,6 @@ export function StudyStudioPanel({
                 icon: MessageCircle,
                 label: t("chat"),
               },
-              {
-                id: "lookup" as StudioActionId,
-                icon: Languages,
-                label: t("translate"),
-              },
             ].map((a) => (
               <button
                 key={a.id}
@@ -260,11 +229,7 @@ export function StudyStudioPanel({
                   if (!hasActivePassage) return;
                   if (a.id === "chat") {
                     setChatPrefill(null);
-                    setOverlayMode("chat");
-                    onSetViewingLookup(true);
-                  } else if (a.id === "lookup") {
-                    setOverlayMode("lookup");
-                    onSetViewingLookup(true);
+                    setChatOpen(true);
                   } else {
                     onActionClick(a.id);
                   }
@@ -319,11 +284,7 @@ export function StudyStudioPanel({
           onSelect={(id) => {
             if (id === "chat") {
               setChatPrefill(null);
-              setOverlayMode("chat");
-              onSetViewingLookup(true);
-            } else if (id === "lookup") {
-              setOverlayMode("lookup");
-              onSetViewingLookup(true);
+              setChatOpen(true);
             } else {
               onActionClick(id);
             }
@@ -473,48 +434,23 @@ export function StudyStudioPanel({
         </div>
       </CardContent>
 
-      {/* 640px slide-in overlay (right → left) for Chat / Lookup — wireframe §1 lines 252-260 */}
-      {viewingLookup && activePassage && (
+      {/* 640px slide-in overlay for Chat only */}
+      {chatOpen && activePassage && (
         <StudioOverlay
-          title={
-            overlayMode === "chat"
-              ? t("chatAbout", { title: activePassage.title })
-              : translationSelection
-                ? `${t("lookup")}: ${translationSelection.selectedText}`
-                : t("lookup")
-          }
-          subtitle={
-            overlayMode === "chat"
-              ? t("askQuestions")
-              : t("vietnameseTranslation")
-          }
-          icon={overlayMode === "chat" ? MessageCircle : Languages}
+          title={t("chatAbout", { title: activePassage.title })}
+          subtitle={t("askQuestions")}
+          icon={MessageCircle}
           onClose={() => {
-            onSetViewingLookup(false);
+            setChatOpen(false);
             setChatPrefill(null);
-            setOverlayMode(null);
           }}
           t={t}
         >
-          {chatPrefill ? (
-            <StudyChatPanel
-              key={`${activePassage.id}-${chatPrefill}`}
-              passageId={activePassage.id}
-              prefilledQuestion={chatPrefill}
-            />
-          ) : translationSelection ? (
-            <StudyLookupPanel
-              selection={translationSelection}
-              quickTranslation={quickTranslation}
-              saved={vocabularySaved}
-              onSave={onSaveVocabulary}
-              onAskAi={(question) => {
-                setChatPrefill(question);
-              }}
-            />
-          ) : (
-            <StudioEmptyState hasActivePassage={false} t={t} />
-          )}
+          <StudyChatPanel
+            key={`${activePassage.id}-${chatPrefill ?? "empty"}`}
+            passageId={activePassage.id}
+            prefilledQuestion={chatPrefill}
+          />
         </StudioOverlay>
       )}
     </Card>

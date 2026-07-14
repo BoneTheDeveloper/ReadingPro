@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { saveDictionarySenseToVocabularyAction } from "../actions";
+import { saveDictionarySenseToVocabularyAction } from "../action";
 import type {
   DictionaryEntryDto,
   DictionarySenseDto,
@@ -33,22 +33,7 @@ export function useSaveDictionaryVocabulary() {
       setErrorSenseId(null);
 
       try {
-        const primary =
-          sense.translations.find((t) => t.isPrimary) ?? sense.translations[0];
-        if (!primary) {
-          throw new Error("No primary translation found for sense");
-        }
-
-        const result = await saveDictionarySenseToVocabularyAction({
-          selectedText: entry.headword,
-          translation: primary.translation,
-          contextSentence: sense.example ?? undefined,
-          sourceLanguage: "en",
-          targetLanguage: "vi",
-          source: "DICTIONARY",
-          dictionaryEntryId: entry.id,
-          dictionarySenseId: sense.id,
-        });
+        const result = await saveDictionarySenseToVocabularyAction(entry, sense);
 
         if (!result.success) throw new Error("Failed to save");
 

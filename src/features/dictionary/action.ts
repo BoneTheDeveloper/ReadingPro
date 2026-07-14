@@ -73,7 +73,7 @@ export async function saveDictionarySenseToVocabularyAction(
     throw new Error("No primary translation found for sense");
   }
 
-  const { saveVocabularyAction } = await import("@/features/vocabulary/actions");
+  const { saveVocabularyAction } = await import("@/features/vocabulary/action");
   return saveVocabularyAction({
     selectedText: entry.headword,
     translation: primary.translation,
