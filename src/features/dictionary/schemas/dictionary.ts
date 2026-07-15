@@ -1,9 +1,9 @@
 import { z } from "zod";
 import { getSourceLabel } from "@/features/dictionary/lib/dictionary-helpers";
 
-// ---------------------------------------------------------------------------
-// Server-action input schemas — validated in dictionary/actions.ts
-// ---------------------------------------------------------------------------
+// =============================================================================
+// INPUT — client sends this (validated in actions)
+// =============================================================================
 
 export const suggestInputSchema = z
   .object({
@@ -21,6 +21,10 @@ export const entryDetailInputSchema = z
   })
   .strict();
 
+// =============================================================================
+// OUTPUT — server returns this (DTOs)
+// =============================================================================
+
 const dictionaryTranslationStatusSchema = z.enum([
   "draft",
   "reviewed",
@@ -35,128 +39,90 @@ const dictionarySourceTypeSchema = z.enum([
   "mixed",
 ]);
 
-export const dictionaryTranslationSchema = z
-  .object({
-    id: z.string(),
-    senseId: z.string(),
-    targetLanguage: z.literal("vi"),
-    translation: z.string(),
-    isPrimary: z.boolean(),
-    rank: z.number(),
-    confidence: z.number().nullable(),
-    status: dictionaryTranslationStatusSchema,
-    sourceType: dictionarySourceTypeSchema,
-    sourceName: z.string().nullable(),
-    reviewedAt: z.string().nullable(),
-    sourceLabel: z.string(),
-  })
-  .strict();
+export interface DictionaryTranslationDto {
+  id: string;
+  senseId: string;
+  targetLanguage: "vi";
+  translation: string;
+  isPrimary: boolean;
+  rank: number;
+  confidence: number | null;
+  status: z.infer<typeof dictionaryTranslationStatusSchema>;
+  sourceType: z.infer<typeof dictionarySourceTypeSchema>;
+  sourceName: string | null;
+  reviewedAt: string | null;
+  sourceLabel: string;
+}
 
-export const dictionarySenseSchema = z
-  .object({
-    id: z.string(),
-    partOfSpeech: z.string().nullable(),
-    definition: z.string().nullable(),
-    example: z.string().nullable(),
-    tags: z.array(z.string()),
-    usageRank: z.number(),
-    translations: z.array(dictionaryTranslationSchema),
-  })
-  .strict();
+export interface DictionarySenseDto {
+  id: string;
+  partOfSpeech: string | null;
+  definition: string | null;
+  example: string | null;
+  tags: string[];
+  usageRank: number;
+  translations: DictionaryTranslationDto[];
+}
 
-export const dictionaryEntrySchema = z
-  .object({
-    id: z.string(),
-    headword: z.string(),
-    sourceLanguage: z.string(),
-    frequencyRank: z.number(),
-    senses: z.array(dictionarySenseSchema),
-  })
-  .strict();
-
-export const dictionaryMissSchema = z
-  .object({
-    headword: z.string(),
-    found: z.literal(false),
-  })
-  .strict();
-
-export const dictionaryLookupDataSchema = z.union([
-  dictionaryEntrySchema,
-  dictionaryMissSchema,
-]);
-
-export const dictionarySuggestItemSchema = z
-  .object({
-    id: z.string(),
-    headword: z.string(),
-    matchType: z.enum(["exact", "alias", "prefix", "phrase"]),
-    matchedAlias: z.string().nullable(),
-    primaryTranslation: z.string().nullable(),
-    sourceLabel: z.string().nullable(),
-  })
-  .strict();
-
-export const dictionarySearchResultSchema = z
-  .object({
-    id: z.string(),
-    headword: z.string(),
-    matchType: z.enum(["exact", "alias", "phrase", "prefix", "contains"]),
-    matchedText: z.string().nullable(),
-    primaryTranslation: z.string().nullable(),
-    partOfSpeech: z.string().nullable(),
-    sourceLabel: z.string().nullable(),
-  })
-  .strict();
-
-export type DictionaryTranslationDto = z.infer<
-  typeof dictionaryTranslationSchema
->;
-export type DictionarySenseDto = z.infer<typeof dictionarySenseSchema>;
-export type DictionaryEntryDto = z.infer<typeof dictionaryEntrySchema>;
-export type DictionaryMissDto = z.infer<typeof dictionaryMissSchema>;
-export type DictionarySuggestItemDto = z.infer<
-  typeof dictionarySuggestItemSchema
->;
-export type DictionarySearchResultDto = z.infer<
-  typeof dictionarySearchResultSchema
->;
-
-// ---------------------------------------------------------------------------
-// Mappers — build wire DTOs from repository row shapes. Pure functions (no DB /
-// server-only APIs) so they stay safe to import from either server or client.
-// ---------------------------------------------------------------------------
-
-type EntryWithSenses = {
+export interface DictionaryEntryDto {
   id: string;
   headword: string;
   sourceLanguage: string;
   frequencyRank: number;
-  senses?: Array<{
-    id: string;
-    partOfSpeech: string | null;
-    definition: string | null;
-    example: string | null;
-    tags: string[] | null;
-    usageRank: number;
-    translations?: Array<{
-      id: string;
-      senseId: string;
-      targetLanguage: string;
-      translation: string;
-      isPrimary: boolean;
-      rank: number;
-      confidence: number | null;
-      status: string;
-      sourceType: string;
-      sourceName: string | null;
-      reviewedAt: Date | null;
-    }>;
-  }>;
-};
+  senses: DictionarySenseDto[];
+}
+
+export interface DictionarySuggestItemDto {
+  id: string;
+  headword: string;
+  matchType: "exact" | "alias" | "prefix" | "phrase";
+  matchedAlias: string | null;
+  primaryTranslation: string | null;
+  sourceLabel: string | null;
+}
+
+export interface DictionarySearchResultDto {
+  id: string;
+  headword: string;
+  matchType: "exact" | "alias" | "phrase" | "prefix" | "contains";
+  matchedText: string | null;
+  primaryTranslation: string | null;
+  partOfSpeech: string | null;
+  sourceLabel: string | null;
+}
+
+// =============================================================================
+// MAPPERS — convert internal model to DTO
+// =============================================================================
 
 export function buildEntryDto(
-  entry: EntryWithSenses,
+  entry: {
+    id: string;
+    headword: string;
+    sourceLanguage: string;
+    frequencyRank: number;
+    senses?: Array<{
+      id: string;
+      partOfSpeech: string | null;
+      definition: string | null;
+      example: string | null;
+      tags: string[] | null;
+      usageRank: number;
+      translations?: Array<{
+        id: string;
+        senseId: string;
+        targetLanguage: string;
+        translation: string;
+        isPrimary: boolean;
+        rank: number;
+        confidence: number | null;
+        status: string;
+        sourceType: string;
+        sourceName: string | null;
+        reviewedAt: Date | null;
+      }>;
+    }>;
+  },
   targetLanguage: string,
   statuses: readonly string[],
 ): DictionaryEntryDto {

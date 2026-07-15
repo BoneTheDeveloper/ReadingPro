@@ -4,11 +4,11 @@ import { useTranslations } from "next-intl";
 import { Bookmark, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { TranslationSelection, QuickTranslationData } from "@/features/reading/schemas/translation";
+import type { TranslationSelection, TranslationDto } from "@/features/reading/schemas/translation";
 
 interface StudyLookupPanelProps {
   selection: TranslationSelection;
-  quickTranslation: QuickTranslationData | null;
+  quickTranslation: TranslationDto | null;
   saved: boolean;
   onSave: () => void;
   onAskAi: (prefilledQuestion: string) => void;

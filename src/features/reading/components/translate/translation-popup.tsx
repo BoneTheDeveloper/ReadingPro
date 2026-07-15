@@ -5,14 +5,14 @@ import { useTranslations } from "next-intl";
 import { Loader2, Languages } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { TranslationSelection, QuickTranslationData } from "@/features/reading/schemas/translation";
+import type { TranslationSelection, TranslationDto } from "@/features/reading/schemas/translation";
 
 type QuickTranslationStatus =
   "idle" | "ready" | "loading" | "success" | "error";
 
 interface TranslationPopupProps {
   selection: TranslationSelection;
-  translation: QuickTranslationData | null;
+  translation: TranslationDto | null;
   status: QuickTranslationStatus;
   onTranslate: () => void;
   onSave: () => void;

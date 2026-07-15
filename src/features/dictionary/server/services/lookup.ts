@@ -2,7 +2,6 @@ import "server-only";
 import { normalizeDictionaryTerm } from "../../lib/normalize-dictionary-term";
 import {
   type DictionaryEntryDto,
-  type DictionaryMissDto,
   type DictionaryTranslationDto,
   buildEntryDto
 } from "@/features/dictionary/schemas/dictionary";
@@ -26,7 +25,7 @@ interface LookupOptions {
 export async function resolveDictionaryLookup(
   term: string,
   options: LookupOptions,
-): Promise<DictionaryEntryDto | DictionaryMissDto> {
+): Promise<DictionaryEntryDto | null> {
   const normalized = normalizeDictionaryTerm(term);
   const statuses = options.includeDraft
     ? [...RUNTIME_STATUSES, "draft"]
@@ -39,7 +38,7 @@ export async function resolveDictionaryLookup(
   );
 
   if (rows.length === 0) {
-    return { headword: normalized, found: false };
+    return null;
   }
 
   const entry = groupLookupRows(rows);

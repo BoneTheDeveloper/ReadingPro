@@ -1,7 +1,8 @@
 import "server-only";
-import type {
-  VocabularySetDto,
-  VocabularySetType,
+import {
+  type VocabularySetDto,
+  type VocabularySetType,
+  toVocabularySetDto,
 } from "@/features/vocabulary/schemas/vocabulary";
 import {
   listVocabularySets,
@@ -13,19 +14,6 @@ import {
   removeItemFromSet,
   type VocabularySetWithCount,
 } from "@/features/vocabulary/server/db/vocabulary-sets";
-
-function toVocabularySetDto(set: VocabularySetWithCount): VocabularySetDto {
-  return {
-    id: set.id,
-    name: set.name,
-    type: set.type as VocabularySetDto["type"],
-    periodStart: set.periodStart?.toISOString() ?? null,
-    periodEnd: set.periodEnd?.toISOString() ?? null,
-    createdAt: set.createdAt.toISOString(),
-    updatedAt: set.updatedAt.toISOString(),
-    _count: { items: set._count.setItems },
-  };
-}
 
 export async function getVocabularySetList(params: {
   userId: string;

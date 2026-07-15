@@ -4,9 +4,10 @@ import { moduleLog } from "@/lib/observability/logger";
 import { findOwnedPassage } from "@/features/passage/server/db/passage";
 import type { VocabularyStatus } from "@/generated/prisma/enums";
 import { VocabularySourceType } from "@/generated/prisma/enums";
-import type {
-  VocabularyItemDto,
-  VocabularyStatsDto,
+import {
+  type VocabularyItemDto,
+  type VocabularyStatsDto,
+  toVocabularyItemDto,
 } from "@/features/vocabulary/schemas/vocabulary";
 import {
   upsertVocabularyItem,
@@ -32,56 +33,6 @@ export interface SaveVocabularyItemInput {
   source?: VocabularySourceType;
   dictionaryEntryId?: string;
   dictionarySenseId?: string;
-}
-
-function toVocabularyItemDto(item: {
-  id: string;
-  normalizedText: string;
-  displayText: string;
-  type: string | null;
-  translation: string;
-  sourceLanguage: string;
-  targetLanguage: string;
-  status: string;
-  source: string;
-  savedCount: number;
-  nextReviewAt: Date | null;
-  lastReviewedAt: Date | null;
-  createdAt: Date;
-  updatedAt: Date;
-  occurrences?: {
-    id: string;
-    vocabularyItemId: string;
-    sourceId: string | null;
-    selectedText: string;
-    contextSentence: string | null;
-    createdAt: Date;
-  }[];
-}): VocabularyItemDto {
-  return {
-    id: item.id,
-    normalizedText: item.normalizedText,
-    displayText: item.displayText,
-    type: item.type,
-    translation: item.translation,
-    sourceLanguage: item.sourceLanguage,
-    targetLanguage: item.targetLanguage,
-    status: item.status as VocabularyItemDto["status"],
-    source: item.source,
-    savedCount: item.savedCount,
-    nextReviewAt: item.nextReviewAt?.toISOString() ?? null,
-    lastReviewedAt: item.lastReviewedAt?.toISOString() ?? null,
-    createdAt: item.createdAt.toISOString(),
-    updatedAt: item.updatedAt.toISOString(),
-    occurrences: (item.occurrences ?? []).map((o) => ({
-      id: o.id,
-      vocabularyItemId: o.vocabularyItemId,
-      sourceId: o.sourceId,
-      selectedText: o.selectedText,
-      contextSentence: o.contextSentence,
-      createdAt: o.createdAt.toISOString(),
-    })),
-  };
 }
 
 export async function saveVocabularyItem(

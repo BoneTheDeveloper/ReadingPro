@@ -1,38 +1,47 @@
 import { z } from "zod";
 
-// Inlined from @/app/api/_lib/api-envelope-schema
-const apiErrorResponseSchema = z.object({
-  success: z.literal(false),
-  error: z.string(),
-}).strict();
+// =============================================================================
+// INPUT — client sends this (validated in routes/actions)
+// =============================================================================
 
-function makeApiResponseSchema<T extends z.ZodType>(dataSchema: T) {
-  return z.discriminatedUnion("success", [
-    z.object({ success: z.literal(true), data: dataSchema }).strict(),
-    apiErrorResponseSchema,
-  ]);
-}
-
-export const translationDataSchema = z
+export const translateInputSchema = z
   .object({
-    translation: z.string(),
-    type: z.string().nullable(),
-    provider: z.enum([
-      "cache",
-      "dictionary",
-      "fallback",
-      "google_translate",
-      "ai",
-    ]),
+    text: z.string().min(1),
+    context: z.string(),
+    sourceId: z.string().uuid(),
+    sourceLanguage: z.literal("en"),
+    targetLanguage: z.literal("vi"),
   })
   .strict();
 
-type TranslationData = z.infer<typeof translationDataSchema>;
+export type TranslateInput = z.infer<typeof translateInputSchema>;
 
-// Response contract: data wrapped in envelope + error envelope
-export const translateResponseSchema = makeApiResponseSchema(translationDataSchema);
+// =============================================================================
+// OUTPUT — server returns this (DTO)
+// =============================================================================
 
-// Shared selection types used across features
+export interface TranslationDto {
+  translation: string;
+  type: string | null;
+  provider: "cache" | "dictionary" | "fallback" | "google_translate" | "ai";
+}
+
+export function toTranslationDto(data: {
+  translation: string;
+  type: string | null;
+  provider: "cache" | "dictionary" | "fallback" | "google_translate" | "ai";
+}): TranslationDto {
+  return {
+    translation: data.translation,
+    type: data.type,
+    provider: data.provider,
+  };
+}
+
+// =============================================================================
+// SHARED TYPES — not schemas, used across features
+// =============================================================================
+
 export interface TranslationSelection {
   selectedText: string;
   selectionRect: {
@@ -55,4 +64,4 @@ export interface TranslationSelection {
   };
 }
 
-export type QuickTranslationData = TranslationData;
+export type QuickTranslationData = TranslationDto;

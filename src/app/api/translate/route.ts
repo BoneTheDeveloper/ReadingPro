@@ -28,10 +28,10 @@ export async function POST(req: NextRequest) {
     );
 
     if (!result.ok) {
-      return Response.json({ success: false, error: "Source not found." }, { status: result.status });
+      return Response.json({ error: "Source not found." }, { status: result.status });
     }
 
-    return Response.json({ success: true, data: result.data });
+    return Response.json(result.data);
   } catch (error) {
     return Response.json({ success: false, error: "Invalid request." }, { status: 400 });
   }

@@ -2,10 +2,7 @@ import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
 import { moduleLog } from "@/lib/observability/logger";
 import type { TranslateResolutionSource } from "@/features/reading/lib/text-utils";
-import {
-  quickTranslationSchema,
-  type QuickTranslation,
-} from "@/features/dictionary/server/services/lookup-quick";
+import type { QuickTranslation } from "@/features/dictionary/server/services/lookup-quick";
 import {
   buildTranslationCacheKey,
   fetchCacheAndSource,
@@ -66,9 +63,9 @@ export async function executeTranslate(
   }
 
   if (row.cacheResponse) {
-    const cachedResult = quickTranslationSchema.safeParse(row.cacheResponse);
-    if (cachedResult.success) {
-      const data = asCacheProvider(cachedResult.data);
+    const cached = row.cacheResponse as unknown as QuickTranslation | null;
+    if (cached && typeof cached.translation === "string" && typeof cached.provider === "string") {
+      const data = asCacheProvider(cached);
       log.info(
         {
           cacheHit: true,

@@ -1,8 +1,8 @@
 import { z } from "zod";
 
-// ---------------------------------------------------------------------------
-// Server-action input schema — validated in studio-panel/actions.ts
-// ---------------------------------------------------------------------------
+// =============================================================================
+// INPUT — client sends this (validated in actions)
+// =============================================================================
 
 export const generateStudioQuestionsInputSchema = z
   .object({
@@ -11,8 +11,10 @@ export const generateStudioQuestionsInputSchema = z
   })
   .strict();
 
-// Single source of truth for the question-option vocabulary — every question
-// shape (AI-generation output, DB-persistence input) reuses this.
+// =============================================================================
+// SHARED — used by AI generation and DB persistence
+// =============================================================================
+
 export const questionOptionSchema = z
   .object({
     id: z.string(),
@@ -20,8 +22,10 @@ export const questionOptionSchema = z
   })
   .strict();
 
-// Shape returned by the AI question-generation call (passed directly as the
-// `generateObject` schema param in ../services/question-generator.ts).
+// =============================================================================
+// AI GENERATION — validates AI output (not a DTO, internal validation)
+// =============================================================================
+
 export const generatedQuestionSchema = z
   .object({
     questionText: z.string(),
@@ -50,30 +54,27 @@ export const questionGenerationDataSchema = z
 export type GeneratedQuestion = z.infer<typeof generatedQuestionSchema>;
 export type QuestionGenerationData = z.infer<typeof questionGenerationDataSchema>;
 
-// Response-side shape for a generated question (adds `id`/`number` on top of
-// the AI-generation shape, for the client-facing artifact response).
-export const generatedStudyQuestionSchema = z
-  .object({
-    id: z.string(),
-    number: z.number().int().positive(),
-    questionText: z.string(),
-    options: z.array(questionOptionSchema),
-    correctAnswer: z.string(),
-    explanation: z.string(),
-    sourceText: z.string().optional(),
-    sourceLine: z.number().int().positive().optional(),
-    questionType: z.string(),
-    difficulty: z.number(),
-  })
-  .strict();
+// =============================================================================
+// OUTPUT — server returns this (DTOs)
+// =============================================================================
 
-export type GeneratedStudyQuestionDto = z.infer<
-  typeof generatedStudyQuestionSchema
->;
+export interface GeneratedStudyQuestionDto {
+  id: string;
+  number: number;
+  questionText: string;
+  options: { id: string; text: string }[];
+  correctAnswer: string;
+  explanation: string;
+  sourceText?: string;
+  sourceLine?: number;
+  questionType: string;
+  difficulty: number;
+}
 
-// Validates a question before it is persisted (DB field names differ from the
-// AI-generation shape: `correctOption` instead of `correctAnswer`, plus an
-// `artifactId`).
+// =============================================================================
+// DB PERSISTENCE — validates before saving to DB (not a DTO)
+// =============================================================================
+
 export const questionDataSchema = z
   .object({
     artifactId: z

@@ -1,5 +1,9 @@
 import { z } from "zod";
 
+// =============================================================================
+// INPUT — client sends this (validated in actions/routes)
+// =============================================================================
+
 export const uiMessageTextPartSchema = z
   .object({
     type: z.literal("text"),
@@ -33,12 +37,16 @@ export const studyChatQuerySchema = z
   })
   .strict();
 
-export type UiMessage = z.infer<typeof uiMessageSchema>;
+// =============================================================================
+// OUTPUT — server returns this (DTOs)
+// =============================================================================
 
-// getChatHistoryAction's return shape — reuses uiMessageSchema (same shape:
-// id, role, single text part) rather than redefining an equivalent schema.
-export const studyChatHistoryDataSchema = z
-  .object({
-    messages: z.array(uiMessageSchema),
-  })
-  .strict();
+export interface UiMessage {
+  id: string;
+  role: "user" | "assistant";
+  parts: { type: "text"; text: string }[];
+}
+
+export interface StudyChatHistoryDto {
+  messages: UiMessage[];
+}

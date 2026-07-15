@@ -19,36 +19,63 @@ source of truth for *what* can import *what*. Do not restate the rules here.
 | **Service** | `features/<f>/server/services/*.ts` | Business logic. **Owns DTO building** (`toEntityDto`). Owns authorization. Throws domain errors. |
 | **Repository** | `features/<f>/server/db/*.ts` | Prisma only. No schemas, no auth checks, no business rules. |
 
-**Why these boundaries:**
+### Import Boundaries
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                         CLIENT SIDE                                  │
+│  Page ─────────────► Component ─────────────► Hook                  │
+│    │                      │                      │                   │
+│    ▼                      ▼                      ▼                 │
+│  Server Actions (actions.ts) ◄── can import schemas/               │
+└─────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────┐
+│                         SERVER SIDE                                  │
+│  Route/Action ──────────► Service ──────────► Repository ───► DB   │
+│       │                      │                    │                │
+│       ▼                      ▼                    ▼                │
+│  schemas/ (InputSchema)  DTOs + to*Dto()    Prisma queries         │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+**Allowed imports:**
+
+| From | Can import |
+|------|------------|
+| **Client** (Page, Component, Hook) | Action, schemas (InputSchema type), DTO types |
+| **Action** | schemas (InputSchema), services, DTOs |
+| **Route** | schemas (InputSchema/QuerySchema), services |
+| **Service** | services of other features (with caution), repositories |
+| **Repository** | Nothing server-side except Prisma + lib utilities |
+
+**Cross-feature imports:** Allowed for types/DTOs, discouraged for services (creates tight coupling).
+
+### Anti-Patterns
+
+| Anti-Pattern | Why Wrong | Correct |
+|--------------|-----------|---------|
+| `Client → Service` | Breaks isolation, `server-only` throws at runtime | Call Action instead |
+| `Action → Repository` | Duplicates business logic, bypasses authorization | Call Service instead |
+| `Service → Service` of different feature | Tight coupling, hard to delete features | Refactor shared logic to a shared module |
+| `Repository → Service` | Circular dependency, hard to test | Repository returns raw data, Service transforms |
+| `DTO schema` (Zod for output) | DTOs are trusted server output, no validation needed | Use TypeScript `interface *Dto` |
+| `Response envelope` for internal APIs | Unnecessary complexity | Return data directly |
+| Inline business logic in Action/Route | Breaks single-responsibility | Move to Service |
+
+### Why These Boundaries
 
 - **Repo never calls Service** — avoids circular deps, and lets Service be tested without a DB.
 - **Action/Route never calls Repo** — mapping, authorization, and cascade logic must live in exactly one place, or the second caller will duplicate it.
 - **Client never touches Service/Repo** — `server-only` throws at runtime; ESLint catches it earlier.
 - **Feature never imports Feature** — keeps a slice deletable as a unit.
 
-**Invariant:** Action/Route is **thin** — one service call, nothing else. Service is the only layer that builds DTOs, checks ownership, or throws domain errors.
+### Invariant
+
+Action/Route is **thin** — one service call, nothing else. Service is the only layer that builds DTOs, checks ownership, or throws domain errors.
 
 ---
 
-## Feature Structure
-
-Each feature lives in `src/features/<feature>/`:
-
-```
-features/<f>/
-├── schemas/               # Zod Input schemas
-│   └── *.ts
-├── components/           # React components
-├── hooks/               # React hooks
-├── lib/                 # Feature-specific utilities
-└── server/              # Server-side code
-    ├── actions.ts        # Server Actions
-    ├── db/              # Repositories (Prisma)
-    ├── services/        # Business logic + DTOs
-    └── inngest/          # Async event handlers
-```
-
----
 
 ## Data Flow
 

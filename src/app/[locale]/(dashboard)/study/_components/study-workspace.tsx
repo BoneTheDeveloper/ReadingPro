@@ -2,17 +2,13 @@
 
 import { useCallback, useState } from "react";
 import { Group, Panel, Separator } from "react-resizable-panels";
-import { translateResponseSchema } from "@/features/reading/schemas/translation";
+import type { TranslationDto, TranslationSelection } from "@/features/reading/schemas/translation";
 import { saveVocabularyAction } from "@/features/vocabulary/server/actions/vocabulary"
 import {
   clampTranslationContext,
   isTranslateTextWithinLimit,
 } from "@/features/reading/lib/translation-limits";
 import type { PassageData } from "@/types/passage";
-import type {
-  TranslationSelection,
-  QuickTranslationData,
-} from "@/features/reading/schemas/translation";
 import { SourcesPanel } from "@/features/upload/components/panel/sources-panel";
 import { ContentPanel } from "@/features/reading/components/content-panel";
 import { StudioPanel } from "@/features/studio-panel/components/studio-panel";
@@ -30,7 +26,7 @@ type QuickTranslationStatus =
 
 interface QuickTranslationState {
   requestId: number;
-  data: QuickTranslationData | null;
+  data: TranslationDto | null;
   status: QuickTranslationStatus;
 }
 
@@ -167,16 +163,19 @@ export function StudyWorkspace({
     })
       .then(async (r) => {
         const json: unknown = await r.json();
-        const parsed = translateResponseSchema.safeParse(json);
-        if (!parsed.success || !parsed.data.success || "error" in parsed.data) {
+        if (!r.ok || !json || typeof json !== "object") {
           throw new Error("Quick translation failed");
         }
-        return parsed.data.data;
+        const data = json as { translation?: string; provider?: string };
+        if (!data.translation) {
+          throw new Error("Quick translation failed");
+        }
+        return data as TranslationDto;
       })
       .then((data) => {
         setQuickTranslationState((prev) => {
           if (prev.requestId !== requestId) return prev;
-          return { requestId, data: data as QuickTranslationData, status: "success" };
+          return { requestId, data, status: "success" };
         });
       })
       .catch(() => {

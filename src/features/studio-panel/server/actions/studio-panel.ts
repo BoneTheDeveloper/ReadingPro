@@ -9,7 +9,7 @@ import {
   resetQuizResult,
 } from "../services/studio-artifacts";
 import { getChatHistory } from "../services/ai-chat";
-import { studyChatHistoryDataSchema } from "../../schemas/ai-chat";
+import type { StudyChatHistoryDto } from "../../schemas/ai-chat";
 import { recordQuizResultInputSchema } from "../../schemas/studio-artifact";
 import { generateStudioQuestionsInputSchema } from "../../schemas/question";
 import {
@@ -70,18 +70,13 @@ export async function generateStudioQuestionsAction(input: {
   }
 }
 
-export async function getChatHistoryAction(passageId: string) {
+export async function getChatHistoryAction(passageId: string): Promise<StudyChatHistoryDto["messages"]> {
   const parsedPassageId = passageIdSchema.parse(passageId);
   const userId = await getUserId();
   const rows = await getChatHistory(userId, parsedPassageId);
-  // Validate the mapped shape against the schema instead of an `as` cast, so a
-  // future DB role value outside "user"/"assistant" fails loudly here.
-  const { messages } = studyChatHistoryDataSchema.parse({
-    messages: rows.map((row) => ({
-      id: row.id,
-      role: row.role,
-      parts: [{ type: "text" as const, text: row.content }],
-    })),
-  });
-  return messages;
+  return rows.map((row) => ({
+    id: row.id,
+    role: row.role as "user" | "assistant",
+    parts: [{ type: "text" as const, text: row.content }],
+  }));
 }

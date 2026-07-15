@@ -111,7 +111,7 @@ function SetCard({
   colorIndex: number;
 }) {
   const col = SET_COLORS[colorIndex % SET_COLORS.length];
-  const itemCount = set._count.items;
+  const itemCount = set._count.setItems;
 
   // Hardcoded knownCount — DB has no mastered-per-set count
   // TODO: add mastered count per set to enable real progress

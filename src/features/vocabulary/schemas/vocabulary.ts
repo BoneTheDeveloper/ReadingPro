@@ -5,16 +5,15 @@ import {
   VocabularySetType,
 } from "@/generated/prisma/enums";
 
-// Re-export enums for single source of truth
 export { VocabularyStatus, VocabularySourceType, VocabularySetType } from "@/generated/prisma/enums";
 
 export const vocabularyStatusSchema = z.nativeEnum(VocabularyStatus);
 export const vocabularySourceSchema = z.nativeEnum(VocabularySourceType);
 export const vocabularySetTypeSchema = z.nativeEnum(VocabularySetType);
 
-// ---------------------------------------------------------------------------
-// Server-action input schemas — validated in vocabulary/actions.ts
-// ---------------------------------------------------------------------------
+// =============================================================================
+// INPUT — client sends this (validated in actions)
+// =============================================================================
 
 export const saveVocabularyInputSchema = z
   .object({
@@ -77,61 +76,156 @@ export const removeItemFromVocabularySetInputSchema = z
   })
   .strict();
 
-export const vocabularyOccurrenceSchema = z.object({
-  id: z.string(),
-  vocabularyItemId: z.string(),
-  sourceId: z.string().nullable(),
-  selectedText: z.string(),
-  contextSentence: z.string().nullable(),
-  createdAt: z.string(),
-}).strict();
+// =============================================================================
+// OUTPUT — server returns this (DTOs)
+// =============================================================================
 
-export const vocabularyItemSchema = z.object({
-  id: z.string(),
-  normalizedText: z.string(),
-  displayText: z.string(),
-  type: z.string().nullable(),
-  translation: z.string(),
-  sourceLanguage: z.string(),
-  targetLanguage: z.string(),
-  status: vocabularyStatusSchema,
-  source: z.string(),
-  savedCount: z.number(),
-  nextReviewAt: z.string().nullable(),
-  lastReviewedAt: z.string().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-  occurrences: z.array(vocabularyOccurrenceSchema),
-}).strict();
+export interface VocabularyOccurrenceDto {
+  id: string;
+  vocabularyItemId: string;
+  sourceId: string | null;
+  selectedText: string;
+  contextSentence: string | null;
+  createdAt: string;
+}
 
-export const vocabularySetSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  type: vocabularySetTypeSchema,
-  periodStart: z.string().nullable(),
-  periodEnd: z.string().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-  _count: z.object({
-    items: z.number(),
-  }).strict(),
-}).strict();
+export interface VocabularyItemDto {
+  id: string;
+  normalizedText: string;
+  displayText: string;
+  type: string | null;
+  translation: string;
+  sourceLanguage: string;
+  targetLanguage: string;
+  status: VocabularyStatus;
+  source: string;
+  savedCount: number;
+  nextReviewAt: string | null;
+  lastReviewedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  occurrences: VocabularyOccurrenceDto[];
+}
 
-export const vocabularyStatsSchema = z.object({
-  total: z.number(),
-  new: z.number(),
-  learning: z.number(),
-  known: z.number(),
-}).strict();
+export interface VocabularySetDto {
+  id: string;
+  name: string;
+  type: VocabularySetType;
+  periodStart: string | null;
+  periodEnd: string | null;
+  createdAt: string;
+  updatedAt: string;
+  _count: { setItems: number };
+}
 
-export const vocabularyListDataSchema = z.object({
-  items: z.array(vocabularyItemSchema),
-  total: z.number(),
-  page: z.number(),
-  pageSize: z.number(),
-}).strict();
+export interface VocabularyStatsDto {
+  total: number;
+  new: number;
+  learning: number;
+  known: number;
+}
 
-// DTOs - inferred from schema (trusted server output)
-export type VocabularyItemDto = z.infer<typeof vocabularyItemSchema>;
-export type VocabularySetDto = z.infer<typeof vocabularySetSchema>;
-export type VocabularyStatsDto = z.infer<typeof vocabularyStatsSchema>;
+export interface VocabularyListDto {
+  items: VocabularyItemDto[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+// =============================================================================
+// MODEL — internal Prisma type (for mappers)
+// =============================================================================
+
+export type VocabularyItemModel = {
+  id: string;
+  normalizedText: string;
+  displayText: string;
+  type: string | null;
+  translation: string;
+  sourceLanguage: string;
+  targetLanguage: string;
+  status: VocabularyStatus;
+  source: string;
+  savedCount: number;
+  nextReviewAt: Date | null;
+  lastReviewedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  occurrences: Array<{
+    id: string;
+    vocabularyItemId: string;
+    sourceId: string | null;
+    selectedText: string;
+    contextSentence: string | null;
+    createdAt: Date;
+  }>;
+};
+
+export type VocabularySetModel = {
+  id: string;
+  name: string;
+  type: VocabularySetType;
+  periodStart: Date | null;
+  periodEnd: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  _count: { setItems: number };
+};
+
+// =============================================================================
+// MAPPERS — convert internal model to DTO
+// =============================================================================
+
+export function toVocabularyItemDto(model: VocabularyItemModel): VocabularyItemDto {
+  return {
+    id: model.id,
+    normalizedText: model.normalizedText,
+    displayText: model.displayText,
+    type: model.type,
+    translation: model.translation,
+    sourceLanguage: model.sourceLanguage,
+    targetLanguage: model.targetLanguage,
+    status: model.status,
+    source: model.source,
+    savedCount: model.savedCount,
+    nextReviewAt: model.nextReviewAt?.toISOString() ?? null,
+    lastReviewedAt: model.lastReviewedAt?.toISOString() ?? null,
+    createdAt: model.createdAt.toISOString(),
+    updatedAt: model.updatedAt.toISOString(),
+    occurrences: model.occurrences.map((o) => ({
+      id: o.id,
+      vocabularyItemId: o.vocabularyItemId,
+      sourceId: o.sourceId,
+      selectedText: o.selectedText,
+      contextSentence: o.contextSentence,
+      createdAt: o.createdAt.toISOString(),
+    })),
+  };
+}
+
+export function toVocabularySetDto(model: VocabularySetModel): VocabularySetDto {
+  return {
+    id: model.id,
+    name: model.name,
+    type: model.type,
+    periodStart: model.periodStart?.toISOString() ?? null,
+    periodEnd: model.periodEnd?.toISOString() ?? null,
+    createdAt: model.createdAt.toISOString(),
+    updatedAt: model.updatedAt.toISOString(),
+    _count: { setItems: model._count.setItems },
+  };
+}
+
+export function toVocabularyListDto(
+  items: VocabularyItemModel[],
+  total: number,
+  page: number,
+  pageSize: number,
+): VocabularyListDto {
+  return {
+    items: items.map(toVocabularyItemDto),
+    total,
+    page,
+    pageSize,
+  };
+}
