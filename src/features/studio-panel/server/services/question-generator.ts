@@ -1,8 +1,10 @@
 import "server-only";
 import { generateObject } from "ai";
-import { openai } from "@ai-sdk/openai";
+import { openai } from "@/infrastructure/ai";
 import { moduleLog } from "@/lib/logger";
 import { wrapUserText } from "@/infrastructure/ai/prompt-utils";
+import { getModel } from "@/infrastructure/ai/models";
+import { withAITrace } from "@/infrastructure/ai/observability";
 import {
   questionGenerationDataSchema,
   type QuestionGenerationData,
@@ -23,14 +25,20 @@ export async function generateComprehensionQuestions(
       .map((line, i) => `${i + 1}: ${line}`)
       .join("\n");
 
-    const { object } = await generateObject({
-      model: openai("gpt-4o-mini"),
-      schema: questionGenerationDataSchema,
-      system: `You are an expert English language educator. Generate multiple-choice reading comprehension questions that: test understanding (not memory), have clear answers from text, include line number citations, range factual to inferential, cover different parts of passage. Wrong answers should be plausible but clearly incorrect.`,
-      prompt: `Generate ${questionCount} reading comprehension questions for this passage:
+    const { modelId } = getModel("structured");
+
+    const { object } = await withAITrace(
+      { operation: "generate-questions", feature: "studio-panel", model: modelId },
+      () =>
+        generateObject({
+          model: openai(modelId),
+          schema: questionGenerationDataSchema,
+          system: `You are an expert English language educator. Generate multiple-choice reading comprehension questions that: test understanding (not memory), have clear answers from text, include line number citations, range factual to inferential, cover different parts of passage. Wrong answers should be plausible but clearly incorrect.`,
+          prompt: `Generate ${questionCount} reading comprehension questions for this passage:
 
 ${wrapUserText(numberedPassage)}`,
-    });
+        })
+    );
 
     return object;
   } catch (error) {

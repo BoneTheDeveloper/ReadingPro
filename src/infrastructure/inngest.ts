@@ -1,11 +1,5 @@
 /**
- * Generic Inngest client.
- * Single instance used across the app.
+ * @deprecated Use `@/infrastructure/inngest/client` or `@/infrastructure/inngest/registry` instead.
  */
 
-import { Inngest } from "inngest";
-
-export const inngest = new Inngest({
-  id: "english-reading-training",
-  eventKey: process.env.INNGEST_EVENT_KEY,
-});
+export { inngest } from "./inngest/client";

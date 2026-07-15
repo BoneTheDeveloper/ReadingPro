@@ -1,8 +1,16 @@
-import "server-only";
-const DEFAULT_STUDY_CHAT_MODEL = "gpt-4o-mini";
+/**
+ * @deprecated Use `@/infrastructure/ai/models` instead.
+ * This module exists for backward compatibility during migration.
+ *
+ * Migration:
+ *   OLD: import { getStudyChatModelId } from "@/infrastructure/ai/model-config";
+ *   NEW: import { getModel } from "@/infrastructure/ai/models";
+ *        const modelId = getModel("chat").modelId;
+ */
 
+import { getModel } from "./models";
+
+/** @deprecated Use getModel("chat") instead */
 export function getStudyChatModelId(): string {
-  return DEFAULT_STUDY_CHAT_MODEL;
+  return getModel("chat").modelId;
 }
-
-export { DEFAULT_STUDY_CHAT_MODEL };

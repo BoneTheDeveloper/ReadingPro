@@ -1,9 +1,9 @@
 import "server-only";
-import { openai } from "@ai-sdk/openai";
+import { openai } from "@/infrastructure/ai";
 import { convertToModelMessages, streamText } from "ai";
 import { prisma } from "@/lib/prisma";
 import { wrapUserText } from "@/infrastructure/ai/prompt-utils";
-import { getStudyChatModelId } from "@/infrastructure/ai/model-config";
+import { getModel } from "@/infrastructure/ai/models";
 import { moduleLog } from "@/lib/logger";
 import {
   MAX_PASSAGE_CHARS,
@@ -96,7 +96,7 @@ export async function streamStudyChat(params: {
     ${passageContent}
   `);
 
-  const modelId = getStudyChatModelId();
+  const { modelId } = getModel("chat");
 
   log.info(
     {
