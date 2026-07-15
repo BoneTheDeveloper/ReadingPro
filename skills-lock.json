@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "inngest-setup": {
+      "source": "inngest/inngest-skills",
+      "sourceType": "github",
+      "skillPath": "skills/inngest-setup/SKILL.md",
+      "computedHash": "13f7025183bcfea6ebb5e27b1bfa5cbf8f3570847aba144538af12854667d04a"
+    }
+  }
+}
