@@ -36,9 +36,8 @@ Each feature lives in `src/features/<feature>/`:
 
 ```
 features/<f>/
-├── <f>.tsx              # Feature root component (optional)
-├── <f>.test.tsx        # Feature tests
-├── schema.ts             # Zod Input schemas shared in feature
+├── schemas/               # Zod Input schemas
+│   └── *.ts
 ├── components/           # React components
 ├── hooks/               # React hooks
 ├── lib/                 # Feature-specific utilities
@@ -48,8 +47,6 @@ features/<f>/
     ├── services/        # Business logic + DTOs
     └── inngest/          # Async event handlers
 ```
-
-**Note:** Single `schema.ts` file. If schemas grow large, split into `schemas/` folder but keep at feature root.
 
 ---
 
@@ -67,15 +64,16 @@ Client ──(Zod InputSchema)──► Action/Route ──► Service ──►
 
 ## File Organization by Scope
 
-### Level 1: Feature-shared schemas → `features/<f>/schema.ts`
+### Level 1: Feature-shared schemas → `features/<f>/schemas/*.ts`
 
-If a schema is used by multiple places within the same feature (client + server), put it in a single `schema.ts` file at the feature root.
+If a schema is used by multiple places within the same feature (client + server), put it in the `schemas/` folder.
 
 ```
 features/vocabulary/
-├── VocabularyForm.tsx      # imports from ../schema
-├── actions.ts              # imports from ../schema
-└── schema.ts               # ALL schemas for vocabulary feature
+├── VocabularyForm.tsx      # imports from schemas/
+├── actions.ts              # imports from schemas/
+└── schemas/
+    └── vocabulary.ts      # ALL schemas for vocabulary feature
 ```
 
 ### Level 2: Single-use schemas → inline in Action/Route
@@ -97,7 +95,7 @@ export async function updateVocabularyStatus(data: unknown) {
 }
 ```
 
-**Why:** Prevents `schema.ts` from becoming a dumping ground for micro-schemas.
+**Why:** Prevents `schemas/` folder from becoming a dumping ground for micro-schemas.
 
 ### Cross-feature → `src/types/`
 
@@ -231,8 +229,8 @@ export const createVocabularyInputSchema = z.object({
 
 | Suffix | Purpose | Location |
 |--------|---------|----------|
-| `*InputSchema` | Body of Server Action or HTTP POST/PUT | `features/<f>/schema.ts` |
-| `*QuerySchema` | URL query params | `features/<f>/schema.ts` |
+| `*InputSchema` | Body of Server Action or HTTP POST/PUT | `features/<f>/schemas/` |
+| `*QuerySchema` | URL query params | `features/<f>/schemas/` |
 | `*EventSchema` | Inngest queue payload | `features/<f>/server/inngest/` |
 | `*Dto` | Response shape returned to client | `features/<f>/server/services/` |
 | `*Model` | Prisma/internal row type | `features/<f>/server/services/` or `types/` |
