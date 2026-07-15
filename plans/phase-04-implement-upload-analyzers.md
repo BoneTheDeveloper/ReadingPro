@@ -1,7 +1,7 @@
 ---
 phase: 4
 title: "Implement Upload Analyzers"
-status: pending
+status: completed
 priority: P2
 effort: "2h"
 dependencies: ["phase-03-migrate-inngest-infrastructure"]

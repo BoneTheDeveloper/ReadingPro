@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Migrate Studio-Panel"
-status: pending
+status: completed
 priority: P2
 effort: "1h"
 dependencies: ["phase-01-scaffold-ai-infrastructure"]

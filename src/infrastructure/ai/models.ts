@@ -3,18 +3,16 @@
  *
  * Usage:
  *   import { MODELS, getModel } from "@/infrastructure/ai/models";
- *   const modelId = getModel("chat").modelId;
+ *   const modelId = getModel("chat");
  */
 
 export const MODELS = {
   chat: {
     id: "gpt-4o-mini",
-    provider: "openai",
     maxTokens: 16384,
   },
   structured: {
     id: "gpt-4o-mini",
-    provider: "openai",
     maxTokens: 8192,
   },
 } as const;
@@ -23,9 +21,11 @@ export type ModelPurpose = keyof typeof MODELS;
 
 /**
  * Get model ID for a given purpose.
- * Used with Vercel AI SDK:
- *   ai.streamText({ model: getModel("chat").modelId, ... });
+ * Usage with Vercel AI SDK v7:
+ *   import { openai } from "@/infrastructure/ai";
+ *   import { getModel } from "@/infrastructure/ai/models";
+ *   streamText({ model: openai(getModel("chat")), ... });
  */
-export function getModel(purpose: ModelPurpose): { modelId: string } {
-  return { modelId: MODELS[purpose].id };
+export function getModel(purpose: ModelPurpose): string {
+  return MODELS[purpose].id;
 }

@@ -27,7 +27,7 @@ Respond with only a valid JSON object.`;
  * Extract vocabulary from text using AI.
  */
 export async function extractVocabulary(text: string): Promise<VocabularyResult> {
-  const { modelId } = getModel("structured");
+  const modelId = getModel("structured");
 
   const { object } = await withAITrace(
     { operation: "vocab-extraction", feature: "upload", model: modelId },

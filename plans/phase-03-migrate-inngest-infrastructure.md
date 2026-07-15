@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "Migrate Inngest Infrastructure"
-status: pending
+status: completed
 priority: P2
 effort: "2h"
 dependencies: ["phase-01-scaffold-ai-infrastructure"]

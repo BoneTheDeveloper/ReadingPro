@@ -2,11 +2,11 @@
  * AI Infrastructure — Public exports
  *
  * Usage:
- *   import { MODELS, getModel } from "@/infrastructure/ai";
- *   import { withAITrace } from "@/infrastructure/ai";
- *   import { openai } from "@/infrastructure/ai";
+ *   import { MODELS, getModel, openai, withAITrace } from "@/infrastructure/ai";
+ *   import { wrapUserText } from "@/infrastructure/ai/text-utils";
  */
 
 export { MODELS, getModel, type ModelPurpose } from "./models";
 export { withAITrace, type AITraceContext } from "./observability";
-export { openai, createModel, getProviderModel, type AIProvider } from "./client";
+export { openai } from "./client";
+export { wrapUserText } from "./text-utils";

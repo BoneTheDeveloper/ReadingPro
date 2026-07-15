@@ -2,7 +2,7 @@ import "server-only";
 import { generateObject } from "ai";
 import { openai } from "@/infrastructure/ai";
 import { moduleLog } from "@/lib/logger";
-import { wrapUserText } from "@/infrastructure/ai/prompt-utils";
+import { wrapUserText } from "@/infrastructure/ai/text-utils";
 import { getModel } from "@/infrastructure/ai/models";
 import { withAITrace } from "@/infrastructure/ai/observability";
 import {
@@ -25,7 +25,7 @@ export async function generateComprehensionQuestions(
       .map((line, i) => `${i + 1}: ${line}`)
       .join("\n");
 
-    const { modelId } = getModel("structured");
+    const modelId = getModel("structured");
 
     const { object } = await withAITrace(
       { operation: "generate-questions", feature: "studio-panel", model: modelId },

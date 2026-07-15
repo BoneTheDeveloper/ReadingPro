@@ -2,7 +2,7 @@ import "server-only";
 import { openai } from "@/infrastructure/ai";
 import { convertToModelMessages, streamText } from "ai";
 import { prisma } from "@/lib/prisma";
-import { wrapUserText } from "@/infrastructure/ai/prompt-utils";
+import { wrapUserText } from "@/infrastructure/ai/text-utils";
 import { getModel } from "@/infrastructure/ai/models";
 import { moduleLog } from "@/lib/logger";
 import {
@@ -96,7 +96,7 @@ export async function streamStudyChat(params: {
     ${passageContent}
   `);
 
-  const { modelId } = getModel("chat");
+  const modelId = getModel("chat");
 
   log.info(
     {

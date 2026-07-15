@@ -118,11 +118,11 @@ infrastructure/storage/        # Swappable storage layer (separate from Inngest)
 
 | Phase | Name | Status | Dependencies |
 |-------|------|--------|-------------|
-| 1 | [Scaffold AI Infrastructure](./phase-01-scaffold-ai-infrastructure.md) | Pending | — |
-| 2 | [Migrate Studio-Panel](./phase-02-migrate-studio-panel.md) | Pending | Phase 1 |
-| 3 | [Migrate Inngest Infrastructure](./phase-03-migrate-inngest-infrastructure.md) | Pending | Phase 1 |
-| 4 | [Implement Upload Analyzers](./phase-04-implement-upload-analyzers.md) | Pending | Phase 3 |
-| 5 | [Add Question Generation Job](./phase-05-add-question-generation-job.md) | Pending | Phase 2, Phase 3 |
+| 1 | [Scaffold AI Infrastructure](./phase-01-scaffold-ai-infrastructure.md) | Completed | — |
+| 2 | [Migrate Studio-Panel](./phase-02-migrate-studio-panel.md) | Completed | Phase 1 |
+| 3 | [Migrate Inngest Infrastructure](./phase-03-migrate-inngest-infrastructure.md) | Completed | Phase 1 |
+| 4 | [Implement Upload Analyzers](./phase-04-implement-upload-analyzers.md) | Completed | Phase 3 |
+| 5 | [Add Question Generation Job](./phase-05-add-question-generation-job.md) | Completed | Phase 2, Phase 3 |
 
 ## Dependencies
 

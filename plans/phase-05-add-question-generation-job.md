@@ -1,7 +1,7 @@
 ---
 phase: 5
 title: "Add Question Generation Job"
-status: pending
+status: completed
 priority: P2
 effort: "2h"
 dependencies: ["phase-02-migrate-studio-panel", "phase-03-migrate-inngest-infrastructure"]
