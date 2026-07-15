@@ -2,9 +2,9 @@ import "server-only";
 import { put, del, head, get } from "@vercel/blob";
 import { writeFile, mkdir, readFile, unlink } from "node:fs/promises";
 import path from "node:path";
-import { createModuleLogger } from "@/lib/observability/logger";
+import { moduleLog } from "@/lib/observability/logger";
 
-const log = createModuleLogger("storage:blob");
+const log = moduleLog("storage:blob");
 
 const LOCAL_STORAGE_DIR = path.resolve(".local-blob-storage");
 

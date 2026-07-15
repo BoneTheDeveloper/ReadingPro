@@ -1,5 +1,17 @@
 import { z } from "zod";
-import { makeApiResponseSchema } from "@/lib/http/api-envelope-schema";
+
+// Inlined from @/app/api/_lib/api-envelope-schema
+const apiErrorResponseSchema = z.object({
+  success: z.literal(false),
+  error: z.string(),
+}).strict();
+
+function makeApiResponseSchema<T extends z.ZodType>(dataSchema: T) {
+  return z.discriminatedUnion("success", [
+    z.object({ success: z.literal(true), data: dataSchema }).strict(),
+    apiErrorResponseSchema,
+  ]);
+}
 
 export const translationDataSchema = z
   .object({

@@ -8,7 +8,7 @@ import { Send, Loader2, AlertCircle, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getChatHistoryAction } from "@/features/studio-panel/server/actions/studio-panel";
-import { captureClientError } from "@/lib/observability/capture-client-error";
+import * as Sentry from "@sentry/nextjs";
 interface StudyChatPanelProps {
   passageId: string;
   prefilledQuestion?: string | null;
@@ -52,8 +52,8 @@ export function StudyChatPanel({
           setMessages(messages);
         }
       } catch (error) {
-        captureClientError(error, {
-          scope: "study.chat.history-fetch",
+        Sentry.captureException(error, {
+          tags: { scope: "study.chat.history-fetch" },
           extra: { passageId },
         });
         if (isMounted) setMessages([]);

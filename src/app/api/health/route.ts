@@ -1,18 +1,9 @@
 import { NextResponse } from "next/server";
-import { createRequestLogContext, createRequestLogger } from "@/lib/observability/logger";
 import { prisma } from "@/lib/prisma";
 
-const MODULE = "api:health";
-
 export async function GET() {
-  const log = createRequestLogger(
-    MODULE,
-    createRequestLogContext({}, "GET", "/api/health"),
-  );
-
   const checks: Record<string, { status: string; latencyMs?: number; error?: string }> = {};
 
-  // Database check
   const dbStart = performance.now();
   try {
     await prisma.$queryRaw`SELECT 1`;
@@ -28,17 +19,8 @@ export async function GET() {
   }
 
   const allOk = Object.values(checks).every((c) => c.status === "ok");
-  const httpStatus = allOk ? 200 : 503;
-
-  log.debug({ context: { checks } }, "health check completed");
   return NextResponse.json(
-    {
-      success: allOk,
-      data: {
-        status: allOk ? "ok" : "degraded",
-        checks,
-      },
-    },
-    { status: httpStatus },
+    { success: allOk, data: { status: allOk ? "ok" : "degraded", checks } },
+    { status: allOk ? 200 : 503 },
   );
 }

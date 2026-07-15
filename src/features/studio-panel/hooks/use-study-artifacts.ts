@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { captureClientError } from "@/lib/observability/capture-client-error";
+import * as Sentry from "@sentry/nextjs";
 import type { ArtifactsCacheEntry } from "@/types/studio-artifact";
 import { ARTIFACT_STALE_TIME } from "@/features/studio-panel/lib/studio-artifact-types";
 import { getStudioArtifactsAction } from "@/features/studio-panel/server/actions/studio-panel";
@@ -63,8 +63,8 @@ export function useStudyArtifacts({
         });
       })
       .catch((err) => {
-        captureClientError(err, {
-          scope: "study.fetch-artifacts",
+        Sentry.captureException(err, {
+          tags: { scope: "study.fetch-artifacts" },
           extra: { passageId },
         });
         setState((prev) => {

@@ -1,7 +1,6 @@
 import "server-only";
 import { NotFoundError } from "@/lib/errors";
-import { createModuleLogger } from "@/lib/observability/logger";
-import { toIsoString } from "@/lib/utils";
+import { moduleLog } from "@/lib/observability/logger";
 import { findOwnedPassage } from "@/features/passage/server/db/passage";
 import type { VocabularyStatus } from "@/generated/prisma/enums";
 import { VocabularySourceType } from "@/generated/prisma/enums";
@@ -20,7 +19,7 @@ import {
   getVocabularyStats,
 } from "../db/vocabulary-item-progress";
 
-const log = createModuleLogger("lib:vocabulary-service");
+const log = moduleLog("vocabulary:items");
 
 export interface SaveVocabularyItemInput {
   userId: string;
@@ -70,17 +69,17 @@ function toVocabularyItemDto(item: {
     status: item.status as VocabularyItemDto["status"],
     source: item.source,
     savedCount: item.savedCount,
-    nextReviewAt: toIsoString(item.nextReviewAt),
-    lastReviewedAt: toIsoString(item.lastReviewedAt),
-    createdAt: toIsoString(item.createdAt) ?? "",
-    updatedAt: toIsoString(item.updatedAt) ?? "",
+    nextReviewAt: item.nextReviewAt?.toISOString() ?? null,
+    lastReviewedAt: item.lastReviewedAt?.toISOString() ?? null,
+    createdAt: item.createdAt.toISOString(),
+    updatedAt: item.updatedAt.toISOString(),
     occurrences: (item.occurrences ?? []).map((o) => ({
       id: o.id,
       vocabularyItemId: o.vocabularyItemId,
       sourceId: o.sourceId,
       selectedText: o.selectedText,
       contextSentence: o.contextSentence,
-      createdAt: toIsoString(o.createdAt) ?? "",
+      createdAt: o.createdAt.toISOString(),
     })),
   };
 }

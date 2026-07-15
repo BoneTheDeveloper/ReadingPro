@@ -1,5 +1,4 @@
 import "server-only";
-import { toIsoString } from "@/lib/utils";
 import type {
   VocabularySetDto,
   VocabularySetType,
@@ -20,10 +19,10 @@ function toVocabularySetDto(set: VocabularySetWithCount): VocabularySetDto {
     id: set.id,
     name: set.name,
     type: set.type as VocabularySetDto["type"],
-    periodStart: toIsoString(set.periodStart),
-    periodEnd: toIsoString(set.periodEnd),
-    createdAt: toIsoString(set.createdAt) ?? "",
-    updatedAt: toIsoString(set.updatedAt) ?? "",
+    periodStart: set.periodStart?.toISOString() ?? null,
+    periodEnd: set.periodEnd?.toISOString() ?? null,
+    createdAt: set.createdAt.toISOString(),
+    updatedAt: set.updatedAt.toISOString(),
     _count: { items: set._count.setItems },
   };
 }

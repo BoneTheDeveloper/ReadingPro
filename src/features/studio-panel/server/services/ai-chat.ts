@@ -2,9 +2,9 @@ import "server-only";
 import { openai } from "@ai-sdk/openai";
 import { convertToModelMessages, streamText } from "ai";
 import { prisma } from "@/lib/prisma";
-import { wrapUserText } from "@/services/ai/prompt-utils";
-import { getStudyChatModelId } from "@/services/ai/model-config";
-import { createModuleLogger } from "@/lib/observability/logger";
+import { wrapUserText } from "@/infrastructure/ai/prompt-utils";
+import { getStudyChatModelId } from "@/infrastructure/ai/model-config";
+import { moduleLog } from "@/lib/observability/logger";
 import { NotFoundError } from "@/lib/errors";
 import {
   MAX_PASSAGE_CHARS,
@@ -12,7 +12,7 @@ import {
 } from "../../schemas/ai-chat";
 import { truncateToRecentTurns, extractTextContent } from "../../lib/ai-chat-utils";
 
-const log = createModuleLogger("lib:study:chat-service");
+const log = moduleLog("studio-panel:chat");
 
 export async function getOwnedPassageForChat(
   userId: string,

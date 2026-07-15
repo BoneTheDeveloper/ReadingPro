@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { captureClientError } from "@/lib/observability/capture-client-error";
+import * as Sentry from "@sentry/nextjs";
 import { uploadFileAction, uploadTextAction, getUploadStatus } from "../server/actions/upload";
 import type { PassageData } from "@/types/passage";
 
@@ -108,7 +108,7 @@ export function useUploadSubmit(options: UseUploadSubmitOptions = {}) {
         const { passage } = await pollJobStatus(jobId);
         return { passageId: passage.id, jobId };
       } catch (error) {
-        captureClientError(error, { scope: "upload:file" });
+        Sentry.captureException(error, { tags: { scope: "upload:file" } });
         setIsProcessing(false);
         onError?.(
           error instanceof Error ? error.message : "Upload failed",
@@ -140,7 +140,7 @@ export function useUploadSubmit(options: UseUploadSubmitOptions = {}) {
         const { passage } = await pollJobStatus(jobId);
         return { passageId: passage.id, jobId };
       } catch (error) {
-        captureClientError(error, { scope: "upload:text" });
+        Sentry.captureException(error, { tags: { scope: "upload:text" } });
         setIsProcessing(false);
         onError?.(
           error instanceof Error ? error.message : "Upload failed",

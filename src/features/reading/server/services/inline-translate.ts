@@ -1,6 +1,6 @@
 import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
-import { createRequestLogger } from "@/lib/observability/logger";
+import { moduleLog } from "@/lib/observability/logger";
 import type { TranslateResolutionSource } from "@/features/reading/lib/text-utils";
 import {
   quickTranslationSchema,
@@ -22,12 +22,11 @@ export interface TranslateServiceInput {
   targetLanguage: "vi";
 }
 
-type RequestLogger = ReturnType<typeof createRequestLogger>;
-
 export interface TranslateServiceContext {
   userId: string;
-  log: RequestLogger;
 }
+
+const log = moduleLog("reading:translate");
 
 export type TranslateResult =
   | {
@@ -62,7 +61,7 @@ export async function executeTranslate(
   const row = rows[0];
 
   if (!row?.sourceId) {
-    ctx.log.warn("Translation source not found");
+    log.warn("Translation source not found");
     return { ok: false, status: 404 };
   }
 
@@ -70,42 +69,38 @@ export async function executeTranslate(
     const cachedResult = quickTranslationSchema.safeParse(row.cacheResponse);
     if (cachedResult.success) {
       const data = asCacheProvider(cachedResult.data);
-      ctx.log.info(
+      log.info(
         {
-          context: {
-            cacheHit: true,
-            provider: data.provider,
-            selectedTextLength: input.text.length,
-            contextLength: input.context.length,
-          },
+          cacheHit: true,
+          provider: data.provider,
+          selectedTextLength: input.text.length,
+          contextLength: input.context.length,
         },
         "Translation cache hit",
       );
 
-      void persistAsync(ctx.userId, input, data, ctx.log);
+      void persistAsync(ctx.userId, input, data);
 
       return { ok: true, data, resolutionSource: "cache" };
     }
   }
 
-  const result = await resolveWordTranslate(input, ctx);
+  const result = await resolveWordTranslate(input);
 
   if (!result.translation) {
     return { ok: false, status: 404 };
   }
 
-  ctx.log.info(
+  log.info(
     {
-      context: {
-        provider: result.provider,
-        selectedTextLength: input.text.length,
-        contextLength: input.context.length,
-      },
+      provider: result.provider,
+      selectedTextLength: input.text.length,
+      contextLength: input.context.length,
     },
     "Translation resolved",
   );
 
-  void persistAsync(ctx.userId, input, result, ctx.log);
+  void persistAsync(ctx.userId, input, result);
 
   return {
     ok: true,
@@ -119,7 +114,6 @@ async function persistAsync(
   userId: string,
   input: TranslateServiceInput,
   result: QuickTranslation,
-  log: RequestLogger,
 ) {
   try {
     await Promise.all([

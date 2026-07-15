@@ -1,10 +1,12 @@
-import 'server-only';
+import "server-only";
+import { moduleLog } from "@/lib/observability/logger";
 import { resolveQuickDictionaryTranslation, type QuickTranslation } from "@/features/dictionary/server/services/lookup-quick";
-import type { TranslateServiceInput, TranslateServiceContext } from "./inline-translate";
+import type { TranslateServiceInput } from "./inline-translate";
+
+const log = moduleLog("reading:word-translate");
 
 export async function resolveWordTranslate(
   input: TranslateServiceInput,
-  ctx: TranslateServiceContext,
 ): Promise<QuickTranslation> {
   const result = await resolveQuickDictionaryTranslation({
     text: input.text,
@@ -14,20 +16,10 @@ export async function resolveWordTranslate(
   });
 
   if (!result) {
-    ctx.log.info({ context: { scope: "word" } }, "Word translate not found");
+    log.info("Word translate not found");
     return { translation: "", source: "none", provider: "none" };
   }
 
-  ctx.log.info(
-    {
-      context: {
-        scope: "word",
-        provider: result.provider,
-        selectedTextLength: input.text.length,
-      },
-    },
-    "Word translate resolved",
-  );
-
+  log.info({ provider: result.provider }, "Word translate resolved");
   return result;
 }

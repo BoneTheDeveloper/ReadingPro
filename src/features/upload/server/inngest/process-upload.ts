@@ -1,4 +1,4 @@
-import { inngest } from "@/services/inngest";
+import { inngest } from "@/infrastructure/inngest";
 import { UPLOAD_PROCESS_EVENT } from "./events";
 import { prisma } from "@/lib/prisma";
 import { step } from "inngest";
@@ -8,7 +8,7 @@ import {
   computeWordCount,
   sourceTypeToPassageSourceType,
 } from "@/features/upload/server/services/upload-processor";
-import { downloadFile } from "@/services/storage";
+import { downloadFile } from "@/infrastructure/storage";
 import { parsePDF } from "@/features/upload/lib/pdf-parsers";
 import type { UploadProcessorInput } from "@/features/upload/server/services/upload-processor";
 

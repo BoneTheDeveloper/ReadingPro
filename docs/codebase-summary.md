@@ -31,12 +31,7 @@ src/
 │   └── [locale]/           # UI routes with i18n
 │
 ├── features/                 # Vertical slices
-│   ├── dictionary/          # Dictionary lookup/search
-│   ├── vocabulary/          # Vocabulary management
-│   ├── reading/             # Reading view + inline translation
-│   ├── studio-panel/        # AI chat + quiz generation
-│   ├── upload/             # File upload & processing
-│   └── passage/            # Passage persistence
+│   └── <domain>       
 │       ├── components/      # React components
 │       ├── hooks/          # React hooks
 │       ├── lib/            # Feature utilities
@@ -104,11 +99,8 @@ src/
 
 ## Key Patterns
 
-**Error Architecture:** Domain errors in `lib/errors/`, feature errors extend base. Routes use `withRoute()` + `toHttp()`.
 
 **Schema Architecture:** Data schemas in `features/`, response contracts via `makeApiResponseSchema()`. Clients validate with `safeParse()`.
-
-**Logging:** Pino in `lib/logger.ts`. Request context via `createModuleLogger()`.
 
 **Background Processing:** Inngest for async job processing (upload processing, AI analysis).
 

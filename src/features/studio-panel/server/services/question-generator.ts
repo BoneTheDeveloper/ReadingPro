@@ -1,8 +1,8 @@
 import "server-only";
 import { generateObject } from "ai";
 import { openai } from "@ai-sdk/openai";
-import { createModuleLogger } from "@/lib/observability/logger";
-import { wrapUserText } from "@/services/ai/prompt-utils";
+import { moduleLog } from "@/lib/observability/logger";
+import { wrapUserText } from "@/infrastructure/ai/prompt-utils";
 import {
   questionGenerationDataSchema,
   type QuestionGenerationData,
@@ -11,7 +11,7 @@ import {
 export type { GeneratedQuestion } from "../../schemas/question";
 export type QuestionGenerationResult = QuestionGenerationData;
 
-const log = createModuleLogger("studio-panel:question-generator");
+const log = moduleLog("studio-panel:question-generator");
 
 export async function generateComprehensionQuestions(
   passage: string,

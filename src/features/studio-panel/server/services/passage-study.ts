@@ -5,7 +5,7 @@ import {
   generateComprehensionQuestions,
   type GeneratedQuestion,
 } from "./question-generator";
-import { createModuleLogger } from "@/lib/observability/logger";
+import { moduleLog } from "@/lib/observability/logger";
 import { NotFoundError } from "@/lib/errors";
 import { findOwnedPassage } from "@/features/passage/server/db/passage";
 import {
@@ -26,7 +26,7 @@ import {
 
 export { type GeneratedStudyQuestionDto } from "../../schemas/question";
 
-const log = createModuleLogger("lib:study:passage-service");
+const log = moduleLog("studio-panel:passage-study");
 
 export async function generateQuestionsForPassage(
   userId: string,

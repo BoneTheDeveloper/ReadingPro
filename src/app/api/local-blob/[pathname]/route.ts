@@ -1,20 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readFileBuffer } from "@/services/storage";
-import { createRequestLogContext, createRequestLogger } from "@/lib/observability/logger";
-
-const MODULE = "api:local-blob";
+import { readFileBuffer } from "@/infrastructure/storage";
 
 export async function GET(
-  request: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ pathname: string }> },
 ) {
-  const log = createRequestLogger(
-    MODULE,
-    createRequestLogContext(request, "GET", "/api/local-blob"),
-  );
-
   if (process.env.NODE_ENV !== "development") {
-    log.warn("blocked non-development access");
     return NextResponse.json({ error: "Not available in production" }, { status: 404 });
   }
 
@@ -23,15 +14,11 @@ export async function GET(
   try {
     decoded = decodeURIComponent(pathname);
   } catch {
-    log.warn({ context: { pathname } }, "invalid pathname encoding");
     return NextResponse.json({ error: "Invalid pathname encoding" }, { status: 400 });
   }
 
-  log.debug({ context: { pathname: decoded } }, "reading file");
   const buffer = await readFileBuffer(decoded);
-
   if (!buffer) {
-    log.warn({ context: { pathname: decoded } }, "file not found");
     return NextResponse.json({ error: "File not found" }, { status: 404 });
   }
 
