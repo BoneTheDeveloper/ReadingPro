@@ -1,6 +1,5 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
-import { NotFoundError } from "@/lib/errors";
 import { simpleSchedule } from "@/features/vocabulary/lib/scheduler";
 import type { VocabularyItem, VocabularyStatus } from "@/generated/prisma/client";
 
@@ -14,7 +13,7 @@ export async function updateVocabularyStatus(params: {
   });
 
   if (!item || item.userId !== params.userId) {
-    throw new NotFoundError("Vocabulary item");
+    throw new Error("Vocabulary item not found");
   }
 
   return prisma.vocabularyItem.update({
@@ -33,7 +32,7 @@ export async function reviewVocabularyItem(params: {
   });
 
   if (!item || item.userId !== params.userId) {
-    throw new NotFoundError("Vocabulary item");
+    throw new Error("Vocabulary item not found");
   }
 
   const { nextStatus, nextReviewDate } = simpleSchedule(

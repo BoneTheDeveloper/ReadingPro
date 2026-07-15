@@ -26,13 +26,13 @@ export const entryDetailInputSchema = z
 // =============================================================================
 
 // Note: These schemas are kept for potential future use (validation, exports)
-const _dictionaryTranslationStatusSchema = z.enum([
+export const dictionaryTranslationStatusSchema = z.enum([
   "draft",
   "reviewed",
   "approved",
   "deprecated",
 ]);
-const _dictionarySourceTypeSchema = z.enum([
+export const dictionarySourceTypeSchema = z.enum([
   "seed",
   "manual",
   "provider",

@@ -1,5 +1,4 @@
 import "server-only";
-import { NotFoundError } from "@/lib/errors";
 import { moduleLog } from "@/lib/logger";
 import { getOwnedPassage } from "@/features/passage";
 import type { VocabularyStatus } from "@/generated/prisma/enums";
@@ -42,7 +41,7 @@ export async function saveVocabularyItem(
     const passage = await getOwnedPassage(input.userId, input.sourceId);
 
     if (!passage) {
-      throw new NotFoundError("Source");
+      throw new Error("Source passage not found");
     }
   }
 

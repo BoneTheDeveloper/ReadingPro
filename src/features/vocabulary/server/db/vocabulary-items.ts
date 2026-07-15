@@ -1,7 +1,6 @@
 import "server-only";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
-import { NotFoundError } from "@/lib/errors";
 import {
   findOrCreateDailySet,
   findOrCreateWeeklySet,
@@ -184,7 +183,7 @@ export async function deleteVocabularyItem(params: {
   });
 
   if (!item || item.userId !== params.userId) {
-    throw new NotFoundError("Vocabulary item");
+    throw new Error("Vocabulary item not found");
   }
 
   await prisma.vocabularyItem.delete({

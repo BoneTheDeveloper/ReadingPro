@@ -37,6 +37,13 @@ export async function generateQuestionsForPassage(
 }> {
   const passage = await getOwnedPassageForStudy(userId, passageId);
 
+  if (!passage) {
+    throw new PassageStudyServiceError(
+      "Passage not found",
+      "PASSAGE_NOT_FOUND",
+    );
+  }
+
   // Idempotency: if this artifact was already committed (e.g. double-submit or
   // retry after a lost response), return the existing data without re-generating.
   const existing = await findExistingStudioArtifact(artifactId, userId);

@@ -4,7 +4,6 @@ import {
   type StudioArtifactType,
 } from "@/features/studio-panel/lib/studio-artifact-types";
 import type { GeneratedStudyQuestionDto } from "@/features/studio-panel/schemas/question";
-import { NotFoundError } from "@/lib/errors";
 import {
   deleteQuizResults,
   findArtifactQuestions,
@@ -14,14 +13,9 @@ import {
   upsertQuizResult,
 } from "../db/studio-artifacts";
 
-// Extends NotFoundError so the toHttp boundary maps it to 404 via a single
-// instanceof check, while keeping the artifact-specific message + name.
-export class ArtifactNotFoundError extends NotFoundError {
-  constructor(artifactId: string) {
-    super("Artifact");
-    this.message = `Artifact not found or access denied: ${artifactId}`;
-    this.name = "ArtifactNotFoundError";
-  }
+// Simple factory for artifact not found errors
+export function artifactNotFound(artifactId: string): Error {
+  return new Error(`Artifact not found or access denied: ${artifactId}`);
 }
 
 function parseQuestionOptions(value: unknown): GeneratedStudyQuestionDto["options"] {
@@ -93,7 +87,7 @@ export async function recordQuizResult(
   const artifact = await findStudioArtifactForOwnership(artifactId, userId);
 
   if (!artifact) {
-    throw new ArtifactNotFoundError(artifactId);
+    throw artifactNotFound(artifactId);
   }
 
   await upsertQuizResult(artifactId, {
@@ -111,7 +105,7 @@ export async function resetQuizResult(
   const artifact = await findStudioArtifactForOwnership(artifactId, userId);
 
   if (!artifact) {
-    throw new ArtifactNotFoundError(artifactId);
+    throw artifactNotFound(artifactId);
   }
 
   await deleteQuizResults(artifactId);
@@ -129,7 +123,7 @@ export async function getArtifactQuestions(
     // Check if artifact exists but just has no questions yet, or if it doesn't exist/owned
     const artifact = await findStudioArtifactExists(artifactId, userId);
     if (!artifact) {
-      throw new ArtifactNotFoundError(artifactId);
+      throw artifactNotFound(artifactId);
     }
   }
 

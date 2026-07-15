@@ -31,6 +31,7 @@ export type StudioArtifactErrorCode =
   | "VALIDATION_FAILED"
   | "UPSTREAM_ERROR"
   | "TIMEOUT"
+  | "PASSAGE_NOT_FOUND"
   | "UNKNOWN";
 
 export interface GeneratedStudyQuestionDto {

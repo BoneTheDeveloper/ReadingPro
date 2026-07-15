@@ -33,9 +33,8 @@ export function useSaveDictionaryVocabulary() {
       setErrorSenseId(null);
 
       try {
-        const result = await saveDictionarySenseToVocabularyAction(entry, sense);
-
-        if (!result.success) throw new Error("Failed to save");
+        // Action returns VocabularyItemDto directly; throws on failure
+        await saveDictionarySenseToVocabularyAction(entry, sense);
 
         setSavedSenses((prev) => new Set(prev).add(key));
       } catch {

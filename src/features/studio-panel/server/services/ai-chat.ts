@@ -5,7 +5,6 @@ import { prisma } from "@/lib/prisma";
 import { wrapUserText } from "@/infrastructure/ai/prompt-utils";
 import { getStudyChatModelId } from "@/infrastructure/ai/model-config";
 import { moduleLog } from "@/lib/logger";
-import { NotFoundError } from "@/lib/errors";
 import {
   MAX_PASSAGE_CHARS,
   type UiMessage,
@@ -24,7 +23,7 @@ export async function getOwnedPassageForChat(
   });
 
   if (!passage) {
-    throw new NotFoundError("Passage");
+    throw new Error("Passage not found");
   }
 
   return passage;
