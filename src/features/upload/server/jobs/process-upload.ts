@@ -1,5 +1,5 @@
 import { inngest } from "@/infrastructure/inngest";
-import { UPLOAD_PROCESS_EVENT } from "../inngest/events";
+import { UPLOAD_PROCESS_EVENT } from "./events";
 import { prisma } from "@/lib/prisma";
 import { step } from "inngest";
 import {

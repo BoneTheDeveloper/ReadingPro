@@ -1,10 +1,7 @@
 import "server-only";
 import { generateObject } from "ai";
-import { openai } from "@/infrastructure/ai";
+import { openai, getModel, wrapUserText, withAITrace } from "@/infrastructure/ai";
 import { moduleLog } from "@/lib/logger";
-import { wrapUserText } from "@/infrastructure/ai/text-utils";
-import { getModel } from "@/infrastructure/ai/models";
-import { withAITrace } from "@/infrastructure/ai/observability";
 import {
   questionGenerationDataSchema,
   type QuestionGenerationData,

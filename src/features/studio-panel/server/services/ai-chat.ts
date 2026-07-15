@@ -1,9 +1,7 @@
 import "server-only";
-import { openai } from "@/infrastructure/ai";
+import { openai, getModel, wrapUserText } from "@/infrastructure/ai";
 import { convertToModelMessages, streamText } from "ai";
 import { prisma } from "@/lib/prisma";
-import { wrapUserText } from "@/infrastructure/ai/text-utils";
-import { getModel } from "@/infrastructure/ai/models";
 import { moduleLog } from "@/lib/logger";
 import {
   MAX_PASSAGE_CHARS,

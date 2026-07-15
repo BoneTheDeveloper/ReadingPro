@@ -4,9 +4,7 @@
  */
 
 import { generateObject } from "ai";
-import { openai } from "@/infrastructure/ai";
-import { getModel } from "@/infrastructure/ai/models";
-import { withAITrace } from "@/infrastructure/ai/observability";
+import { openai, getModel, withAITrace } from "@/infrastructure/ai";
 import { z } from "zod";
 
 export type CEFRLevel = "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
