@@ -4,8 +4,8 @@ import { prisma } from "@/lib/prisma";
 import {
   escapeLikeWildcards,
   normalizeDictionaryTerm,
-} from "../../lib/normalize-dictionary-term";
-import { RUNTIME_STATUSES } from "../../lib/dictionary-helpers";
+} from "@/features/dictionary/lib/normalize-dictionary-term";
+import { RUNTIME_STATUSES } from "@/features/dictionary/lib/dictionary-helpers";
 
 export interface SuggestCandidateRow {
   id: string;

@@ -1,6 +1,6 @@
 import "server-only";
-import { moduleLog } from "@/lib/observability/logger";
-import { resolveQuickDictionaryTranslation, type QuickTranslation } from "@/features/dictionary/server/services/lookup-quick";
+import { moduleLog } from "@/lib/logger";
+import { resolveQuickDictionaryTranslation, type QuickTranslation } from "@/features/dictionary";
 import type { TranslateServiceInput } from "./inline-translate";
 
 const log = moduleLog("reading:word-translate");

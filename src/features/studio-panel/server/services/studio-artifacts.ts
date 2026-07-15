@@ -2,8 +2,8 @@ import "server-only";
 import {
   type StudioArtifact,
   type StudioArtifactType,
-} from "../../lib/studio-artifact-types";
-import type { GeneratedStudyQuestionDto } from "../../schemas/question";
+} from "@/features/studio-panel/lib/studio-artifact-types";
+import type { GeneratedStudyQuestionDto } from "@/features/studio-panel/schemas/question";
 import { NotFoundError } from "@/lib/errors";
 import {
   deleteQuizResults,

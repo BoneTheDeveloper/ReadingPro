@@ -1,8 +1,8 @@
 import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
-import { moduleLog } from "@/lib/observability/logger";
+import { moduleLog } from "@/lib/logger";
 import type { TranslateResolutionSource } from "@/features/reading/lib/text-utils";
-import type { QuickTranslation } from "@/features/dictionary/server/services/lookup-quick";
+import type { QuickTranslation } from "@/features/dictionary";
 import {
   buildTranslationCacheKey,
   fetchCacheAndSource,

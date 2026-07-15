@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getUserId } from "@/lib/auth/auth-server";
-import type { VocabularyStatus } from "../../schemas/vocabulary";
+import type { VocabularyStatus } from "@/features/vocabulary/schemas/vocabulary";
 import {
   saveVocabularyInputSchema,
   updateVocabularyStatusInputSchema,
@@ -13,7 +13,7 @@ import {
   deleteVocabularySetInputSchema,
   addItemsToVocabularySetInputSchema,
   removeItemFromVocabularySetInputSchema,
-} from "../../schemas/vocabulary";
+} from "@/features/vocabulary/schemas/vocabulary";
 import {
   saveVocabularyItem,
   deleteVocabularyItemById,

@@ -9,9 +9,9 @@ import {
   resetQuizResult,
 } from "../services/studio-artifacts";
 import { getChatHistory } from "../services/ai-chat";
-import type { StudyChatHistoryDto } from "../../schemas/ai-chat";
-import { recordQuizResultInputSchema } from "../../schemas/studio-artifact";
-import { generateStudioQuestionsInputSchema } from "../../schemas/question";
+import type { StudyChatHistoryDto } from "@/features/studio-panel/schemas/ai-chat";
+import { recordQuizResultInputSchema } from "@/features/studio-panel/schemas/studio-artifact";
+import { generateStudioQuestionsInputSchema } from "@/features/studio-panel/schemas/question";
 import {
   generateQuestionsForPassage,
   PassageStudyServiceError,

@@ -9,7 +9,7 @@ import {
   formatFileSize,
 } from "@/features/upload/lib/upload-validation";
 import { cn } from "@/lib/utils";
-import { useUploadSubmit } from "../../hooks/use-upload-submit";
+import { useUploadSubmit } from "@/features/upload/hooks/use-upload-submit";
 import {
   Dialog,
   DialogContent,

@@ -12,7 +12,6 @@ import {
   verifySetOwnership,
   addItemToSet,
   removeItemFromSet,
-  type VocabularySetWithCount,
 } from "@/features/vocabulary/server/db/vocabulary-sets";
 
 export async function getVocabularySetList(params: {

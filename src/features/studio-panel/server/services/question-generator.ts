@@ -1,14 +1,14 @@
 import "server-only";
 import { generateObject } from "ai";
 import { openai } from "@ai-sdk/openai";
-import { moduleLog } from "@/lib/observability/logger";
+import { moduleLog } from "@/lib/logger";
 import { wrapUserText } from "@/infrastructure/ai/prompt-utils";
 import {
   questionGenerationDataSchema,
   type QuestionGenerationData,
-} from "../../schemas/question";
+} from "@/features/studio-panel/schemas/question";
 
-export type { GeneratedQuestion } from "../../schemas/question";
+export type { GeneratedQuestion } from "@/features/studio-panel/schemas/question";
 export type QuestionGenerationResult = QuestionGenerationData;
 
 const log = moduleLog("studio-panel:question-generator");

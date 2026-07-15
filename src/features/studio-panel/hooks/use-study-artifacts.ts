@@ -6,7 +6,7 @@ import type { ArtifactsCacheEntry } from "@/types/studio-artifact";
 import { ARTIFACT_STALE_TIME } from "@/features/studio-panel/lib/studio-artifact-types";
 import { getStudioArtifactsAction } from "@/features/studio-panel/server/actions/studio-panel";
 import type { Dispatch, SetStateAction } from "react";
-import type { StudyState } from "@/app/[locale]/(dashboard)/study/_hooks/use-study-workspace-state";
+import type { StudyState } from "@/types/study-state";
 
 type ArtifactsState = Record<string, ArtifactsCacheEntry>;
 

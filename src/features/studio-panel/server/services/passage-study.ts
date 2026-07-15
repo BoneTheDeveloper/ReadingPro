@@ -5,26 +5,25 @@ import {
   generateComprehensionQuestions,
   type GeneratedQuestion,
 } from "./question-generator";
-import { moduleLog } from "@/lib/observability/logger";
-import { NotFoundError } from "@/lib/errors";
-import { findOwnedPassage } from "@/features/passage/server/db/passage";
+import { moduleLog } from "@/lib/logger";
+import { getOwnedPassage as getOwnedPassageForStudy } from "@/features/passage";
 import {
   questionDataSchema,
   type GeneratedStudyQuestionDto,
-} from "../../schemas/question";
+} from "@/features/studio-panel/schemas/question";
 import {
   STUDIO_GENERATION_TIMEOUT_MS,
   type StudioArtifact,
   type StudioArtifactErrorCode,
   type StudioArtifactStatus,
   type StudioArtifactType,
-} from "../../lib/studio-artifact-types";
+} from "@/features/studio-panel/lib/studio-artifact-types";
 import {
   createStudioArtifactWithQuestions,
   findExistingStudioArtifact,
 } from "../db/studio-artifact-questions";
 
-export { type GeneratedStudyQuestionDto } from "../../schemas/question";
+export { type GeneratedStudyQuestionDto } from "@/features/studio-panel/schemas/question";
 
 const log = moduleLog("studio-panel:passage-study");
 
@@ -36,7 +35,7 @@ export async function generateQuestionsForPassage(
   artifact: StudioArtifact;
   questions: GeneratedStudyQuestionDto[];
 }> {
-  const passage = await getOwnedPassage(userId, passageId);
+  const passage = await getOwnedPassageForStudy(userId, passageId);
 
   // Idempotency: if this artifact was already committed (e.g. double-submit or
   // retry after a lost response), return the existing data without re-generating.
@@ -94,15 +93,6 @@ export async function generateQuestionsForPassage(
     artifact: rowToArtifact(artifact),
     questions: validQuestions.map(toQuestionData),
   };
-}
-
-async function getOwnedPassage(userId: string, passageId: string) {
-  const passage = await findOwnedPassage(userId, passageId);
-
-  if (!passage) {
-    throw new NotFoundError("Passage");
-  }
-  return passage;
 }
 
 // Races a generation promise against the shared timeout budget. On timeout the

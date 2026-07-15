@@ -1,6 +1,6 @@
 // features/passage/services/passage.ts
 import "server-only";
-import { getUserPassages } from "../db/passage";
+import { getUserPassages, findOwnedPassage, deletePassage } from "../db/passage";
 import type { PassageData } from "@/types/passage";
 
 export async function listUserPassages(userId: string): Promise<PassageData[]> {
@@ -14,4 +14,19 @@ export async function listUserPassages(userId: string): Promise<PassageData[]> {
     createdAt: p.createdAt.getTime(),
     sourceType: p.sourceType,
   }));
+}
+
+/**
+ * Get owned passage with ownership check.
+ * Use this instead of directly importing from passage db.
+ */
+export async function getOwnedPassage(userId: string, passageId: string) {
+  return findOwnedPassage(userId, passageId);
+}
+
+/**
+ * Delete passage with ownership check.
+ */
+export async function deletePassageById(passageId: string, userId: string) {
+  return deletePassage(passageId, userId);
 }

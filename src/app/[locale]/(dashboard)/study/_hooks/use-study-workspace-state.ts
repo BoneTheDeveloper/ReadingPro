@@ -11,19 +11,9 @@ import { deletePassageAction } from "@/features/passage/server/actions/passage";
 import type { PassageData } from "@/types/passage";
 import type { DocumentItem } from "@/features/upload/components/panel/sources-panel";
 
-type StudyStatus =
-  "idle" | "uploading" | "analyzing" | "ready" | "error";
-
-export interface StudyState {
-  passages: PassageData[];
-  activePassageId: string | null;
-  status: StudyStatus;
-  error: string | null;
-  uploadModalOpen: boolean;
-  artifactsByPassageId: Record<string, import("@/types/studio-artifact").ArtifactsCacheEntry>;
-  viewingArtifactByPassageId: Record<string, import("@/types/studio-artifact").ArtifactRef | null>;
-  artifactDetailById: Record<string, import("@/types/studio-artifact").ArtifactDetailCacheEntry>;
-}
+// Re-export shared type for backward compatibility
+export type { StudyState, StudyStatus } from "@/types/study-state";
+import type { StudyState } from "@/types/study-state";
 
 function getMostRecentPassageId(passages: PassageData[]): string | null {
   return (

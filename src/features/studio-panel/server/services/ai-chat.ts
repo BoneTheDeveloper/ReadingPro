@@ -4,13 +4,13 @@ import { convertToModelMessages, streamText } from "ai";
 import { prisma } from "@/lib/prisma";
 import { wrapUserText } from "@/infrastructure/ai/prompt-utils";
 import { getStudyChatModelId } from "@/infrastructure/ai/model-config";
-import { moduleLog } from "@/lib/observability/logger";
+import { moduleLog } from "@/lib/logger";
 import { NotFoundError } from "@/lib/errors";
 import {
   MAX_PASSAGE_CHARS,
   type UiMessage,
-} from "../../schemas/ai-chat";
-import { truncateToRecentTurns, extractTextContent } from "../../lib/ai-chat-utils";
+} from "@/features/studio-panel/schemas/ai-chat";
+import { truncateToRecentTurns, extractTextContent } from "@/features/studio-panel/lib/ai-chat-utils";
 
 const log = moduleLog("studio-panel:chat");
 

@@ -1,7 +1,7 @@
 import "server-only";
 import { findEntryByIdRaw } from "../db/entry-detail";
-import { buildEntryDto } from "../../schemas/dictionary";
-import { RUNTIME_STATUSES } from "../../lib/dictionary-helpers";
+import { buildEntryDto } from "@/features/dictionary/schemas/dictionary";
+import { RUNTIME_STATUSES } from "@/features/dictionary/lib/dictionary-helpers";
 import { groupLookupRows } from "./lookup";
 
 export interface EntryDetailOptions {

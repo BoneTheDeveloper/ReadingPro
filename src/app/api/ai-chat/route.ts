@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { getUserId } from "@/lib/auth/auth-server";
-import { moduleLog } from "@/lib/observability/logger";
+import { moduleLog } from "@/lib/logger";
 import {
   studyChatRequestSchema,
   type UiMessage,

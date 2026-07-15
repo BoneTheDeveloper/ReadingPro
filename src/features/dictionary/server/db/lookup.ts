@@ -1,7 +1,7 @@
 import "server-only";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
-import { RUNTIME_STATUSES } from "../../lib/dictionary-helpers";
+import { RUNTIME_STATUSES } from "@/features/dictionary/lib/dictionary-helpers";
 
 export interface LookupRawRow {
   entryId: string;

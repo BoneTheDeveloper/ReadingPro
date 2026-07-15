@@ -6,12 +6,12 @@ import { getDictionaryEntryDetail } from "../services/entry-detail";
 import {
   suggestInputSchema,
   entryDetailInputSchema,
-} from "../../schemas/dictionary";
+} from "@/features/dictionary/schemas/dictionary";
 import type {
   DictionaryEntryDto,
   DictionarySenseDto,
   DictionarySuggestItemDto,
-} from "../../schemas/dictionary";
+} from "@/features/dictionary/schemas/dictionary";
 
 /**
  * Server Action powering the as-you-type dictionary search box.
@@ -60,21 +60,23 @@ export async function getDictionaryEntryDetailAction(
 }
 
 /**
- * Bridge action: dictionary feature saves vocabulary through vocabulary feature.
+ * Bridge action: dictionary feature saves vocabulary through vocabulary service.
  * This keeps the boundary clean - hooks only call their own feature's actions.
  */
 export async function saveDictionarySenseToVocabularyAction(
   entry: DictionaryEntryDto,
   sense: DictionarySenseDto,
 ) {
+  const userId = await getUserId();
   const primary =
     sense.translations.find((t) => t.isPrimary) ?? sense.translations[0];
   if (!primary) {
     throw new Error("No primary translation found for sense");
   }
 
-  const { saveVocabularyAction } = await import("@/features/vocabulary/server/actions/vocabulary");
-  return saveVocabularyAction({
+  const { saveVocabularyItem } = await import("@/features/vocabulary");
+  return saveVocabularyItem({
+    userId,
     selectedText: entry.headword,
     translation: primary.translation,
     contextSentence: sense.example ?? undefined,

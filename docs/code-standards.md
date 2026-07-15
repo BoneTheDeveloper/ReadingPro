@@ -51,14 +51,52 @@ source of truth for *what* can import *what*. Do not restate the rules here.
 
 **Cross-feature imports:** Allowed for types/DTOs, discouraged for services (creates tight coupling).
 
+### Cross-Feature Import Rules
+
+**Unidirectional dependency:** If Feature A depends on Feature B, Feature B MUST NOT depend on Feature A.
+
+```
+✅ Valid: Reading → Dictionary (Reading can use Dictionary)
+❌ Invalid: Dictionary → Reading (circular dependency)
+```
+
+**Barrel file pattern:** Each feature exports only allowed APIs via `index.ts`:
+
+```typescript
+// ✅ Correct: Import via barrel file
+import { lookupWord, type WordLookupResult } from '@/features/dictionary';
+
+// ❌ Wrong: Deep import bypassing barrel
+import { findWordByHeadword } from '@/features/dictionary/server/db/lookup';
+```
+
+**Ownership checks:** Features MUST NOT import other feature's repositories directly. Use service methods:
+
+```typescript
+// ❌ Wrong: Cross-feature repo import
+import { findOwnedPassage } from "@/features/passage/server/db/passage";
+
+// ✅ Correct: Use service method
+import { verifyPassageOwnership } from "@/features/passage/server/services";
+```
+
+**UI Communication between features:**
+
+| Pattern | When to use | Example |
+|---------|-------------|---------|
+| **URL-driven** (best) | Features on same/different pages | `?word=apple` triggers Dictionary lookup |
+| **Page composition** | Features on same page | `page.tsx` passes props between `ReadingViewer` and `DictionarySidebar` |
+| **Global state** | Features far apart on page | `useReadingStore` with Zustand/Context |
+
 ### Anti-Patterns
 
 | Anti-Pattern | Why Wrong | Correct |
 |--------------|-----------|---------|
 | `Client → Service` | Breaks isolation, `server-only` throws at runtime | Call Action instead |
 | `Action → Repository` | Duplicates business logic, bypasses authorization | Call Service instead |
-| `Service → Service` of different feature | Tight coupling, hard to delete features | Refactor shared logic to a shared module |
-| `Repository → Service` | Circular dependency, hard to test | Repository returns raw data, Service transforms |
+| `Feature → Feature Repository` | Ownership logic lives in wrong feature | Use service method with ownership check |
+| `Circular dependency` | A → B → A breaks build and testing | Unidirectional only |
+| `Deep import bypassing barrel` | Exposes internal implementation | Use feature barrel file |
 | `DTO schema` (Zod for output) | DTOs are trusted server output, no validation needed | Use TypeScript `interface *Dto` |
 | `Response envelope` for internal APIs | Unnecessary complexity | Return data directly |
 | Inline business logic in Action/Route | Breaks single-responsibility | Move to Service |

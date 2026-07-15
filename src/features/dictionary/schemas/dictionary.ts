@@ -25,13 +25,14 @@ export const entryDetailInputSchema = z
 // OUTPUT — server returns this (DTOs)
 // =============================================================================
 
-const dictionaryTranslationStatusSchema = z.enum([
+// Note: These schemas are kept for potential future use (validation, exports)
+const _dictionaryTranslationStatusSchema = z.enum([
   "draft",
   "reviewed",
   "approved",
   "deprecated",
 ]);
-const dictionarySourceTypeSchema = z.enum([
+const _dictionarySourceTypeSchema = z.enum([
   "seed",
   "manual",
   "provider",

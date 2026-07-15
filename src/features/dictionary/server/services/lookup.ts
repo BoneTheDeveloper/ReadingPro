@@ -1,5 +1,5 @@
 import "server-only";
-import { normalizeDictionaryTerm } from "../../lib/normalize-dictionary-term";
+import { normalizeDictionaryTerm } from "@/features/dictionary/lib/normalize-dictionary-term";
 import {
   type DictionaryEntryDto,
   type DictionaryTranslationDto,

@@ -1,5 +1,5 @@
 import "server-only";
-import { normalizeDictionaryTerm } from "../../lib/normalize-dictionary-term";
+import { normalizeDictionaryTerm } from "@/features/dictionary/lib/normalize-dictionary-term";
 import { getSourceLabel } from "@/features/dictionary/lib/dictionary-helpers";
 import type { DictionarySuggestItemDto } from "@/features/dictionary/schemas/dictionary";
 import {
