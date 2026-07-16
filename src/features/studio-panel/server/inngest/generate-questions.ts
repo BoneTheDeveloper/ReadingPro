@@ -3,7 +3,7 @@
  * Async Inngest job for generating reading comprehension questions.
  */
 
-import { inngest } from "@/infrastructure/inngest";
+import { inngest } from "@/infrastructure/inngest/client";
 import { prisma } from "@/lib/prisma";
 import { step } from "inngest";
 import { generateComprehensionQuestions } from "../services/question-generator";

@@ -22,7 +22,10 @@ features/<feature>/server/inngest/
 **Root config:**
 ```
 src/
-├── infrastructure/inngest.ts   # Client + job registry
+├── infrastructure/inngest/
+│   ├── index.ts     # Barrel: exports client + functions
+│   ├── client.ts   # Inngest client singleton
+│   └── registry.ts # Job registry
 └── app/api/inngest/route.ts   # Serve endpoint
 ```
 
@@ -48,7 +51,7 @@ features/studio-panel/server/inngest/
 ## Client Configuration (v4)
 
 ```typescript
-// src/infrastructure/inngest.ts
+// src/infrastructure/inngest/client.ts
 import { Inngest } from "inngest";
 
 export const inngest = new Inngest({
@@ -338,7 +341,10 @@ export const cleanupJob = inngest.createFunction(
 
 | File | Purpose |
 |------|---------|
-| `src/infrastructure/inngest.ts` | Client singleton + job registry |
+| `src/infrastructure/inngest/` | Inngest infrastructure folder |
+| `src/infrastructure/inngest/client.ts` | Client singleton |
+| `src/infrastructure/inngest/registry.ts` | Job registry |
+| `src/infrastructure/inngest/index.ts` | Barrel export |
 | `src/app/api/inngest/route.ts` | HTTP endpoint for Inngest |
 | `features/*/server/inngest/*.ts` | Feature-owned jobs + events |
 
@@ -349,8 +355,3 @@ export const cleanupJob = inngest.createFunction(
 | Inngest Dashboard | Step timing, retries, failures |
 | `moduleLog` in services | Feature-specific logs |
 | Sentry | Error aggregation |
-
-## Related Docs
-
-- [ai-infrastructure.md](./ai-infrastructure.md) — AI + Inngest layer separation
-- [observability.md](./observability.md) — Logging + tracing

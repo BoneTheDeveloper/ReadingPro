@@ -4,42 +4,117 @@
 
 Implemented.
 
-## Current Structure
+## Overview
+
+AI infrastructure provides unified access to OpenAI models with observability, sandboxing, and tracing.
+
+## Structure
 
 ```
-src/infrastructure/
-├── ai/index.ts        # Unified AI infrastructure
-└── inngest.ts   # Inngest client + job registry
+src/infrastructure/ai/
+└── index.ts     # All AI exports
 ```
 
-### ai — Unified AI Exports
+## Client
 
 ```typescript
-// All from one place
-import { openai, getModel, MODELS, withAITrace, wrapUserText } from "@/infrastructure/ai";
+import { openai } from "@/infrastructure/ai";
 ```
 
-**Exports:**
-| Export | Purpose |
-|--------|---------|
-| `openai` | OpenAI SDK client |
-| `getModel(purpose)` | Get model ID by purpose (`chat`, `structured`) |
-| `MODELS` | Model registry constant |
-| `withAITrace(ctx, fn)` | Wrap AI calls with logging + Sentry |
-| `wrapUserText(text)` | Sandbox user-provided text |
+## Exports
 
-### inngest — Unified Inngest Exports
+| Export | Type | Purpose |
+|--------|------|---------|
+| `openai` | Client | OpenAI SDK client |
+| `getModel(purpose)` | Function | Get model ID by purpose |
+| `MODELS` | Constant | Model registry |
+| `withAITrace(ctx, fn)` | Wrapper | AI calls with logging + Sentry |
+| `wrapUserText(text)` | Sanitizer | Sandbox user-provided text |
+
+## Model Registry
 
 ```typescript
-// All from one place
-import { inngest, inngestFunctions } from "@/infrastructure/inngest";
+export const MODELS = {
+  chat: {
+    id: "gpt-4o-mini",
+    maxTokens: 16384,
+  },
+  structured: {
+    id: "gpt-4o-mini",
+    maxTokens: 8192,
+  },
+} as const;
 ```
 
-**Exports:**
-| Export | Purpose |
-|--------|---------|
-| `inngest` | Inngest client singleton |
-| `inngestFunctions` | Registry of all feature jobs |
+**Usage:**
+
+```typescript
+import { getModel } from "@/infrastructure/ai";
+
+const modelId = getModel("chat"); // "gpt-4o-mini"
+const modelId = getModel("structured"); // "gpt-4o-mini"
+```
+
+---
+
+## Routes & Connectors
+
+### Route: AI Chat (Streaming)
+
+```
+Client → Server Action → OpenAI Stream → Client
+```
+
+```typescript
+// features/<f>/server/services/ai-chat.ts
+import { openai } from "@/infrastructure/ai";
+import { streamText } from "ai";
+
+export async function chatStream(messages: Message[]) {
+  const result = streamText({
+    model: openai("gpt-4o-mini"),
+    messages,
+    system: "You are a helpful assistant.",
+  });
+
+  return result.toDataStreamResponse();
+}
+```
+
+### Route: Structured Output (Inngest Jobs)
+
+```
+Server Action → inngest.send() → Inngest → AI (structured) → DB
+```
+
+```typescript
+// features/<f>/server/services/question-generator.ts
+import { openai, withAITrace } from "@/infrastructure/ai";
+import { generateObject } from "ai";
+
+export async function generateQuestions(content: string, count: number) {
+  return withAITrace(
+    { operation: "generate-questions", feature: "studio-panel", model: "gpt-4o-mini" },
+    () =>
+      generateObject({
+        model: openai("gpt-4o-mini"),
+        schema: questionsSchema,
+        prompt: `Generate ${count} questions about: ${content}`,
+      })
+  );
+}
+```
+
+### Connector: User Text Sandboxing
+
+Always wrap user input before sending to AI:
+
+```typescript
+import { wrapUserText } from "@/infrastructure/ai";
+
+const safePrompt = wrapUserText(userText, "user_content");
+// Use safePrompt in AI calls
+```
 
 ---
 
@@ -47,23 +122,19 @@ import { inngest, inngestFunctions } from "@/infrastructure/inngest";
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  Feature Code                                               │
-│  (studio-panel, upload)                                     │
-├─────────────────────────────────────────────────────────────┤
-│  Orchestration Layer (Inngest)                             │
-│  → Owns workflow, retries, fan-out, result delivery        │
-│  → May call AI infra multiple times per job                │
-│  → NOT aware of AI internals                               │
+│  Feature Services                                           │
+│  (ai-chat.ts, question-generator.ts)                       │
+│  → Use AI infra with wrappers                               │
 ├─────────────────────────────────────────────────────────────┤
 │  AI Infrastructure Layer                                    │
-│  → Pure functions: make AI calls with observability        │
-│  → No side effects, no job awareness                        │
+│  (@/infrastructure/ai)                                     │
+│  → Client, models, tracing, sandboxing                     │
 ├─────────────────────────────────────────────────────────────┤
-│  External AI Providers (OpenAI)                            │
+│  External AI Providers (OpenAI)                             │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-**Rule:** AI infra knows nothing about Inngest. Inngest knows about AI infra.
+**Rule:** AI infra knows nothing about features. Features know about AI infra.
 
 ---
 
@@ -77,7 +148,7 @@ features/studio-panel/server/
 │   ├── ai-chat.ts              # Chat streaming (sync AI)
 │   └── question-generator.ts    # Structured generation (async job)
 └── inngest/
-    └── generate-questions.ts   # Inngest job
+    └── generate-questions.ts   # Inngest job → calls question-generator.ts
 ```
 
 ### upload
@@ -88,8 +159,7 @@ features/upload/server/
 │   ├── cefr-detector.ts       # AI CEFR detection
 │   └── vocabulary-extractor.ts # AI vocabulary extraction
 └── inngest/
-    ├── events.ts              # Event definitions
-    └── process-upload.ts      # Inngest job
+    └── process-upload.ts      # Inngest job → calls analyzers
 ```
 
 ---
@@ -98,23 +168,22 @@ features/upload/server/
 
 | Context | Import from |
 |---------|-------------|
-| Services (sync AI) | `"ai"` (SDK) + `@/infrastructure/ai` |
-| Jobs (async workflow) | `"inngest"` (SDK) + `@/infrastructure/inngest` |
-| Actions (send events) | `@/infrastructure/inngest` |
-| API routes | `"inngest/next"` + `@/infrastructure/inngest` |
+| Streaming chat | `@/infrastructure/ai` + `ai` SDK |
+| Structured generation | `@/infrastructure/ai` + `ai` SDK |
+| User text sandboxing | `@/infrastructure/ai` |
 
 ---
 
 ## Tracing Strategy
 
-### Manual (in services)
+### withAITrace()
 
-Use `withAITrace()` for expensive operations only:
+Wrap expensive operations for logging + Sentry:
 
 ```typescript
 // Good — expensive structured generation
 await withAITrace(
-  { operation: "generate-questions", feature: "studio-panel", model: getModel("structured") },
+  { operation: "generate-questions", feature: "studio-panel", model: "gpt-4o-mini" },
   () => generateObject({ ... })
 );
 
@@ -122,19 +191,19 @@ await withAITrace(
 streamText({ ... });
 ```
 
-### Inngest (for jobs)
-
-Inngest provides built-in step-level tracing in dashboard. No extra setup needed.
-
 ---
 
 ## Observability
 
-| Layer | Tool | What it captures |
-|-------|------|-----------------|
-| Services | Pino (`moduleLog`) | Feature-specific logs |
-| Services | Sentry | Error aggregation |
-| Jobs | Inngest Dashboard | Step timing, retries, failures |
-| All | Sentry | Cross-cutting errors |
+| Layer | Tool | What |
+|-------|------|------|
+| AI Calls | Pino (`moduleLog`) | Feature-specific logs |
+| AI Errors | Sentry | Error aggregation with AI tags |
+| Structured Jobs | Inngest Dashboard | Step timing, retries |
 
 ---
+
+## Related Docs
+
+- [inngest-architecture.md](./inngest-architecture.md) — Inngest async jobs
+- [observability.md](./observability.md) — Logging + tracing
