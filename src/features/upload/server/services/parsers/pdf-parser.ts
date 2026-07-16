@@ -38,15 +38,3 @@ export async function parsePDF(buffer: Buffer): Promise<ParsedPDF> {
   }
 }
 
-export function extractTitleFromPDF(pdf: ParsedPDF, filename: string): string {
-  if (pdf.metadata?.title) {
-    return pdf.metadata.title;
-  }
-
-  const firstLine = pdf.text.split('\n')[0];
-  if (firstLine && firstLine.length < 100 && firstLine.length > 3) {
-    return firstLine;
-  }
-
-  return filename.replace('.pdf', '').replace(/[_-]/g, ' ');
-}

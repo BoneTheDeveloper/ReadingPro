@@ -7,9 +7,9 @@ import { generateObject } from "ai";
 import { openai, getModel, withAITrace } from "@/infrastructure/ai";
 import { z } from "zod";
 
-export type CEFRLevel = "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
+type CEFRLevel = "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
 
-export interface CefrResult {
+interface CefrResult {
   cefrLevel: CEFRLevel;
 }
 

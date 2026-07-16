@@ -12,7 +12,6 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "lint": "eslint",
-    "deadcode": "knip",
     "postinstall": "prisma generate --generator client",
     "db:generate": "prisma generate --generator client",
     "db:seed:dictionary": "tsx prisma/seed.ts",

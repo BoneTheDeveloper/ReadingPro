@@ -13,7 +13,7 @@ import { z } from "zod";
 export const uploadSourceTypeSchema = z.enum(["paste", "txt", "pdf", "youtube"]);
 
 /** File uploads are the subset that carry a binary file (derived, not re-typed). */
-export const fileSourceTypeSchema = uploadSourceTypeSchema.extract(["txt", "pdf"]);
+const fileSourceTypeSchema = uploadSourceTypeSchema.extract(["txt", "pdf"]);
 
 /** `uploadFileAction` FormData fields (parsed after the File itself). */
 export const uploadFileRequestSchema = z

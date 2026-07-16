@@ -150,56 +150,7 @@ export function validateTextContent(text: string): FileValidationResult {
 /**
  * Sanitize and validate filename
  */
-export function sanitizeFilename(
-  name: string
-): FileValidationResult & { sanitized?: string } {
-  if (name.length > UPLOAD_CONFIG.MAX_FILENAME_LENGTH) {
-    return {
-      valid: false,
-      error: UPLOAD_CONFIG.ERROR_MESSAGES.FILENAME_TOO_LONG,
-    };
-  }
-
-  const sanitized = name.replace(/[^a-zA-Z0-9._-]/g, "_");
-
-  if (!sanitized || sanitized === "." || sanitized === "..") {
-    return {
-      valid: false,
-      error: UPLOAD_CONFIG.ERROR_MESSAGES.INVALID_FILENAME,
-    };
-  }
-
-  if (
-    sanitized.includes("..") ||
-    sanitized.startsWith("/") ||
-    sanitized.startsWith("\\")
-  ) {
-    return {
-      valid: false,
-      error: UPLOAD_CONFIG.ERROR_MESSAGES.INVALID_FILENAME,
-    };
-  }
-
-  return { valid: true, sanitized };
-}
 
 // ============ UTILITIES ============
 
-export function formatFileSize(bytes: number): string {
-  if (bytes === 0) return "0 Bytes";
-  const k = 1024;
-  const sizes = ["Bytes", "KB", "MB", "GB"];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
-}
 
-export function sanitizeTitle(name: string): string {
-  return (
-    name
-      .replace(/\.[^/.]+$/, "")
-      .replace(/[^a-zA-Z0-9\s'-]/g, "")
-      .replace(/[_-]+/g, " ")
-      .trim()
-      .slice(0, 200) || "Untitled"
-  );
-}

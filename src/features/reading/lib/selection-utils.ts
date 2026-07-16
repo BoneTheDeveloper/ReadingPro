@@ -69,7 +69,7 @@ export function extractSelectionInfo({
   };
 }
 
-export function calculateCursorActionRect(
+function calculateCursorActionRect(
   cursorPoint: SelectionPoint,
 ): SelectionRect {
   return {
@@ -80,7 +80,7 @@ export function calculateCursorActionRect(
   };
 }
 
-export function calculateSelectionActionRect(input: {
+function calculateSelectionActionRect(input: {
   selectionRect: SelectionRect;
   clientRects: SelectionRect[];
   isBackward: boolean;

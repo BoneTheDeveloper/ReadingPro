@@ -53,10 +53,6 @@ export async function uploadFile(
 /**
  * Delete a file from storage.
  */
-export async function deleteFile(pathname: string): Promise<boolean> {
-  const adapter = await getAdapter();
-  return adapter.deleteFile(pathname);
-}
 
 /**
  * Get a URL for viewing a file (inline).
@@ -69,15 +65,6 @@ export async function getViewableUrl(pathname: string): Promise<string | null> {
 /**
  * Get a URL for downloading a file.
  */
-export async function getDownloadUrl(pathname: string): Promise<string | null> {
-  const adapter = await getAdapter();
-  return adapter.getDownloadUrl(pathname);
-}
-
-/**
- * Alias for getViewableUrl for backward compatibility.
- */
-export const getSignedUrl = getViewableUrl;
 
 /**
  * Download a stored file's raw bytes for processing.
@@ -90,6 +77,3 @@ export async function downloadFile(pathname: string): Promise<Buffer | null> {
 /**
  * Check which storage provider is active.
  */
-export function getStorageProvider(): "local" | "blob" {
-  return process.env.STORAGE_PROVIDER === "local" ? "local" : "blob";
-}

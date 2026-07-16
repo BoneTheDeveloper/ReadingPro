@@ -5,11 +5,10 @@ import {
   VocabularySetType,
 } from "@/generated/prisma/enums";
 
-export { VocabularyStatus, VocabularySourceType, VocabularySetType } from "@/generated/prisma/enums";
+export { VocabularyStatus, VocabularySetType } from "@/generated/prisma/enums";
 
-export const vocabularyStatusSchema = z.nativeEnum(VocabularyStatus);
-export const vocabularySourceSchema = z.nativeEnum(VocabularySourceType);
-export const vocabularySetTypeSchema = z.nativeEnum(VocabularySetType);
+const vocabularyStatusSchema = z.nativeEnum(VocabularyStatus);
+const vocabularySourceSchema = z.nativeEnum(VocabularySourceType);
 
 // =============================================================================
 // INPUT — client sends this (validated in actions)
@@ -80,7 +79,7 @@ export const removeItemFromVocabularySetInputSchema = z
 // OUTPUT — server returns this (DTOs)
 // =============================================================================
 
-export interface VocabularyOccurrenceDto {
+interface VocabularyOccurrenceDto {
   id: string;
   vocabularyItemId: string;
   sourceId: string | null;
@@ -123,13 +122,6 @@ export interface VocabularyStatsDto {
   new: number;
   learning: number;
   known: number;
-}
-
-export interface VocabularyListDto {
-  items: VocabularyItemDto[];
-  total: number;
-  page: number;
-  pageSize: number;
 }
 
 // =============================================================================
@@ -213,19 +205,5 @@ export function toVocabularySetDto(model: VocabularySetModel): VocabularySetDto 
     createdAt: model.createdAt.toISOString(),
     updatedAt: model.updatedAt.toISOString(),
     _count: { setItems: model._count.setItems },
-  };
-}
-
-export function toVocabularyListDto(
-  items: VocabularyItemModel[],
-  total: number,
-  page: number,
-  pageSize: number,
-): VocabularyListDto {
-  return {
-    items: items.map(toVocabularyItemDto),
-    total,
-    page,
-    pageSize,
   };
 }

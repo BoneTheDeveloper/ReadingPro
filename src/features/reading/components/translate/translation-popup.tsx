@@ -27,7 +27,7 @@ const VIEWPORT_MARGIN = 8;
 const ICON_VIEWPORT_PADDING = 40;
 const CURSOR_ICON_OFFSET = 6;
 
-export function calculateStudyTranslationPopupPosition(input: {
+function calculateStudyTranslationPopupPosition(input: {
   selectionRect: TranslationSelection["selectionRect"];
   viewportWidth: number;
   viewportHeight: number;
@@ -67,7 +67,7 @@ export function calculateStudyTranslationPopupPosition(input: {
   };
 }
 
-export function calculateStudyTranslationIconPosition(input: {
+function calculateStudyTranslationIconPosition(input: {
   selectionRect: TranslationSelection["selectionRect"];
   actionRect?: TranslationSelection["actionRect"];
   viewportWidth: number;

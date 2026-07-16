@@ -25,21 +25,6 @@ export const entryDetailInputSchema = z
 // OUTPUT — server returns this (DTOs)
 // =============================================================================
 
-// Note: These schemas are kept for potential future use (validation, exports)
-export const dictionaryTranslationStatusSchema = z.enum([
-  "draft",
-  "reviewed",
-  "approved",
-  "deprecated",
-]);
-export const dictionarySourceTypeSchema = z.enum([
-  "seed",
-  "manual",
-  "provider",
-  "llm",
-  "mixed",
-]);
-
 export interface DictionaryTranslationDto {
   id: string;
   senseId: string;
@@ -48,8 +33,8 @@ export interface DictionaryTranslationDto {
   isPrimary: boolean;
   rank: number;
   confidence: number | null;
-  status: z.infer<typeof dictionaryTranslationStatusSchema>;
-  sourceType: z.infer<typeof dictionarySourceTypeSchema>;
+  status: string;
+  sourceType: string;
   sourceName: string | null;
   reviewedAt: string | null;
   sourceLabel: string;
@@ -79,16 +64,6 @@ export interface DictionarySuggestItemDto {
   matchType: "exact" | "alias" | "prefix" | "phrase";
   matchedAlias: string | null;
   primaryTranslation: string | null;
-  sourceLabel: string | null;
-}
-
-export interface DictionarySearchResultDto {
-  id: string;
-  headword: string;
-  matchType: "exact" | "alias" | "phrase" | "prefix" | "contains";
-  matchedText: string | null;
-  primaryTranslation: string | null;
-  partOfSpeech: string | null;
   sourceLabel: string | null;
 }
 
@@ -154,7 +129,7 @@ export function buildEntryDto(
   };
 }
 
-export function toTranslationDto(t: {
+function toTranslationDto(t: {
   id: string;
   senseId: string;
   targetLanguage: string;

@@ -14,7 +14,7 @@ import {
 } from "../db/studio-artifacts";
 
 // Simple factory for artifact not found errors
-export function artifactNotFound(artifactId: string): Error {
+function artifactNotFound(artifactId: string): Error {
   return new Error(`Artifact not found or access denied: ${artifactId}`);
 }
 

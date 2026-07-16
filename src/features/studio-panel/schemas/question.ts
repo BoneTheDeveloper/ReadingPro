@@ -15,7 +15,7 @@ export const generateStudioQuestionsInputSchema = z
 // SHARED — used by AI generation and DB persistence
 // =============================================================================
 
-export const questionOptionSchema = z
+const questionOptionSchema = z
   .object({
     id: z.string(),
     text: z.string(),
@@ -26,7 +26,7 @@ export const questionOptionSchema = z
 // AI GENERATION — validates AI output (not a DTO, internal validation)
 // =============================================================================
 
-export const generatedQuestionSchema = z
+const generatedQuestionSchema = z
   .object({
     questionText: z.string(),
     options: z.array(questionOptionSchema).min(2),

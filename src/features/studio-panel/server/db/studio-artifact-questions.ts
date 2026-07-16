@@ -3,21 +3,7 @@ import { Prisma } from "@/generated/prisma/client";
 import { QuestionType } from "@/generated/prisma/enums";
 import { prisma } from "@/lib/prisma";
 
-export async function getPassageWithQuestions(
-  passageId: string,
-  userId: string,
-) {
-  return prisma.passage.findUnique({
-    where: { id: passageId, userId, deletedAt: null },
-    include: { questions: true },
-  });
-}
 
-export async function createQuestion(data: Prisma.QuestionUncheckedCreateInput) {
-  return prisma.question.create({
-    data,
-  });
-}
 
 export async function findExistingStudioArtifact(
   artifactId: string,

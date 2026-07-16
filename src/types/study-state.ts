@@ -4,7 +4,7 @@
 import type { PassageData } from "./passage";
 import type { ArtifactsCacheEntry, ArtifactRef, ArtifactDetailCacheEntry } from "./studio-artifact";
 
-export type StudyStatus =
+type StudyStatus =
   | "idle"
   | "uploading"
   | "analyzing"

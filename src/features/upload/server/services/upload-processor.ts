@@ -30,14 +30,6 @@ export interface AnalysisResult {
   topics: string[];
 }
 
-export interface ProcessedContent {
-  content: string;
-  wordCount: number;
-  passageSourceType: "TEXT" | "PDF";
-  cefrLevel: string;
-  vocabulary: string[];
-  topics: string[];
-}
 
 // ---------- Pipeline Steps ----------
 
@@ -45,33 +37,6 @@ export interface ProcessedContent {
  * Resolve text from upload source.
  * This is I/O-bound (file download) — retry is cheap.
  */
-export async function resolveText(
-  sourceType: string,
-  text: string | undefined,
-  blobPath: string | undefined
-): Promise<string> {
-  switch (sourceType) {
-    case "paste":
-      return text ?? "";
-
-    case "txt":
-    case "pdf": {
-      // blobPath download is done in the Inngest step
-      // This function just returns the already-downloaded content
-      if (!blobPath) {
-        throw new Error(`Missing blobPath for ${sourceType} upload`);
-      }
-      // Content should be passed from the step that downloaded it
-      return text ?? "";
-    }
-
-    case "youtube":
-      throw new Error("YouTube upload not implemented");
-
-    default:
-      throw new Error(`Unsupported sourceType: ${sourceType}`);
-  }
-}
 
 /**
  * Normalize text based on source type.
@@ -128,31 +93,3 @@ export function sourceTypeToPassageSourceType(
  * Convenience function that orchestrates all pipeline steps.
  * Use this for simple cases; for Inngest, call individual steps.
  */
-export async function processUpload(
-  input: UploadProcessorInput,
-  resolvedText: string
-): Promise<ProcessedContent> {
-  // Validate
-  if (!resolvedText.trim()) {
-    throw new Error("Resolved text is empty");
-  }
-
-  // Normalize
-  const normalized = await normalizeTextPipeline(resolvedText, input.sourceType);
-
-  // Analyze
-  const analysis = await analyzeContent(normalized);
-
-  // Compute
-  const wordCount = computeWordCount(normalized);
-  const passageSourceType = sourceTypeToPassageSourceType(input.sourceType);
-
-  return {
-    content: normalized,
-    wordCount,
-    passageSourceType,
-    cefrLevel: analysis.cefrLevel,
-    vocabulary: analysis.vocabulary,
-    topics: analysis.topics,
-  };
-}

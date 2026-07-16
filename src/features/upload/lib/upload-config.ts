@@ -33,6 +33,3 @@ export const UPLOAD_CONFIG = {
     INVALID_FILENAME: "Invalid filename.",
   },
 } as const;
-
-// Type exports for convenience
-export type AllowedMimeType = (typeof UPLOAD_CONFIG.ALLOWED_MIME_TYPES)[number];

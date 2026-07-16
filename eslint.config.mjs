@@ -424,18 +424,6 @@ export default defineConfig([
           ],
         },
       ],
-
-      // =======================================================================
-      // RULE 4: Allow underscore-prefixed unused variables (placeholder patterns)
-      // =======================================================================
-      "@typescript-eslint/no-unused-vars": [
-        "warn",
-        {
-          argsIgnorePattern: "^_",
-          varsIgnorePattern: "^_",
-          caughtErrorsIgnorePattern: "^_",
-        },
-      ],
     },
   },
 ]);

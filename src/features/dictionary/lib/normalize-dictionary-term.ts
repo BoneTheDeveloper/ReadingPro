@@ -12,11 +12,3 @@ export function escapeLikeWildcards(value: string): string {
     .replace(/%/g, "\\%")
     .replace(/_/g, "\\_");
 }
-
-export function buildDictionaryKey(input: {
-  normalizedTerm: string;
-  sourceLanguage: string;
-  targetLanguage: string;
-}): string {
-  return `${input.sourceLanguage}:${input.targetLanguage}:${input.normalizedTerm}`;
-}

@@ -3,9 +3,9 @@
 
 export type StudioArtifactType = "quiz" | "flashcard";
 export type StudioArtifactStatus = "generating" | "done" | "failed";
-export type ArtifactsCacheStatus = "idle" | "loading" | "success" | "error";
+type ArtifactsCacheStatus = "idle" | "loading" | "success" | "error";
 
-export interface QuizResult {
+interface QuizResult {
   completedAt: string;
   correctCount: number;
   totalQuestions: number;
@@ -34,7 +34,7 @@ export type StudioArtifactErrorCode =
   | "PASSAGE_NOT_FOUND"
   | "UNKNOWN";
 
-export interface GeneratedStudyQuestionDto {
+interface GeneratedStudyQuestionDto {
   id: string;
   number: number;
   questionText: string;

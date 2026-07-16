@@ -15,8 +15,9 @@
 Use the smallest relevant verification:
 
 ```bash
-pnpm run typecheck
-pnpm run lint
+pnpm typecheck
+pnpm lint
+pnpm knip
 ```
 ## Working Rules
 

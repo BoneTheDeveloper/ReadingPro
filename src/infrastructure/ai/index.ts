@@ -15,7 +15,7 @@ import * as Sentry from "@sentry/nextjs";
 // Model Registry
 // ============================================================================
 
-export const MODELS = {
+const MODELS = {
   chat: {
     id: "gpt-4o-mini",
     maxTokens: 16384,

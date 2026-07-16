@@ -12,7 +12,7 @@ import type { PassageData } from "@/types/passage";
 import type { DocumentItem } from "@/features/upload/components/panel/sources-panel";
 
 // Re-export shared type for backward compatibility
-export type { StudyState, StudyStatus } from "@/types/study-state";
+export type { StudyState } from "@/types/study-state";
 import type { StudyState } from "@/types/study-state";
 
 function getMostRecentPassageId(passages: PassageData[]): string | null {

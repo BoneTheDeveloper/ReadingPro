@@ -35,12 +35,6 @@ export function buildTranslationCacheKey(input: TranslationKeyInput) {
   });
 }
 
-export async function getTranslationCache(cacheKey: string) {
-  return prisma.translationCache.findUnique({
-    where: { cacheKey },
-    select: { provider: true, response: true },
-  });
-}
 
 export async function upsertTranslationCache(input: TranslationCacheInput) {
   const cacheKey = buildTranslationCacheKey(input);

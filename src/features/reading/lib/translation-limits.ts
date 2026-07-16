@@ -1,5 +1,5 @@
-export const MAX_TRANSLATE_TEXT_LENGTH = 500;
-export const MAX_TRANSLATE_CONTEXT_LENGTH = 4000;
+const MAX_TRANSLATE_TEXT_LENGTH = 500;
+const MAX_TRANSLATE_CONTEXT_LENGTH = 4000;
 
 export function isTranslateTextWithinLimit(
   text: string,

@@ -7,9 +7,6 @@ export {
   type StudioArtifactStatus,
   type StudioArtifactErrorCode,
   type ArtifactsCacheEntry,
-  type ArtifactsCacheStatus,
   type ArtifactRef,
   type ArtifactDetailCacheEntry,
-  type QuizResult,
-  type GeneratedStudyQuestionDto,
 } from "@/types/studio-artifact";
