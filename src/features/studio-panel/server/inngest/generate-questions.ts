@@ -7,8 +7,7 @@ import { inngest } from "@/infrastructure/inngest";
 import { prisma } from "@/lib/prisma";
 import { step } from "inngest";
 import { generateComprehensionQuestions } from "../services/question-generator";
-
-export const GENERATE_QUESTIONS_EVENT = "studio/questions.generate";
+import { GENERATE_QUESTIONS_EVENT, type GenerateQuestionsEventData } from "./events";
 
 export const generateQuestionsJob = inngest.createFunction(
   {
@@ -16,7 +15,7 @@ export const generateQuestionsJob = inngest.createFunction(
     name: "Generate Questions",
     triggers: [{ event: GENERATE_QUESTIONS_EVENT }],
   },
-  async ({ event }: { event: { data: { passageId: string; userId: string; questionCount?: number } } }) => {
+  async ({ event }: { event: { data: GenerateQuestionsEventData } }) => {
     const { passageId, userId, questionCount = 5 } = event.data;
 
     // Step 1: Get passage content
