@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
 
-const LOCAL_STORAGE_DIR = path.join(process.cwd(), "tmp", "uploads");
+const LOCAL_STORAGE_DIR = path.join(process.cwd(), "tmp");
 
 export async function GET(
   request: NextRequest,

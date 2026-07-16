@@ -12,7 +12,8 @@ import { moduleLog } from "@/lib/logger";
 const log = moduleLog("storage:local");
 
 // Local storage directory - relative to project root
-const LOCAL_STORAGE_DIR = path.join(process.cwd(), "tmp", "uploads");
+// Filename already includes path structure (e.g., "uploads/userId/file.pdf")
+const LOCAL_STORAGE_DIR = path.join(process.cwd(), "tmp");
 
 export interface StorageResult {
   url: string;
@@ -77,11 +78,11 @@ export async function deleteFile(pathname: string): Promise<boolean> {
 }
 
 /**
- * Get the pathname (local files don't need special URLs).
+ * Get the URL for viewing a file.
  */
 export async function getViewableUrl(pathname: string): Promise<string | null> {
-  // Return the pathname - API route will serve the file
-  return pathname;
+  // Return the API route path - local storage serves files via /api/storage/
+  return `/api/storage/${pathname}`;
 }
 
 /**
@@ -93,7 +94,7 @@ export const getSignedUrl = getViewableUrl;
  * Get download URL (same as viewable for local).
  */
 export async function getDownloadUrl(pathname: string): Promise<string | null> {
-  return pathname;
+  return `/api/storage/${pathname}`;
 }
 
 /**

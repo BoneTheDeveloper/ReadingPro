@@ -12,6 +12,7 @@ import type { PassageData } from "@/types/passage";
 import type { TranslationSelection } from "@/features/reading/schemas/translation";
 import { extractSelectionInfo } from "@/features/reading/lib/selection-utils";
 import { getPassageSourceUrlAction } from "@/features/passage/server/actions/passage";
+import { PdfViewer } from "@/components/ui/pdf-viewer";
 
 type ViewMode = "source" | "passage";
 
@@ -193,10 +194,9 @@ export function ContentPanel({
                 <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
               </div>
             ) : sourceUrl ? (
-              <iframe
-                src={sourceUrl}
-                className="w-full h-full min-h-[60vh] border-0 rounded-md"
-                title={`Original PDF: ${passage.title}`}
+              <PdfViewer
+                url={sourceUrl}
+                className="min-h-[60vh]"
               />
             ) : (
               <div className="flex-1 flex items-center justify-center">
