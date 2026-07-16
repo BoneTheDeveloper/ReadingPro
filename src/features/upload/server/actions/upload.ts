@@ -4,7 +4,7 @@ import { z } from "zod";
 import { getUserId } from "@/lib/auth/auth-server";
 import { prisma } from "@/lib/prisma";
 import { inngest } from "@/infrastructure/inngest";
-import { createUploadProcessEvent } from "@/features/upload/server/jobs/events";
+import { createUploadProcessEvent } from "@/features/upload/server/inngest/events";
 import { uploadFile } from "@/infrastructure/storage";
 import {
   validateFile,

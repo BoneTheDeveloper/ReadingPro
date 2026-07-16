@@ -76,7 +76,7 @@ features/studio-panel/server/
 ├── services/
 │   ├── ai-chat.ts              # Chat streaming (sync AI)
 │   └── question-generator.ts    # Structured generation (async job)
-└── jobs/
+└── inngest/
     └── generate-questions.ts   # Inngest job
 ```
 
@@ -87,7 +87,7 @@ features/upload/server/
 ├── services/analyzers/
 │   ├── cefr-detector.ts       # AI CEFR detection
 │   └── vocabulary-extractor.ts # AI vocabulary extraction
-└── jobs/
+└── inngest/
     ├── events.ts              # Event definitions
     └── process-upload.ts      # Inngest job
 ```

@@ -8,8 +8,8 @@
  */
 
 import { Inngest } from "inngest";
-import { uploadJobs } from "@/features/upload/server/jobs";
-import { studioPanelJobs } from "@/features/studio-panel/server/jobs";
+import { uploadJobs } from "@/features/upload/server/inngest";
+import { studioPanelJobs } from "@/features/studio-panel/server/inngest";
 
 // ============================================================================
 // Inngest Client

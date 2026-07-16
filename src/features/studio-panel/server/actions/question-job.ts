@@ -1,7 +1,7 @@
 "use server";
 
 import { inngest } from "@/infrastructure/inngest";
-import { GENERATE_QUESTIONS_EVENT } from "../jobs/generate-questions";
+import { GENERATE_QUESTIONS_EVENT } from "../inngest/generate-questions";
 
 export async function requestQuestionGeneration(params: {
   passageId: string;
