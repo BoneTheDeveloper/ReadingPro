@@ -140,8 +140,13 @@ export function UploadZone({
               )}
             >
               <span className="flex items-center gap-1.5">
+                  <FileText className="w-4 h-4" />
+                  .txt
+                </span>
+              <span className="text-border">|</span>
+              <span className="flex items-center gap-1.5">
                 <FileText className="w-4 h-4" />
-                {UPLOAD_CONFIG.ALLOWED_EXTENSIONS.join(", ")}
+                .pdf
               </span>
               <span className="text-border">|</span>
               <span>

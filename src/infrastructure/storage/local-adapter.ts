@@ -85,10 +85,6 @@ export async function getViewableUrl(pathname: string): Promise<string | null> {
   return `/api/storage/${pathname}`;
 }
 
-/**
- * Alias for getViewableUrl.
- */
-export const getSignedUrl = getViewableUrl;
 
 /**
  * Get download URL (same as viewable for local).

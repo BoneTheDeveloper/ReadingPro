@@ -12,7 +12,7 @@ import type { PassageData } from "@/types/passage";
 import type { TranslationSelection } from "@/features/reading/schemas/translation";
 import { extractSelectionInfo } from "@/features/reading/lib/selection-utils";
 import { getPassageSourceUrlAction } from "@/features/passage/server/actions/passage";
-import { PdfViewer } from "@/components/ui/pdf-viewer";
+import { PdfViewer } from "./pdf-viewer";
 
 type ViewMode = "source" | "passage";
 
@@ -176,6 +176,7 @@ export function ContentPanel({
               {
                 value: "source",
                 label: t("source"),
+                disabled: passage.sourceType === "TEXT",
               },
             ]}
           />
@@ -254,7 +255,7 @@ function SegmentedToggle<T extends string>({
 }: {
   value: T;
   onChange: (next: T) => void;
-  options: { value: T; label: string }[];
+  options: { value: T; label: string; disabled?: boolean }[];
 }) {
   return (
     <div className="inline-flex bg-paper border border-border p-[3px]">
@@ -264,12 +265,15 @@ function SegmentedToggle<T extends string>({
           <button
             key={opt.value}
             type="button"
-            onClick={() => onChange(opt.value)}
+            onClick={() => !opt.disabled && onChange(opt.value)}
+            disabled={opt.disabled}
             className={cn(
               "px-3.5 py-1.5 text-xs font-semibold transition-all",
               active
                 ? "bg-surface text-primary shadow-sm"
-                : "text-muted-foreground hover:text-foreground",
+                : opt.disabled
+                  ? "text-muted-foreground/40 cursor-not-allowed"
+                  : "text-muted-foreground hover:text-foreground",
             )}
           >
             {opt.label}

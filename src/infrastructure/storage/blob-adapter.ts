@@ -77,10 +77,6 @@ export async function getDownloadUrl(pathname: string): Promise<string | null> {
   }
 }
 
-/**
- * Alias for getViewableUrl.
- */
-export const getSignedUrl = getViewableUrl;
 
 /**
  * Download a stored file's raw bytes for processing.

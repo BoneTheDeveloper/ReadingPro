@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { AuthControls } from "./auth-controls";
 import { SettingsModal } from "@/components/layout/settings-modal";
 import { useTranslations } from "next-intl";
-import { useTheme } from "@/components/provider/theme-provider";
+import { useTheme } from "@/components/providers/theme-provider";
 import { useSyncExternalStore } from "react";
 
 // App shell per design.md §8:
