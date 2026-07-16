@@ -13,6 +13,7 @@ export async function listUserPassages(userId: string): Promise<PassageData[]> {
     wordCount: p.wordCount,
     createdAt: p.createdAt.getTime(),
     sourceType: p.sourceType,
+    filePath: p.filePath,
   }));
 }
 

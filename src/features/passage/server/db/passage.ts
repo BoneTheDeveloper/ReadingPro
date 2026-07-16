@@ -5,6 +5,16 @@ export async function getUserPassages(userId: string) {
   return prisma.passage.findMany({
     where: { userId, deletedAt: null },
     orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      title: true,
+      content: true,
+      cefrLevel: true,
+      wordCount: true,
+      createdAt: true,
+      sourceType: true,
+      filePath: true,
+    },
   });
 }
 

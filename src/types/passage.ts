@@ -11,6 +11,7 @@ export interface PassageData {
   wordCount: number;
   createdAt: number;
   sourceType: SourceType;
+  filePath: string | null;
   status?: "processing" | "ready";
 }
 
@@ -23,6 +24,7 @@ export type PassageRow = {
   wordCount: number;
   createdAt: Date;
   sourceType: SourceType;
+  filePath: string | null;
 };
 
 /**
@@ -38,6 +40,7 @@ export function toPassageData(row: PassageRow): PassageData {
     wordCount: row.wordCount,
     createdAt: row.createdAt.getTime(),
     sourceType: row.sourceType,
+    filePath: row.filePath,
     status: "ready",
   };
 }

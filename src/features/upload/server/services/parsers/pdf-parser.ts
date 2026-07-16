@@ -13,7 +13,7 @@ export interface ParsedPDF {
 
 export async function parsePDF(buffer: Buffer): Promise<ParsedPDF> {
   try {
-    const pdfParse = new PDFParse(buffer);
+    const pdfParse = new PDFParse(new Uint8Array(buffer));
     const textResult = await pdfParse.getText();
     const infoResult = await pdfParse.getInfo();
 

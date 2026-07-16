@@ -161,6 +161,8 @@
     "selectDocumentFromSources": "Select a document from Sources",
     "chooseRecentOrAdd": "Choose from your recent documents or add a new one",
     "wordCount": "{count} words",
+    "sourceNotAvailable": "Source file not available",
+    "noSourceFile": "No source file for this passage",
     "translatePassage": "Translate passage",
     "listenSource": "Listen to source",
     "listenTranslation": "Listen to translation",

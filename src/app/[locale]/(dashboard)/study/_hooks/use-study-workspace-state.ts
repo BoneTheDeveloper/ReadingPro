@@ -104,6 +104,7 @@ export function useStudyWorkspaceState(initialPassages: PassageData[]) {
         wordCount: 0,
         createdAt: Date.now(),
         sourceType: "TEXT",
+        filePath: null,
         status: "processing",
       };
       setPassages((prev) => [tempPassage, ...prev]);

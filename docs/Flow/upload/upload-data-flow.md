@@ -132,7 +132,7 @@ PENDING → PROCESSING → DONE
 | File | Stage | Purpose |
 |------|-------|---------|
 | [`upload-processor.ts`](../../features/upload/server/services/upload-processor.ts) | Orchestrator | Pipeline step functions |
-| [`pdf-parsers.ts`](../../features/upload/lib/pdf-parsers.ts) | EXTRACT | PDF parsing via `pdf-parse` |
+| [`pdf-parser.ts`](../../features/upload/server/services/parsers/pdf-parser.ts) | EXTRACT | PDF parsing via `pdf-parse` |
 | [`upload-validation.ts`](../../features/upload/lib/upload-validation.ts) | VALIDATE | File/text size/content checks |
 | [`text-normalizer.ts`](../../features/upload/server/services/normalizers/text-normalizer.ts) | CLEAN | Basic text cleanup |
 | [`pdf-normalizer.ts`](../../features/upload/server/services/normalizers/pdf-normalizer.ts) | CLEAN | PDF-specific cleanup |

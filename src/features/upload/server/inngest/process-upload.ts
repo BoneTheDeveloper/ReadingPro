@@ -9,7 +9,7 @@ import {
   sourceTypeToPassageSourceType,
 } from "@/features/upload/server/services/upload-processor";
 import { downloadFile } from "@/infrastructure/storage";
-import { parsePDF } from "@/features/upload/lib/pdf-parsers";
+import { parsePDF } from "@/features/upload/server/services/parsers/pdf-parser";
 import type { UploadProcessorInput } from "@/features/upload/server/services/upload-processor";
 
 export const processUploadJob = inngest.createFunction(

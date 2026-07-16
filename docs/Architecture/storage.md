@@ -2,24 +2,28 @@
 
 ## Storage Adapter
 
-`src/server/storage/blob-storage.ts` exposes one storage API:
+`src/infrastructure/storage.ts` exposes one unified storage API:
 
-- `uploadFile(filename, buffer, contentType)`
-- `deleteFile(pathname)`
-- `getSignedUrl(pathname)`
-- `readFileBuffer(pathname)` for local development reads
+- `uploadFile(filename, buffer, contentType)` — Upload file, returns `{ url, pathname }`
+- `deleteFile(pathname)` — Delete file by pathname
+- `getViewableUrl(pathname)` — Get inline viewable URL (for PDFs, images)
+- `getDownloadUrl(pathname)` — Get download URL
+- `downloadFile(pathname)` — Download file as Buffer (for processing)
 
-## Environments
+## Environment
+
+All environments use **Vercel Blob** (private):
 
 | Environment | Backend |
 |-------------|---------|
-| Local development | `.local-blob-storage/` filesystem directory |
-| Vercel preview | Private Vercel Blob store/token |
+| Development | Vercel Blob |
+| Production | Vercel Blob |
+
+**Setup:**
+```bash
+vercel env pull .env.local
+```
 
 ## Path Contract
 
-`Passage.filePath` stores the storage pathname, not a provider-specific public URL. This keeps persisted records portable across local and preview storage adapters.
-
-## Local Private File Access
-
-`GET /api/local-blob/[pathname]` serves local files only when `NODE_ENV === "development"`. It returns `404` outside development.
+`Passage.filePath` stores the storage pathname (e.g., `uploads/userId/passageId.pdf`), not the full URL.

@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { FileText, FileSearch, Plus } from "lucide-react";
+import { FileText, FileSearch, Plus, FileType, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getCEFRShortLabel } from "@/lib/cefr";
 import { getCEFRBadgeVariant } from "./cefr-badge";
@@ -11,6 +11,7 @@ import { useScrollProgress } from "@/features/reading/hooks/use-scroll-progress"
 import type { PassageData } from "@/types/passage";
 import type { TranslationSelection } from "@/features/reading/schemas/translation";
 import { extractSelectionInfo } from "@/features/reading/lib/selection-utils";
+import { getPassageSourceUrlAction } from "@/features/passage/server/actions/passage";
 
 type ViewMode = "source" | "passage";
 
@@ -36,6 +37,24 @@ export function ContentPanel({
   const contentRef = useRef<HTMLDivElement>(null);
   const selectionStartedInContentRef = useRef(false);
   const progress = useScrollProgress(scrollRef);
+  const [sourceUrl, setSourceUrl] = useState<string | null>(null);
+  const [sourceLoading, setSourceLoading] = useState(false);
+
+  // Fetch source URL when switching to source view
+  useEffect(() => {
+    if (viewMode !== "source" || !passage?.filePath) {
+      return;
+    }
+
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSourceLoading(true);
+    getPassageSourceUrlAction(passage.id).then((url) => {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSourceUrl(url);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSourceLoading(false);
+    });
+  }, [viewMode, passage?.filePath, passage?.id]);
 
   const updateSelectionFromMouseEvent = useCallback(
     (event: MouseEvent) => {
@@ -157,31 +176,58 @@ export function ContentPanel({
         ref={scrollRef}
         className="flex-1 overflow-y-auto panel-scroll px-8 pt-7 pb-20"
       >
-        <div className="max-w-[66ch] mx-auto">
-          <h3 className="font-serif text-[27px] font-semibold text-foreground mb-5 leading-tight">
-            {passage.title}
-          </h3>
-          <div
-            ref={contentRef}
-            className="reading-content text-foreground"
-            onMouseDown={handleContentMouseDown}
-            onMouseUp={handleContentMouseUp}
-          >
-            {passage.content.split("\n\n").map((paragraph, i) => (
-              <p key={i} className="mb-6 last:mb-0">
-                {paragraph}
-              </p>
-            ))}
-          </div>
-
-          {error && (
-            <div className="mt-8 pt-6 border-t border-border/20">
-              <div className="p-3 bg-danger-soft border border-destructive/20 text-destructive text-sm">
-                {error}
+        {viewMode === "source" && passage.sourceType === "PDF" ? (
+          <div className="h-full flex flex-col">
+            {sourceLoading ? (
+              <div className="flex-1 flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
               </div>
+            ) : sourceUrl ? (
+              <iframe
+                src={sourceUrl}
+                className="w-full h-full min-h-[60vh] border-0 rounded-md"
+                title={`Original PDF: ${passage.title}`}
+              />
+            ) : (
+              <div className="flex-1 flex items-center justify-center">
+                <div className="text-center">
+                  <FileType className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                  <p className="text-muted-foreground text-sm">
+                    {passage.filePath
+                      ? t("sourceNotAvailable")
+                      : t("noSourceFile")}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="max-w-[66ch] mx-auto">
+            <h3 className="font-serif text-[27px] font-semibold text-foreground mb-5 leading-tight">
+              {passage.title}
+            </h3>
+            <div
+              ref={contentRef}
+              className="reading-content text-foreground"
+              onMouseDown={handleContentMouseDown}
+              onMouseUp={handleContentMouseUp}
+            >
+              {passage.content.split("\n\n").map((paragraph, i) => (
+                <p key={i} className="mb-6 last:mb-0">
+                  {paragraph}
+                </p>
+              ))}
             </div>
-          )}
-        </div>
+
+            {error && (
+              <div className="mt-8 pt-6 border-t border-border/20">
+                <div className="p-3 bg-danger-soft border border-destructive/20 text-destructive text-sm">
+                  {error}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
