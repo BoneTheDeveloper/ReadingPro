@@ -1,13 +1,8 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Upload, Type, Globe, Search, FileText } from "lucide-react";
-import { useDropzone, type FileRejection } from "react-dropzone";
-import {
-  validateFile,
-  formatFileSize,
-} from "@/features/upload/lib/upload-validation";
 import { cn } from "@/lib/utils";
 import { useUploadSubmit } from "@/features/upload/hooks/use-upload-submit";
 import {
@@ -19,7 +14,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { TextInputArea } from "@/features/upload/components/model/text-input-area";
+import { UploadZone } from "@/features/upload/components/model/upload-zone";
 import type { PassageData } from "@/types/passage";
 
 export interface UploadModalProps {
@@ -85,7 +81,6 @@ export function UploadModal({
   const t = useTranslations("Study");
   const [activeMode, setActiveMode] = useState<InputMode>(null);
   const [error, setError] = useState<string | null>(null);
-  const [pastedText, setPastedText] = useState("");
   const { isProcessing, uploadProgress, handleFileUpload, handleTextSubmit } =
     useUploadSubmit({ onUploadStart, onComplete: onUploadComplete, onError: onUploadError });
 
@@ -100,47 +95,16 @@ export function UploadModal({
     }
   };
 
-  const handleTextSubmitWrapper = async () => {
-    if (!pastedText.trim() || isProcessing) return;
+  const handleTextSubmitWrapper = async (text: string) => {
+    if (!text.trim() || isProcessing) return;
     setError(null);
     onClose(); // Close modal immediately when upload starts
     try {
-      await handleTextSubmit(pastedText);
+      await handleTextSubmit(text);
     } catch (err) {
       setError(err instanceof Error ? err.message : t("uploadFailed"));
     }
   };
-
-  const handleDrop = useCallback(
-    (acceptedFiles: File[], rejectedFiles: FileRejection[]) => {
-      setError(null);
-      if (rejectedFiles.length > 0) {
-        const code = rejectedFiles[0].errors[0]?.code;
-        if (code === "file-too-large") setError(t("fileTooLarge"));
-        else if (code === "file-invalid-type")
-          setError(t("unsupportedFileType"));
-        else setError(t("invalidFileTryAgain"));
-        return;
-      }
-      if (acceptedFiles.length > 0) {
-        const validation = validateFile(acceptedFiles[0]);
-        if (!validation.valid) {
-          setError(validation.error ?? t("invalidFile"));
-          return;
-        }
-        handleFileUploadWrapper(acceptedFiles[0]);
-      }
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
-  );
-
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop: handleDrop,
-    accept: { "text/plain": [".txt"], "application/pdf": [".pdf"] },
-    maxSize: 10 * 1024 * 1024,
-    multiple: false,
-  });
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -165,24 +129,11 @@ export function UploadModal({
         <div className="p-5 flex-1 overflow-y-auto">
           {activeMode === null && (
             <>
-              <div
-                {...getRootProps()}
-                className={cn(
-                  "flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all min-h-40",
-                  isDragActive ? "border-primary bg-accent" : "border-border",
-                )}
-              >
-                <input {...getInputProps()} />
-                <Upload className="w-7 h-7 mb-3 text-primary" />
-                <p className="text-sm font-medium text-primary">
-                  {isDragActive ? t("dropFileHere") : t("dropFilesHere")}
-                </p>
-                <p className="text-xs mt-1 text-muted-foreground">
-                  {t("supportedFileTypes", {
-                    size: formatFileSize(10 * 1024 * 1024),
-                  })}
-                </p>
-              </div>
+              <UploadZone
+                onFileSelect={handleFileUploadWrapper}
+                isProcessing={isProcessing}
+                variant="compact"
+              />
 
               <div className="grid grid-cols-2 gap-3 mt-5">
                 <SourceButton
@@ -221,33 +172,11 @@ export function UploadModal({
               >
                 &larr; {t("backToSources")}
               </Button>
-              <div
-                {...getRootProps()}
-                className={cn(
-                  "flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all min-h-55",
-                  isDragActive ? "border-primary bg-accent" : "border-border",
-                )}
-              >
-                <input {...getInputProps()} />
-                <div className="w-14 h-14 rounded-xl flex items-center justify-center mb-4 bg-accent border border-border">
-                  <Upload className="w-7 h-7 text-primary" />
-                </div>
-                <p className="text-base font-semibold mb-1 text-foreground">
-                  {isDragActive ? t("dropFileHere") : t("uploadAFile")}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {t("dragDropOrBrowse")}
-                </p>
-                <div className="flex items-center gap-3 mt-3 text-xs text-muted-foreground">
-                  <span>.txt, .pdf</span>
-                  <span className="text-border">|</span>
-                  <span>
-                    {t("maxFileSize", {
-                      size: formatFileSize(10 * 1024 * 1024),
-                    })}
-                  </span>
-                </div>
-              </div>
+              <UploadZone
+                onFileSelect={handleFileUploadWrapper}
+                isProcessing={isProcessing}
+                variant="expanded"
+              />
             </div>
           )}
 
@@ -261,38 +190,10 @@ export function UploadModal({
               >
                 &larr; {t("backToSources")}
               </Button>
-              <div className="bg-surface border border-border rounded-xl overflow-hidden">
-                <div className="flex items-center gap-2 px-4 py-3 border-b border-border bg-accent">
-                  <Type className="w-4 h-4 text-primary" />
-                  <h3 className="text-sm font-semibold text-primary">
-                    {t("pasteYourText")}
-                  </h3>
-                </div>
-                <Textarea
-                  value={pastedText}
-                  onChange={(e) => {
-                    setPastedText(e.target.value);
-                    setError(null);
-                  }}
-                  placeholder={t("pasteEnglishText")}
-                  className="w-full p-5 min-h-45 resize-none border-0 focus-visible:ring-0 text-base leading-relaxed bg-surface"
-                />
-                <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-accent">
-                  <span className="text-xs text-muted-foreground">
-                    {t("wordCount", {
-                      count: pastedText.trim().split(/\s+/).filter(Boolean)
-                        .length,
-                    })}
-                  </span>
-                  <Button
-                    onClick={handleTextSubmitWrapper}
-                    disabled={pastedText.trim().length === 0 || isProcessing}
-                    size="sm"
-                  >
-                    {isProcessing ? uploadProgress : t("continue")}
-                  </Button>
-                </div>
-              </div>
+              <TextInputArea
+                onSubmit={handleTextSubmitWrapper}
+                isProcessing={isProcessing}
+              />
             </div>
           )}
 

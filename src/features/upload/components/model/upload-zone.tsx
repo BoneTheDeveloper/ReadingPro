@@ -13,12 +13,15 @@ interface UploadZoneProps {
   onFileSelect: (file: File) => void;
   isProcessing?: boolean;
   disabled?: boolean;
+  variant?: "default" | "compact" | "expanded";
+  isDragActiveExternal?: boolean;
 }
 
 export function UploadZone({
   onFileSelect,
   isProcessing,
   disabled,
+  variant = "default",
 }: UploadZoneProps) {
   const [error, setError] = useState<string>();
 
@@ -61,18 +64,23 @@ export function UploadZone({
     disabled: disabled || isProcessing,
   });
 
+  const variantStyles = {
+    default: "min-h-[300px] p-12",
+    compact: "min-h-40 p-8",
+    expanded: "min-h-55 p-10",
+  };
+
   return (
     <div className="w-full">
       <div
         {...getRootProps()}
         className={cn(
           "relative flex flex-col items-center justify-center",
-          "border-2 border-dashed rounded-[14px] p-12 text-center",
+          "border-2 border-dashed rounded-xl text-center",
           "transition-all duration-200 cursor-pointer",
-          "min-h-[300px]",
+          variantStyles[variant],
           isDragActive && "border-primary bg-accent scale-[1.02]",
-          !isDragActive &&
-            "border-border hover:border-primary/40 hover:bg-muted",
+          !isDragActive && "border-border hover:border-primary/40 hover:bg-muted",
           (disabled || isProcessing) && "opacity-50 cursor-not-allowed",
         )}
       >
@@ -81,8 +89,10 @@ export function UploadZone({
         <div className="flex flex-col items-center gap-5">
           <div
             className={cn(
-              "w-14 h-14 rounded-xl flex items-center justify-center transition-transform",
-              isDragActive ? "bg-indigo-soft scale-110" : "bg-indigo-soft",
+              "rounded-xl flex items-center justify-center transition-transform bg-indigo-soft",
+              variant === "compact" ? "w-7 h-7" : "w-14 h-14",
+              variant === "expanded" && "mb-4",
+              isDragActive && "scale-110",
             )}
           >
             {isProcessing ? (
@@ -93,14 +103,20 @@ export function UploadZone({
           </div>
 
           <div>
-            <h3 className="text-lg font-semibold text-foreground mb-2">
+            <h3 className={cn(
+              "font-semibold text-foreground mb-2",
+              variant === "compact" ? "text-sm" : variant === "expanded" ? "text-base" : "text-lg"
+            )}>
               {isDragActive
                 ? "Drop your file here"
                 : isProcessing
                   ? "Processing..."
                   : "Upload your content"}
             </h3>
-            <p className="text-muted-foreground text-sm">
+            <p className={cn(
+              "text-muted-foreground",
+              variant === "compact" ? "text-xs" : "text-sm"
+            )}>
               {isProcessing
                 ? "Please wait while we process your file"
                 : "Drag and drop, or click to browse"}
@@ -108,7 +124,7 @@ export function UploadZone({
           </div>
 
           {!isProcessing && (
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <div className={cn("flex items-center gap-4 text-muted-foreground", variant === "compact" ? "text-xs" : "text-sm")}>
               <span className="flex items-center gap-1.5">
                 <FileText className="w-4 h-4" />
                 .txt, .pdf

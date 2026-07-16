@@ -4,22 +4,32 @@
 
 Server-side logic: server action → Inngest queue → background worker → database.
 
+**Key principle:** All parsing happens in the background worker. The server action
+only validates and stores the raw file. Bad files become FAILED jobs, never crashes.
+
 ---
 
 ## Data Flow
 
 ```mermaid
 flowchart TD
-    A[uploadFileAction] --> B[Create UploadJob]
-    B --> C[Upload file to storage]
-    C --> D[inngest.send event]
-    D --> E[Return jobId to client]
+    A[uploadFileAction / uploadTextAction] --> B[Validate input]
+    B --> C[Create UploadJob PENDING]
+    C --> D{Source type}
+    D -->|file| E[Upload to storage]
+    D -->|paste| F[Skip storage]
+    E --> G[inngest.send event]
+    F --> G
+    G --> H[Return jobId to client]
 
-    F[Inngest Worker] --> G[Update job: PROCESSING]
-    G --> H[Resolve text from source]
-    H --> I[AI Analysis]
-    I --> J[Create Passage]
-    J --> K[Update job: DONE]
+    I[Inngest Worker] --> J[Update job: PROCESSING]
+    J --> K[EXTRACT text from source]
+    K --> L[VALIDATE extracted text]
+    L -->|fail| M[Update job: FAILED]
+    L -->|pass| N[CLEAN normalize text]
+    N --> O[AI ANALYSIS]
+    O --> P[Create Passage]
+    P --> Q[Update job: DONE]
 ```
 
 ---
@@ -28,8 +38,8 @@ flowchart TD
 
 | Action | Input | What it does |
 |--------|-------|--------------|
-| `uploadTextAction` | `{ passageId, title, text }` | Create job, emit event with inline text |
-| `uploadFileAction` | `FormData` | Create job, upload file, emit event |
+| `uploadFileAction` | `FormData` | Validate file, store to blob, emit event |
+| `uploadTextAction` | `{ passageId, title, text }` | Validate text, emit event with inline text |
 
 ### Output
 
@@ -39,14 +49,49 @@ flowchart TD
 
 ---
 
+## Processing Stages (Inngest Worker)
+
+### Stage 1: EXTRACT
+
+| Source | Extraction |
+|--------|------------|
+| `paste` | Use inline `text` directly |
+| `txt` | Download from storage → UTF-8 decode |
+| `pdf` | Download from storage → `parsePDF()` |
+
+### Stage 2: VALIDATE
+
+| Check | Failure |
+|-------|---------|
+| Not empty | `FAILED: Resolved text is empty` |
+| Min length (50 chars) | (via `validateTextContent` in action) |
+| Max length (100k chars) | (via `validateTextContent` in action) |
+
+### Stage 3: CLEAN (Normalization)
+
+| Type | Normalizations |
+|------|----------------|
+| Structural | Line endings (`\r\n` → `\n`), whitespace collapse |
+| PDF-specific | Form feeds (`\f` → `\n\n`), empty line removal |
+
+### Stage 4: AI ANALYSIS
+
+| Input | Output |
+|-------|--------|
+| Cleaned text | `AnalysisResult { cefrLevel, vocabulary, topics }` |
+
+See **[Upload AI Pipeline](./upload-ai-pipeline.md)** for full AI analysis details.
+
+---
+
 ## Text Resolution by Source
 
-| Source | Resolution |
-|--------|------------|
-| `paste` | Uses inline `text` directly |
-| `txt` | Download from storage → UTF-8 |
-| `pdf` | Download from storage → parse PDF |
-| `youtube` | Fetch transcript (TODO) |
+| Source | Resolution | Parser |
+|--------|------------|--------|
+| `paste` | Inline text directly | None |
+| `txt` | Download from storage → UTF-8 | None |
+| `pdf` | Download from storage → `parsePDF()` | `pdf-parse` |
+| `youtube` | Fetch transcript (TODO) | — |
 
 ---
 
@@ -63,25 +108,48 @@ PENDING → PROCESSING → DONE
 | `PENDING` | Job created, not yet started |
 | `PROCESSING` | Worker picked up the job |
 | `DONE` | Passage created successfully |
-| `FAILED` | Error occurred |
+| `FAILED` | Error occurred (stored in `error` field) |
 
 ---
 
 ## Key Files
 
+### Server Actions
+
 | File | Purpose |
 |------|---------|
-| [`actions.ts`](../../features/upload/server/actions/upload.ts) | Server actions |
-| [`process-upload.ts`](../../features/upload/server/inngest/process-upload.ts) | Inngest worker |
+| [`upload.ts`](../../features/upload/server/actions/upload.ts) | Server actions: `uploadFileAction`, `uploadTextAction`, `getUploadStatus` |
+
+### Inngest Worker
+
+| File | Purpose |
+|------|---------|
+| [`process-upload.ts`](../../features/upload/server/inngest/process-upload.ts) | Inngest worker orchestrating pipeline |
 | [`events.ts`](../../features/upload/server/inngest/events.ts) | Event schemas |
 
 ### Processing Services
 
-| File | Purpose |
-|------|---------|
-| [`upload-processor.ts`](../../features/upload/server/services/upload-processor.ts) | Pipeline orchestrator |
-| [`text-normalizer.ts`](../../features/upload/server/services/normalizers/text-normalizer.ts) | Text cleanup |
-| [`pdf-parsers.ts`](../../features/upload/lib/pdf-parsers.ts) | PDF parsing |
+| File | Stage | Purpose |
+|------|-------|---------|
+| [`upload-processor.ts`](../../features/upload/server/services/upload-processor.ts) | Orchestrator | Pipeline step functions |
+| [`pdf-parsers.ts`](../../features/upload/lib/pdf-parsers.ts) | EXTRACT | PDF parsing via `pdf-parse` |
+| [`upload-validation.ts`](../../features/upload/lib/upload-validation.ts) | VALIDATE | File/text size/content checks |
+| [`text-normalizer.ts`](../../features/upload/server/services/normalizers/text-normalizer.ts) | CLEAN | Basic text cleanup |
+| [`pdf-normalizer.ts`](../../features/upload/server/services/normalizers/pdf-normalizer.ts) | CLEAN | PDF-specific cleanup |
+| [`cefr-detector.ts`](../../features/upload/server/services/analyzers/cefr-detector.ts) | ANALYSIS | AI CEFR detection |
+| [`vocabulary-extractor.ts`](../../features/upload/server/services/analyzers/vocabulary-extractor.ts) | ANALYSIS | AI vocabulary extraction |
+| [`topic-tagger.ts`](../../features/upload/server/services/analyzers/topic-tagger.ts) | ANALYSIS | AI topic tagging |
+
+---
+
+## Current Limitations
+
+| Issue | Description |
+|-------|-------------|
+| No text preview | Users cannot see extracted text before AI analysis |
+| PDF noise | Headers, footers, page numbers not removed |
+| No language detection | Non-English text accepted |
+| YouTube not implemented | Transcript fetching is TODO |
 
 ---
 
