@@ -81,7 +81,7 @@ export function UploadModal({
   const t = useTranslations("Study");
   const [activeMode, setActiveMode] = useState<InputMode>(null);
   const [error, setError] = useState<string | null>(null);
-  const { isProcessing, uploadProgress, handleFileUpload, handleTextSubmit } =
+  const { isProcessing, handleFileUpload, handleTextSubmit } =
     useUploadSubmit({ onUploadStart, onComplete: onUploadComplete, onError: onUploadError });
 
   const handleFileUploadWrapper = async (file: File) => {

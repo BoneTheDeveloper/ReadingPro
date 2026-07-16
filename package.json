@@ -32,6 +32,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "dotenv": "^17.4.2",
+    "file-type": "^22.0.1",
     "inngest": "^4.11.0",
     "lucide-react": "^1.14.0",
     "next": "^16.2.6",

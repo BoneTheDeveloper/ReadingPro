@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { FileText, AlertCircle, Loader2 } from "lucide-react";
 import { validateTextContent } from "@/features/upload/lib/upload-validation";
+import { UPLOAD_CONFIG } from "@/features/upload/lib/upload-config";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -59,6 +60,8 @@ export function TextInputArea({
         <div className="flex items-center justify-between px-5 py-3.5 border-t border-border bg-muted/40">
           <span className="text-sm text-muted-foreground">
             {wordCount} {wordCount === 1 ? "word" : "words"}
+            <span className="mx-2">·</span>
+            {text.length} / {UPLOAD_CONFIG.MAX_TEXT_LENGTH}
           </span>
 
           <Button

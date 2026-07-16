@@ -1,82 +1,205 @@
-export const MAX_FILE_SIZE = 10 * 1024 * 1024;
-export const ALLOWED_TEXT_TYPES = ['text/plain'];
-export const ALLOWED_PDF_TYPES = ['application/pdf'];
+/**
+ * Upload Validation - Single Source of Truth for validation logic
+ * Client (UX) and Server (Security) both use these functions.
+ */
+
+import { UPLOAD_CONFIG } from "./upload-config";
 
 export interface FileValidationResult {
   valid: boolean;
   error?: string;
 }
 
+// ============ FILE VALIDATION ============
+
+/**
+ * Shallow file validation - used by Client for fast UX feedback
+ * Checks: size, MIME type, extension
+ */
 export function validateFile(file: File): FileValidationResult {
-  if (file.size > MAX_FILE_SIZE) {
+  if (file.size > UPLOAD_CONFIG.MAX_FILE_SIZE_BYTES) {
     return {
       valid: false,
-      error: `File size exceeds ${MAX_FILE_SIZE / 1024 / 1024}MB limit`,
+      error: UPLOAD_CONFIG.ERROR_MESSAGES.FILE_TOO_LARGE,
     };
   }
 
-  if (file.type === 'application/pdf' || file.type === 'text/plain') {
-    return { valid: true };
+  if (file.size === 0) {
+    return {
+      valid: false,
+      error: UPLOAD_CONFIG.ERROR_MESSAGES.EMPTY_FILE,
+    };
   }
 
-  const extension = file.name.split('.').pop()?.toLowerCase();
-  if (extension === 'pdf' || extension === 'txt') {
-    return { valid: true };
-  }
+  // Check MIME type
+  const mimeType = file.type;
+  const extension = file.name.split(".").pop()?.toLowerCase();
 
-  return {
-    valid: false,
-    error: 'Only .txt and .pdf files are supported',
-  };
-}
+  // Accept if MIME or extension matches
+  const validMime = UPLOAD_CONFIG.ALLOWED_MIME_TYPES.includes(mimeType as typeof UPLOAD_CONFIG.ALLOWED_MIME_TYPES[number]);
+  const validExtension =
+    extension === "pdf" || extension === "txt";
 
-export function validateTextContent(text: string): FileValidationResult {
-  const trimmed = text.trim();
-
-  if (trimmed.length === 0) {
-    return { valid: false, error: 'Text content is empty' };
-  }
-
-  if (trimmed.length < 50) {
-    return { valid: false, error: 'Text is too short (minimum 50 characters)' };
-  }
-
-  if (trimmed.length > 100000) {
-    return { valid: false, error: 'Text is too long (maximum 100,000 characters)' };
+  if (!validMime && !validExtension) {
+    return {
+      valid: false,
+      error: UPLOAD_CONFIG.ERROR_MESSAGES.INVALID_TYPE,
+    };
   }
 
   return { valid: true };
 }
 
-const MAX_FILENAME_LENGTH = 100;
+/**
+ * Deep file validation - Server-side only
+ * Verifies actual file content using magic numbers (file signatures)
+ * This prevents attacks where someone renames malware.exe to document.pdf
+ */
+export async function validateFileContent(
+  buffer: Buffer,
+  mimeType: string
+): Promise<FileValidationResult> {
+  if (mimeType === "application/pdf") {
+    // Verify PDF magic number: %PDF- (starts with 0x25 0x50 0x44 0x46)
+    // file-type library handles this robustly
+    const { fileTypeFromBuffer } = await import("file-type");
+    const detected = await fileTypeFromBuffer(buffer);
 
-export function sanitizeFilename(name: string): FileValidationResult & { sanitized?: string } {
-  if (name.length > MAX_FILENAME_LENGTH) {
-    return { valid: false, error: `Filename exceeds ${MAX_FILENAME_LENGTH} character limit` };
+    if (!detected) {
+      return {
+        valid: false,
+        error: UPLOAD_CONFIG.ERROR_MESSAGES.CORRUPT_FILE,
+      };
+    }
+
+    // Check if detected type is PDF (or matches expected MIME)
+    if (detected.mime !== "application/pdf") {
+      return {
+        valid: false,
+        error: UPLOAD_CONFIG.ERROR_MESSAGES.CORRUPT_FILE,
+      };
+    }
+
+    return { valid: true };
   }
-  const sanitized = name.replace(/[^a-zA-Z0-9._-]/g, '_');
-  if (!sanitized || sanitized === '.' || sanitized === '..') {
-    return { valid: false, error: 'Invalid filename' };
+
+  if (mimeType === "text/plain" || mimeType === "text/plain;charset=utf-8") {
+    // Verify it's valid UTF-8 text (no null bytes, valid encoding)
+    const textDecoder = new TextDecoder("utf-8", { fatal: true });
+    try {
+      textDecoder.decode(buffer);
+
+      // Check for null bytes which indicate binary data
+      if (buffer.includes(0x00)) {
+        return {
+          valid: false,
+          error: UPLOAD_CONFIG.ERROR_MESSAGES.CORRUPT_FILE,
+        };
+      }
+
+      return { valid: true };
+    } catch {
+      return {
+        valid: false,
+        error: UPLOAD_CONFIG.ERROR_MESSAGES.CORRUPT_FILE,
+      };
+    }
   }
-  if (sanitized.includes('..') || sanitized.startsWith('/') || sanitized.startsWith('\\')) {
-    return { valid: false, error: 'Invalid filename' };
+
+  // Unknown type - fail safe
+  return {
+    valid: false,
+    error: UPLOAD_CONFIG.ERROR_MESSAGES.INVALID_TYPE,
+  };
+}
+
+// ============ TEXT VALIDATION ============
+
+/**
+ * Text content validation - used by both Client and Server
+ */
+export function validateTextContent(text: string): FileValidationResult {
+  const trimmed = text.trim();
+
+  if (trimmed.length === 0) {
+    return {
+      valid: false,
+      error: UPLOAD_CONFIG.ERROR_MESSAGES.TEXT_EMPTY,
+    };
   }
+
+  if (trimmed.length < UPLOAD_CONFIG.MIN_TEXT_LENGTH) {
+    return {
+      valid: false,
+      error: UPLOAD_CONFIG.ERROR_MESSAGES.TEXT_TOO_SHORT,
+    };
+  }
+
+  if (trimmed.length > UPLOAD_CONFIG.MAX_TEXT_LENGTH) {
+    return {
+      valid: false,
+      error: UPLOAD_CONFIG.ERROR_MESSAGES.TEXT_TOO_LONG,
+    };
+  }
+
+  return { valid: true };
+}
+
+// ============ FILENAME VALIDATION ============
+
+/**
+ * Sanitize and validate filename
+ */
+export function sanitizeFilename(
+  name: string
+): FileValidationResult & { sanitized?: string } {
+  if (name.length > UPLOAD_CONFIG.MAX_FILENAME_LENGTH) {
+    return {
+      valid: false,
+      error: UPLOAD_CONFIG.ERROR_MESSAGES.FILENAME_TOO_LONG,
+    };
+  }
+
+  const sanitized = name.replace(/[^a-zA-Z0-9._-]/g, "_");
+
+  if (!sanitized || sanitized === "." || sanitized === "..") {
+    return {
+      valid: false,
+      error: UPLOAD_CONFIG.ERROR_MESSAGES.INVALID_FILENAME,
+    };
+  }
+
+  if (
+    sanitized.includes("..") ||
+    sanitized.startsWith("/") ||
+    sanitized.startsWith("\\")
+  ) {
+    return {
+      valid: false,
+      error: UPLOAD_CONFIG.ERROR_MESSAGES.INVALID_FILENAME,
+    };
+  }
+
   return { valid: true, sanitized };
 }
 
-export function sanitizeTitle(name: string): string {
-  return name
-    .replace(/\.[^/.]+$/, '')
-    .replace(/[^a-zA-Z0-9\s'-]/g, '')
-    .replace(/[_-]+/g, ' ')
-    .trim()
-    .slice(0, 200) || 'Untitled';
-}
+// ============ UTILITIES ============
 
 export function formatFileSize(bytes: number): string {
-  if (bytes === 0) return '0 Bytes';
+  if (bytes === 0) return "0 Bytes";
   const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const sizes = ["Bytes", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+  return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
+}
+
+export function sanitizeTitle(name: string): string {
+  return (
+    name
+      .replace(/\.[^/.]+$/, "")
+      .replace(/[^a-zA-Z0-9\s'-]/g, "")
+      .replace(/[_-]+/g, " ")
+      .trim()
+      .slice(0, 200) || "Untitled"
+  );
 }

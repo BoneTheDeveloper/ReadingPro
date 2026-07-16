@@ -5,9 +5,10 @@ import { getUserId } from "@/lib/auth/auth-server";
 import { prisma } from "@/lib/prisma";
 import { inngest } from "@/infrastructure/inngest";
 import { createUploadProcessEvent } from "@/features/upload/server/inngest/events";
-import { uploadFile } from "@/infrastructure/storage";
+import { uploadFile } from "@/infrastructure/storage/index";
 import {
   validateFile,
+  validateFileContent,
   validateTextContent,
 } from "@/features/upload/lib/upload-validation";
 import {
@@ -21,15 +22,17 @@ function newJobId() {
 }
 
 // ---------- File upload (txt / pdf) ----------
-// The action is intentionally thin: persist the RAW file, then hand a pointer
-// to the background worker. All parsing (which can crash on malformed PDFs)
-// happens in the worker, so a bad file becomes a FAILED job, never a crash.
+// Client validates for UX, Server validates for SECURITY:
+// - Step 1: Shallow check (same as client) for fast rejection
+// - Step 2: Deep check (magic numbers) to verify actual file content
 
 export async function uploadFileAction(formData: FormData) {
   const file = formData.get("file");
   if (!(file instanceof File)) {
     throw new Error("Missing file");
   }
+
+  // Step 1: Shallow validation (fast rejection)
   const validation = validateFile(file);
   if (!validation.valid) {
     throw new Error(validation.error ?? "Invalid file");
@@ -47,8 +50,7 @@ export async function uploadFileAction(formData: FormData) {
   const ext = parsed.sourceType === "pdf" ? "pdf" : "txt";
   const blobPath = `uploads/${userId}/${parsed.passageId}.${ext}`;
 
-  // Job-first: the job exists before any fallible IO, so a blob write failure
-  // surfaces as FAILED via polling instead of a silent disruption.
+  // Job-first: the job exists before any fallible IO
   await prisma.uploadJob.create({
     data: {
       id: jobId,
@@ -61,13 +63,29 @@ export async function uploadFileAction(formData: FormData) {
 
   try {
     const buffer = Buffer.from(await file.arrayBuffer());
+
+    // Step 2: Deep validation - verify actual file content using magic numbers
+    // This prevents attacks where someone renames malware.exe to document.pdf
+    const contentValidation = await validateFileContent(buffer, file.type);
+    if (!contentValidation.valid) {
+      // Mark job as failed and clean up
+      await prisma.uploadJob
+        .update({ where: { id: jobId }, data: { status: "FAILED", error: contentValidation.error } })
+        .catch(() => {});
+      throw new Error(contentValidation.error);
+    }
+
     const stored = await uploadFile(blobPath, buffer, file.type || "application/octet-stream");
     if (!stored) throw new Error("Storage upload returned null");
   } catch (error) {
+    // If already marked as failed above, don't overwrite
     const message = error instanceof Error ? error.message : "Failed to store file";
-    await prisma.uploadJob
-      .update({ where: { id: jobId }, data: { status: "FAILED", error: message } })
-      .catch(() => {});
+    const existingJob = await prisma.uploadJob.findUnique({ where: { id: jobId } });
+    if (existingJob?.status !== "FAILED") {
+      await prisma.uploadJob
+        .update({ where: { id: jobId }, data: { status: "FAILED", error: message } })
+        .catch(() => {});
+    }
     return { success: true as const, data: { jobId } };
   }
 

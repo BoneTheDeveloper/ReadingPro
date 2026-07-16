@@ -1,17 +1,18 @@
+/**
+ * Vercel Blob Storage Adapter - Production
+ * Wraps Vercel Blob SDK with the same interface as local adapter.
+ */
+
 import "server-only";
 import { put, del, head, get } from "@vercel/blob";
 import { moduleLog } from "@/lib/logger";
 
 const log = moduleLog("storage:blob");
 
-// ---------- Types ----------
-
 export interface StorageResult {
   url: string;
   pathname: string;
 }
-
-// ---------- Exported API ----------
 
 /**
  * Upload a file to Vercel Blob storage.
@@ -77,12 +78,12 @@ export async function getDownloadUrl(pathname: string): Promise<string | null> {
 }
 
 /**
- * Alias for getViewableUrl for backward compatibility.
+ * Alias for getViewableUrl.
  */
 export const getSignedUrl = getViewableUrl;
 
 /**
- * Download a stored file's raw bytes for processing (e.g., PDF parsing).
+ * Download a stored file's raw bytes for processing.
  */
 export async function downloadFile(pathname: string): Promise<Buffer | null> {
   try {

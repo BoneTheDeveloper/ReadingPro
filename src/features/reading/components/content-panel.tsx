@@ -46,15 +46,25 @@ export function ContentPanel({
       return;
     }
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setSourceLoading(true);
-    getPassageSourceUrlAction(passage.id).then((url) => {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setSourceUrl(url);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setSourceLoading(false);
-    });
-  }, [viewMode, passage?.filePath, passage?.id]);
+    const passageId = passage.id;
+    let cancelled = false;
+
+    async function fetchSourceUrl() {
+      setSourceLoading(true);
+      const url = await getPassageSourceUrlAction(passageId);
+      if (!cancelled) {
+        setSourceUrl(url);
+        setSourceLoading(false);
+      }
+    }
+
+    fetchSourceUrl();
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewMode, passage?.filePath]);
 
   const updateSelectionFromMouseEvent = useCallback(
     (event: MouseEvent) => {

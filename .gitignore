@@ -43,7 +43,7 @@ prisma/dev.db-journal
 
 
 # local blob storage (dev)
-.local-blob-storage/
+/tmp/uploads/
 
 # vercel
 .vercel

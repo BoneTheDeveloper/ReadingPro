@@ -5,8 +5,8 @@ import { useDropzone, type FileRejection } from "react-dropzone";
 import { Upload, FileText, AlertCircle, Loader2 } from "lucide-react";
 import {
   validateFile,
-  formatFileSize,
 } from "@/features/upload/lib/upload-validation";
+import { UPLOAD_CONFIG } from "@/features/upload/lib/upload-config";
 import { cn } from "@/lib/utils";
 
 interface UploadZoneProps {
@@ -32,9 +32,9 @@ export function UploadZone({
       if (rejectedFiles.length > 0) {
         const rejection = rejectedFiles[0];
         if (rejection.errors[0]?.code === "file-too-large") {
-          setError("File size exceeds 10MB limit");
+          setError(UPLOAD_CONFIG.ERROR_MESSAGES.FILE_TOO_LARGE);
         } else if (rejection.errors[0]?.code === "file-invalid-type") {
-          setError("Only .txt and .pdf files are supported");
+          setError(UPLOAD_CONFIG.ERROR_MESSAGES.INVALID_TYPE);
         } else {
           setError("Invalid file. Please try again.");
         }
@@ -50,7 +50,7 @@ export function UploadZone({
         onFileSelect(acceptedFiles[0]);
       }
     },
-    [onFileSelect],
+    [onFileSelect]
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -59,7 +59,7 @@ export function UploadZone({
       "text/plain": [".txt"],
       "application/pdf": [".pdf"],
     },
-    maxSize: 10 * 1024 * 1024,
+    maxSize: UPLOAD_CONFIG.MAX_FILE_SIZE_BYTES,
     multiple: false,
     disabled: disabled || isProcessing,
   });
@@ -80,8 +80,9 @@ export function UploadZone({
           "transition-all duration-200 cursor-pointer",
           variantStyles[variant],
           isDragActive && "border-primary bg-accent scale-[1.02]",
-          !isDragActive && "border-border hover:border-primary/40 hover:bg-muted",
-          (disabled || isProcessing) && "opacity-50 cursor-not-allowed",
+          !isDragActive &&
+            "border-border hover:border-primary/40 hover:bg-muted",
+          (disabled || isProcessing) && "opacity-50 cursor-not-allowed"
         )}
       >
         <input {...getInputProps()} />
@@ -92,7 +93,7 @@ export function UploadZone({
               "rounded-xl flex items-center justify-center transition-transform bg-indigo-soft",
               variant === "compact" ? "w-7 h-7" : "w-14 h-14",
               variant === "expanded" && "mb-4",
-              isDragActive && "scale-110",
+              isDragActive && "scale-110"
             )}
           >
             {isProcessing ? (
@@ -103,20 +104,28 @@ export function UploadZone({
           </div>
 
           <div>
-            <h3 className={cn(
-              "font-semibold text-foreground mb-2",
-              variant === "compact" ? "text-sm" : variant === "expanded" ? "text-base" : "text-lg"
-            )}>
+            <h3
+              className={cn(
+                "font-semibold text-foreground mb-2",
+                variant === "compact"
+                  ? "text-sm"
+                  : variant === "expanded"
+                    ? "text-base"
+                    : "text-lg"
+              )}
+            >
               {isDragActive
                 ? "Drop your file here"
                 : isProcessing
                   ? "Processing..."
                   : "Upload your content"}
             </h3>
-            <p className={cn(
-              "text-muted-foreground",
-              variant === "compact" ? "text-xs" : "text-sm"
-            )}>
+            <p
+              className={cn(
+                "text-muted-foreground",
+                variant === "compact" ? "text-xs" : "text-sm"
+              )}
+            >
               {isProcessing
                 ? "Please wait while we process your file"
                 : "Drag and drop, or click to browse"}
@@ -124,13 +133,20 @@ export function UploadZone({
           </div>
 
           {!isProcessing && (
-            <div className={cn("flex items-center gap-4 text-muted-foreground", variant === "compact" ? "text-xs" : "text-sm")}>
+            <div
+              className={cn(
+                "flex items-center gap-4 text-muted-foreground",
+                variant === "compact" ? "text-xs" : "text-sm"
+              )}
+            >
               <span className="flex items-center gap-1.5">
                 <FileText className="w-4 h-4" />
-                .txt, .pdf
+                {UPLOAD_CONFIG.ALLOWED_EXTENSIONS.join(", ")}
               </span>
               <span className="text-border">|</span>
-              <span>Max {formatFileSize(10 * 1024 * 1024)}</span>
+              <span>
+                Max {UPLOAD_CONFIG.MAX_FILE_SIZE_MB}MB
+              </span>
             </div>
           )}
         </div>

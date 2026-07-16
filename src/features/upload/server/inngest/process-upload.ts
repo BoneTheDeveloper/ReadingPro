@@ -8,7 +8,7 @@ import {
   computeWordCount,
   sourceTypeToPassageSourceType,
 } from "@/features/upload/server/services/upload-processor";
-import { downloadFile } from "@/infrastructure/storage";
+import { downloadFile } from "@/infrastructure/storage/index";
 import { parsePDF } from "@/features/upload/server/services/parsers/pdf-parser";
 import type { UploadProcessorInput } from "@/features/upload/server/services/upload-processor";
 
