@@ -424,6 +424,15 @@ export default defineConfig([
           ],
         },
       ],
+
+      // =======================================================================
+      // RULE 4: Allow underscore prefix for unused variables (intentional unused)
+      // =======================================================================
+      "@typescript-eslint/no-unused-vars": ["warn", {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_",
+      }],
     },
   },
 ]);
