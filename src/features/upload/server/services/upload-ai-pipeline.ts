@@ -13,14 +13,14 @@ import { SourceType } from "@/generated/prisma/enums";
 
 // ---------- Types ----------
 
-export interface UploadProcessorInput {
+export interface UploadPipelineInput {
   jobId: string;
   userId: string;
   passageId: string;
   title: string;
   sourceType: SourceType;
-  text?: string; // paste
-  blobPath?: string; // txt, pdf
+  text?: string;
+  blobPath?: string; //  pdf
   youtubeUrl?: string; // youtube
   startedAt: number;
 }
@@ -84,8 +84,10 @@ export function computeWordCount(text: string): number {
  */
 export function sourceTypeToPassageSourceType(
   sourceType: SourceType
-): "TEXT" | "PDF" {
-  return sourceType === SourceType.PDF ? "PDF" : "TEXT";
+): "TEXT" | "PDF" | "YOUTUBE" {
+  if (sourceType === SourceType.PDF) return "PDF";
+  if (sourceType === SourceType.YOUTUBE) return "YOUTUBE";
+  return "TEXT";
 }
 
 // ---------- Convenience Orchestrator ----------

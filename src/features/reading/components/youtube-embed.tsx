@@ -1,6 +1,6 @@
 "use client";
 
-import { extractVideoId } from "@/utils/youtube-url-helper";
+import { extractVideoId } from "@/utils/youtube-url";
 
 interface YouTubeEmbedProps {
   url: string;

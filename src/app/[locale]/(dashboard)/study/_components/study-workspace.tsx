@@ -12,7 +12,7 @@ import type { PassageData } from "@/types/passage";
 import { SourcesPanel } from "@/features/upload/components/panel/sources-panel";
 import { ContentPanel } from "@/features/reading/components/content-panel";
 import { StudioPanel } from "@/features/studio-panel/components/studio-panel";
-import { TranslationPopup } from "@/features/reading/components/translate/translation-popup";
+import { TranslationPopup } from "@/features/reading/components/translation-popup";
 import { UploadModal } from "@/features/upload/components/model/upload-modal";
 import { useStudyActions } from "../_hooks/use-study-actions";
 import { useStudyPanelLayout } from "../_hooks/use-study-panel-layout";

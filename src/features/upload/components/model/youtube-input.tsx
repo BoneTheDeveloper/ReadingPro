@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { Loader2, PlayCircle, Clipboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { isValidYouTubeUrl, extractVideoId } from "@/utils/youtube-url-helper";
+import { isValidYouTubeUrl, extractVideoId } from "@/utils/youtube-url";
 import { checkTranscriptAvailability} from "@/features/upload/server/actions/check-youtube-transcript";
 
 interface YouTubeInputProps {

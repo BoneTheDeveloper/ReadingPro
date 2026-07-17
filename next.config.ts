@@ -31,7 +31,7 @@ const csp = {
   baseUri: "base-uri 'self'",
   formAction: "form-action 'self'",
   frameAncestors: "frame-ancestors 'self'",
-  frameSrc: "frame-src 'self' https://challenges.cloudflare.com",
+  frameSrc: "frame-src 'self' https://challenges.cloudflare.com https://www.youtube.com https://youtube.com",
   workerSrc: "worker-src 'self' blob:",
   upgradeInsecure: "upgrade-insecure-requests",
 };

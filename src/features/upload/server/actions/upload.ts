@@ -13,7 +13,7 @@ import {
   validateTextContent,
 } from "@/features/upload/lib/upload-validation";
 import { toPassageData, type PassageModel } from "@/types/passage";
-import { extractVideoId, isValidYouTubeUrl } from "@/utils/youtube-url-helper";
+import { extractVideoId, isValidYouTubeUrl } from "@/utils/youtube-url";
 
 // ---------- Schema & Helpers ----------
 

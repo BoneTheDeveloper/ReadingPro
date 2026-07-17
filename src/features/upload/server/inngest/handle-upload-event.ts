@@ -8,10 +8,10 @@ import {
   analyzeContent,
   computeWordCount,
   sourceTypeToPassageSourceType,
-} from "@/features/upload/server/services/upload-processor";
+} from "@/features/upload/server/services/upload-ai-pipeline";
 import { downloadFile } from "@/infrastructure/storage/index";
 import { parsePDF } from "@/features/upload/server/services/parsers/pdf-parser";
-import type { UploadProcessorInput } from "@/features/upload/server/services/upload-processor";
+import type { UploadPipelineInput } from "@/features/upload/server/services/upload-ai-pipeline";
 
 export const processUploadJob = inngest.createFunction(
   {
@@ -19,7 +19,7 @@ export const processUploadJob = inngest.createFunction(
     name: "Process Upload Job",
     triggers: [{ event: UPLOAD_PROCESS_EVENT }],
   },
-  async ({ event }: { event: { data: UploadProcessorInput } }) => {
+  async ({ event }: { event: { data: UploadPipelineInput } }) => {
     const { jobId, userId, sourceType, blobPath, text, youtubeUrl, startedAt, passageId, title } = event.data;
 
     const failJob = async (error: string) => {
