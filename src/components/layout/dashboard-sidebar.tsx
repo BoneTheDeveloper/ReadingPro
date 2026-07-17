@@ -13,7 +13,7 @@ import {
   Moon,
   Monitor,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/cn";
 import { Button } from "@/components/ui/button";
 import { AuthControls } from "./auth-controls";
 import { SettingsModal } from "@/components/layout/settings-modal";

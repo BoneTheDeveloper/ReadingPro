@@ -10,7 +10,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/cn";
 import { Button } from "@/components/ui/button";
 import type { GeneratedStudyQuestionDto } from "@/features/studio-panel/schemas/question";
 import { QuizResults } from "./quiz-results";

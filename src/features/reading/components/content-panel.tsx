@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { FileText, FileSearch, Plus, FileType, Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { getCEFRShortLabel } from "@/lib/cefr";
+import { cn } from "@/utils/cn";
+import { getCEFRShortLabel } from "@/utils/cefr";
 import { getCEFRBadgeVariant } from "./cefr-badge";
 import { Badge } from "@/components/ui/badge";
 import { useScrollProgress } from "@/features/reading/hooks/use-scroll-progress";

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Type, PlayCircle } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/cn";
 import { useUploadSubmit } from "@/features/upload/hooks/use-upload-submit";
 import {
   Dialog,
@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { TextInputArea } from "@/features/upload/components/model/text-input-area";
 import { UploadZone } from "@/features/upload/components/model/upload-zone";
-import { YouTubeInput } from "@/features/upload/components/model/youtube-input";
+import { YouTubeInput } from "@/features/upload/components/youtube-input";
 import type { PassageData } from "@/types/passage";
 
 export interface UploadModalProps {
@@ -116,6 +116,11 @@ export function UploadModal({
     }
   };
 
+  const handleBack = () => {
+    setError(null);
+    setActiveMode(null);
+  };
+
   const handleClose = () => {
     setError(null);
     setActiveMode(null);
@@ -194,7 +199,7 @@ export function UploadModal({
             <div className="flex flex-col gap-2">
               <Button
                 variant="ghost"
-                onClick={() => setActiveMode(null)}
+                onClick={handleBack}
                 className="text-primary text-sm w-fit h-auto py-1 px-2 -ml-2 hover:bg-accent/50"
               >
                 &larr; {t("backToSources")}
@@ -210,7 +215,7 @@ export function UploadModal({
             <div className="flex flex-col gap-2">
               <Button
                 variant="ghost"
-                onClick={() => setActiveMode(null)}
+                onClick={handleBack}
                 className="text-primary text-sm w-fit h-auto py-1 px-2 -ml-2 hover:bg-accent/50"
               >
                 &larr; {t("backToSources")}

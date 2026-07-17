@@ -13,8 +13,7 @@ import type {
   ArtifactRef,
   ArtifactsCacheEntry,
 } from "@/features/studio-panel/lib/studio-artifact-types";
-import type { StudyState } from "./use-study-workspace-state";
-
+import type { StudyState } from "@/types/study-state";
 interface UseStudyActionsInput {
   state: StudyState;
   setState: Dispatch<SetStateAction<StudyState>>;

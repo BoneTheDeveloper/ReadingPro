@@ -1,6 +1,4 @@
 import { YoutubeTranscript } from "youtube-transcript";
-import { extractVideoId } from "@/features/upload/lib/youtube-url";
-
 /**
  * Fetch transcript from YouTube video.
  * Returns null if no transcript available.

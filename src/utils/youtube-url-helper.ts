@@ -8,15 +8,18 @@
  * Supports: youtube.com, youtu.be, shorts, live
  */
 export function extractVideoId(url: string): string | null {
-  const regex =
-    /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=|shorts\/|live\/)|youtu\.be\/)([\w-]{11})/i;
-  const match = url.match(regex);
-  return match ? match[1] : null;
+  const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+  const match = url.match(regExp);
+  return (match && match[2].length === 11) ? match[2] : null;
 }
 
 /**
  * Validate YouTube URL format.
  */
 export function isValidYouTubeUrl(url: string): boolean {
+  if (!url || url.trim().length === 0) {
+    return false;
+  }
+
   return extractVideoId(url) !== null;
 }
