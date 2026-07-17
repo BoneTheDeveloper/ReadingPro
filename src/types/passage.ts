@@ -12,11 +12,12 @@ export interface PassageData {
   createdAt: number;
   sourceType: SourceType;
   filePath: string | null;
+  youtubeUrl: string | null;
   status?: "processing" | "ready";
 }
 
-// Raw Prisma row type for mapping
-export type PassageRow = {
+// Raw Prisma model type for mapping
+export type PassageModel = {
   id: string;
   title: string;
   content: string;
@@ -25,13 +26,14 @@ export type PassageRow = {
   createdAt: Date;
   sourceType: SourceType;
   filePath: string | null;
+  youtubeUrl: string | null;
 };
 
 /**
  * Maps raw Prisma record to PassageData.
  * Centralized mapping at the read boundary.
  */
-export function toPassageData(row: PassageRow): PassageData {
+export function toPassageData(row: PassageModel): PassageData {
   return {
     id: row.id,
     title: row.title,
@@ -41,6 +43,7 @@ export function toPassageData(row: PassageRow): PassageData {
     createdAt: row.createdAt.getTime(),
     sourceType: row.sourceType,
     filePath: row.filePath,
+    youtubeUrl: row.youtubeUrl,
     status: "ready",
   };
 }

@@ -1,5 +1,6 @@
 import { inngest } from "@/infrastructure/inngest/client";
 import { UPLOAD_PROCESS_EVENT } from "./events";
+import { SourceType } from "@/generated/prisma/enums";
 import { prisma } from "@/lib/prisma";
 import { step } from "inngest";
 import {
@@ -19,7 +20,7 @@ export const processUploadJob = inngest.createFunction(
     triggers: [{ event: UPLOAD_PROCESS_EVENT }],
   },
   async ({ event }: { event: { data: UploadProcessorInput } }) => {
-    const { jobId, userId, sourceType, blobPath, text, startedAt, passageId, title } = event.data;
+    const { jobId, userId, sourceType, blobPath, text, youtubeUrl, startedAt, passageId, title } = event.data;
 
     const failJob = async (error: string) => {
       await prisma.uploadJob.update({
@@ -38,23 +39,21 @@ export const processUploadJob = inngest.createFunction(
       });
 
       // Step 2: Resolve text from source (I/O - can retry cheaply)
+      // For YouTube, transcript is already fetched in the action and passed via text
       const rawText = await step.run("resolve-text", async () => {
         switch (sourceType) {
-          case "paste":
+          case SourceType.TEXT:
             return text ?? "";
-          case "txt":
-          case "pdf": {
-            if (!blobPath) throw new Error(`Missing blobPath for ${sourceType} upload`);
+          case SourceType.PDF: {
+            if (!blobPath) throw new Error(`Missing blobPath for PDF upload`);
             const buffer = await downloadFile(blobPath);
             if (!buffer) throw new Error("Failed to read uploaded file from storage");
-            if (sourceType === "pdf") {
-              const parsed = await parsePDF(buffer);
-              return parsed.text;
-            }
-            return buffer.toString("utf-8");
+            const parsed = await parsePDF(buffer);
+            return parsed.text;
           }
-          case "youtube":
-            throw new Error("YouTube upload not implemented");
+          case SourceType.YOUTUBE:
+            // Transcript already fetched in action, passed via text field
+            return text ?? "";
           default:
             throw new Error(`Unsupported sourceType: ${sourceType}`);
         }
@@ -101,6 +100,7 @@ export const processUploadJob = inngest.createFunction(
               wordCount: analysis.wordCount,
               sourceType: analysis.passageSourceType,
               filePath: blobPath || undefined,
+              youtubeUrl: youtubeUrl || undefined,
               createdAt: new Date(startedAt),
             },
           });

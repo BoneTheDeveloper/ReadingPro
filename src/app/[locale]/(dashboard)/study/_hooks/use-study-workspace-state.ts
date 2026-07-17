@@ -105,6 +105,7 @@ export function useStudyWorkspaceState(initialPassages: PassageData[]) {
         createdAt: Date.now(),
         sourceType: "TEXT",
         filePath: null,
+        youtubeUrl: null,
         status: "processing",
       };
       setPassages((prev) => [tempPassage, ...prev]);

@@ -4,7 +4,7 @@
  */
 
 import { z } from "zod";
-import { uploadSourceTypeSchema } from "@/features/upload/schemas/upload";
+import { SourceType } from "@/generated/prisma/enums";
 
 // ---------- Event Name ----------
 
@@ -23,9 +23,9 @@ export const uploadProcessEventSchema = z
     userId: z.string(),
     blobPath: z.string().optional(),
     text: z.string().optional(),
-    url: z.string().optional(),
+    youtubeUrl: z.string().optional(),
     title: z.string(),
-    sourceType: uploadSourceTypeSchema,
+    sourceType: z.nativeEnum(SourceType),
     passageId: z.string().uuid(), // Client-provided UUID for stable key
     startedAt: z.number(), // Client timestamp for createdAt ordering
   })

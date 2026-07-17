@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { SourceType } from "@/generated/prisma/enums";
 import { getUserId } from "@/lib/auth/auth-server";
 import { prisma } from "@/lib/prisma";
 import { inngest } from "@/infrastructure/inngest";
@@ -11,11 +12,36 @@ import {
   validateFileContent,
   validateTextContent,
 } from "@/features/upload/lib/upload-validation";
-import {
-  uploadFileRequestSchema,
-  uploadTextRequestSchema,
-} from "@/features/upload/schemas/upload";
-import { toPassageData, type PassageRow } from "@/types/passage";
+import { toPassageData, type PassageModel } from "@/types/passage";
+import { extractVideoId, isValidYouTubeUrl } from "@/features/upload/lib/youtube-url";
+
+// ---------- Schema & Helpers ----------
+
+const uploadYouTubeRequestSchema = z
+  .object({
+    passageId: z.string().uuid(),
+    title: z.string().min(1),
+    youtubeUrl: z.string().min(1),
+    startedAt: z.number(),
+  })
+  .strict();
+
+const uploadTextRequestSchema = z
+  .object({
+    passageId: z.string().uuid(),
+    title: z.string().min(1),
+    text: z.string().min(1),
+    startedAt: z.number(),
+  })
+  .strict();
+
+function sourceTypeFromExtension(ext: string): SourceType {
+  const lower = ext.toLowerCase();
+  if (lower === "pdf") return SourceType.PDF;
+  return SourceType.TEXT;
+}
+
+// ---------- ID Generator ----------
 
 function newJobId() {
   return `upload_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
@@ -38,17 +64,19 @@ export async function uploadFileAction(formData: FormData) {
     throw new Error(validation.error ?? "Invalid file");
   }
 
-  const parsed = uploadFileRequestSchema.parse({
-    passageId: formData.get("passageId"),
-    title: formData.get("title"),
-    sourceType: formData.get("sourceType"),
-    startedAt: formData.get("startedAt"),
-  });
+  const passageId = formData.get("passageId") as string;
+  const title = formData.get("title") as string;
+  const startedAt = Number(formData.get("startedAt"));
+
+  if (!passageId || !title || isNaN(startedAt)) {
+    throw new Error("Missing required fields");
+  }
 
   const userId = await getUserId();
   const jobId = newJobId();
-  const ext = parsed.sourceType === "pdf" ? "pdf" : "txt";
-  const blobPath = `uploads/${userId}/${parsed.passageId}.${ext}`;
+  const ext = file.name.split(".").pop() || "txt";
+  const blobPath = `uploads/${userId}/${passageId}.${ext}`;
+  const sourceType = sourceTypeFromExtension(ext);
 
   // Job-first: the job exists before any fallible IO
   await prisma.uploadJob.create({
@@ -56,7 +84,7 @@ export async function uploadFileAction(formData: FormData) {
       id: jobId,
       userId,
       status: "PENDING",
-      sourceType: parsed.sourceType,
+      sourceType,
       blobPath,
     },
   });
@@ -94,10 +122,10 @@ export async function uploadFileAction(formData: FormData) {
       jobId,
       userId,
       blobPath,
-      title: parsed.title,
-      sourceType: parsed.sourceType,
-      passageId: parsed.passageId,
-      startedAt: parsed.startedAt,
+      title,
+      sourceType,
+      passageId,
+      startedAt,
     })
   );
 
@@ -122,7 +150,7 @@ export async function uploadTextAction(input: z.infer<typeof uploadTextRequestSc
       id: jobId,
       userId,
       status: "PENDING",
-      sourceType: "paste",
+      sourceType: SourceType.TEXT,
     },
   });
 
@@ -132,7 +160,65 @@ export async function uploadTextAction(input: z.infer<typeof uploadTextRequestSc
       userId,
       text: parsed.text,
       title: parsed.title,
-      sourceType: "paste",
+      sourceType: SourceType.TEXT,
+      passageId: parsed.passageId,
+      startedAt: parsed.startedAt,
+    })
+  );
+
+  return { success: true as const, data: { jobId } };
+}
+
+// ---------- YouTube upload ----------
+// Fast check: Validate URL + check transcript availability before creating job
+
+export async function uploadYouTubeAction(
+  input: z.infer<typeof uploadYouTubeRequestSchema>
+) {
+  const parsed = uploadYouTubeRequestSchema.parse(input);
+
+  // Step 1: Validate YouTube URL
+  if (!isValidYouTubeUrl(parsed.youtubeUrl)) {
+    throw new Error("Invalid YouTube URL");
+  }
+
+  const videoId = extractVideoId(parsed.youtubeUrl);
+  if (!videoId) {
+    throw new Error("Could not extract video ID");
+  }
+
+  // Step 2: Check transcript availability (fast check)
+  const { fetchTranscript } = await import("../services/parsers/youtube-transcript");
+  const transcript = await fetchTranscript(videoId);
+
+  if (!transcript) {
+    throw new Error(
+      "This video doesn't have captions/subtitles available"
+    );
+  }
+
+  const userId = await getUserId();
+  const jobId = newJobId();
+
+  // Create job
+  await prisma.uploadJob.create({
+    data: {
+      id: jobId,
+      userId,
+      status: "PENDING",
+      sourceType: SourceType.YOUTUBE,
+    },
+  });
+
+  // Send event with transcript for immediate processing
+  await inngest.send(
+    createUploadProcessEvent({
+      jobId,
+      userId,
+      youtubeUrl: parsed.youtubeUrl,
+      text: transcript,
+      title: parsed.title,
+      sourceType: SourceType.YOUTUBE,
       passageId: parsed.passageId,
       startedAt: parsed.startedAt,
     })
@@ -168,7 +254,7 @@ export async function getUploadStatus(jobId: string) {
     });
     if (passageRow) {
       // Use mapper - content included but client can ignore for display
-      passage = toPassageData(passageRow as PassageRow);
+      passage = toPassageData(passageRow as PassageModel);
     }
   }
 

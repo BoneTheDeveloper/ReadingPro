@@ -200,6 +200,7 @@ model Passage {
   wordCount   Int
   sourceType  SourceType
   filePath    String?    @unique
+  youtubeUrl  String?
   deletedAt   DateTime?
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt

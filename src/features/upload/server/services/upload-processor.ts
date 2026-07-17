@@ -9,6 +9,7 @@ import { normalizePdfText } from "./normalizers/pdf-normalizer";
 import { detectCefrLevel } from "./analyzers/cefr-detector";
 import { extractVocabulary } from "./analyzers/vocabulary-extractor";
 import { extractTopics } from "./analyzers/topic-tagger";
+import { SourceType } from "@/generated/prisma/enums";
 
 // ---------- Types ----------
 
@@ -17,10 +18,10 @@ export interface UploadProcessorInput {
   userId: string;
   passageId: string;
   title: string;
-  sourceType: "paste" | "txt" | "pdf" | "youtube";
+  sourceType: SourceType;
   text?: string; // paste
   blobPath?: string; // txt, pdf
-  url?: string; // youtube
+  youtubeUrl?: string; // youtube
   startedAt: number;
 }
 
@@ -82,9 +83,9 @@ export function computeWordCount(text: string): number {
  * Map upload source type to passage source type.
  */
 export function sourceTypeToPassageSourceType(
-  sourceType: string
+  sourceType: SourceType
 ): "TEXT" | "PDF" {
-  return sourceType === "pdf" ? "PDF" : "TEXT";
+  return sourceType === SourceType.PDF ? "PDF" : "TEXT";
 }
 
 // ---------- Convenience Orchestrator ----------

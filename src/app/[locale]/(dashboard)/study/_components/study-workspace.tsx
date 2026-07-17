@@ -64,7 +64,7 @@ export function StudyWorkspace({
 
   // Translation state (lifted from ContentPanel)
   const [contentViewMode, setContentViewMode] = useState<
-    "source" | "passage"
+    "passage" | "pdf" | "video"
   >("passage");
   const [selection, setSelection] = useState<TranslationSelection | null>(null);
   const [quickTranslationState, setQuickTranslationState] =

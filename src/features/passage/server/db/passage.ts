@@ -14,6 +14,7 @@ export async function getUserPassages(userId: string) {
       createdAt: true,
       sourceType: true,
       filePath: true,
+      youtubeUrl: true,
     },
   });
 }

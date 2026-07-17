@@ -13,8 +13,9 @@ import type { TranslationSelection } from "@/features/reading/schemas/translatio
 import { extractSelectionInfo } from "@/features/reading/lib/selection-utils";
 import { getPassageSourceUrlAction } from "@/features/passage/server/actions/passage";
 import { PdfViewer } from "./pdf-viewer";
+import { YouTubeEmbed } from "./youtube-embed";
 
-type ViewMode = "source" | "passage";
+type ViewMode = "passage" | "pdf" | "video";
 
 interface ContentPanelProps {
   passage: PassageData | null;
@@ -43,7 +44,7 @@ export function ContentPanel({
 
   // Fetch source URL when switching to source view
   useEffect(() => {
-    if (viewMode !== "source" || !passage?.filePath) {
+    if (viewMode !== "pdf" || !passage?.filePath) {
       return;
     }
 
@@ -165,21 +166,38 @@ export function ContentPanel({
         </div>
 
         <div className="ml-auto">
-          <SegmentedToggle
-            value={viewMode}
-            onChange={onViewModeChange}
-            options={[
-              {
-                value: "passage",
-                label: t("passage"),
-              },
-              {
-                value: "source",
-                label: t("source"),
-                disabled: passage.sourceType === "TEXT",
-              },
-            ]}
-          />
+          {passage.sourceType === "YOUTUBE" && (
+            <SegmentedToggle
+              value={viewMode}
+              onChange={onViewModeChange}
+              options={[
+                {
+                  value: "passage",
+                  label: t("passage"),
+                },
+                {
+                  value: "video",
+                  label: t("video"),
+                },
+              ]}
+            />
+          )}
+          {passage.sourceType === "PDF" && (
+            <SegmentedToggle
+              value={viewMode}
+              onChange={onViewModeChange}
+              options={[
+                {
+                  value: "passage",
+                  label: t("passage"),
+                },
+                {
+                  value: "pdf",
+                  label: t("pdf"),
+                },
+              ]}
+            />
+          )}
         </div>
       </div>
 
@@ -188,7 +206,9 @@ export function ContentPanel({
         ref={scrollRef}
         className="flex-1 overflow-y-auto panel-scroll px-8 pt-7 pb-20"
       >
-        {viewMode === "source" && passage.sourceType === "PDF" ? (
+        {viewMode === "video" && passage.youtubeUrl ? (
+          <YouTubeEmbed url={passage.youtubeUrl} />
+        ) : viewMode === "pdf" && passage.sourceType === "PDF" ? (
           <div className="h-full flex flex-col">
             {sourceLoading ? (
               <div className="flex-1 flex items-center justify-center">

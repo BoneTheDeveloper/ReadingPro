@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { Upload, Type, Globe, Search, FileText } from "lucide-react";
+import { Upload, Type,, Search, FileText, Youtube } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUploadSubmit } from "@/features/upload/hooks/use-upload-submit";
 import {
@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TextInputArea } from "@/features/upload/components/model/text-input-area";
 import { UploadZone } from "@/features/upload/components/model/upload-zone";
+import { YouTubeInput } from "@/features/upload/components/model/youtube-input";
 import type { PassageData } from "@/types/passage";
 
 export interface UploadModalProps {
@@ -26,7 +27,7 @@ export interface UploadModalProps {
   onUploadError?: (error: string, jobId?: string) => void;
 }
 
-type InputMode = "file" | "text" | null;
+type InputMode = "file" | "text" | "youtube" | null;
 
 function SourceButton({
   icon: Icon,
@@ -81,7 +82,7 @@ export function UploadModal({
   const t = useTranslations("Study");
   const [activeMode, setActiveMode] = useState<InputMode>(null);
   const [error, setError] = useState<string | null>(null);
-  const { isProcessing, handleFileUpload, handleTextSubmit } =
+  const { isProcessing, handleFileUpload, handleTextSubmit, handleYouTubeSubmit } =
     useUploadSubmit({ onUploadStart, onComplete: onUploadComplete, onError: onUploadError });
 
   const handleFileUploadWrapper = async (file: File) => {
@@ -101,6 +102,17 @@ export function UploadModal({
     onClose(); // Close modal immediately when upload starts
     try {
       await handleTextSubmit(text);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("uploadFailed"));
+    }
+  };
+
+  const handleYouTubeSubmitWrapper = async (url: string) => {
+    if (!url.trim() || isProcessing) return;
+    setError(null);
+    onClose(); // Close modal immediately when upload starts
+    try {
+      await handleYouTubeSubmit(url);
     } catch (err) {
       setError(err instanceof Error ? err.message : t("uploadFailed"));
     }
@@ -142,10 +154,9 @@ export function UploadModal({
                   onClick={() => setActiveMode("file")}
                 />
                 <SourceButton
-                  icon={Globe}
-                  label={t("website")}
-                  desc={t("comingSoon")}
-                  disabled
+                  icon={Youtube}
+                  label={t("youtube")}
+                  onClick={() => setActiveMode("youtube")}
                 />
                 <SourceButton
                   icon={FileText}
@@ -192,6 +203,23 @@ export function UploadModal({
               </Button>
               <TextInputArea
                 onSubmit={handleTextSubmitWrapper}
+                isProcessing={isProcessing}
+              />
+            </div>
+          )}
+
+          {activeMode === "youtube" && (
+            <div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setActiveMode(null)}
+                className="text-primary mb-3 -ml-2"
+              >
+                &larr; {t("backToSources")}
+              </Button>
+              <YouTubeInput
+                onSubmit={handleYouTubeSubmitWrapper}
                 isProcessing={isProcessing}
               />
             </div>

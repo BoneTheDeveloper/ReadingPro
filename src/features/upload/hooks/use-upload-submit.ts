@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import * as Sentry from "@sentry/nextjs";
-import { uploadFileAction, uploadTextAction, getUploadStatus } from "../server/actions/upload";
+import { uploadFileAction, uploadTextAction, uploadYouTubeAction, getUploadStatus } from "../server/actions/upload";
 import type { PassageData } from "@/types/passage";
 
 type UploadStatus = "PENDING" | "PROCESSING" | "DONE" | "FAILED";
@@ -153,10 +153,43 @@ export function useUploadSubmit(options: UseUploadSubmitOptions = {}) {
     [pollJobStatus, onUploadStart, onError]
   );
 
+  const handleYouTubeSubmit = useCallback(
+    async (youtubeUrl: string) => {
+      setIsProcessing(true);
+      const startedAt = Date.now();
+      const passageId = crypto.randomUUID(); // Client generates UUID for stable key
+      try {
+        const result = await uploadYouTubeAction({
+          passageId,
+          title: "YouTube Video",
+          youtubeUrl,
+          startedAt,
+        });
+
+        const jobId = result.data.jobId;
+        onUploadStart?.("YouTube Video", jobId, passageId);
+
+        const { passage } = await pollJobStatus(jobId);
+        return { passageId: passage.id, jobId };
+      } catch (error) {
+        Sentry.captureException(error, { tags: { scope: "upload:youtube" } });
+        setIsProcessing(false);
+        onError?.(
+          error instanceof Error ? error.message : "Upload failed",
+          undefined,
+          passageId
+        );
+        throw error;
+      }
+    },
+    [pollJobStatus, onUploadStart, onError]
+  );
+
   return {
     isProcessing,
     uploadProgress,
     handleFileUpload,
     handleTextSubmit,
+    handleYouTubeSubmit,
   };
 }

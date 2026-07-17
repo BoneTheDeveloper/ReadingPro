@@ -14,6 +14,7 @@ export async function listUserPassages(userId: string): Promise<PassageData[]> {
     createdAt: p.createdAt.getTime(),
     sourceType: p.sourceType,
     filePath: p.filePath,
+    youtubeUrl: p.youtubeUrl,
   }));
 }
 
