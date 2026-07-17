@@ -22,9 +22,11 @@ const csp = {
   fontSrc: "font-src 'self' https://fonts.gstatic.com",
   connectSrc: [
     "connect-src 'self'",
+    isDev ? "http://localhost:*" : "",
+    isDev ? "ws://localhost:*" : "",
     "https://*.sentry.io",
     "https://vitals.vercel-insights.com",
-  ].join(" "),
+  ].filter(Boolean).join(" "),
   objectSrc: "object-src 'none'",
   baseUri: "base-uri 'self'",
   formAction: "form-action 'self'",

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { Upload, Type,, Search, FileText, Youtube } from "lucide-react";
+import { Type, PlayCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUploadSubmit } from "@/features/upload/hooks/use-upload-submit";
 import {
@@ -10,10 +10,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { TextInputArea } from "@/features/upload/components/model/text-input-area";
 import { UploadZone } from "@/features/upload/components/model/upload-zone";
 import { YouTubeInput } from "@/features/upload/components/model/youtube-input";
@@ -27,7 +25,7 @@ export interface UploadModalProps {
   onUploadError?: (error: string, jobId?: string) => void;
 }
 
-type InputMode = "file" | "text" | "youtube" | null;
+type InputMode = "file" | "paste-text" | "youtube" | null;
 
 function SourceButton({
   icon: Icon,
@@ -36,7 +34,7 @@ function SourceButton({
   onClick,
   disabled,
 }: {
-  icon: typeof Upload;
+  icon: React.ElementType;
   label: string;
   desc?: string;
   onClick?: () => void;
@@ -88,9 +86,9 @@ export function UploadModal({
   const handleFileUploadWrapper = async (file: File) => {
     if (isProcessing) return; // Prevent double-submit
     setError(null);
-    onClose(); // Close modal immediately when upload starts
     try {
       await handleFileUpload(file);
+      onClose(); // Close modal only on success
     } catch (err) {
       setError(err instanceof Error ? err.message : t("uploadFailed"));
     }
@@ -99,9 +97,9 @@ export function UploadModal({
   const handleTextSubmitWrapper = async (text: string) => {
     if (!text.trim() || isProcessing) return;
     setError(null);
-    onClose(); // Close modal immediately when upload starts
     try {
       await handleTextSubmit(text);
+      onClose(); // Close modal only on success
     } catch (err) {
       setError(err instanceof Error ? err.message : t("uploadFailed"));
     }
@@ -110,35 +108,48 @@ export function UploadModal({
   const handleYouTubeSubmitWrapper = async (url: string) => {
     if (!url.trim() || isProcessing) return;
     setError(null);
-    onClose(); // Close modal immediately when upload starts
     try {
       await handleYouTubeSubmit(url);
+      onClose(); // Close modal only on success
     } catch (err) {
       setError(err instanceof Error ? err.message : t("uploadFailed"));
     }
   };
 
+  const handleClose = () => {
+    setError(null);
+    setActiveMode(null);
+    onClose();
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-lg max-h-[90vh] flex flex-col p-0">
-        <DialogHeader className="p-5 pb-4">
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
+      <DialogContent showCloseButton={false} className="max-w-lg max-h-[90vh] flex flex-col p-0 gap-0">
+        <DialogHeader className="p-5 pb-2 relative">
           <DialogTitle>{t("addSourceTitle")}</DialogTitle>
-          <DialogDescription className="sr-only">
-            {t("uploadOrPasteContent")}
-          </DialogDescription>
+          <button
+            onClick={handleClose}
+            className="absolute right-5 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center rounded-full hover:bg-accent transition-colors"
+            aria-label="Close"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M18 6 6 18" />
+              <path d="m6 6 12 12" />
+            </svg>
+          </button>
         </DialogHeader>
 
-        <div className="px-5">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder={t("searchSourcesWeb")}
-              className="pl-10 bg-accent"
-            />
-          </div>
-        </div>
-
-        <div className="p-5 flex-1 overflow-y-auto">
+        <div className="px-5 pb-5 pt-1 flex-1 overflow-y-auto">
           {activeMode === null && (
             <>
               <UploadZone
@@ -149,25 +160,14 @@ export function UploadModal({
 
               <div className="grid grid-cols-2 gap-3 mt-5">
                 <SourceButton
-                  icon={Upload}
-                  label={t("uploadFile")}
-                  onClick={() => setActiveMode("file")}
-                />
-                <SourceButton
-                  icon={Youtube}
+                  icon={PlayCircle}
                   label={t("youtube")}
                   onClick={() => setActiveMode("youtube")}
                 />
                 <SourceButton
-                  icon={FileText}
-                  label={t("googleDrive")}
-                  desc={t("comingSoon")}
-                  disabled
-                />
-                <SourceButton
                   icon={Type}
                   label={t("pasteText")}
-                  onClick={() => setActiveMode("text")}
+                  onClick={() => setActiveMode("paste-text")}
                 />
               </div>
             </>
@@ -177,9 +177,8 @@ export function UploadModal({
             <div>
               <Button
                 variant="ghost"
-                size="sm"
                 onClick={() => setActiveMode(null)}
-                className="text-primary mb-3 -ml-2"
+                className="text-primary text-sm -ml-1"
               >
                 &larr; {t("backToSources")}
               </Button>
@@ -191,13 +190,12 @@ export function UploadModal({
             </div>
           )}
 
-          {activeMode === "text" && (
-            <div>
+          {activeMode === "paste-text" && (
+            <div className="flex flex-col gap-2">
               <Button
                 variant="ghost"
-                size="sm"
                 onClick={() => setActiveMode(null)}
-                className="text-primary mb-3 -ml-2"
+                className="text-primary text-sm w-fit h-auto py-1 px-2 -ml-2 hover:bg-accent/50"
               >
                 &larr; {t("backToSources")}
               </Button>
@@ -209,12 +207,11 @@ export function UploadModal({
           )}
 
           {activeMode === "youtube" && (
-            <div>
+            <div className="flex flex-col gap-2">
               <Button
                 variant="ghost"
-                size="sm"
                 onClick={() => setActiveMode(null)}
-                className="text-primary mb-3 -ml-2"
+                className="text-primary text-sm w-fit h-auto py-1 px-2 -ml-2 hover:bg-accent/50"
               >
                 &larr; {t("backToSources")}
               </Button>
@@ -230,12 +227,6 @@ export function UploadModal({
               {error}
             </div>
           )}
-        </div>
-
-        <div className="p-4 border-t border-border flex justify-end">
-          <Button variant="outline" onClick={onClose}>
-            {t("cancel")}
-          </Button>
         </div>
       </DialogContent>
     </Dialog>
