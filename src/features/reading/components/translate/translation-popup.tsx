@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Loader2, Languages } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/utils/cn";
+import { cn } from "@/lib/utils";
 import type { TranslationSelection, TranslationDto } from "@/features/reading/schemas/translation";
 
 type QuickTranslationStatus =

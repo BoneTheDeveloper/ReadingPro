@@ -1,24 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useTranslations } from "next-intl";
-import { Loader2, PlayCircle } from "lucide-react";
+import { Loader2, PlayCircle, Clipboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { isValidYouTubeUrl } from "@/utils/youtube-url-helper";
+import { isValidYouTubeUrl, extractVideoId } from "@/utils/youtube-url-helper";
 import { checkTranscriptAvailability} from "@/features/upload/server/actions/check-youtube-transcript";
-
-function extractVideoId(url: string) {
-  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
-  return match ? match[1] : null;
-}
 
 interface YouTubeInputProps {
   onSubmit: (url: string) => Promise<void>;
+  onUploadStart?: () => void;
   isProcessing: boolean;
 }
 
-export function YouTubeInput({ onSubmit, isProcessing }: YouTubeInputProps) {
+export function YouTubeInput({ onSubmit, onUploadStart, isProcessing }: YouTubeInputProps) {
   const t = useTranslations("Study");
   const [url, setUrl] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -26,12 +22,15 @@ export function YouTubeInput({ onSubmit, isProcessing }: YouTubeInputProps) {
   const [isValidating, setIsValidating] = useState(false);
   const [isTranscriptValid, setIsTranscriptValid] = useState(false);
 
+  const isUrlFormatValid = useMemo(
+    () => url.trim().length > 0 && isValidYouTubeUrl(url),
+    [url]
+  );
 
   useEffect(() => {
-    if (!isValidYouTubeUrl) return;
+    if (!isUrlFormatValid) return;
     const videoId = extractVideoId(url);
     if (!videoId) return;
-
 
     const delayDebounceFn = setTimeout(async () => {
       const result = await checkTranscriptAvailability(videoId);
@@ -41,19 +40,35 @@ export function YouTubeInput({ onSubmit, isProcessing }: YouTubeInputProps) {
         setError(null);
       } else {
         setIsTranscriptValid(false);
-        setError(result.message);
+        setError(result.message ?? "Unable to validate video");
       }
       setIsValidating(false);
     }, 800);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [url, isValidYouTubeUrl]);
+  }, [url, isUrlFormatValid]);
+
+  const handlePaste = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text) {
+        const isFormatValid = text.trim().length > 0 && isValidYouTubeUrl(text);
+        setUrl(text);
+        setError(null);
+        setIsTranscriptValid(false);
+        setIsValidating(isFormatValid);
+      }
+    } catch {
+      // Clipboard access denied or not available
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isValidYouTubeUrl || !isTranscriptValid) return;
+    if (!isUrlFormatValid || !isTranscriptValid) return;
 
     setError(null);
+    onUploadStart?.();
     try {
       await onSubmit(url);
     } catch (err) {
@@ -86,8 +101,17 @@ export function YouTubeInput({ onSubmit, isProcessing }: YouTubeInputProps) {
             disabled={isProcessing}
             className="pl-10 pr-10"
           />
-          {isValidating && (
+          {isValidating ? (
             <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
+          ) : (
+            <button
+              type="button"
+              onClick={handlePaste}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              title="Paste from clipboard"
+            >
+              <Clipboard className="w-4 h-4" />
+            </button>
           )}
         </div>
       </div>
@@ -98,7 +122,7 @@ export function YouTubeInput({ onSubmit, isProcessing }: YouTubeInputProps) {
 
       <Button
         type="submit"
-        disabled={!isValidYouTubeUrl || !isTranscriptValid || isProcessing || isValidating}
+        disabled={!isUrlFormatValid || !isTranscriptValid || isProcessing || isValidating}
         className="w-full"
       >
         {isProcessing ? (

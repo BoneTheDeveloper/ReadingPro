@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { Download, Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/utils/cn";
+import { cn } from "@/lib/utils";
 import type { VocabularyItemDto, VocabularyStatus } from "../schemas/vocabulary";
 
 interface VocabularyListProps {

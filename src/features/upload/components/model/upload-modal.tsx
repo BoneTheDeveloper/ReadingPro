@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Type, PlayCircle } from "lucide-react";
-import { cn } from "@/utils/cn";
+import { cn } from "@/lib/utils";
 import { useUploadSubmit } from "@/features/upload/hooks/use-upload-submit";
 import {
   Dialog,
@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { TextInputArea } from "@/features/upload/components/model/text-input-area";
 import { UploadZone } from "@/features/upload/components/model/upload-zone";
-import { YouTubeInput } from "@/features/upload/components/youtube-input";
+import { YouTubeInput } from "@/features/upload/components/model/youtube-input";
 import type { PassageData } from "@/types/passage";
 
 export interface UploadModalProps {
@@ -110,10 +110,13 @@ export function UploadModal({
     setError(null);
     try {
       await handleYouTubeSubmit(url);
-      onClose(); // Close modal only on success
     } catch (err) {
       setError(err instanceof Error ? err.message : t("uploadFailed"));
     }
+  };
+
+  const handleYouTubeUploadStart = () => {
+    onClose();
   };
 
   const handleBack = () => {
@@ -222,6 +225,7 @@ export function UploadModal({
               </Button>
               <YouTubeInput
                 onSubmit={handleYouTubeSubmitWrapper}
+                onUploadStart={handleYouTubeUploadStart}
                 isProcessing={isProcessing}
               />
             </div>

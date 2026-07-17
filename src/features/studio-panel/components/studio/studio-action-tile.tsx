@@ -10,7 +10,7 @@ import {
   Languages,
   Sparkles,
 } from "lucide-react";
-import { cn } from "@/utils/cn";
+import { cn } from "@/lib/utils";
 import type { StudioActionId } from "@/features/studio-panel/server/actions/studio-panel";
 
 // All 6 wireframe tiles. Only quiz / chat / lookup are wired in this build;

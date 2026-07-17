@@ -7,7 +7,7 @@ import {
   validateFile,
 } from "@/features/upload/lib/upload-validation";
 import { UPLOAD_CONFIG } from "@/features/upload/lib/upload-config";
-import { cn } from "@/utils/cn";
+import { cn } from "@/lib/utils";
 
 interface UploadZoneProps {
   onFileSelect: (file: File) => void;

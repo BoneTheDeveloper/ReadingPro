@@ -187,13 +187,14 @@ export async function uploadYouTubeAction(
     throw new Error("Could not extract video ID");
   }
 
-  // Step 2: Check transcript availability (fast check)
-  const { fetchTranscript } = await import("../services/parsers/youtube-transcript");
-  const transcript = await fetchTranscript(videoId);
+  // Step 2: Get transcript from cache (validated on paste)
+  const { getCachedTranscriptForUpload } = await import("./check-youtube-transcript");
+  const transcript = await getCachedTranscriptForUpload(videoId);
 
   if (!transcript) {
+    // Fallback: user submitted without validation OR cache expired
     throw new Error(
-      "This video doesn't have captions/subtitles available"
+      "Please validate the video before uploading (transcript may have expired)"
     );
   }
 

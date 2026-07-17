@@ -15,7 +15,7 @@ import {
 import { buttonVariants } from "@/components/ui/button";
 import { DashboardSidebar } from "@/components/layout/dashboard-sidebar";
 import { Link } from "@/i18n/navigation";
-import { cn } from "@/utils/cn";
+import { cn } from "@/lib/utils";
 
 type UserProgress = {
   totalCards: number;

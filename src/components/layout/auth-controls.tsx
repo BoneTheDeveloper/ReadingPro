@@ -2,7 +2,7 @@
 
 import { authClient } from "@/lib/auth/auth-client";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/utils/cn";
+import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
