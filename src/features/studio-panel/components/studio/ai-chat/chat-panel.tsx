@@ -7,7 +7,7 @@ import { DefaultChatTransport } from "ai";
 import { Send, Loader2, AlertCircle, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { getChatHistoryAction } from "@/features/studio-panel/server/actions/studio-panel";
+import { getChatHistoryAction } from "@/features/studio-panel/server/actions/chat";
 import * as Sentry from "@sentry/nextjs";
 interface StudyChatPanelProps {
   passageId: string;

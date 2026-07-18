@@ -13,7 +13,7 @@ import {
   toPersistedUiMessages,
   persistUserMessage,
   streamStudyChat,
-} from "@/features/studio-panel/server/services/ai-chat";
+} from "@/features/studio-panel/server/services/ai-chat/ai-chat";
 
 const log = moduleLog("studio-panel:chat-route");
 

@@ -1,15 +1,13 @@
 "use client";
 
-import {
-  STUDIO_GENERATION_TIMEOUT_MS,
-  type StudioArtifact,
-  type StudioArtifactErrorCode,
-} from "@/features/studio-panel/lib/studio-artifact-types";
-import type { GeneratedStudyQuestionDto } from "@/features/studio-panel/schemas/question";
-import { generateStudioQuestionsAction } from "../server/actions/studio-panel";
+import type { StudioArtifact, StudioArtifactErrorCode } from "@/features/studio-panel/schemas/studio-artifact";
+import type { GeneratedQuestionDto } from "@/features/studio-panel/schemas/question";
+import { generateStudioQuestionsAction } from "../server/actions/question";
+
+const STUDIO_GENERATION_TIMEOUT_MS = 45_000;
 
 export type GenerateStudioQuestionsResult =
-  | { artifact: StudioArtifact; questions: GeneratedStudyQuestionDto[] }
+  | { artifact: StudioArtifact; questions: GeneratedQuestionDto[] }
   | { error: string; code: StudioArtifactErrorCode };
 
 const TIMEOUT_SENTINEL = Symbol("studio-questions-timeout");

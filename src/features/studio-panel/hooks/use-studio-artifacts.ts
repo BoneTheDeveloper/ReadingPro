@@ -2,11 +2,12 @@
 
 import { useEffect } from "react";
 import * as Sentry from "@sentry/nextjs";
-import type { ArtifactsCacheEntry } from "@/types/studio-artifact";
-import { ARTIFACT_STALE_TIME } from "@/features/studio-panel/lib/studio-artifact-types";
-import { getStudioArtifactsAction } from "@/features/studio-panel/server/actions/studio-panel";
+import type { ArtifactsCacheEntry } from "@/features/studio-panel/schemas/studio-artifact";
+import { getStudioArtifactsAction } from "@/features/studio-panel/server/actions/artifact";
 import type { Dispatch, SetStateAction } from "react";
 import type { StudyState } from "@/types/study-state";
+
+const ARTIFACT_STALE_TIME = 60_000;
 
 type ArtifactsState = Record<string, ArtifactsCacheEntry>;
 
@@ -16,7 +17,7 @@ interface UseStudyArtifactsInput {
   setState: Dispatch<SetStateAction<StudyState>>;
 }
 
-export function useStudyArtifacts({
+export function useStudioArtifacts({
   activePassageId,
   artifactsByPassageId,
   setState,

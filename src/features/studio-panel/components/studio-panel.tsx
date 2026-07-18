@@ -23,11 +23,11 @@ import type {
   ArtifactDetailCacheEntry,
   StudioArtifactType,
   StudioArtifactErrorCode,
-} from "@/features/studio-panel/lib/studio-artifact-types";
-import type { StudioActionId } from "@/features/studio-panel/server/actions/studio-panel";
-import { QuizContent } from "./studio/quiz/quiz-content";
+} from "@/features/studio-panel/schemas/studio-artifact";
+import type { StudioActionId } from "@/features/studio-panel/server/actions/artifact";
+import { QuestionContent } from "./studio/questions/question-content";
 import { StudyChatPanel } from "./studio/ai-chat/chat-panel";
-import { resetQuizResultAction } from "@/features/studio-panel/server/actions/studio-panel";
+import { resetQuizResultAction } from "@/features/studio-panel/server/actions/question";
 import {
   StudioActionGrid,
   StudioEmptyState,
@@ -175,7 +175,7 @@ export function StudioPanel({
           />
           <div className="flex-1 overflow-y-auto panel-scroll p-4">
             {viewingArtifact.type === "quiz" && detail?.questions && (
-              <QuizContent
+              <QuestionContent
                 questions={detail.questions}
                 passageTitle={viewingArtifact.title}
                 artifactId={viewingArtifact.id}

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { GeneratedQuestionDto } from "./question";
 
 // ---------------------------------------------------------------------------
 // Server-action input schema — validated in studio-panel/actions.ts
@@ -13,3 +14,56 @@ export const recordQuizResultInputSchema = z
     message: "correctCount cannot exceed totalQuestions",
     path: ["correctCount"],
   });
+
+// ---------------------------------------------------------------------------
+// Types - shared across studio-panel feature
+// ---------------------------------------------------------------------------
+
+export type StudioArtifactType = "quiz" | "flashcard";
+export type StudioArtifactStatus = "generating" | "done" | "failed";
+type ArtifactsCacheStatus = "idle" | "loading" | "success" | "error";
+
+interface QuizResult {
+  completedAt: string;
+  correctCount: number;
+  totalQuestions: number;
+  accuracyRate: number;
+}
+
+export interface StudioArtifact {
+  id: string;
+  type: StudioArtifactType;
+  passageId: string;
+  title: string;
+  status: StudioArtifactStatus;
+  createdAt: string;
+  updatedAt?: string;
+  quizResult?: QuizResult;
+  errorCode?: StudioArtifactErrorCode;
+  errorDetail?: string;
+}
+
+export type StudioArtifactErrorCode =
+  | "GENERATION_FAILED"
+  | "NO_QUESTIONS"
+  | "VALIDATION_FAILED"
+  | "UPSTREAM_ERROR"
+  | "TIMEOUT"
+  | "PASSAGE_NOT_FOUND"
+  | "UNKNOWN";
+
+export interface ArtifactsCacheEntry {
+  status: ArtifactsCacheStatus;
+  data: StudioArtifact[];
+  fetchedAt?: number;
+  error?: string;
+}
+
+export interface ArtifactRef {
+  type: StudioArtifactType;
+  id: string;
+}
+
+export interface ArtifactDetailCacheEntry {
+  questions?: GeneratedQuestionDto[];
+}

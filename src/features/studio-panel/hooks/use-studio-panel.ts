@@ -4,23 +4,23 @@ import { useCallback, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import type { Dispatch, SetStateAction } from "react";
 import { generateStudioQuestions } from "@/features/studio-panel/hooks/use-studio-questions";
-import { getArtifactQuestionsAction } from "@/features/studio-panel/server/actions/studio-panel";
-import type { StudioActionId } from "@/features/studio-panel/server/actions/studio-panel";
+import { getArtifactQuestionsAction } from "@/features/studio-panel/server/actions/artifact";
+import type { StudioActionId } from "@/features/studio-panel/server/actions/artifact";
 import type { PassageData } from "@/types/passage";
 import type {
   StudioArtifact,
   StudioArtifactErrorCode,
   ArtifactRef,
   ArtifactsCacheEntry,
-} from "@/features/studio-panel/lib/studio-artifact-types";
+} from "@/features/studio-panel/schemas/studio-artifact";
 import type { StudyState } from "@/types/study-state";
-interface UseStudyActionsInput {
+interface UseStudioPanelInput {
   state: StudyState;
   setState: Dispatch<SetStateAction<StudyState>>;
   passages: PassageData[];
 }
 
-export function useStudyActions({ state, setState, passages }: UseStudyActionsInput) {
+export function useStudioPanel({ state, setState, passages }: UseStudioPanelInput) {
   const t = useTranslations("Study");
   const activePassageIdRef = useRef(state.activePassageId);
   // Guards against re-entrant retries of the same artifact (e.g. a fast

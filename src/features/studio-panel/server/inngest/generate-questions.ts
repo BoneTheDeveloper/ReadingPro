@@ -6,7 +6,7 @@
 import { inngest } from "@/infrastructure/inngest/client";
 import { prisma } from "@/lib/prisma";
 import { step } from "inngest";
-import { generateComprehensionQuestions } from "../services/question-generator";
+import { generateComprehensionQuestions } from "../services/question/question-generator";
 import { GENERATE_QUESTIONS_EVENT, type GenerateQuestionsEventData } from "./events";
 
 export const generateQuestionsJob = inngest.createFunction(

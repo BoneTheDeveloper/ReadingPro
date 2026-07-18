@@ -3,29 +3,28 @@ import { Prisma } from "@/generated/prisma/client";
 import { QuestionType } from "@/generated/prisma/enums";
 import {
   generateComprehensionQuestions,
-  type GeneratedQuestion,
 } from "./question-generator";
 import { moduleLog } from "@/lib/logger";
 import { getOwnedPassage as getOwnedPassageForStudy } from "@/features/passage";
 import {
   questionDataSchema,
-  type GeneratedStudyQuestionDto,
+  type GeneratedQuestionDto,
+  type GeneratedQuestion,
 } from "@/features/studio-panel/schemas/question";
 import {
-  STUDIO_GENERATION_TIMEOUT_MS,
   type StudioArtifact,
   type StudioArtifactErrorCode,
   type StudioArtifactStatus,
   type StudioArtifactType,
-} from "@/features/studio-panel/lib/studio-artifact-types";
+} from "@/features/studio-panel/schemas/studio-artifact";
 import {
   createStudioArtifactWithQuestions,
   findExistingStudioArtifact,
-} from "../db/studio-artifact-questions";
+} from "@/features/studio-panel/server/db/studio-artifact-questions";
 
-export { type GeneratedStudyQuestionDto } from "@/features/studio-panel/schemas/question";
+const STUDIO_GENERATION_TIMEOUT_MS = 45_000;
 
-const log = moduleLog("studio-panel:passage-study");
+const log = moduleLog("studio-panel:questions");
 
 export async function generateQuestionsForPassage(
   userId: string,
@@ -33,12 +32,12 @@ export async function generateQuestionsForPassage(
   artifactId: string,
 ): Promise<{
   artifact: StudioArtifact;
-  questions: GeneratedStudyQuestionDto[];
+  questions: GeneratedQuestionDto[];
 }> {
   const passage = await getOwnedPassageForStudy(userId, passageId);
 
   if (!passage) {
-    throw new PassageStudyServiceError(
+    throw new QuestionServiceError(
       "Passage not found",
       "PASSAGE_NOT_FOUND",
     );
@@ -63,7 +62,7 @@ export async function generateQuestionsForPassage(
   );
 
   if (!questionResult) {
-    throw new PassageStudyServiceError(
+    throw new QuestionServiceError(
       "Question generation failed — try again",
       "GENERATION_FAILED",
     );
@@ -73,13 +72,13 @@ export async function generateQuestionsForPassage(
     isValidGeneratedQuestion(q, artifactId),
   );
   if (questionResult.questions.length === 0) {
-    throw new PassageStudyServiceError(
+    throw new QuestionServiceError(
       "No questions generated — try again",
       "NO_QUESTIONS",
     );
   }
   if (validQuestions.length === 0) {
-    throw new PassageStudyServiceError(
+    throw new QuestionServiceError(
       "All generated questions failed validation — try again",
       "VALIDATION_FAILED",
     );
@@ -117,7 +116,7 @@ async function withGenerationTimeout<T>(work: Promise<T>): Promise<T> {
     timer = setTimeout(
       () =>
         reject(
-          new PassageStudyServiceError(
+          new QuestionServiceError(
             "Question generation timed out — try again",
             "TIMEOUT",
           ),
@@ -171,7 +170,7 @@ function toQuestionCreateInput(question: GeneratedQuestion) {
 function toQuestionData(
   question: GeneratedQuestion,
   index: number,
-): GeneratedStudyQuestionDto {
+): GeneratedQuestionDto {
   return {
     id: `pending-${index}`,
     number: index + 1,
@@ -233,7 +232,7 @@ function rowToExistingQuestionDto(
     difficulty: number;
   },
   index: number,
-): GeneratedStudyQuestionDto {
+): GeneratedQuestionDto {
   const options =
     typeof q.options === "string"
       ? (() => {
@@ -258,7 +257,7 @@ function rowToExistingQuestionDto(
   };
 }
 
-export class PassageStudyServiceError extends Error {
+export class QuestionServiceError extends Error {
   readonly code: StudioArtifactErrorCode;
 
   constructor(
@@ -266,7 +265,7 @@ export class PassageStudyServiceError extends Error {
     code: StudioArtifactErrorCode = "UPSTREAM_ERROR",
   ) {
     super(message);
-    this.name = "PassageStudyServiceError";
+    this.name = "QuestionServiceError";
     this.code = code;
   }
 }

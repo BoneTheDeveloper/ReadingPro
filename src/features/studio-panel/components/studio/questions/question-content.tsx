@@ -12,11 +12,11 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import type { GeneratedStudyQuestionDto } from "@/features/studio-panel/schemas/question";
-import { QuizResults } from "./quiz-results";
+import type { GeneratedQuestionDto } from "@/features/studio-panel/schemas/question";
+import { QuestionResults } from "./question-results";
 
-interface QuizContentProps {
-  questions: GeneratedStudyQuestionDto[];
+interface QuestionContentProps {
+  questions: GeneratedQuestionDto[];
   passageTitle: string;
   artifactId: string | null;
   onReset: () => void;
@@ -27,14 +27,14 @@ interface QuizContentProps {
   onResetResult: () => void;
 }
 
-export function QuizContent({
+export function QuestionContent({
   questions,
   passageTitle,
   artifactId,
   onReset,
   onRecordResult,
   onResetResult,
-}: QuizContentProps) {
+}: QuestionContentProps) {
   const t = useTranslations("Study");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
@@ -134,7 +134,7 @@ export function QuizContent({
   if (isComplete) {
     const correctCount = Object.values(answers).filter(Boolean).length;
     return (
-      <QuizResults
+      <QuestionResults
         correctCount={correctCount}
         totalQuestions={questions.length}
         passageTitle={passageTitle}

@@ -7,15 +7,12 @@ import {
   type QuestionGenerationData,
 } from "@/features/studio-panel/schemas/question";
 
-export type { GeneratedQuestion } from "@/features/studio-panel/schemas/question";
-export type QuestionGenerationResult = QuestionGenerationData;
-
 const log = moduleLog("studio-panel:question-generator");
 
 export async function generateComprehensionQuestions(
   passage: string,
   questionCount: number = 5,
-): Promise<QuestionGenerationResult | null> {
+): Promise<QuestionGenerationData | null> {
   try {
     const numberedPassage = passage
       .split("\n")

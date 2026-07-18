@@ -58,7 +58,7 @@ export type QuestionGenerationData = z.infer<typeof questionGenerationDataSchema
 // OUTPUT — server returns this (DTOs)
 // =============================================================================
 
-export interface GeneratedStudyQuestionDto {
+export interface GeneratedQuestionDto {
   id: string;
   number: number;
   questionText: string;

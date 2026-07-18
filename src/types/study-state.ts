@@ -2,7 +2,7 @@
 // Used by study hooks and components
 
 import type { PassageData } from "./passage";
-import type { ArtifactsCacheEntry, ArtifactRef, ArtifactDetailCacheEntry } from "./studio-artifact";
+import type { ArtifactsCacheEntry, ArtifactRef, ArtifactDetailCacheEntry } from "@/features/studio-panel/schemas/studio-artifact";
 
 type StudyStatus =
   | "idle"

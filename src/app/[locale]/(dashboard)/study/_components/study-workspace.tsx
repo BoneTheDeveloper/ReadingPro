@@ -14,10 +14,10 @@ import { ContentPanel } from "@/features/reading/components/content-panel";
 import { StudioPanel } from "@/features/studio-panel/components/studio-panel";
 import { TranslationPopup } from "@/features/reading/components/translation-popup";
 import { UploadModal } from "@/features/upload/components/model/upload-modal";
-import { useStudyActions } from "../_hooks/use-study-actions";
+import { useStudioPanel } from "@/features/studio-panel/hooks/use-studio-panel";
 import { useStudyPanelLayout } from "../_hooks/use-study-panel-layout";
 import { useStudyWorkspaceState } from "../_hooks/use-study-workspace-state";
-import { useStudyArtifacts } from "@/features/studio-panel/hooks/use-study-artifacts";
+import { useStudioArtifacts } from "@/features/studio-panel/hooks/use-studio-artifacts";
 
 let quickTranslationRequestCounter = 0;
 
@@ -57,7 +57,7 @@ export function StudyWorkspace({
     handleRecordQuizResult,
     handleResetQuizResult,
     retryQuizArtifact,
-  } = useStudyActions({ state, setState, passages });
+  } = useStudioPanel({ state, setState, passages });
   const layout = useStudyPanelLayout();
   // Presence heartbeat is mounted app-wide in DashboardSidebar; the study page is
   // wrapped by it, so no per-page heartbeat is needed here.
@@ -216,7 +216,7 @@ export function StudyWorkspace({
     : false;
 
   // Fetch artifacts when switching passages
-  useStudyArtifacts({
+  useStudioArtifacts({
     activePassageId: state.activePassageId,
     artifactsByPassageId: state.artifactsByPassageId,
     setState,

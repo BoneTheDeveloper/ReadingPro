@@ -8,9 +8,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   recordQuizResultAction,
   resetQuizResultAction,
-} from "@/features/studio-panel/server/actions/studio-panel";
+} from "@/features/studio-panel/server/actions/question";
 
-interface QuizResultsProps {
+interface QuestionResultsProps {
   correctCount: number;
   totalQuestions: number;
   passageTitle: string;
@@ -24,7 +24,7 @@ interface QuizResultsProps {
   onResetResult: () => void;
 }
 
-export function QuizResults({
+export function QuestionResults({
   correctCount,
   totalQuestions,
   passageTitle,
@@ -33,7 +33,7 @@ export function QuizResults({
   onNewPassage,
   onRecordResult,
   onResetResult,
-}: QuizResultsProps) {
+}: QuestionResultsProps) {
   const t = useTranslations("Study");
   const [saveError, setSaveError] = useState<string | null>(null);
   const isSavingRef = useRef(false);
