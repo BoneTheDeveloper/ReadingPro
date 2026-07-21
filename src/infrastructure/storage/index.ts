@@ -53,6 +53,10 @@ export async function uploadFile(
 /**
  * Delete a file from storage.
  */
+export async function deleteFile(pathname: string): Promise<boolean> {
+  const adapter = await getAdapter();
+  return adapter.deleteFile(pathname);
+}
 
 /**
  * Get a URL for viewing a file (inline).

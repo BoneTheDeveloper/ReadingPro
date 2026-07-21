@@ -11,14 +11,20 @@ import { deletePassageAction } from "@/features/passage/server/actions/passage";
 import type { PassageData } from "@/types/passage";
 import type { DocumentItem } from "@/features/upload/components/panel/sources-panel";
 
-// Re-export shared type for backward compatibility
-import type { StudyState } from "@/types/study-state";
+type StudyStatus = "idle" | "uploading" | "analyzing" | "ready" | "error";
+
+export interface StudyState {
+  passages: PassageData[];
+  activePassageId: string | null;
+  status: StudyStatus;
+  error: string | null;
+  uploadModalOpen: boolean;
+}
 
 function getMostRecentPassageId(passages: PassageData[]): string | null {
   return (
     passages.reduce<PassageData | null>((latest, passage) => {
       if (!latest) return passage;
-      // Strict > preserves first-seen order on ties
       return passage.createdAt > latest.createdAt ? passage : latest;
     }, null)?.id ?? null
   );
@@ -28,9 +34,6 @@ export function useStudyWorkspaceState(initialPassages: PassageData[]) {
   const router = useRouter();
   const [, startTransition] = useTransition();
 
-  // Replace useOptimistic with regular state
-  const [passages, setPassages] = useState<PassageData[]>(initialPassages);
-
   const [state, setState] = useState<StudyState>(() => {
     const initialId = getMostRecentPassageId(initialPassages);
     return {
@@ -39,9 +42,6 @@ export function useStudyWorkspaceState(initialPassages: PassageData[]) {
       status: initialId ? "ready" : "idle",
       error: null,
       uploadModalOpen: false,
-      artifactsByPassageId: {},
-      viewingArtifactByPassageId: {},
-      artifactDetailById: {},
     };
   });
   const [isUploading, setIsUploading] = useState(false);
@@ -49,13 +49,13 @@ export function useStudyWorkspaceState(initialPassages: PassageData[]) {
 
   const activePassage = useMemo(
     () =>
-      passages.find((passage) => passage.id === state.activePassageId) ?? null,
-    [passages, state.activePassageId],
+      state.passages.find((passage) => passage.id === state.activePassageId) ?? null,
+    [state.passages, state.activePassageId],
   );
 
   const documents: DocumentItem[] = useMemo(
     () =>
-      [...passages]
+      [...state.passages]
         .sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0))
         .map((passage) => ({
           id: passage.id,
@@ -72,7 +72,7 @@ export function useStudyWorkspaceState(initialPassages: PassageData[]) {
           sourceType: passage.sourceType,
           status: passage.status,
         })),
-    [passages],
+    [state.passages],
   );
 
   const handleSelectDocument = useCallback((id: string) => {
@@ -84,7 +84,7 @@ export function useStudyWorkspaceState(initialPassages: PassageData[]) {
   }, []);
 
   const handleOpenUploadModal = useCallback(() => {
-    if (isUploading) return; // Prevent opening during upload
+    if (isUploading) return;
     setState((prev) => ({ ...prev, uploadModalOpen: true }));
   }, [isUploading]);
 
@@ -93,8 +93,7 @@ export function useStudyWorkspaceState(initialPassages: PassageData[]) {
   }, []);
 
   const handleUploadStart = useCallback(
-    (fileName: string, jobId: string, passageId: string) => {
-      // Create temp passage with processing status
+    (fileName: string, _jobId: string, passageId: string) => {
       const tempPassage: PassageData = {
         id: passageId,
         title: fileName,
@@ -107,7 +106,10 @@ export function useStudyWorkspaceState(initialPassages: PassageData[]) {
         youtubeUrl: null,
         status: "processing",
       };
-      setPassages((prev) => [tempPassage, ...prev]);
+      setState((prev) => ({
+        ...prev,
+        passages: [tempPassage, ...prev.passages],
+      }));
       setIsUploading(true);
       setUploadingFileName(fileName);
     },
@@ -118,14 +120,9 @@ export function useStudyWorkspaceState(initialPassages: PassageData[]) {
     (data: { passage: PassageData; jobId: string }) => {
       const { passage } = data;
 
-      // In-place replace: same ID, status becomes ready
-      setPassages((prev) =>
-        prev.map((p) => (p.id === passage.id ? passage : p)),
-      );
-
-      // Only switch if no active passage (preserve user's reading)
       setState((prev) => ({
         ...prev,
+        passages: prev.passages.map((p) => (p.id === passage.id ? passage : p)),
         activePassageId: prev.activePassageId ?? passage.id,
         uploadModalOpen: false,
         status: "ready",
@@ -135,7 +132,6 @@ export function useStudyWorkspaceState(initialPassages: PassageData[]) {
       setIsUploading(false);
       setUploadingFileName("");
 
-      // Background sync from RSC
       startTransition(() => {
         router.refresh();
       });
@@ -145,9 +141,11 @@ export function useStudyWorkspaceState(initialPassages: PassageData[]) {
 
   const handleUploadError = useCallback(
     (error: string, _jobId?: string, passageId?: string) => {
-      // Remove temporary passage if exists
       if (passageId) {
-        setPassages((prev) => prev.filter((p) => p.id !== passageId));
+        setState((prev) => ({
+          ...prev,
+          passages: prev.passages.filter((p) => p.id !== passageId),
+        }));
       }
       setState((prev) => ({ ...prev, error }));
       setIsUploading(false);
@@ -159,31 +157,21 @@ export function useStudyWorkspaceState(initialPassages: PassageData[]) {
   const handleDeletePassage = useCallback(
     (passageId: string) => {
       startTransition(async () => {
-        // Remove from local state
-        setPassages((prev) => prev.filter((p) => p.id !== passageId));
-
         setState((prev) => {
-          const restArtifactsByPassageId = { ...prev.artifactsByPassageId };
-          const restViewingByPassageId = { ...prev.viewingArtifactByPassageId };
-          delete restArtifactsByPassageId[passageId];
-          delete restViewingByPassageId[passageId];
+          const remaining = prev.passages.filter((p) => p.id !== passageId);
           if (prev.activePassageId === passageId) {
-            // Re-read from current passages state (already updated above)
-            const remaining = passages.filter((p) => p.id !== passageId);
             const replacementId = getMostRecentPassageId(remaining);
             return {
               ...prev,
+              passages: remaining,
               activePassageId: replacementId,
-              artifactsByPassageId: restArtifactsByPassageId,
-              viewingArtifactByPassageId: restViewingByPassageId,
               status: replacementId ? "ready" : "idle",
               error: null,
             };
           }
           return {
             ...prev,
-            artifactsByPassageId: restArtifactsByPassageId,
-            viewingArtifactByPassageId: restViewingByPassageId,
+            passages: remaining,
             error: null,
           };
         });
@@ -198,13 +186,12 @@ export function useStudyWorkspaceState(initialPassages: PassageData[]) {
         }
       });
     },
-    [passages],
+    [],
   );
 
   return {
     state,
     setState,
-    passages,
     activePassage,
     documents,
     isUploading,

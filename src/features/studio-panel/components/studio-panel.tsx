@@ -18,11 +18,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import type { PassageData } from "@/types/passage";
 import type {
-  ArtifactsCacheEntry,
   ArtifactRef,
   ArtifactDetailCacheEntry,
   StudioArtifactType,
   StudioArtifactErrorCode,
+  StudioArtifact,
 } from "@/features/studio-panel/schemas/studio-artifact";
 import type { StudioActionId } from "@/features/studio-panel/server/actions/artifact";
 import { QuestionContent } from "./studio/questions/question-content";
@@ -34,13 +34,16 @@ import {
   StudioLibraryHeader,
 } from "./studio/studio-action-tile";
 
+type ArtifactQueryStatus = "idle" | "loading" | "success" | "error";
+
 interface StudioPanelProps {
-  artifactsCache: ArtifactsCacheEntry;
+  artifacts: StudioArtifact[];
+  status: ArtifactQueryStatus;
+  viewingArtifact: ArtifactRef | null;
+  setViewingArtifact: (ref: ArtifactRef | null) => void;
+  artifactDetailById: Record<string, ArtifactDetailCacheEntry>;
   activePassage: PassageData | null;
   hasActivePassage: boolean;
-  viewingArtifactRef: ArtifactRef | null;
-  onSetViewingArtifact: (ref: ArtifactRef | null) => void;
-  artifactDetailById: Record<string, ArtifactDetailCacheEntry>;
   onActionClick: (actionId: StudioActionId) => void;
   collapsed?: boolean;
   onToggleCollapse: () => void;
@@ -49,7 +52,6 @@ interface StudioPanelProps {
     stats: { correctCount: number; totalQuestions: number },
   ) => void;
   onResetQuizResult: (artifactId: string) => void;
-  onRetryArtifact: (artifactId: string) => void;
 }
 
 function generationErrorMessage(
@@ -94,27 +96,35 @@ function formatRelativeTime(
 }
 
 export function StudioPanel({
-  artifactsCache,
+  artifacts,
+  status: _status,
+  viewingArtifact,
+  setViewingArtifact,
+  artifactDetailById,
   activePassage,
   hasActivePassage,
-  viewingArtifactRef,
-  onSetViewingArtifact,
-  artifactDetailById,
   onActionClick,
   collapsed = false,
   onToggleCollapse,
   onRecordQuizResult,
   onResetQuizResult,
-  onRetryArtifact,
 }: StudioPanelProps) {
   const t = useTranslations("Study");
   const [chatPrefill, setChatPrefill] = useState<string | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
 
-  const artifacts = artifactsCache.data ?? [];
-  const viewingArtifact = viewingArtifactRef
-    ? (artifacts.find((r) => r.id === viewingArtifactRef.id) ?? null)
+  // Lookup full artifact from viewingArtifact ref
+  const viewingArtifactData = viewingArtifact
+    ? artifacts.find((a) => a.id === viewingArtifact.id) ?? null
     : null;
+
+  // Computed values for StudioActionGrid
+  const runningCount = artifacts.filter((r) => r.status === "generating").length;
+  const isActionLocked = (actionId: StudioActionId) => {
+    if (actionId === "quiz")
+      return artifacts.some((r) => r.status === "generating" && r.type === "quiz");
+    return false;
+  };
 
   // Esc closes the chat overlay
   useEffect(() => {
@@ -137,14 +147,14 @@ export function StudioPanel({
   }, [chatOpen]);
 
   // Artifact detail view (taken from the library list) — shown in the panel
-  if (viewingArtifact) {
-    const meta = artifactMeta[viewingArtifact.type] ?? {
+  if (viewingArtifactData) {
+    const meta = artifactMeta[viewingArtifactData.type] ?? {
       icon: HelpCircle,
-      labelKey: viewingArtifact.type,
+      labelKey: viewingArtifactData.type,
     };
     const Icon = meta.icon;
     const label = t(meta.labelKey);
-    const detail = artifactDetailById[viewingArtifact.id];
+    const detail = artifactDetailById[viewingArtifactData.id];
 
     return (
       <Card className="h-full flex flex-col overflow-hidden bg-panel rounded-none">
@@ -155,7 +165,7 @@ export function StudioPanel({
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => onSetViewingArtifact(null)}
+                  onClick={() => setViewingArtifact(null)}
                   aria-label={t("backToSources")}
                 >
                   <ArrowLeft className="w-4 h-4 text-muted-foreground" />
@@ -164,7 +174,7 @@ export function StudioPanel({
                 <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider truncate">
                   {t("resultTitle", {
                     type: label,
-                    title: viewingArtifact.title,
+                    title: viewingArtifactData.title,
                   })}
                 </h2>
               </>
@@ -174,16 +184,16 @@ export function StudioPanel({
             collapseLabel={t("collapsePanel")}
           />
           <div className="flex-1 overflow-y-auto panel-scroll p-4">
-            {viewingArtifact.type === "quiz" && detail?.questions && (
+            {viewingArtifactData.type === "quiz" && detail?.questions && (
               <QuestionContent
                 questions={detail.questions}
-                passageTitle={viewingArtifact.title}
-                artifactId={viewingArtifact.id}
-                onReset={() => onSetViewingArtifact(null)}
+                passageTitle={viewingArtifactData.title}
+                artifactId={viewingArtifactData.id}
+                onReset={() => setViewingArtifact(null)}
                 onRecordResult={(stats) =>
-                  onRecordQuizResult(viewingArtifact.id, stats)
+                  onRecordQuizResult(viewingArtifactData.id, stats)
                 }
-                onResetResult={() => onResetQuizResult(viewingArtifact.id)}
+                onResetResult={() => onResetQuizResult(viewingArtifactData.id)}
               />
             )}
           </div>
@@ -252,17 +262,6 @@ export function StudioPanel({
     );
   }
 
-  const runningCount = artifacts.filter(
-    (r) => r.status === "generating",
-  ).length;
-  const isActionLocked = (actionId: StudioActionId) => {
-    if (actionId === "quiz")
-      return artifacts.some(
-        (r) => r.status === "generating" && r.type === "quiz",
-      );
-    return false;
-  };
-
   return (
     <Card className="h-full flex flex-col overflow-hidden bg-panel rounded-none">
       <CardContent className="p-0 flex flex-col h-full">
@@ -315,7 +314,7 @@ export function StudioPanel({
                       type="button"
                       onClick={() =>
                         artifact.status === "done" &&
-                        onSetViewingArtifact({
+                        setViewingArtifact({
                           type: artifact.type,
                           id: artifact.id,
                         })
@@ -407,23 +406,6 @@ export function StudioPanel({
                       </div>
                     )}
 
-                    {isFailed && (
-                      <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 bg-surface shadow-sm border border-border"
-                          title={t("retry")}
-                          disabled={isActionLocked("quiz")}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onRetryArtifact(artifact.id);
-                          }}
-                        >
-                          <RefreshCw className="w-3.5 h-3.5" />
-                        </Button>
-                      </div>
-                    )}
                   </div>
                 );
               })}

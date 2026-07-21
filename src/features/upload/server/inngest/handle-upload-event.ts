@@ -1,6 +1,6 @@
 import { inngest } from "@/infrastructure/inngest/client";
 import { UPLOAD_PROCESS_EVENT } from "./events";
-import { SourceType } from "@/generated/prisma/enums";
+import { SourceType } from "@/types/passage";
 import { prisma } from "@/lib/prisma";
 import { step } from "inngest";
 import {
@@ -9,7 +9,7 @@ import {
   computeWordCount,
   sourceTypeToPassageSourceType,
 } from "@/features/upload/server/services/upload-ai-pipeline";
-import { downloadFile } from "@/infrastructure/storage/index";
+import { downloadFile, deleteFile } from "@/infrastructure/storage/index";
 import { parsePDF } from "@/features/upload/server/services/parsers/pdf-parser";
 import type { UploadPipelineInput } from "@/features/upload/server/services/upload-ai-pipeline";
 
@@ -29,6 +29,15 @@ export const processUploadJob = inngest.createFunction(
       }).catch(() => {});
     };
 
+    // Cleanup on failure: delete blob (Passage is created atomically by Inngest, so no partial state)
+    const cleanupOnFailure = async () => {
+      if (blobPath) {
+        await step.run("cleanup-blob", async () => {
+          await deleteFile(blobPath).catch(() => {});
+        });
+      }
+    };
+
     try {
       // Step 1: Update status to PROCESSING
       await step.run("update-job-status-to-processing", async () => {
@@ -39,20 +48,18 @@ export const processUploadJob = inngest.createFunction(
       });
 
       // Step 2: Resolve text from source (I/O - can retry cheaply)
-      // For YouTube, transcript is already fetched in the action and passed via text
       const rawText = await step.run("resolve-text", async () => {
         switch (sourceType) {
           case SourceType.TEXT:
             return text ?? "";
           case SourceType.PDF: {
-            if (!blobPath) throw new Error(`Missing blobPath for PDF upload`);
+            if (!blobPath) throw new Error("Missing blobPath for PDF upload");
             const buffer = await downloadFile(blobPath);
             if (!buffer) throw new Error("Failed to read uploaded file from storage");
             const parsed = await parsePDF(buffer);
             return parsed.text;
           }
           case SourceType.YOUTUBE:
-            // Transcript already fetched in action, passed via text field
             return text ?? "";
           default:
             throw new Error(`Unsupported sourceType: ${sourceType}`);
@@ -63,17 +70,8 @@ export const processUploadJob = inngest.createFunction(
         throw new Error("Resolved text is empty");
       }
 
-      // Step 3: Analyze content (AI call - expensive, with idempotency check)
+      // Step 3: Analyze content (AI call - idempotent)
       const analysis = await step.run("analyze-content", async () => {
-        // Idempotency: skip if already analyzed
-        const existingPassage = await prisma.passage.findUnique({
-          where: { id: passageId },
-          select: { cefrLevel: true },
-        });
-        if (existingPassage?.cefrLevel) {
-          return { skip: true, passageId };
-        }
-
         const normalized = await normalizeTextPipeline(rawText, sourceType);
         const analysisResult = await analyzeContent(normalized);
         const wordCount = computeWordCount(normalized);
@@ -87,25 +85,23 @@ export const processUploadJob = inngest.createFunction(
         };
       });
 
-      // Step 4: Create passage in database (skip if already exists)
-      if (!("skip" in analysis)) {
-        await step.run("create-passage", async () => {
-          await prisma.passage.create({
-            data: {
-              id: passageId,
-              userId,
-              title,
-              content: analysis.content,
-              cefrLevel: analysis.cefrLevel as "B1" | "B2" | "C1" | "C2" | "A1" | "A2",
-              wordCount: analysis.wordCount,
-              sourceType: analysis.passageSourceType,
-              filePath: blobPath || undefined,
-              youtubeUrl: youtubeUrl || undefined,
-              createdAt: new Date(startedAt),
-            },
-          });
+      // Step 4: Create passage in database (atomic - either all fields or nothing)
+      await step.run("create-passage", async () => {
+        await prisma.passage.create({
+          data: {
+            id: passageId,
+            userId,
+            title,
+            content: analysis.content,
+            cefrLevel: analysis.cefrLevel as "B1" | "B2" | "C1" | "C2" | "A1" | "A2",
+            wordCount: analysis.wordCount,
+            sourceType: analysis.passageSourceType,
+            filePath: blobPath || undefined,
+            youtubeUrl: youtubeUrl || undefined,
+            createdAt: new Date(startedAt),
+          },
         });
-      }
+      });
 
       // Step 5: Update status to DONE
       await step.run("update-job-status-to-done", async () => {
@@ -115,10 +111,6 @@ export const processUploadJob = inngest.createFunction(
         });
       });
 
-      if ("skip" in analysis) {
-        return { jobId, passageId, skipped: true };
-      }
-
       return {
         jobId,
         passageId,
@@ -127,6 +119,7 @@ export const processUploadJob = inngest.createFunction(
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown error";
       await failJob(message);
+      await cleanupOnFailure();
       throw error;
     }
   }

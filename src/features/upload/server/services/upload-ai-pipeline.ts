@@ -9,9 +9,7 @@ import { normalizePdfText } from "./normalizers/pdf-normalizer";
 import { detectCefrLevel } from "./analyzers/cefr-detector";
 import { extractVocabulary } from "./analyzers/vocabulary-extractor";
 import { extractTopics } from "./analyzers/topic-tagger";
-import { SourceType } from "@/generated/prisma/enums";
-
-// ---------- Types ----------
+import { SourceType } from "@/types/passage";// ---------- Types ----------
 
 export interface UploadPipelineInput {
   jobId: string;

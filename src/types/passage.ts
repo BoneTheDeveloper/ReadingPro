@@ -1,7 +1,7 @@
 // Single source of truth: the stored passage source type is the Prisma enum
 // (TEXT | PDF | YOUTUBE). Type-only import — erased at compile, safe on client.
-import type { SourceType } from "@/generated/prisma/client";
-export type { SourceType };
+import  { SourceType } from "@/generated/prisma/client";
+export  { SourceType };
 
 export interface PassageData {
   id: string;

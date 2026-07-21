@@ -1,2 +1,2 @@
 // Barrel file for passage feature
-export { getOwnedPassage, deletePassageById } from "./server/services/passage";
+export { getOwnedPassage, deletePassageById, listUserPassages } from "./server/services/passage";

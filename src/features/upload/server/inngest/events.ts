@@ -4,8 +4,7 @@
  */
 
 import { z } from "zod";
-import { SourceType } from "@/generated/prisma/enums";
-
+import { SourceType } from "@/types/passage";
 // ---------- Event Name ----------
 
 export const UPLOAD_PROCESS_EVENT = "upload/process" as const;

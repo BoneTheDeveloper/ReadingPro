@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { SourceType } from "@/generated/prisma/enums";
+import { SourceType } from "@/types/passage";
 import { getUserId } from "@/lib/auth/auth-server";
 import { prisma } from "@/lib/prisma";
 import { inngest } from "@/infrastructure/inngest";
@@ -92,11 +92,9 @@ export async function uploadFileAction(formData: FormData) {
   try {
     const buffer = Buffer.from(await file.arrayBuffer());
 
-    // Step 2: Deep validation - verify actual file content using magic numbers
-    // This prevents attacks where someone renames malware.exe to document.pdf
+    // Deep validation - verify actual file content using magic numbers
     const contentValidation = await validateFileContent(buffer, file.type);
     if (!contentValidation.valid) {
-      // Mark job as failed and clean up
       await prisma.uploadJob
         .update({ where: { id: jobId }, data: { status: "FAILED", error: contentValidation.error } })
         .catch(() => {});
@@ -106,7 +104,6 @@ export async function uploadFileAction(formData: FormData) {
     const stored = await uploadFile(blobPath, buffer, file.type || "application/octet-stream");
     if (!stored) throw new Error("Storage upload returned null");
   } catch (error) {
-    // If already marked as failed above, don't overwrite
     const message = error instanceof Error ? error.message : "Failed to store file";
     const existingJob = await prisma.uploadJob.findUnique({ where: { id: jobId } });
     if (existingJob?.status !== "FAILED") {

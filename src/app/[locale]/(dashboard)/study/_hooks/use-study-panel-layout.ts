@@ -4,7 +4,6 @@ import { useCallback, useRef, useState, useSyncExternalStore } from "react";
 import {
   useDefaultLayout,
   type PanelImperativeHandle,
-  type PanelSize,
 } from "react-resizable-panels";
 
 const noopStorage = { getItem: () => null, setItem: () => {} };
@@ -12,35 +11,25 @@ const subscribe = () => () => {};
 const getClientSnapshot = () => true;
 const getServerSnapshot = () => false;
 
-const COLLAPSED_SIZE_PX = 60;
-const COLLAPSED_THRESHOLD_PX = COLLAPSED_SIZE_PX + 4;
-
 /**
- * Determines whether a panel is currently at its collapsed size, based on
- * the panel's pixel width reported by the library. The library does NOT
- * expose an `onCollapse` / `onExpand` callback — `onResize` is the only
- * resize event — so we mirror the state into React via `onResize`.
- */
-function isCollapsedSize(panelSize: PanelSize | undefined): boolean {
-  if (!panelSize) return false;
-  return panelSize.inPixels <= COLLAPSED_THRESHOLD_PX;
-}
-
-/**
- * `collapsible` is always true so the library collapses to `collapsedSize`
- * (60px) when the user drags past `minSize`, and so `panel.collapse()` works
- * as a programmatic toggle. `collapsedSize` (60) is intentionally smaller than
- * `minSize` (200) — that's the supported relationship: `minSize` is the
- * minimum *expanded* width, `collapsedSize` is the snap target on collapse.
+ * Manages study panel layout with resizable panels.
  *
- * `leftPanelCollapsed` / `rightPanelCollapsed` are mirrored from the Panel's
- * `onResize` callback. The library only fires this on resize, so collapsing
- * programmatically via `panel.collapse()` will fire `onResize` synchronously
- * with `inPixels ≈ 60`, which we mirror to React state. Expanding fires it
- * with the prior expanded width, mirroring back to `false`.
+ * Library API usage:
+ * - `collapsedSize="60px"` on Panel: library uses this size when collapsed
+ * - `collapsible={collapsible}` on Panel: enables/disables collapse ability
+ * - `panel.collapse()`: library shrinks to collapsedSize (60px)
+ * - `panel.expand()`: library returns to previous expanded size
  *
- * Avoids dual-state — collapse/expand logic uses the imperative handle, and
- * the React mirror is purely a view concern (icon-strip vs full panel layout).
+ * State separation:
+ * - `*Collapsible`: Controls Panel's `collapsible` prop (timing-sensitive)
+ * - `*Collapsed`: Controls visual state (icon strip) AND separator disabled state
+ *
+ * Timing pattern (critical):
+ * - Collapse: setCollapsible(true) → setTimeout(0) → panel.collapse() → setCollapsed(true)
+ * - Expand: panel.expand() → setCollapsed(false) → setTimeout(150) → setCollapsible(false)
+ *
+ * Why this order? React batches state updates. We must enable collapsible BEFORE
+ * calling panel.collapse(), but disable it AFTER expand completes.
  */
 export function useStudyPanelLayout() {
   const mounted = useSyncExternalStore(
@@ -52,8 +41,13 @@ export function useStudyPanelLayout() {
   const leftPanelRef = useRef<PanelImperativeHandle>(null);
   const rightPanelRef = useRef<PanelImperativeHandle>(null);
 
+  // Visual state - tells child to show icon strip, and disables separator
   const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(false);
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false);
+
+  // Library prop state - enables/disables collapse ability
+  const [leftPanelCollapsible, setLeftPanelCollapsible] = useState(false);
+  const [rightPanelCollapsible, setRightPanelCollapsible] = useState(false);
 
   const { defaultLayout, onLayoutChanged } = useDefaultLayout({
     id: "study-panels",
@@ -64,24 +58,44 @@ export function useStudyPanelLayout() {
   const toggleLeft = useCallback(() => {
     const panel = leftPanelRef.current;
     if (!panel) return;
-    if (panel.isCollapsed()) panel.expand();
-    else panel.collapse();
+
+    if (!panel.isCollapsed()) {
+      // Collapsing: enable collapsible first, then collapse
+      setLeftPanelCollapsible(true);
+      setTimeout(() => {
+        panel.collapse();
+        setLeftPanelCollapsed(true);
+      }, 0);
+    } else {
+      // Expanding: expand first, then disable collapsible after animation
+      panel.expand();
+      setLeftPanelCollapsed(false);
+      setTimeout(() => setLeftPanelCollapsible(false), 150);
+    }
   }, []);
 
   const toggleRight = useCallback(() => {
     const panel = rightPanelRef.current;
     if (!panel) return;
-    if (panel.isCollapsed()) panel.expand();
-    else panel.collapse();
+
+    if (!panel.isCollapsed()) {
+      // Collapsing: enable collapsible first, then collapse
+      setRightPanelCollapsible(true);
+      setTimeout(() => {
+        panel.collapse();
+        setRightPanelCollapsed(true);
+      }, 0);
+    } else {
+      // Expanding: expand first, then disable collapsible after animation
+      panel.expand();
+      setRightPanelCollapsed(false);
+      setTimeout(() => setRightPanelCollapsible(false), 150);
+    }
   }, []);
 
-  // Mirror `onResize` into collapsed booleans. Threshold matches collapsedSize.
-  const handleLeftResize = useCallback((panelSize: PanelSize) => {
-    setLeftPanelCollapsed(isCollapsedSize(panelSize));
-  }, []);
-  const handleRightResize = useCallback((panelSize: PanelSize) => {
-    setRightPanelCollapsed(isCollapsedSize(panelSize));
-  }, []);
+  // No-op resize handlers - resize doesn't affect collapse state
+  const handleLeftResize = useCallback(() => {}, []);
+  const handleRightResize = useCallback(() => {}, []);
 
   return {
     defaultLayout,
@@ -90,6 +104,8 @@ export function useStudyPanelLayout() {
     rightPanelRef,
     leftPanelCollapsed,
     rightPanelCollapsed,
+    leftPanelCollapsible,
+    rightPanelCollapsible,
     toggleLeft,
     toggleRight,
     handleLeftResize,

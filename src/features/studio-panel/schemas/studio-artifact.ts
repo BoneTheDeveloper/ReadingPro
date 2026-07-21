@@ -21,7 +21,6 @@ export const recordQuizResultInputSchema = z
 
 export type StudioArtifactType = "quiz" | "flashcard";
 export type StudioArtifactStatus = "generating" | "done" | "failed";
-type ArtifactsCacheStatus = "idle" | "loading" | "success" | "error";
 
 interface QuizResult {
   completedAt: string;
@@ -51,13 +50,6 @@ export type StudioArtifactErrorCode =
   | "TIMEOUT"
   | "PASSAGE_NOT_FOUND"
   | "UNKNOWN";
-
-export interface ArtifactsCacheEntry {
-  status: ArtifactsCacheStatus;
-  data: StudioArtifact[];
-  fetchedAt?: number;
-  error?: string;
-}
 
 export interface ArtifactRef {
   type: StudioArtifactType;

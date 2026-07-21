@@ -8,32 +8,33 @@ import { getCEFRShortLabel } from "@/utils/cefr";
 import { getCEFRBadgeVariant } from "./cefr-badge";
 import { Badge } from "@/components/ui/badge";
 import { useScrollProgress } from "@/features/reading/hooks/use-scroll-progress";
+import { useContentState } from "@/features/reading/hooks/use-content-state";
 import type { PassageData } from "@/types/passage";
-import type { TranslationSelection } from "@/features/reading/schemas/translation";
 import { extractSelectionInfo } from "@/features/reading/lib/selection-utils";
 import { getPassageSourceUrlAction } from "@/features/passage/server/actions/passage";
 import { PdfViewer } from "./pdf-viewer";
 import { YouTubeEmbed } from "./youtube-embed";
-
-type ViewMode = "passage" | "pdf" | "video";
-
-interface ContentPanelProps {
-  passage: PassageData | null;
-  error: string | null;
-  viewMode: ViewMode;
-  onViewModeChange: (mode: ViewMode) => void;
-  onSelectionChange: (selection: TranslationSelection | null) => void;
-  onOpenUploadModal: () => void;
-}
+import { TranslationPopup } from "./translation-popup";
 
 export function ContentPanel({
   passage,
   error,
-  viewMode,
-  onViewModeChange,
-  onSelectionChange,
   onOpenUploadModal,
-}: ContentPanelProps) {
+}: {
+  passage: PassageData | null;
+  error: string | null;
+  onOpenUploadModal: () => void;
+}) {
+  const {
+    viewMode,
+    setViewMode,
+    selection,
+    quickTranslationState,
+    isVocabularySaved,
+    handleSelectionChange,
+    handleQuickTranslate,
+    handleSaveVocabulary,
+  } = useContentState({ passageId: passage?.id });
   const t = useTranslations("Study");
   const scrollRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -79,9 +80,9 @@ export function ContentPanel({
           y: event.clientY,
         },
       });
-      onSelectionChange(info);
+      handleSelectionChange(info);
     },
-    [passage, onSelectionChange],
+    [passage, handleSelectionChange],
   );
 
   useEffect(() => {
@@ -169,7 +170,7 @@ export function ContentPanel({
           {passage.sourceType === "YOUTUBE" && (
             <SegmentedToggle
               value={viewMode}
-              onChange={onViewModeChange}
+              onChange={setViewMode}
               options={[
                 {
                   value: "passage",
@@ -185,7 +186,7 @@ export function ContentPanel({
           {passage.sourceType === "PDF" && (
             <SegmentedToggle
               value={viewMode}
-              onChange={onViewModeChange}
+              onChange={setViewMode}
               options={[
                 {
                   value: "passage",
@@ -260,6 +261,19 @@ export function ContentPanel({
           </div>
         )}
       </div>
+
+      {/* Translation popup — rendered at content panel level */}
+      {selection && passage && (
+        <TranslationPopup
+          selection={selection}
+          translation={quickTranslationState.data}
+          status={quickTranslationState.status}
+          onTranslate={handleQuickTranslate}
+          onSave={handleSaveVocabulary}
+          saved={isVocabularySaved}
+          onDismiss={() => handleSelectionChange(null)}
+        />
+      )}
     </div>
   );
 }
