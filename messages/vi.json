@@ -156,6 +156,7 @@
     "analyzingContent": "Đang phân tích nội dung...",
     "renameSource": "Đổi tên nguồn",
     "deleteSource": "Xóa nguồn",
+    "deleteArtifact": "Xóa artifact",
     "noMatchingSources": "Không có nguồn phù hợp",
     "noSourcesYet": "Chưa có nguồn nào.",
     "addSourceToStart": "Thêm một nguồn để bắt đầu.",

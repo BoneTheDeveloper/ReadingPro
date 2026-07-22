@@ -153,6 +153,7 @@
     "analyzingContent": "Analyzing content...",
     "renameSource": "Rename source",
     "deleteSource": "Delete source",
+    "deleteArtifact": "Delete artifact",
     "noMatchingSources": "No matching sources",
     "noSourcesYet": "No sources yet.",
     "addSourceToStart": "Add a source to get started.",
@@ -251,13 +252,7 @@
     "next": "Next",
     "attemptSaveFailed": "Failed to save progress",
     "retry": "Retry",
-    "source": "Source",
-    "video": "Video",
-    "genErrorNoQuestions": "No questions could be generated",
-    "genErrorValidation": "Generated questions were invalid",
-    "genErrorTimeout": "Generation timed out — try again",
-    "genErrorUpstream": "The generator is unavailable",
-    "genErrorGeneric": "Generation failed"
+    "source": "Source"
   },
   "Reading": {
     "title": "Reading View",

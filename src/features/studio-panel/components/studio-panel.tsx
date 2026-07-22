@@ -9,8 +9,16 @@ import {
   ChevronRight,
   MessageCircle,
   Loader2,
+  Trash2,
+  MoreVertical,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import type { PassageData } from "@/types/passage";
@@ -47,6 +55,7 @@ interface StudioPanelProps {
     stats: { correctCount: number; totalQuestions: number },
   ) => void;
   onResetQuizResult: (artifactId: string) => void;
+  onDeleteArtifact?: (artifactId: string) => void;
   chatPrefill?: string | null;
   onChatPrefillChange?: (prefill: string | null) => void;
 }
@@ -73,6 +82,7 @@ export function StudioPanel({
   onToggleCollapse,
   onRecordQuizResult,
   onResetQuizResult,
+  onDeleteArtifact,
   chatPrefill: chatPrefillProp,
   onChatPrefillChange,
 }: StudioPanelProps) {
@@ -187,18 +197,25 @@ export function StudioPanel({
             collapseIcon={<PanelRight className="w-4 h-4" />}
             collapseLabel={t("collapsePanel")}
           />
-          <div className="flex-1 overflow-y-auto panel-scroll">
-            {viewingArtifactData.type === "quiz" && detail?.questions && (
-              <QuestionContent
-                questions={detail.questions}
-                passageTitle=""
-                artifactId={viewingArtifactData.id}
-                onReset={() => setViewingArtifact(null)}
-                onRecordResult={(stats) =>
-                  onRecordQuizResult(viewingArtifactData.id, stats)
-                }
-                onResetResult={() => onResetQuizResult(viewingArtifactData.id)}
-              />
+          <div className="flex-1 overflow-y-auto panel-scroll relative">
+            {viewingArtifactData.type === "quiz" && (
+              detail?.questions ? (
+                <QuestionContent
+                  questions={detail.questions}
+                  passageTitle=""
+                  artifactId={viewingArtifactData.id}
+                  onReset={() => setViewingArtifact(null)}
+                  onRecordResult={(stats) =>
+                    onRecordQuizResult(viewingArtifactData.id, stats)
+                  }
+                  onResetResult={() => onResetQuizResult(viewingArtifactData.id)}
+                />
+              ) : (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-muted-foreground">
+                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                  <span className="text-sm">Loading...</span>
+                </div>
+              )
             )}
           </div>
         </CardContent>
@@ -306,74 +323,18 @@ export function StudioPanel({
                 const meta = artifactMeta[artifact.type] ?? {
                   icon: HelpCircle,
                   labelKey: artifact.type,
-                };
-                const Icon = meta.icon;
-                const label = t(meta.labelKey);
-                const hasResult =
-                  artifact.type === "quiz" && artifact.quizResult;
-                const isFailed = artifact.status === "failed";
-                const isGenerating = artifact.status === "generating";
-
+                };                
                 return (
-                  <div key={artifact.id} className="group relative">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        artifact.status === "done" &&
-                        setViewingArtifact({
-                          type: artifact.type,
-                          id: artifact.id,
-                        })
-                      }
-                      disabled={artifact.status !== "done"}
-                      className={cn(
-                        "w-full flex items-center gap-2.5 px-3 py-2.5 h-auto text-left rounded-[13px] border bg-surface transition-all",
-                        isGenerating &&
-                          "border-primary/20 bg-primary/5 cursor-default",
-                        artifact.status === "done" &&
-                          "border-border hover:border-primary hover:-translate-y-px hover:shadow-card cursor-pointer",
-                        isFailed &&
-                          "border-destructive/20 bg-destructive/5 opacity-60 cursor-not-allowed",
-                      )}
-                    >
-                      <div
-                        className={cn(
-                          "w-8 h-8 rounded-[10px] flex items-center justify-center shrink-0",
-                          isFailed
-                            ? "bg-destructive/10 text-destructive"
-                            : "bg-primary/10 text-primary",
-                        )}
-                      >
-                        {isGenerating ? (
-                          <Loader2 className="w-4 h-4 text-primary animate-spin" />
-                        ) : (
-                          <Icon className="w-4 h-4" strokeWidth={2} />
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-[12px] font-semibold text-foreground truncate leading-tight">
-                          {t("resultTitle", {
-                            type: label,
-                            title: artifact.title,
-                          })}
-                        </p>
-                        {hasResult ? (
-                          <p className="text-[11px] font-semibold text-success mt-0.5">
-                            {artifact.quizResult!.correctCount}/{artifact.quizResult!.totalQuestions} · {Math.round(artifact.quizResult!.accuracyRate * 100)}%
-                          </p>
-                        ) : (
-                          <p className="text-[11px] text-muted-foreground truncate mt-0.5">
-                            {isGenerating
-                              ? t("generating")
-                              : isFailed
-                                ? generationErrorMessage()
-                                : null}
-                          </p>
-                        )}
-                      </div>
-                    </button>
-
-                  </div>
+                  <ArtifactRow
+                    key={artifact.id}
+                    artifact={artifact}
+                    Icon={meta.icon}
+                    label={t(meta.labelKey)}
+                    t={t}
+                    errorMessage={artifact.status === "failed" ? generationErrorMessage() : null}
+                    onClick={() => setViewingArtifact({ type: artifact.type, id: artifact.id })}
+                    onDelete={onDeleteArtifact ? () => onDeleteArtifact(artifact.id) : undefined}
+                  />
                 );
               })}
             </div>
@@ -411,6 +372,104 @@ function PanelHeader({
         >
           {collapseIcon}
         </Button>
+      )}
+    </div>
+  );
+}
+
+function ArtifactRow({
+  artifact,
+  Icon,
+  label,
+  t,
+  errorMessage,
+  onClick,
+  onDelete,
+}: {
+  artifact: StudioArtifact;
+  Icon: React.ElementType;
+  label: string;
+  t: any; 
+  errorMessage?: string | null;
+  onClick: () => void;
+  onDelete?: () => void;
+}) {
+  const isGenerating = artifact.status === "generating";
+  const isFailed = artifact.status === "failed";
+  const hasResult = artifact.type === "quiz" && artifact.quizResult;
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => {
+        if (artifact.status === "done") onClick();
+      }}
+      className={cn(
+        "group w-full flex items-center gap-2.5 px-3 py-2.5 text-left rounded-[13px] border transition-all outline-none",
+        isGenerating && "border-primary/20 bg-primary/5 cursor-default",
+        artifact.status === "done" && "border-border bg-surface hover:border-primary hover:-translate-y-px hover:shadow-card cursor-pointer",
+        isFailed && "border-destructive/20 bg-destructive/5 opacity-60 cursor-not-allowed",
+      )}
+    >
+      <div
+        className={cn(
+          "w-8 h-8 rounded-[10px] flex items-center justify-center shrink-0",
+          isFailed
+            ? "bg-destructive/10 text-destructive"
+            : "bg-primary/10 text-primary",
+        )}
+      >
+        {isGenerating ? (
+          <Loader2 className="w-4 h-4 text-primary animate-spin" />
+        ) : (
+          <Icon className="w-4 h-4" strokeWidth={2} />
+        )}
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <p className="text-[12px] font-semibold text-foreground truncate leading-tight">
+          {t("resultTitle", { type: label, title: artifact.title })}
+        </p>
+        {hasResult ? (
+          <p className="text-[11px] font-semibold text-success mt-0.5">
+            {artifact.quizResult!.correctCount}/{artifact.quizResult!.totalQuestions} · {Math.round(artifact.quizResult!.accuracyRate * 100)}%
+          </p>
+        ) : (
+          <p className="text-[11px] text-muted-foreground truncate mt-0.5">
+            {isGenerating
+              ? t("generating")
+              : isFailed
+                ? errorMessage
+                : null}
+          </p>
+        )}
+      </div>
+
+      {onDelete && artifact.status === "done" && (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              onClick={(e) => e.stopPropagation()}
+              className="shrink-0 p-1 rounded-lg text-muted-foreground/40 hover:text-foreground hover:bg-muted transition-colors opacity-0 group-hover:opacity-100"
+              aria-label={t("deleteArtifact")}
+            >
+              <MoreVertical className="w-4 h-4" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent side="right" align="end" className="min-w-40">
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
+              className="text-destructive focus:text-destructive font-medium"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              {t("deleteArtifact")}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       )}
     </div>
   );

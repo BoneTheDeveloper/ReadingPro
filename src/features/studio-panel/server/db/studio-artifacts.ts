@@ -46,6 +46,15 @@ export async function deleteQuizResults(artifactId: string) {
   });
 }
 
+export async function deleteStudioArtifact(artifactId: string, userId: string) {
+  // First delete related quiz results (cascade should handle this, but being explicit)
+  await prisma.quizResult.deleteMany({ where: { artifactId } });
+  // Delete the artifact
+  return prisma.studioArtifact.delete({
+    where: { id: artifactId, userId },
+  });
+}
+
 export async function findArtifactQuestions(artifactId: string, userId: string) {
   return prisma.question.findMany({
     where: { artifactId, artifact: { userId } },
