@@ -20,6 +20,8 @@ export const recordQuizResultInputSchema = z
 // ---------------------------------------------------------------------------
 
 export type StudioArtifactType = "quiz" | "flashcard";
+// Chat is a synthetic artifact type — not persisted, used only for in-panel chat view
+export type StudioArtifactViewType = StudioArtifactType | "chat";
 export type StudioArtifactStatus = "generating" | "done" | "failed";
 
 interface QuizResult {
@@ -52,7 +54,7 @@ export type StudioArtifactErrorCode =
   | "UNKNOWN";
 
 export interface ArtifactRef {
-  type: StudioArtifactType;
+  type: StudioArtifactViewType;
   id: string;
 }
 

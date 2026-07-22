@@ -7,7 +7,7 @@ import {
   useTransition,
 } from "react";
 import { useRouter } from "next/navigation";
-import { deletePassageAction } from "@/features/passage/server/actions/passage";
+import { deletePassageAction } from "@/features/passage-crud/server/actions/passage";
 import type { PassageData } from "@/types/passage";
 import type { DocumentItem } from "@/features/upload/components/panel/sources-panel";
 

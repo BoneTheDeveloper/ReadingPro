@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { TranslationDto, TranslationSelection } from "@/features/reading/schemas/translation";
 import { saveVocabularyAction } from "@/features/vocabulary/server/actions/vocabulary";
 import {
@@ -35,22 +35,26 @@ export function useContentState({ passageId }: UseContentStateOptions) {
     new Set(),
   );
 
+  // Track previous values to detect changes
+  const prevPassageIdRef = useRef(passageId ?? null);
+  const prevViewModeRef = useRef(viewMode);
+
   // Clear stale selection on passage/mode change
-  const [prevPassageId, setPrevPassageId] = useState(passageId ?? null);
-  const [prevViewMode, setPrevViewMode] = useState(viewMode);
-  if (
-    passageId !== prevPassageId ||
-    viewMode !== prevViewMode
-  ) {
-    setPrevPassageId(passageId ?? null);
-    setPrevViewMode(viewMode);
-    setSelection(null);
-    setQuickTranslationState((prev) => ({
-      requestId: prev.requestId + 1,
-      data: null,
-      status: "idle",
-    }));
-  }
+  useEffect(() => {
+    if (
+      passageId !== prevPassageIdRef.current ||
+      viewMode !== prevViewModeRef.current
+    ) {
+      prevPassageIdRef.current = passageId ?? null;
+      prevViewModeRef.current = viewMode;
+      setSelection(null);
+      setQuickTranslationState((prev) => ({
+        requestId: prev.requestId + 1,
+        data: null,
+        status: "idle",
+      }));
+    }
+  }, [passageId, viewMode]);
 
   const handleSelectionChange = useCallback(
     (sel: TranslationSelection | null) => {

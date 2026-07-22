@@ -34,7 +34,6 @@ const generatedQuestionSchema = z
     sourceText: z.string(),
     sourceLine: z.number().int().positive(),
     explanation: z.string(),
-    questionType: z.enum(["MULTIPLE_CHOICE", "TRUE_FALSE"]),
     difficulty: z.number().int().min(1).max(5),
   })
   .strict()
@@ -67,7 +66,6 @@ export interface GeneratedQuestionDto {
   explanation: string;
   sourceText?: string;
   sourceLine?: number;
-  questionType: string;
   difficulty: number;
 }
 

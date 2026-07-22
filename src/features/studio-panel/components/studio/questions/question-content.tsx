@@ -150,17 +150,8 @@ export function QuestionContent({
   return (
     <div className="bg-surface rounded-xl shadow-sm border border-border p-6 flex flex-col relative overflow-hidden flex-1">
       <div className="w-full flex flex-col h-full">
-        <div className="flex items-center justify-between mb-6">
-          <span className="text-xs font-semibold text-primary uppercase tracking-[0.02em]">
-            {t("multipleChoice")}
-          </span>
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-muted-foreground mr-2">
-              {t("questionOf", {
-                current: currentIndex + 1,
-                total: questions.length,
-              })}
-            </span>
+        <div className="flex items-center justify-center mb-6">
+          <div className="flex items-center gap-1">
             <Button
               variant="ghost"
               size="sm"
@@ -170,6 +161,9 @@ export function QuestionContent({
             >
               <ChevronLeft className="w-3.5 h-3.5" />
             </Button>
+            <span className="text-sm font-semibold text-foreground min-w-[3rem] text-center">
+              {currentIndex + 1}/{questions.length}
+            </span>
             <Button
               variant="ghost"
               size="sm"
@@ -182,17 +176,16 @@ export function QuestionContent({
           </div>
         </div>
 
-        <div className="w-full h-1.5 bg-muted rounded-full mb-8">
-          <div
-            className="h-full bg-primary rounded-full transition-all"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-
         <div className="flex-1 overflow-y-auto min-h-0">
-          <h3 className="text-xl font-bold text-foreground mb-8 text-left leading-snug">
+          <h3 className="text-xl font-bold text-foreground mb-2 text-left leading-snug">
             {currentQuestion.questionText}
           </h3>
+          <div className="w-full h-1 bg-muted rounded-full mb-6">
+            <div
+              className="h-full bg-primary rounded-full transition-all"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
           <div className="space-y-4">
             {currentQuestion.options.map((option) => {
               const isSelected = selectedAnswer === option.id;
@@ -265,7 +258,7 @@ export function QuestionContent({
           </div>
         </div>
 
-        <div className="mt-8 pt-6 border-t border-border flex gap-4">
+        <div className="mt-4 pt-3 flex gap-4">
           {!showFeedback ? (
             <Button
               onClick={handleCheckAnswer}
@@ -310,21 +303,6 @@ export function QuestionContent({
                   {currentQuestion.explanation}
                 </p>
               </div>
-              {currentQuestion.sourceText && (
-                <div className="bg-muted border border-border rounded-lg p-3">
-                  <p className="text-xs text-muted-foreground mb-0.5 font-medium flex items-center justify-between">
-                    {t("source")}{" "}
-                    {currentQuestion.sourceLine && (
-                      <span>
-                        {t("sourceLine", { line: currentQuestion.sourceLine })}
-                      </span>
-                    )}
-                  </p>
-                  <p className="text-sm text-muted-foreground italic">
-                    &ldquo;{currentQuestion.sourceText}&rdquo;
-                  </p>
-                </div>
-              )}
               <Button onClick={handleNext} className="w-full">
                 {currentIndex < questions.length - 1 ? (
                   <>

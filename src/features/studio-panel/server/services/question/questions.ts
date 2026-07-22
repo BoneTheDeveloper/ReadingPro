@@ -1,11 +1,10 @@
 import "server-only";
 import { Prisma } from "@/generated/prisma/client";
-import { QuestionType } from "@/generated/prisma/enums";
 import {
   generateComprehensionQuestions,
 } from "./question-generator";
 import { moduleLog } from "@/lib/logger";
-import { getOwnedPassage as getOwnedPassageForStudy } from "@/features/passage";
+import { getOwnedPassage as getOwnedPassageForStudy } from "@/features/passage-crud";
 import {
   questionDataSchema,
   type GeneratedQuestionDto,
@@ -162,7 +161,6 @@ function toQuestionCreateInput(question: GeneratedQuestion) {
     sourceText: question.sourceText,
     sourceLine: question.sourceLine,
     explanation: question.explanation,
-    questionType: question.questionType as QuestionType,
     difficulty: question.difficulty,
   };
 }
@@ -180,7 +178,6 @@ function toQuestionData(
     explanation: question.explanation,
     sourceText: question.sourceText,
     sourceLine: question.sourceLine,
-    questionType: question.questionType,
     difficulty: question.difficulty,
   };
 }
@@ -228,7 +225,6 @@ function rowToExistingQuestionDto(
     sourceText: string;
     sourceLine: number;
     explanation: string;
-    questionType: string;
     difficulty: number;
   },
   index: number,
@@ -252,7 +248,6 @@ function rowToExistingQuestionDto(
     explanation: q.explanation,
     sourceText: q.sourceText,
     sourceLine: q.sourceLine,
-    questionType: q.questionType,
     difficulty: q.difficulty,
   };
 }

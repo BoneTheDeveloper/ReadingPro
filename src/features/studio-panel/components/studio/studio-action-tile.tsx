@@ -24,7 +24,7 @@ type TileSpec = {
   enabled: boolean;
 };
 
-const STUDIO_ACTION_TILES: TileSpec[] = [
+const STUDIO_GRID_TILES: TileSpec[] = [
   {
     id: "quiz",
     labelKey: "quiz",
@@ -70,11 +70,11 @@ const STUDIO_ACTION_TILES: TileSpec[] = [
 ];
 
 export function isStudioTileEnabled(actionId: StudioActionId): boolean {
-  const tile = STUDIO_ACTION_TILES.find((t) => t.id === actionId);
+  const tile = STUDIO_GRID_TILES.find((t) => t.id === actionId);
   return tile?.enabled ?? false;
 }
 
-export function StudioActionGrid({
+export function StudioGrid({
   hasActivePassage,
   runningCount,
   isActionLocked,
@@ -89,7 +89,7 @@ export function StudioActionGrid({
 }) {
   return (
     <div className="px-3 pt-3 grid grid-cols-2 gap-2">
-      {STUDIO_ACTION_TILES.map((tile) => {
+      {STUDIO_GRID_TILES.map((tile) => {
         const enabled = tile.enabled;
         const locked = enabled && hasActivePassage && isActionLocked(tile.id);
         const isOverCap =
@@ -144,23 +144,7 @@ export function StudioActionGrid({
   );
 }
 
-export function StudioLibraryHeader({
-  count,
-  t,
-}: {
-  count: number;
-  t: ReturnType<typeof useTranslations<"Study">>;
-}) {
-  return (
-    <div className="flex items-center gap-2.5 pt-5 px-4 pb-2">
-      <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
-        {t("library")}
-      </span>
-      <div className="flex-1 h-px bg-border" />
-      <span className="text-[10px] font-bold text-ink-3">{count}</span>
-    </div>
-  );
-}
+
 
 export function StudioEmptyState({
   hasActivePassage,
@@ -191,26 +175,6 @@ export function StudioEmptyState({
       <p className="text-[11px] text-muted-foreground/40 mt-1">
         {t("uploadOrSelectSources")}
       </p>
-    </div>
-  );
-}
-
-export function StudioComingSoon({
-  Icon,
-  label,
-  t,
-}: {
-  Icon: typeof HelpCircle;
-  label: string;
-  t: ReturnType<typeof useTranslations<"Study">>;
-}) {
-  return (
-    <div className="flex flex-col items-center justify-center flex-1 text-center px-8 py-12">
-      <div className="w-14 h-14 rounded-[14px] bg-muted flex items-center justify-center mb-4">
-        <Icon className="w-7 h-7 text-muted-foreground" />
-      </div>
-      <p className="text-base font-semibold text-foreground mb-1">{label}</p>
-      <p className="text-sm text-muted-foreground">{t("comingSoon")}</p>
     </div>
   );
 }

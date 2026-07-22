@@ -26,10 +26,6 @@ enum SourceType {
   YOUTUBE
 }
 
-enum QuestionType {
-  MULTIPLE_CHOICE
-  TRUE_FALSE
-}
 
 enum VocabularySetType {
   MANUAL
@@ -398,7 +394,6 @@ model Question {
   sourceText    String
   sourceLine    Int
   explanation   String
-  questionType  QuestionType @default(MULTIPLE_CHOICE)
   difficulty    Int          @default(3)
   createdAt     DateTime     @default(now())
 

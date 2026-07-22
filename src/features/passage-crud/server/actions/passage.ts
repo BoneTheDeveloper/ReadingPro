@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getUserId } from "@/lib/auth/auth-server";
-import { deletePassageById, getOwnedPassage } from "@/features/passage";
+import { deletePassageById, getOwnedPassage } from "@/features/passage-crud";
 import { getViewableUrl } from "@/infrastructure/storage/index";
 
 export async function deletePassageAction(passageId: string) {

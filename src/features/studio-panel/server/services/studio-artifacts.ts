@@ -136,7 +136,6 @@ export async function getArtifactQuestions(
     sourceText: q.sourceText,
     sourceLine: q.sourceLine,
     explanation: q.explanation,
-    questionType: q.questionType,
     difficulty: q.difficulty,
   }));
 

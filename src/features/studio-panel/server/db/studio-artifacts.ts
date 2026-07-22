@@ -58,7 +58,6 @@ export async function findArtifactQuestions(artifactId: string, userId: string) 
       sourceText: true,
       sourceLine: true,
       explanation: true,
-      questionType: true,
       difficulty: true,
     },
   });

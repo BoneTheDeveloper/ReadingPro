@@ -63,7 +63,8 @@ export function StudyWorkspace({
             minSize="200px"
             maxSize="800px"
             collapsedSize="60px"
-            collapsible={layout.leftPanelCollapsible}
+            collapsible={true}
+            onResize={layout.handleLeftResize}
           >
             <SourcesPanel
               documents={documents}
@@ -104,7 +105,8 @@ export function StudyWorkspace({
             defaultSize="280px"
             minSize="200px"
             collapsedSize="60px"
-            collapsible={layout.rightPanelCollapsible}
+            collapsible={true}
+            onResize={layout.handleRightResize}
           >
             <StudioPanel
               artifacts={artifactQuery.artifacts}

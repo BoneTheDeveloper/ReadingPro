@@ -83,7 +83,6 @@ export const generateQuestionsJob = inngest.createFunction(
             sourceText: q.sourceText ?? "",
             sourceLine: q.sourceLine ?? 0,
             explanation: q.explanation ?? "",
-            questionType: "MULTIPLE_CHOICE",
           })),
         });
       }

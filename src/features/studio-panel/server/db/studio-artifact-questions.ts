@@ -1,6 +1,5 @@
 import "server-only";
 import { Prisma } from "@/generated/prisma/client";
-import { QuestionType } from "@/generated/prisma/enums";
 import { prisma } from "@/lib/prisma";
 
 
@@ -27,7 +26,6 @@ export async function createStudioArtifactWithQuestions(input: {
     sourceText: string;
     sourceLine: number;
     explanation: string;
-    questionType: QuestionType;
     difficulty: number;
   }[];
 }) {
@@ -53,7 +51,6 @@ export async function createStudioArtifactWithQuestions(input: {
         sourceText: q.sourceText,
         sourceLine: q.sourceLine,
         explanation: q.explanation,
-        questionType: q.questionType,
         difficulty: q.difficulty,
       })),
     });

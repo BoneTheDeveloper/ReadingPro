@@ -1,6 +1,6 @@
 import "server-only";
 import { moduleLog } from "@/lib/logger";
-import { getOwnedPassage } from "@/features/passage";
+import { getOwnedPassage } from "@/features/passage-crud";
 import type { VocabularyStatus } from "@/generated/prisma/enums";
 import { VocabularySourceType } from "@/generated/prisma/enums";
 import {

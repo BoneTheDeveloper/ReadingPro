@@ -1,16 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useDeferredValue } from "react";
 import { useTranslations } from "next-intl";
 import {
   PanelRight,
   HelpCircle,
   Layers,
   ChevronRight,
-  X,
-  ArrowLeft,
   MessageCircle,
-  RefreshCw,
   Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -20,19 +17,17 @@ import type { PassageData } from "@/types/passage";
 import type {
   ArtifactRef,
   ArtifactDetailCacheEntry,
-  StudioArtifactType,
-  StudioArtifactErrorCode,
+  StudioArtifactViewType,
   StudioArtifact,
 } from "@/features/studio-panel/schemas/studio-artifact";
 import type { StudioActionId } from "@/features/studio-panel/server/actions/artifact";
 import { QuestionContent } from "./studio/questions/question-content";
 import { StudyChatPanel } from "./studio/ai-chat/chat-panel";
-import { resetQuizResultAction } from "@/features/studio-panel/server/actions/question";
 import {
-  StudioActionGrid,
+  StudioGrid,
   StudioEmptyState,
-  StudioLibraryHeader,
 } from "./studio/studio-action-tile";
+import { useGenerationErrorMessage } from "./studio/studio-errors";
 
 type ArtifactQueryStatus = "idle" | "loading" | "success" | "error";
 
@@ -52,48 +47,18 @@ interface StudioPanelProps {
     stats: { correctCount: number; totalQuestions: number },
   ) => void;
   onResetQuizResult: (artifactId: string) => void;
-}
-
-function generationErrorMessage(
-  errorCode: StudioArtifactErrorCode | undefined,
-  t: ReturnType<typeof useTranslations<"Study">>,
-): string {
-  switch (errorCode) {
-    case "NO_QUESTIONS":
-      return t("genErrorNoQuestions");
-    case "VALIDATION_FAILED":
-      return t("genErrorValidation");
-    case "TIMEOUT":
-      return t("genErrorTimeout");
-    case "UPSTREAM_ERROR":
-      return t("genErrorUpstream");
-    default:
-      return t("genErrorGeneric");
-  }
+  chatPrefill?: string | null;
+  onChatPrefillChange?: (prefill: string | null) => void;
 }
 
 const artifactMeta: Record<
-  StudioArtifactType,
+  StudioArtifactViewType,
   { icon: typeof HelpCircle; labelKey: string }
 > = {
   quiz: { icon: HelpCircle, labelKey: "quiz" },
   flashcard: { icon: Layers, labelKey: "flashcards" },
+  chat: { icon: MessageCircle, labelKey: "chat" },
 };
-
-function formatRelativeTime(
-  timestamp: string,
-  t: ReturnType<typeof useTranslations<"Study">>,
-): string {
-  const seconds = Math.floor(
-    (Date.now() - new Date(timestamp).getTime()) / 1000,
-  );
-  if (seconds < 60) return t("justNow");
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return t("minutesAgo", { count: minutes });
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return t("hoursAgo", { count: hours });
-  return t("daysAgo", { count: Math.floor(hours / 24) });
-}
 
 export function StudioPanel({
   artifacts,
@@ -108,17 +73,33 @@ export function StudioPanel({
   onToggleCollapse,
   onRecordQuizResult,
   onResetQuizResult,
+  chatPrefill: chatPrefillProp,
+  onChatPrefillChange,
 }: StudioPanelProps) {
   const t = useTranslations("Study");
-  const [chatPrefill, setChatPrefill] = useState<string | null>(null);
-  const [chatOpen, setChatOpen] = useState(false);
+  const generationErrorMessage = useGenerationErrorMessage();
+  const [localChatPrefill, setLocalChatPrefill] = useState<string | null>(null);
 
-  // Lookup full artifact from viewingArtifact ref
+  // Derive chatPrefill directly: external prop takes precedence, local state is fallback
+  const chatPrefillDeferred = useDeferredValue(chatPrefillProp ?? null);
+  const chatPrefill = chatPrefillDeferred ?? localChatPrefill;
+
+  // Sync chatPrefill state changes back to parent
+  useEffect(() => {
+    onChatPrefillChange?.(chatPrefill);
+  }, [chatPrefill, onChatPrefillChange]);
+
+  const viewingChat = viewingArtifact?.type === "chat";
+  const chatPassageId = viewingChat && activePassage ? activePassage.id : null;
+
+  // Lookup full artifact from viewingArtifact ref — excludes synthetic "chat" type
   const viewingArtifactData = viewingArtifact
-    ? artifacts.find((a) => a.id === viewingArtifact.id) ?? null
+    ? viewingArtifact.type !== "chat"
+      ? artifacts.find((a) => a.id === viewingArtifact.id) ?? null
+      : null
     : null;
 
-  // Computed values for StudioActionGrid
+  // Computed values for StudioGrid
   const runningCount = artifacts.filter((r) => r.status === "generating").length;
   const isActionLocked = (actionId: StudioActionId) => {
     if (actionId === "quiz")
@@ -126,25 +107,58 @@ export function StudioPanel({
     return false;
   };
 
-  // Esc closes the chat overlay
+  // Esc closes the chat view
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
-      if (e.key === "Escape" && (chatOpen || chatPrefill)) {
-        setChatOpen(false);
-        setChatPrefill(null);
+      if (e.key === "Escape" && viewingChat) {
+        setViewingArtifact(null);
+        setLocalChatPrefill(null);
       }
     }
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
-  }, [chatOpen, chatPrefill]);
+  }, [viewingChat, setViewingArtifact]);
 
-  // Reset chat state when closing
+  // Reset chat prefill when closing
   useEffect(() => {
-    if (!chatOpen) {
+    if (!viewingChat) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setChatPrefill(null);
+      setLocalChatPrefill(null);
     }
-  }, [chatOpen]);
+  }, [viewingChat]);
+
+  // Chat view — rendered inline like question artifact
+  if (viewingChat && chatPassageId) {
+    return (
+      <Card className="h-full flex flex-col overflow-hidden bg-panel rounded-none">
+        <CardContent className="p-0 flex flex-col h-full">
+          <PanelHeader
+            left={
+              <button
+                type="button"
+                onClick={() => setViewingArtifact(null)}
+                className="flex items-center gap-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider"
+              >
+                <span className="hover:underline">{t("studio")}</span>
+                <ChevronRight className="w-3 h-3" />
+                {t("chat")}
+              </button>
+            }
+            onCollapse={onToggleCollapse}
+            collapseIcon={<PanelRight className="w-4 h-4" />}
+            collapseLabel={t("collapsePanel")}
+          />
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <StudyChatPanel
+              key={`${chatPassageId}-${chatPrefill ?? "empty"}`}
+              passageId={chatPassageId}
+              prefilledQuestion={chatPrefill}
+            />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   // Artifact detail view (taken from the library list) — shown in the panel
   if (viewingArtifactData) {
@@ -152,7 +166,6 @@ export function StudioPanel({
       icon: HelpCircle,
       labelKey: viewingArtifactData.type,
     };
-    const Icon = meta.icon;
     const label = t(meta.labelKey);
     const detail = artifactDetailById[viewingArtifactData.id];
 
@@ -161,33 +174,24 @@ export function StudioPanel({
         <CardContent className="p-0 flex flex-col h-full">
           <PanelHeader
             left={
-              <>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setViewingArtifact(null)}
-                  aria-label={t("backToSources")}
-                >
-                  <ArrowLeft className="w-4 h-4 text-muted-foreground" />
-                </Button>
-                <Icon className="w-4 h-4 text-muted-foreground" />
-                <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider truncate">
-                  {t("resultTitle", {
-                    type: label,
-                    title: viewingArtifactData.title,
-                  })}
-                </h2>
-              </>
+              <button
+                type="button"
+                onClick={() => setViewingArtifact(null)}
+                className="flex items-center gap-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider"
+              >
+                <span className="hover:underline">{t("studio")}</span>
+                <ChevronRight className="w-3 h-3" />
+                {label}
+              </button>
             }
-            onCollapse={onToggleCollapse}
             collapseIcon={<PanelRight className="w-4 h-4" />}
             collapseLabel={t("collapsePanel")}
           />
-          <div className="flex-1 overflow-y-auto panel-scroll p-4">
+          <div className="flex-1 overflow-y-auto panel-scroll">
             {viewingArtifactData.type === "quiz" && detail?.questions && (
               <QuestionContent
                 questions={detail.questions}
-                passageTitle={viewingArtifactData.title}
+                passageTitle=""
                 artifactId={viewingArtifactData.id}
                 onReset={() => setViewingArtifact(null)}
                 onRecordResult={(stats) =>
@@ -238,8 +242,8 @@ export function StudioPanel({
                 onClick={() => {
                   if (!hasActivePassage) return;
                   if (a.id === "chat") {
-                    setChatPrefill(null);
-                    setChatOpen(true);
+                    setLocalChatPrefill(null);
+                    setViewingArtifact({ type: "chat", id: "chat" });
                   } else {
                     onActionClick(a.id);
                   }
@@ -276,14 +280,14 @@ export function StudioPanel({
           collapseLabel={t("collapsePanel")}
         />
 
-        <StudioActionGrid
+        <StudioGrid
           hasActivePassage={hasActivePassage}
           runningCount={runningCount}
           isActionLocked={isActionLocked}
           onSelect={(id) => {
             if (id === "chat") {
-              setChatPrefill(null);
-              setChatOpen(true);
+              setLocalChatPrefill(null);
+              setViewingArtifact({ type: "chat", id: "chat" });
             } else {
               onActionClick(id);
             }
@@ -291,7 +295,9 @@ export function StudioPanel({
           t={t}
         />
 
-        <StudioLibraryHeader count={artifacts.length} t={t} />
+        <div className="flex items-center gap-2.5 pt-5 px-4 pb-2">
+          <div className="flex-1 h-px bg-border" />
+        </div>
 
         <div className="flex-1 overflow-y-auto panel-scroll px-3 pb-4">
           {artifacts.length > 0 ? (
@@ -351,60 +357,21 @@ export function StudioPanel({
                             title: artifact.title,
                           })}
                         </p>
-                        <div className="flex items-center justify-between gap-2 mt-0.5">
-                          <p className="text-[11px] text-muted-foreground truncate">
+                        {hasResult ? (
+                          <p className="text-[11px] font-semibold text-success mt-0.5">
+                            {artifact.quizResult!.correctCount}/{artifact.quizResult!.totalQuestions} · {Math.round(artifact.quizResult!.accuracyRate * 100)}%
+                          </p>
+                        ) : (
+                          <p className="text-[11px] text-muted-foreground truncate mt-0.5">
                             {isGenerating
                               ? t("generating")
                               : isFailed
-                                ? generationErrorMessage(artifact.errorCode, t)
-                                : formatRelativeTime(
-                                    artifact.updatedAt ?? artifact.createdAt,
-                                    t,
-                                  )}
+                                ? generationErrorMessage()
+                                : null}
                           </p>
-                          {hasResult && (
-                            <span className="text-[11px] font-semibold text-success bg-success-soft px-1.5 py-0.5 rounded shrink-0">
-                              {artifact.quizResult!.correctCount}/
-                              {artifact.quizResult!.totalQuestions} ·{" "}
-                              {Math.round(
-                                artifact.quizResult!.accuracyRate * 100,
-                              )}
-                              %
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <ChevronRight
-                        className={cn(
-                          "w-4 h-4 shrink-0 transition-colors",
-                          isFailed
-                            ? "text-muted-foreground/30"
-                            : "text-muted-foreground/50 group-hover:text-primary",
                         )}
-                      />
-                    </button>
-
-                    {hasResult && artifact.status === "done" && (
-                      <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 bg-surface shadow-sm border border-border"
-                          title={t("retry")}
-                          onClick={async (e) => {
-                            e.stopPropagation();
-                            try {
-                              await resetQuizResultAction(artifact.id);
-                              onResetQuizResult(artifact.id);
-                            } catch (err) {
-                              console.error("Failed to reset quiz result", err);
-                            }
-                          }}
-                        >
-                          <RefreshCw className="w-3.5 h-3.5" />
-                        </Button>
                       </div>
-                    )}
+                    </button>
 
                   </div>
                 );
@@ -415,26 +382,6 @@ export function StudioPanel({
           )}
         </div>
       </CardContent>
-
-      {/* 640px slide-in overlay for Chat only */}
-      {chatOpen && activePassage && (
-        <StudioOverlay
-          title={t("chatAbout", { title: activePassage.title })}
-          subtitle={t("askQuestions")}
-          icon={MessageCircle}
-          onClose={() => {
-            setChatOpen(false);
-            setChatPrefill(null);
-          }}
-          t={t}
-        >
-          <StudyChatPanel
-            key={`${activePassage.id}-${chatPrefill ?? "empty"}`}
-            passageId={activePassage.id}
-            prefilledQuestion={chatPrefill}
-          />
-        </StudioOverlay>
-      )}
     </Card>
   );
 }
@@ -447,8 +394,8 @@ function PanelHeader({
 }: {
   left: React.ReactNode;
   onCollapse?: () => void;
-  collapseIcon: React.ReactNode;
-  collapseLabel: string;
+  collapseIcon?: React.ReactNode;
+  collapseLabel?: string;
 }) {
   return (
     <div className="h-[54px] px-4 flex items-center justify-between">
@@ -465,69 +412,6 @@ function PanelHeader({
           {collapseIcon}
         </Button>
       )}
-    </div>
-  );
-}
-
-function StudioOverlay({
-  title,
-  subtitle,
-  icon: Icon,
-  onClose,
-  children,
-  t,
-}: {
-  title: string;
-  subtitle: string;
-  icon: typeof HelpCircle;
-  onClose: () => void;
-  children: React.ReactNode;
-  t: ReturnType<typeof useTranslations<"Study">>;
-}) {
-  return (
-    <div className="absolute inset-0 z-[60] flex">
-      <div
-        onClick={onClose}
-        className="absolute inset-0 bg-rail/40 backdrop-blur-[2px] studio-scrim-enter"
-        aria-hidden
-      />
-      <div className="ml-auto w-[640px] max-w-[88%] h-full bg-surface border-l border-border shadow-[-24px_0_60px_rgba(0,0,0,0.16)] flex flex-col studio-overlay-enter">
-        {/* Header — wireframe §1 lines 257-271 */}
-        <div className="h-[60px] shrink-0 px-5 flex items-center gap-3 border-b border-border">
-          <div className="w-[38px] h-[38px] rounded-[12px] bg-primary/10 flex items-center justify-center text-primary shrink-0">
-            <Icon className="w-5 h-5" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="text-[15px] font-bold text-foreground truncate">
-              {title}
-            </div>
-            <div className="text-[11px] text-muted-foreground mt-0.5">
-              {subtitle}
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="inline-flex items-center gap-1.5 px-2.5 py-2 rounded-[11px] border border-border bg-surface text-ink-2 text-xs font-semibold hover:border-primary hover:text-primary transition-all"
-          >
-            <X className="w-3.5 h-3.5" />
-            {t("allTools")}
-          </button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            aria-label="Close"
-            className="h-[34px] w-[34px] rounded-[11px] text-muted-foreground hover:text-coral hover:border-coral border border-transparent"
-          >
-            <X className="w-4 h-4" />
-          </Button>
-        </div>
-
-        <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-          {children}
-        </div>
-      </div>
     </div>
   );
 }

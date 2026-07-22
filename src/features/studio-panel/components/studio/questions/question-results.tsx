@@ -131,17 +131,12 @@ export function QuestionResults({
             </CardContent>
           </Card>
         </div>
-
-        <p className="text-base text-foreground mb-8">
-          {message} {accuracy}%
-        </p>
-
         <div className="flex gap-4">
           <Button variant="outline" onClick={handleRetry} className="flex-1">
             {t("tryAgain")}
           </Button>
           <Button onClick={onNewPassage} className="flex-1">
-            {t("newPassage")}
+            {t("goBack")}
           </Button>
         </div>
       </div>

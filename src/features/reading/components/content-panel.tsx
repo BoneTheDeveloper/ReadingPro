@@ -11,7 +11,7 @@ import { useScrollProgress } from "@/features/reading/hooks/use-scroll-progress"
 import { useContentState } from "@/features/reading/hooks/use-content-state";
 import type { PassageData } from "@/types/passage";
 import { extractSelectionInfo } from "@/features/reading/lib/selection-utils";
-import { getPassageSourceUrlAction } from "@/features/passage/server/actions/passage";
+import { getPassageSourceUrlAction } from "@/features/passage-crud/server/actions/passage";
 import { PdfViewer } from "./pdf-viewer";
 import { YouTubeEmbed } from "./youtube-embed";
 import { TranslationPopup } from "./translation-popup";
