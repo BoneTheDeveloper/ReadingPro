@@ -8,18 +8,12 @@ import {
   GraduationCap,
   Library,
   Menu,
-  Settings as SettingsIcon,
-  Sun,
-  Moon,
-  Monitor,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { AuthControls } from "./auth-controls";
-import { SettingsModal } from "@/components/layout/settings-modal";
+import { LocaleSwitcher } from "./locale-switcher";
 import { useTranslations } from "next-intl";
-import { useTheme } from "@/components/providers/theme-provider";
-import { useSyncExternalStore } from "react";
 
 // App shell per design.md §8:
 // - 62px dark rail (#221F2B), 40px icon tiles (radius 13px)
@@ -30,7 +24,6 @@ import { useSyncExternalStore } from "react";
 const RAIL_WIDTH_PX = 62;
 
 const navItems = [
-  { href: "/", labelKey: "Navigation.dashboard", icon: GraduationCap },
   { href: "/study", labelKey: "Navigation.study", icon: BookOpen },
   { href: "/vocabulary", labelKey: "Navigation.vocabulary", icon: Library },
   { href: "/dictionary", labelKey: "Navigation.dictionary", icon: BookMarked },
@@ -40,7 +33,6 @@ export function DashboardSidebar({ children }: { children: React.ReactNode }) {
   const t = useTranslations();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const closeMobile = useCallback(() => setMobileOpen(false), []);
 
@@ -73,11 +65,7 @@ export function DashboardSidebar({ children }: { children: React.ReactNode }) {
         style={{ width: RAIL_WIDTH_PX }}
         className="hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 bg-rail items-center py-5 z-40"
       >
-        <SidebarContent
-          isActive={isActive}
-          t={t}
-          onOpenSettings={() => setSettingsOpen(true)}
-        />
+        <SidebarContent isActive={isActive} t={t} />
       </aside>
 
       {mobileOpen && (
@@ -96,10 +84,6 @@ export function DashboardSidebar({ children }: { children: React.ReactNode }) {
         <MobileSidebarContent
           isActive={isActive}
           onNavigate={closeMobile}
-          onOpenSettings={() => {
-            setMobileOpen(false);
-            setSettingsOpen(true);
-          }}
           t={t}
         />
       </aside>
@@ -128,7 +112,8 @@ export function DashboardSidebar({ children }: { children: React.ReactNode }) {
           <span className="font-semibold text-foreground text-sm">
             English Reading
           </span>
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-2">
+            <LocaleSwitcher />
             <AuthControls compact />
           </div>
         </header>
@@ -136,69 +121,31 @@ export function DashboardSidebar({ children }: { children: React.ReactNode }) {
           {children}
         </main>
       </div>
-
-      <SettingsModal
-        open={settingsOpen}
-        onClose={() => setSettingsOpen(false)}
-      />
     </div>
-  );
-}
-
-function RailThemeButton({ isActive }: { isActive: boolean }) {
-  const { theme, setTheme } = useTheme();
-  const mounted = useSyncExternalStore(
-    () => () => {},
-    () => true,
-    () => false,
-  );
-  if (!mounted) {
-    return (
-      <div className="w-10 h-10 flex items-center justify-center text-white/30">
-        <Sun className="w-5 h-5" />
-      </div>
-    );
-  }
-  const Icon = theme === "dark" ? Moon : theme === "light" ? Sun : Monitor;
-  const next = theme === "light" ? "dark" : "light";
-  return (
-    <button
-      type="button"
-      onClick={() => setTheme(next)}
-      title={theme === "light" ? "Switch to dark" : "Switch to light"}
-      className={cn(
-        "w-10 h-10 flex items-center justify-center rounded-[13px] transition-all",
-        isActive
-          ? "bg-white/[0.14] text-white"
-          : "text-white/60 hover:text-white hover:bg-white/[0.08]",
-      )}
-    >
-      <Icon className="w-5 h-5" />
-    </button>
   );
 }
 
 function SidebarContent({
   isActive,
   t,
-  onOpenSettings,
 }: {
   isActive: (href: string) => boolean;
   t: ReturnType<typeof useTranslations>;
-  onOpenSettings: () => void;
 }) {
   return (
     <div className="flex flex-col h-full w-full items-center">
-      <div
+      <Link
+        href="/"
         className="mb-6 w-10 h-10 rounded-[13px] flex items-center justify-center text-white"
         style={{
           background:
             "linear-gradient(135deg, #5A4FE0 0%, #7A6BFF 60%, #F2664A 100%)",
         }}
-        aria-hidden
+        aria-label={t("Navigation.dashboard")}
+        title={t("Navigation.dashboard")}
       >
         <GraduationCap className="w-5 h-5" />
-      </div>
+      </Link>
 
       <nav className="flex-1 w-full px-2 space-y-1.5 flex flex-col items-center">
         {navItems.map((item) => {
@@ -222,20 +169,9 @@ function SidebarContent({
         })}
       </nav>
 
-      <div className="mt-4 pt-4 w-full px-2 border-t border-white/10 flex flex-col items-center gap-1.5">
-        <RailThemeButton isActive={false} />
-        <button
-          type="button"
-          onClick={onOpenSettings}
-          title={t("Navigation.settings")}
-          aria-label={t("Navigation.settings")}
-          className="w-10 h-10 flex items-center justify-center rounded-[13px] text-white/60 hover:text-white hover:bg-white/[0.08] transition-all"
-        >
-          <SettingsIcon className="w-5 h-5" />
-        </button>
-        <div className="mt-1">
-          <AuthControls />
-        </div>
+      <div className="mt-4 pt-4 w-full px-2 border-t border-white/10 flex flex-col items-center gap-3">
+        <LocaleSwitcher variant="rail" />
+        <AuthControls />
       </div>
     </div>
   );
@@ -244,12 +180,10 @@ function SidebarContent({
 function MobileSidebarContent({
   isActive,
   onNavigate,
-  onOpenSettings,
   t,
 }: {
   isActive: (href: string) => boolean;
   onNavigate: () => void;
-  onOpenSettings: () => void;
   t: ReturnType<typeof useTranslations>;
 }) {
   return (
@@ -301,18 +235,10 @@ function MobileSidebarContent({
             </Link>
           );
         })}
-
-        <button
-          type="button"
-          onClick={onOpenSettings}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:bg-accent/60 hover:text-foreground transition-colors"
-        >
-          <SettingsIcon className="w-4.5 h-4.5 text-muted-foreground" />
-          {t("Navigation.settings")}
-        </button>
       </nav>
 
-      <div className="px-3 py-3 border-t border-border">
+      <div className="px-3 py-3 border-t border-border flex items-center justify-between">
+        <LocaleSwitcher />
         <AuthControls compact />
       </div>
     </div>

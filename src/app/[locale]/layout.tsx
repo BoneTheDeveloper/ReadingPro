@@ -2,7 +2,6 @@ import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Plus_Jakarta_Sans, JetBrains_Mono, Lora } from "next/font/google";
-import { ThemeProvider } from "@/components/providers/theme-provider";
 import { routing } from "@/i18n/routing";
 import "../globals.css";
 
@@ -48,11 +47,9 @@ export default async function LocaleLayout({
       suppressHydrationWarning
     >
       <body className="h-full overflow-hidden flex flex-col font-sans">
-        <ThemeProvider>
-          <NextIntlClientProvider messages={messages}>
-            {children}
-          </NextIntlClientProvider>
-        </ThemeProvider>
+        <NextIntlClientProvider messages={messages}>
+          {children}
+        </NextIntlClientProvider>
       </body>
     </html>
   );

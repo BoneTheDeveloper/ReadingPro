@@ -1,5 +1,4 @@
 import * as React from "react";
-import { Input as InputPrimitive } from "@base-ui/react/input";
 
 import { cn } from "@/lib/utils";
 
@@ -8,7 +7,7 @@ import { cn } from "@/lib/utils";
 // - Focus: indigo border + glow 0 0 0 3px rgba(90,79,224,.10)
 function Input({ className, type, ...props }: React.ComponentProps<"input">) {
   return (
-    <InputPrimitive
+    <input
       type={type}
       data-slot="input"
       className={cn(

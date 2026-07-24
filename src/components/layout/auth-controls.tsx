@@ -73,7 +73,7 @@ export function AuthControls({
               alt={session.user.name || "User"}
               width={36}
               height={36}
-              className="w-9 h-9 rounded-full"
+              className="rounded-full"
             />
           ) : (
             <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center">
@@ -84,16 +84,11 @@ export function AuthControls({
               )}
             </div>
           )}
-          {!isRail && (
-            <span className="text-sm font-medium max-w-[100px] truncate">
-              {session.user.name || "User"}
-            </span>
-          )}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
         <DropdownMenuItem asChild>
-          <Link href="/settings" className="cursor-pointer">
+          <Link href="/account" className="cursor-pointer">
             <Settings className="w-4 h-4 mr-2" />
             Settings
           </Link>

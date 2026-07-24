@@ -1,6 +1,7 @@
 "use client";
 
-import { Progress as ProgressPrimitive } from "@base-ui/react/progress";
+import * as React from "react";
+import * as ProgressPrimitive from "@radix-ui/react-progress";
 
 import { cn } from "@/lib/utils";
 
@@ -9,7 +10,7 @@ function Progress({
   children,
   value,
   ...props
-}: ProgressPrimitive.Root.Props) {
+}: ProgressPrimitive.ProgressProps) {
   return (
     <ProgressPrimitive.Root
       value={value}
@@ -25,9 +26,12 @@ function Progress({
   );
 }
 
-function ProgressTrack({ className, ...props }: ProgressPrimitive.Track.Props) {
+function ProgressTrack({
+  className,
+  ...props
+}: React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root>) {
   return (
-    <ProgressPrimitive.Track
+    <ProgressPrimitive.Root
       className={cn(
         "relative flex h-1 w-full items-center overflow-x-hidden rounded-full bg-muted",
         className,
@@ -41,9 +45,9 @@ function ProgressTrack({ className, ...props }: ProgressPrimitive.Track.Props) {
 function ProgressIndicator({
   className,
   ...props
-}: ProgressPrimitive.Indicator.Props) {
+}: React.ComponentPropsWithoutRef<typeof ProgressPrimitive.ProgressIndicator>) {
   return (
-    <ProgressPrimitive.Indicator
+    <ProgressPrimitive.ProgressIndicator
       data-slot="progress-indicator"
       className={cn("h-full bg-primary transition-all", className)}
       {...props}
@@ -51,9 +55,12 @@ function ProgressIndicator({
   );
 }
 
-function ProgressLabel({ className, ...props }: ProgressPrimitive.Label.Props) {
+function ProgressLabel({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <ProgressPrimitive.Label
+    <div
       className={cn("text-sm font-medium", className)}
       data-slot="progress-label"
       {...props}
@@ -61,9 +68,12 @@ function ProgressLabel({ className, ...props }: ProgressPrimitive.Label.Props) {
   );
 }
 
-function ProgressValue({ className, ...props }: ProgressPrimitive.Value.Props) {
+function ProgressValue({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <ProgressPrimitive.Value
+    <div
       className={cn(
         "ml-auto text-sm text-muted-foreground tabular-nums",
         className,
