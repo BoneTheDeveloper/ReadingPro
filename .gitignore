@@ -60,7 +60,6 @@ next-env.d.ts
 # agent file
 .claude
 .codex
-.agents
 .vscode
 
 # Sentry Config File
