@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { getUserId } from "@/lib/auth/auth-server";
-import { fetchStudioArtifacts, getArtifactQuestions, removeStudioArtifact } from "../services/studio-artifacts";
+import { fetchStudioArtifacts, getArtifactQuestions } from "../services/studio-artifacts";
 
 export type StudioActionId = "quiz" | "flashcard" | "summary" | "chat" | "mindmap" | "lookup";
 

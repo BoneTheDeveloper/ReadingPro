@@ -4,73 +4,67 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { routing } from "@/i18n/routing";
 
-// next-intl middleware for locale handling
 const intlMiddleware = createMiddleware(routing);
 
-// Public routes that don't require authentication.
-// The home route (/, /:locale) is the dashboard and stays protected.
 const PUBLIC_PATHS = [
   "/sign-in",
   "/sign-up",
   "/about",
 ];
 
-// Check if path is public (handles locale prefixes)
+function getNormalizedPath(pathname: string): string {
+  const localePattern = new RegExp(`^/(${routing.locales.join("|")})(/.*)?$`);
+  const match = pathname.match(localePattern);
+  return match ? (match[2] || "/") : pathname;
+}
+
 function isPublicRoute(pathname: string): boolean {
-  if (PUBLIC_PATHS.includes(pathname)) return true;
-
-  for (const locale of routing.locales) {
-    for (const path of PUBLIC_PATHS) {
-      if (pathname === `/${locale}${path}` || pathname.startsWith(`/${locale}${path}/`)) {
-        return true;
-      }
-    }
-  }
-
-  return false;
+  const normalizedPath = getNormalizedPath(pathname);
+  return PUBLIC_PATHS.includes(normalizedPath);
 }
 
-// Check if path is an auth page (for redirecting logged-in users away)
 function isAuthPage(pathname: string): boolean {
-  const authPaths = ["/sign-in", "/sign-up"];
-  for (const locale of routing.locales) {
-    for (const path of authPaths) {
-      if (pathname.startsWith(`/${locale}${path}`)) return true;
-    }
-  }
-  return false;
+  const normalizedPath = getNormalizedPath(pathname);
+  return ["/sign-in", "/sign-up"].includes(normalizedPath);
 }
 
-export default async function proxy(request: NextRequest) {
+export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Skip API routes and monitoring endpoints
   if (pathname.startsWith("/api/") || pathname.startsWith("/monitoring")) {
     return NextResponse.next();
   }
 
-  // Extract locale from pathname for redirect URLs
   const localePattern = new RegExp(`^/(${routing.locales.join("|")})(?:/|$)`);
-  const locale = pathname.match(localePattern)?.[1] ?? routing.defaultLocale;
+  const pathLocale = pathname.match(localePattern)?.[1];
+  const cookieLocale = request.cookies.get('NEXT_LOCALE')?.value;
+  const currentLocale = pathLocale || cookieLocale || routing.defaultLocale;
 
-  // Get session from Better Auth
+  const buildUrl = (targetPath: string) => {
+    const isDefault = currentLocale === routing.defaultLocale;
+    const prefix = (routing.localePrefix === "as-needed" && isDefault)
+      ? ""
+      : `/${currentLocale}`;
+    return new URL(`${prefix}${targetPath}`, request.url);
+  };
+
   const session = await auth.api.getSession({
     headers: request.headers,
   });
 
-  // Unauthenticated user trying to access protected route
-  if (!session && !isPublicRoute(pathname)) {
-    const signInUrl = new URL(`/${locale}/sign-in`, request.url);
+  const isPublic = isPublicRoute(pathname);
+  const isAuth = isAuthPage(pathname);
+
+  if (!session && !isPublic) {
+    const signInUrl = buildUrl("/sign-in");
     signInUrl.searchParams.set("redirect_url", request.url);
     return NextResponse.redirect(signInUrl);
   }
 
-  // Authenticated user on auth page → redirect to dashboard
-  if (session && isAuthPage(pathname)) {
-    return NextResponse.redirect(new URL(`/${locale}`, request.url));
+  if (session && isAuth) {
+    return NextResponse.redirect(buildUrl("/"));
   }
 
-  // Let next-intl handle locale routing
   return intlMiddleware(request);
 }
 
