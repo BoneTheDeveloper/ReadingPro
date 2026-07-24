@@ -28,13 +28,14 @@ export function ContentPanel({
   const {
     viewMode,
     setViewMode,
-    selection,
-    quickTranslationState,
+    selectedWordInfo,
+    translationState,
     isVocabularySaved,
-    handleSelectionChange,
-    handleQuickTranslate,
+    handleWordSelection,
+    translateWord,
     handleSaveVocabulary,
   } = useContentState({ passageId: passage?.id });
+  
   const t = useTranslations("Study");
   const scrollRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -66,7 +67,6 @@ export function ContentPanel({
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewMode, passage?.filePath]);
 
   const updateSelectionFromMouseEvent = useCallback(
@@ -80,9 +80,9 @@ export function ContentPanel({
           y: event.clientY,
         },
       });
-      handleSelectionChange(info);
+      handleWordSelection(info);
     },
-    [passage, handleSelectionChange],
+    [passage, handleWordSelection],
   );
 
   useEffect(() => {
@@ -263,15 +263,15 @@ export function ContentPanel({
       </div>
 
       {/* Translation popup — rendered at content panel level */}
-      {selection && passage && (
+      {selectedWordInfo && passage && (
         <TranslationPopup
-          selection={selection}
-          translation={quickTranslationState.data}
-          status={quickTranslationState.status}
-          onTranslate={handleQuickTranslate}
+          selection={selectedWordInfo}
+          translation={translationState.data}
+          status={translationState.status}
+          onTranslate={translateWord}
           onSave={handleSaveVocabulary}
           saved={isVocabularySaved}
-          onDismiss={() => handleSelectionChange(null)}
+          onDismiss={() => handleWordSelection(null)}
         />
       )}
     </div>
