@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="vi" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STUDIO - Nền tảng học tập thông minh</title>
+
+    <!-- Tải Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Tải Font chữ Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Tải FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Cấu hình Tailwind -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#7B61FF',
+                        'primary-dark': '#6A45E5',
+                        'primary-light': '#8A63F7',
+                        'surface': '#f8f9fc',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="font-sans text-gray-800 antialiased bg-white selection:bg-primary-light selection:text-white overflow-x-hidden">
+
+    <nav class="fixed w-full z-50 bg-white/80 backdrop-blur-md border-b border-gray-100 transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <!-- Logo -->
+                <div class="flex items-center gap-3 cursor-pointer">
+                    <div class="bg-gradient-to-br from-primary-light to-primary-dark w-10 h-10 rounded-xl flex justify-center items-center text-white text-lg shadow-md shadow-primary/20">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <span class="font-bold text-xl tracking-tight text-gray-900">STUDIO</span>
+                </div>
+
+                <!-- Links (Desktop) -->
+                <div class="hidden md:flex space-x-8">
+                    <a href="#features" class="text-sm font-medium text-gray-600 hover:text-primary transition-colors">Tính năng</a>
+                    <a href="#how-it-works" class="text-sm font-medium text-gray-600 hover:text-primary transition-colors">Cách hoạt động</a>
+                    <a href="#pricing" class="text-sm font-medium text-gray-600 hover:text-primary transition-colors">Bảng giá</a>
+                </div>
+
+                <!-- Buttons -->
+                <div class="flex items-center gap-4">
+                    <a href="#" class="hidden sm:block text-sm font-semibold text-gray-700 hover:text-primary transition-colors">Đăng nhập</a>
+                    <a href="#" class="bg-primary hover:bg-primary-dark text-white text-sm font-semibold py-2.5 px-6 rounded-full transition-all duration-300 shadow-md hover:shadow-lg shadow-primary/25">
+                        Bắt đầu miễn phí
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <section class="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
+        <!-- Background Gradient Mờ ảo (Kế thừa từ trang Login) -->
+        <div class="absolute inset-0 z-0 pointer-events-none">
+            <div class="absolute top-20 left-10 w-72 h-72 rounded-full bg-primary-light/20 blur-[80px] mix-blend-multiply"></div>
+            <div class="absolute top-40 right-20 w-96 h-96 rounded-full bg-blue-300/20 blur-[100px] mix-blend-multiply"></div>
+        </div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
+                <!-- Cột nội dung Text -->
+                <div class="text-center lg:text-left">
+                    <div class="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary font-semibold text-sm mb-6 border border-primary/20">
+                        🌟 Nền tảng học tập hệ mới
+                    </div>
+                    <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 leading-[1.15] mb-6 tracking-tight">
+                        Không gian học tập <br class="hidden lg:block"/>
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-500">thông minh</span> dành cho bạn.
+                    </h1>
+                    <p class="text-lg text-gray-600 mb-8 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
+                        Tự động tóm tắt tài liệu PDF, tạo thẻ ghi nhớ, và sơ đồ tư duy chỉ trong vài giây. Tiết kiệm 50% thời gian học tập với trợ lý ảo STUDIO.
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                        <a href="#" class="bg-primary hover:bg-primary-dark text-white font-semibold py-4 px-8 rounded-full transition-all duration-300 shadow-lg shadow-primary/30 text-center flex items-center justify-center gap-2">
+                            Trải nghiệm ngay <i class="fas fa-arrow-right text-sm"></i>
+                        </a>
+                        <a href="#" class="bg-white hover:bg-gray-50 text-gray-700 font-semibold py-4 px-8 rounded-full transition-all duration-300 border border-gray-200 text-center flex items-center justify-center gap-2">
+                            <i class="fas fa-play-circle text-primary"></i> Xem Video
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Cột hình ảnh minh họa (Dashboard Mockup) -->
+                <div class="relative mx-auto w-full max-w-lg lg:max-w-none perspective-1000">
+                    <!-- Glassmorphism Dashboard Box -->
+                    <div class="relative rounded-2xl bg-white/60 backdrop-blur-xl border border-white/80 shadow-2xl overflow-hidden transform rotate-y-[-10deg] rotate-x-[5deg] transition-transform duration-700 hover:rotate-0">
+                        <!-- Header Mockup -->
+                        <div class="h-12 border-b border-gray-100 bg-white/50 flex items-center px-4 gap-2">
+                            <div class="w-3 h-3 rounded-full bg-red-400"></div>
+                            <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
+                            <div class="w-3 h-3 rounded-full bg-green-400"></div>
+                            <div class="ml-4 w-48 h-4 bg-gray-100 rounded-full"></div>
+                        </div>
+                        <!-- Body Mockup -->
+                        <div class="p-6 grid grid-cols-3 gap-6 h-80">
+                            <!-- Sidebar -->
+                            <div class="col-span-1 border-r border-gray-100 pr-4 space-y-4">
+                                <div class="w-full h-8 bg-gray-100 rounded-lg"></div>
+                                <div class="w-3/4 h-4 bg-gray-50 rounded-full"></div>
+                                <div class="w-2/3 h-4 bg-gray-50 rounded-full"></div>
+                                <div class="w-5/6 h-4 bg-gray-50 rounded-full"></div>
+                            </div>
+                            <!-- Main Content -->
+                            <div class="col-span-2 space-y-4">
+                                <div class="w-1/3 h-6 bg-gray-200 rounded-lg mb-6"></div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="h-24 bg-primary/10 rounded-xl border border-primary/20 flex flex-col justify-center items-center text-primary gap-2">
+                                        <i class="fas fa-layer-group text-xl"></i>
+                                        <span class="text-xs font-bold">Thẻ ghi nhớ</span>
+                                    </div>
+                                    <div class="h-24 bg-blue-50 rounded-xl border border-blue-100 flex flex-col justify-center items-center text-blue-500 gap-2">
+                                        <i class="fas fa-sitemap text-xl"></i>
+                                        <span class="text-xs font-bold">Sơ đồ tư duy</span>
+                                    </div>
+                                </div>
+                                <div class="w-full h-20 bg-gray-50 rounded-xl mt-4"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="features" class="py-20 bg-surface relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">Mọi công cụ bạn cần ở một nơi</h2>
+                <p class="text-gray-600">STUDIO biến các tài liệu khô khan thành các định dạng học tập tương tác, giúp bạn ghi nhớ nhanh hơn và sâu hơn.</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <!-- Feature 1 -->
+                <div class="bg-white p-8 rounded-[24px] shadow-sm hover:shadow-xl transition-all duration-300 group border border-gray-100 hover:border-primary/30">
+                    <div class="w-14 h-14 rounded-2xl bg-red-50 text-red-500 flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform">
+                        <i class="far fa-file-pdf"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Tóm tắt PDF</h3>
+                    <p class="text-gray-500 text-sm leading-relaxed">Tải lên bất kỳ tài liệu nào. AI của chúng tôi sẽ trích xuất những ý chính và tóm tắt ngắn gọn cho bạn.</p>
+                </div>
+
+                <!-- Feature 2 -->
+                <div class="bg-white p-8 rounded-[24px] shadow-sm hover:shadow-xl transition-all duration-300 group border border-gray-100 hover:border-primary/30">
+                    <div class="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform">
+                        <i class="fas fa-layer-group"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Thẻ ghi nhớ</h3>
+                    <p class="text-gray-500 text-sm leading-relaxed">Tự động tạo Flashcard từ văn bản của bạn. Ôn tập theo phương pháp lặp lại ngắt quãng hiệu quả.</p>
+                </div>
+
+                <!-- Feature 3 -->
+                <div class="bg-white p-8 rounded-[24px] shadow-sm hover:shadow-xl transition-all duration-300 group border border-gray-100 hover:border-primary/30">
+                    <div class="w-14 h-14 rounded-2xl bg-blue-50 text-blue-500 flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform">
+                        <i class="fas fa-sitemap"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Sơ đồ tư duy</h3>
+                    <p class="text-gray-500 text-sm leading-relaxed">Biến các khái niệm phức tạp thành biểu đồ trực quan. Dễ dàng nắm bắt bức tranh toàn cảnh.</p>
+                </div>
+
+                <!-- Feature 4 -->
+                <div class="bg-white p-8 rounded-[24px] shadow-sm hover:shadow-xl transition-all duration-300 group border border-gray-100 hover:border-primary/30">
+                    <div class="w-14 h-14 rounded-2xl bg-green-50 text-green-500 flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform">
+                        <i class="far fa-comments"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Trò chuyện AI</h3>
+                    <p class="text-gray-500 text-sm leading-relaxed">Có câu hỏi về tài liệu? Hãy hỏi trực tiếp trợ lý AI của bạn như một người gia sư riêng biệt.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-20 relative overflow-hidden">
+        <div class="absolute inset-0 bg-primary"></div>
+        <!-- Abstract patterns -->
+        <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(white 2px, transparent 2px); background-size: 30px 30px;"></div>
+
+        <div class="max-w-4xl mx-auto px-4 relative z-10 text-center">
+            <h2 class="text-3xl md:text-4xl font-bold text-white mb-6">Sẵn sàng để học tập thông minh hơn?</h2>
+            <p class="text-primary-light text-lg mb-10 max-w-2xl mx-auto">Tham gia cùng hàng ngàn học sinh và sinh viên đang sử dụng STUDIO để cải thiện điểm số và tiết kiệm thời gian.</p>
+
+            <a href="#" class="inline-block bg-white text-primary font-bold text-lg py-4 px-10 rounded-full hover:bg-gray-50 transition-all duration-300 shadow-[0_10px_25px_rgba(0,0,0,0.1)] hover:scale-105">
+                Bắt đầu học miễn phí
+            </a>
+        </div>
+    </section>
+
+    <footer class="bg-white py-12 border-t border-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="flex items-center gap-2">
+                <i class="fas fa-graduation-cap text-primary text-xl"></i>
+                <span class="font-bold text-gray-900">STUDIO</span>
+            </div>
+            <div class="text-sm text-gray-500">
+                &copy; 2026 STUDIO. Đã đăng ký bản quyền.
+            </div>
+            <div class="flex gap-4">
+                <a href="#" class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:text-primary hover:bg-primary/10 transition-colors"><i class="fab fa-facebook-f"></i></a>
+                <a href="#" class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:text-primary hover:bg-primary/10 transition-colors"><i class="fab fa-twitter"></i></a>
+                <a href="#" class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:text-primary hover:bg-primary/10 transition-colors"><i class="fab fa-instagram"></i></a>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>
