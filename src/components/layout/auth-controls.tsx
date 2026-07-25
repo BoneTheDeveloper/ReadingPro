@@ -31,7 +31,7 @@ export function AuthControls({
     await authClient.signOut({
       fetchOptions: {
         onSuccess: () => {
-          router.push("/sign-in");
+          router.push("/login");
           router.refresh();
         },
       },
@@ -53,13 +53,13 @@ export function AuthControls({
   if (!session?.user) {
     return (
       <>
-        <Link href="/sign-in">
+        <Link href="/login">
           <Button variant="ghost" size={compact || isRail ? "icon" : "sm"}>
             Sign in
           </Button>
         </Link>
         {!compact && !isRail && (
-          <Link href="/sign-up">
+          <Link href="/signup">
             <Button size="sm">Sign up</Button>
           </Link>
         )}

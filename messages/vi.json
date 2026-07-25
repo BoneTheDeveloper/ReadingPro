@@ -30,14 +30,36 @@
     "signUpTitle": "Tạo tài khoản",
     "signUpDescription": "Nhập email và mật khẩu để bắt đầu",
     "email": "Email",
+    "emailPlaceholder": "Email của bạn",
     "password": "Mật khẩu",
+    "passwordPlaceholder": "Mật khẩu (tối thiểu 8 ký tự)",
     "confirmPassword": "Xác nhận mật khẩu",
+    "confirmPasswordPlaceholder": "Xác nhận mật khẩu",
     "signInWithGoogle": "Đăng nhập bằng Google",
     "signUpWithGoogle": "Đăng ký bằng Google",
+    "continueWithGoogle": "Tiếp tục với Google",
+    "continueWithEmail": "Tiếp tục với email",
+    "or": "hoặc",
+    "goBack": "Quay lại",
+    "continue": "Tiếp tục",
     "noAccount": "Chưa có tài khoản?",
     "hasAccount": "Đã có tài khoản?",
+    "youUsedGoogleLastTime": "Bạn đã dùng Google để đăng nhập lần trước",
     "passwordsDoNotMatch": "Mật khẩu không khớp",
-    "passwordMinLength": "Mật khẩu phải có ít nhất 6 ký tự"
+    "passwordMinLength": "Mật khẩu phải có ít nhất 8 ký tự",
+    "invalidEmail": "Email không hợp lệ",
+    "enter6DigitCode": "Vui lòng nhập mã 6 chữ số",
+    "codeSentTo": "Đã gửi mã đến",
+    "verify": "Xác thực",
+    "didNotReceiveCode": "Không nhận được mã?",
+    "resend": "Gửi lại",
+    "createPasswordFor": "Tạo mật khẩu cho",
+    "createAccount": "Tạo tài khoản",
+    "errors": {
+      "oauthFailed": "Đăng nhập Google thất bại",
+      "signupFailed": "Đăng ký thất bại",
+      "unexpected": "Đã xảy ra lỗi không mong muốn"
+    }
   },
   "Dashboard": {
     "studyDashboard": "Bảng học tập",
@@ -286,6 +308,46 @@
     "notFoundDescription": "Trang bạn đang tìm không tồn tại.",
     "goHome": "Về trang chủ",
     "authCallbackFailed": "Xác thực thất bại. Vui lòng thử lại."
+  },
+  "Marketing": {
+    "features": "Tính năng",
+    "howItWorks": "Cách hoạt động",
+    "pricing": "Bảng giá",
+    "signIn": "Đăng nhập",
+    "getStartedFree": "Bắt đầu miễn phí",
+    "hero": {
+      "badge": "🌟 Nền tảng học tập hệ mới",
+      "headline": "Không gian học tập",
+      "headlineHighlight": "thông minh dành cho bạn.",
+      "subtitle": "Tự động tóm tắt tài liệu PDF, tạo thẻ ghi nhớ, và sơ đồ tư duy chỉ trong vài giây. Tiết kiệm 50% thời gian học tập với trợ lý ảo.",
+      "experienceNow": "Trải nghiệm ngay",
+      "watchVideo": "Xem Video"
+    },
+    "featuresSection": {
+      "title": "Mọi công cụ bạn cần ở một nơi",
+      "subtitle": "Biến các tài liệu khô khan thành các định dạng học tập tương tác, giúp bạn ghi nhớ nhanh hơn và sâu hơn.",
+      "pdfSummary": {
+        "title": "Tóm tắt PDF",
+        "description": "Tải lên bất kỳ tài liệu nào. AI sẽ trích xuất những ý chính và tóm tắt ngắn gọn cho bạn."
+      },
+      "flashcards": {
+        "title": "Thẻ ghi nhớ",
+        "description": "Tự động tạo Flashcard từ văn bản. Ôn tập theo phương pháp lặp lại ngắt quãng hiệu quả."
+      },
+      "mindMap": {
+        "title": "Sơ đồ tư duy",
+        "description": "Biến các khái niệm phức tạp thành biểu đồ trực quan. Dễ dàng nắm bắt bức tranh toàn cảnh."
+      },
+      "aiChat": {
+        "title": "Trò chuyện AI",
+        "description": "Có câu hỏi về tài liệu? Hãy hỏi trực tiếp trợ lý AI như một người gia sư riêng biệt."
+      }
+    },
+    "cta": {
+      "title": "Sẵn sàng để học tập thông minh hơn?",
+      "subtitle": "Tham gia cùng hàng ngàn học sinh và sinh viên đang sử dụng để cải thiện điểm số và tiết kiệm thời gian.",
+      "startLearningFree": "Bắt đầu học miễn phí"
+    }
   },
   "Dictionary": {
     "title": "Từ điển",

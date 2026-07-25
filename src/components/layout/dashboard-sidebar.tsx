@@ -38,8 +38,8 @@ export function DashboardSidebar({ children }: { children: React.ReactNode }) {
 
   const isActive = useCallback(
     (href: string) => {
-      if (href === "/") {
-        return pathname === "/";
+      if (href === "/dashboard") {
+        return pathname === "/dashboard";
       }
       if (href === "/study") {
         return (
@@ -113,7 +113,7 @@ export function DashboardSidebar({ children }: { children: React.ReactNode }) {
             English Reading
           </span>
           <div className="ml-auto flex items-center gap-2">
-            <LocaleSwitcher />
+            <LocaleSwitcher side="bottom" />
             <AuthControls compact />
           </div>
         </header>
@@ -135,7 +135,7 @@ function SidebarContent({
   return (
     <div className="flex flex-col h-full w-full items-center">
       <Link
-        href="/"
+        href="/dashboard"
         className="mb-6 w-10 h-10 rounded-[13px] flex items-center justify-center text-white"
         style={{
           background:
@@ -170,7 +170,7 @@ function SidebarContent({
       </nav>
 
       <div className="mt-4 pt-4 w-full px-2 border-t border-white/10 flex flex-col items-center gap-3">
-        <LocaleSwitcher variant="rail" />
+        <LocaleSwitcher variant="rail" side="right" />
         <AuthControls />
       </div>
     </div>
@@ -189,7 +189,7 @@ function MobileSidebarContent({
   return (
     <div className="flex flex-col h-full">
       <div className="px-5 py-5 border-b border-border">
-        <Link href="/" className="flex items-center gap-3" onClick={onNavigate}>
+        <Link href="/dashboard" className="flex items-center gap-3" onClick={onNavigate}>
           <div
             className="w-9 h-9 rounded-[12px] flex items-center justify-center text-white"
             style={{
@@ -238,7 +238,7 @@ function MobileSidebarContent({
       </nav>
 
       <div className="px-3 py-3 border-t border-border flex items-center justify-between">
-        <LocaleSwitcher />
+        <LocaleSwitcher side="bottom" />
         <AuthControls compact />
       </div>
     </div>

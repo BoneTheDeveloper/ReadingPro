@@ -3,77 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đăng nhập - STUDIO</title>
+    <title>Đăng nhập - Study Workspace</title>
 
-    <!-- Tải Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- Tải Font chữ Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-
-    <!-- Tải FontAwesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <!-- Cấu hình Tailwind -->
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
                     },
                     colors: {
-                        primary: '#7B61FF',
-                        'primary-hover': '#6A45E5',
-                        'linear-gray': '#F2F2F2',
-                        'linear-gray-hover': '#E5E5E5',
+                        paper: '#F5F2EC',
+                        indigo: '#5A4FE0',
+                        'indigo-hover': '#4A3FD0',
+                        'indigo-soft': '#ECEAFB',
+                        ink: '#221F2B',
+                        'ink-2': '#565160',
+                        'ink-3': '#908B98',
                     }
                 }
             }
         }
     </script>
 </head>
-<body class="bg-white flex flex-col items-center justify-center min-h-screen text-gray-900 font-sans antialiased selection:bg-primary/20 selection:text-primary">
+<body class="bg-paper flex flex-col items-center justify-center min-h-screen font-sans antialiased">
 
     <div class="w-full max-w-[320px] flex flex-col items-center">
 
-        <!-- Logo (Được làm nhỏ gọn và bo tròn hoàn toàn giống Linear) -->
-        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-[#8A63F7] to-[#6A45E5] flex items-center justify-center text-white mb-6 shadow-sm">
-            <i class="fas fa-graduation-cap text-[16px]"></i>
+        <!-- Logo -->
+        <div class="w-11 h-11 rounded-full bg-gradient-to-br from-[#5A4FE0] to-[#4A3FD0] flex items-center justify-center text-white mb-6 shadow-md">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+            </svg>
         </div>
 
-        <!-- Tiêu đề -->
-        <h1 class="text-[17px] font-semibold mb-8 text-gray-900 tracking-tight">Đăng nhập vào STUDIO</h1>
+        <!-- Title -->
+        <h1 class="text-[17px] font-semibold mb-6 text-ink tracking-tight">Đăng nhập</h1>
 
-        <!-- Nút chính (Google) mang màu thương hiệu -->
-        <button class="w-full bg-primary hover:bg-primary-hover text-white font-medium text-[14px] py-2.5 px-4 rounded-full flex items-center justify-center gap-2.5 transition-colors mb-2">
-            <i class="fab fa-google text-[14px]"></i>
-            Tiếp tục với Google
-        </button>
-
-        <!-- Chú thích siêu nhỏ bên dưới nút chính -->
-        <p class="text-[12px] text-gray-500 mb-5">Bạn đã dùng Google để đăng nhập lần trước</p>
-
-        <!-- Các nút phụ (Apple, Email) màu xám nhạt -->
-        <div class="flex flex-col gap-2.5 w-full">
-            <button class="w-full bg-linear-gray hover:bg-linear-gray-hover text-gray-800 font-medium text-[14px] py-2.5 px-4 rounded-full transition-colors flex items-center justify-center gap-2.5">
-                <i class="fab fa-apple text-[16px] mb-0.5"></i>
-                Tiếp tục với Apple
+        <!-- Login Methods (always visible) -->
+        <div id="login-methods" class="step w-full">
+            <!-- Google button (indigo - primary) -->
+            <button class="w-full bg-indigo hover:bg-indigo-hover text-white font-medium text-[14px] py-2.5 px-4 rounded-full flex items-center justify-center gap-2.5 transition-colors shadow-md">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                Tiếp tục với Google
             </button>
-            <button class="w-full bg-linear-gray hover:bg-linear-gray-hover text-gray-800 font-medium text-[14px] py-2.5 px-4 rounded-full transition-colors flex items-center justify-center">
+
+            <!-- hoặc divider -->
+            <div class="flex items-center gap-3 my-3">
+                <div class="flex-1 h-px bg-[#EAE5DB]"></div>
+                <span class="text-[11px] text-ink-3 font-medium">hoặc</span>
+                <div class="flex-1 h-px bg-[#EAE5DB]"></div>
+            </div>
+
+            <!-- Email button -->
+            <button id="show-email" class="w-full bg-[#EAE5DB] hover:bg-[#E0DBD3] text-ink font-medium text-[14px] py-2.5 px-4 rounded-full flex items-center justify-center gap-2 transition-colors">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                    <polyline points="22,6 12,13 2,6"></polyline>
+                </svg>
                 Tiếp tục với email
             </button>
         </div>
 
+        <!-- Email + Password form -->
+        <div id="step-email-password" class="step hidden w-full">
+            <div class="mb-3">
+                <input
+                    type="email"
+                    id="email"
+                    placeholder="Email"
+                    class="w-full px-4 py-2.5 text-[14px] border border-[#EAE5DB] rounded-full bg-white focus:outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/10 transition-all text-center"
+                >
+            </div>
+            <div class="mb-3 relative">
+                <input
+                    type="password"
+                    id="password"
+                    placeholder="Mật khẩu"
+                    class="w-full px-4 py-2.5 text-[14px] border border-[#EAE5DB] rounded-full bg-white focus:outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/10 transition-all text-center pr-10"
+                >
+                <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-ink-3 hover:text-ink-2">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                </button>
+            </div>
+            <button class="w-full bg-indigo hover:bg-indigo-hover text-white font-medium text-[14px] py-2.5 px-4 rounded-full flex items-center justify-center gap-2 transition-colors shadow-md mb-3">
+                Đăng nhập
+            </button>
+            <button id="back-to-method" class="w-full text-[13px] text-ink-2 hover:text-ink flex items-center justify-center gap-1.5 transition-colors py-2">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                Quay lại
+            </button>
+        </div>
+
         <!-- Footer -->
-        <div class="mt-10 text-[13px] text-gray-500">
+        <div id="footer-signup" class="mt-8 text-[13px] text-ink-2">
             Chưa có tài khoản?
-            <a href="#" class="text-gray-900 font-medium hover:underline">Đăng ký</a>
-            hoặc
-            <a href="#" class="text-gray-900 font-medium hover:underline">tìm hiểu thêm</a>
+            <a href="signup.html" class="text-ink font-medium hover:underline">Đăng ký</a>
         </div>
 
     </div>
+
+    <script>
+        // Check last login method
+        const lastLoginMethod = localStorage.getItem('lastLoginMethod');
+
+        const loginMethods = document.getElementById('login-methods');
+        const stepEmailPassword = document.getElementById('step-email-password');
+
+        // If last login was Google, add the label
+        if (lastLoginMethod === 'google') {
+            const label = document.createElement('p');
+            label.className = 'text-[12px] text-ink-3 mb-2 text-center';
+            label.textContent = 'Bạn đã dùng Google để đăng nhập lần trước';
+            loginMethods.insertBefore(label, loginMethods.firstChild);
+        }
+
+        document.getElementById('show-email').onclick = () => {
+            loginMethods.classList.add('hidden');
+            stepEmailPassword.classList.remove('hidden');
+        };
+
+        document.getElementById('back-to-method').onclick = () => {
+            stepEmailPassword.classList.add('hidden');
+            loginMethods.classList.remove('hidden');
+        };
+    </script>
 
 </body>
 </html>

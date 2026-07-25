@@ -17,7 +17,13 @@ const locales = [
   { code: "vi", label: "Tiếng Việt" },
 ];
 
-export function LocaleSwitcher({ variant = "default" }: { variant?: "default" | "rail" }) {
+export function LocaleSwitcher({
+  variant = "default",
+  side = "bottom",
+}: {
+  variant?: "default" | "rail";
+  side?: "top" | "bottom" | "left" | "right";
+}) {
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
@@ -53,7 +59,7 @@ export function LocaleSwitcher({ variant = "default" }: { variant?: "default" | 
         )}
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent side="right" align="start" className="w-40 rounded-lg border-border bg-white py-1 shadow-lg">
+      <DropdownMenuContent side={side} align="start" className="w-40 rounded-lg border-border bg-white py-1 shadow-lg">
         {locales.map((loc) => {
           const isActive = locale === loc.code;
           return (

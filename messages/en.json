@@ -1,6 +1,6 @@
 {
   "Common": {
-    "appName": "ReadingPro",
+    "appName": "Study Workspace",
     "loading": "Loading...",
     "tryAgain": "Try again",
     "search": "Search...",
@@ -30,14 +30,36 @@
     "signUpTitle": "Create an account",
     "signUpDescription": "Enter your email and password to get started",
     "email": "Email",
+    "emailPlaceholder": "Your email",
     "password": "Password",
+    "passwordPlaceholder": "Password (min 8 characters)",
     "confirmPassword": "Confirm password",
+    "confirmPasswordPlaceholder": "Confirm password",
     "signInWithGoogle": "Sign in with Google",
     "signUpWithGoogle": "Sign up with Google",
+    "continueWithGoogle": "Continue with Google",
+    "continueWithEmail": "Continue with email",
+    "or": "or",
+    "goBack": "Go back",
+    "continue": "Continue",
     "noAccount": "Don't have an account?",
     "hasAccount": "Already have an account?",
+    "youUsedGoogleLastTime": "You used Google to sign in last time",
     "passwordsDoNotMatch": "Passwords do not match",
-    "passwordMinLength": "Password must be at least 6 characters"
+    "passwordMinLength": "Password must be at least 8 characters",
+    "invalidEmail": "Invalid email format",
+    "enter6DigitCode": "Please enter 6-digit code",
+    "codeSentTo": "Code sent to",
+    "verify": "Verify",
+    "didNotReceiveCode": "Didn't receive the code?",
+    "resend": "Resend",
+    "createPasswordFor": "Create password for",
+    "createAccount": "Create account",
+    "errors": {
+      "oauthFailed": "OAuth sign in failed",
+      "signupFailed": "Signup failed",
+      "unexpected": "An unexpected error occurred"
+    }
   },
   "Dashboard": {
     "studyDashboard": "Study dashboard",
@@ -280,6 +302,46 @@
     "notFoundDescription": "The page you are looking for does not exist.",
     "goHome": "Go home",
     "authCallbackFailed": "Authentication failed. Please try again."
+  },
+  "Marketing": {
+    "features": "Features",
+    "howItWorks": "How it works",
+    "pricing": "Pricing",
+    "signIn": "Sign in",
+    "getStartedFree": "Get started free",
+    "hero": {
+      "badge": "🌟 Next-gen learning platform",
+      "headline": "Smart learning space",
+      "headlineHighlight": "for you.",
+      "subtitle": "Automatically summarize PDFs, create flashcards, and mind maps in seconds. Save 50% study time with AI assistant.",
+      "experienceNow": "Experience now",
+      "watchVideo": "Watch video"
+    },
+    "featuresSection": {
+      "title": "All the tools you need in one place",
+      "subtitle": "Turn dry documents into interactive learning formats, helping you remember faster and deeper.",
+      "pdfSummary": {
+        "title": "PDF Summary",
+        "description": "Upload any document. AI extracts key points and concise summaries for you."
+      },
+      "flashcards": {
+        "title": "Flashcards",
+        "description": "Auto-generate flashcards from text. Review with effective spaced repetition."
+      },
+      "mindMap": {
+        "title": "Mind Maps",
+        "description": "Turn complex concepts into visual diagrams. Easily grasp the big picture."
+      },
+      "aiChat": {
+        "title": "AI Chat",
+        "description": "Have questions about a document? Ask the AI assistant directly like a personal tutor."
+      }
+    },
+    "cta": {
+      "title": "Ready to learn smarter?",
+      "subtitle": "Join thousands of students and learners using it to improve grades and save time.",
+      "startLearningFree": "Start learning free"
+    }
   },
   "Dictionary": {
     "title": "Dictionary",

@@ -79,3 +79,7 @@ implement-notes/
 #obsidian
 docs/.obsidian/
 docs/.trash/
+
+#playwright
+screen-shot
+.playwright-mcp
