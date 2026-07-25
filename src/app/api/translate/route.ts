@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { headers } from "next/headers";
 import { z } from "zod";
-import { auth } from "@/lib/auth";
+import { auth } from "@/lib/auth/auth";
 import { executeTranslate } from "@/features/reading/server/services/inline-translate";
 
 const translateRequestSchema = z.object({

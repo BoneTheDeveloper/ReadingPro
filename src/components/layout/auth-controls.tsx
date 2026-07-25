@@ -1,6 +1,5 @@
 "use client";
 
-import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -14,17 +13,24 @@ import { User, LogOut, Settings } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { authClient } from "@/lib/auth/auth-client";
+import type { AuthSession } from "@/lib/auth/types";
+
+type SessionUser = NonNullable<AuthSession>["user"];
 
 interface AuthControlsProps {
   compact?: boolean;
   variant?: "default" | "rail";
+  user: SessionUser | null;
+  loading?: boolean;
 }
 
 export function AuthControls({
   compact = false,
   variant = "default",
+  user,
+  loading = false,
 }: AuthControlsProps) {
-  const { data: session, isPending: loading } = authClient.useSession();
   const isRail = variant === "rail";
   const router = useRouter();
 
@@ -51,7 +57,7 @@ export function AuthControls({
     );
   }
 
-  if (!session?.user) {
+  if (!user) {
     return (
       <Link href="/login">
         <Button variant="ghost" size={compact || isRail ? "icon" : "sm"}>
@@ -68,18 +74,18 @@ export function AuthControls({
           variant="ghost"
           className={cn("rounded-full gap-2", isRail ? "w-10 h-10 p-0" : "px-3")}
         >
-          {session.user.image ? (
+          {user.image ? (
             <Image
-              src={session.user.image}
-              alt={session.user.name || "User avatar"}
+              src={user.image}
+              alt={user.name || "User avatar"}
               width={36}
               height={36}
               className="rounded-full object-cover"
             />
           ) : (
             <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center uppercase">
-              {session.user.name ? (
-                <span className="text-sm font-medium">{session.user.name[0]}</span>
+              {user.name ? (
+                <span className="text-sm font-medium">{user.name[0]}</span>
               ) : (
                 <User className="w-4 h-4" />
               )}
@@ -90,8 +96,8 @@ export function AuthControls({
 
       <DropdownMenuContent align="end" className="w-48">
         <div className="px-2 py-1.5 text-sm">
-          <p className="font-medium truncate">{session.user.name}</p>
-          <p className="text-xs text-muted-foreground truncate">{session.user.email}</p>
+          <p className="font-medium truncate">{user.name}</p>
+          <p className="text-xs text-muted-foreground truncate">{user.email}</p>
         </div>
         <DropdownMenuSeparator />
 
@@ -104,7 +110,10 @@ export function AuthControls({
 
         <DropdownMenuSeparator />
 
-        <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10">
+        <DropdownMenuItem
+          onClick={handleSignOut}
+          className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
+        >
           <LogOut className="w-4 h-4 mr-2" />
           Đăng xuất
         </DropdownMenuItem>

@@ -2,7 +2,7 @@
 
 import { headers } from "next/headers";
 import { z } from "zod";
-import { auth } from "@/lib/auth";
+import { auth } from "@/lib/auth/auth";
 import { fetchStudioArtifacts, getArtifactQuestions } from "../services/studio-artifacts";
 
 const passageIdSchema = z.string().uuid();

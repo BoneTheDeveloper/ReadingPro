@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { PillButton } from "../ui/pill-button";
-import { authClient } from "@/lib/auth-client";
+import { authClient } from "@/lib/auth/auth-client";
 
 const GoogleIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -34,6 +34,7 @@ export function LoginForm({ signInLabel = "Đăng nhập" }: LoginFormProps) {
     try {
       await authClient.signIn.social({
         provider: "google",
+        callbackURL: "/study",
       });
     } catch {
       setError("Đăng nhập Google thất bại");

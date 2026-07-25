@@ -1,6 +1,5 @@
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
+import { getSession } from "@/lib/auth/get-session";
 import { VocabularyPageClient } from "@/features/vocabulary/components/vocabulary-page";
 import {
   getVocabularyItemList,
@@ -11,7 +10,7 @@ import { getVocabularySetList } from "@/features/vocabulary/server/services/voca
 export const dynamic = "force-dynamic";
 
 export default async function VocabularyPage() {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await getSession();
   if (!session) redirect("/login");
 
   const [list, stats, sets] = await Promise.all([

@@ -13,6 +13,9 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { AuthControls } from "./auth-controls";
+import type { AuthSession } from "@/lib/auth/types";
+
+type SessionUser = NonNullable<AuthSession>["user"];
 
 const RAIL_WIDTH_PX = 62;
 
@@ -22,7 +25,12 @@ const navItems = [
   { href: "/dictionary", label: "Từ điển", icon: BookMarked },
 ];
 
-export function DashboardSidebar({ children }: { children: React.ReactNode }) {
+interface DashboardSidebarProps {
+  children: React.ReactNode;
+  user: SessionUser | null;
+}
+
+export function DashboardSidebar({ children, user }: DashboardSidebarProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -54,7 +62,7 @@ export function DashboardSidebar({ children }: { children: React.ReactNode }) {
         style={{ width: RAIL_WIDTH_PX }}
         className="hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 bg-rail items-center py-5 z-40"
       >
-        <SidebarContent isActive={isActive} />
+        <SidebarContent isActive={isActive} user={user} />
       </aside>
 
       {mobileOpen && (
@@ -73,6 +81,7 @@ export function DashboardSidebar({ children }: { children: React.ReactNode }) {
         <MobileSidebarContent
           isActive={isActive}
           onNavigate={closeMobile}
+          user={user}
         />
       </aside>
 
@@ -101,7 +110,7 @@ export function DashboardSidebar({ children }: { children: React.ReactNode }) {
             English Reading
           </span>
           <div className="ml-auto flex items-center gap-2">
-            <AuthControls compact />
+            <AuthControls compact user={user} />
           </div>
         </header>
         <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
@@ -114,13 +123,15 @@ export function DashboardSidebar({ children }: { children: React.ReactNode }) {
 
 function SidebarContent({
   isActive,
+  user,
 }: {
   isActive: (href: string) => boolean;
+  user: SessionUser | null;
 }) {
   return (
     <div className="flex flex-col h-full w-full items-center">
       <div
-        className="mb-6 w-10 h-10 rounded-[13px] flex items-center justify-center text-white cursor-default"
+        className="mb-6 w-10 h-10 rounded-[13px] flex justify-center items-center text-white cursor-default"
         style={{
           background:
             "linear-gradient(135deg, #5A4FE0 0%, #7A6BFF 60%, #F2664A 100%)",
@@ -152,7 +163,7 @@ function SidebarContent({
       </nav>
 
       <div className="mt-4 pt-4 w-full px-2 border-t border-white/10 flex flex-col items-center gap-3">
-        <AuthControls />
+        <AuthControls user={user} />
       </div>
     </div>
   );
@@ -161,16 +172,18 @@ function SidebarContent({
 function MobileSidebarContent({
   isActive,
   onNavigate,
+  user,
 }: {
   isActive: (href: string) => boolean;
   onNavigate: () => void;
+  user: SessionUser | null;
 }) {
   return (
     <div className="flex flex-col h-full">
       <div className="px-5 py-5 border-b border-border">
         <div className="flex items-center gap-3">
           <div
-            className="w-9 h-9 rounded-[12px] flex items-center justify-center text-white cursor-default"
+            className="w-9 h-9 rounded-[12px] flex justify-center items-center text-white cursor-default"
             style={{
               background:
                 "linear-gradient(135deg, #5A4FE0 0%, #7A6BFF 60%, #F2664A 100%)",
@@ -217,7 +230,7 @@ function MobileSidebarContent({
       </nav>
 
       <div className="px-3 py-3 border-t border-border flex items-center justify-between">
-        <AuthControls compact />
+        <AuthControls compact user={user} />
       </div>
     </div>
   );

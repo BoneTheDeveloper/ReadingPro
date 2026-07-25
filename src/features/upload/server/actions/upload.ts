@@ -3,7 +3,7 @@
 import { headers } from "next/headers";
 import { z } from "zod";
 import { SourceType } from "@/types/passage";
-import { auth } from "@/lib/auth";
+import { auth } from "@/lib/auth/auth";
 import { prisma } from "@/lib/prisma";
 import { inngest } from "@/infrastructure/inngest";
 import { createUploadProcessEvent } from "@/features/upload/server/inngest/events";

@@ -1,7 +1,7 @@
 "use server";
 
 import { headers } from "next/headers";
-import { auth } from "@/lib/auth";
+import { auth } from "@/lib/auth/auth";
 import { suggestDictionaryTerms } from "../services/suggest";
 import { getDictionaryEntryDetail } from "../services/entry-detail";
 import {

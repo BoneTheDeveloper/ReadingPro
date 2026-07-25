@@ -3,7 +3,7 @@
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { auth } from "@/lib/auth";
+import { auth } from "@/lib/auth/auth";
 import type { VocabularyStatus } from "@/features/vocabulary/schemas/vocabulary";
 import {
   saveVocabularyInputSchema,

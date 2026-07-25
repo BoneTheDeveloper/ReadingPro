@@ -1,4 +1,5 @@
-import { authClient } from "@/lib/auth-client";
+import { redirect } from "next/navigation";
+import { getSession } from "@/lib/auth/get-session";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -6,10 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator";
 
 export default async function AccountPage() {
-  const { data: session } = await authClient.useSession();
+  const session = await getSession();
 
-  if (!session?.user) {
-    return null;
+  if (!session) {
+    redirect("/login");
   }
 
   return (

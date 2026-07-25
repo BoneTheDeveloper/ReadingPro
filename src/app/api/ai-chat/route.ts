@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { headers } from "next/headers";
 import * as Sentry from "@sentry/nextjs";
-import { auth } from "@/lib/auth";
+import { auth } from "@/lib/auth/auth";
 import { moduleLog } from "@/lib/logger";
 import {
   studyChatRequestSchema,
