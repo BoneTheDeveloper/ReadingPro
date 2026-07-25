@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
 import { Type, PlayCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUploadSubmit } from "@/features/upload/hooks/use-upload-submit";
@@ -27,214 +26,87 @@ export interface UploadModalProps {
 
 type InputMode = "file" | "paste-text" | "youtube" | null;
 
-function SourceButton({
-  icon: Icon,
-  label,
-  desc,
-  onClick,
-  disabled,
-}: {
-  icon: React.ElementType;
-  label: string;
-  desc?: string;
-  onClick?: () => void;
-  disabled?: boolean;
+function SourceButton({ icon: Icon, label, desc, onClick, disabled }: {
+  icon: React.ElementType; label: string; desc?: string; onClick?: () => void; disabled?: boolean;
 }) {
   return (
-    <Button
-      variant="outline"
-      onClick={onClick}
-      disabled={disabled}
-      className="h-auto p-4 flex items-center gap-3 justify-start hover:bg-accent"
-    >
+    <Button variant="outline" onClick={onClick} disabled={disabled} className="h-auto p-4 flex items-center gap-3 justify-start hover:bg-accent">
       <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-accent border border-border">
-        <Icon
-          className={cn(
-            "w-4 h-4",
-            disabled ? "text-muted-foreground" : "text-primary",
-          )}
-        />
+        <Icon className={cn("w-4 h-4", disabled ? "text-muted-foreground" : "text-primary")} />
       </div>
       <div className="text-left">
-        <p
-          className={cn(
-            "text-sm font-semibold",
-            disabled ? "text-muted-foreground" : "text-foreground",
-          )}
-        >
-          {label}
-        </p>
+        <p className={cn("text-sm font-semibold", disabled ? "text-muted-foreground" : "text-foreground")}>{label}</p>
         {desc && <p className="text-xs text-muted-foreground">{desc}</p>}
       </div>
     </Button>
   );
 }
 
-export function UploadModal({
-  isOpen,
-  onClose,
-  onUploadStart,
-  onUploadComplete,
-  onUploadError,
-}: UploadModalProps) {
-  const t = useTranslations("Study");
+export function UploadModal({ isOpen, onClose, onUploadStart, onUploadComplete, onUploadError }: UploadModalProps) {
   const [activeMode, setActiveMode] = useState<InputMode>(null);
   const [error, setError] = useState<string | null>(null);
-  const { isProcessing, handleFileUpload, handleTextSubmit, handleYouTubeSubmit } =
-    useUploadSubmit({ onUploadStart, onComplete: onUploadComplete, onError: onUploadError });
+  const { isProcessing, handleFileUpload, handleTextSubmit, handleYouTubeSubmit } = useUploadSubmit({ onUploadStart, onComplete: onUploadComplete, onError: onUploadError });
 
   const handleFileUploadWrapper = async (file: File) => {
-    if (isProcessing) return; // Prevent double-submit
+    if (isProcessing) return;
     setError(null);
-    try {
-      await handleFileUpload(file);
-      onClose(); // Close modal only on success
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t("uploadFailed"));
-    }
+    try { await handleFileUpload(file); onClose(); } catch (err) { setError(err instanceof Error ? err.message : "Tải lên thất bại"); }
   };
 
   const handleTextSubmitWrapper = async (text: string) => {
     if (!text.trim() || isProcessing) return;
     setError(null);
-    try {
-      await handleTextSubmit(text);
-      onClose(); // Close modal only on success
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t("uploadFailed"));
-    }
+    try { await handleTextSubmit(text); onClose(); } catch (err) { setError(err instanceof Error ? err.message : "Tải lên thất bại"); }
   };
 
   const handleYouTubeSubmitWrapper = async (url: string) => {
     if (!url.trim() || isProcessing) return;
     setError(null);
-    try {
-      await handleYouTubeSubmit(url);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t("uploadFailed"));
-    }
+    try { await handleYouTubeSubmit(url); } catch (err) { setError(err instanceof Error ? err.message : "Tải lên thất bại"); }
   };
 
-  const handleYouTubeUploadStart = () => {
-    onClose();
-  };
-
-  const handleBack = () => {
-    setError(null);
-    setActiveMode(null);
-  };
-
-  const handleClose = () => {
-    setError(null);
-    setActiveMode(null);
-    onClose();
-  };
+  const handleBack = () => { setError(null); setActiveMode(null); };
+  const handleClose = () => { setError(null); setActiveMode(null); onClose(); };
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent showCloseButton={false} className="max-w-lg max-h-[90vh] flex flex-col p-0 gap-0">
         <DialogHeader className="p-5 pb-2 relative">
-          <DialogTitle>{t("addSourceTitle")}</DialogTitle>
-          <button
-            onClick={handleClose}
-            className="absolute right-5 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center rounded-full hover:bg-accent transition-colors"
-            aria-label="Close"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M18 6 6 18" />
-              <path d="m6 6 12 12" />
+          <DialogTitle>Thêm nguồn</DialogTitle>
+          <button onClick={handleClose} className="absolute right-5 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center rounded-full hover:bg-accent transition-colors" aria-label="Đóng">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 6 6 18" /><path d="m6 6 12 12" />
             </svg>
           </button>
         </DialogHeader>
-
         <div className="px-5 pb-5 pt-1 flex-1 overflow-y-auto">
           {activeMode === null && (
             <>
-              <UploadZone
-                onFileSelect={handleFileUploadWrapper}
-                isProcessing={isProcessing}
-                variant="compact"
-              />
-
+              <UploadZone onFileSelect={handleFileUploadWrapper} isProcessing={isProcessing} variant="compact" />
               <div className="grid grid-cols-2 gap-3 mt-5">
-                <SourceButton
-                  icon={PlayCircle}
-                  label={t("youtube")}
-                  onClick={() => setActiveMode("youtube")}
-                />
-                <SourceButton
-                  icon={Type}
-                  label={t("pasteText")}
-                  onClick={() => setActiveMode("paste-text")}
-                />
+                <SourceButton icon={PlayCircle} label="YouTube" onClick={() => setActiveMode("youtube")} />
+                <SourceButton icon={Type} label="Dán văn bản" onClick={() => setActiveMode("paste-text")} />
               </div>
             </>
           )}
-
-          {activeMode === "file" && (
-            <div>
-              <Button
-                variant="ghost"
-                onClick={() => setActiveMode(null)}
-                className="text-primary text-sm -ml-1"
-              >
-                &larr; {t("backToSources")}
-              </Button>
-              <UploadZone
-                onFileSelect={handleFileUploadWrapper}
-                isProcessing={isProcessing}
-                variant="expanded"
-              />
-            </div>
-          )}
-
           {activeMode === "paste-text" && (
             <div className="flex flex-col gap-2">
-              <Button
-                variant="ghost"
-                onClick={handleBack}
-                className="text-primary text-sm w-fit h-auto py-1 px-2 -ml-2 hover:bg-accent/50"
-              >
-                &larr; {t("backToSources")}
+              <Button variant="ghost" onClick={handleBack} className="text-primary text-sm w-fit h-auto py-1 px-2 -ml-2 hover:bg-accent/50">
+                &larr; Quay lại nguồn
               </Button>
-              <TextInputArea
-                onSubmit={handleTextSubmitWrapper}
-                isProcessing={isProcessing}
-              />
+              <TextInputArea onSubmit={handleTextSubmitWrapper} isProcessing={isProcessing} />
             </div>
           )}
-
           {activeMode === "youtube" && (
             <div className="flex flex-col gap-2">
-              <Button
-                variant="ghost"
-                onClick={handleBack}
-                className="text-primary text-sm w-fit h-auto py-1 px-2 -ml-2 hover:bg-accent/50"
-              >
-                &larr; {t("backToSources")}
+              <Button variant="ghost" onClick={handleBack} className="text-primary text-sm w-fit h-auto py-1 px-2 -ml-2 hover:bg-accent/50">
+                &larr; Quay lại nguồn
               </Button>
-              <YouTubeInput
-                onSubmit={handleYouTubeSubmitWrapper}
-                onUploadStart={handleYouTubeUploadStart}
-                isProcessing={isProcessing}
-              />
+              <YouTubeInput onSubmit={handleYouTubeSubmitWrapper} onUploadStart={onClose} isProcessing={isProcessing} />
             </div>
           )}
-
           {error && (
-            <div className="mt-4 p-3 bg-danger-soft border border-destructive/20 rounded-lg text-destructive text-sm">
-              {error}
-            </div>
+            <div className="mt-4 p-3 bg-danger-soft border border-destructive/20 rounded-lg text-destructive text-sm">{error}</div>
           )}
         </div>
       </DialogContent>

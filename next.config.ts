@@ -1,8 +1,5 @@
 import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
-import createNextIntlPlugin from "next-intl/plugin";
-
-const withNextIntl = createNextIntlPlugin();
 
 const isDev = process.env.NODE_ENV !== "production";
 
@@ -95,7 +92,7 @@ const nextConfig: NextConfig = {
 };
 
 // --- Sentry Wrapper ---
-export default withSentryConfig(withNextIntl(nextConfig), {
+export default withSentryConfig(nextConfig, {
   org: process.env.SENTRY_ORG || "pham-dac-luc",
   project: process.env.SENTRY_PROJECT || "javascript-nextjs",
   authToken: process.env.SENTRY_AUTH_TOKEN,

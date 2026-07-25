@@ -10,7 +10,6 @@ import type {
   DictionaryEntryDto,
   DictionarySenseDto,
 } from "@/features/dictionary/schemas/dictionary";
-import { useTranslations } from "next-intl";
 import type { SaveStatus } from "../hooks/use-save-dictionary-vocabulary";
 
 interface DictionaryEntryCardProps {
@@ -24,8 +23,6 @@ export function DictionaryEntryCard({
   saveSense,
   getSaveStatus,
 }: DictionaryEntryCardProps) {
-  const t = useTranslations();
-
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -48,8 +45,7 @@ export function DictionaryEntryCard({
           <>
             <Separator />
             <p className="text-xs text-muted-foreground">
-              {t("Dictionary.source")}:{" "}
-              {entry.senses[0].translations[0].sourceLabel}
+              Nguồn: {entry.senses[0].translations[0].sourceLabel}
             </p>
           </>
         )}
@@ -65,10 +61,18 @@ interface SenseBlockProps {
 }
 
 function SenseBlock({ sense, status, onSave }: SenseBlockProps) {
-  const t = useTranslations();
   const primary =
     sense.translations.find((t) => t.isPrimary) ?? sense.translations[0];
   const isDisabled = status === "saved" || status === "saving";
+
+  const saveLabel =
+    status === "idle" ? "Lưu" :
+    status === "saving" ? "Đang lưu..." :
+    status === "saved" ? "Đã lưu" :
+    "Lưu thất bại";
+
+  const saveAriaLabel =
+    status === "saved" ? "Đã lưu" : "Lưu vào từ vựng";
 
   return (
     <div className="space-y-2">
@@ -120,19 +124,12 @@ function SenseBlock({ sense, status, onSave }: SenseBlockProps) {
           )}
           onClick={status === "error" ? onSave : onSave}
           disabled={isDisabled}
-          aria-label={
-            status === "saved"
-              ? t("Dictionary.savedToVocabulary")
-              : t("Dictionary.saveToVocabulary")
-          }
+          aria-label={saveAriaLabel}
         >
           <Bookmark
             className={cn("w-3 h-3", status === "saved" && "fill-current")}
           />
-          {status === "idle" && t("Dictionary.saveToVocabulary")}
-          {status === "saving" && t("Dictionary.saving")}
-          {status === "saved" && t("Dictionary.savedToVocabulary")}
-          {status === "error" && t("Dictionary.saveFailed")}
+          {saveLabel}
         </Button>
 
         {sense.tags.length > 0 && (

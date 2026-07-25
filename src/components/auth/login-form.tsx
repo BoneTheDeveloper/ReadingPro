@@ -20,27 +20,11 @@ const BookIcon = () => (
   </svg>
 );
 
-
-export type AuthTranslations = {
-  signIn: string;
-  signInTitle: string;
-  signInWithGoogle: string;
-  errors?: {
-    oauthFailed?: string;
-  };
-};
-
-type Translations = {
-  auth: AuthTranslations;
-  common: Record<string, string>;
-};
-
 interface LoginFormProps {
-  translations: Translations;
-  signInLabel: string;
+  signInLabel?: string;
 }
 
-export function LoginForm({ translations, signInLabel }: LoginFormProps) {
+export function LoginForm({ signInLabel = "Đăng nhập" }: LoginFormProps) {
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState("");
 
@@ -48,14 +32,13 @@ export function LoginForm({ translations, signInLabel }: LoginFormProps) {
     setLoading(true);
     setError("");
     try {
-      // Google One Tap popup. On success the plugin follows `callbackURL`
-      // via fetchOptions.onSuccess (no full page reload). On dismiss or
-      // unavailable-account it rejects; the catch surfaces the error UX.
-      await authClient.oneTap({
-        callbackURL: "/dashboard",
+      await authClient.signIn.social({
+        provider: "google",
+        callbackURL: "/study",
+        popupWindow: true,
       });
     } catch {
-      setError(translations.auth.errors?.oauthFailed || "OAuth sign in failed");
+      setError("Đăng nhập Google thất bại");
     } finally {
       setLoading(false);
     }
@@ -80,7 +63,7 @@ export function LoginForm({ translations, signInLabel }: LoginFormProps) {
       <div className="space-y-3 w-full">
         <PillButton onClick={handleGoogle} className="w-full" disabled={loading}>
           <GoogleIcon />
-          {translations.auth.signInWithGoogle}
+          Đăng nhập với Google
         </PillButton>
       </div>
     </div>

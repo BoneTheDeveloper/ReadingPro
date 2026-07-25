@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
 import { FileText, FileSearch, Plus, FileType, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getCEFRShortLabel } from "@/utils/cefr";
@@ -35,8 +34,7 @@ export function ContentPanel({
     translateWord,
     handleSaveVocabulary,
   } = useContentState({ passageId: passage?.id });
-  
-  const t = useTranslations("Study");
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const selectionStartedInContentRef = useRef(false);
@@ -44,11 +42,8 @@ export function ContentPanel({
   const [sourceUrl, setSourceUrl] = useState<string | null>(null);
   const [sourceLoading, setSourceLoading] = useState(false);
 
-  // Fetch source URL when switching to source view
   useEffect(() => {
-    if (viewMode !== "pdf" || !passage?.filePath) {
-      return;
-    }
+    if (viewMode !== "pdf" || !passage?.filePath) return;
 
     const passageId = passage.id;
     let cancelled = false;
@@ -64,9 +59,7 @@ export function ContentPanel({
 
     fetchSourceUrl();
 
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [viewMode, passage?.filePath]);
 
   const updateSelectionFromMouseEvent = useCallback(
@@ -75,10 +68,7 @@ export function ContentPanel({
       const info = extractSelectionInfo({
         contentRef,
         sourceId: passage.id,
-        cursorPoint: {
-          x: event.clientX,
-          y: event.clientY,
-        },
+        cursorPoint: { x: event.clientX, y: event.clientY },
       });
       handleWordSelection(info);
     },
@@ -91,7 +81,6 @@ export function ContentPanel({
       selectionStartedInContentRef.current = false;
       updateSelectionFromMouseEvent(event);
     }
-
     document.addEventListener("mouseup", handleDocumentMouseUp);
     return () => document.removeEventListener("mouseup", handleDocumentMouseUp);
   }, [updateSelectionFromMouseEvent]);
@@ -116,30 +105,27 @@ export function ContentPanel({
             <FileSearch className="w-6 h-6 text-muted-foreground" />
           </div>
           <p className="text-base font-medium text-foreground">
-            {t("selectDocumentFromSources")}
+            Chọn tài liệu từ Nguồn
           </p>
           <p className="text-sm text-muted-foreground mt-1 mb-4">
-            {t("chooseRecentOrAdd")}
+            Chọn tài liệu gần đây hoặc thêm tài liệu mới
           </p>
           <button
             onClick={onOpenUploadModal}
             className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all shadow-sm"
           >
             <Plus className="w-4 h-4" />
-            {t("addSource")}
+            Thêm nguồn
           </button>
         </div>
       </div>
     );
   }
 
-  const level = (passage.cefrLevel || "B2") as Parameters<
-    typeof getCEFRBadgeVariant
-  >[0];
+  const level = (passage.cefrLevel || "B2") as Parameters<typeof getCEFRBadgeVariant>[0];
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      {/* 3px indigo→coral reading progress strip — wireframe §1 lines 117-120 */}
       <div
         className="h-[3px] w-full bg-border shrink-0"
         role="progressbar"
@@ -153,7 +139,6 @@ export function ContentPanel({
         />
       </div>
 
-      {/* 53px meta bar — wireframe §1 lines 121-137: CEFR/word-count LEFT, Original/Simplified RIGHT */}
       <div className="h-[53px] shrink-0 flex items-center gap-3 px-6 border-b border-border/20">
         <div className="flex items-center gap-3">
           <Badge variant={getCEFRBadgeVariant(level)}>
@@ -162,7 +147,7 @@ export function ContentPanel({
           <span className="w-px h-3.5 bg-border" />
           <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
             <FileText className="w-3.5 h-3.5" />
-            {t("wordCount", { count: passage.wordCount })}
+            {passage.wordCount} từ
           </span>
         </div>
 
@@ -172,14 +157,8 @@ export function ContentPanel({
               value={viewMode}
               onChange={setViewMode}
               options={[
-                {
-                  value: "passage",
-                  label: t("passage"),
-                },
-                {
-                  value: "video",
-                  label: t("video"),
-                },
+                { value: "passage", label: "Bài đọc" },
+                { value: "video", label: "Video" },
               ]}
             />
           )}
@@ -188,21 +167,14 @@ export function ContentPanel({
               value={viewMode}
               onChange={setViewMode}
               options={[
-                {
-                  value: "passage",
-                  label: t("passage"),
-                },
-                {
-                  value: "pdf",
-                  label: t("pdf"),
-                },
+                { value: "passage", label: "Bài đọc" },
+                { value: "pdf", label: "PDF" },
               ]}
             />
           )}
         </div>
       </div>
 
-      {/* Reading content */}
       <div
         ref={scrollRef}
         className="flex-1 overflow-y-auto panel-scroll px-8 pt-7 pb-20"
@@ -216,18 +188,15 @@ export function ContentPanel({
                 <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
               </div>
             ) : sourceUrl ? (
-              <PdfViewer
-                url={sourceUrl}
-                className="min-h-[60vh]"
-              />
+              <PdfViewer url={sourceUrl} className="min-h-[60vh]" />
             ) : (
               <div className="flex-1 flex items-center justify-center">
                 <div className="text-center">
                   <FileType className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
                   <p className="text-muted-foreground text-sm">
                     {passage.filePath
-                      ? t("sourceNotAvailable")
-                      : t("noSourceFile")}
+                      ? "Tệp nguồn không khả dụng"
+                      : "Không có tệp nguồn cho bài đọc này"}
                   </p>
                 </div>
               </div>
@@ -262,7 +231,6 @@ export function ContentPanel({
         )}
       </div>
 
-      {/* Translation popup — rendered at content panel level */}
       {selectedWordInfo && passage && (
         <TranslationPopup
           selection={selectedWordInfo}
@@ -278,10 +246,6 @@ export function ContentPanel({
   );
 }
 
-/**
- * Pill segmented control — paper bg, indigo text on the active item.
- * Matches the wireframe's Original/Simplified toggle (lines 133-136).
- */
 function SegmentedToggle<T extends string>({
   value,
   onChange,

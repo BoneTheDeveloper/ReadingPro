@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useTranslations } from "next-intl";
 import { BookOpen, Library } from "lucide-react";
 import { VocabularyList } from "./vocabulary-list";
 import { VocabularySetList } from "./vocabulary-set-list";
@@ -31,7 +30,6 @@ const TAB_BASE =
   "flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer";
 const TAB_ON = "bg-[#5A4FE0] text-white shadow-sm";
 
-// Stats card component
 function StatCard({
   label,
   value,
@@ -75,8 +73,6 @@ export function VocabularyPageClient({
   initialStats,
   initialSets,
 }: VocabularyPageClientProps) {
-  const t = useTranslations("Vocabulary");
-
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<VocabularyStatus | "ALL">(
@@ -85,7 +81,6 @@ export function VocabularyPageClient({
   const [activeTab, setActiveTab] = useState<ViewTab>("words");
   const [creating, setCreating] = useState(false);
 
-  // Server-fetched initial data (no loading state - data already loaded)
   const [items, setItems] = useState(initialList);
   const [total] = useState(initialTotal);
   const [stats, setStats] = useState(initialStats);
@@ -145,48 +140,45 @@ export function VocabularyPageClient({
   return (
     <div className="flex-1 overflow-y-auto bg-[#F5F2EC]">
       <div className="mx-auto max-w-[1020px] px-10 py-10 pb-16">
-        {/* Page header */}
         <div className="mb-7">
           <h1 className="text-[26px] font-extrabold tracking-tight text-[#221F2B] mb-1">
-            {t("pageTitle")}
+            Từ vựng
           </h1>
           <p className="text-sm text-[#565160] leading-relaxed">
-            {t("pageDescription")}
+            Xem lại và quản lý các từ và cụm từ đã lưu.
           </p>
         </div>
 
-        {/* Stats row - server-fetched, no loading state */}
         <div
           className="grid gap-3 mb-8"
           style={{ gridTemplateColumns: "repeat(4, 1fr)" }}
         >
           <StatCard
-            label={t("total")}
+            label="Tổng"
             value={stats.total}
-            sublabel={t("totalWordsSaved")}
+            sublabel="từ đã lưu"
             accent="#221F2B"
           />
           <StatCard
-            label={t("newWords")}
+            label="Mới"
             value={stats.new}
-            sublabel={t("notStudiedYet")}
+            sublabel="chưa học"
             accent="#EEA63C"
           />
           <StatCard
-            label={t("learningWords")}
+            label="Đang học"
             value={stats.learning}
-            sublabel={t("inProgress")}
+            sublabel="đang tiến"
             accent="#5A4FE0"
           />
           <StatCard
-            label={t("known")}
+            label="Đã biết"
             value={stats.known}
-            sublabel={t("masteredWords")}
+            sublabel="đã thuộc"
             accent="#2FA66A"
           />
         </div>
 
-        {/* Tab control */}
         <div className="flex bg-white border border-[#EAE5DB] rounded-xl p-0.5 max-w-xs mb-6">
           <button
             type="button"
@@ -194,7 +186,7 @@ export function VocabularyPageClient({
             onClick={() => setActiveTab("words")}
           >
             <BookOpen className="size-3.5" strokeWidth={2} />
-            {t("wordsTab")}
+            Từ vựng
             <span
               className="ml-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold"
               style={{
@@ -211,7 +203,7 @@ export function VocabularyPageClient({
             onClick={() => setActiveTab("sets")}
           >
             <Library className="size-3.5" strokeWidth={2} />
-            {t("setsTab")}
+            Bộ từ
             <span
               className="ml-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold"
               style={{
@@ -224,7 +216,6 @@ export function VocabularyPageClient({
           </button>
         </div>
 
-        {/* Words tab - server-fetched */}
         {activeTab === "words" && (
           <VocabularyList
             items={items}
@@ -248,7 +239,6 @@ export function VocabularyPageClient({
           />
         )}
 
-        {/* Sets tab - server-fetched */}
         {activeTab === "sets" && (
           <VocabularySetList
             sets={sets}

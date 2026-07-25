@@ -15,19 +15,19 @@ export default function GlobalError({
   }, [error])
 
   return (
-    <html lang="en">
+    <html lang="vi">
       <body className="min-h-full flex items-center justify-center bg-background text-foreground">
         <div className="flex flex-col items-center gap-4 px-8 text-center">
-          <h1 className="text-2xl font-semibold">Something went wrong</h1>
+          <h1 className="text-2xl font-semibold">Đã xảy ra lỗi</h1>
           <p className="text-sm text-muted-foreground">
-            An unexpected error occurred. Please try again.
+            Đã xảy ra lỗi không mong muốn. Vui lòng thử lại.
           </p>
           <button
             type="button"
             onClick={reset}
             className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/80"
           >
-            Try again
+            Thử lại
           </button>
         </div>
       </body>

@@ -11,7 +11,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { User, LogOut, Settings } from "lucide-react";
-import { Link, useRouter } from "@/i18n/navigation";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 
 interface AuthControlsProps {
@@ -54,7 +55,7 @@ export function AuthControls({
     return (
       <Link href="/login">
         <Button variant="ghost" size={compact || isRail ? "icon" : "sm"}>
-          Sign in
+          Đăng nhập
         </Button>
       </Link>
     );
@@ -97,7 +98,7 @@ export function AuthControls({
         <DropdownMenuItem asChild>
           <Link href="/account" className="cursor-pointer w-full">
             <Settings className="w-4 h-4 mr-2" />
-            Settings
+            Cài đặt
           </Link>
         </DropdownMenuItem>
 
@@ -105,7 +106,7 @@ export function AuthControls({
 
         <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10">
           <LogOut className="w-4 h-4 mr-2" />
-          Sign out
+          Đăng xuất
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

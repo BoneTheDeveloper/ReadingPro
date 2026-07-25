@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { useTranslations } from "next-intl";
 import {
   BookOpen,
   CheckCircle,
@@ -20,22 +19,13 @@ interface QuestionContentProps {
   passageTitle: string;
   artifactId: string | null;
   onReset: () => void;
-  onRecordResult: (stats: {
-    correctCount: number;
-    totalQuestions: number;
-  }) => void;
+  onRecordResult: (stats: { correctCount: number; totalQuestions: number }) => void;
   onResetResult: () => void;
 }
 
 export function QuestionContent({
-  questions,
-  passageTitle,
-  artifactId,
-  onReset,
-  onRecordResult,
-  onResetResult,
+  questions, passageTitle, artifactId, onReset, onRecordResult, onResetResult,
 }: QuestionContentProps) {
-  const t = useTranslations("Study");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
@@ -43,27 +33,20 @@ export function QuestionContent({
   const [isComplete, setIsComplete] = useState(false);
 
   const resetTest = useCallback(() => {
-    setCurrentIndex(0);
-    setSelectedAnswer(null);
-    setShowFeedback(false);
-    setAnswers({});
-    setIsComplete(false);
+    setCurrentIndex(0); setSelectedAnswer(null); setShowFeedback(false);
+    setAnswers({}); setIsComplete(false);
   }, []);
 
   const currentQuestion = questions[currentIndex];
-  const progress =
-    questions.length > 0 ? ((currentIndex + 1) / questions.length) * 100 : 0;
+  const progress = questions.length > 0 ? ((currentIndex + 1) / questions.length) * 100 : 0;
 
   const handleSelectAnswer = useCallback(
-    (optionId: string) => {
-      if (!showFeedback) setSelectedAnswer(optionId);
-    },
+    (optionId: string) => { if (!showFeedback) setSelectedAnswer(optionId); },
     [showFeedback],
   );
 
   const handleCheckAnswer = useCallback(async () => {
     if (!selectedAnswer || !currentQuestion) return;
-
     const isCorrect = selectedAnswer === currentQuestion.correctAnswer;
     setAnswers((prev) => ({ ...prev, [currentQuestion.id]: isCorrect }));
     setShowFeedback(true);
@@ -71,9 +54,7 @@ export function QuestionContent({
 
   const handleNext = useCallback(() => {
     if (currentIndex < questions.length - 1) {
-      setCurrentIndex((i) => i + 1);
-      setSelectedAnswer(null);
-      setShowFeedback(false);
+      setCurrentIndex((i) => i + 1); setSelectedAnswer(null); setShowFeedback(false);
     } else {
       setIsComplete(true);
     }
@@ -81,37 +62,24 @@ export function QuestionContent({
 
   const handlePrevious = useCallback(() => {
     if (currentIndex > 0) {
-      setCurrentIndex((i) => i - 1);
-      setSelectedAnswer(null);
-      setShowFeedback(false);
+      setCurrentIndex((i) => i - 1); setSelectedAnswer(null); setShowFeedback(false);
     }
   }, [currentIndex]);
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
+    function handleKeyDown(e: KeyboardEvent) {
       if (!currentQuestion) return;
       if (e.key >= "1" && e.key <= "4" && !showFeedback) {
         const idx = parseInt(e.key) - 1;
-        if (currentQuestion.options[idx])
-          handleSelectAnswer(currentQuestion.options[idx].id);
+        if (currentQuestion.options[idx]) handleSelectAnswer(currentQuestion.options[idx].id);
       } else if (e.key === "Enter") {
         if (showFeedback) handleNext();
         else if (selectedAnswer) handleCheckAnswer();
-      } else if (e.key === "Backspace" && showFeedback) {
-        handlePrevious();
-      }
-    };
+      } else if (e.key === "Backspace" && showFeedback) handlePrevious();
+    }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [
-    currentQuestion,
-    showFeedback,
-    selectedAnswer,
-    handleSelectAnswer,
-    handleCheckAnswer,
-    handleNext,
-    handlePrevious,
-  ]);
+  }, [currentQuestion, showFeedback, selectedAnswer, handleSelectAnswer, handleCheckAnswer, handleNext, handlePrevious]);
 
   if (questions.length === 0) {
     return (
@@ -120,12 +88,8 @@ export function QuestionContent({
           <div className="w-14 h-14 bg-muted rounded-xl flex items-center justify-center mx-auto mb-4">
             <BookOpen className="w-7 h-7 text-muted-foreground" />
           </div>
-          <p className="text-foreground text-base font-medium">
-            {t("noTestYet")}
-          </p>
-          <p className="text-muted-foreground text-sm mt-1">
-            {t("generateQuestionsToStart")}
-          </p>
+          <p className="text-foreground text-base font-medium">Chưa có bài kiểm tra</p>
+          <p className="text-muted-foreground text-sm mt-1">Tạo câu hỏi để bắt đầu kiểm tra</p>
         </div>
       </div>
     );
@@ -152,25 +116,13 @@ export function QuestionContent({
       <div className="w-full flex flex-col h-full">
         <div className="flex items-center justify-center mb-6">
           <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 px-2 text-xs gap-1"
-              disabled={currentIndex === 0}
-              onClick={handlePrevious}
-            >
+            <Button variant="ghost" size="sm" className="h-7 px-2 text-xs gap-1" disabled={currentIndex === 0} onClick={handlePrevious}>
               <ChevronLeft className="w-3.5 h-3.5" />
             </Button>
             <span className="text-sm font-semibold text-foreground min-w-[3rem] text-center">
               {currentIndex + 1}/{questions.length}
             </span>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 px-2 text-xs gap-1"
-              disabled={currentIndex === questions.length - 1 && !showFeedback}
-              onClick={handleNext}
-            >
+            <Button variant="ghost" size="sm" className="h-7 px-2 text-xs gap-1" disabled={currentIndex === questions.length - 1 && !showFeedback} onClick={handleNext}>
               <ChevronRight className="w-3.5 h-3.5" />
             </Button>
           </div>
@@ -181,10 +133,7 @@ export function QuestionContent({
             {currentQuestion.questionText}
           </h3>
           <div className="w-full h-1 bg-muted rounded-full mb-6">
-            <div
-              className="h-full bg-primary rounded-full transition-all"
-              style={{ width: `${progress}%` }}
-            />
+            <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${progress}%` }} />
           </div>
           <div className="space-y-4">
             {currentQuestion.options.map((option) => {
@@ -197,61 +146,27 @@ export function QuestionContent({
                   disabled={showFeedback}
                   className={cn(
                     "w-full p-4 text-left rounded-xl flex items-start gap-4 group transition-all",
-                    !showFeedback &&
-                      "bg-surface border border-border hover:border-primary hover:bg-primary/5",
-                    !showFeedback &&
-                      isSelected &&
-                      "bg-primary/5 border-2 border-primary",
-                    showFeedback &&
-                      isCorrect &&
-                      "bg-success-soft/60 border border-success/40",
-                    showFeedback &&
-                      isSelected &&
-                      !isCorrect &&
-                      "bg-danger-soft/60 border border-danger/40",
-                    showFeedback &&
-                      !isSelected &&
-                      !isCorrect &&
-                      "bg-surface border border-border opacity-50",
+                    !showFeedback && "bg-surface border border-border hover:border-primary hover:bg-primary/5",
+                    !showFeedback && isSelected && "bg-primary/5 border-2 border-primary",
+                    showFeedback && isCorrect && "bg-success-soft/60 border border-success/40",
+                    showFeedback && isSelected && !isCorrect && "bg-danger-soft/60 border border-danger/40",
+                    showFeedback && !isSelected && !isCorrect && "bg-surface border border-border opacity-50",
                   )}
                 >
-                  <span
-                    className={cn(
-                      "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0",
-                      !showFeedback &&
-                        !isSelected &&
-                        "border border-border group-hover:border-primary group-hover:text-primary",
-                      !showFeedback &&
-                        isSelected &&
-                        "bg-primary text-primary-foreground",
-                      showFeedback &&
-                        isCorrect &&
-                        "bg-success text-primary-foreground",
-                      showFeedback &&
-                        isSelected &&
-                        !isCorrect &&
-                        "bg-danger text-primary-foreground",
-                    )}
-                  >
+                  <span className={cn(
+                    "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0",
+                    !showFeedback && !isSelected && "border border-border group-hover:border-primary group-hover:text-primary",
+                    !showFeedback && isSelected && "bg-primary text-primary-foreground",
+                    showFeedback && isCorrect && "bg-success text-primary-foreground",
+                    showFeedback && isSelected && !isCorrect && "bg-danger text-primary-foreground",
+                  )}>
                     {option.id}
                   </span>
-                  <span
-                    className={cn(
-                      "text-base pt-0.5",
-                      !showFeedback &&
-                        isSelected &&
-                        "font-semibold text-foreground",
-                      !showFeedback && !isSelected && "text-foreground",
-                    )}
-                  >
+                  <span className={cn("text-base pt-0.5", !showFeedback && isSelected && "font-semibold text-foreground", !showFeedback && !isSelected && "text-foreground")}>
                     {option.text}
                   </span>
-                  {showFeedback && isCorrect && (
-                    <CheckCircle className="w-5 h-5 text-success shrink-0 mt-0.5" />
-                  )}
-                  {showFeedback && isSelected && !isCorrect && (
-                    <XCircle className="w-5 h-5 text-danger shrink-0 mt-0.5" />
-                  )}
+                  {showFeedback && isCorrect && <CheckCircle className="w-5 h-5 text-success shrink-0 mt-0.5" />}
+                  {showFeedback && isSelected && !isCorrect && <XCircle className="w-5 h-5 text-danger shrink-0 mt-0.5" />}
                 </button>
               );
             })}
@@ -260,56 +175,23 @@ export function QuestionContent({
 
         <div className="mt-4 pt-3 flex gap-4">
           {!showFeedback ? (
-            <Button
-              onClick={handleCheckAnswer}
-              disabled={!selectedAnswer}
-              className={cn(
-                "flex-1",
-                !selectedAnswer && "bg-muted text-muted-foreground",
-              )}
-            >
-              {t("checkAnswer")}
+            <Button onClick={handleCheckAnswer} disabled={!selectedAnswer} className={cn("flex-1", !selectedAnswer && "bg-muted text-muted-foreground")}>
+              Kiểm tra đáp án
             </Button>
           ) : (
             <div className="flex-1 space-y-3">
-              <div
-                className={cn(
-                  "p-4 rounded-xl text-sm",
-                  answers[currentQuestion.id]
-                    ? "bg-success-soft/60 border border-success/30"
-                    : "bg-danger-soft/60 border border-danger/20",
-                )}
-              >
-                <div
-                  className={cn(
-                    "flex items-center gap-1.5 mb-1 font-semibold",
-                    answers[currentQuestion.id]
-                      ? "text-success"
-                      : "text-danger",
-                  )}
-                >
-                  {answers[currentQuestion.id] ? (
-                    <CheckCircle className="w-4 h-4" />
-                  ) : (
-                    <XCircle className="w-4 h-4" />
-                  )}
-                  <span>
-                    {answers[currentQuestion.id]
-                      ? t("correctFeedback")
-                      : t("incorrectFeedback")}
-                  </span>
+              <div className={cn("p-4 rounded-xl text-sm", answers[currentQuestion.id] ? "bg-success-soft/60 border border-success/30" : "bg-danger-soft/60 border border-danger/20")}>
+                <div className={cn("flex items-center gap-1.5 mb-1 font-semibold", answers[currentQuestion.id] ? "text-success" : "text-danger")}>
+                  {answers[currentQuestion.id] ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+                  <span>{answers[currentQuestion.id] ? "Chính xác!" : "Chưa đúng lắm"}</span>
                 </div>
-                <p className="text-foreground/80">
-                  {currentQuestion.explanation}
-                </p>
+                <p className="text-foreground/80">{currentQuestion.explanation}</p>
               </div>
               <Button onClick={handleNext} className="w-full">
                 {currentIndex < questions.length - 1 ? (
-                  <>
-                    {t("nextQuestion")} <ArrowRight className="w-4 h-4" />
-                  </>
+                  <>{Câu tiếp theo} <ArrowRight className="w-4 h-4" /></>
                 ) : (
-                  t("viewResults")
+                  "Xem kết quả"
                 )}
               </Button>
             </div>

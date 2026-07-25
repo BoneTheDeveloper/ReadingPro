@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Link, usePathname } from "@/i18n/navigation";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   BookOpen,
   BookMarked,
@@ -12,25 +13,16 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { AuthControls } from "./auth-controls";
-import { LocaleSwitcher } from "./locale-switcher";
-import { useTranslations } from "next-intl";
-
-// App shell per design.md §8:
-// - 62px dark rail (#221F2B), 40px icon tiles (radius 13px)
-// - Active item bg rgba(255,255,255,.14), indigo gradient logo top
-// - Side panels warm paper (#FBF9F5), 54px header with UPPERCASE label
-// - Reader region pure white; app frame 100vh / overflow:hidden
 
 const RAIL_WIDTH_PX = 62;
 
 const navItems = [
-  { href: "/study", labelKey: "Navigation.study", icon: BookOpen },
-  { href: "/vocabulary", labelKey: "Navigation.vocabulary", icon: Library },
-  { href: "/dictionary", labelKey: "Navigation.dictionary", icon: BookMarked },
+  { href: "/study", labelVi: "Học", icon: BookOpen },
+  { href: "/vocabulary", labelVi: "Từ vựng", icon: Library },
+  { href: "/dictionary", labelVi: "Từ điển", icon: BookMarked },
 ];
 
 export function DashboardSidebar({ children }: { children: React.ReactNode }) {
-  const t = useTranslations();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -38,9 +30,6 @@ export function DashboardSidebar({ children }: { children: React.ReactNode }) {
 
   const isActive = useCallback(
     (href: string) => {
-      if (href === "/dashboard") {
-        return pathname === "/dashboard";
-      }
       if (href === "/study") {
         return (
           pathname === "/study" ||
@@ -65,7 +54,7 @@ export function DashboardSidebar({ children }: { children: React.ReactNode }) {
         style={{ width: RAIL_WIDTH_PX }}
         className="hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 bg-rail items-center py-5 z-40"
       >
-        <SidebarContent isActive={isActive} t={t} />
+        <SidebarContent isActive={isActive} />
       </aside>
 
       {mobileOpen && (
@@ -84,7 +73,6 @@ export function DashboardSidebar({ children }: { children: React.ReactNode }) {
         <MobileSidebarContent
           isActive={isActive}
           onNavigate={closeMobile}
-          t={t}
         />
       </aside>
 
@@ -113,7 +101,6 @@ export function DashboardSidebar({ children }: { children: React.ReactNode }) {
             English Reading
           </span>
           <div className="ml-auto flex items-center gap-2">
-            <LocaleSwitcher side="bottom" />
             <AuthControls compact />
           </div>
         </header>
@@ -127,22 +114,20 @@ export function DashboardSidebar({ children }: { children: React.ReactNode }) {
 
 function SidebarContent({
   isActive,
-  t,
 }: {
   isActive: (href: string) => boolean;
-  t: ReturnType<typeof useTranslations>;
 }) {
   return (
     <div className="flex flex-col h-full w-full items-center">
       <Link
-        href="/dashboard"
+        href="/"
         className="mb-6 w-10 h-10 rounded-[13px] flex items-center justify-center text-white"
         style={{
           background:
             "linear-gradient(135deg, #5A4FE0 0%, #7A6BFF 60%, #F2664A 100%)",
         }}
-        aria-label={t("Navigation.dashboard")}
-        title={t("Navigation.dashboard")}
+        aria-label="Dashboard"
+        title="Dashboard"
       >
         <GraduationCap className="w-5 h-5" />
       </Link>
@@ -154,8 +139,8 @@ function SidebarContent({
             <Link
               key={item.href}
               href={item.href}
-              aria-label={t(item.labelKey)}
-              title={t(item.labelKey)}
+              aria-label={item.labelVi}
+              title={item.labelVi}
               className={cn(
                 "w-10 h-10 flex justify-center items-center rounded-[13px] transition-all",
                 active
@@ -170,7 +155,6 @@ function SidebarContent({
       </nav>
 
       <div className="mt-4 pt-4 w-full px-2 border-t border-white/10 flex flex-col items-center gap-3">
-        <LocaleSwitcher variant="rail" side="right" />
         <AuthControls />
       </div>
     </div>
@@ -180,16 +164,14 @@ function SidebarContent({
 function MobileSidebarContent({
   isActive,
   onNavigate,
-  t,
 }: {
   isActive: (href: string) => boolean;
   onNavigate: () => void;
-  t: ReturnType<typeof useTranslations>;
 }) {
   return (
     <div className="flex flex-col h-full">
       <div className="px-5 py-5 border-b border-border">
-        <Link href="/dashboard" className="flex items-center gap-3" onClick={onNavigate}>
+        <Link href="/" className="flex items-center gap-3" onClick={onNavigate}>
           <div
             className="w-9 h-9 rounded-[12px] flex items-center justify-center text-white"
             style={{
@@ -231,14 +213,13 @@ function MobileSidebarContent({
                   active ? "text-primary" : "text-muted-foreground",
                 )}
               />
-              {t(item.labelKey)}
+              {item.labelVi}
             </Link>
           );
         })}
       </nav>
 
       <div className="px-3 py-3 border-t border-border flex items-center justify-between">
-        <LocaleSwitcher side="bottom" />
         <AuthControls compact />
       </div>
     </div>

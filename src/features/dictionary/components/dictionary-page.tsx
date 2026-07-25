@@ -3,7 +3,6 @@
 import { useEffect, useRef } from "react";
 import { BookMarked, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { useTranslations } from "next-intl";
 import { DictionaryEntryCard } from "./dictionary-entry-card";
 import { DictionarySuggestDropdown } from "./dictionary-suggest-dropdown";
 import { useSaveDictionaryVocabulary } from "../hooks/use-save-dictionary-vocabulary";
@@ -11,7 +10,6 @@ import { useDictionarySuggest } from "../hooks/use-dictionary-suggest";
 import { useDictionaryEntryDetail } from "../hooks/use-dictionary-entry-detail";
 
 export function DictionaryPageClient() {
-  const t = useTranslations();
   const {
     query,
     suggestions,
@@ -51,7 +49,7 @@ export function DictionaryPageClient() {
     <div className="flex flex-col h-full max-w-2xl mx-auto px-4 py-8 gap-6">
       <div className="flex items-center gap-3">
         <BookMarked className="w-6 h-6 text-primary" />
-        <h1 className="text-2xl font-bold">{t("Dictionary.title")}</h1>
+        <h1 className="text-2xl font-bold">Từ điển</h1>
       </div>
 
       <div ref={containerRef} className="relative">
@@ -63,7 +61,7 @@ export function DictionaryPageClient() {
             onFocus={() => {
               if (suggestions.length > 0) setDropdownVisible(true);
             }}
-            placeholder={t("Dictionary.searchPlaceholder")}
+            placeholder="Tìm từ..."
             className="pl-9"
           />
         </div>
@@ -78,7 +76,7 @@ export function DictionaryPageClient() {
       <div className="flex-1 overflow-y-auto">
         {detailStatus === "loading" && (
           <div className="flex items-center justify-center py-12 text-muted-foreground">
-            {t("Dictionary.loading")}
+            Đang tìm...
           </div>
         )}
 
@@ -92,20 +90,20 @@ export function DictionaryPageClient() {
 
         {detailStatus === "not-found" && (
           <div className="text-center py-12 text-muted-foreground">
-            <p>{t("Dictionary.noResult")}</p>
+            <p>Không tìm thấy kết quả cho từ này</p>
           </div>
         )}
 
         {detailStatus === "error" && (
           <div className="text-center py-12 text-destructive">
-            <p>{t("Dictionary.error")}</p>
+            <p>Tìm kiếm thất bại. Vui lòng thử lại.</p>
           </div>
         )}
 
         {detailStatus === "idle" && (
           <div className="text-center py-12 text-muted-foreground">
             <Search className="w-10 h-10 mx-auto mb-3 opacity-30" />
-            <p>{t("Dictionary.idleHint")}</p>
+            <p>Nhập từ tiếng Anh để tra nghĩa tiếng Việt</p>
           </div>
         )}
       </div>

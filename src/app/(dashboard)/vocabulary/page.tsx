@@ -9,7 +9,6 @@ import { getVocabularySetList } from "@/features/vocabulary/server/services/voca
 export const dynamic = "force-dynamic";
 
 export default async function VocabularyPage() {
-  // Auth gate - middleware handles redirect, but we verify userId exists
   const userId = await getUserId();
 
   const [list, stats, sets] = await Promise.all([

@@ -5,7 +5,7 @@ export default function DashboardOverview() {
         Dashboard
       </h1>
       <p className="text-muted-foreground">
-        Coming soon.
+        Sắp ra mắt.
       </p>
     </div>
   );

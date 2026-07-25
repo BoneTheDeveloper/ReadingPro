@@ -1,4 +1,3 @@
-// app/[locale]/(dashboard)/study/page.tsx
 import { getUserId } from "@/lib/auth/auth-server";
 import { listUserPassages } from "@/features/passage-crud/server/services/passage";
 import { StudyWorkspace } from "./_components/study-workspace";

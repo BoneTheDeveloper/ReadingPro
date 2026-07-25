@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { useTranslations } from "next-intl";
 import { Loader2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,9 +26,9 @@ export function VocabularySetList({
   sets,
   loading,
   onCreateSet,
+  onDeleteSet,
   creating,
 }: VocabularySetListProps) {
-  const t = useTranslations("Vocabulary");
   const [newSetName, setNewSetName] = useState("");
 
   const handleCreate = useCallback(() => {
@@ -50,14 +49,13 @@ export function VocabularySetList({
 
   return (
     <div className="flex flex-col gap-5">
-      {/* Section header */}
       <div className="flex items-center justify-between">
         <span className="text-xs text-[#565160]">
-          {t("setsInLibrary", { count: sets.length })}
+          {sets.length} bộ từ trong thư viện
         </span>
         <div className="flex items-center gap-2">
           <Input
-            placeholder={t("newSetName")}
+            placeholder="Tên bộ từ..."
             value={newSetName}
             onChange={(e) => setNewSetName(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -74,18 +72,16 @@ export function VocabularySetList({
             ) : (
               <Plus className="size-3.5" strokeWidth={2.5} />
             )}
-            {t("newSet")}
+            Bộ mới
           </Button>
         </div>
       </div>
 
-      {/* Card grid */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {sets.map((set, i) => (
           <SetCard key={set.id} set={set} colorIndex={i} />
         ))}
 
-        {/* Add new set card */}
         <button
           type="button"
           className="group flex flex-col items-center justify-center gap-3 min-h-[168px] rounded-2xl border-2 border-dashed border-[#DAD4C8] cursor-pointer text-[#908B98] font-semibold text-sm transition-all hover:border-[#5A4FE0] hover:text-[#5A4FE0] hover:bg-[#5A4FE0]/3"
@@ -96,7 +92,7 @@ export function VocabularySetList({
           <div className="w-9 h-9 rounded-xl border-2 border-dashed border-current flex items-center justify-center">
             <Plus className="size-4" strokeWidth={2.2} />
           </div>
-          {t("newSet")}
+          Bộ mới
         </button>
       </div>
     </div>
@@ -112,9 +108,6 @@ function SetCard({
 }) {
   const col = SET_COLORS[colorIndex % SET_COLORS.length];
   const itemCount = set._count.setItems;
-
-  // Hardcoded knownCount — DB has no mastered-per-set count
-  // TODO: add mastered count per set to enable real progress
   const knownCount = Math.min(itemCount, Math.floor(itemCount * 0.3));
   const progress =
     itemCount > 0 ? Math.round((knownCount / itemCount) * 100) : 0;
@@ -126,22 +119,12 @@ function SetCard({
         boxShadow: "0 1px 2px rgba(0,0,0,.04), 0 4px 12px rgba(0,0,0,.04)",
       }}
     >
-      {/* Icon + count */}
       <div className="flex items-start justify-between gap-2 mb-3">
         <div
           className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
           style={{ background: col.bg }}
         >
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke={col.color}
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={col.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="m16 6 4 14" />
             <path d="M12 6v14" />
             <path d="M8 8v12" />
@@ -153,12 +136,10 @@ function SetCard({
         </span>
       </div>
 
-      {/* Name */}
       <div className="text-sm font-bold text-[#221F2B] mb-1.5 leading-snug line-clamp-2">
         {set.name}
       </div>
 
-      {/* Progress bar */}
       <div className="h-1 bg-[#F5F2EC] rounded-full overflow-hidden mb-2">
         <div
           className="h-full rounded-full transition-all"
@@ -169,13 +150,12 @@ function SetCard({
         />
       </div>
 
-      {/* Progress label + CTA */}
       <div className="flex items-center justify-between">
         <span className="text-[10px] font-medium text-[#908B98]">
           {knownCount}/{itemCount} known
         </span>
         <span className="text-[10px] font-semibold text-[#5A4FE0]">
-          Study →
+          Học →
         </span>
       </div>
     </div>

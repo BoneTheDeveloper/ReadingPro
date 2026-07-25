@@ -12,7 +12,7 @@ import importX from "eslint-plugin-import-x";
 
 const LAYERS = {
   // Client-side
-  PAGE: "page",           // app/[locale]/ (folder-based)
+  PAGE: "page",           // app/ (folder-based)
   COMPONENT: "component", // features/*/(components|hooks)/**, src/components/**
 
   // Server-side
