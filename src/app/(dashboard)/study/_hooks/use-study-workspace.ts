@@ -109,6 +109,7 @@ export function useStudyWorkspaceState(initialPassages: PassageData[]) {
       setState((prev) => ({
         ...prev,
         passages: [tempPassage, ...prev.passages],
+        error: null,
       }));
       setIsUploading(true);
       setUploadingFileName(fileName);
@@ -147,7 +148,8 @@ export function useStudyWorkspaceState(initialPassages: PassageData[]) {
           passages: prev.passages.filter((p) => p.id !== passageId),
         }));
       }
-      setState((prev) => ({ ...prev, error }));
+      // UploadModal owns upload errors and keeps them beside the upload controls.
+      // Do not copy them into workspace state, where they would render in the reader.
       setIsUploading(false);
       setUploadingFileName("");
     },

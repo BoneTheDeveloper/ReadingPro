@@ -9,10 +9,9 @@ import { checkTranscriptAvailability } from "@/features/upload/server/actions/ch
 
 interface YouTubeInputProps {
   onSubmit: (url: string) => Promise<void>;
-  onUploadStart?: () => void;
 }
 
-export function YouTubeInput({ onSubmit, onUploadStart }: YouTubeInputProps) {
+export function YouTubeInput({ onSubmit }: YouTubeInputProps) {
   const [url, setUrl] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isValidating, setIsValidating] = useState(false);
@@ -36,15 +35,32 @@ export function YouTubeInput({ onSubmit, onUploadStart }: YouTubeInputProps) {
   const handlePaste = async () => {
     try {
       const text = await navigator.clipboard.readText();
-      if (text) { setUrl(text); setError(null); setIsTranscriptValid(false); setIsValidating(isValidYouTubeUrl(text)); }
+      if (!text) return;
+      // Paste goes through the same flow as typing so the debounced
+      // transcript validation can confirm the URL before the user submits.
+      const isFormatValid = text.trim().length > 0 && isValidYouTubeUrl(text);
+      setUrl(text);
+      setError(null);
+      setIsTranscriptValid(false);
+      setIsValidating(isFormatValid);
     } catch {}
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isUrlFormatValid || !isTranscriptValid) return;
+    if (!isUrlFormatValid) {
+      setError("URL YouTube không hợp lệ");
+      return;
+    }
+    if (isValidating) {
+      setError("Đang xác thực video, vui lòng đợi…");
+      return;
+    }
+    if (!isTranscriptValid) {
+      setError("Không thể xác thực video này. Hãy thử video khác có phụ đề.");
+      return;
+    }
     setError(null);
-    onUploadStart?.();
     try { await onSubmit(url); } catch (err) { setError(err instanceof Error ? err.message : "Tải lên thất bại"); }
   };
 

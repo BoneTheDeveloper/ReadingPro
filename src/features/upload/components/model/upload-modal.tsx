@@ -49,26 +49,45 @@ export function UploadModal({ isOpen, onClose, onUploadStart, onUploadComplete, 
 
   const handleFileUploadWrapper = async (file: File) => {
     setError(null);
-    try { await handleFileUpload(file); } catch (err) { setError(err instanceof Error ? err.message : "Tải lên thất bại"); }
-    onClose();
+    try {
+      await handleFileUpload(file);
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Tải lên thất bại");
+    }
   };
 
   const handleTextSubmitWrapper = async (text: string) => {
     if (!text.trim()) return;
     setError(null);
-    try { await handleTextSubmit(text); } catch (err) { setError(err instanceof Error ? err.message : "Tải lên thất bại"); }
-    onClose();
+    try {
+      await handleTextSubmit(text);
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Tải lên thất bại");
+    }
   };
 
   const handleYouTubeSubmitWrapper = async (url: string) => {
     if (!url.trim()) return;
     setError(null);
-    try { await handleYouTubeSubmit(url); } catch (err) { setError(err instanceof Error ? err.message : "Tải lên thất bại"); }
-    onClose();
+    try {
+      await handleYouTubeSubmit(url);
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Tải lên thất bại");
+    }
   };
 
   const handleBack = () => { setError(null); setActiveMode(null); };
   const handleClose = () => { setError(null); setActiveMode(null); onClose(); };
+
+  // Switching input modes must drop the previous section's error so it
+  // doesn't bleed into the new section under the user's attention.
+  const handleModeChange = (next: InputMode) => {
+    setError(null);
+    setActiveMode(next);
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
@@ -86,8 +105,8 @@ export function UploadModal({ isOpen, onClose, onUploadStart, onUploadComplete, 
             <>
               <UploadZone onFileSelect={handleFileUploadWrapper} variant="compact" />
               <div className="grid grid-cols-2 gap-3 mt-5">
-                <SourceButton icon={PlayCircle} label="YouTube" onClick={() => setActiveMode("youtube")} />
-                <SourceButton icon={Type} label="Dán văn bản" onClick={() => setActiveMode("paste-text")} />
+                <SourceButton icon={PlayCircle} label="YouTube" onClick={() => handleModeChange("youtube")} />
+                <SourceButton icon={Type} label="Dán văn bản" onClick={() => handleModeChange("paste-text")} />
               </div>
             </>
           )}
@@ -104,7 +123,7 @@ export function UploadModal({ isOpen, onClose, onUploadStart, onUploadComplete, 
               <Button variant="ghost" onClick={handleBack} className="text-primary text-sm w-fit h-auto py-1 px-2 -ml-2 hover:bg-accent/50">
                 &larr; Quay lại nguồn
               </Button>
-              <YouTubeInput onSubmit={handleYouTubeSubmitWrapper} onUploadStart={onClose} />
+              <YouTubeInput onSubmit={handleYouTubeSubmitWrapper} />
             </div>
           )}
           {error && (

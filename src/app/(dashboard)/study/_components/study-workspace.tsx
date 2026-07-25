@@ -88,7 +88,6 @@ export function StudyWorkspace({
               <ContentPanel
                 key={activePassage?.id ?? "empty"}
                 passage={activePassage}
-                error={state.error}
                 onOpenUploadModal={handleOpenUploadModal}
               />
             </div>

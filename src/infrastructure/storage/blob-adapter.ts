@@ -1,10 +1,5 @@
-/**
- * Vercel Blob Storage Adapter - Production
- * Wraps Vercel Blob SDK with the same interface as local adapter.
- */
-
 import "server-only";
-import { put, del, head, get } from "@vercel/blob";
+import { put, del, get } from "@vercel/blob";
 import { moduleLog } from "@/lib/logger";
 
 const log = moduleLog("storage:blob");
@@ -26,9 +21,8 @@ export async function uploadFile(
     const blob = await put(filename, buffer, {
       contentType,
       access: "private",
-      addRandomSuffix: false,
     });
-    log.info({ pathname: filename, url: blob.url }, "Uploaded to Vercel Blob");
+    log.info({ pathname: blob.pathname, url: blob.url }, "Uploaded to Vercel Blob");
     return { url: blob.url, pathname: blob.pathname };
   } catch (err) {
     log.error({ err, pathname: filename }, "Upload failed");
@@ -41,10 +35,7 @@ export async function uploadFile(
  */
 export async function deleteFile(pathname: string): Promise<boolean> {
   try {
-    const blobInfo = await head(pathname);
-    if (blobInfo) {
-      await del(blobInfo.downloadUrl);
-    }
+    await del(pathname); // Just pass pathname directly
     log.info({ pathname }, "Deleted file");
     return true;
   } catch (err) {
@@ -52,31 +43,6 @@ export async function deleteFile(pathname: string): Promise<boolean> {
     return false;
   }
 }
-
-/**
- * Get a URL for viewing a file.
- */
-export async function getViewableUrl(pathname: string): Promise<string | null> {
-  try {
-    const blobInfo = await head(pathname);
-    return blobInfo?.url ?? null;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Get a URL for downloading a file.
- */
-export async function getDownloadUrl(pathname: string): Promise<string | null> {
-  try {
-    const blobInfo = await head(pathname);
-    return blobInfo?.downloadUrl ?? null;
-  } catch {
-    return null;
-  }
-}
-
 
 /**
  * Download a stored file's raw bytes for processing.
@@ -91,4 +57,16 @@ export async function downloadFile(pathname: string): Promise<Buffer | null> {
     log.error({ err, pathname }, "Download failed");
     return null;
   }
+}
+
+/**
+ * Get a URL for viewing a file.
+ * Returns a relative URL to the authenticated server route that streams the
+ * private blob. Useful for `<iframe>`, `<embed>`, or anchor `href` targets.
+ *
+ * Use `downloadFile(pathname)` for raw bytes; the resulting URL is privately
+ * scoped and not shareable.
+ */
+export async function getViewableUrl(pathname: string): Promise<string | null> {
+  return `/api/storage/source?pathname=${encodeURIComponent(pathname)}`;
 }

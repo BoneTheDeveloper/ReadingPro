@@ -17,11 +17,9 @@ import { TranslationPopup } from "./translation-popup";
 
 export function ContentPanel({
   passage,
-  error,
   onOpenUploadModal,
 }: {
   passage: PassageData | null;
-  error: string | null;
   onOpenUploadModal: () => void;
 }) {
   const {
@@ -179,8 +177,10 @@ export function ContentPanel({
         ref={scrollRef}
         className="flex-1 overflow-y-auto panel-scroll px-8 pt-7 pb-20"
       >
-        {viewMode === "video" && passage.youtubeUrl ? (
-          <YouTubeEmbed url={passage.youtubeUrl} />
+        {viewMode === "video" && passage.sourceType === "YOUTUBE" ? (
+          <div className="h-full flex flex-col">
+            <YouTubeEmbed url={passage.youtubeUrl ?? ""} />
+          </div>
         ) : viewMode === "pdf" && passage.sourceType === "PDF" ? (
           <div className="h-full flex flex-col">
             {sourceLoading ? (
@@ -219,14 +219,6 @@ export function ContentPanel({
                 </p>
               ))}
             </div>
-
-            {error && (
-              <div className="mt-8 pt-6 border-t border-border/20">
-                <div className="p-3 bg-danger-soft border border-destructive/20 text-destructive text-sm">
-                  {error}
-                </div>
-              </div>
-            )}
           </div>
         )}
       </div>
