@@ -14,11 +14,14 @@ const csp = {
     isDev ? "'unsafe-eval'" : "",
     "https://va.vercel-scripts.com",
     "https://challenges.cloudflare.com",
+    // Google Identity Services (Better Auth One Tap).
+    "https://accounts.google.com",
+    "https://apis.google.com",
   ]
     .filter(Boolean)
     .join(" "),
-  styleSrc: "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  imgSrc: "img-src 'self' blob: data: https://lh3.googleusercontent.com",
+  styleSrc: "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com",
+  imgSrc: "img-src 'self' blob: data: https://lh3.googleusercontent.com https://accounts.google.com",
   fontSrc: "font-src 'self' https://fonts.gstatic.com",
   connectSrc: [
     "connect-src 'self'",
@@ -26,12 +29,14 @@ const csp = {
     isDev ? "ws://localhost:*" : "",
     "https://*.sentry.io",
     "https://vitals.vercel-insights.com",
+    // One Tap exchanges the ID token with our auth API.
+    "https://accounts.google.com",
   ].filter(Boolean).join(" "),
   objectSrc: "object-src 'none'",
   baseUri: "base-uri 'self'",
   formAction: "form-action 'self'",
   frameAncestors: "frame-ancestors 'self'",
-  frameSrc: "frame-src 'self' https://challenges.cloudflare.com https://www.youtube.com https://youtube.com",
+  frameSrc: "frame-src 'self' https://challenges.cloudflare.com https://www.youtube.com https://youtube.com https://accounts.google.com",
   workerSrc: "worker-src 'self' blob:",
   upgradeInsecure: "upgrade-insecure-requests",
 };

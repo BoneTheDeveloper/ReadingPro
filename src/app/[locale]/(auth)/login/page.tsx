@@ -1,6 +1,6 @@
 import { getMessages, getTranslations } from "next-intl/server";
-import { LoginForm } from "@/components/auth/components/login-form";
-import type { AuthTranslations } from "@/components/auth/components/login-form";
+import { LoginForm } from "@/components/auth/login-form";
+import type { AuthTranslations } from "@/components/auth/login-form";
 
 export default async function SignInPage({
   params,

@@ -52,18 +52,11 @@ export function AuthControls({
 
   if (!session?.user) {
     return (
-      <>
-        <Link href="/login">
-          <Button variant="ghost" size={compact || isRail ? "icon" : "sm"}>
-            Sign in
-          </Button>
-        </Link>
-        {!compact && !isRail && (
-          <Link href="/signup">
-            <Button size="sm">Sign up</Button>
-          </Link>
-        )}
-      </>
+      <Link href="/login">
+        <Button variant="ghost" size={compact || isRail ? "icon" : "sm"}>
+          Sign in
+        </Button>
+      </Link>
     );
   }
 

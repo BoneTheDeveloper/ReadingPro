@@ -6,16 +6,13 @@ import {
   BookOpen,
   HelpCircle,
   MessageCircle,
-  Network,
-  Languages,
   Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { StudioActionId } from "@/features/studio-panel/server/actions/artifact";
 
-// All 6 wireframe tiles. Only quiz / chat / lookup are wired in this build;
-// the rest stay visible but disabled per scope decision. Translate and lookup
-// share a tile — both are lookup-via-translation flows.
+// Remaining wireframe tiles. Only quiz / chat are wired in this build;
+// the rest stay visible but disabled per scope decision.
 type TileSpec = {
   id: StudioActionId;
   labelKey: string;
@@ -47,24 +44,10 @@ const STUDIO_GRID_TILES: TileSpec[] = [
     enabled: false,
   },
   {
-    id: "mindmap",
-    labelKey: "mindMap",
-    descriptionKey: "visualOverview",
-    icon: Network,
-    enabled: false,
-  },
-  {
     id: "chat",
     labelKey: "chat",
     descriptionKey: "askQuestions",
     icon: MessageCircle,
-    enabled: true,
-  },
-  {
-    id: "lookup",
-    labelKey: "translate",
-    descriptionKey: "vietnameseTranslation",
-    icon: Languages,
     enabled: true,
   },
 ];
@@ -97,7 +80,6 @@ export function StudioGrid({
           hasActivePassage &&
           runningCount >= 3 &&
           tile.id !== "chat" &&
-          tile.id !== "lookup" &&
           !locked;
         const disabled = !enabled || !hasActivePassage || isOverCap;
 

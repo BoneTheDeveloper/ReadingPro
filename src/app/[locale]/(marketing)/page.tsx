@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { getTranslations } from "next-intl/server";
 import {
   FileText,
@@ -111,15 +111,9 @@ export default async function MarketingPage() {
               <LocaleSwitcher side="bottom" />
               <Link
                 href="/login"
-                className="hidden sm:block text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
-              >
-                {t("signIn")}
-              </Link>
-              <Link
-                href="/signup"
                 className="bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-semibold py-2.5 px-6 rounded-full transition-colors shadow-md hover:shadow-lg"
               >
-                {t("getStartedFree")}
+                {t("signIn")}
               </Link>
             </div>
           </div>
@@ -152,7 +146,7 @@ export default async function MarketingPage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <Link
-                  href="/signup"
+                  href="/login"
                   className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-4 px-8 rounded-full transition-colors shadow-md text-center flex items-center justify-center gap-2"
                 >
                   {t("hero.experienceNow")}
@@ -264,7 +258,7 @@ export default async function MarketingPage() {
           </p>
 
           <Link
-            href="/signup"
+            href="/login"
             className="inline-block bg-white text-primary font-bold text-lg py-4 px-10 rounded-full hover:bg-background transition-colors shadow-md hover:scale-105"
           >
             {t("cta.startLearningFree")}
