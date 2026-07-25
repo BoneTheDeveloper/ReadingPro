@@ -7,7 +7,6 @@
   ],
   "ignore": [
     "src/components/ui/**",
-    "src/i18n/navigation.ts"
   ],
   "ignoreDependencies": [
     "pino-pretty",

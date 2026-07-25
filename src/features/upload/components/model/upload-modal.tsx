@@ -45,24 +45,26 @@ function SourceButton({ icon: Icon, label, desc, onClick, disabled }: {
 export function UploadModal({ isOpen, onClose, onUploadStart, onUploadComplete, onUploadError }: UploadModalProps) {
   const [activeMode, setActiveMode] = useState<InputMode>(null);
   const [error, setError] = useState<string | null>(null);
-  const { isProcessing, handleFileUpload, handleTextSubmit, handleYouTubeSubmit } = useUploadSubmit({ onUploadStart, onComplete: onUploadComplete, onError: onUploadError });
+  const { handleFileUpload, handleTextSubmit, handleYouTubeSubmit } = useUploadSubmit({ onUploadStart, onComplete: onUploadComplete, onError: onUploadError });
 
   const handleFileUploadWrapper = async (file: File) => {
-    if (isProcessing) return;
     setError(null);
-    try { await handleFileUpload(file); onClose(); } catch (err) { setError(err instanceof Error ? err.message : "Tải lên thất bại"); }
+    try { await handleFileUpload(file); } catch (err) { setError(err instanceof Error ? err.message : "Tải lên thất bại"); }
+    onClose();
   };
 
   const handleTextSubmitWrapper = async (text: string) => {
-    if (!text.trim() || isProcessing) return;
+    if (!text.trim()) return;
     setError(null);
-    try { await handleTextSubmit(text); onClose(); } catch (err) { setError(err instanceof Error ? err.message : "Tải lên thất bại"); }
+    try { await handleTextSubmit(text); } catch (err) { setError(err instanceof Error ? err.message : "Tải lên thất bại"); }
+    onClose();
   };
 
   const handleYouTubeSubmitWrapper = async (url: string) => {
-    if (!url.trim() || isProcessing) return;
+    if (!url.trim()) return;
     setError(null);
     try { await handleYouTubeSubmit(url); } catch (err) { setError(err instanceof Error ? err.message : "Tải lên thất bại"); }
+    onClose();
   };
 
   const handleBack = () => { setError(null); setActiveMode(null); };
@@ -82,7 +84,7 @@ export function UploadModal({ isOpen, onClose, onUploadStart, onUploadComplete, 
         <div className="px-5 pb-5 pt-1 flex-1 overflow-y-auto">
           {activeMode === null && (
             <>
-              <UploadZone onFileSelect={handleFileUploadWrapper} isProcessing={isProcessing} variant="compact" />
+              <UploadZone onFileSelect={handleFileUploadWrapper} variant="compact" />
               <div className="grid grid-cols-2 gap-3 mt-5">
                 <SourceButton icon={PlayCircle} label="YouTube" onClick={() => setActiveMode("youtube")} />
                 <SourceButton icon={Type} label="Dán văn bản" onClick={() => setActiveMode("paste-text")} />
@@ -94,7 +96,7 @@ export function UploadModal({ isOpen, onClose, onUploadStart, onUploadComplete, 
               <Button variant="ghost" onClick={handleBack} className="text-primary text-sm w-fit h-auto py-1 px-2 -ml-2 hover:bg-accent/50">
                 &larr; Quay lại nguồn
               </Button>
-              <TextInputArea onSubmit={handleTextSubmitWrapper} isProcessing={isProcessing} />
+              <TextInputArea onSubmit={handleTextSubmitWrapper} />
             </div>
           )}
           {activeMode === "youtube" && (
@@ -102,7 +104,7 @@ export function UploadModal({ isOpen, onClose, onUploadStart, onUploadComplete, 
               <Button variant="ghost" onClick={handleBack} className="text-primary text-sm w-fit h-auto py-1 px-2 -ml-2 hover:bg-accent/50">
                 &larr; Quay lại nguồn
               </Button>
-              <YouTubeInput onSubmit={handleYouTubeSubmitWrapper} onUploadStart={onClose} isProcessing={isProcessing} />
+              <YouTubeInput onSubmit={handleYouTubeSubmitWrapper} onUploadStart={onClose} />
             </div>
           )}
           {error && (

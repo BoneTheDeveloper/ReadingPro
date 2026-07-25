@@ -20,8 +20,6 @@ export const recordQuizResultInputSchema = z
 // ---------------------------------------------------------------------------
 
 export type StudioArtifactType = "quiz" | "flashcard";
-// Chat is a synthetic artifact type — not persisted, used only for in-panel chat view
-export type StudioArtifactViewType = StudioArtifactType | "chat";
 export type StudioArtifactStatus = "generating" | "done" | "failed";
 
 interface QuizResult {
@@ -53,10 +51,25 @@ export type StudioArtifactErrorCode =
   | "PASSAGE_NOT_FOUND"
   | "UNKNOWN";
 
+/**
+ * Reference to a real, persisted studio artifact.
+ * Chat uses its own mode in `StudioPanelView` — it is NOT an artifact.
+ */
 export interface ArtifactRef {
-  type: StudioArtifactViewType;
+  type: StudioArtifactType;
   id: string;
 }
+
+/**
+ * What the studio panel is currently displaying. Chat is a first-class mode,
+ * not a fake artifact — it does not appear in `ArtifactRef.type`.
+ *
+ * Add new modes here when introducing new panel content (history, settings, etc.).
+ */
+export type StudioPanelView =
+  | { mode: "artifact"; ref: ArtifactRef }
+  | { mode: "chat" }
+  | null;
 
 export interface ArtifactDetailCacheEntry {
   questions?: GeneratedQuestionDto[];

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { FileText, AlertCircle, Loader2 } from "lucide-react";
+import { FileText, AlertCircle } from "lucide-react";
 import { validateTextContent } from "@/features/upload/lib/upload-validation";
 import { UPLOAD_CONFIG } from "@/features/upload/lib/upload-config";
 import { Button } from "@/components/ui/button";
@@ -9,13 +9,11 @@ import { Textarea } from "@/components/ui/textarea";
 
 interface TextInputAreaProps {
   onSubmit: (text: string) => void;
-  isProcessing?: boolean;
   disabled?: boolean;
 }
 
 export function TextInputArea({
   onSubmit,
-  isProcessing,
   disabled,
 }: TextInputAreaProps) {
   const [text, setText] = useState("");
@@ -52,7 +50,7 @@ export function TextInputArea({
             setText(e.target.value);
             setError(undefined);
           }}
-          disabled={disabled || isProcessing}
+          disabled={disabled}
           placeholder="Nhập tối thiểu 50 từ vào đây"
           className="w-full p-6 min-h-75 resize-none border-0 focus-visible:ring-0 text-lg leading-relaxed bg-surface font-serif"
         />
@@ -66,16 +64,9 @@ export function TextInputArea({
 
           <Button
             onClick={handleSubmit}
-            disabled={disabled || isProcessing || text.trim().length === 0}
+            disabled={disabled || text.trim().length === 0}
           >
-            {isProcessing ? (
-              <span className="flex items-center gap-2">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Processing...
-              </span>
-            ) : (
-              "Continue"
-            )}
+            Continue
           </Button>
         </div>
       </div>

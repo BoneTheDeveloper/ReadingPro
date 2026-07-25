@@ -139,7 +139,7 @@ export function SourcesPanel({
   );
 }
 
-function ProcessingRow({ title, onSelect }: { title: string; onSelect: () => void }) {
+function ProcessingRow({ title }: { title: string; onSelect: () => void }) {
   return (
     <div className="w-full p-2.5 flex items-center gap-2.5 rounded-[13px] border border-transparent relative overflow-hidden cursor-not-allowed opacity-70">
       <div className="absolute inset-0 z-0 bg-accent animate-[upload-fill_2.8s_ease-in-out_forwards]">

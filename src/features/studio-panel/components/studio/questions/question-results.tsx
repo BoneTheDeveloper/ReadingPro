@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef} from "react";
 import { Trophy, AlertCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -47,11 +47,6 @@ export function QuestionResults({
     }
     onReset();
   }, [artifactId, onReset, onResetResult]);
-
-  useEffect(() => { recordResult(); }, [recordResult]);
-
-  const accuracy = Math.round((correctCount / totalQuestions) * 100);
-  const message = accuracy >= 80 ? "Xuất sắc!" : accuracy >= 60 ? "Làm tốt lắm!" : "Tiếp tục luyện tập nhé!";
 
   return (
     <div className="bg-surface rounded-xl shadow-sm border border-border flex items-center justify-center flex-1 min-h-75 relative overflow-hidden">

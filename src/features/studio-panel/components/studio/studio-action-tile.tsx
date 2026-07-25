@@ -8,20 +8,20 @@ import {
   Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { StudioActionId } from "@/features/studio-panel/server/actions/artifact";
+import type { StudioActionId } from "@/features/studio-panel/schemas/studio-action";
 
 type TileSpec = {
   id: StudioActionId;
-  labelVi: string;
+  label: string;
   icon: typeof HelpCircle;
   enabled: boolean;
 };
 
 const STUDIO_GRID_TILES: TileSpec[] = [
-  { id: "quiz", labelVi: "Câu hỏi", icon: HelpCircle, enabled: true },
-  { id: "flashcard", labelVi: "Flashcards", icon: Layers, enabled: false },
-  { id: "summary", labelVi: "Tóm tắt", icon: BookOpen, enabled: false },
-  { id: "chat", labelVi: "Trò chuyện", icon: MessageCircle, enabled: true },
+  { id: "quiz", label: "Câu hỏi", icon: HelpCircle, enabled: true },
+  { id: "flashcard", label: "Flashcards", icon: Layers, enabled: false },
+  { id: "summary", label: "Tóm tắt", icon: BookOpen, enabled: false },
+  { id: "chat", label: "Trò chuyện", icon: MessageCircle, enabled: true },
 ];
 
 export function isStudioTileEnabled(actionId: StudioActionId): boolean {
@@ -70,7 +70,7 @@ export function StudioGrid({
               size={21}
             />
             <span className={cn("relative z-10 text-[11.5px] font-semibold text-center leading-tight", disabled ? "text-muted-foreground/70" : "text-foreground")}>
-              {tile.labelVi}
+              {tile.label}
             </span>
           </button>
         );

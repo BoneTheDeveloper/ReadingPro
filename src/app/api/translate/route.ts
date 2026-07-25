@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
+import { headers } from "next/headers";
 import { z } from "zod";
-import { getUserId } from "@/lib/auth/auth-server";
+import { auth } from "@/lib/auth";
 import { executeTranslate } from "@/features/reading/server/services/inline-translate";
 
 const translateRequestSchema = z.object({
@@ -17,14 +18,18 @@ const translateRequestSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) {
+    return Response.json({ error: "Authentication required" }, { status: 401 });
+  }
+
   try {
     const body = await req.json();
     const input = translateRequestSchema.parse(body);
-    const userId = await getUserId();
 
     const result = await executeTranslate(
       { text: input.text, context: input.context, sourceId: input.sourceId, sourceLanguage: input.sourceLanguage, targetLanguage: input.targetLanguage },
-      { userId },
+      { userId: session.user.id },
     );
 
     if (!result.ok) {

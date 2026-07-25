@@ -2,12 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import * as Sentry from "@sentry/nextjs";
-import { getArtifactQuestionsAction } from "@/features/studio-panel/server/actions/artifact";
-import { getStudioArtifactsAction } from "@/features/studio-panel/server/actions/artifact";
+import { getArtifactQuestionsAction, getStudioArtifactsAction } from "@/features/studio-panel/server/actions/artifact";
 import type {
   ArtifactRef,
   ArtifactDetailCacheEntry,
   StudioArtifact,
+  StudioPanelView,
 } from "@/features/studio-panel/schemas/studio-artifact";
 
 const ARTIFACT_STALE_TIME = 60_000;
@@ -23,9 +23,7 @@ export function useStudioArtifactQuery({
 }: UseStudioArtifactQueryOptions) {
   const [artifacts, setArtifacts] = useState<StudioArtifact[]>([]);
   const [status, setStatus] = useState<ArtifactQueryStatus>("idle");
-  const [viewingArtifact, setViewingArtifact] = useState<ArtifactRef | null>(
-    null,
-  );
+  const [view, setView] = useState<StudioPanelView>(null);
   const [artifactDetailById, setArtifactDetailById] = useState<
     Record<string, ArtifactDetailCacheEntry>
   >({});
@@ -42,7 +40,7 @@ export function useStudioArtifactQuery({
 
     setArtifacts([]);
     setStatus("idle");
-    setViewingArtifact(null);
+    setView(null);
     fetchedAtRef.current = null;
   }, [passageId]);
 
@@ -79,11 +77,13 @@ export function useStudioArtifactQuery({
   }, [passageId, status]);
 
   // Lazy-load artifact detail when opening artifact
-  const openArtifact = useCallback(
-    async (ref: ArtifactRef | null) => {
-      setViewingArtifact(ref);
+  const setViewWithFetch = useCallback(
+    async (next: StudioPanelView) => {
+      setView(next);
 
-      if (!ref || artifactDetailById[ref.id]) return;
+      if (!next || next.mode !== "artifact") return;
+      const ref: ArtifactRef = next.ref;
+      if (artifactDetailById[ref.id]) return;
 
       try {
         const result = await getArtifactQuestionsAction(ref.id);
@@ -102,8 +102,8 @@ export function useStudioArtifactQuery({
     artifacts,
     setArtifacts,
     status,
-    viewingArtifact,
+    view,
+    setView: setViewWithFetch,
     artifactDetailById,
-    setViewingArtifact: openArtifact,
   };
 }

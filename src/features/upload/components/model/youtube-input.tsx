@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Loader2, PlayCircle, Clipboard } from "lucide-react";
+import { PlayCircle, Clipboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { isValidYouTubeUrl, extractVideoId } from "@/utils/youtube-url";
@@ -10,10 +10,9 @@ import { checkTranscriptAvailability } from "@/features/upload/server/actions/ch
 interface YouTubeInputProps {
   onSubmit: (url: string) => Promise<void>;
   onUploadStart?: () => void;
-  isProcessing: boolean;
 }
 
-export function YouTubeInput({ onSubmit, onUploadStart, isProcessing }: YouTubeInputProps) {
+export function YouTubeInput({ onSubmit, onUploadStart }: YouTubeInputProps) {
   const [url, setUrl] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isValidating, setIsValidating] = useState(false);
@@ -65,11 +64,10 @@ export function YouTubeInput({ onSubmit, onUploadStart, isProcessing }: YouTubeI
               const isFormatValid = newUrl.trim().length > 0 && isValidYouTubeUrl(newUrl);
               setUrl(newUrl); setError(null); setIsTranscriptValid(false); setIsValidating(isFormatValid);
             }}
-            disabled={isProcessing}
             className="pl-10 pr-10"
           />
           {isValidating ? (
-            <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
           ) : (
             <button type="button" onClick={handlePaste} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors" title="Dán từ clipboard">
               <Clipboard className="w-4 h-4" />
@@ -78,8 +76,8 @@ export function YouTubeInput({ onSubmit, onUploadStart, isProcessing }: YouTubeI
         </div>
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
-      <Button type="submit" disabled={!isUrlFormatValid || !isTranscriptValid || isProcessing || isValidating} className="w-full">
-        {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : "Thêm"}
+      <Button type="submit" disabled={!isUrlFormatValid || !isTranscriptValid || isValidating} className="w-full">
+        Thêm
       </Button>
     </form>
   );

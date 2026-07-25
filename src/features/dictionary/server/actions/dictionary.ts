@@ -1,6 +1,7 @@
 "use server";
 
-import { getUserId } from "@/lib/auth/auth-server";
+import { headers } from "next/headers";
+import { auth } from "@/lib/auth";
 import { suggestDictionaryTerms } from "../services/suggest";
 import { getDictionaryEntryDetail } from "../services/entry-detail";
 import {
@@ -28,7 +29,8 @@ export async function suggestDictionaryTermsAction(
     targetLanguage,
   });
 
-  await getUserId();
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) throw new Error("Authentication required");
 
   return suggestDictionaryTerms(parsed.query, {
     sourceLanguage: parsed.sourceLanguage,
@@ -51,7 +53,8 @@ export async function getDictionaryEntryDetailAction(
     targetLanguage,
   });
 
-  await getUserId();
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) throw new Error("Authentication required");
 
   return getDictionaryEntryDetail(parsed.entryId, {
     sourceLanguage: parsed.sourceLanguage,
@@ -67,7 +70,8 @@ export async function saveDictionarySenseToVocabularyAction(
   entry: DictionaryEntryDto,
   sense: DictionarySenseDto,
 ) {
-  const userId = await getUserId();
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) throw new Error("Authentication required");
   const primary =
     sense.translations.find((t) => t.isPrimary) ?? sense.translations[0];
   if (!primary) {
@@ -76,7 +80,7 @@ export async function saveDictionarySenseToVocabularyAction(
 
   const { saveVocabularyItem } = await import("@/features/vocabulary");
   return saveVocabularyItem({
-    userId,
+    userId: session.user.id,
     selectedText: entry.headword,
     translation: primary.translation,
     contextSentence: sense.example ?? undefined,

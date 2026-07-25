@@ -119,16 +119,15 @@ function SidebarContent({
 }) {
   return (
     <div className="flex flex-col h-full w-full items-center">
-      <Link
-        href="/"
-        className="mb-6 w-10 h-10 rounded-[13px] flex items-center justify-center text-white"
+      <div
+        className="mb-6 w-10 h-10 rounded-[13px] flex items-center justify-center text-white cursor-default"
         style={{
           background:
             "linear-gradient(135deg, #5A4FE0 0%, #7A6BFF 60%, #F2664A 100%)",
         }}
       >
         <GraduationCap className="w-5 h-5" />
-      </Link>
+      </div>
 
       <nav className="flex-1 w-full px-2 space-y-1.5 flex flex-col items-center">
         {navItems.map((item) => {
@@ -169,9 +168,9 @@ function MobileSidebarContent({
   return (
     <div className="flex flex-col h-full">
       <div className="px-5 py-5 border-b border-border">
-        <Link href="/" className="flex items-center gap-3" onClick={onNavigate}>
+        <div className="flex items-center gap-3">
           <div
-            className="w-9 h-9 rounded-[12px] flex items-center justify-center text-white"
+            className="w-9 h-9 rounded-[12px] flex items-center justify-center text-white cursor-default"
             style={{
               background:
                 "linear-gradient(135deg, #5A4FE0 0%, #7A6BFF 60%, #F2664A 100%)",
@@ -187,7 +186,7 @@ function MobileSidebarContent({
               Training App
             </p>
           </div>
-        </Link>
+        </div>
       </div>
 
       <nav className="flex-1 px-3 py-4 space-y-1">

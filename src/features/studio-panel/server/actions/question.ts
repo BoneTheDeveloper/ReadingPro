@@ -1,6 +1,7 @@
 "use server";
 
-import { getUserId } from "@/lib/auth/auth-server";
+import { headers } from "next/headers";
+import { auth } from "@/lib/auth";
 import { recordQuizResult, resetQuizResult } from "../services/studio-artifacts";
 import { recordQuizResultInputSchema } from "@/features/studio-panel/schemas/studio-artifact";
 import { generateStudioQuestionsInputSchema } from "@/features/studio-panel/schemas/question";
@@ -14,13 +15,15 @@ export async function recordQuizResultAction(
   stats: { correctCount: number; totalQuestions: number },
 ) {
   const parsedStats = recordQuizResultInputSchema.parse(stats);
-  const userId = await getUserId();
-  await recordQuizResult(artifactId, userId, parsedStats);
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) throw new Error("Authentication required");
+  await recordQuizResult(artifactId, session.user.id, parsedStats);
 }
 
 export async function resetQuizResultAction(artifactId: string) {
-  const userId = await getUserId();
-  await resetQuizResult(artifactId, userId);
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) throw new Error("Authentication required");
+  await resetQuizResult(artifactId, session.user.id);
 }
 
 export async function generateStudioQuestionsAction(input: {
@@ -28,10 +31,11 @@ export async function generateStudioQuestionsAction(input: {
   artifactId: string;
 }) {
   const { passageId, artifactId } = generateStudioQuestionsInputSchema.parse(input);
-  const userId = await getUserId();
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) throw new Error("Authentication required");
   try {
     const { artifact, questions } = await generateQuestionsForPassage(
-      userId,
+      session.user.id,
       passageId,
       artifactId,
     );

@@ -327,7 +327,6 @@ function PaginationBar({
   page,
   totalPages,
   total,
-  filter,
   onPageChange,
 }: {
   page: number;

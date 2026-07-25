@@ -110,9 +110,8 @@ export function StudyWorkspace({
           >
             <StudioPanel
               artifacts={artifactQuery.artifacts}
-              status={artifactQuery.status}
-              viewingArtifact={artifactQuery.viewingArtifact}
-              setViewingArtifact={artifactQuery.setViewingArtifact}
+              view={artifactQuery.view}
+              setView={artifactQuery.setView}
               artifactDetailById={artifactQuery.artifactDetailById}
               activePassage={activePassage}
               hasActivePassage={!!state.activePassageId}

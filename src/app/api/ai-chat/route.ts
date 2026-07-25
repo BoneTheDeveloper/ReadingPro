@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
+import { headers } from "next/headers";
 import * as Sentry from "@sentry/nextjs";
-import { getUserId } from "@/lib/auth/auth-server";
+import { auth } from "@/lib/auth";
 import { moduleLog } from "@/lib/logger";
 import {
   studyChatRequestSchema,
@@ -18,6 +19,12 @@ import {
 const log = moduleLog("studio-panel:chat-route");
 
 export async function POST(req: NextRequest) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) {
+    return Response.json({ error: "Authentication required" }, { status: 401 });
+  }
+  const userId = session.user.id;
+
   let body: unknown;
   try {
     body = await req.json();
@@ -47,7 +54,6 @@ export async function POST(req: NextRequest) {
   }
 
   const { messages, passageId } = parsed.data;
-  const userId = await getUserId();
 
   const passage = await getOwnedPassageForChat(userId, passageId);
 

@@ -1,8 +1,9 @@
 "use server";
 
+import { headers } from "next/headers";
 import { z } from "zod";
 import { SourceType } from "@/types/passage";
-import { getUserId } from "@/lib/auth/auth-server";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { inngest } from "@/infrastructure/inngest";
 import { createUploadProcessEvent } from "@/features/upload/server/inngest/events";
@@ -72,7 +73,9 @@ export async function uploadFileAction(formData: FormData) {
     throw new Error("Missing required fields");
   }
 
-  const userId = await getUserId();
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) throw new Error("Authentication required");
+  const userId = session.user.id;
   const jobId = newJobId();
   const ext = file.name.split(".").pop() || "txt";
   const blobPath = `uploads/${userId}/${passageId}.${ext}`;
@@ -139,7 +142,9 @@ export async function uploadTextAction(input: z.infer<typeof uploadTextRequestSc
     throw new Error(contentCheck.error ?? "Invalid text content");
   }
 
-  const userId = await getUserId();
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) throw new Error("Authentication required");
+  const userId = session.user.id;
   const jobId = newJobId();
 
   await prisma.uploadJob.create({
@@ -195,7 +200,9 @@ export async function uploadYouTubeAction(
     );
   }
 
-  const userId = await getUserId();
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) throw new Error("Authentication required");
+  const userId = session.user.id;
   const jobId = newJobId();
 
   // Create job
@@ -226,7 +233,9 @@ export async function uploadYouTubeAction(
 }
 
 export async function getUploadStatus(jobId: string) {
-  const userId = await getUserId();
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) throw new Error("Authentication required");
+  const userId = session.user.id;
   const job = await prisma.uploadJob.findUnique({
     where: { id: jobId, userId },
   });

@@ -60,7 +60,7 @@ export function ContentPanel({
     fetchSourceUrl();
 
     return () => { cancelled = true; };
-  }, [viewMode, passage?.filePath]);
+  }, [viewMode, passage?.filePath, passage?.id]);
 
   const updateSelectionFromMouseEvent = useCallback(
     (event: MouseEvent) => {

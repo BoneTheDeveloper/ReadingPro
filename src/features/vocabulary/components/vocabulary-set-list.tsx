@@ -26,7 +26,6 @@ export function VocabularySetList({
   sets,
   loading,
   onCreateSet,
-  onDeleteSet,
   creating,
 }: VocabularySetListProps) {
   const [newSetName, setNewSetName] = useState("");

@@ -6,7 +6,7 @@ import type {
   StudioArtifact,
   StudioArtifactErrorCode,
 } from "@/features/studio-panel/schemas/studio-artifact";
-import type { StudioActionId } from "@/features/studio-panel/server/actions/artifact";
+import type { StudioActionId } from "@/features/studio-panel/schemas/studio-action";
 import type { PassageData } from "@/types/passage";
 
 type SetArtifactsCallback = (updater: (prev: StudioArtifact[]) => StudioArtifact[]) => void;
