@@ -125,7 +125,6 @@ export function StudioPanel({
             }
             onCollapse={onToggleCollapse}
             collapseIcon={<PanelRight className="w-4 h-4" />}
-            collapseLabel="Thu gọn bảng"
           />
           <div className="flex-1 min-h-0 overflow-hidden">
             <StudyChatPanel key={`${chatPassageId}-${chatPrefill ?? "empty"}`} passageId={chatPassageId} prefilledQuestion={chatPrefill} />
@@ -151,7 +150,6 @@ export function StudioPanel({
               </button>
             }
             collapseIcon={<PanelRight className="w-4 h-4" />}
-            collapseLabel="Thu gọn bảng"
           />
           <div className="flex-1 overflow-y-auto panel-scroll relative">
             {viewingArtifactData.type === "quiz" && detail?.questions ? (
@@ -180,7 +178,7 @@ export function StudioPanel({
       <Card className="h-full flex flex-col overflow-hidden bg-panel rounded-none">
         <CardContent className="p-0 flex flex-col h-full items-center">
           <div className="w-full p-2 flex justify-center border-b border-border">
-            <Button variant="ghost" size="icon" onClick={onToggleCollapse} className="h-8 w-8 text-muted-foreground hover:text-foreground" title="Mở rộng bảng">
+            <Button variant="ghost" size="icon" onClick={onToggleCollapse} className="h-8 w-8 text-muted-foreground hover:text-foreground">
               <PanelRight className="w-5 h-5" />
             </Button>
           </div>
@@ -219,7 +217,6 @@ export function StudioPanel({
           left={<h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Studio</h2>}
           onCollapse={onToggleCollapse}
           collapseIcon={<PanelRight className="w-4 h-4" />}
-          collapseLabel="Thu gọn bảng"
         />
         <StudioGrid
           hasActivePassage={hasActivePassage}
@@ -243,7 +240,6 @@ export function StudioPanel({
                     key={artifact.id}
                     artifact={artifact}
                     Icon={meta.icon}
-                    labelVi={meta.labelVi}
                     errorMessage={artifact.status === "failed" ? generationErrorMessage() : null}
                     onClick={() => setViewingArtifact({ type: artifact.type, id: artifact.id })}
                     onDelete={onDeleteArtifact ? () => onDeleteArtifact(artifact.id) : undefined}
@@ -279,11 +275,10 @@ function PanelHeader({ left, onCollapse, collapseIcon, collapseLabel }: {
 }
 
 function ArtifactRow({
-  artifact, Icon, labelVi, errorMessage, onClick, onDelete,
+  artifact, Icon, errorMessage, onClick, onDelete,
 }: {
   artifact: StudioArtifact;
   Icon: React.ElementType;
-  labelVi: string;
   errorMessage?: string | null;
   onClick: () => void;
   onDelete?: () => void;

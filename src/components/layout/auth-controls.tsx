@@ -32,7 +32,7 @@ export function AuthControls({
     await authClient.signOut({
       fetchOptions: {
         onSuccess: () => {
-          router.push("/login");
+          router.push("/");
           router.refresh();
         },
       },

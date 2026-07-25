@@ -2,24 +2,19 @@
 
 import { useCallback, useState } from "react";
 import { useDropzone, type FileRejection } from "react-dropzone";
-import { Upload, FileText, AlertCircle, Loader2 } from "lucide-react";
-import {
-  validateFile,
-} from "@/features/upload/lib/upload-validation";
+import { Upload, FileText, AlertCircle } from "lucide-react";
+import { validateFile } from "@/features/upload/lib/upload-validation";
 import { UPLOAD_CONFIG } from "@/features/upload/lib/upload-config";
 import { cn } from "@/lib/utils";
 
 interface UploadZoneProps {
   onFileSelect: (file: File) => void;
-  isProcessing?: boolean;
   disabled?: boolean;
   variant?: "default" | "compact" | "expanded";
-  isDragActiveExternal?: boolean;
 }
 
 export function UploadZone({
   onFileSelect,
-  isProcessing,
   disabled,
   variant = "default",
 }: UploadZoneProps) {
@@ -61,7 +56,7 @@ export function UploadZone({
     },
     maxSize: UPLOAD_CONFIG.MAX_FILE_SIZE_BYTES,
     multiple: false,
-    disabled: disabled || isProcessing,
+    disabled: disabled,
   });
 
   const variantStyles = {
@@ -77,12 +72,10 @@ export function UploadZone({
         className={cn(
           "relative flex flex-col items-center justify-center",
           "border-2 border-dashed rounded-xl text-center",
-          "transition-all duration-200 cursor-pointer",
+          "transition-colors duration-200 cursor-pointer",
           variantStyles[variant],
-          isDragActive && "border-primary bg-accent scale-[1.02]",
-          !isDragActive &&
-            "border-border hover:border-primary/40 hover:bg-muted",
-          (disabled || isProcessing) && "opacity-50 cursor-not-allowed"
+          isDragActive ? "border-primary bg-accent/50" : "border-border hover:bg-muted",
+          disabled && "opacity-60 cursor-not-allowed pointer-events-none"
         )}
       >
         <input {...getInputProps()} />
@@ -90,35 +83,21 @@ export function UploadZone({
         <div className="flex flex-col items-center gap-5">
           <div
             className={cn(
-              "rounded-xl flex items-center justify-center transition-transform bg-indigo-soft",
-              variant === "compact" ? "w-7 h-7" : "w-14 h-14",
-              variant === "expanded" && "mb-4",
-              isDragActive && "scale-110"
+              "rounded-xl flex items-center justify-center bg-indigo-soft",
+              variant === "compact" ? "w-7 h-7" : "w-14 h-14"
             )}
           >
-            {isProcessing ? (
-              <Loader2 className="w-7 h-7 text-primary animate-spin" />
-            ) : (
-              <Upload className="w-7 h-7 text-primary" />
-            )}
+            <Upload className="w-7 h-7 text-primary" />
           </div>
 
           <div>
             <h3
               className={cn(
-                "font-semibold text-foreground mb-2",
-                variant === "compact"
-                  ? "text-sm"
-                  : variant === "expanded"
-                    ? "text-base"
-                    : "text-lg"
+                "font-semibold text-foreground mb-1",
+                variant === "compact" ? "text-sm" : "text-lg"
               )}
             >
-              {isDragActive
-                ? "Drop your file here"
-                : isProcessing
-                  ? "Processing..."
-                  : "Upload your content"}
+              Tải file của bạn lên
             </h3>
             <p
               className={cn(
@@ -126,34 +105,22 @@ export function UploadZone({
                 variant === "compact" ? "text-xs" : "text-sm"
               )}
             >
-              {isProcessing
-                ? "Please wait while we process your file"
-                : "Drag and drop, or click to browse"}
+              Ấn để bật hoặc kéo file vào đây
             </p>
           </div>
 
-          {!isProcessing && (
-            <div
-              className={cn(
-                "flex items-center gap-4 text-muted-foreground",
-                variant === "compact" ? "text-xs" : "text-sm"
-              )}
-            >
-              <span className="flex items-center gap-1.5">
-                  <FileText className="w-4 h-4" />
-                  .txt
-                </span>
-              <span className="text-border">|</span>
-              <span className="flex items-center gap-1.5">
-                <FileText className="w-4 h-4" />
-                .pdf
-              </span>
-              <span className="text-border">|</span>
-              <span>
-                Max {UPLOAD_CONFIG.MAX_FILE_SIZE_MB}MB
-              </span>
-            </div>
-          )}
+          <div
+            className={cn(
+              "flex items-center gap-4 text-muted-foreground mt-1",
+              variant === "compact" ? "text-xs" : "text-sm"
+            )}
+          >
+            <span className="flex items-center gap-1.5">
+              <FileText className="w-4 h-4" /> .txt, .pdf
+            </span>
+            <span className="text-border">|</span>
+            <span>Max {UPLOAD_CONFIG.MAX_FILE_SIZE_MB}MB</span>
+          </div>
         </div>
       </div>
 

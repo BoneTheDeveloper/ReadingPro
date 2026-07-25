@@ -35,7 +35,6 @@ export function LoginForm({ signInLabel = "Đăng nhập" }: LoginFormProps) {
       await authClient.signIn.social({
         provider: "google",
         callbackURL: "/study",
-        popupWindow: true,
       });
     } catch {
       setError("Đăng nhập Google thất bại");

@@ -13,16 +13,15 @@ import type { StudioActionId } from "@/features/studio-panel/server/actions/arti
 type TileSpec = {
   id: StudioActionId;
   labelVi: string;
-  descriptionVi: string;
   icon: typeof HelpCircle;
   enabled: boolean;
 };
 
 const STUDIO_GRID_TILES: TileSpec[] = [
-  { id: "quiz", labelVi: "Câu hỏi", descriptionVi: "Kiểm tra hiểu biết", icon: HelpCircle, enabled: true },
-  { id: "flashcard", labelVi: "Flashcards", descriptionVi: "Từ vựng quan trọng", icon: Layers, enabled: false },
-  { id: "summary", labelVi: "Tóm tắt", descriptionVi: "Tóm tắt nội dung", icon: BookOpen, enabled: false },
-  { id: "chat", labelVi: "Trò chuyện", descriptionVi: "Hỏi về bài đọc", icon: MessageCircle, enabled: true },
+  { id: "quiz", labelVi: "Câu hỏi", icon: HelpCircle, enabled: true },
+  { id: "flashcard", labelVi: "Flashcards", icon: Layers, enabled: false },
+  { id: "summary", labelVi: "Tóm tắt", icon: BookOpen, enabled: false },
+  { id: "chat", labelVi: "Trò chuyện", icon: MessageCircle, enabled: true },
 ];
 
 export function isStudioTileEnabled(actionId: StudioActionId): boolean {
@@ -54,8 +53,6 @@ export function StudioGrid({
             type="button"
             onClick={() => !disabled && onSelect(tile.id)}
             disabled={disabled}
-            aria-label={tile.labelVi}
-            title={!enabled ? "Sắp ra mắt" : tile.descriptionVi}
             className={cn(
               "relative overflow-hidden flex flex-col items-center gap-1.5 px-2 py-3.5 rounded-[14px] border bg-surface transition-all",
               !disabled && "border-border hover:border-primary hover:-translate-y-px hover:shadow-card cursor-pointer",

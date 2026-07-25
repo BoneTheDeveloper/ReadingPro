@@ -42,7 +42,7 @@ export function TextInputArea({
         <div className="flex items-center gap-3 px-5 py-3.5 border-b border-border bg-muted/40">
           <FileText className="w-4 h-4 text-primary" />
           <h3 className="font-semibold text-foreground text-sm">
-            Paste your text
+            Nhập văn bản
           </h3>
         </div>
 
@@ -53,7 +53,7 @@ export function TextInputArea({
             setError(undefined);
           }}
           disabled={disabled || isProcessing}
-          placeholder="Paste your English text content here..."
+          placeholder="Nhập tối thiểu 50 từ vào đây"
           className="w-full p-6 min-h-75 resize-none border-0 focus-visible:ring-0 text-lg leading-relaxed bg-surface font-serif"
         />
 

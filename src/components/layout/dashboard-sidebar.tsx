@@ -17,9 +17,9 @@ import { AuthControls } from "./auth-controls";
 const RAIL_WIDTH_PX = 62;
 
 const navItems = [
-  { href: "/study", labelVi: "Học", icon: BookOpen },
-  { href: "/vocabulary", labelVi: "Từ vựng", icon: Library },
-  { href: "/dictionary", labelVi: "Từ điển", icon: BookMarked },
+  { href: "/study", label: "Học tập", icon: BookOpen },
+  { href: "/vocabulary", label: "Từ vựng", icon: Library },
+  { href: "/dictionary", label: "Từ điển", icon: BookMarked },
 ];
 
 export function DashboardSidebar({ children }: { children: React.ReactNode }) {
@@ -126,8 +126,6 @@ function SidebarContent({
           background:
             "linear-gradient(135deg, #5A4FE0 0%, #7A6BFF 60%, #F2664A 100%)",
         }}
-        aria-label="Dashboard"
-        title="Dashboard"
       >
         <GraduationCap className="w-5 h-5" />
       </Link>
@@ -139,8 +137,8 @@ function SidebarContent({
             <Link
               key={item.href}
               href={item.href}
-              aria-label={item.labelVi}
-              title={item.labelVi}
+              aria-label={item.label}
+              title={item.label}
               className={cn(
                 "w-10 h-10 flex justify-center items-center rounded-[13px] transition-all",
                 active
@@ -213,7 +211,7 @@ function MobileSidebarContent({
                   active ? "text-primary" : "text-muted-foreground",
                 )}
               />
-              {item.labelVi}
+              {item.label}
             </Link>
           );
         })}

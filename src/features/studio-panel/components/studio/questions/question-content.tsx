@@ -189,7 +189,7 @@ export function QuestionContent({
               </div>
               <Button onClick={handleNext} className="w-full">
                 {currentIndex < questions.length - 1 ? (
-                  <>{Câu tiếp theo} <ArrowRight className="w-4 h-4" /></>
+                  <>Câu tiếp theo <ArrowRight className="w-4 h-4" /></>
                 ) : (
                   "Xem kết quả"
                 )}

@@ -59,7 +59,7 @@ export function SourcesPanel({
       <Card className="h-full flex flex-col overflow-hidden bg-panel rounded-none">
         <CardContent className="p-0 flex flex-col h-full items-center">
           <div className="w-full p-2 flex justify-center border-b border-border">
-            <Button variant="ghost" size="icon" onClick={onToggleCollapse} className="h-8 w-8 text-muted-foreground hover:text-foreground" title="Mở rộng bảng">
+            <Button variant="ghost" size="icon" onClick={onToggleCollapse} className="h-8 w-8 text-muted-foreground hover:text-foreground" >
               <PanelLeft className="w-5 h-5" />
             </Button>
           </div>
@@ -95,7 +95,7 @@ export function SourcesPanel({
       <CardContent className="p-0 flex flex-col h-full">
         <div className="h-[54px] px-4 flex items-center justify-between border-b border-border">
           <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Nguồn</h2>
-          <Button variant="ghost" size="icon" onClick={onToggleCollapse} className="h-[30px] w-[30px] rounded-[9px] text-muted-foreground hover:text-primary" title="Thu gọn bảng" aria-label="Thu gọn bảng">
+          <Button variant="ghost" size="icon" onClick={onToggleCollapse} className="h-[30px] w-[30px] rounded-[9px] text-muted-foreground hover:text-primary">
             <PanelLeft className="w-4 h-4" />
           </Button>
         </div>
