@@ -74,6 +74,10 @@ export function extractSelectionInfo({
     contextSentence,
     sourceId,
     targetLanguage,
+    // Phase 2: only the word popup ships; phrase detection is deferred. Set
+    // the discriminator constant here so Phase 5 can branch without a schema
+    // migration.
+    kind: "word",
     clientMetrics: {
       wordsBeforeSelected: countWordsBeforeSelection(container, range),
     },

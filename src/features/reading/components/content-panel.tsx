@@ -209,8 +209,8 @@ export function ContentPanel({
           translation={translationState.data}
           status={translationState.status}
           onTranslate={translateWord}
-          onSave={handleSaveVocabulary}
-          saved={isVocabularySaved}
+          _onSave={handleSaveVocabulary}
+          _saved={isVocabularySaved}
           onDismiss={() => handleWordSelection(null)}
         />
       )}

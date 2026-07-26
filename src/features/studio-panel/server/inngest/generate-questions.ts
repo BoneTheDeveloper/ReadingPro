@@ -69,6 +69,7 @@ export const generateQuestionsJob = inngest.createFunction(
           type: "question",
           title: `${passage.title} - Question`,
           status: "READY",
+          updatedAt: new Date(),
         },
       });
 

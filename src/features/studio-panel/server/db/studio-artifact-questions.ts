@@ -38,6 +38,7 @@ export async function createStudioArtifactWithQuestions(input: {
         type: "question",
         title: input.title,
         status: "done",
+        updatedAt: new Date(),
       },
       include: { questionResult: true },
     });

@@ -114,7 +114,7 @@ export interface VocabularySetDto {
   periodEnd: string | null;
   createdAt: string;
   updatedAt: string;
-  _count: { setItems: number };
+  _count: { vocabularySetItems: number };
 }
 
 export interface VocabularyStatsDto {
@@ -143,7 +143,7 @@ export type VocabularyItemModel = {
   lastReviewedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
-  occurrences: Array<{
+  vocabularyOccurrences: Array<{
     id: string;
     vocabularyItemId: string;
     sourceId: string | null;
@@ -161,7 +161,7 @@ export type VocabularySetModel = {
   periodEnd: Date | null;
   createdAt: Date;
   updatedAt: Date;
-  _count: { setItems: number };
+  _count: { vocabularySetItems: number };
 };
 
 // =============================================================================
@@ -184,7 +184,7 @@ export function toVocabularyItemDto(model: VocabularyItemModel): VocabularyItemD
     lastReviewedAt: model.lastReviewedAt?.toISOString() ?? null,
     createdAt: model.createdAt.toISOString(),
     updatedAt: model.updatedAt.toISOString(),
-    occurrences: model.occurrences.map((o) => ({
+    occurrences: model.vocabularyOccurrences.map((o) => ({
       id: o.id,
       vocabularyItemId: o.vocabularyItemId,
       sourceId: o.sourceId,
@@ -204,6 +204,6 @@ export function toVocabularySetDto(model: VocabularySetModel): VocabularySetDto 
     periodEnd: model.periodEnd?.toISOString() ?? null,
     createdAt: model.createdAt.toISOString(),
     updatedAt: model.updatedAt.toISOString(),
-    _count: { setItems: model._count.setItems },
+    _count: { vocabularySetItems: model._count.vocabularySetItems },
   };
 }

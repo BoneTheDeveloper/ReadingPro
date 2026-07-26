@@ -37,6 +37,7 @@ export async function prepareUploadAction(
       status: "PENDING",
       sourceType: SourceType.PDF,
       blobPath,
+      updatedAt: new Date(),
     },
   });
 

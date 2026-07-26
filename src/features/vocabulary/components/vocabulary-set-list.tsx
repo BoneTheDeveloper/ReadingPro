@@ -106,7 +106,7 @@ function SetCard({
   colorIndex: number;
 }) {
   const col = SET_COLORS[colorIndex % SET_COLORS.length];
-  const itemCount = set._count.setItems;
+  const itemCount = set._count.vocabularySetItems;
   const knownCount = Math.min(itemCount, Math.floor(itemCount * 0.3));
   const progress =
     itemCount > 0 ? Math.round((knownCount / itemCount) * 100) : 0;

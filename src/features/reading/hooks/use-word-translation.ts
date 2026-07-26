@@ -1,10 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { TranslationDto, TranslationSelection } from "@/features/reading/schemas/translation";
 
-
-let translationRequestCounter = 0;
+import type {
+  TranslationDto,
+  TranslationSelection,
+} from "@/features/reading/schemas/translation";
 
 type TranslationStatus = "idle" | "ready" | "loading" | "success" | "error";
 
@@ -14,11 +15,53 @@ export interface TranslationState {
   status: TranslationStatus;
 }
 
+let translationRequestCounter = 0;
+
+/**
+ * Static lookup the placeholder UI renders. Phase 3 replaces the body of
+ * `translateWord` with a real `fetch("/api/translate", ...)` call.
+ */
+const PLACEHOLDER_LOOKUP: Record<string, TranslationDto> = {
+  priority: {
+    translation: "LÀM",
+    type: "word",
+    ipa: null,
+    provider: "fallback",
+  },
+  gesture: {
+    translation: "cử chỉ",
+    type: "word",
+    ipa: null,
+    provider: "fallback",
+  },
+};
+
+function lookupPlaceholder(selectedText: string): TranslationDto {
+  const key = selectedText.trim().toLowerCase();
+  return (
+    PLACEHOLDER_LOOKUP[key] ?? {
+      translation: null,
+      type: null,
+      ipa: null,
+      provider: "fallback",
+    }
+  );
+}
+
+/**
+ * Phase 2 placeholder translator.
+ *
+ * Flow: `idle` -> `ready` (on selection) -> `loading` (on translate) -> `success` /
+ * `error` (200ms simulated). No fetch goes out. Phase 3 swaps the body of
+ * `translateWord` for a real `fetch` call.
+ */
 export function useWordTranslator(
   passageId: string | null | undefined,
-  viewMode: string
+  viewMode: string,
 ) {
-  const [selectedWordInfo, setSelectedWordInfo] = useState<TranslationSelection | null>(null);
+  const [selectedWordInfo, setSelectedWordInfo] = useState<TranslationSelection | null>(
+    null,
+  );
   const [translationState, setTranslationState] = useState<TranslationState>({
     requestId: 0,
     data: null,
@@ -56,11 +99,7 @@ export function useWordTranslator(
         return;
       }
 
-      const wordCount = sel.selectedText.trim().split(/\s+/).length;
-      if (wordCount > 1) return;
-
       setSelectedWordInfo(sel);
-
       setTranslationState((prev) => ({
         requestId: prev.requestId + 1,
         data: null,
@@ -71,55 +110,27 @@ export function useWordTranslator(
   );
 
   const translateWord = useCallback(() => {
-    if (
-      !selectedWordInfo ||
-      translationState.status === "loading"
-    ) {
+    if (!selectedWordInfo || translationState.status === "loading") {
       return;
     }
 
     const requestId = ++translationRequestCounter;
-    setTranslationState((prev) => ({
-      ...prev,
-      requestId,
-      status: "loading",
-    }));
+    setTranslationState((prev) => ({ ...prev, requestId, status: "loading" }));
 
-    fetch("/api/translate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        text: selectedWordInfo.selectedText,
-        context: selectedWordInfo.contextSentence,
-        sourceId: selectedWordInfo.sourceId,
-        sourceLanguage: "en",
-        targetLanguage: "vi",
-        clientMetrics: selectedWordInfo.clientMetrics,
-      }),
-    })
-      .then(async (r) => {
-        const json: unknown = await r.json();
-        if (!r.ok || !json || typeof json !== "object") {
-          throw new Error("Word translation failed");
-        }
-        const data = json as { translation?: string; provider?: string };
-        if (!data.translation) {
-          throw new Error("Word translation failed");
-        }
-        return data as TranslationDto;
-      })
-      .then((data) => {
-        setTranslationState((prev) => {
-          if (prev.requestId !== requestId) return prev;
-          return { requestId, data, status: "success" };
-        });
-      })
-      .catch(() => {
-        setTranslationState((prev) => {
-          if (prev.requestId !== requestId) return prev;
-          return { requestId, data: null, status: "error" };
-        });
+    // 200ms simulated latency so the skeleton -> success transition is visible.
+    // Phase 3 replaces this timer with a real fetch.
+    const timer = setTimeout(() => {
+      setTranslationState((prev) => {
+        if (prev.requestId !== requestId) return prev;
+        return {
+          requestId,
+          data: lookupPlaceholder(selectedWordInfo.selectedText),
+          status: "success",
+        };
       });
+    }, 200);
+
+    return () => clearTimeout(timer);
   }, [selectedWordInfo, translationState.status]);
 
   return {
@@ -127,5 +138,6 @@ export function useWordTranslator(
     translationState,
     handleWordSelection,
     translateWord,
+    selectionKind: "word" as const,
   };
 }

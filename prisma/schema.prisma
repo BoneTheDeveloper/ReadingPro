@@ -6,9 +6,9 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
-//better-auth-model
+//[better-auth-model]
 
-model account {
+model Account {
   id                    String    @id
   accountId             String
   providerId            String
@@ -22,12 +22,12 @@ model account {
   password              String?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime
-  user                  user      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
 
-model session {
+model Session {
   id        String   @id
   expiresAt DateTime
   token     String   @unique
@@ -36,27 +36,27 @@ model session {
   ipAddress String?
   userAgent String?
   userId    String
-  user      user     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
 
-model user {
-  id               String    @id
+model User {
+  id               String         @id
   name             String
-  email            String    @unique
-  emailVerified    Boolean   @default(false)
+  email            String         @unique
+  emailVerified    Boolean        @default(false)
   image            String?
-  createdAt        DateTime  @default(now())
+  createdAt        DateTime       @default(now())
   updatedAt        DateTime
-  tier             String?   @default("FREE")
+  tier             String?        @default("FREE")
   stripeCustomerId String?
-  account          account[]
-  profiles         profiles?
-  session          session[]
+  accounts         Account[]
+  userProfile      UserProfile?
+  sessions         Session[]
 }
 
-model verification {
+model Verification {
   id         String   @id
   identifier String
   value      String
@@ -67,36 +67,37 @@ model verification {
   @@index([identifier])
 }
 
-//app-model
+//[app-model]
 
-model profiles {
-  id                    String                  @id
-  bio                   String?
-  createdAt             DateTime                @default(now())
-  updatedAt             DateTime
-  file_upload_intents   file_upload_intents[]
-  passages              passages[]
-  user                  user                    @relation(fields: [id], references: [id], onDelete: Cascade)
-  studio_artifacts      studio_artifacts[]
-  study_chat_messages   study_chat_messages[]
-  upload_jobs           upload_jobs[]
-  vocabulary_items      vocabulary_items[]
-  vocabulary_sets       vocabulary_sets[]
+model UserProfile {
+  id                   String                  @id
+  bio                  String?
+  createdAt            DateTime                @default(now())
+  updatedAt            DateTime
+  fileUploadIntents    FileUploadIntent[]
+  passages             Passage[]
+  user                 User                    @relation(fields: [id], references: [id], onDelete: Cascade)
+  studioArtifacts      StudioArtifact[]
+  studyChatMessages    StudyChatMessage[]
+  uploadJobs           UploadJob[]
+  vocabularyItems      VocabularyItem[]
+  vocabularySets       VocabularySet[]
 }
 
-model file_upload_intents {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId    String
-  pathname  String   @unique
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-  profiles  profiles @relation(fields: [userId], references: [id], onDelete: Cascade)
+//upload-model
+model FileUploadIntent {
+  id          String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String
+  pathname    String      @unique
+  expiresAt   DateTime
+  createdAt   DateTime    @default(now())
+  userProfile UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([expiresAt])
   @@index([userId, expiresAt])
 }
 
-model upload_jobs {
+model UploadJob {
   id         String       @id
   userId     String
   status     UploadStatus @default(PENDING)
@@ -106,13 +107,13 @@ model upload_jobs {
   error      String?
   createdAt  DateTime     @default(now())
   updatedAt  DateTime
-  profiles   profiles     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userProfile UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([createdAt])
   @@index([userId, status])
 }
 
-model passages {
+model Passage {
   id                    String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId                String
   title                 String
@@ -125,35 +126,35 @@ model passages {
   createdAt             DateTime                @default(now())
   updatedAt             DateTime
   youtubeUrl            String?
-  profiles              profiles                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  questions             questions[]
-  studio_artifacts      studio_artifacts[]
-  study_chat_messages   study_chat_messages[]
+  userProfile           UserProfile             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questions             Question[]
+  studioArtifacts       StudioArtifact[]
+  studyChatMessages     StudyChatMessage[]
 
   @@index([createdAt])
   @@index([userId, deletedAt])
   @@index([userId])
 }
-
-model studio_artifacts {
-  id           String        @id @db.Uuid
-  passageId    String        @db.Uuid
-  userId       String
-  type         String
-  title        String
-  status       String
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime
-  questions    questions[]
-  question_results question_results?
-  passages     passages      @relation(fields: [passageId], references: [id], onDelete: Cascade)
-  profiles     profiles      @relation(fields: [userId], references: [id], onDelete: Cascade)
+//studio-model
+model StudioArtifact {
+  id               String            @id @db.Uuid
+  passageId        String            @db.Uuid
+  userId           String
+  type             String
+  title            String
+  status           String
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime
+  questions        Question[]
+  questionResult   QuestionResult?
+  passage          Passage           @relation(fields: [passageId], references: [id], onDelete: Cascade)
+  userProfile      UserProfile       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([passageId, createdAt(sort: Desc)])
   @@index([userId])
 }
 
-model questions {
+model Question {
   id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   passageId        String           @db.Uuid
   artifactId       String           @db.Uuid
@@ -166,39 +167,39 @@ model questions {
   questionType     QuestionType     @default(MULTIPLE_CHOICE)
   difficulty       Int              @default(3)
   createdAt        DateTime         @default(now())
-  studio_artifacts studio_artifacts @relation(fields: [artifactId], references: [id], onDelete: Cascade)
-  passages         passages         @relation(fields: [passageId], references: [id], onDelete: Cascade)
+  studioArtifact   StudioArtifact   @relation(fields: [artifactId], references: [id], onDelete: Cascade)
+  passage          Passage          @relation(fields: [passageId], references: [id], onDelete: Cascade)
 
   @@index([artifactId])
   @@index([passageId])
 }
 
-model question_results {
+model QuestionResult {
   id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   artifactId       String           @unique @db.Uuid
   completedAt      DateTime         @default(now())
   correctCount     Int
   totalQuestions   Int
   accuracyRate     Float
-  studio_artifacts studio_artifacts @relation(fields: [artifactId], references: [id], onDelete: Cascade)
+  studioArtifact   StudioArtifact   @relation(fields: [artifactId], references: [id], onDelete: Cascade)
 }
 
 
-model study_chat_messages {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId    String
-  passageId String   @db.Uuid
-  role      String
-  content   String
-  createdAt DateTime @default(now())
-  passages  passages @relation(fields: [passageId], references: [id], onDelete: Cascade)
-  profiles  profiles @relation(fields: [userId], references: [id], onDelete: Cascade)
+model StudyChatMessage {
+  id          String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String
+  passageId   String      @db.Uuid
+  role        String
+  content     String
+  createdAt   DateTime    @default(now())
+  passage     Passage      @relation(fields: [passageId], references: [id], onDelete: Cascade)
+  userProfile UserProfile  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, passageId, createdAt])
 }
 
-
-model vocabulary_items {
+//vocabulary
+model VocabularyItem {
   id                     String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId                 String
   translation            String
@@ -217,40 +218,40 @@ model vocabulary_items {
   dictionarySenseId      String?                  @db.Uuid
   status                 VocabularyStatus         @default(NEW)
   source                 VocabularySourceType     @default(TRANSLATE)
-  profiles               profiles                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-  vocabulary_occurrences vocabulary_occurrences[]
-  vocabulary_set_items   vocabulary_set_items[]
+  userProfile            UserProfile              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vocabularyOccurrences  VocabularyOccurrence[]
+  vocabularySetItems     VocabularySetItem[]
 
   @@unique([userId, normalizedText, targetLanguage, normalizedTranslation])
   @@index([userId, nextReviewAt])
   @@index([userId, status])
 }
 
-model vocabulary_occurrences {
+model VocabularyOccurrence {
   id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   vocabularyItemId String           @db.Uuid
   sourceId         String?          @db.Uuid
   selectedText     String
   contextSentence  String?
   createdAt        DateTime         @default(now())
-  vocabulary_items vocabulary_items @relation(fields: [vocabularyItemId], references: [id], onDelete: Cascade)
+  vocabularyItem   VocabularyItem   @relation(fields: [vocabularyItemId], references: [id], onDelete: Cascade)
 
   @@unique([vocabularyItemId, sourceId, contextSentence])
   @@index([sourceId])
 }
 
-model vocabulary_set_items {
+model VocabularySetItem {
   id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   vocabularySetId  String           @db.Uuid
   vocabularyItemId String           @db.Uuid
   addedAt          DateTime         @default(now())
-  vocabulary_items vocabulary_items @relation(fields: [vocabularyItemId], references: [id], onDelete: Cascade)
-  vocabulary_sets  vocabulary_sets  @relation(fields: [vocabularySetId], references: [id], onDelete: Cascade)
+  vocabularyItem   VocabularyItem   @relation(fields: [vocabularyItemId], references: [id], onDelete: Cascade)
+  vocabularySet    VocabularySet    @relation(fields: [vocabularySetId], references: [id], onDelete: Cascade)
 
   @@unique([vocabularySetId, vocabularyItemId])
 }
 
-model vocabulary_sets {
+model VocabularySet {
   id                   String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId               String
   name                 String
@@ -259,14 +260,14 @@ model vocabulary_sets {
   periodEnd            DateTime?
   createdAt            DateTime               @default(now())
   updatedAt            DateTime
-  vocabulary_set_items vocabulary_set_items[]
-  profiles             profiles               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vocabularySetItems   VocabularySetItem[]
+  userProfile          UserProfile            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, type, periodStart, periodEnd])
   @@index([userId, type])
 }
 
-//enum
+//[enum]
 enum CEFRLevel {
   A1
   A2

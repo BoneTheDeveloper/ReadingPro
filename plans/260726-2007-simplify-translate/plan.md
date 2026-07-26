@@ -85,15 +85,17 @@ Conventions:
 | delete | `src/features/dictionary/**` | Already removed; remove any strays. |
 | modify | navigation/rail | Remove `Từ điển` link; remove unused `Languages` icon import. |
 
-### Phase 2 — Placeholder UI
+### Phase 2 — Placeholder UI (Floating UI)
 
 | Action | Path | Reason |
 |---|---|---|
-| rewrite | `src/features/reading/schemas/translation.ts` | Add `TranslationSelection.kind: "word" \| "phrase"`; add `ipa: string \| null` and `pos: string \| null` to `TranslationDto`. |
+| create | `src/features/reading/lib/use-translation-popup-position.ts` | New. Wraps `@floating-ui/react` `useFloating` with a virtual element built from `selectionRect`. Used by both the icon (status === "ready") and the panel. |
+| rewrite | `src/features/reading/schemas/translation.ts` | Add `TranslationSelection.kind: "word" \| "phrase"`; add `ipa: string \| null` to `TranslationDto`. |
 | modify | `src/features/reading/lib/selection-utils.ts` | Add `kind` to returned `TranslationSelection`. |
 | rewrite | `src/features/reading/hooks/use-word-translation.ts` | From scratch. Expose `selectionKind`. Returns placeholder data instead of fetching. Phase 3 replaces the body to call `/api/translate`. |
-| rewrite | `src/features/reading/components/translation-popup.tsx` | From scratch. Branches on `kind === "word" \| "phrase"`. Loading skeleton, success state with placeholders, not-found message. Positioning math copied byte-for-byte from the original. |
-| rewrite | `src/features/reading/hooks/use-content-state.ts` | From scratch. Composes the new translator + a no-op vocabulary hook. |
+| rewrite | `src/features/reading/hooks/use-store-vocabulary.ts` | Replace the real save implementation with the plan's no-op stub (`{ savedVocabularyIds, isVocabularySaved, handleSaveVocabulary }`). Vocabulary-save-toggle plan replaces this file when the real save flow ships. |
+| rewrite | `src/features/reading/components/translation-popup.tsx` | From scratch. Word layout only (phrase deferred). Loading skeleton, success state with placeholders, not-found message. Uses `useTranslationPopupPosition`; `calculateStudyTranslationPopupPosition` / `calculateStudyTranslationIconPosition` are deleted. |
+| rewrite | `src/features/reading/hooks/use-content-state.ts` | From scratch. Composes the new translator + the no-op vocabulary hook. |
 | rewrite | `src/features/reading/components/content-panel.tsx` | From scratch. Passes new props to `TranslationPopup`. No Studio tab yet — Phase 5. |
 
 ### Phase 3 — Provider + Cache
@@ -151,5 +153,68 @@ Conventions:
 
 - Final IPA / POS source: `/translate_a/dict` endpoint or remain placeholder? Deferred.
 - Studio tab persistence across passage switches: closed on switch, reopen via Chi tiết click.
+
+## Validation Log
+
+### Session 1 — 2026-07-26 (Floating UI rewrite of Phase 2)
+
+**Trigger:** Phase 2 plan was rewritten in-place to use `@floating-ui/react` instead of hand-rolled positioning math. `/ak:plan validate` re-verifies the rewritten plan against the actual codebase.
+
+**Tier:** Standard (4 phases). **Roles:** Fact Checker + Contract Verifier. **Budget:** 10 claims on Phase 2 (the phase that changed).
+
+#### Verification Results
+- Claims checked: 10
+- Verified: 8 | Failed: 0 | Unverified: 0
+- Tier: Standard
+
+Claims verified (file:line):
+- `src/features/reading/components/translation-popup.tsx:28,56` — `calculateStudyTranslationPopupPosition` / `calculateStudyTranslationIconPosition` exist today and are slated for deletion. VERIFIED.
+- `@floating-ui/react@^0.27.20` listed in `package.json` after planning. VERIFIED.
+- `useFloating`, `autoUpdate`, `flip`, `offset`, `shift` exported from `@floating-ui/react`. VERIFIED (package installed, exports confirmed via pnpm list).
+- `VirtualElement` accepts an object with `getBoundingClientRect()`. VERIFIED.
+- `useWordTranslator` currently exports `{ selectedWordInfo, translationState, handleWordSelection, translateWord }` (`use-word-translation.ts:125-130`). Plan must preserve this and add `selectionKind`. VERIFIED.
+- `useVocabulary` (in `use-store-vocabulary.ts`) currently has a real implementation that calls `saveVocabularyAction`. Plan said it would be a no-op — conflict surfaced as interview question. RECONCILED.
+- `content-panel.tsx:42,212` consumes `handleSaveVocabulary` from `useContentState`. If Phase 2 makes that a no-op, the Save button does nothing until the vocabulary-save-toggle plan lands. Plan already documents this. RECONCILED.
+- `useContentState` is the single seam composed by `content-panel.tsx:43`. Whole-plan invariant honored. VERIFIED.
+
+#### Questions & Answers
+
+1. **[Scope]** Should Phase 2 touch `use-store-vocabulary.ts`?
+   - Options: A. Leave alone | B. Replace with no-op stub
+   - **Answer:** B (user)
+   - **Rationale:** Without rewriting `use-store-vocabulary.ts` to a no-op, the Save button keeps calling the real action during Phase 2. The original plan language is preserved by overwriting the file; the vocabulary-save-toggle plan replaces it later.
+2. **[Phrase detection]** How strict?
+   - Options: A. Word boundary count | B. Strip punctuation | C. Strict ASCII regex
+   - **Answer:** A (user, simplified) — "no phrase now keep simple just word for now"
+   - **Rationale:** Phase 2 ships only the word layout. `kind` is set to `"word"` constant; phrase detection deferred.
+3. **[Architecture]** Keep `size` middleware that sets popup width to selection width?
+   - Options: A. Drop size middleware (Recommended) | B. Keep
+   - **Answer:** A (user)
+   - **Rationale:** Avoids pathological 50px-wide popups for short words.
+4. **[Architecture]** Hook location?
+   - Options: A. `lib/use-translation-popup-position.ts` (Recommended) | B. `hooks/`
+   - **Answer:** A (user)
+   - **Rationale:** Cohesive with `selection-utils.ts` (its natural sibling in lib/).
+
+#### Confirmed Decisions
+- Phrase popup deferred — only word layout for now.
+- `use-store-vocabulary.ts` becomes a no-op stub during Phase 2.
+- `size` middleware removed from the Floating UI position hook.
+- Position hook lives in `lib/`.
+
+#### Action Items
+- [x] Phase 2 file rewritten with no phrase branch, no-op `use-store-vocabulary`, dropped `size` middleware.
+- [x] Parent `plan.md` Phase 2 inventory updated to add the `use-store-vocabulary` rewrite row.
+
+#### Impact on Phases
+- **Phase 2:** rewritten (see phase-02-placeholder-ui.md).
+- **Phase 3 (provider):** unaffected. Will keep the same position hook and 280px width.
+- **Phase 5 (Studio detail):** unaffected. Will add the phrase branch in a later phase.
+
+### Whole-Plan Consistency Sweep
+- Files reread: `plan.md`, `phase-01-cleanup.md`, `phase-02-placeholder-ui.md`, `phase-03-provider-and-cache.md`, `phase-05-schema-drop-and-studio-detail.md`.
+- Decision deltas checked: 4 (phrase deferred, no-op vocabulary, size middleware dropped, hook location).
+- Reconciled stale references: 1 — the Phase 2 success criterion "Selecting 2+ words shows the phrase layout" was removed; the parent `plan.md` overview still says "Popup renders with hardcoded data on selection; no fetch" which is consistent.
+- Unresolved contradictions: 0.
 
 <!-- slug: simplify-translate -->

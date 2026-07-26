@@ -7,7 +7,7 @@ import type {
 } from "@/generated/prisma/client";
 
 export type VocabularySetWithCount = VocabularySet & {
-  _count: { setItems: number };
+  _count: { vocabularySetItems: number };
 };
 
 function getPeriodBounds(type: "DAILY" | "WEEKLY"): {
@@ -73,6 +73,7 @@ async function findOrCreateSetByType(
       type,
       periodStart,
       periodEnd,
+      updatedAt: new Date(),
     },
   });
 }
@@ -83,7 +84,7 @@ export async function listVocabularySets(params: {
 }): Promise<VocabularySetWithCount[]> {
   const query: Parameters<typeof prisma.vocabularySet.findMany>[0] = {
     where: { userId: params.userId },
-    include: { _count: { select: { setItems: true } } },
+    include: { _count: { select: { vocabularySetItems: true } } },
     orderBy: { updatedAt: "desc" },
   };
 
@@ -105,8 +106,9 @@ export async function createManualSet(params: {
       type: "MANUAL",
       periodStart: null,
       periodEnd: null,
+      updatedAt: new Date(),
     },
-    include: { _count: { select: { setItems: true } } },
+    include: { _count: { select: { vocabularySetItems: true } } },
   });
 }
 
@@ -126,7 +128,7 @@ export async function updateVocabularySet(params: {
   return prisma.vocabularySet.update({
     where: { id: params.setId },
     data: { name: params.name },
-    include: { _count: { select: { setItems: true } } },
+    include: { _count: { select: { vocabularySetItems: true } } },
   });
 }
 

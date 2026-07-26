@@ -102,6 +102,7 @@ export const processUploadJob = inngest.createFunction(
             filePath: blobPath || undefined,
             youtubeUrl: youtubeUrl || undefined,
             createdAt: new Date(startedAt),
+            updatedAt: new Date(startedAt),
           },
         });
       });

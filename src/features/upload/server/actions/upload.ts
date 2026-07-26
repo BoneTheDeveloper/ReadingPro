@@ -61,6 +61,7 @@ export async function uploadTextAction(input: z.infer<typeof uploadTextRequestSc
       userId,
       status: "PENDING",
       sourceType: SourceType.TEXT,
+      updatedAt: new Date(),
     },
   });
 
@@ -114,6 +115,7 @@ export async function uploadYouTubeAction(
       userId,
       status: "PENDING",
       sourceType: SourceType.YOUTUBE,
+      updatedAt: new Date(),
     },
   });
 

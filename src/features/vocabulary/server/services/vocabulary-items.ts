@@ -57,7 +57,7 @@ export async function saveVocabularyItem(
     "Vocabulary item saved",
   );
 
-  return toVocabularyItemDto({ ...item, occurrences: [] });
+  return toVocabularyItemDto({ ...item, vocabularyOccurrences: [] });
 }
 
 export async function getVocabularyItemList(params: {
@@ -89,7 +89,7 @@ export async function updateVocabularyItemStatus(params: {
   status: VocabularyStatus;
 }): Promise<VocabularyItemDto> {
   const item = await updateVocabularyStatus(params);
-  return toVocabularyItemDto({ ...item, occurrences: [] });
+  return toVocabularyItemDto({ ...item, vocabularyOccurrences: [] });
 }
 
 export async function reviewVocabularyItemById(params: {
@@ -98,7 +98,7 @@ export async function reviewVocabularyItemById(params: {
   isCorrect: boolean;
 }): Promise<VocabularyItemDto> {
   const item = await reviewVocabularyItem(params);
-  return toVocabularyItemDto({ ...item, occurrences: [] });
+  return toVocabularyItemDto({ ...item, vocabularyOccurrences: [] });
 }
 
 export async function deleteVocabularyItemById(params: {

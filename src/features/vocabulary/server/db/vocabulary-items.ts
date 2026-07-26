@@ -1,11 +1,6 @@
 import "server-only";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
-import {
-  findOrCreateDailySet,
-  findOrCreateWeeklySet,
-  addItemToSet,
-} from "@/features/vocabulary/server/db/vocabulary-sets";
 import type { VocabularyStatus, VocabularySourceType } from "@/generated/prisma/enums";
 
 // Text normalization helpers (vocabulary-specific, used locally)
@@ -22,7 +17,7 @@ import type {
 
 
 export interface VocabularyItemWithOccurrences extends VocabularyItem {
-  occurrences: VocabularyOccurrence[];
+  vocabularyOccurrences: VocabularyOccurrence[];
 }
 
 export interface UpsertVocabularyItemParams {
@@ -58,7 +53,6 @@ export async function upsertVocabularyItem(
     update: {
       savedCount: { increment: 1 },
       updatedAt: new Date(),
-      // Preserve status, nextReviewAt, lastReviewedAt on re-save
     },
     create: {
       userId: params.userId,
@@ -74,6 +68,7 @@ export async function upsertVocabularyItem(
       dictionarySenseId: params.dictionarySenseId ?? null,
       status: "NEW",
       savedCount: 1,
+      updatedAt: new Date(),
     },
   });
 
@@ -83,16 +78,6 @@ export async function upsertVocabularyItem(
     params.sourceId,
     params.contextSentence,
   );
-
-  const [dailySet, weeklySet] = await Promise.all([
-    findOrCreateDailySet(params.userId),
-    findOrCreateWeeklySet(params.userId),
-  ]);
-
-  await Promise.all([
-    addItemToSet({ setId: dailySet.id, itemId: item.id }),
-    addItemToSet({ setId: weeklySet.id, itemId: item.id }),
-  ]);
 
   return item;
 }
@@ -151,7 +136,7 @@ export async function listVocabularyItems(params: {
     prisma.vocabularyItem.findMany({
       where,
       include: {
-        occurrences: {
+        vocabularyOccurrences: {
           select: {
             id: true,
             vocabularyItemId: true,

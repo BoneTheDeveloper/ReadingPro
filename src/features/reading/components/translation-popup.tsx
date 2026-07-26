@@ -1,10 +1,15 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Loader2, Languages } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { TranslationSelection, TranslationDto } from "@/features/reading/schemas/translation";
+
+import type {
+  TranslationDto,
+  TranslationSelection,
+} from "@/features/reading/schemas/translation";
+import { useTranslationPopupPosition } from "@/features/reading/lib/use-translation-popup-position";
 
 type QuickTranslationStatus = "idle" | "ready" | "loading" | "success" | "error";
 
@@ -13,68 +18,47 @@ interface TranslationPopupProps {
   translation: TranslationDto | null;
   status: QuickTranslationStatus;
   onTranslate: () => void;
-  onSave: () => void;
-  saved: boolean;
   onDismiss: () => void;
+  /**
+   * Phase 2: the Save button is disabled and does not call onSave. The prop
+   * stays in the interface so `content-panel.tsx` does not need to refactor
+   * when the vocabulary-save-toggle plan replaces the no-op vocabulary hook.
+   * Underscore-prefixed to satisfy the unused-args lint rule.
+   */
+  _onSave?: () => void;
+  _saved?: boolean;
 }
 
 const POPUP_WIDTH = 280;
-const POPUP_OFFSET_Y = 8;
-const POPUP_ESTIMATED_HEIGHT = 120;
-const VIEWPORT_MARGIN = 8;
-const ICON_VIEWPORT_PADDING = 40;
-const CURSOR_ICON_OFFSET = 6;
 
-function calculateStudyTranslationPopupPosition(input: {
-  selectionRect: TranslationSelection["selectionRect"];
-  viewportWidth: number;
-  viewportHeight: number;
-  popupWidth?: number;
-  popupHeight: number;
-  offsetY?: number;
-}) {
-  const {
-    selectionRect, viewportWidth, viewportHeight,
-    popupWidth = POPUP_WIDTH, popupHeight, offsetY = POPUP_OFFSET_Y,
-  } = input;
-  const spaceBelow = viewportHeight - selectionRect.top - selectionRect.height;
-  const showAbove = spaceBelow < popupHeight + offsetY;
-  const unclampedTop = showAbove
-    ? selectionRect.top - popupHeight - offsetY
-    : selectionRect.top + selectionRect.height + offsetY;
-  const maxTop = Math.max(VIEWPORT_MARGIN, viewportHeight - popupHeight - VIEWPORT_MARGIN);
-  return {
-    top: Math.max(VIEWPORT_MARGIN, Math.min(unclampedTop, maxTop)),
-    left: Math.max(VIEWPORT_MARGIN, Math.min(
-      selectionRect.left + selectionRect.width / 2 - popupWidth / 2,
-      viewportWidth - popupWidth - VIEWPORT_MARGIN,
-    )),
-    showAbove,
-  };
-}
-
-function calculateStudyTranslationIconPosition(input: {
-  selectionRect: TranslationSelection["selectionRect"];
-  actionRect?: TranslationSelection["actionRect"];
-  viewportWidth: number;
-}) {
-  const rect = input.actionRect ?? input.selectionRect;
-  const isCursorPoint = rect.width === 0 && rect.height === 0;
-  const iconTop = isCursorPoint ? rect.top + CURSOR_ICON_OFFSET : rect.top + rect.height + 2;
-  const iconLeft = Math.min(
-    rect.left + rect.width + (isCursorPoint ? CURSOR_ICON_OFFSET : -8),
-    input.viewportWidth - ICON_VIEWPORT_PADDING,
-  );
-  return { top: iconTop, left: Math.max(VIEWPORT_MARGIN, iconLeft) };
-}
-
+/**
+ * Phase 2 placeholder popup.
+ *
+ * Positioning is delegated to Floating UI via `useTranslationPopupPosition`,
+ * which anchors a virtual element at the selection rect and handles above/
+ * below flip, viewport shift, and scroll/resize updates. No hand-rolled math.
+ *
+ * Word layout only — phrase layout is deferred.
+ */
 export function TranslationPopup({
-  selection, translation, status, onTranslate, onSave, saved, onDismiss,
+  selection,
+  translation,
+  status,
+  onTranslate,
+  onDismiss,
 }: TranslationPopupProps) {
-  const iconRef = useRef<HTMLButtonElement>(null);
-  const panelRef = useRef<HTMLDivElement>(null);
-  const [panelHeight, setPanelHeight] = useState(POPUP_ESTIMATED_HEIGHT);
+  // Icon (status === "ready") anchors below the selection so the user can
+  // click "Translate". Panel anchors above, flipping to below if no room.
+  const isIcon = status === "ready";
 
+  const { setFloating, floatingStyles } = useTranslationPopupPosition({
+    selection,
+    placement: isIcon ? "bottom-start" : "top",
+    offsetPx: 8,
+    widthPx: POPUP_WIDTH,
+  });
+
+  // Escape dismisses.
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") onDismiss();
@@ -83,35 +67,56 @@ export function TranslationPopup({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [onDismiss]);
 
+  // Outside-click dismisses. Delayed attach so the selection `mouseup` that
+  // opened the popup does not immediately close it.
+  const [armed, setArmed] = useState(false);
   useEffect(() => {
+    const id = window.setTimeout(() => setArmed(true), 100);
+    return () => window.clearTimeout(id);
+  }, []);
+
+  useEffect(() => {
+    if (!armed) return;
     function handleMouseDown(e: MouseEvent) {
-      const el = iconRef.current ?? panelRef.current;
-      if (el && !el.contains(e.target as Node)) onDismiss();
+      const target = e.target as Node | null;
+      const root = document.querySelector("[data-translation-popup-root]");
+      if (target && root && root.contains(target)) return;
+      onDismiss();
     }
-    const timer = setTimeout(() => document.addEventListener("mousedown", handleMouseDown), 100);
-    return () => { clearTimeout(timer); document.removeEventListener("mousedown", handleMouseDown); };
-  }, [onDismiss]);
+    document.addEventListener("mousedown", handleMouseDown);
+    return () => document.removeEventListener("mousedown", handleMouseDown);
+  }, [armed, onDismiss]);
 
-  const rect = selection.selectionRect;
-  const viewportHeight = window.innerHeight;
-  const viewportWidth = document.documentElement.clientWidth;
+  // Not found: render an empty state (no panel / icon).
+  if (
+    status === "success" &&
+    translation &&
+    translation.translation === null
+  ) {
+    return (
+      <div
+        ref={setFloating}
+        data-translation-popup-root
+        className={cn(
+          "fixed z-50 bg-surface border border-border rounded-xl shadow-xl",
+          "px-4 py-3 text-sm text-muted-foreground",
+        )}
+        style={floatingStyles}
+      >
+        Không tìm thấy bản dịch
+      </div>
+    );
+  }
 
-  useLayoutEffect(() => {
-    if (status === "ready") return;
-    const nextHeight = panelRef.current?.getBoundingClientRect().height;
-    if (nextHeight && Math.abs(nextHeight - panelHeight) > 1) setPanelHeight(nextHeight);
-  }, [panelHeight, selection.selectedText, status, translation?.translation, translation?.type]);
-
-  if (status === "ready") {
-    const iconPosition = calculateStudyTranslationIconPosition({
-      selectionRect: rect, actionRect: selection.actionRect, viewportWidth,
-    });
+  // Icon: small floating circle, click triggers translate.
+  if (isIcon) {
     return (
       <button
-        ref={iconRef}
+        ref={setFloating}
         type="button"
         onClick={onTranslate}
         aria-label="Dịch"
+        data-translation-popup-root
         className={cn(
           "fixed z-50 flex items-center justify-center",
           "w-8 h-8 rounded-full",
@@ -119,73 +124,91 @@ export function TranslationPopup({
           "hover:bg-primary/90 active:scale-95",
           "transition-all duration-150",
         )}
-        style={iconPosition}
+        style={floatingStyles}
       >
         <Languages className="w-4 h-4" />
       </button>
     );
   }
 
-  const { top, left } = calculateStudyTranslationPopupPosition({
-    selectionRect: rect, viewportWidth, viewportHeight, popupHeight: panelHeight,
-  });
-
   return (
     <div
-      ref={panelRef}
-      className={cn("fixed z-50 bg-surface border border-border rounded-xl shadow-xl", "w-[340px]")}
-      style={{ top, left }}
+      ref={setFloating}
+      data-translation-popup-root
+      className={cn(
+        "fixed z-50 bg-surface border border-border rounded-xl shadow-xl",
+        "overflow-hidden",
+      )}
+      style={floatingStyles}
     >
       {status === "loading" && (
-        <div className="px-4 py-4 flex items-center gap-2">
-          <Loader2 className="w-4 h-4 text-primary animate-spin" />
-          <span className="text-sm text-muted-foreground">Đang dịch...</span>
+        <div className="px-4 py-4 space-y-2">
+          <div className="flex items-center gap-2">
+            <Loader2 className="w-4 h-4 text-primary animate-spin" />
+            <span className="text-sm text-muted-foreground">Đang dịch...</span>
+          </div>
+          <div className="space-y-1.5">
+            <div className="h-2.5 rounded bg-muted animate-pulse w-4/5" />
+            <div className="h-2.5 rounded bg-muted animate-pulse w-3/5" />
+            <div className="h-2.5 rounded bg-muted animate-pulse w-2/5" />
+          </div>
         </div>
       )}
 
       {status === "error" && (
         <div className="px-4 py-4">
           <p className="text-sm text-destructive py-1">Dịch thất bại</p>
-          <button type="button" className="text-xs text-primary hover:underline" onClick={onTranslate}>
+          <button
+            type="button"
+            className="text-xs text-primary hover:underline"
+            onClick={onTranslate}
+          >
             Thử lại
           </button>
         </div>
       )}
 
-      {status === "success" && translation && (
+      {status === "success" && translation && translation.translation && (
         <>
-          <div className="px-4 pt-4 pb-3 flex items-center gap-3">
-            <p className="text-base font-semibold text-foreground line-clamp-1 flex-1 min-w-0">
+          <div className="px-4 pt-4 pb-2">
+            <p className="text-base font-semibold text-foreground line-clamp-1">
               {selection.selectedText}
             </p>
-            <div className="shrink-0 inline-flex bg-paper border border-border p-[3px]">
-              <button type="button" className="px-3 py-1 text-[12px] font-semibold rounded bg-surface text-primary shadow-sm">US</button>
-              <button type="button" className="px-3 py-1 text-[12px] font-semibold text-muted-foreground">UK</button>
-            </div>
           </div>
           <div className="px-4 pb-3">
-            <p className="text-lg font-semibold text-primary leading-tight">
-              {translation.translation.replace(/^\W+|\W+$/g, "")}
+            <p className="text-lg font-semibold text-primary leading-tight line-clamp-2">
+              {translation.translation}
             </p>
           </div>
-          {translation.type && (
-            <div className="px-4 pb-3">
-              <p className="text-[13px] text-muted-foreground leading-relaxed">{translation.type}</p>
-            </div>
-          )}
+          <div className="px-4 pb-3 space-y-1">
+            <p className="text-[13px] text-muted-foreground">
+              <span className="font-medium">IPA:</span> —
+            </p>
+            <p className="text-[13px] text-muted-foreground">
+              <span className="font-medium">POS:</span> —
+            </p>
+            <p className="text-[13px] text-muted-foreground line-clamp-2">
+              <span className="font-medium">Nghĩa:</span>{" "}
+              {translation.type ?? "—"}
+            </p>
+          </div>
           <div className="h-px bg-border/30 mx-4" />
           <div className="px-4 pt-3 pb-4 flex items-center gap-2">
             <Button
-              variant={saved ? "ghost" : "outline"}
+              variant="outline"
               size="sm"
-              className={cn("h-8 flex-1 text-[13px] font-semibold gap-1.5", saved && "text-muted-foreground")}
-              onClick={saved ? undefined : onSave}
-              disabled={saved}
+              disabled
+              className="h-8 flex-1 text-[13px] font-semibold"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill={saved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="m19 21-7-4-7-4 4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
-              </svg>
-              {saved ? "Đã lưu" : "Lưu"}
+              Lưu
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled
+              className="h-8 text-[13px] font-semibold text-muted-foreground"
+            >
+              Chi tiết
             </Button>
           </div>
         </>
