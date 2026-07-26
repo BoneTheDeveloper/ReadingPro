@@ -35,7 +35,6 @@ Scenario: Cached translation
 ```
 
 **Traceability:** Use case [UC-09](../use-cases.md#uc-09-translate-selection) ·
-Scope: Translation · Tests: [test-scenarios.md](../../Testing/test-scenarios.md)
 
 ---
 

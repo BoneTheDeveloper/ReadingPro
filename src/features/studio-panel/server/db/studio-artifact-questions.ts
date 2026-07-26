@@ -35,7 +35,7 @@ export async function createStudioArtifactWithQuestions(input: {
         id: input.artifactId,
         passageId: input.passageId,
         userId: input.userId,
-        type: "quiz",
+        type: "question",
         title: input.title,
         status: "done",
       },

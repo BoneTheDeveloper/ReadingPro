@@ -37,7 +37,7 @@ export function QuestionDetailView({ artifact, detail, onClose, onRecordResult, 
           collapseLabel="Collapse studio panel"
         />
         <div className="flex-1 overflow-y-auto panel-scroll relative">
-          {artifact.type === "quiz" && detail?.questions ? (
+          {artifact.type === "question" && detail?.questions ? (
             <QuestionContent
               questions={detail.questions}
               passageTitle=""

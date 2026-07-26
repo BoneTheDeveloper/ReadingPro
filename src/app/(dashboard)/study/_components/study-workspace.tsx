@@ -7,7 +7,7 @@ import { ContentPanel } from "@/features/reading/components/content-panel";
 import { StudioPanel } from "@/features/studio-panel/components/studio-panel";
 import { UploadModal } from "@/features/upload/components/model/upload-modal";
 import { useStudioArtifactQuery } from "@/features/studio-panel/hooks/use-studio-artifact-query";
-import { useQuizMutation } from "@/features/studio-panel/hooks/use-quiz-mutation";
+import { useQuestionMutation } from "@/features/studio-panel/hooks/use-question-mutation";
 import { useStudyPanelLayout } from "../_hooks/use-study-panel-layout";
 import { useStudyWorkspaceState } from "../_hooks/use-study-workspace";
 
@@ -37,7 +37,7 @@ export function StudyWorkspace({
     passageId: state.activePassageId,
   });
 
-  const quizMutation = useQuizMutation({
+  const questionMutation = useQuestionMutation({
     passageId: state.activePassageId,
     passages: state.passages,
     setArtifacts: artifactQuery.setArtifacts,
@@ -117,11 +117,11 @@ export function StudyWorkspace({
               artifactDetailById={artifactQuery.artifactDetailById}
               activePassage={activePassage}
               hasActivePassage={!!state.activePassageId}
-              onActionClick={quizMutation.handleActionClick}
+              onActionClick={questionMutation.handleActionClick}
               collapsed={layout.rightPanelCollapsed}
               onToggleCollapse={layout.toggleRight}
-              onRecordQuizResult={quizMutation.handleRecordQuizResult}
-              onResetQuizResult={quizMutation.handleResetQuizResult}
+              onRecordQuestionResult={questionMutation.handleRecordQuestionResult}
+              onResetQuestionResult={questionMutation.handleResetQuestionResult}
             />
           </Panel>
         </Group>

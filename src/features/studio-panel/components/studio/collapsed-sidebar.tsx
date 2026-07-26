@@ -14,7 +14,7 @@ interface CollapsedSidebarProps {
 }
 
 const COLLAPSED_TILES = [
-  { id: "quiz" as StudioActionId, icon: HelpCircle, label: "Câu hỏi" },
+  { id: "question" as StudioActionId, icon: HelpCircle, label: "Câu hỏi" },
   { id: "flashcard" as StudioActionId, icon: Layers, label: "Flashcards" },
   { id: "summary" as StudioActionId, icon: BookOpen, label: "Tóm tắt" },
   { id: "chat" as StudioActionId, icon: MessageCircle, label: "Trò chuyện" },

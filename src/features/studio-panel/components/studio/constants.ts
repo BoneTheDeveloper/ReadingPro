@@ -6,6 +6,6 @@ import type { StudioArtifactType } from "@/features/studio-panel/schemas/studio-
  * lives with the action tiles instead.
  */
 export const ARTIFACT_META: Record<StudioArtifactType, { icon: LucideIcon; label: string }> = {
-  quiz: { icon: HelpCircle, label: "Câu hỏi" },
+  question: { icon: HelpCircle, label: "Câu hỏi" },
   flashcard: { icon: Layers, label: "Flashcards" },
 };

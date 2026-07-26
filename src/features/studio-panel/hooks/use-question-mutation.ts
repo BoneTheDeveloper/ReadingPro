@@ -11,16 +11,16 @@ import type { PassageData } from "@/types/passage";
 
 type SetArtifactsCallback = (updater: (prev: StudioArtifact[]) => StudioArtifact[]) => void;
 
-interface UseQuizMutationOptions {
+interface UseQuestionMutationOptions {
   passageId: string | null | undefined;
   passages: PassageData[] | undefined;
   setArtifacts: SetArtifactsCallback;
   setError: (error: string | null) => void;
 }
 
-export function useQuizMutation({
+export function useQuestionMutation({
   passageId, passages, setArtifacts, setError,
-}: UseQuizMutationOptions) {
+}: UseQuestionMutationOptions) {
   const passageIdRef = useRef(passageId ?? null);
   const passagesRef = useRef(passages);
 
@@ -42,7 +42,7 @@ export function useQuizMutation({
     [updateArtifact, setError],
   );
 
-  const generateQuizArtifact = useCallback(
+  const generateQuestionArtifact = useCallback(
     async (artifactId: string) => {
       const pid = passageIdRef.current;
       if (!pid) return;
@@ -66,28 +66,28 @@ export function useQuizMutation({
       if (!pid) return;
       const passage = passagesRef.current?.find((p) => p.id === pid);
       if (!passage) return;
-      if (actionId !== "quiz") return;
+      if (actionId !== "question") return;
       const artifactId = crypto.randomUUID();
-      const optimistic: StudioArtifact = { id: artifactId, type: "quiz", passageId: pid, title: passage.title, status: "generating", createdAt: new Date().toISOString() };
+      const optimistic: StudioArtifact = { id: artifactId, type: "question", passageId: pid, title: passage.title, status: "generating", createdAt: new Date().toISOString() };
       setArtifacts((prev) => [optimistic, ...prev]);
-      await generateQuizArtifact(artifactId);
+      await generateQuestionArtifact(artifactId);
     },
-    [setArtifacts, generateQuizArtifact],
+    [setArtifacts, generateQuestionArtifact],
   );
 
-  const handleRecordQuizResult = useCallback(
+  const handleRecordQuestionResult = useCallback(
     (artifactId: string, stats: { correctCount: number; totalQuestions: number }) => {
       updateArtifact(artifactId, {
-        quizResult: { completedAt: new Date().toISOString(), correctCount: stats.correctCount, totalQuestions: stats.totalQuestions, accuracyRate: stats.totalQuestions > 0 ? Math.round((stats.correctCount / stats.totalQuestions) * 100) / 100 : 0 },
+        questionResult: { completedAt: new Date().toISOString(), correctCount: stats.correctCount, totalQuestions: stats.totalQuestions, accuracyRate: stats.totalQuestions > 0 ? Math.round((stats.correctCount / stats.totalQuestions) * 100) / 100 : 0 },
       });
     },
     [updateArtifact],
   );
 
-  const handleResetQuizResult = useCallback(
-    (artifactId: string) => { updateArtifact(artifactId, { quizResult: undefined }); },
+  const handleResetQuestionResult = useCallback(
+    (artifactId: string) => { updateArtifact(artifactId, { questionResult: undefined }); },
     [updateArtifact],
   );
 
-  return { handleActionClick, handleRecordQuizResult, handleResetQuizResult };
+  return { handleActionClick, handleRecordQuestionResult, handleResetQuestionResult };
 }

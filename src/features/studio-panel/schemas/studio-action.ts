@@ -1,7 +1,5 @@
 export type StudioActionId =
-  | "quiz"
+  | "question"
   | "flashcard"
   | "summary"
   | "chat"
-  | "mindmap"
-  | "lookup";

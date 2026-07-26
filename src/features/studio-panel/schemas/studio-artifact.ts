@@ -19,10 +19,10 @@ export const recordQuizResultInputSchema = z
 // Types - shared across studio-panel feature
 // ---------------------------------------------------------------------------
 
-export type StudioArtifactType = "quiz" | "flashcard";
+export type StudioArtifactType = "question" | "flashcard";
 export type StudioArtifactStatus = "generating" | "done" | "failed";
 
-interface QuizResult {
+interface QuestionResult {
   completedAt: string;
   correctCount: number;
   totalQuestions: number;
@@ -37,7 +37,7 @@ export interface StudioArtifact {
   status: StudioArtifactStatus;
   createdAt: string;
   updatedAt?: string;
-  quizResult?: QuizResult;
+  questionResult?: QuestionResult;
   errorCode?: StudioArtifactErrorCode;
   errorDetail?: string;
 }

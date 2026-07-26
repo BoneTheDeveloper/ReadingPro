@@ -75,7 +75,7 @@ None. Searched existing plans in `plans/`; no overlap with `260726-1235-direct-p
 - [ ] `ArtifactRow` renders instantly (no `loading` flash) for any passage whose cache is warm.
 - [ ] Manual pass: open `/study`, navigate to `/dashboard`, return to `/study` — list of artifacts for the previously-active passage appears without a server call.
 - [ ] `pnpm typecheck && pnpm lint && pnpm knip` all green.
-- [ ] Quiz mutation flow (start, in-progress, done, record result, delete) still works end-to-end.
+- [ ] Question mutation flow (start, in-progress, done, record result, delete) still works end-to-end.
 
 ## Open Questions
 

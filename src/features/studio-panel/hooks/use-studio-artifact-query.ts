@@ -84,7 +84,6 @@ export function useStudioArtifactQuery({
   );
 
   /**
-   * Mutation setter used by `useQuizMutation`.  Mutates the cache entry
    * in-place and notifies subscribers so all hook instances stay in sync.
    */
   const setArtifacts = useCallback(

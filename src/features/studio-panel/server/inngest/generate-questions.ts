@@ -34,7 +34,7 @@ export const generateQuestionsJob = inngest.createFunction(
     const questionsResult = await step.run("generate-questions", async () => {
       // Idempotency: check if already generated
       const existing = await prisma.studioArtifact.findFirst({
-        where: { passageId, userId, type: "quiz" },
+        where: { passageId, userId, type: "question" },
         select: { id: true },
       });
       if (existing) {
@@ -66,8 +66,8 @@ export const generateQuestionsJob = inngest.createFunction(
           id: artifactId,
           passageId,
           userId,
-          type: "quiz",
-          title: `${passage.title} - Quiz`,
+          type: "question",
+          title: `${passage.title} - Question`,
           status: "READY",
         },
       });

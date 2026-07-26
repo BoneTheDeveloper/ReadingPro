@@ -178,7 +178,7 @@ Active = indigo bg, white text. Hover = indigo border/text.
 |---|---|
 | Navigation | `book-open` (Study), `languages` (Dictionary), `library` (Vocabulary), `bar-chart-3` (Progress), `settings`, `moon` |
 | Sources / Upload | `file-text` (Text), `play-circle` (Video — *note: `youtube` does not exist in this build*), `file` (PDF), `link` (Web), `upload`, `search`, `plus` |
-| Studio | `list-checks` (Quiz), `layers` (Flashcards), `align-left` (Summary), `message-circle` (Chat), `network` (Mind map), `globe` (Translate) |
+| Studio | `list-checks` (Question), `layers` (Flashcards), `align-left` (Summary), `message-circle` (Chat), `network` (Mind map), `globe` (Translate) |
 | Actions | `check`, `x`, `rotate-ccw` (undo), `trash-2`, `download`, `bookmark` (save), `volume-2` (play audio), `chevron-left/right`, `arrow-up` (send) |
 
 Icon color by context: **default** `#221F2B`/`#565160` · **muted** `#908B98` · **active** `#5A4FE0`.

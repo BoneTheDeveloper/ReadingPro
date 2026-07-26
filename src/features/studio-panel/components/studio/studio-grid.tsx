@@ -18,7 +18,7 @@ type TileSpec = {
 };
 
 const STUDIO_GRID_TILES: TileSpec[] = [
-  { id: "quiz", label: "Câu hỏi", icon: HelpCircle, enabled: true },
+  { id: "question", label: "Câu hỏi", icon: HelpCircle, enabled: true },
   { id: "flashcard", label: "Flashcards", icon: Layers, enabled: false },
   { id: "summary", label: "Tóm tắt", icon: BookOpen, enabled: false },
   { id: "chat", label: "Trò chuyện", icon: MessageCircle, enabled: true },

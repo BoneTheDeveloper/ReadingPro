@@ -22,7 +22,7 @@ export function ArtifactRow({ artifact, errorMessage, onClick, onDelete }: Artif
   const Icon = ARTIFACT_META[artifact.type].icon;
   const isGenerating = artifact.status === "generating";
   const isFailed = artifact.status === "failed";
-  const hasResult = artifact.type === "quiz" && artifact.quizResult;
+  const hasResult = artifact.type === "question" && artifact.questionResult;
 
   return (
     <div
@@ -45,7 +45,7 @@ export function ArtifactRow({ artifact, errorMessage, onClick, onDelete }: Artif
         </p>
         {hasResult ? (
           <p className="text-[11px] font-semibold text-success mt-0.5">
-            {artifact.quizResult!.correctCount}/{artifact.quizResult!.totalQuestions} · {Math.round(artifact.quizResult!.accuracyRate * 100)}%
+            {artifact.questionResult!.correctCount}/{artifact.questionResult!.totalQuestions} · {Math.round(artifact.questionResult!.accuracyRate * 100)}%
           </p>
         ) : (
           <p className="text-[11px] text-muted-foreground truncate mt-0.5">

@@ -14,7 +14,6 @@
     "lint": "eslint",
     "postinstall": "prisma generate --generator client",
     "db:generate": "prisma generate --generator client",
-    "db:seed:dictionary": "tsx prisma/seed.ts",
     "dev:inngest": "npx inngest-cli@latest dev"
   },
   "dependencies": {

@@ -25,8 +25,8 @@ interface StudioPanelProps {
   onActionClick: (actionId: StudioActionId) => void;
   collapsed?: boolean;
   onToggleCollapse: () => void;
-  onRecordQuizResult: (artifactId: string, stats: { correctCount: number; totalQuestions: number }) => void;
-  onResetQuizResult: (artifactId: string) => void;
+  onRecordQuesitonResult: (artifactId: string, stats: { correctCount: number; totalQuestions: number }) => void;
+  onResetQuestionResult: (artifactId: string) => void;
   onDeleteArtifact?: (artifactId: string) => void;
   chatPrefill?: string | null;
   onChatPrefillChange?: (prefill: string | null) => void;
@@ -42,8 +42,8 @@ export function StudioPanel({
   onActionClick,
   collapsed = false,
   onToggleCollapse,
-  onRecordQuizResult,
-  onResetQuizResult,
+  onRecordQuestionResult,
+  onResetQuestionResult,
   onDeleteArtifact,
   chatPrefill: chatPrefillProp,
   onChatPrefillChange,
@@ -86,7 +86,7 @@ export function StudioPanel({
 
   const runningCount = artifacts.filter((r) => r.status === "generating").length;
   const isActionLocked = (actionId: StudioActionId) =>
-    actionId === "quiz" && artifacts.some((r) => r.status === "generating" && r.type === "quiz");
+    actionId === "question" && artifacts.some((r) => r.status === "generating" && r.type === "question");
 
   // Route to one of four views based on panel mode.
   if (isChatOpen && chatPassageId) {
@@ -106,8 +106,8 @@ export function StudioPanel({
         artifact={viewingArtifact}
         detail={artifactDetailById[viewingArtifact.id]}
         onClose={closeView}
-        onRecordResult={onRecordQuizResult}
-        onResetResult={onResetQuizResult}
+        onRecordResult={onRecordQuestionResult}
+        onResetResult={onResetQuestionResult}
       />
     );
   }

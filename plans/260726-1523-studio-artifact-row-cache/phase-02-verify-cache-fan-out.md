@@ -11,14 +11,14 @@ dependencies: [1]
 
 ## Overview
 
-Confirm Phase 1's cache behavior end-to-end and resolve the Bug 2 fan-out question. Wrap up with a manual regression pass on the existing quiz mutation flow.
+Confirm Phase 1's cache behavior end-to-end and resolve the Bug 2 fan-out question. Wrap up with a manual regression pass on the existing question mutation flow.
 
 ## Requirements
 
 - Functional:
   - Manual recording of cache hits / misses across navigation patterns.
   - Empirical identification of the fan-out source (if any).
-  - End-to-end pass on quiz creation, in-progress, completion, score recording, and delete.
+  - End-to-end pass on question creation, in-progress, completion, score recording, and delete.
 - Non-functional:
   - No new telemetry beyond a one-shot `Sentry.addBreadcrumb` (removed after diagnosis).
 
@@ -29,7 +29,7 @@ No new architecture. Phase 2 is empirical verification + minimal scoping fix.
 ## Related Code Files
 
 - Modify (data-gathering only, then revert): `src/features/studio-panel/server/services/studio-artifacts.ts`
-- Possibly modify (if fan-out confirmed): `src/features/studio-panel/hooks/use-quiz-mutation.ts`
+- Possibly modify (if fan-out confirmed): `src/features/studio-panel/hooks/use-question-mutation.ts`
 - Read for verification: `src/features/studio-panel/components/studio-panel.tsx`, `src/features/studio-panel/components/studio/default-studio-view.tsx`
 
 ## Implementation Steps
@@ -53,7 +53,7 @@ No new architecture. Phase 2 is empirical verification + minimal scoping fix.
    - If a multi-passage fetch is intentional (e.g., bulk regeneration), keep it but rename the cache key to `bulk:${userId}` and add a comment.
 
 4. **Regression pass**
-   - Start a quiz on a passage; wait for `done`; open the artifact; record a result; delete.
+   - Start a question on a passage; wait for `done`; open the artifact; record a result; delete.
    - Verify mutations update the cache entry in place (no full refetch).
 
 5. **Cleanup**
@@ -65,7 +65,7 @@ No new architecture. Phase 2 is empirical verification + minimal scoping fix.
 - [ ] Cache verification matrix passes all five cases.
 - [ ] Fan-out diagnosis recorded in the phase report (or: "no fan-out found").
 - [ ] If a fan-out was found, the trigger is gated and reproduction no longer triggers it.
-- [ ] Quiz mutation flow works end-to-end without redundant network calls.
+- [ ] Question mutation flow works end-to-end without redundant network calls.
 - [ ] Breadcrumb lines removed; no leftover debug logs.
 
 ## Risk Assessment
