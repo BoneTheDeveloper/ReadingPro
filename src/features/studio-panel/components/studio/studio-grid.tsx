@@ -24,11 +24,6 @@ const STUDIO_GRID_TILES: TileSpec[] = [
   { id: "chat", label: "Trò chuyện", icon: MessageCircle, enabled: true },
 ];
 
-export function isStudioTileEnabled(actionId: StudioActionId): boolean {
-  const tile = STUDIO_GRID_TILES.find((t) => t.id === actionId);
-  return tile?.enabled ?? false;
-}
-
 interface StudioGridProps {
   hasActivePassage: boolean;
   runningCount: number;

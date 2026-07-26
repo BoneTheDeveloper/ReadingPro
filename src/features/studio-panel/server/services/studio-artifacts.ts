@@ -1,4 +1,5 @@
 import "server-only";
+import * as Sentry from "@sentry/nextjs";
 import {
   type StudioArtifact,
   type StudioArtifactType,
@@ -67,6 +68,13 @@ export async function fetchStudioArtifacts(
   userId: string,
   passageId: string,
 ): Promise<{ artifacts: StudioArtifact[] }> {
+  // DIAGNOSTIC BREADCRUMB — phase 2 fan-out trace; remove after diagnosis
+  Sentry.addBreadcrumb({
+    category: "artifact.fetch",
+    message: "fetchStudioArtifacts called",
+    data: { passageId, userId },
+  });
+
   const rows = await findStudioArtifacts(userId, passageId);
 
   return { artifacts: rows.map((row) => toStudioArtifact(row)) };
