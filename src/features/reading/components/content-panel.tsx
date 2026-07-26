@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { FileText, FileSearch, Plus, FileType, Loader2 } from "lucide-react";
+import { useCallback, useEffect, useRef } from "react";
+import { FileText, FileSearch, Plus, FileType } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getCEFRShortLabel } from "@/utils/cefr";
 import { getCEFRBadgeVariant } from "./cefr-badge";
@@ -10,7 +10,6 @@ import { useScrollProgress } from "@/features/reading/hooks/use-scroll-progress"
 import { useContentState } from "@/features/reading/hooks/use-content-state";
 import type { PassageData } from "@/types/passage";
 import { extractSelectionInfo } from "@/features/reading/lib/selection-utils";
-import { getPassageSourceUrlAction } from "@/features/passage-crud/server/actions/passage";
 import { PdfViewer } from "./pdf-viewer";
 import { YouTubeEmbed } from "./youtube-embed";
 import { TranslationPopup } from "./translation-popup";
@@ -37,28 +36,8 @@ export function ContentPanel({
   const contentRef = useRef<HTMLDivElement>(null);
   const selectionStartedInContentRef = useRef(false);
   const progress = useScrollProgress(scrollRef);
-  const [sourceUrl, setSourceUrl] = useState<string | null>(null);
-  const [sourceLoading, setSourceLoading] = useState(false);
-
-  useEffect(() => {
-    if (viewMode !== "pdf" || !passage?.filePath) return;
-
-    const passageId = passage.id;
-    let cancelled = false;
-
-    async function fetchSourceUrl() {
-      setSourceLoading(true);
-      const url = await getPassageSourceUrlAction(passageId);
-      if (!cancelled) {
-        setSourceUrl(url);
-        setSourceLoading(false);
-      }
-    }
-
-    fetchSourceUrl();
-
-    return () => { cancelled = true; };
-  }, [viewMode, passage?.filePath, passage?.id]);
+  const pdfBlobPathname =
+    viewMode === "pdf" && passage?.filePath ? passage.filePath : null;
 
   const updateSelectionFromMouseEvent = useCallback(
     (event: MouseEvent) => {
@@ -177,32 +156,23 @@ export function ContentPanel({
         ref={scrollRef}
         className="flex-1 overflow-y-auto panel-scroll px-8 pt-7 pb-20"
       >
-        {viewMode === "video" && passage.sourceType === "YOUTUBE" ? (
-          <div className="h-full flex flex-col">
-            <YouTubeEmbed url={passage.youtubeUrl ?? ""} />
+        {viewMode === "video" && (
+          <YouTubeEmbed url={passage.youtubeUrl ?? ""} />
+        )}
+        {viewMode === "pdf" && !pdfBlobPathname && (
+          <div className="flex items-center justify-center min-h-[60vh]">
+            <div className="text-center">
+              <FileType className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+              <p className="text-muted-foreground text-sm">
+                Không có tệp nguồn cho bài đọc này
+              </p>
+            </div>
           </div>
-        ) : viewMode === "pdf" && passage.sourceType === "PDF" ? (
-          <div className="h-full flex flex-col">
-            {sourceLoading ? (
-              <div className="flex-1 flex items-center justify-center">
-                <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-              </div>
-            ) : sourceUrl ? (
-              <PdfViewer url={sourceUrl} className="min-h-[60vh]" />
-            ) : (
-              <div className="flex-1 flex items-center justify-center">
-                <div className="text-center">
-                  <FileType className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-                  <p className="text-muted-foreground text-sm">
-                    {passage.filePath
-                      ? "Tệp nguồn không khả dụng"
-                      : "Không có tệp nguồn cho bài đọc này"}
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        ) : (
+        )}
+        {viewMode === "pdf" && pdfBlobPathname && (
+          <PdfViewer blobPathname={pdfBlobPathname} fileName={passage.title} />
+        )}
+        {viewMode === "passage" && (
           <div className="max-w-[66ch] mx-auto">
             <h3 className="font-serif text-[27px] font-semibold text-foreground mb-5 leading-tight">
               {passage.title}

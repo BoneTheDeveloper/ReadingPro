@@ -28,6 +28,8 @@ const csp = {
     "https://vitals.vercel-insights.com",
     // One Tap exchanges the ID token with our auth API.
     "https://accounts.google.com",
+    // Direct browser → Vercel Blob multipart upload.
+    "https://*.blob.vercel-storage.com",
   ].filter(Boolean).join(" "),
   objectSrc: "object-src 'none'",
   baseUri: "base-uri 'self'",
@@ -63,11 +65,7 @@ const nextConfig: NextConfig = {
   // it is not bundled/traced into the server build.
   serverExternalPackages: ["pino", "pino-pretty", "pdf-parse"],
   experimental: {
-    // Raw file uploads flow through a Server Action; the validation cap is 10MB
-    // while the Server Action body default is 1MB.
-    serverActions: {
-      bodySizeLimit: "10mb",
-    },
+    // Vercel Blob direct uploads bypass the Server Action body limit.
   },
   allowedDevOrigins: ["host.docker.internal"],
   turbopack: {

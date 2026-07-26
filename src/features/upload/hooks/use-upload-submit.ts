@@ -2,7 +2,11 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import * as Sentry from "@sentry/nextjs";
-import { uploadFileAction, uploadTextAction, uploadYouTubeAction, getUploadStatus } from "../server/actions/upload";
+import { upload } from "@vercel/blob/client";
+import { prepareUploadAction } from "../server/actions/prepare-upload";
+import { notifyUploadComplete } from "../server/actions/notify-upload-complete";
+import { abortUploadAction } from "../server/actions/abort-upload";
+import { uploadTextAction, uploadYouTubeAction, getUploadStatus } from "../server/actions/upload";
 import type { PassageData } from "@/types/passage";
 
 type UploadStatus = "PENDING" | "PROCESSING" | "DONE" | "FAILED";
@@ -87,26 +91,45 @@ export function useUploadSubmit(options: UseUploadSubmitOptions = {}) {
     async (file: File) => {
       setIsProcessing(true);
       const startedAt = Date.now();
-      const passageId = crypto.randomUUID(); // Client generates UUID for stable key
+      const passageId = crypto.randomUUID();
+      const fileTitle = file.name.replace(/\.(txt|pdf)$/, "");
+
       try {
-        // Send the raw file only — the worker reads it back from storage and
-        // parses it. No client-side text extraction (PDFs can't be read here).
-        const isPdf = file.name.endsWith(".pdf");
-        const fileTitle = file.name.replace(/\.(txt|pdf)$/, "");
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("passageId", passageId); // Client-provided UUID
-        formData.append("title", fileTitle);
-        formData.append("sourceType", isPdf ? "pdf" : "txt");
-        formData.append("startedAt", String(startedAt));
+        // Step 1: Reserve job and pathname (server action — no file bytes sent here)
+        const prep = await prepareUploadAction({
+          passageId,
+          title: fileTitle,
+          startedAt,
+          mimeType: file.type,
+          size: file.size,
+        });
 
-        const result = await uploadFileAction(formData);
+        onUploadStart?.(fileTitle, prep.data.jobId, passageId);
 
-        const jobId = result.data.jobId;
-        onUploadStart?.(fileTitle, jobId, passageId);
+        // Step 2: Upload directly from browser to Vercel Blob
+        try {
+          await upload(prep.data.pathname, file, {
+            access: "private",
+            handleUploadUrl: prep.data.handleUploadUrl,
+            clientPayload: JSON.stringify({ jobId: prep.data.jobId }),
+            multipart: true,
+          });
+        } catch (err) {
+          await abortUploadAction({ jobId: prep.data.jobId }).catch(() => {});
+          throw err;
+        }
 
-        const { passage } = await pollJobStatus(jobId);
-        return { passageId: passage.id, jobId };
+        // Step 3: Signal worker to start processing
+        await notifyUploadComplete({
+          jobId: prep.data.jobId,
+          pathname: prep.data.pathname,
+          title: fileTitle,
+          passageId,
+          startedAt,
+        });
+
+        const { passage } = await pollJobStatus(prep.data.jobId);
+        return { passageId: passage.id, jobId: prep.data.jobId };
       } catch (error) {
         Sentry.captureException(error, { tags: { scope: "upload:file" } });
         setIsProcessing(false);

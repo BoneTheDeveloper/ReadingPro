@@ -5,12 +5,9 @@ import { z } from "zod";
 import { SourceType } from "@/types/passage";
 import { auth } from "@/lib/auth/auth";
 import { prisma } from "@/lib/prisma";
-import { inngest } from "@/infrastructure/inngest";
+import { inngest } from "@/inngest";
 import { createUploadProcessEvent } from "@/features/upload/server/inngest/events";
-import { uploadFile } from "@/infrastructure/storage/index";
 import {
-  validateFile,
-  validateFileContent,
   validateTextContent,
 } from "@/features/upload/lib/upload-validation";
 import { toPassageData, type PassageModel } from "@/types/passage";
@@ -36,117 +33,10 @@ const uploadTextRequestSchema = z
   })
   .strict();
 
-function sourceTypeFromExtension(ext: string): SourceType {
-  const lower = ext.toLowerCase();
-  if (lower === "pdf") return SourceType.PDF;
-  return SourceType.TEXT;
-}
-
 // ---------- ID Generator ----------
 
 function newJobId() {
   return `upload_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
-}
-
-// ---------- File upload (txt / pdf) ----------
-// Client validates for UX, Server validates for SECURITY:
-// - Step 1: Shallow check (same as client) for fast rejection
-// - Step 2: Deep check (magic numbers) to verify actual file content
-//
-// One action, two storage paths decided by extension:
-// - PDF bytes -> Vercel Blob (blobPath used downstream)
-// - TXT bytes -> inlined into the Inngest event (no Blob)
-
-export async function uploadFileAction(formData: FormData) {
-  const file = formData.get("file");
-  if (!(file instanceof File)) {
-    throw new Error("Missing file");
-  }
-
-  const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
-  if (ext !== "pdf" && ext !== "txt") {
-    throw new Error("Only PDF and plain text files are supported.");
-  }
-
-  // Step 1: Shallow validation (fast rejection)
-  const validation = validateFile(file);
-  if (!validation.valid) {
-    throw new Error(validation.error ?? "Invalid file");
-  }
-
-  const passageId = formData.get("passageId") as string;
-  const title = formData.get("title") as string;
-  const startedAt = Number(formData.get("startedAt"));
-
-  if (!passageId || !title || isNaN(startedAt)) {
-    throw new Error("Missing required fields");
-  }
-
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) throw new Error("Authentication required");
-  const userId = session.user.id;
-  const jobId = newJobId();
-  const blobPath = `uploads/${userId}/${passageId}.${ext}`;
-  const sourceType = sourceTypeFromExtension(ext);
-
-  // Job-first: the job exists before any fallible IO
-  await prisma.uploadJob.create({
-    data: {
-      id: jobId,
-      userId,
-      status: "PENDING",
-      sourceType,
-      blobPath,
-    },
-  });
-
-  // These two values are filled inside the try block based on the file kind.
-  // Declared outside so the `inngest.send` below can read them.
-  let resolvedBlobPath: string | undefined;
-  let inlineText: string | undefined;
-
-  try {
-    const buffer = Buffer.from(await file.arrayBuffer());
-
-    // Deep validation - verify actual file content using magic numbers
-    const contentValidation = await validateFileContent(buffer, file.type);
-    if (!contentValidation.valid) {
-      await prisma.uploadJob
-        .update({ where: { id: jobId }, data: { status: "FAILED", error: contentValidation.error } })
-        .catch(() => {});
-      throw new Error(contentValidation.error);
-    }
-
-    // Single condition: kind of file decides where its bytes go.
-    if (ext === "pdf") {
-      const stored = await uploadFile(blobPath, buffer, file.type || "application/octet-stream");
-      if (!stored) throw new Error("Storage upload returned null");
-      resolvedBlobPath = blobPath;
-    } else {
-      inlineText = buffer.toString("utf-8");
-    }
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to store file";
-    await prisma.uploadJob
-      .update({ where: { id: jobId }, data: { status: "FAILED", error: message } })
-      .catch(() => {});
-    throw new Error(message);
-  }
-
-  await inngest.send(
-    createUploadProcessEvent({
-      jobId,
-      userId,
-      blobPath: resolvedBlobPath,
-      text: inlineText,
-      title,
-      sourceType,
-      passageId,
-      startedAt,
-    })
-  );
-
-  return { success: true as const, data: { jobId } };
 }
 
 // ---------- Pasted text ----------

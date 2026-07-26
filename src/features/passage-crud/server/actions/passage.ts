@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth/auth";
 import { deletePassageById, getOwnedPassage } from "@/features/passage-crud";
-import { getViewableUrl } from "@/infrastructure/storage/index";
+import { getViewableUrl } from "@/lib/storage/blob";
 
 export async function deletePassageAction(passageId: string) {
   const session = await auth.api.getSession({ headers: await headers() });

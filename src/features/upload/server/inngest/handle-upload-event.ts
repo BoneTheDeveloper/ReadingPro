@@ -1,4 +1,4 @@
-import { inngest } from "@/infrastructure/inngest/client";
+import { inngest } from "@/inngest/client";
 import { UPLOAD_PROCESS_EVENT } from "./events";
 import { SourceType } from "@/types/passage";
 import { prisma } from "@/lib/prisma";
@@ -9,8 +9,9 @@ import {
   computeWordCount,
   sourceTypeToPassageSourceType,
 } from "@/features/upload/server/services/upload-ai-pipeline";
-import { downloadFile, deleteFile } from "@/infrastructure/storage/index";
+import { downloadFile, deleteFile } from "./blob";
 import { parsePDF } from "@/features/upload/server/services/parsers/pdf-parser";
+import { validateFileContent } from "@/features/upload/lib/upload-validation";
 import type { UploadPipelineInput } from "@/features/upload/server/services/upload-ai-pipeline";
 
 export const processUploadJob = inngest.createFunction(
@@ -56,6 +57,8 @@ export const processUploadJob = inngest.createFunction(
             if (!blobPath) throw new Error("Missing blobPath for PDF upload");
             const buffer = await downloadFile(blobPath);
             if (!buffer) throw new Error("Failed to read uploaded file from storage");
+            const contentValidation = await validateFileContent(buffer, "application/pdf");
+            if (!contentValidation.valid) throw new Error(contentValidation.error ?? "Invalid PDF content");
             const parsed = await parsePDF(buffer);
             return parsed.text;
           }
