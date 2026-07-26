@@ -1,6 +1,17 @@
 "use client";
+import dynamic from "next/dynamic";
 
-import { useCallback, useEffect, useRef } from "react";
+const PdfViewer = dynamic(
+  () => import("./pdf-viewer").then((mod) => mod.PdfViewer),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center min-h-[60vh] text-muted-foreground text-sm">
+        Đang tải PDF...
+      </div>
+    )
+  }
+);import { useCallback, useEffect, useRef } from "react";
 import { FileText, FileSearch, Plus, FileType } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getCEFRShortLabel } from "@/utils/cefr";
@@ -10,7 +21,6 @@ import { useScrollProgress } from "@/features/reading/hooks/use-scroll-progress"
 import { useContentState } from "@/features/reading/hooks/use-content-state";
 import type { PassageData } from "@/types/passage";
 import { extractSelectionInfo } from "@/features/reading/lib/selection-utils";
-import { PdfViewer } from "./pdf-viewer";
 import { YouTubeEmbed } from "./youtube-embed";
 import { TranslationPopup } from "./translation-popup";
 

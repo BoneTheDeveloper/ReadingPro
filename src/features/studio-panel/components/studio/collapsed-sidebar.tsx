@@ -1,6 +1,6 @@
 "use client";
 
-import { HelpCircle, MessageCircle, PanelRight } from "lucide-react";
+import { BookOpen, HelpCircle, Layers, MessageCircle, PanelRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -15,6 +15,8 @@ interface CollapsedSidebarProps {
 
 const COLLAPSED_TILES = [
   { id: "quiz" as StudioActionId, icon: HelpCircle, label: "Câu hỏi" },
+  { id: "flashcard" as StudioActionId, icon: Layers, label: "Flashcards" },
+  { id: "summary" as StudioActionId, icon: BookOpen, label: "Tóm tắt" },
   { id: "chat" as StudioActionId, icon: MessageCircle, label: "Trò chuyện" },
 ] as const;
 
@@ -37,20 +39,10 @@ export function CollapsedSidebar({ hasActivePassage, onToggleCollapse, onSelectC
           {COLLAPSED_TILES.map((tile) => (
             <button
               key={tile.id}
-              onClick={() => {
-                if (!hasActivePassage) return;
-                if (tile.id === "chat") onSelectChat();
-                else onSelectAction(tile.id);
-              }}
-              disabled={!hasActivePassage}
+              onClick={onToggleCollapse}
               title={tile.label}
               aria-label={tile.label}
-              className={cn(
-                "w-11 h-11 rounded-lg flex items-center justify-center transition-colors",
-                hasActivePassage
-                  ? "text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
-                  : "text-muted-foreground/30 cursor-not-allowed",
-              )}
+              className="w-11 h-11 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer transition-colors"
             >
               <tile.icon className="w-5 h-5" />
             </button>

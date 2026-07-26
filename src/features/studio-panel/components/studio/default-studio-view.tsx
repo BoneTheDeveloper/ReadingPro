@@ -3,7 +3,7 @@
 import { PanelRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { StudioGrid, StudioEmptyState } from "./studio-action-tile";
+import { StudioGrid, StudioEmptyState } from "./studio-grid";
 import { ArtifactRow } from "./artifact-row";
 import type { StudioArtifact } from "@/features/studio-panel/schemas/studio-artifact";
 import type { StudioActionId } from "@/features/studio-panel/schemas/studio-action";
@@ -57,12 +57,12 @@ export function DefaultStudioView({
             else onSelectAction(id);
           }}
         />
-        <div className="flex items-center gap-2.5 pt-5 px-4 pb-2">
+        <div className="flex items-center gap-2.5 pt-3 px-4 pb-2">
           <div className="flex-1 h-px bg-border" />
         </div>
         <div className="flex-1 overflow-y-auto panel-scroll px-3 pb-4">
           {artifacts.length > 0 ? (
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 pt-0.25" >
               {artifacts.map((artifact) => (
                 <ArtifactRow
                   key={artifact.id}
