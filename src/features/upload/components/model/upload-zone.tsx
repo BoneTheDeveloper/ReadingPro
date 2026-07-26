@@ -8,13 +8,15 @@ import { UPLOAD_CONFIG } from "@/features/upload/lib/upload-config";
 import { cn } from "@/lib/utils";
 
 interface UploadZoneProps {
-  onFileSelect: (file: File) => void;
+  onTxtSelect: (file: File) => void;
+  onPdfSelect: (file: File) => void;
   disabled?: boolean;
   variant?: "default" | "compact" | "expanded";
 }
 
 export function UploadZone({
-  onFileSelect,
+  onTxtSelect,
+  onPdfSelect,
   disabled,
   variant = "default",
 }: UploadZoneProps) {
@@ -37,15 +39,22 @@ export function UploadZone({
       }
 
       if (acceptedFiles.length > 0) {
-        const validation = validateFile(acceptedFiles[0]);
+        const file = acceptedFiles[0];
+        const validation = validateFile(file);
         if (!validation.valid) {
           setError(validation.error);
           return;
         }
-        onFileSelect(acceptedFiles[0]);
+        // Route by extension/MIME — TXT goes to the text path,
+        // PDF goes to the blob path. They never share a callback.
+        if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) {
+          onPdfSelect(file);
+        } else {
+          onTxtSelect(file);
+        }
       }
     },
-    [onFileSelect]
+    [onTxtSelect, onPdfSelect]
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({

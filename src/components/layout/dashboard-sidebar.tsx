@@ -12,6 +12,12 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { AuthControls } from "./auth-controls";
 import type { AuthSession } from "@/lib/auth/types";
 
@@ -57,13 +63,14 @@ export function DashboardSidebar({ children, user }: DashboardSidebarProps) {
   );
 
   return (
-    <div className="h-dvh flex bg-background overflow-hidden">
-      <aside
-        style={{ width: RAIL_WIDTH_PX }}
-        className="hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 bg-rail items-center py-5 z-40"
-      >
-        <SidebarContent isActive={isActive} user={user} />
-      </aside>
+    <TooltipProvider delayDuration={150}>
+      <div className="h-dvh flex bg-background overflow-hidden">
+        <aside
+          style={{ width: RAIL_WIDTH_PX }}
+          className="hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 bg-rail items-center py-5 z-40"
+        >
+          <SidebarContent isActive={isActive} user={user} />
+        </aside>
 
       {mobileOpen && (
         <div
@@ -96,15 +103,20 @@ export function DashboardSidebar({ children, user }: DashboardSidebarProps) {
 
       <div className="lg:hidden flex-1 flex flex-col h-dvh overflow-hidden">
         <header className="lg:hidden sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-border px-4 py-3 flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setMobileOpen(true)}
-            className="-ml-1.5"
-            aria-label="Open menu"
-          >
-            <Menu className="w-5 h-5" />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setMobileOpen(true)}
+                className="-ml-1.5"
+                aria-label="Open menu"
+              >
+                <Menu className="w-5 h-5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Open menu</TooltipContent>
+          </Tooltip>
           <GraduationCap className="w-5 h-5 text-primary" />
           <span className="font-semibold text-foreground text-sm">
             English Reading
@@ -117,7 +129,8 @@ export function DashboardSidebar({ children, user }: DashboardSidebarProps) {
           {children}
         </main>
       </div>
-    </div>
+      </div>
+    </TooltipProvider>
   );
 }
 
@@ -144,20 +157,23 @@ function SidebarContent({
         {navItems.map((item) => {
           const active = isActive(item.href);
           return (
-            <Link
-              key={item.href}
-              href={item.href}
-              aria-label={item.label}
-              title={item.label}
-              className={cn(
-                "w-10 h-10 flex justify-center items-center rounded-[13px] transition-all",
-                active
-                  ? "bg-white/[0.14] text-white"
-                  : "text-white/60 hover:text-white hover:bg-white/[0.08]",
-              )}
-            >
-              <item.icon className="w-5 h-5" strokeWidth={1.75} />
-            </Link>
+            <Tooltip key={item.href}>
+              <TooltipTrigger asChild>
+                <Link
+                  href={item.href}
+                  aria-label={item.label}
+                  className={cn(
+                    "w-10 h-10 flex justify-center items-center rounded-[13px] transition-all",
+                    active
+                      ? "bg-white/[0.14] text-white"
+                      : "text-white/60 hover:text-white hover:bg-white/[0.08]",
+                  )}
+                >
+                  <item.icon className="w-5 h-5" strokeWidth={1.75} />
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side="right">{item.label}</TooltipContent>
+            </Tooltip>
           );
         })}
       </nav>

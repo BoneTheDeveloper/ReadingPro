@@ -11,7 +11,6 @@
 <!-- Commands run, screenshots, or manual checks. -->
 
 - [ ] `pnpm typecheck`
-- [ ] `pnpm test`
 - [ ] `pnpm lint`
 
 ## Checklist

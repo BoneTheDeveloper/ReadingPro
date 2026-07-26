@@ -61,7 +61,6 @@ export function YouTubeInput({ onSubmit }: YouTubeInputProps) {
             type="button"
             onClick={handlePaste}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-            title="Dán từ clipboard"
           >
             <Clipboard className="w-4 h-4" />
           </button>

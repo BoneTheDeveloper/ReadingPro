@@ -44,12 +44,19 @@ function SourceButton({ icon: Icon, label, desc, onClick, disabled }: {
 
 export function UploadModal({ isOpen, onClose, onUploadStart, onUploadComplete, onUploadError }: UploadModalProps) {
   const [activeMode, setActiveMode] = useState<InputMode>(null);
-  const { handleFileUpload, handleTextSubmit, handleYouTubeSubmit } = useUploadSubmit({ onUploadStart, onComplete: onUploadComplete, onError: onUploadError });
+  const { handlePdfUpload, handleTxtUpload, handleTextSubmit, handleYouTubeSubmit } = useUploadSubmit({ onUploadStart, onComplete: onUploadComplete, onError: onUploadError });
 
-  const handleFileUploadWrapper = async (file: File) => {
+  const handlePdfSelect = async (file: File) => {
     onClose();
     try {
-      await handleFileUpload(file);
+      await handlePdfUpload(file);
+    } catch {}
+  };
+
+  const handleTxtSelect = async (file: File) => {
+    onClose();
+    try {
+      await handleTxtUpload(file);
     } catch {}
   };
 
@@ -90,7 +97,7 @@ export function UploadModal({ isOpen, onClose, onUploadStart, onUploadComplete, 
         <div className="px-5 pb-5 pt-1 flex-1 overflow-y-auto">
           {activeMode === null && (
             <>
-              <UploadZone onFileSelect={handleFileUploadWrapper} variant="compact" />
+              <UploadZone onTxtSelect={handleTxtSelect} onPdfSelect={handlePdfSelect} variant="compact" />
               <div className="grid grid-cols-2 gap-3 mt-5">
                 <SourceButton icon={PlayCircle} label="YouTube" onClick={() => handleModeChange("youtube")} />
                 <SourceButton icon={Type} label="Dán văn bản" onClick={() => handleModeChange("paste-text")} />

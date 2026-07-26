@@ -1,6 +1,11 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import {
+  Avatar,
+  AvatarImage,
+  AvatarFallback,
+} from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -12,7 +17,6 @@ import {
 import { User, LogOut, Settings } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { authClient } from "@/lib/auth/auth-client";
 import type { AuthSession } from "@/lib/auth/types";
 
@@ -74,23 +78,21 @@ export function AuthControls({
           variant="ghost"
           className={cn("rounded-full gap-2", isRail ? "w-10 h-10 p-0" : "px-3")}
         >
-          {user.image ? (
-            <Image
-              src={user.image}
-              alt={user.name || "User avatar"}
-              width={36}
-              height={36}
-              className="rounded-full object-cover"
-            />
-          ) : (
-            <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center uppercase">
+          <Avatar className="w-9 h-9">
+            {user.image ? (
+              <AvatarImage
+                src={user.image}
+                alt={user.name || "User avatar"}
+              />
+            ) : null}
+            <AvatarFallback className="uppercase">
               {user.name ? (
-                <span className="text-sm font-medium">{user.name[0]}</span>
+                user.name[0]
               ) : (
                 <User className="w-4 h-4" />
               )}
-            </div>
-          )}
+            </AvatarFallback>
+          </Avatar>
         </Button>
       </DropdownMenuTrigger>
 

@@ -87,12 +87,69 @@ export function useUploadSubmit(options: UseUploadSubmitOptions = {}) {
     [clearPoll, onComplete]
   );
 
-  const handleFileUpload = useCallback(
+  const handleTextSubmitInternal = useCallback(
+    async ({
+      text,
+      title,
+      scope,
+    }: {
+      text: string;
+      title: string;
+      scope: "upload:text" | "upload:txt";
+    }) => {
+      setIsProcessing(true);
+      const startedAt = Date.now();
+      const passageId = crypto.randomUUID(); // Client generates UUID for stable key
+      try {
+        const result = await uploadTextAction({
+          passageId, // Client-provided UUID
+          title,
+          text,
+          startedAt,
+        });
+
+        const jobId = result.data.jobId;
+        onUploadStart?.(title, jobId, passageId);
+
+        const { passage } = await pollJobStatus(jobId);
+        return { passageId: passage.id, jobId };
+      } catch (error) {
+        Sentry.captureException(error, { tags: { scope } });
+        setIsProcessing(false);
+        onError?.(
+          error instanceof Error ? error.message : "Upload failed",
+          undefined,
+          passageId
+        );
+        throw error;
+      }
+    },
+    [pollJobStatus, onUploadStart, onError]
+  );
+
+  // TXT files mirror the pasted-text path: read content, send inline as text.
+  // No blob, no PDF parser — the worker treats it as a TEXT source.
+  const handleTxtUpload = useCallback(
+    async (file: File) => {
+      const text = await file.text();
+      const fileTitle = file.name.replace(/\.txt$/, "");
+      return handleTextSubmitInternal({ text, title: fileTitle, scope: "upload:txt" });
+    },
+    [handleTextSubmitInternal]
+  );
+
+  const handleTextSubmit = useCallback(
+    async (text: string) =>
+      handleTextSubmitInternal({ text, title: "Pasted Text", scope: "upload:text" }),
+    [handleTextSubmitInternal]
+  );
+
+  const handlePdfUpload = useCallback(
     async (file: File) => {
       setIsProcessing(true);
       const startedAt = Date.now();
       const passageId = crypto.randomUUID();
-      const fileTitle = file.name.replace(/\.(txt|pdf)$/, "");
+      const fileTitle = file.name.replace(/\.pdf$/, "");
 
       try {
         // Step 1: Reserve job and pathname (server action — no file bytes sent here)
@@ -131,39 +188,7 @@ export function useUploadSubmit(options: UseUploadSubmitOptions = {}) {
         const { passage } = await pollJobStatus(prep.data.jobId);
         return { passageId: passage.id, jobId: prep.data.jobId };
       } catch (error) {
-        Sentry.captureException(error, { tags: { scope: "upload:file" } });
-        setIsProcessing(false);
-        onError?.(
-          error instanceof Error ? error.message : "Upload failed",
-          undefined,
-          passageId
-        );
-        throw error;
-      }
-    },
-    [pollJobStatus, onUploadStart, onError]
-  );
-
-  const handleTextSubmit = useCallback(
-    async (text: string) => {
-      setIsProcessing(true);
-      const startedAt = Date.now();
-      const passageId = crypto.randomUUID(); // Client generates UUID for stable key
-      try {
-        const result = await uploadTextAction({
-          passageId, // Client-provided UUID
-          title: "Pasted Text",
-          text,
-          startedAt,
-        });
-
-        const jobId = result.data.jobId;
-        onUploadStart?.("Pasted Text", jobId, passageId);
-
-        const { passage } = await pollJobStatus(jobId);
-        return { passageId: passage.id, jobId };
-      } catch (error) {
-        Sentry.captureException(error, { tags: { scope: "upload:text" } });
+        Sentry.captureException(error, { tags: { scope: "upload:pdf" } });
         setIsProcessing(false);
         onError?.(
           error instanceof Error ? error.message : "Upload failed",
@@ -211,7 +236,8 @@ export function useUploadSubmit(options: UseUploadSubmitOptions = {}) {
   return {
     isProcessing,
     uploadProgress,
-    handleFileUpload,
+    handlePdfUpload,
+    handleTxtUpload,
     handleTextSubmit,
     handleYouTubeSubmit,
   };
