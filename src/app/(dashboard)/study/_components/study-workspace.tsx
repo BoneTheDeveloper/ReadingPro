@@ -30,6 +30,7 @@ export function StudyWorkspace({
     handleUploadComplete,
     handleUploadError,
     handleDeletePassage,
+    handleClearUploadError,
   } = useStudyWorkspaceState(initialPassages);
 
   const artifactQuery = useStudioArtifactQuery({
@@ -76,6 +77,8 @@ export function StudyWorkspace({
               onDelete={handleDeletePassage}
               collapsed={layout.leftPanelCollapsed}
               onToggleCollapse={layout.toggleLeft}
+              uploadError={state.uploadError}
+              onClearUploadError={handleClearUploadError}
             />
           </Panel>
 

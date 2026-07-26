@@ -12,6 +12,7 @@ import {
 } from "@/features/upload/lib/upload-validation";
 import { toPassageData, type PassageModel } from "@/types/passage";
 import { extractVideoId, isValidYouTubeUrl } from "@/utils/youtube-url";
+import { fetchTranscript } from "../services/parsers/youtube-transcript";
 
 // ---------- Schema & Helpers ----------
 
@@ -96,15 +97,10 @@ export async function uploadYouTubeAction(
     throw new Error("Could not extract video ID");
   }
 
-  // Step 2: Get transcript from cache (validated on paste)
-  const { getCachedTranscriptForUpload } = await import("./check-youtube-transcript");
-  const transcript = await getCachedTranscriptForUpload(videoId);
-
+  // Validate transcript availability before creating job
+  const transcript = await fetchTranscript(videoId);
   if (!transcript) {
-    // Fallback: user submitted without validation OR cache expired
-    throw new Error(
-      "Please validate the video before uploading (transcript may have expired)"
-    );
+    throw new Error("Video này không có phụ đề. Hãy thử video khác có phụ đề tiếng Anh.");
   }
 
   const session = await auth.api.getSession({ headers: await headers() });
@@ -112,7 +108,6 @@ export async function uploadYouTubeAction(
   const userId = session.user.id;
   const jobId = newJobId();
 
-  // Create job
   await prisma.uploadJob.create({
     data: {
       id: jobId,
@@ -122,7 +117,6 @@ export async function uploadYouTubeAction(
     },
   });
 
-  // Send event with transcript for immediate processing
   await inngest.send(
     createUploadProcessEvent({
       jobId,

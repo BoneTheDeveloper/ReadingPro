@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { PlayCircle, Clipboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { isValidYouTubeUrl, extractVideoId } from "@/utils/youtube-url";
-import { checkTranscriptAvailability } from "@/features/upload/server/actions/check-youtube-transcript";
+import { isValidYouTubeUrl } from "@/utils/youtube-url";
 
 interface YouTubeInputProps {
   onSubmit: (url: string) => Promise<void>;
@@ -14,35 +13,16 @@ interface YouTubeInputProps {
 export function YouTubeInput({ onSubmit }: YouTubeInputProps) {
   const [url, setUrl] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [isValidating, setIsValidating] = useState(false);
-  const [isTranscriptValid, setIsTranscriptValid] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isUrlFormatValid = useMemo(() => url.trim().length > 0 && isValidYouTubeUrl(url), [url]);
-
-  useEffect(() => {
-    if (!isUrlFormatValid) return;
-    const videoId = extractVideoId(url);
-    if (!videoId) return;
-    const delayDebounceFn = setTimeout(async () => {
-      const result = await checkTranscriptAvailability(videoId);
-      if (result.success) { setIsTranscriptValid(true); setError(null); }
-      else { setIsTranscriptValid(false); setError(result.message ?? "Không thể xác thực video"); }
-      setIsValidating(false);
-    }, 800);
-    return () => clearTimeout(delayDebounceFn);
-  }, [url, isUrlFormatValid]);
 
   const handlePaste = async () => {
     try {
       const text = await navigator.clipboard.readText();
       if (!text) return;
-      // Paste goes through the same flow as typing so the debounced
-      // transcript validation can confirm the URL before the user submits.
-      const isFormatValid = text.trim().length > 0 && isValidYouTubeUrl(text);
       setUrl(text);
       setError(null);
-      setIsTranscriptValid(false);
-      setIsValidating(isFormatValid);
     } catch {}
   };
 
@@ -52,16 +32,15 @@ export function YouTubeInput({ onSubmit }: YouTubeInputProps) {
       setError("URL YouTube không hợp lệ");
       return;
     }
-    if (isValidating) {
-      setError("Đang xác thực video, vui lòng đợi…");
-      return;
-    }
-    if (!isTranscriptValid) {
-      setError("Không thể xác thực video này. Hãy thử video khác có phụ đề.");
-      return;
-    }
     setError(null);
-    try { await onSubmit(url); } catch (err) { setError(err instanceof Error ? err.message : "Tải lên thất bại"); }
+    setIsSubmitting(true);
+    try {
+      await onSubmit(url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Tải lên thất bại");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -75,24 +54,24 @@ export function YouTubeInput({ onSubmit }: YouTubeInputProps) {
             type="url"
             placeholder="Nhập URL YouTube"
             value={url}
-            onChange={(e) => {
-              const newUrl = e.target.value;
-              const isFormatValid = newUrl.trim().length > 0 && isValidYouTubeUrl(newUrl);
-              setUrl(newUrl); setError(null); setIsTranscriptValid(false); setIsValidating(isFormatValid);
-            }}
+            onChange={(e) => { setUrl(e.target.value); setError(null); }}
             className="pl-10 pr-10"
           />
-          {isValidating ? (
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
-          ) : (
-            <button type="button" onClick={handlePaste} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors" title="Dán từ clipboard">
-              <Clipboard className="w-4 h-4" />
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={handlePaste}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+            title="Dán từ clipboard"
+          >
+            <Clipboard className="w-4 h-4" />
+          </button>
         </div>
+        <p className="text-xs text-muted-foreground">
+          Chức năng chỉ hỗ trợ video có phụ đề.
+        </p>
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
-      <Button type="submit" disabled={!isUrlFormatValid || !isTranscriptValid || isValidating} className="w-full">
+      <Button type="submit" disabled={!isUrlFormatValid || isSubmitting} className="w-full">
         Thêm
       </Button>
     </form>

@@ -44,48 +44,35 @@ function SourceButton({ icon: Icon, label, desc, onClick, disabled }: {
 
 export function UploadModal({ isOpen, onClose, onUploadStart, onUploadComplete, onUploadError }: UploadModalProps) {
   const [activeMode, setActiveMode] = useState<InputMode>(null);
-  const [error, setError] = useState<string | null>(null);
   const { handleFileUpload, handleTextSubmit, handleYouTubeSubmit } = useUploadSubmit({ onUploadStart, onComplete: onUploadComplete, onError: onUploadError });
 
   const handleFileUploadWrapper = async (file: File) => {
-    setError(null);
+    onClose();
     try {
       await handleFileUpload(file);
-      onClose();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Tải lên thất bại");
-    }
+    } catch {}
   };
 
   const handleTextSubmitWrapper = async (text: string) => {
     if (!text.trim()) return;
-    setError(null);
+    onClose();
     try {
       await handleTextSubmit(text);
-      onClose();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Tải lên thất bại");
-    }
+    } catch {}
   };
 
   const handleYouTubeSubmitWrapper = async (url: string) => {
     if (!url.trim()) return;
-    setError(null);
+    onClose();
     try {
       await handleYouTubeSubmit(url);
-      onClose();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Tải lên thất bại");
-    }
+    } catch {}
   };
 
-  const handleBack = () => { setError(null); setActiveMode(null); };
-  const handleClose = () => { setError(null); setActiveMode(null); onClose(); };
+  const handleBack = () => { setActiveMode(null); };
+  const handleClose = () => { setActiveMode(null); onClose(); };
 
-  // Switching input modes must drop the previous section's error so it
-  // doesn't bleed into the new section under the user's attention.
   const handleModeChange = (next: InputMode) => {
-    setError(null);
     setActiveMode(next);
   };
 
@@ -125,9 +112,6 @@ export function UploadModal({ isOpen, onClose, onUploadStart, onUploadComplete, 
               </Button>
               <YouTubeInput onSubmit={handleYouTubeSubmitWrapper} />
             </div>
-          )}
-          {error && (
-            <div className="mt-4 p-3 bg-danger-soft border border-destructive/20 rounded-lg text-destructive text-sm">{error}</div>
           )}
         </div>
       </DialogContent>

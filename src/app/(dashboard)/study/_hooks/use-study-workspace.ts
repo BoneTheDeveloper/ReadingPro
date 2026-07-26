@@ -19,6 +19,7 @@ export interface StudyState {
   status: StudyStatus;
   error: string | null;
   uploadModalOpen: boolean;
+  uploadError: string | null;
 }
 
 function getMostRecentPassageId(passages: PassageData[]): string | null {
@@ -42,6 +43,7 @@ export function useStudyWorkspaceState(initialPassages: PassageData[]) {
       status: initialId ? "ready" : "idle",
       error: null,
       uploadModalOpen: false,
+      uploadError: null,
     };
   });
   const [isUploading, setIsUploading] = useState(false);
@@ -80,12 +82,13 @@ export function useStudyWorkspaceState(initialPassages: PassageData[]) {
       ...prev,
       activePassageId: id,
       status: "ready",
+      uploadError: null,
     }));
   }, []);
 
   const handleOpenUploadModal = useCallback(() => {
     if (isUploading) return;
-    setState((prev) => ({ ...prev, uploadModalOpen: true }));
+    setState((prev) => ({ ...prev, uploadModalOpen: true, uploadError: null }));
   }, [isUploading]);
 
   const handleCloseUploadModal = useCallback(() => {
@@ -148,8 +151,7 @@ export function useStudyWorkspaceState(initialPassages: PassageData[]) {
           passages: prev.passages.filter((p) => p.id !== passageId),
         }));
       }
-      // UploadModal owns upload errors and keeps them beside the upload controls.
-      // Do not copy them into workspace state, where they would render in the reader.
+      setState((prev) => ({ ...prev, uploadError: error }));
       setIsUploading(false);
       setUploadingFileName("");
     },
@@ -169,12 +171,14 @@ export function useStudyWorkspaceState(initialPassages: PassageData[]) {
               activePassageId: replacementId,
               status: replacementId ? "ready" : "idle",
               error: null,
+              uploadError: null,
             };
           }
           return {
             ...prev,
             passages: remaining,
             error: null,
+            uploadError: null,
           };
         });
         try {
@@ -191,6 +195,10 @@ export function useStudyWorkspaceState(initialPassages: PassageData[]) {
     [],
   );
 
+  const handleClearUploadError = useCallback(() => {
+    setState((prev) => ({ ...prev, uploadError: null }));
+  }, []);
+
   return {
     state,
     setState,
@@ -205,5 +213,6 @@ export function useStudyWorkspaceState(initialPassages: PassageData[]) {
     handleUploadComplete,
     handleUploadError,
     handleDeletePassage,
+    handleClearUploadError,
   };
 }
