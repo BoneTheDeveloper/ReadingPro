@@ -11,7 +11,7 @@ const PdfViewer = dynamic(
       </div>
     )
   }
-);import { useCallback, useEffect, useRef } from "react";
+);import { useCallback, useEffect, useRef, useState } from "react";
 import { FileText, FileSearch, Plus, FileType } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getCEFRShortLabel } from "@/utils/cefr";
@@ -20,7 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { useScrollProgress } from "@/features/reading/hooks/use-scroll-progress";
 import { useContentState } from "@/features/reading/hooks/use-content-state";
 import type { PassageData } from "@/types/passage";
-import { extractSelectionInfo } from "@/features/reading/lib/selection-utils";
+import { extractSelectionInfo, type SelectionRect } from "@/features/reading/lib/selection-utils";
 import { YouTubeEmbed } from "./youtube-embed";
 import { TranslationPopup } from "./translation-popup";
 
@@ -45,19 +45,25 @@ export function ContentPanel({
   const scrollRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const selectionStartedInContentRef = useRef(false);
+  const [selectionRect, setSelectionRect] = useState<SelectionRect | null>(null);
   const progress = useScrollProgress(scrollRef);
   const pdfBlobPathname =
     viewMode === "pdf" && passage?.filePath ? passage.filePath : null;
 
   const updateSelectionFromMouseEvent = useCallback(
-    (event: MouseEvent) => {
+    (_event: MouseEvent) => {
       if (!passage) return;
       const info = extractSelectionInfo({
         contentRef,
         sourceId: passage.id,
-        cursorPoint: { x: event.clientX, y: event.clientY },
       });
-      handleWordSelection(info);
+      if (!info) {
+        handleWordSelection(null);
+        setSelectionRect(null);
+        return;
+      }
+      setSelectionRect(info.rect);
+      handleWordSelection(info.word);
     },
     [passage, handleWordSelection],
   );
@@ -203,15 +209,19 @@ export function ContentPanel({
         )}
       </div>
 
-      {selectedWordInfo && passage && (
+      {selectedWordInfo && selectionRect && passage && (
         <TranslationPopup
-          selection={selectedWordInfo}
+          word={selectedWordInfo}
+          anchorRect={selectionRect}
           translation={translationState.data}
           status={translationState.status}
           onTranslate={translateWord}
           _onSave={handleSaveVocabulary}
           _saved={isVocabularySaved}
-          onDismiss={() => handleWordSelection(null)}
+          onDismiss={() => {
+            handleWordSelection(null);
+            setSelectionRect(null);
+          }}
         />
       )}
     </div>

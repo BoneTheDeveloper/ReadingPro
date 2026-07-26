@@ -1,6 +1,6 @@
 import type {
   TranslationDto,
-  TranslationSelection,
+  WordSelection,
 } from "@/features/reading/schemas/translation";
 
 /**
@@ -9,7 +9,7 @@ import type {
  * vocabulary-save-toggle plan replaces this file when the real save flow ships.
  */
 export function useVocabulary(
-  _selectedWordInfo: TranslationSelection | null,
+  _selectedWordInfo: WordSelection | null,
   _translationData: TranslationDto | null,
 ) {
   return {

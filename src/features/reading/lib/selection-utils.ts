@@ -1,39 +1,33 @@
-import type { TranslationSelection } from "@/features/reading/schemas/translation";
+import type { WordSelection } from "@/features/reading/schemas/translation";
 
-type SelectionRect = TranslationSelection["selectionRect"];
-type SelectionPoint = { x: number; y: number };
-
-const CURSOR_SELECTION_ANCHOR_TOLERANCE = 48;
-const WORD_BOUNDARY = /\s+/;
-
-/**
- * Count whitespace-separated tokens in a string. Empty input returns 0;
- * whitespace-only input returns 0 (split on `\s+` collapses to a single empty
- * token that we filter out).
- */
-function countWords(text: string): number {
-  if (!text) return 0;
-  const tokens = text.trim().split(WORD_BOUNDARY).filter(Boolean);
-  return tokens.length;
-}
+/** DOMRect-shaped geometry. Consumed by Floating UI as a virtual reference. */
+export type SelectionRect = {
+  top: number;
+  left: number;
+  width: number;
+  height: number;
+};
 
 interface ExtractSelectionInput {
   contentRef: React.RefObject<HTMLDivElement | null>;
   sourceId: string;
   targetLanguage?: "vi";
-  cursorPoint?: SelectionPoint;
+}
+
+export interface ExtractedSelection {
+  word: WordSelection;
+  rect: SelectionRect;
 }
 
 /**
- * Extracts the current browser text selection and surrounding context paragraph
- * from a reading content container. Returns null if no meaningful selection exists.
+ * Extracts the current browser text selection and its bounding rect from a
+ * reading content container. Returns null if no meaningful selection exists.
  */
 export function extractSelectionInfo({
   contentRef,
   sourceId,
   targetLanguage = "vi",
-  cursorPoint,
-}: ExtractSelectionInput): TranslationSelection | null {
+}: ExtractSelectionInput): ExtractedSelection | null {
   const container = contentRef.current;
   if (!container) return null;
 
@@ -52,94 +46,15 @@ export function extractSelectionInfo({
   // Find closest <p> ancestor for context sentence
   const contextSentence = extractContextParagraph(range);
 
-  // Get selection geometry for popup positioning.
-  const clientRects = getVisibleSelectionRects(range);
-  const rect = getSelectionBoundingRect(range, clientRects);
-  if (!isVisibleSelectionRect(rect)) return null;
-
   return {
-    selectedText,
-    selectionRect: {
-      top: rect.top,
-      left: rect.left,
-      width: rect.width,
-      height: rect.height,
+    word: {
+      selectedText,
+      contextSentence,
+      sourceId,
+      targetLanguage,
     },
-    actionRect: calculateSelectionActionRect({
-      selectionRect: rect,
-      clientRects,
-      isBackward: isSelectionBackward(selection),
-      cursorPoint,
-    }),
-    contextSentence,
-    sourceId,
-    targetLanguage,
-    // Phase 2: only the word popup ships; phrase detection is deferred. Set
-    // the discriminator constant here so Phase 5 can branch without a schema
-    // migration.
-    kind: "word",
-    clientMetrics: {
-      wordsBeforeSelected: countWordsBeforeSelection(container, range),
-    },
+    rect: rectFromDOMRect(range.getBoundingClientRect()),
   };
-}
-
-function calculateCursorActionRect(
-  cursorPoint: SelectionPoint,
-): SelectionRect {
-  return {
-    top: cursorPoint.y,
-    left: cursorPoint.x,
-    width: 0,
-    height: 0,
-  };
-}
-
-function calculateSelectionActionRect(input: {
-  selectionRect: SelectionRect;
-  clientRects: SelectionRect[];
-  isBackward: boolean;
-  cursorPoint?: SelectionPoint;
-}): SelectionRect {
-  const visibleRects = input.clientRects.filter(isVisibleSelectionRect);
-
-  if (
-    input.cursorPoint &&
-    isCursorPointNearSelection(
-      input.cursorPoint,
-      visibleRects,
-      input.selectionRect,
-    )
-  ) {
-    return calculateCursorActionRect(input.cursorPoint);
-  }
-
-  const edgeRect = input.isBackward ? visibleRects[0] : visibleRects.at(-1);
-
-  if (!edgeRect) return input.selectionRect;
-
-  return {
-    top: edgeRect.top,
-    left: input.isBackward ? edgeRect.left : edgeRect.left + edgeRect.width,
-    width: 0,
-    height: edgeRect.height || input.selectionRect.height,
-  };
-}
-
-function isCursorPointNearSelection(
-  point: SelectionPoint,
-  clientRects: SelectionRect[],
-  selectionRect: SelectionRect,
-) {
-  const rects = clientRects.length > 0 ? clientRects : [selectionRect];
-
-  return rects.some(
-    (rect) =>
-      point.x >= rect.left - CURSOR_SELECTION_ANCHOR_TOLERANCE &&
-      point.x <= rect.left + rect.width + CURSOR_SELECTION_ANCHOR_TOLERANCE &&
-      point.y >= rect.top - CURSOR_SELECTION_ANCHOR_TOLERANCE &&
-      point.y <= rect.top + rect.height + CURSOR_SELECTION_ANCHOR_TOLERANCE,
-  );
 }
 
 function extractContextParagraph(range: Range): string {
@@ -166,49 +81,6 @@ function extractContextParagraph(range: Range): string {
   return "";
 }
 
-function countWordsBeforeSelection(container: HTMLElement, range: Range) {
-  const beforeSelectionRange = document.createRange();
-  beforeSelectionRange.setStart(container, 0);
-  beforeSelectionRange.setEnd(range.startContainer, range.startOffset);
-
-  const wordsBeforeSelection = countWords(beforeSelectionRange.toString());
-  beforeSelectionRange.detach();
-
-  return wordsBeforeSelection;
-}
-
-function getVisibleSelectionRects(range: Range): SelectionRect[] {
-  return Array.from(range.getClientRects())
-    .map(rectFromDOMRect)
-    .filter(isVisibleSelectionRect);
-}
-
-function getSelectionBoundingRect(
-  range: Range,
-  clientRects: SelectionRect[],
-): SelectionRect {
-  const rect = rectFromDOMRect(range.getBoundingClientRect());
-  if (isVisibleSelectionRect(rect)) return rect;
-
-  if (clientRects.length === 0) return rect;
-
-  const left = Math.min(...clientRects.map((clientRect) => clientRect.left));
-  const top = Math.min(...clientRects.map((clientRect) => clientRect.top));
-  const right = Math.max(
-    ...clientRects.map((clientRect) => clientRect.left + clientRect.width),
-  );
-  const bottom = Math.max(
-    ...clientRects.map((clientRect) => clientRect.top + clientRect.height),
-  );
-
-  return {
-    top,
-    left,
-    width: right - left,
-    height: bottom - top,
-  };
-}
-
 function rectFromDOMRect(rect: DOMRect): SelectionRect {
   return {
     top: rect.top,
@@ -216,18 +88,4 @@ function rectFromDOMRect(rect: DOMRect): SelectionRect {
     width: rect.width,
     height: rect.height,
   };
-}
-
-function isVisibleSelectionRect(rect: SelectionRect) {
-  return rect.width > 0 || rect.height > 0;
-}
-
-function isSelectionBackward(selection: Selection) {
-  if (!selection.anchorNode || !selection.focusNode) return false;
-
-  const directionRange = document.createRange();
-  directionRange.setStart(selection.anchorNode, selection.anchorOffset);
-  directionRange.setEnd(selection.focusNode, selection.focusOffset);
-
-  return directionRange.collapsed;
 }

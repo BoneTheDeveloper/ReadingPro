@@ -23,7 +23,6 @@ export async function executeTranslate(
     ok: true,
     data: {
       translation: "placeholder",
-      type: null,
       ipa: null,
       provider: "fallback",
     },

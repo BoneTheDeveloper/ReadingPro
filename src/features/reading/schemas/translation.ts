@@ -1,28 +1,17 @@
-type SelectionRect = {
-  top: number;
-  left: number;
-  width: number;
-  height: number;
-};
-
-type ClientMetrics = {
-  wordsBeforeSelected: number;
-};
-
-export type TranslationSelection = {
+/**
+ * Data-only shape of a selected word, passed from the browser selection event
+ * through the hook state into the popup. Positioning data lives separately in
+ * `selection-utils.ts` so the popup can attach it as a Floating UI reference.
+ */
+export type WordSelection = {
   selectedText: string;
-  selectionRect: SelectionRect;
-  actionRect?: SelectionRect;
   contextSentence: string;
   sourceId: string;
   targetLanguage: "vi";
-  kind: "word" | "phrase";
-  clientMetrics?: ClientMetrics;
 };
 
 export type TranslationDto = {
   translation: string | null;
-  type: "word" | "phrase" | null;
   ipa: string | null;
   provider: "cache" | "fallback" | "google_translate";
 };

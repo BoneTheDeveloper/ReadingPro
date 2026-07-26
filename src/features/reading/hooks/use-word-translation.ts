@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import type {
   TranslationDto,
-  TranslationSelection,
+  WordSelection,
 } from "@/features/reading/schemas/translation";
 
 type TranslationStatus = "idle" | "ready" | "loading" | "success" | "error";
@@ -24,13 +24,11 @@ let translationRequestCounter = 0;
 const PLACEHOLDER_LOOKUP: Record<string, TranslationDto> = {
   priority: {
     translation: "LÀM",
-    type: "word",
     ipa: null,
     provider: "fallback",
   },
   gesture: {
     translation: "cử chỉ",
-    type: "word",
     ipa: null,
     provider: "fallback",
   },
@@ -41,7 +39,6 @@ function lookupPlaceholder(selectedText: string): TranslationDto {
   return (
     PLACEHOLDER_LOOKUP[key] ?? {
       translation: null,
-      type: null,
       ipa: null,
       provider: "fallback",
     }
@@ -59,7 +56,7 @@ export function useWordTranslator(
   passageId: string | null | undefined,
   viewMode: string,
 ) {
-  const [selectedWordInfo, setSelectedWordInfo] = useState<TranslationSelection | null>(
+  const [selectedWordInfo, setSelectedWordInfo] = useState<WordSelection | null>(
     null,
   );
   const [translationState, setTranslationState] = useState<TranslationState>({
@@ -88,7 +85,7 @@ export function useWordTranslator(
   }, [passageId, viewMode]);
 
   const handleWordSelection = useCallback(
-    (sel: TranslationSelection | null) => {
+    (sel: WordSelection | null) => {
       if (!sel) {
         setSelectedWordInfo(null);
         setTranslationState((prev) => ({
@@ -138,6 +135,5 @@ export function useWordTranslator(
     translationState,
     handleWordSelection,
     translateWord,
-    selectionKind: "word" as const,
   };
 }
