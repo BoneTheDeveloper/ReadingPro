@@ -3,7 +3,6 @@
 import { BookOpen, HelpCircle, Layers, MessageCircle, PanelRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import type { StudioActionId } from "@/features/studio-panel/schemas/studio-action";
 
 interface CollapsedSidebarProps {
@@ -20,7 +19,7 @@ const COLLAPSED_TILES = [
   { id: "chat" as StudioActionId, icon: MessageCircle, label: "Trò chuyện" },
 ] as const;
 
-export function CollapsedSidebar({ hasActivePassage, onToggleCollapse, onSelectChat, onSelectAction }: CollapsedSidebarProps) {
+export function CollapsedSidebar({  onToggleCollapse}: CollapsedSidebarProps) {
   return (
     <Card className="h-full flex flex-col overflow-hidden bg-panel rounded-none">
       <CardContent className="p-0 flex flex-col h-full items-center">
