@@ -6,6 +6,7 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+//better-auth-model
 
 model account {
   id                    String    @id
@@ -26,6 +27,62 @@ model account {
   @@index([userId])
 }
 
+model session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      user     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model user {
+  id               String    @id
+  name             String
+  email            String    @unique
+  emailVerified    Boolean   @default(false)
+  image            String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime
+  tier             String?   @default("FREE")
+  stripeCustomerId String?
+  account          account[]
+  profiles         profiles?
+  session          session[]
+}
+
+model verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime
+
+  @@index([identifier])
+}
+
+//app-model
+
+model profiles {
+  id                    String                  @id
+  bio                   String?
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime
+  file_upload_intents   file_upload_intents[]
+  passages              passages[]
+  user                  user                    @relation(fields: [id], references: [id], onDelete: Cascade)
+  studio_artifacts      studio_artifacts[]
+  study_chat_messages   study_chat_messages[]
+  upload_jobs           upload_jobs[]
+  vocabulary_items      vocabulary_items[]
+  vocabulary_sets       vocabulary_sets[]
+}
 
 model file_upload_intents {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -37,6 +94,22 @@ model file_upload_intents {
 
   @@index([expiresAt])
   @@index([userId, expiresAt])
+}
+
+model upload_jobs {
+  id         String       @id
+  userId     String
+  status     UploadStatus @default(PENDING)
+  sourceType String
+  blobPath   String?
+  passageId  String?
+  error      String?
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime
+  profiles   profiles     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@index([userId, status])
 }
 
 model passages {
@@ -62,19 +135,22 @@ model passages {
   @@index([userId])
 }
 
-model profiles {
-  id                    String                  @id
-  bio                   String?
-  createdAt             DateTime                @default(now())
-  updatedAt             DateTime
-  file_upload_intents   file_upload_intents[]
-  passages              passages[]
-  user                  user                    @relation(fields: [id], references: [id], onDelete: Cascade)
-  studio_artifacts      studio_artifacts[]
-  study_chat_messages   study_chat_messages[]
-  upload_jobs           upload_jobs[]
-  vocabulary_items      vocabulary_items[]
-  vocabulary_sets       vocabulary_sets[]
+model studio_artifacts {
+  id           String        @id @db.Uuid
+  passageId    String        @db.Uuid
+  userId       String
+  type         String
+  title        String
+  status       String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime
+  questions    questions[]
+  question_results question_results?
+  passages     passages      @relation(fields: [passageId], references: [id], onDelete: Cascade)
+  profiles     profiles      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([passageId, createdAt(sort: Desc)])
+  @@index([userId])
 }
 
 model questions {
@@ -107,37 +183,6 @@ model question_results {
   studio_artifacts studio_artifacts @relation(fields: [artifactId], references: [id], onDelete: Cascade)
 }
 
-model session {
-  id        String   @id
-  expiresAt DateTime
-  token     String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime
-  ipAddress String?
-  userAgent String?
-  userId    String
-  user      user     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-}
-
-model studio_artifacts {
-  id           String        @id @db.Uuid
-  passageId    String        @db.Uuid
-  userId       String
-  type         String
-  title        String
-  status       String
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime
-  questions    questions[]
-  question_results question_results?
-  passages     passages      @relation(fields: [passageId], references: [id], onDelete: Cascade)
-  profiles     profiles      @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([passageId, createdAt(sort: Desc)])
-  @@index([userId])
-}
 
 model study_chat_messages {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -152,47 +197,6 @@ model study_chat_messages {
   @@index([userId, passageId, createdAt])
 }
 
-model upload_jobs {
-  id         String       @id
-  userId     String
-  status     UploadStatus @default(PENDING)
-  sourceType String
-  blobPath   String?
-  passageId  String?
-  error      String?
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime
-  profiles   profiles     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([createdAt])
-  @@index([userId, status])
-}
-
-model user {
-  id               String    @id
-  name             String
-  email            String    @unique
-  emailVerified    Boolean   @default(false)
-  image            String?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime
-  tier             String?   @default("FREE")
-  stripeCustomerId String?
-  account          account[]
-  profiles         profiles?
-  session          session[]
-}
-
-model verification {
-  id         String   @id
-  identifier String
-  value      String
-  expiresAt  DateTime
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime
-
-  @@index([identifier])
-}
 
 model vocabulary_items {
   id                     String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -262,6 +266,7 @@ model vocabulary_sets {
   @@index([userId, type])
 }
 
+//enum
 enum CEFRLevel {
   A1
   A2

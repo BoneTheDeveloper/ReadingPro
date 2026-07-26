@@ -25,7 +25,7 @@ interface StudioPanelProps {
   onActionClick: (actionId: StudioActionId) => void;
   collapsed?: boolean;
   onToggleCollapse: () => void;
-  onRecordQuesitonResult: (artifactId: string, stats: { correctCount: number; totalQuestions: number }) => void;
+  onRecordQuestionResult: (artifactId: string, stats: { correctCount: number; totalQuestions: number }) => void;
   onResetQuestionResult: (artifactId: string) => void;
   onDeleteArtifact?: (artifactId: string) => void;
   chatPrefill?: string | null;

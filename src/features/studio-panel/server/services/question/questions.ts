@@ -190,7 +190,7 @@ function rowToArtifact(row: {
   status: string;
   createdAt: Date;
   updatedAt: Date;
-  quizResult?: {
+  questionResult?: {
     completedAt: Date;
     correctCount: number;
     totalQuestions: number;
@@ -205,12 +205,12 @@ function rowToArtifact(row: {
     status: row.status as StudioArtifactStatus,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
-    quizResult: row.quizResult
+    questionResult: row.questionResult
       ? {
-          completedAt: row.quizResult.completedAt.toISOString(),
-          correctCount: row.quizResult.correctCount,
-          totalQuestions: row.quizResult.totalQuestions,
-          accuracyRate: row.quizResult.accuracyRate,
+          completedAt: row.questionResult.completedAt.toISOString(),
+          correctCount: row.questionResult.correctCount,
+          totalQuestions: row.questionResult.totalQuestions,
+          accuracyRate: row.questionResult.accuracyRate,
         }
       : undefined,
   };

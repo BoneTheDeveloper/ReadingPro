@@ -10,7 +10,7 @@ export async function findExistingStudioArtifact(
 ) {
   return prisma.studioArtifact.findUnique({
     where: { id: artifactId, userId },
-    include: { quizResult: true, questions: { orderBy: { createdAt: "asc" } } },
+    include: { questionResult: true, questions: { orderBy: { createdAt: "asc" } } },
   });
 }
 
@@ -39,7 +39,7 @@ export async function createStudioArtifactWithQuestions(input: {
         title: input.title,
         status: "done",
       },
-      include: { quizResult: true },
+      include: { questionResult: true },
     });
     await tx.question.createMany({
       data: input.questions.map((q) => ({

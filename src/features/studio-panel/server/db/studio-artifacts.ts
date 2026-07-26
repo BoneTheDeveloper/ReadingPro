@@ -5,7 +5,7 @@ export async function findStudioArtifacts(userId: string, passageId: string) {
   return prisma.studioArtifact.findMany({
     where: { passageId, userId },
     orderBy: { createdAt: "desc" },
-    include: { quizResult: true },
+    include: { questionResult: true },
   });
 }
 
@@ -23,7 +23,7 @@ export async function upsertQuizResult(
   artifactId: string,
   stats: { correctCount: number; totalQuestions: number; accuracyRate: number },
 ) {
-  return prisma.quizResult.upsert({
+  return prisma.questionResult.upsert({
     where: { artifactId },
     create: {
       artifactId,
@@ -41,7 +41,7 @@ export async function upsertQuizResult(
 }
 
 export async function deleteQuizResults(artifactId: string) {
-  return prisma.quizResult.deleteMany({
+  return prisma.questionResult.deleteMany({
     where: { artifactId },
   });
 }
