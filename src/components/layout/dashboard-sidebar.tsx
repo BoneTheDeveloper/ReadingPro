@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   BookOpen,
-  BookMarked,
   GraduationCap,
   Library,
   Menu,
@@ -28,7 +27,6 @@ const RAIL_WIDTH_PX = 62;
 const navItems = [
   { href: "/study", label: "Học tập", icon: BookOpen },
   { href: "/vocabulary", label: "Từ vựng", icon: Library },
-  { href: "/dictionary", label: "Từ điển", icon: BookMarked },
 ];
 
 interface DashboardSidebarProps {
@@ -53,9 +51,6 @@ export function DashboardSidebar({ children, user }: DashboardSidebarProps) {
       }
       if (href === "/vocabulary") {
         return pathname === "/vocabulary";
-      }
-      if (href === "/dictionary") {
-        return pathname === "/dictionary";
       }
       return pathname.startsWith(href);
     },

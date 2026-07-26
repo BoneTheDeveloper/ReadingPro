@@ -1,10 +1,21 @@
 import type { TranslationSelection } from "@/features/reading/schemas/translation";
-import { countWords } from "./text-utils";
 
 type SelectionRect = TranslationSelection["selectionRect"];
 type SelectionPoint = { x: number; y: number };
 
 const CURSOR_SELECTION_ANCHOR_TOLERANCE = 48;
+const WORD_BOUNDARY = /\s+/;
+
+/**
+ * Count whitespace-separated tokens in a string. Empty input returns 0;
+ * whitespace-only input returns 0 (split on `\s+` collapses to a single empty
+ * token that we filter out).
+ */
+function countWords(text: string): number {
+  if (!text) return 0;
+  const tokens = text.trim().split(WORD_BOUNDARY).filter(Boolean);
+  return tokens.length;
+}
 
 interface ExtractSelectionInput {
   contentRef: React.RefObject<HTMLDivElement | null>;
