@@ -20,7 +20,6 @@ import { Badge } from "@/components/ui/badge";
 import { useScrollProgress } from "@/features/reading/hooks/use-scroll-progress";
 import { useContentState } from "@/features/reading/hooks/use-content-state";
 import type { PassageData } from "@/types/passage";
-import { extractSelectionInfo, type SelectionRect } from "@/features/reading/lib/selection-utils";
 import { YouTubeEmbed } from "./youtube-embed";
 import { TranslationPopup } from "./translation-popup";
 
@@ -36,59 +35,18 @@ export function ContentPanel({
     setViewMode,
     selectedWordInfo,
     translationState,
-    isVocabularySaved,
-    handleWordSelection,
     translateWord,
-    handleSaveVocabulary,
   } = useContentState({ passageId: passage?.id });
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
-  const selectionStartedInContentRef = useRef(false);
-  const [selectionRect, setSelectionRect] = useState<SelectionRect | null>(null);
   const progress = useScrollProgress(scrollRef);
   const pdfBlobPathname =
     viewMode === "pdf" && passage?.filePath ? passage.filePath : null;
 
-  const updateSelectionFromMouseEvent = useCallback(
-    (_event: MouseEvent) => {
-      if (!passage) return;
-      const info = extractSelectionInfo({
-        contentRef,
-        sourceId: passage.id,
-      });
-      if (!info) {
-        handleWordSelection(null);
-        setSelectionRect(null);
-        return;
-      }
-      setSelectionRect(info.rect);
-      handleWordSelection(info.word);
-    },
-    [passage, handleWordSelection],
-  );
 
-  useEffect(() => {
-    function handleDocumentMouseUp(event: MouseEvent) {
-      if (!selectionStartedInContentRef.current) return;
-      selectionStartedInContentRef.current = false;
-      updateSelectionFromMouseEvent(event);
-    }
-    document.addEventListener("mouseup", handleDocumentMouseUp);
-    return () => document.removeEventListener("mouseup", handleDocumentMouseUp);
-  }, [updateSelectionFromMouseEvent]);
 
-  const handleContentMouseUp = useCallback(
-    (event: React.MouseEvent<HTMLDivElement>) => {
-      if (selectionStartedInContentRef.current) return;
-      updateSelectionFromMouseEvent(event.nativeEvent);
-    },
-    [updateSelectionFromMouseEvent],
-  );
 
-  const handleContentMouseDown = useCallback(() => {
-    selectionStartedInContentRef.current = true;
-  }, []);
 
   if (!passage) {
     return (
@@ -196,8 +154,6 @@ export function ContentPanel({
             <div
               ref={contentRef}
               className="reading-content text-foreground"
-              onMouseDown={handleContentMouseDown}
-              onMouseUp={handleContentMouseUp}
             >
               {passage.content.split("\n\n").map((paragraph, i) => (
                 <p key={i} className="mb-6 last:mb-0">
@@ -208,22 +164,6 @@ export function ContentPanel({
           </div>
         )}
       </div>
-
-      {selectedWordInfo && selectionRect && passage && (
-        <TranslationPopup
-          word={selectedWordInfo}
-          anchorRect={selectionRect}
-          translation={translationState.data}
-          status={translationState.status}
-          onTranslate={translateWord}
-          _onSave={handleSaveVocabulary}
-          _saved={isVocabularySaved}
-          onDismiss={() => {
-            handleWordSelection(null);
-            setSelectionRect(null);
-          }}
-        />
-      )}
     </div>
   );
 }
