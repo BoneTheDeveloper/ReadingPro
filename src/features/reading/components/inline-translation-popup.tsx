@@ -46,12 +46,7 @@ export function InlineTranslationPopup({
     ],
     whileElementsMounted: autoUpdate,
   });
-  // Floating UI exposes callback setters through `refs`; these do not read a
-  // ref's `.current` value during render. React's refs lint rule cannot
-  // distinguish this documented API from a mutable ref access.
-  // eslint-disable-next-line react-hooks/refs
   const setFloating = refs.setFloating;
-  // eslint-disable-next-line react-hooks/refs
   const setPositionReference = refs.setPositionReference;
 
   const virtualReference = useMemo(
@@ -66,7 +61,6 @@ export function InlineTranslationPopup({
 
   useEffect(() => {
     setPositionReference(virtualReference);
-    // Floating UI callback setter; not a mutable-ref read.
     // eslint-disable-next-line react-hooks/refs
   }, [setPositionReference, virtualReference]);
 

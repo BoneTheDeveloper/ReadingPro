@@ -7,13 +7,13 @@ import { inngest } from "@/inngest/client";
 import { prisma } from "@/lib/prisma";
 import { step } from "inngest";
 import { generateComprehensionQuestions } from "../services/question/question-generator";
-import { GENERATE_QUESTIONS_EVENT, type GenerateQuestionsEventData } from "./events";
+import { GENERATE_QUESTIONS_EVENT, generateQuestionsEventSchema, type GenerateQuestionsEventData } from "./events";
 
 export const generateQuestionsJob = inngest.createFunction(
   {
     id: "generate-questions",
     name: "Generate Questions",
-    triggers: [{ event: GENERATE_QUESTIONS_EVENT }],
+    triggers: [{ event: GENERATE_QUESTIONS_EVENT, schema: generateQuestionsEventSchema }],
   },
   async ({ event }: { event: { data: GenerateQuestionsEventData } }) => {
     const { passageId, userId, questionCount = 5 } = event.data;

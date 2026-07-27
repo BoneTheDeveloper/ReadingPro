@@ -1,5 +1,5 @@
 import "server-only";
-import { openai, getModel, wrapUserText } from "@/infrastructure/ai";
+import { openai, getModel, wrapUserText } from "@/lib/ai";
 import { convertToModelMessages, streamText } from "ai";
 import { prisma } from "@/lib/prisma";
 import { moduleLog } from "@/lib/logger";
@@ -94,7 +94,7 @@ export async function streamStudyChat(params: {
     ${passageContent}
   `);
 
-  const modelId = getModel("chat");
+  const modelId = getModel("studio.chat");
 
   log.info(
     {

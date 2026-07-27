@@ -1,6 +1,6 @@
 import "server-only";
 import { generateObject } from "ai";
-import { openai, getModel, wrapUserText, withAITrace } from "@/infrastructure/ai";
+import { openai, getModel, wrapUserText, withAITrace } from "@/lib/ai";
 import { moduleLog } from "@/lib/logger";
 import {
   questionGenerationDataSchema,
@@ -19,7 +19,7 @@ export async function generateComprehensionQuestions(
       .map((line, i) => `${i + 1}: ${line}`)
       .join("\n");
 
-    const modelId = getModel("structured");
+    const modelId = getModel("studio.question.generate");
 
     const { object } = await withAITrace(
       { operation: "generate-questions", feature: "studio-panel", model: modelId },

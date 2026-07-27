@@ -144,11 +144,3 @@ export function validateTextContent(text: string): FileValidationResult {
 
   return { valid: true };
 }
-
-// ============ FILENAME VALIDATION ============
-
-/**
- * Sanitize and validate filename
- */
-
-// ============ UTILITIES ============

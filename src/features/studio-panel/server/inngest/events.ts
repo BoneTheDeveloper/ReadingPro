@@ -10,7 +10,7 @@ export const GENERATE_QUESTIONS_EVENT = "studio/questions.generate" as const;
 
 // ---------- Event Payload Schema ----------
 
-const generateQuestionsEventSchema = z
+export const generateQuestionsEventSchema = z
   .object({
     passageId: z.string().uuid(),
     userId: z.string(),

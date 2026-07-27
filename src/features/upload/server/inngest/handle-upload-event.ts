@@ -1,5 +1,5 @@
 import { inngest } from "@/inngest/client";
-import { UPLOAD_PROCESS_EVENT } from "./events";
+import { UPLOAD_PROCESS_EVENT, uploadProcessEventSchema } from "./events";
 import { SourceType } from "@/types/passage";
 import { prisma } from "@/lib/prisma";
 import { step } from "inngest";
@@ -18,7 +18,7 @@ export const processUploadJob = inngest.createFunction(
   {
     id: "process-upload-job",
     name: "Process Upload Job",
-    triggers: [{ event: UPLOAD_PROCESS_EVENT }],
+    triggers: [{ event: UPLOAD_PROCESS_EVENT, schema: uploadProcessEventSchema }],
   },
   async ({ event }: { event: { data: UploadPipelineInput } }) => {
     const { jobId, userId, sourceType, blobPath, text, youtubeUrl, startedAt, passageId, title } = event.data;

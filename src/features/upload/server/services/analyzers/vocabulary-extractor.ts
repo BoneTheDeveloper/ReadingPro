@@ -4,7 +4,7 @@
  */
 
 import { generateObject } from "ai";
-import { openai, getModel, withAITrace } from "@/infrastructure/ai";
+import { openai, getModel, withAITrace } from "@/lib/ai";
 import { z } from "zod";
 
 export interface VocabularyResult {
@@ -25,7 +25,7 @@ Respond with only a valid JSON object.`;
  * Extract vocabulary from text using AI.
  */
 export async function extractVocabulary(text: string): Promise<VocabularyResult> {
-  const modelId = getModel("structured");
+  const modelId = getModel("upload.vocabulary.extract");
 
   const { object } = await withAITrace(
     { operation: "vocab-extraction", feature: "upload", model: modelId },

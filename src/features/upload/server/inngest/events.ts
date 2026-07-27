@@ -16,7 +16,7 @@ export const UPLOAD_PROCESS_EVENT = "upload/process" as const;
  * The event carries a lightweight "source descriptor". The worker resolves the
  * actual text from whichever field matches `sourceType`.
  */
-const uploadProcessEventSchema = z
+export const uploadProcessEventSchema = z
   .object({
     jobId: z.string(),
     userId: z.string(),
