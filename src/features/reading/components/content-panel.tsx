@@ -11,7 +11,8 @@ const PdfViewer = dynamic(
       </div>
     )
   }
-);import { useCallback, useEffect, useRef, useState } from "react";
+);
+import { useRef, } from "react";
 import { FileText, FileSearch, Plus, FileType } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getCEFRShortLabel } from "@/utils/cefr";
@@ -21,7 +22,6 @@ import { useScrollProgress } from "@/features/reading/hooks/use-scroll-progress"
 import { useContentState } from "@/features/reading/hooks/use-content-state";
 import type { PassageData } from "@/types/passage";
 import { YouTubeEmbed } from "./youtube-embed";
-import { TranslationPopup } from "./translation-popup";
 
 export function ContentPanel({
   passage,
@@ -33,9 +33,6 @@ export function ContentPanel({
   const {
     viewMode,
     setViewMode,
-    selectedWordInfo,
-    translationState,
-    translateWord,
   } = useContentState({ passageId: passage?.id });
 
   const scrollRef = useRef<HTMLDivElement>(null);
