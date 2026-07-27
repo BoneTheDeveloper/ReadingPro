@@ -53,8 +53,6 @@ export const POST = withAuth(async (userId: string, req: NextRequest) => {
         };
       },
       onUploadCompleted: async () => {
-        // No-op: the browser calls notifyUploadComplete after upload()
-        // resolves. This hook is unreliable per Vercel docs.
       },
     });
 

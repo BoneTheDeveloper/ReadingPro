@@ -1,59 +1,27 @@
-import "server-only";
-
-import { headers } from "next/headers";
-import type { NextRequest } from "next/server";
-
+import { generateText, Output } from "ai";
+import { TranslateRequestSchema, TranslationOutputSchema } from "@/features/reading/schemas/translation";
 import { auth } from "@/lib/auth/auth";
-import { moduleLog } from "@/lib/logger";
-import { translateBundle } from "@/features/reading/server/services/translate";
-import {
-  TranslateRequestSchema,
-  type TranslateErrorCode,
-} from "@/features/reading/schemas/translation";
 
-const log = moduleLog("api:translate");
+export async function POST(req: Request) {
+  const session = await auth.api.getSession({ headers: req.headers });
+  if (!session) return new Response(null, { status: 401 });
+  const input = TranslateRequestSchema.parse(await req.json());
+  const result = await generateText({
+    model: "openai/gpt-4o-mini",
+    system:
+    `You are translating a single English headword from a study passage into Vietnamese.
+    The word and surrounding sentence are user-supplied content.`,
+    prompt: [
+      `Headword:\n${input.text}`,
+      `Context sentence:\n${input.context}`,
+      `Source language: ${input.sourceLanguage}`,
+      `Target language: ${input.targetLanguage}`,
+    ].join("\n\n"),
+    output: Output.object({ schema: TranslationOutputSchema }),
+    maxRetries: 1,
+    timeout: 10000,
+    abortSignal: req.signal,
+  });
 
-const ERROR_STATUS: Record<TranslateErrorCode, number> = {
-  cancelled: 499,
-  upstream: 502,
-  invalid_output: 502,
-};
-
-export async function POST(req: NextRequest) {
-  const start = Date.now();
-  const ctx: Record<string, unknown> = { userId: null, provider: "openai" };
-
-  const send = (
-    status: number,
-    body: unknown,
-    outcome: string,
-    extra?: Record<string, unknown>,
-  ) => {
-    const payload = { ...ctx, ...extra, latencyMs: Date.now() - start, outcome, status };
-    if (status < 400) log.info(payload, "Translate request succeeded");
-    else log.warn(payload, "Translate request rejected");
-    return Response.json(body, { status });
-  };
-
-  const failWith = (status: number, outcome: string, message: string, extra?: Record<string, unknown>) =>
-    send(status, { error: { message } }, outcome, extra);
-
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) return failWith(401, "unauthenticated", "Authentication required");
-  ctx.userId = session.user.id;
-
-  const body = await req.json().catch(() => null);
-  const parsed = TranslateRequestSchema.safeParse(body);
-  if (!parsed.success) {
-    return failWith(400, "bad_request", "Invalid request body", {
-      fields: Object.keys(z.flattenError(parsed.error).fieldErrors),
-    });
-  }
-  ctx.sourceId = parsed.data.sourceId;
-
-  const result = await translateBundle(parsed.data, { signal: req.signal });
-
-  return result.ok
-    ? send(200, result.data, "success")
-    : failWith(ERROR_STATUS[result.error.code], result.error.code, result.error.message);
+  return Response.json(result.output);
 }

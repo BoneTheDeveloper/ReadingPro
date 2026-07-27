@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const PART_OF_SPEECH = [
+const PART_OF_SPEECH = [
   "noun", "verb", "adjective", "adverb", "pronoun",
   "preposition", "conjunction", "interjection", "determiner", "unknown",
 ] as const;
@@ -16,22 +16,20 @@ export const TranslateRequestSchema = z.object({
   targetLanguage: z.literal("vi").default("vi"),
 });
 
-export type TranslateRequest = z.infer<typeof TranslateRequestSchema>;
-
 /* ── Output: model ──────────────────────────────────────── */
 
 export const TranslationOutputSchema = z.object({
-  translation: z.string().min(1),
-  ipa: z.string().nullable(),
-  partOfSpeech: z.enum(PART_OF_SPEECH),
+  translation: z
+    .string()
+    .min(1)
+    .describe("Vietnamese translation matching how the word is used in the context sentence, not its most common dictionary sense."),
+  ipa: z
+    .string()
+    .nullable()
+    .describe("IPA transcription General American (US) for the sense implied by the context. Null if not confident."),
+  partOfSpeech: z
+    .enum(PART_OF_SPEECH)
+    .describe("Part of speech as used in the context sentence. Use 'unknown' if unclear."),
 });
 
 export type TranslationDto = z.infer<typeof TranslationOutputSchema>;
-
-/* ── Result ─────────────────────────────────────────────── */
-
-export type TranslateErrorCode = "cancelled" | "upstream" | "invalid_output";
-
-export type TranslateResult =
-  | { ok: true; data: TranslationDto }
-  | { ok: false; error: { code: TranslateErrorCode; message: string } };

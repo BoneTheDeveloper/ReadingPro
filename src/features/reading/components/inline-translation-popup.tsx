@@ -15,7 +15,7 @@ import { Languages, LoaderCircle, RotateCcw, X } from "lucide-react";
 import { useMemo, useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
-import type { TranslationState } from "@/features/reading/hooks/use-word-translation";
+import type { TranslationState } from "@/features/reading/hooks/use-content-state";
 import type { PartOfSpeech, TranslationDto } from "@/features/reading/schemas/translation";
 import type { WordSelectionAnchor } from "@/features/reading/utils/word-selection";
 

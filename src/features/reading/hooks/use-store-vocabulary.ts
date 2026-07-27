@@ -1,7 +1,9 @@
 import type {
   TranslationDto,
-  WordSelection,
 } from "@/features/reading/schemas/translation";
+import type {
+  WordSelection,
+} from "@/features/reading/utils/word-selection";
 
 /**
  * Phase 2 placeholder. Returns a no-op vocabulary surface so `useContentState`
