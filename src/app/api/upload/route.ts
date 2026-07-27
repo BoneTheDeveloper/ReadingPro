@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { handleUpload } from "@vercel/blob/client";
 import { withAuth } from "@/lib/auth/with-auth";
 import { prisma } from "@/lib/prisma";
-import { UPLOAD_CONFIG } from "@/features/upload/lib/upload-config";
+import { UPLOAD_CONFIG } from "@/features/upload/utils/upload-config";
 
 export const POST = withAuth(async (userId: string, req: NextRequest) => {
   const body = await req.json();

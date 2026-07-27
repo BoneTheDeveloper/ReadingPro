@@ -44,7 +44,6 @@ export async function createStudioArtifactWithQuestions(input: {
     });
     await tx.question.createMany({
       data: input.questions.map((q) => ({
-        passageId: input.passageId,
         artifactId: input.artifactId,
         questionText: q.questionText,
         options: q.options,

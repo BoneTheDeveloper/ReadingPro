@@ -57,9 +57,9 @@ function evict() {
   for (const [id, entry] of store) {
     if (entry.status !== "loading" && entry.fetchedAt && now - entry.fetchedAt > TTL_MS) {
       store.delete(id);
-      notify();
     }
   }
+  notify();
 }
 
 function ensureEvictTimer() {
@@ -73,7 +73,10 @@ function ensureEvictTimer() {
 // ---------------------------------------------------------------------------
 
 export function getEntry(passageId: string): CacheEntry {
-  evict(); // TTL eviction on every read keeps map bounded
+  // Eviction runs on the timer only. Calling evict() here would run during
+  // render (via useSyncExternalStore listeners) and notify() inside it would
+  // schedule a setState for another component — the classic
+  // "Cannot update a component while rendering a different component" warning.
   return get(passageId);
 }
 

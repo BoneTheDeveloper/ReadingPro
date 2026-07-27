@@ -64,7 +64,13 @@ export function AuthControls({
   if (!user) {
     return (
       <Link href="/login">
-        <Button variant="ghost" size={compact || isRail ? "icon" : "sm"}>
+        <Button
+          variant="ghost"
+          size={compact || isRail ? "icon" : "sm"}
+          className={cn(
+            isRail && "text-white hover:bg-white/[0.08] hover:text-white data-[state=open]:bg-white/[0.14] data-[state=open]:text-white",
+          )}
+        >
           Đăng nhập
         </Button>
       </Link>
@@ -74,26 +80,33 @@ export function AuthControls({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          className={cn("rounded-full gap-2", isRail ? "w-10 h-10 p-0" : "px-3")}
+        <Avatar
+          className={cn(
+            "rounded-full cursor-pointer select-none transition-colors w-9 h-9",
+            isRail
+              ? "hover:bg-white/[0.08] data-[state=open]:bg-white/[0.14] after:border-transparent"
+              : "hover:bg-accent",
+          )}
         >
-          <Avatar className="w-9 h-9">
-            {user.image ? (
-              <AvatarImage
-                src={user.image}
-                alt={user.name || "User avatar"}
-              />
-            ) : null}
-            <AvatarFallback className="uppercase">
-              {user.name ? (
-                user.name[0]
-              ) : (
-                <User className="w-4 h-4" />
-              )}
-            </AvatarFallback>
-          </Avatar>
-        </Button>
+          {user.image ? (
+            <AvatarImage
+              src={user.image}
+              alt={user.name || "User avatar"}
+            />
+          ) : null}
+          <AvatarFallback
+            className={cn(
+              "uppercase",
+              isRail && "bg-white/10 text-white",
+            )}
+          >
+            {user.name ? (
+              user.name[0]
+            ) : (
+              <User className="w-4 h-4" />
+            )}
+          </AvatarFallback>
+        </Avatar>
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end" className="w-48">

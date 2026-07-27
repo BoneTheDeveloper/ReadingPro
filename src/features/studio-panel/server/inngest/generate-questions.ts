@@ -76,7 +76,6 @@ export const generateQuestionsJob = inngest.createFunction(
       if (questionsResult.questions.questions) {
         await prisma.question.createMany({
           data: questionsResult.questions.questions.map((q) => ({
-            passageId,
             artifactId,
             questionText: q.questionText,
             options: JSON.stringify(q.options),

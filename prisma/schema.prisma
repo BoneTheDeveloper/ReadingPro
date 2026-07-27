@@ -135,7 +135,6 @@ model Passage {
   updatedAt             DateTime
   youtubeUrl            String?
   userProfile           UserProfile             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  questions             Question[]
   studioArtifacts       StudioArtifact[]
   studyChatMessages     StudyChatMessage[]
 
@@ -164,7 +163,6 @@ model StudioArtifact {
 
 model Question {
   id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  passageId        String           @db.Uuid
   artifactId       String           @db.Uuid
   questionText     String
   options          Json
@@ -176,10 +174,8 @@ model Question {
   difficulty       Int              @default(3)
   createdAt        DateTime         @default(now())
   studioArtifact   StudioArtifact   @relation(fields: [artifactId], references: [id], onDelete: Cascade)
-  passage          Passage          @relation(fields: [passageId], references: [id], onDelete: Cascade)
 
   @@index([artifactId])
-  @@index([passageId])
 }
 
 model QuestionResult {
