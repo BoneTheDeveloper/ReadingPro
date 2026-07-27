@@ -91,7 +91,7 @@ export function InlineTranslationPopup({
   const dismiss = useDismiss(context, {
     enabled: isOpen,
     escapeKey: true,
-    outsidePress: true,
+    outsidePress: false,
   });
   const role = useRole(context, {
     role: isExpanded ? "dialog" : "tooltip",

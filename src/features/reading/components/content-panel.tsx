@@ -62,9 +62,6 @@ export function ContentPanel({
       reset();
       return;
     }
-    // Re-selecting the exact same word in the same sentence is a no-op so
-    // the existing translation stays visible. Anything else replaces the
-    // anchor and discards the previous fetch result.
     const current = wordAnchor;
     if (
       current &&

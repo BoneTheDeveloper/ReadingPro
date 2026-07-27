@@ -4,27 +4,15 @@ export type WordSelectionAnchor = {
   context: string;
 };
 
-const EDGE_PUNCTUATION = ".,;:!?()\"'`-/\\";
-
+const EDGE_PUNCTUATION_REGEX = /^[.,;:!?()"'\`\-/\\\\]+|[.,;:!?()"'\`\-/\\\\]+$/g;
 const LATIN_WORD = /^[A-Za-z][A-Za-z'-]*$/;
-
 function normalizeToken(raw: string): string | null {
-  let start = 0;
-  let end = raw.length;
-  while (start < end && EDGE_PUNCTUATION.includes(raw[start] ?? "")) {
-    start += 1;
-  }
-  while (end > start && EDGE_PUNCTUATION.includes(raw[end - 1] ?? "")) {
-    end -= 1;
-  }
-  const trimmed = raw.slice(start, end).replace(/\s+/g, " ").trim();
-  if (trimmed.length < 2) {
-    return null;
-  }
-  if (trimmed.includes(" ")) {
-    return null;
-  }
-  if (!LATIN_WORD.test(trimmed)) {
+  const trimmed = raw
+    .replace(EDGE_PUNCTUATION_REGEX, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (trimmed.length < 2 || trimmed.includes(" ") || !LATIN_WORD.test(trimmed)) {
     return null;
   }
   return trimmed;
@@ -32,93 +20,55 @@ function normalizeToken(raw: string): string | null {
 
 
 function extractSentence(range: Range): string | null {
-  let node: Node | null = range.startContainer;
-  while (node && node.nodeType !== Node.ELEMENT_NODE) {
-    node = node.parentNode;
-  }
-  const element = node as Element | null;
-  const paragraph = element?.closest("p");
-  if (!paragraph) return null;
-  const text = (paragraph.textContent ?? "").trim();
-  if (text.length === 0) return null;
-  const normalized = (range.toString() ?? "").trim();
-  if (normalized.length === 0) return text;
+  const paragraph = range.startContainer.parentElement?.closest("p");
+  if (!paragraph || !paragraph.textContent) return null;
 
-  const startOffset = paragraph.textContent
-    ? paragraph.textContent.indexOf(normalized, getOffsetInParagraph(paragraph, range))
-    : -1;
-  if (startOffset < 0) return text;
-
-  const endOffset = startOffset + normalized.length;
-
-  const sentenceStart = findSentenceStart(text, startOffset);
-  const sentenceEnd = findSentenceEnd(text, endOffset);
-  return text.slice(sentenceStart, sentenceEnd).trim() || null;
-}
-
-function getOffsetInParagraph(paragraph: Element, range: Range): number {
-  const walker = document.createTreeWalker(paragraph, NodeFilter.SHOW_TEXT);
   let offset = 0;
-  let current = walker.nextNode();
-  while (current) {
-    if (current === range.startContainer) {
-      return offset + range.startOffset;
+  const walker = document.createTreeWalker(paragraph, NodeFilter.SHOW_TEXT);
+
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    if (node === range.startContainer) {
+      offset += range.startOffset;
+      break;
     }
-    offset += current.nodeValue?.length ?? 0;
-    current = walker.nextNode();
+    offset += node.nodeValue?.length ?? 0;
   }
-  return 0;
-}
 
-const SENTENCE_END = /[.!?](?=\s|$)/g;
+  const sentences = paragraph.textContent.split(/(?<=[.!?])\s+/);
+  let cursor = 0;
 
-function findSentenceStart(text: string, wordOffset: number): number {
-  const before = text.slice(0, wordOffset);
-  const matches = [...before.matchAll(SENTENCE_END)];
-  if (matches.length === 0) return 0;
-  const last = matches[matches.length - 1];
-  const end = (last.index ?? 0) + last[0].length;
-  return Math.min(end, wordOffset);
-}
-
-function findSentenceEnd(text: string, wordEndOffset: number): number {
-  const after = text.slice(wordEndOffset);
-  SENTENCE_END.lastIndex = 0;
-  const match = SENTENCE_END.exec(after);
-  if (!match) return text.length;
-  return wordEndOffset + match.index + match[0].length;
+  return sentences.find(sentence => {
+    const end = cursor + sentence.length;
+    const isMatch = offset >= cursor && offset <= end;
+    cursor = end + 1;
+    return isMatch;
+  })?.trim() || null;
 }
 
 function isSingleLineSelectionInPassage(range: Range, root: Element): boolean {
-  if (!root.contains(range.startContainer)) return false;
-  if (!root.contains(range.endContainer)) return false;
-  if (range.toString().includes("\n")) return false;
-  return true;
+  return root.contains(range.commonAncestorContainer) && !range.toString().includes("\n");
 }
 
 export function validateWordSelection(
   selection: Selection | null,
   passageRoot: Element | null,
 ): WordSelectionAnchor | null {
-  if (!selection || !passageRoot) return null;
-  if (selection.rangeCount === 0 || selection.isCollapsed) return null;
+  if (!selection?.rangeCount || selection.isCollapsed || !passageRoot) return null;
 
+  const range = selection.getRangeAt(0);
   const raw = selection.toString();
-  if (raw.length === 0) return null;
+
+  if (!raw || !isSingleLineSelectionInPassage(range, passageRoot)) return null;
 
   const word = normalizeToken(raw);
   if (!word) return null;
 
-  const range = selection.getRangeAt(0);
-  if (!isSingleLineSelectionInPassage(range, passageRoot)) return null;
-
-  const context = extractSentence(range);
-  const rect = range.getBoundingClientRect();
-  if (rect.width === 0 && rect.height === 0) return null;
+  const { width, height } = range.getBoundingClientRect();
+  if (width === 0 && height === 0) return null;
 
   return {
     range,
     word,
-    context: context ?? word,
+    context: extractSentence(range) ?? word,
   };
 }

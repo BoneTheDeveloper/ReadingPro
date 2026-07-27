@@ -17,6 +17,7 @@
     "dev:inngest": "npx inngest-cli@latest dev"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^4.0.20",
     "@ai-sdk/react": "^4.0.17",
     "@floating-ui/react": "^0.27.20",
     "@prisma/adapter-pg": "^7.8.0",
