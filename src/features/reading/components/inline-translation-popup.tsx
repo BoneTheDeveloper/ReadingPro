@@ -15,20 +15,18 @@ import { Languages, LoaderCircle, RotateCcw, X } from "lucide-react";
 import { useMemo, useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
-import type { TranslationState } from "@/features/reading/hooks/use-content-state";
 import type { PartOfSpeech, TranslationDto } from "@/features/reading/schemas/translation";
 import type { WordSelectionAnchor } from "@/features/reading/utils/word-selection";
 
 interface InlineTranslationPopupProps {
   anchor: WordSelectionAnchor | null;
-  state: TranslationState;
+  data: TranslationDto | null;
+  error: Error | null;
+  isPending: boolean;
   onTranslate: () => void;
   onClose: () => void;
 }
 
-// Short labels keep the badge a small pill on mobile even for longer POS
-// names like "interjection". The popup only renders the badge when the LLM
-// returned something other than "unknown".
 const PART_OF_SPEECH_LABEL: Record<Exclude<PartOfSpeech, "unknown">, string> = {
   noun: "danh từ",
   verb: "động từ",
@@ -49,13 +47,17 @@ function partOfSpeechBadge(data: TranslationDto): { label: string; aria: string 
 
 export function InlineTranslationPopup({
   anchor,
-  state,
+  data,
+  error,
+  isPending,
   onTranslate,
   onClose,
 }: InlineTranslationPopupProps) {
-  const open = anchor !== null;
+  const isOpen = anchor !== null;
+  const isExpanded = isPending || data !== null || error !== null;
+
   const { context, floatingStyles, refs } = useFloating({
-    open,
+    open: isOpen,
     onOpenChange: (nextOpen) => {
       if (!nextOpen) onClose();
     },
@@ -87,22 +89,21 @@ export function InlineTranslationPopup({
   }, [setPositionReference, virtualReference]);
 
   const dismiss = useDismiss(context, {
-    enabled: open,
+    enabled: isOpen,
     escapeKey: true,
     outsidePress: true,
   });
   const role = useRole(context, {
-    role: state.status === "ready" ? "tooltip" : "dialog",
+    role: isExpanded ? "dialog" : "tooltip",
   });
   const { getFloatingProps } = useInteractions([dismiss, role]);
 
   if (!anchor) return null;
 
-  const word = anchor.selection.selectedText;
-  const translation = state.data?.translation?.trim() ?? "";
-  const ipa = state.data?.ipa ?? null;
-  const posBadge = state.data ? partOfSpeechBadge(state.data) : null;
-  const compact = state.status === "ready" || state.status === "idle";
+  const word = anchor.word;
+  const translation = data?.translation?.trim() ?? "";
+  const ipa = data?.ipa ?? null;
+  const posBadge = data ? partOfSpeechBadge(data) : null;
 
   return (
     <FloatingPortal>
@@ -111,13 +112,13 @@ export function InlineTranslationPopup({
         ref={setFloating}
         style={floatingStyles}
         className={
-          compact
-            ? "z-50"
-            : "z-50 w-[min(20rem,calc(100vw-1rem))] rounded-xl border border-border bg-surface p-4 text-foreground shadow-[0_4px_12px_rgba(0,0,0,.06),0_18px_40px_rgba(0,0,0,.10)]"
+          isExpanded
+            ? "z-50 w-[min(20rem,calc(100vw-1rem))] rounded-xl border border-border bg-surface p-4 text-foreground shadow-[0_4px_12px_rgba(0,0,0,.06),0_18px_40px_rgba(0,0,0,.10)]"
+            : "z-50"
         }
         {...getFloatingProps()}
       >
-        {compact ? (
+        {!isExpanded ? (
           <button
             type="button"
             onClick={onTranslate}
@@ -137,12 +138,16 @@ export function InlineTranslationPopup({
                   {word}
                 </p>
 
-                {state.status === "loading" ? (
+                {isPending ? (
                   <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
                     <LoaderCircle className="size-4 animate-spin" />
                     Đang dịch...
                   </div>
-                ) : state.status === "success" && translation ? (
+                ) : error ? (
+                  <p className="mt-1 text-sm text-coral">
+                    Không thể dịch từ này. Vui lòng thử lại.
+                  </p>
+                ) : translation ? (
                   <div className="mt-1 space-y-1">
                     {ipa !== null && (
                       <p
@@ -164,13 +169,9 @@ export function InlineTranslationPopup({
                       {translation}
                     </p>
                   </div>
-                ) : state.status === "success" ? (
+                ) : (
                   <p className="mt-1 text-sm text-muted-foreground">
                     Không tìm thấy bản dịch
-                  </p>
-                ) : (
-                  <p className="mt-1 text-sm text-coral">
-                    Không thể dịch từ này. Vui lòng thử lại.
                   </p>
                 )}
               </div>
@@ -184,8 +185,7 @@ export function InlineTranslationPopup({
               </button>
             </div>
 
-            {(state.status === "error" ||
-              (state.status === "success" && !translation)) && (
+            {(error || (!isPending && !translation)) && (
               <Button type="button" variant="secondary" size="sm" onClick={onTranslate}>
                 <RotateCcw />
                 Thử lại

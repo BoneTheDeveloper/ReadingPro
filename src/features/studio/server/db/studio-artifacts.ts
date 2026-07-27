@@ -19,7 +19,7 @@ export async function findStudioArtifactForOwnership(
   });
 }
 
-export async function upsertQuizResult(
+export async function upsertQuestionResult(
   artifactId: string,
   stats: { correctCount: number; totalQuestions: number; accuracyRate: number },
 ) {
@@ -40,7 +40,7 @@ export async function upsertQuizResult(
   });
 }
 
-export async function deleteQuizResults(artifactId: string) {
+export async function deleteQuestionResults(artifactId: string) {
   return prisma.questionResult.deleteMany({
     where: { artifactId },
   });

@@ -1,9 +1,7 @@
 import type {
   TranslationDto,
 } from "@/features/reading/schemas/translation";
-import type {
-  WordSelection,
-} from "@/features/reading/utils/word-selection";
+
 
 /**
  * Phase 2 placeholder. Returns a no-op vocabulary surface so `useContentState`
@@ -11,7 +9,6 @@ import type {
  * vocabulary-save-toggle plan replaces this file when the real save flow ships.
  */
 export function useVocabulary(
-  _selectedWordInfo: WordSelection | null,
   _translationData: TranslationDto | null,
 ) {
   return {

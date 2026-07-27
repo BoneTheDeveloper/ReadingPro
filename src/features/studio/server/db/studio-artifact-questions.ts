@@ -42,7 +42,7 @@ export async function createStudioArtifactWithQuestions(input: {
       },
       include: { questionResult: true },
     });
-    await tx.question.createMany({
+    const questions = await tx.question.createManyAndReturn({
       data: input.questions.map((q) => ({
         artifactId: input.artifactId,
         questionText: q.questionText,
@@ -54,6 +54,6 @@ export async function createStudioArtifactWithQuestions(input: {
         difficulty: q.difficulty,
       })),
     });
-    return { artifact };
+    return { artifact, questions };
   });
 }

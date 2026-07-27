@@ -20,7 +20,7 @@ Replace the component-local stale-time guard in `useStudioArtifactQuery` with a 
 ## Context
 
 - Symptom (Bug 1): navigating to the study page always re-fetches artifacts. The hook lives inside `StudyWorkspace` (`src/app/(dashboard)/study/_components/study-workspace.tsx:36`); `study/page.tsx` is `force-dynamic` and re-renders the client tree on every navigation, so component-local `useState` / `useRef` cache is wiped.
-- Symptom (Bug 2): a single navigation triggers fetches for *all* passages instead of only the active one. The hook is keyed by `state.activePassageId` (single id), so the fan-out is not in the hook's call shape — it is in `useQuizMutation` or a sibling effect. Phase 2 traces this empirically.
+- Symptom (Bug 2): a single navigation triggers fetches for *all* passages instead of only the active one. The hook is keyed by `state.activePassageId` (single id), so the fan-out is not in the hook's call shape — it is in `useQuestionMutation` or a sibling effect. Phase 2 traces this empirically.
 - Chosen direction: Option A from the brainstorm — module-level cache + `useSyncExternalStore`. No new dependency. Schema, server actions, and mutation flows unchanged.
 
 ## Goals
@@ -30,7 +30,7 @@ Replace the component-local stale-time guard in `useStudioArtifactQuery` with a 
 | 1 | Per-passage cache survives `StudyWorkspace` remounts | P1 |
 | 2 | Selectors stable across remounts via `useSyncExternalStore` | P1 |
 | 3 | Stale time honored across navigation; no double-fetch on remount | P1 |
-| 4 | No regression in `useQuizMutation` / `ArtifactRow` / `DefaultStudioView` | P1 |
+| 4 | No regression in `useQuestionMutation` / `ArtifactRow` / `DefaultStudioView` | P1 |
 | 5 | Locate the Bug 2 fan-out source and gate it | P1 |
 
 ## Phases
@@ -85,6 +85,6 @@ None. Searched existing plans in `plans/`; no overlap with `260726-1235-direct-p
 
 ## Notes
 
-- Keep `useQuizMutation` untouched. If Phase 2 finds the fan-out is there, gate it on resolved `passageId` rather than changing how the cache works.
+- Keep `useQuestionMutation` untouched. If Phase 2 finds the fan-out is there, gate it on resolved `passageId` rather than changing how the cache works.
 - Do not introduce `useSyncExternalStore` re-render storms; the snapshot only changes when the relevant `passageId` entry changes. Other entries' updates use `getSnapshot` slicing.
 - The cache store is a plain module-level value, not a hook. It lives in `lib/`. Only files starting with `use` and exporting `useX` hooks belong in `hooks/`.

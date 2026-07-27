@@ -3,7 +3,7 @@
 import { headers } from "next/headers";
 import { z } from "zod";
 import { auth } from "@/lib/auth/auth";
-import { getChatHistory } from "../services/ai-chat/ai-chat";
+import { getChatHistory } from "../services/ai-chat";
 import type { StudyChatHistoryDto } from "@/features/studio/schemas/ai-chat";
 
 const passageIdSchema = z.string().uuid();

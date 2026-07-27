@@ -156,4 +156,4 @@ Notes:
 - **Memory growth**: Mitigated by TTL eviction on read + 5-min interval. No hard cap needed because the map only grows for touched passages.
 - **SSR**: hooks file is `"use client"`; the loader's `setInterval` is guarded by `typeof window !== "undefined"` inside `ensureEvictTimer`.
 - **Concurrent fetch dedupe**: the `inflight` promise is shared between mounts of the same `passageId`. The `.then` checks `getEntry(passageId) === e` to drop stale resolve.
-- **Mutation race**: `useQuizMutation.setArtifacts` mutates the local array via `setArtifacts`. After Phase 1, this still works because the hook returns the same `setArtifacts` setter that mutates the entry's `artifacts` array and calls `notifyEntry(passageId)`. Verified by Phase 2 manual pass.
+- **Mutation race**: `useQuestionMutation.setArtifacts` mutates the local array via `setArtifacts`. After Phase 1, this still works because the hook returns the same `setArtifacts` setter that mutates the entry's `artifacts` array and calls `notifyEntry(passageId)`. Verified by Phase 2 manual pass.

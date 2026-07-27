@@ -1,48 +1,42 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { TranslationDto } from "../schemas/translation";
+export function useTranslation() {
+  const [data, setData] = useState<TranslationDto | null>(null);
+  const [error, setError] = useState<Error | null>(null);
+  const [isPending, setIsPending] = useState(false);
+  const abortRef = useRef<AbortController | null>(null);
 
-type State =
-  | { status: "idle" }
-  | { status: "loading" }
-  | { status: "done"; data: TranslationDto }
-  | { status: "error" };
-
-export function useInlineTranslate() {
-  const [state, setState] = useState<State>({ status: "idle" });
-  const controller = useRef<AbortController | null>(null);
-  const cache = useRef(new Map<string, TranslationDto>());
-
-  const translate = useCallback(async (text: string, context: string) => {
-    const key = `${text}\u0000${context}`;
-
-    const hit = cache.current.get(key);
-    if (hit) return setState({ status: "done", data: hit });
-
-    controller.current?.abort();
-    const ac = new AbortController();
-    controller.current = ac;
-    setState({ status: "loading" });
-
+  const translate = useCallback(async (word: string, context: string) => {
+    abortRef.current?.abort();
+    setIsPending(true);
+    setError(null);
     try {
       const res = await fetch("/api/translate", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ text, context }),
-        signal: ac.signal,
+        body: JSON.stringify({ word, context }),
       });
-      if (!res.ok) return setState({ status: "error" });
-
-      const data: TranslationDto = await res.json();
-      cache.current.set(key, data);
-      setState({ status: "done", data });
-    } catch {
-      if (ac.signal.aborted) return;
-      setState({ status: "error" });
+      if (!res.ok) throw new Error(`translate failed: ${res.status}`);
+      setData(await res.json());
+      setIsPending(false);
+    } catch (e) {
+      if ((e as Error).name !== "AbortError") {
+        setError(e as Error);
+        setIsPending(false);
+      }
     }
   }, []);
 
-  useEffect(() => () => controller.current?.abort(), []);
+  const reset = useCallback(() => {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    setData(null);
+    setError(null);
+    setIsPending(false);
+  }, []);
 
-  return { state, translate };
+  useEffect(() => () => abortRef.current?.abort(), []);
+
+  return { data, error, isPending, translate, reset };
 }

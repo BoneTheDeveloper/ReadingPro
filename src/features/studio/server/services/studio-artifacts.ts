@@ -6,12 +6,12 @@ import {
 } from "@/features/studio/schemas/studio";
 import type { GeneratedQuestionDto } from "@/features/studio/schemas/question";
 import {
-  deleteQuizResults,
+  deleteQuestionResults,
   findArtifactQuestions,
   findStudioArtifactExists,
   findStudioArtifactForOwnership,
   findStudioArtifacts,
-  upsertQuizResult,
+  upsertQuestionResult,
 } from "../db/studio-artifacts";
 
 // Simple factory for artifact not found errors
@@ -80,7 +80,7 @@ export async function fetchStudioArtifacts(
   return { artifacts: rows.map((row) => toStudioArtifact(row)) };
 }
 
-export async function recordQuizResult(
+export async function recordQuestionResult(
   artifactId: string,
   userId: string,
   stats: { correctCount: number; totalQuestions: number },
@@ -98,14 +98,14 @@ export async function recordQuizResult(
     throw artifactNotFound(artifactId);
   }
 
-  await upsertQuizResult(artifactId, {
+  await upsertQuestionResult(artifactId, {
     correctCount: stats.correctCount,
     totalQuestions: stats.totalQuestions,
     accuracyRate,
   });
 }
 
-export async function resetQuizResult(
+export async function resetQuestionResult(
   artifactId: string,
   userId: string,
 ): Promise<void> {
@@ -116,7 +116,7 @@ export async function resetQuizResult(
     throw artifactNotFound(artifactId);
   }
 
-  await deleteQuizResults(artifactId);
+  await deleteQuestionResults(artifactId);
 }
 
 export async function getArtifactQuestions(

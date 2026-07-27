@@ -5,8 +5,8 @@ import { Trophy, AlertCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  recordQuizResultAction,
-  resetQuizResultAction,
+  recordQuestionResultAction,
+  resetQuestionResultAction,
 } from "@/features/studio/server/actions/question";
 
 interface QuestionResultsProps {
@@ -31,7 +31,7 @@ export function QuestionResults({
     if (!artifactId || isSavingRef.current) return;
     isSavingRef.current = true;
     try {
-      await recordQuizResultAction(artifactId, { correctCount, totalQuestions });
+      await recordQuestionResultAction(artifactId, { correctCount, totalQuestions });
       setSaveError(null);
       onRecordResult({ correctCount, totalQuestions });
     } catch (err) {
@@ -43,7 +43,7 @@ export function QuestionResults({
 
   const handleRetry = useCallback(async () => {
     if (artifactId) {
-      try { await resetQuizResultAction(artifactId); onResetResult(); } catch {}
+      try { await resetQuestionResultAction(artifactId); onResetResult(); } catch {}
     }
     onReset();
   }, [artifactId, onReset, onResetResult]);

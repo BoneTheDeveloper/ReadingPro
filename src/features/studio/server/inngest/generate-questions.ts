@@ -6,7 +6,7 @@
 import { inngest } from "@/inngest/client";
 import { prisma } from "@/lib/prisma";
 import { step } from "inngest";
-import { generateComprehensionQuestions } from "../services/question/question-generator";
+import { generateComprehensionQuestions } from "../services/question-generator";
 import { GENERATE_QUESTIONS_EVENT, generateQuestionsEventSchema, type GenerateQuestionsEventData } from "./events";
 
 export const generateQuestionsJob = inngest.createFunction(
@@ -43,12 +43,8 @@ export const generateQuestionsJob = inngest.createFunction(
 
       const questions = await generateComprehensionQuestions(
         passage.content,
-        questionCount
+        questionCount,
       );
-
-      if (!questions) {
-        throw new Error("Question generation failed");
-      }
 
       return { questions, passageId, userId, passageTitle: passage.title };
     });

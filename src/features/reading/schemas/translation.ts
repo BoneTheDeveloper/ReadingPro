@@ -10,8 +10,8 @@ export type PartOfSpeech = (typeof PART_OF_SPEECH)[number];
 /* ── Input: HTTP body ───────────────────────────────────── */
 
 export const TranslateRequestSchema = z.object({
-  text: z.string().trim().min(1).max(40).regex(/^\S+$/, "Select a single word"),
-  context: z.string().trim().min(1).max(2000),
+  word: z.string().trim().min(1).max(40).regex(/^\S+$/),
+  context: z.string().trim().min(1).max(1000),
   sourceLanguage: z.literal("en").default("en"),
   targetLanguage: z.literal("vi").default("vi"),
 });

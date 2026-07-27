@@ -20,8 +20,8 @@ import { getCEFRBadgeVariant } from "./cefr-badge";
 import { Badge } from "@/components/ui/badge";
 import { InlineTranslationPopup } from "./inline-translation-popup";
 import { useScrollProgress } from "@/features/reading/hooks/use-scroll-progress";
-import { useContentState } from "@/features/reading/hooks/use-content-state";
-import { selectionToWordSelection } from "@/features/reading/utils/word-selection";
+import { useTranslation } from "@/features/reading/hooks/use-word-translation";
+import { validateWordSelection } from "@/features/reading/utils/word-selection";
 import type { WordSelectionAnchor } from "@/features/reading/utils/word-selection";
 import type { PassageData } from "@/types/passage";
 import { YouTubeEmbed } from "./youtube-embed";
@@ -33,42 +33,53 @@ export function ContentPanel({
   passage: PassageData | null;
   onOpenUploadModal: () => void;
 }) {
-  const {
-    viewMode,
-    setViewMode,
-    selectedWordInfo,
-    translationState,
-    handleWordSelection,
-    translateWord,
-  } = useContentState({ passageId: passage?.id });
+  const [viewMode, setViewMode] = useState<"text" | "pdf" | "video">(
+    "text",
+  );
+  const [wordAnchor, setWordAnchor] = useState<WordSelectionAnchor | null>(null);
+  const { data, error, isPending, translate, reset } = useTranslation();
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
-  const [wordAnchor, setWordAnchor] = useState<WordSelectionAnchor | null>(null);
   const progress = useScrollProgress(scrollRef);
   const pdfBlobPathname =
     viewMode === "pdf" && passage?.filePath ? passage.filePath : null;
 
   const clearTranslation = () => {
     setWordAnchor(null);
-    handleWordSelection(null);
+    reset();
     window.getSelection()?.removeAllRanges();
   };
 
   const handlePassageMouseUp = () => {
-    if (!passage || viewMode !== "passage") return;
-    const anchor = selectionToWordSelection(
+    if (!passage || viewMode !== "text") return;
+    const next = validateWordSelection(
       window.getSelection(),
       contentRef.current,
-      passage.id,
     );
-    if (!anchor) {
+    if (!next) {
       setWordAnchor(null);
-      handleWordSelection(null);
+      reset();
       return;
     }
-    setWordAnchor(anchor);
-    handleWordSelection(anchor.selection);
+    // Re-selecting the exact same word in the same sentence is a no-op so
+    // the existing translation stays visible. Anything else replaces the
+    // anchor and discards the previous fetch result.
+    const current = wordAnchor;
+    if (
+      current &&
+      current.word === next.word &&
+      current.context === next.context
+    ) {
+      return;
+    }
+    setWordAnchor(next);
+    reset();
+  };
+
+  const handleTranslateClick = () => {
+    if (!wordAnchor) return;
+    void translate(wordAnchor.word, wordAnchor.context);
   };
   if (!passage) {
     return (
@@ -130,7 +141,7 @@ export function ContentPanel({
               value={viewMode}
               onChange={setViewMode}
               options={[
-                { value: "passage", label: "Bài đọc" },
+                { value: "text", label: "Bài đọc" },
                 { value: "video", label: "Video" },
               ]}
             />
@@ -140,7 +151,7 @@ export function ContentPanel({
               value={viewMode}
               onChange={setViewMode}
               options={[
-                { value: "passage", label: "Bài đọc" },
+                { value: "text", label: "Bài đọc" },
                 { value: "pdf", label: "PDF" },
               ]}
             />
@@ -168,7 +179,7 @@ export function ContentPanel({
         {viewMode === "pdf" && pdfBlobPathname && (
           <PdfViewer blobPathname={pdfBlobPathname} fileName={passage.title} />
         )}
-        {viewMode === "passage" && (
+        {viewMode === "text" && (
           <div className="max-w-[66ch] mx-auto">
             <h3 className="font-serif text-[27px] font-semibold text-foreground mb-5 leading-tight">
               {passage.title}
@@ -188,9 +199,11 @@ export function ContentPanel({
         )}
       </div>
       <InlineTranslationPopup
-        anchor={selectedWordInfo && wordAnchor && selectedWordInfo.sourceId === wordAnchor.selection.sourceId ? wordAnchor : null}
-        state={translationState}
-        onTranslate={translateWord}
+        anchor={wordAnchor}
+        data={data}
+        error={error}
+        isPending={isPending}
+        onTranslate={handleTranslateClick}
         onClose={clearTranslation}
       />
     </div>

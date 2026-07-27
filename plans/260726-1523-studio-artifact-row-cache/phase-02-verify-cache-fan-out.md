@@ -44,11 +44,11 @@ No new architecture. Phase 2 is empirical verification + minimal scoping fix.
 2. **Fan-out trace**
    - Add a temporary `Sentry.addBreadcrumb({ category: "artifact.fetch", data: { passageId } })` at the top of `fetchStudioArtifacts` in `src/features/studio-panel/server/services/studio-artifacts.ts`.
    - Reproduce the symptom: open `/study`, watch Sentry for events.
-   - If multiple `passageId` values appear in one boot, the fan-out is real. Identify the caller (search `useQuizMutation`, `useStudyWorkspaceState`, any `useEffect`).
+   - If multiple `passageId` values appear in one boot, the fan-out is real. Identify the caller (search `useQuestionMutation`, `useStudyWorkspaceState`, any `useEffect`).
    - If only the active `passageId` appears, the original report was a misread — Phase 2 closes without changes.
 
 3. **Fan-out mitigation** (only if Step 2 confirms)
-   - Gate `useQuizMutation.handleActionClick` on resolved `passageId`.
+   - Gate `useQuestionMutation.handleActionClick` on resolved `passageId`.
    - Confirm `findStudioArtifacts(userId, undefined)` cannot be reached (Prisma would reject undefined; even if it didn't, the cache would receive a `null` key).
    - If a multi-passage fetch is intentional (e.g., bulk regeneration), keep it but rename the cache key to `bulk:${userId}` and add a comment.
 
@@ -71,5 +71,5 @@ No new architecture. Phase 2 is empirical verification + minimal scoping fix.
 ## Risk Assessment
 
 - **False positive in fan-out trace**: A breadcrumb on every fetch is noisy if the fetch is hot. Limit to 5 minutes during diagnosis; if not resolved, escalate to a `Sentry` span instead.
-- **Cache poisoning from mutation**: `useQuizMutation.setArtifacts` mutates the entry's array. If the cache reflects a `done` artifact and the in-flight generation completes, the local array now shadows reality until TTL. Mitigated by `useQuizMutation` already appending the new artifact; any background refresh that arrives after must be ignored. Phase 2 verifies this by replaying the race.
+- **Cache poisoning from mutation**: `useQuestionMutation.setArtifacts` mutates the entry's array. If the cache reflects a `done` artifact and the in-flight generation completes, the local array now shadows reality until TTL. Mitigated by `useQuestionMutation` already appending the new artifact; any background refresh that arrives after must be ignored. Phase 2 verifies this by replaying the race.
 - **Backward compat**: Removing the breadcrumb is straightforward; no production impact.

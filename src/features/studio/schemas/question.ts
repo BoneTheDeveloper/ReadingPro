@@ -50,7 +50,6 @@ export const questionGenerationDataSchema = z
   })
   .strict();
 
-export type GeneratedQuestion = z.infer<typeof generatedQuestionSchema>;
 export type QuestionGenerationData = z.infer<typeof questionGenerationDataSchema>;
 
 // =============================================================================

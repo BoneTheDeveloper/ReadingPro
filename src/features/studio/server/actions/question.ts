@@ -2,28 +2,28 @@
 
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth/auth";
-import { recordQuizResult, resetQuizResult } from "../services/studio-artifacts";
-import { recordQuizResultInputSchema } from "@/features/studio/schemas/studio";
+import { recordQuestionResult, resetQuestionResult } from "../services/studio-artifacts";
+import { recordQuestionResultInputSchema } from "@/features/studio/schemas/studio";
 import { generateStudioQuestionsInputSchema } from "@/features/studio/schemas/question";
 import {
   generateQuestionsForPassage,
   QuestionServiceError,
-} from "../services/question/questions";
+} from "../services/question-generator";
 
-export async function recordQuizResultAction(
+export async function recordQuestionResultAction(
   artifactId: string,
   stats: { correctCount: number; totalQuestions: number },
 ) {
-  const parsedStats = recordQuizResultInputSchema.parse(stats);
+  const parsedStats = recordQuestionResultInputSchema.parse(stats);
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) throw new Error("Authentication required");
-  await recordQuizResult(artifactId, session.user.id, parsedStats);
+  await recordQuestionResult(artifactId, session.user.id, parsedStats);
 }
 
-export async function resetQuizResultAction(artifactId: string) {
+export async function resetQuestionResultAction(artifactId: string) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) throw new Error("Authentication required");
-  await resetQuizResult(artifactId, session.user.id);
+  await resetQuestionResult(artifactId, session.user.id);
 }
 
 export async function generateStudioQuestionsAction(input: {

@@ -23,9 +23,6 @@ B1 (intermediate), B2 (upper-intermediate), C1 (advanced), or C2 (proficient).
 Consider: vocabulary complexity, grammar structures, sentence length, topic sophistication.
 Respond with only a valid JSON object.`;
 
-/**
- * Detect CEFR level from text using AI.
- */
 export async function detectCefrLevel(text: string): Promise<CefrResult> {
   const { object } = await generateObject({
     model: "openai/gpt-4o-mini",

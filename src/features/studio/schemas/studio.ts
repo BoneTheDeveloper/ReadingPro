@@ -14,7 +14,7 @@ export type StudioGridId =
 // Server-action input schema — validated in studio-panel/actions.ts
 // ---------------------------------------------------------------------------
 
-export const recordQuizResultInputSchema = z
+export const recordQuestionResultInputSchema = z
   .object({
     correctCount: z.number().int().nonnegative(),
     totalQuestions: z.number().int().positive(),
