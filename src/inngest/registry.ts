@@ -3,7 +3,7 @@
  */
 
 import { uploadJobs } from "@/features/upload/server/inngest";
-import { studioPanelJobs } from "@/features/studio-panel/server/inngest";
+import { studioPanelJobs } from "@/features/studio/server/inngest";
 
 export const inngestFunctions = [
   ...uploadJobs,

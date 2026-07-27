@@ -4,10 +4,10 @@ import { Group, Panel, Separator } from "react-resizable-panels";
 import type { PassageData } from "@/types/passage";
 import { SourcesPanel } from "@/features/upload/components/panel/sources-panel";
 import { ContentPanel } from "@/features/reading/components/content-panel";
-import { StudioPanel } from "@/features/studio-panel/components/studio-panel";
+import { StudioPanel } from "@/features/studio/components/studio-panel";
 import { UploadModal } from "@/features/upload/components/model/upload-modal";
-import { useStudioArtifactQuery } from "@/features/studio-panel/hooks/use-studio-artifact-query";
-import { useQuestionMutation } from "@/features/studio-panel/hooks/use-question-mutation";
+import { useStudioArtifactQuery } from "@/features/studio/hooks/use-studio-artifact-query";
+import { useQuestionMutation } from "@/features/studio/hooks/use-question-mutation";
 import { useStudyPanelLayout } from "../_hooks/use-study-panel-layout";
 import { useStudyWorkspaceState } from "../_hooks/use-study-workspace";
 

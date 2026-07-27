@@ -33,8 +33,8 @@ Promote the per-passage artifact cache out of the component into a module-level 
 ```ts
 "use client";
 
-import { getStudioArtifactsAction } from "@/features/studio-panel/server/actions/artifact";
-import type { StudioArtifact } from "@/features/studio-panel/schemas/studio-panel";
+import { getStudioArtifactsAction } from "@/features/studio/server/actions/artifact";
+import type { StudioArtifact } from "@/features/studio/schemas/studio";
 const TTL_MS = 60_000;
 const EVICT_INTERVAL_MS = 5 * 60_000;
 

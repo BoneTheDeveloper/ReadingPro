@@ -6,15 +6,15 @@ import { moduleLog } from "@/lib/logger";
 import {
   studyChatRequestSchema,
   type UiMessage,
-} from "@/features/studio-panel/schemas/ai-chat";
-import { validateMessageSizeLimits } from "@/features/studio-panel/utils/ai-chat";
+} from "@/features/studio/schemas/ai-chat";
+import { validateMessageSizeLimits } from "@/features/studio/utils/ai-chat";
 import {
   getOwnedPassageForChat,
   loadPersistedMessages,
   toPersistedUiMessages,
   persistUserMessage,
   streamStudyChat,
-} from "@/features/studio-panel/server/services/ai-chat/ai-chat";
+} from "@/features/studio/server/services/ai-chat/ai-chat";
 
 const log = moduleLog("studio-panel:chat-route");
 
