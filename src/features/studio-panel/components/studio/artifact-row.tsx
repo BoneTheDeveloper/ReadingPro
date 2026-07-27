@@ -9,8 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { ARTIFACT_META } from "./constants";
-import type { StudioArtifact } from "@/features/studio-panel/schemas/studio-artifact";
-
+import type { StudioArtifact } from "@/features/studio-panel/schemas/studio-panel";
 interface ArtifactRowProps {
   artifact: StudioArtifact;
   errorMessage?: string | null;

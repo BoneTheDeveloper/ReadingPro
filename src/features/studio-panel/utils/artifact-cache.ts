@@ -14,8 +14,7 @@
 
 import * as Sentry from "@sentry/nextjs";
 import { getStudioArtifactsAction } from "@/features/studio-panel/server/actions/artifact";
-import type { StudioArtifact } from "@/features/studio-panel/schemas/studio-artifact";
-
+import type { StudioArtifact } from "@/features/studio-panel/schemas/studio-panel";
 const TTL_MS = 60_000;
 const EVICT_INTERVAL_MS = 5 * 60_000;
 

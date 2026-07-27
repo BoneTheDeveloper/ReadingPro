@@ -1,9 +1,10 @@
 ---
 title: "Phase 4: Verification, Manual Smoke, & Docs"
-status: pending
+status: in_progress
 priority: P2
 effort: "0.5d"
 dependencies: [phase-03]
+started: 2026-07-27
 ---
 
 # Phase 4: Verification, Manual Smoke, & Docs
@@ -65,5 +66,5 @@ weakening checks.
 |------|------------|
 | OpenAI latency in CI | Smoke is manual — runs against a local dev server, not CI. |
 | Attribution line regresses from a future rebrand | Negative Playwright assertion makes the contract explicit. |
-| `knip` flags `inline-translate.ts` deletion | Verify all importers updated; `grep` before commit. |
+| `knip` flags `server/translate.ts` as having unused exports | Only `translateBundle` and `ProviderTranslateInput` are exported — the schema, success type, and `TranslationProvider` interface are module-internal. If a future swap needs them exported (e.g. for cross-module tests), re-export then. |
 | `OPENAI_API_KEY` leaks into logs | Log keys are forbidden; the missing-key error message is generic. |

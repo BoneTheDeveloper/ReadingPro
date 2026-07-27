@@ -1,6 +1,6 @@
 "use client";
 
-import type { StudioArtifact, StudioArtifactErrorCode } from "@/features/studio-panel/schemas/studio-artifact";
+import type { StudioArtifact, StudioArtifactErrorCode } from "@/features/studio-panel/schemas/studio-panel";
 import type { GeneratedQuestionDto } from "@/features/studio-panel/schemas/question";
 import { generateStudioQuestionsAction } from "../server/actions/question";
 

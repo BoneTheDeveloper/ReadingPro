@@ -3,8 +3,7 @@
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth/auth";
 import { recordQuizResult, resetQuizResult } from "../services/studio-artifacts";
-import { recordQuizResultInputSchema } from "@/features/studio-panel/schemas/studio-artifact";
-import { generateStudioQuestionsInputSchema } from "@/features/studio-panel/schemas/question";
+import { recordQuizResultInputSchema } from "@/features/studio-panel/schemas/studio-panel";import { generateStudioQuestionsInputSchema } from "@/features/studio-panel/schemas/question";
 import {
   generateQuestionsForPassage,
   QuestionServiceError,

@@ -28,8 +28,7 @@ import type {
   ArtifactDetailCacheEntry,
   StudioArtifact,
   StudioPanelView,
-} from "@/features/studio-panel/schemas/studio-artifact";
-
+} from "@/features/studio-panel/schemas/studio-panel";
 interface UseStudioArtifactQueryOptions {
   passageId: string | null;
 }

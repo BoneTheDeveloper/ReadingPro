@@ -5,8 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StudioGrid, StudioEmptyState } from "./studio-grid";
 import { ArtifactRow } from "./artifact-row";
-import type { StudioArtifact } from "@/features/studio-panel/schemas/studio-artifact";
-import type { StudioActionId } from "@/features/studio-panel/schemas/studio-action";
+import type { StudioArtifact } from "@/features/studio-panel/schemas/studio-panel";import type { StudioGridId } from "@/features/studio-panel/schemas/studio-panel";
 
 const GENERATION_ERROR_MESSAGE = "Tạo nội dung thất bại";
 
@@ -14,10 +13,10 @@ interface DefaultStudioViewProps {
   artifacts: StudioArtifact[];
   hasActivePassage: boolean;
   runningCount: number;
-  isActionLocked: (actionId: StudioActionId) => boolean;
+  isActionLocked: (actionId: StudioGridId) => boolean;
   onToggleCollapse: () => void;
   onSelectChat: () => void;
-  onSelectAction: (actionId: StudioActionId) => void;
+  onSelectAction: (actionId: StudioGridId) => void;
   onOpenArtifact: (artifact: StudioArtifact) => void;
   onDeleteArtifact?: (artifactId: string) => void;
 }

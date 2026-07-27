@@ -8,10 +8,10 @@ import {
   Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { StudioActionId } from "@/features/studio-panel/schemas/studio-action";
+import type { StudioGridId } from "@/features/studio-panel/schemas/studio-panel";
 
 type TileSpec = {
-  id: StudioActionId;
+  id: StudioGridId;
   label: string;
   icon: typeof HelpCircle;
   enabled: boolean;
@@ -27,8 +27,8 @@ const STUDIO_GRID_TILES: TileSpec[] = [
 interface StudioGridProps {
   hasActivePassage: boolean;
   runningCount: number;
-  isActionLocked: (id: StudioActionId) => boolean;
-  onSelect: (id: StudioActionId) => void;
+  isActionLocked: (id: StudioGridId) => boolean;
+  onSelect: (id: StudioGridId) => void;
 }
 
 export function StudioGrid({

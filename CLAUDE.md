@@ -20,6 +20,3 @@ pnpm knip
 
 - Update docs when a code change alters product behavior, architecture,
   operations, API contracts, database shape, or test expectations.
-
-## Scree Shots
-- Store the playwright screenshot in test-results folder

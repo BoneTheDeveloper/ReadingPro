@@ -6,8 +6,7 @@ import type {
   ArtifactDetailCacheEntry,
   StudioArtifact,
   StudioPanelView,
-} from "@/features/studio-panel/schemas/studio-artifact";
-import type { StudioActionId } from "@/features/studio-panel/schemas/studio-action";
+} from "@/features/studio-panel/schemas/studio-panel";import type { StudioGridId } from "@/features/studio-panel/schemas/studio-panel";
 import { ChatDetailView } from "./studio/ai-chat/chat-detail-view";
 import { QuestionDetailView } from "./studio/questions/question-detail-view";
 import { CollapsedSidebar } from "./studio/collapsed-sidebar";
@@ -22,7 +21,7 @@ interface StudioPanelProps {
   artifactDetailById: Record<string, ArtifactDetailCacheEntry>;
   activePassage: PassageData | null;
   hasActivePassage: boolean;
-  onActionClick: (actionId: StudioActionId) => void;
+  onActionClick: (actionId: StudioGridId) => void;
   collapsed?: boolean;
   onToggleCollapse: () => void;
   onRecordQuestionResult: (artifactId: string, stats: { correctCount: number; totalQuestions: number }) => void;
@@ -85,7 +84,7 @@ export function StudioPanel({
     view?.mode === "artifact" ? artifacts.find((a) => a.id === view.ref.id) ?? null : null;
 
   const runningCount = artifacts.filter((r) => r.status === "generating").length;
-  const isActionLocked = (actionId: StudioActionId) =>
+  const isActionLocked = (actionId: StudioGridId) =>
     actionId === "question" && artifacts.some((r) => r.status === "generating" && r.type === "question");
 
   // Route to one of four views based on panel mode.

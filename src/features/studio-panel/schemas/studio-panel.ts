@@ -1,6 +1,15 @@
 import { z } from "zod";
 import type { GeneratedQuestionDto } from "./question";
 
+
+
+export type StudioGridId =
+  | "question"
+  | "flashcard"
+  | "summary"
+  | "chat"
+
+
 // ---------------------------------------------------------------------------
 // Server-action input schema — validated in studio-panel/actions.ts
 // ---------------------------------------------------------------------------
@@ -51,21 +60,13 @@ export type StudioArtifactErrorCode =
   | "PASSAGE_NOT_FOUND"
   | "UNKNOWN";
 
-/**
- * Reference to a real, persisted studio artifact.
- * Chat uses its own mode in `StudioPanelView` — it is NOT an artifact.
- */
+
 export interface ArtifactRef {
   type: StudioArtifactType;
   id: string;
 }
 
-/**
- * What the studio panel is currently displaying. Chat is a first-class mode,
- * not a fake artifact — it does not appear in `ArtifactRef.type`.
- *
- * Add new modes here when introducing new panel content (history, settings, etc.).
- */
+
 export type StudioPanelView =
   | { mode: "artifact"; ref: ArtifactRef }
   | { mode: "chat" }

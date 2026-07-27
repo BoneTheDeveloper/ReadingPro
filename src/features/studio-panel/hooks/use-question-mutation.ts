@@ -5,8 +5,7 @@ import { generateStudioQuestions } from "@/features/studio-panel/hooks/use-studi
 import type {
   StudioArtifact,
   StudioArtifactErrorCode,
-} from "@/features/studio-panel/schemas/studio-artifact";
-import type { StudioActionId } from "@/features/studio-panel/schemas/studio-action";
+} from "@/features/studio-panel/schemas/studio-panel";import type { StudioGridId } from "@/features/studio-panel/schemas/studio-panel";
 import type { PassageData } from "@/types/passage";
 
 type SetArtifactsCallback = (updater: (prev: StudioArtifact[]) => StudioArtifact[]) => void;
@@ -61,7 +60,7 @@ export function useQuestionMutation({
   );
 
   const handleActionClick = useCallback(
-    async (actionId: StudioActionId) => {
+    async (actionId: StudioGridId) => {
       const pid = passageIdRef.current;
       if (!pid) return;
       const passage = passagesRef.current?.find((p) => p.id === pid);

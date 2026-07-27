@@ -3,8 +3,7 @@ import * as Sentry from "@sentry/nextjs";
 import {
   type StudioArtifact,
   type StudioArtifactType,
-} from "@/features/studio-panel/schemas/studio-artifact";
-import type { GeneratedQuestionDto } from "@/features/studio-panel/schemas/question";
+} from "@/features/studio-panel/schemas/studio-panel";import type { GeneratedQuestionDto } from "@/features/studio-panel/schemas/question";
 import {
   deleteQuizResults,
   findArtifactQuestions,

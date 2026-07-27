@@ -72,8 +72,8 @@ DTO the popup needs, then to the route, then to the provider.
 |---|-------|--------|
 | 1 | [Research LLM Structured Output](./phase-01-research-provider-candidates.md) | Completed |
 | 2 | [UI Render Contract & Popup Reshape](./phase-02-ui-render-contract.md) | Completed |
-| 3 | [Route + LLM Provider](./phase-03-route-and-service-rebuild.md) | In Progress |
-| 4 | [Verification, Manual Smoke, & Docs](./phase-04-verification-and-docs.md) | Pending |
+| 3 | [Route + LLM Provider](./phase-03-route-and-service-rebuild.md) | Completed |
+| 4 | [Verification, Manual Smoke, & Docs](./phase-04-verification-and-docs.md) | In Progress |
 
 ### Status notes (2026-07-27)
 
@@ -123,14 +123,12 @@ DTO the popup needs, then to the route, then to the provider.
 
 | Action | File | Reason |
 |--------|------|-------|
-| Create | `src/features/reading/server/providers/translation-provider.ts` | Provider interface |
-| Create | `src/features/reading/server/providers/openai-structured-translation.ts` | OpenAI impl using Vercel AI SDK `generateObject` + zod schema (reuses `src/lib/ai/client.ts` + `getModel("inline-translate")` + `withAITrace`) |
-| Create | `src/features/reading/server/services/translation-bundle.ts` | Thin adapter that calls the provider and tags the result |
+| Create | `src/features/reading/server/translate.ts` | Provider contract + OpenAI impl + `translateBundle` factory in one server-only module |
 | Modify | `src/app/api/translate/route.ts` | Single-step route, typed errors |
 | Modify | `src/features/reading/schemas/translation.ts` | DTO + input schema for the bundle |
 | Modify | `src/features/reading/hooks/use-word-translation.ts` | Consume new response |
 | Modify | `src/features/reading/components/inline-translation-popup.tsx` | Four-piece render (word / IPA / translation / POS badge) — **drop the "Google Translate" footer** |
-| Delete | `src/features/reading/server/services/inline-translate.ts` | Replaced by bundle service |
+| Delete | `src/features/reading/server/services/inline-translate.ts` | Replaced by `server/translate.ts` |
 | Create | `plans/260727-1406-translate-api-redesign-from-ui-render/research.md` | LLM provider + JSON-schema prompt + cost/latency notes |
 | Modify | `.env.example` (or equivalent) | `OPENAI_API_KEY` already present — no change needed; verify in Phase 4 |
 | Create | `docs/reading/inline-translate.md` | Link to the canonical DTO in `translation.ts`; calls out `OPENAI_API_KEY` requirement |

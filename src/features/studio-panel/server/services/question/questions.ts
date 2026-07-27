@@ -15,8 +15,7 @@ import {
   type StudioArtifactErrorCode,
   type StudioArtifactStatus,
   type StudioArtifactType,
-} from "@/features/studio-panel/schemas/studio-artifact";
-import {
+} from "@/features/studio-panel/schemas/studio-panel";import {
   createStudioArtifactWithQuestions,
   findExistingStudioArtifact,
 } from "@/features/studio-panel/server/db/studio-artifact-questions";

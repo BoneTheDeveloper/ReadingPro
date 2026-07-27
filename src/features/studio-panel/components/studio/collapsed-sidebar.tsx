@@ -3,20 +3,20 @@
 import { BookOpen, HelpCircle, Layers, MessageCircle, PanelRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import type { StudioActionId } from "@/features/studio-panel/schemas/studio-action";
+import type { StudioGridId } from "@/features/studio-panel/schemas/studio-panel";
 
 interface CollapsedSidebarProps {
   hasActivePassage: boolean;
   onToggleCollapse: () => void;
   onSelectChat: () => void;
-  onSelectAction: (actionId: StudioActionId) => void;
+  onSelectAction: (actionId: StudioGridId) => void;
 }
 
 const COLLAPSED_TILES = [
-  { id: "question" as StudioActionId, icon: HelpCircle, label: "Câu hỏi" },
-  { id: "flashcard" as StudioActionId, icon: Layers, label: "Flashcards" },
-  { id: "summary" as StudioActionId, icon: BookOpen, label: "Tóm tắt" },
-  { id: "chat" as StudioActionId, icon: MessageCircle, label: "Trò chuyện" },
+  { id: "question" as StudioGridId, icon: HelpCircle, label: "Câu hỏi" },
+  { id: "flashcard" as StudioGridId, icon: Layers, label: "Flashcards" },
+  { id: "summary" as StudioGridId, icon: BookOpen, label: "Tóm tắt" },
+  { id: "chat" as StudioGridId, icon: MessageCircle, label: "Trò chuyện" },
 ] as const;
 
 export function CollapsedSidebar({  onToggleCollapse}: CollapsedSidebarProps) {

@@ -1,4 +1,4 @@
-export const MODELS = {
+const MODELS = {
   "ai-chat": {
     id: "gpt-4o-mini",
     maxTokens: 16384,

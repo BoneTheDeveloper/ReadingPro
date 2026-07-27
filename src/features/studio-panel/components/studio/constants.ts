@@ -1,6 +1,5 @@
 import { HelpCircle, Layers, type LucideIcon } from "lucide-react";
-import type { StudioArtifactType } from "@/features/studio-panel/schemas/studio-artifact";
-
+import type { StudioArtifactType } from "@/features/studio-panel/schemas/studio-panel";
 /**
  * Icon + label for each persisted artifact type. Chat is not an artifact and
  * lives with the action tiles instead.

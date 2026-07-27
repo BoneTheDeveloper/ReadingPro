@@ -5,9 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { PanelHeader } from "../panel-header";
 import { QuestionContent } from "../questions/question-content";
 import { ARTIFACT_META } from "../constants";
-import type { StudioArtifact } from "@/features/studio-panel/schemas/studio-artifact";
-import type { ArtifactDetailCacheEntry } from "@/features/studio-panel/schemas/studio-artifact";
-
+import type { StudioArtifact } from "@/features/studio-panel/schemas/studio-panel";import type { ArtifactDetailCacheEntry } from "@/features/studio-panel/schemas/studio-panel";
 interface QuestionDetailViewProps {
   artifact: StudioArtifact;
   detail: ArtifactDetailCacheEntry | undefined;

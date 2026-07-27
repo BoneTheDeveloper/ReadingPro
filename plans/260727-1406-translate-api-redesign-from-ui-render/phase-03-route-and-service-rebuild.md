@@ -1,10 +1,11 @@
 ---
 title: "Phase 3: Route + LLM Provider"
-status: in_progress
+status: completed
 priority: P1
 effort: "1d"
 dependencies: [phase-01, phase-02]
 started: 2026-07-27
+completed: 2026-07-27
 ---
 
 # Phase 3: Route + LLM Provider
@@ -24,7 +25,8 @@ passthrough, error mapping, and structured logging.
 - [ ] The route delegates to a `translateBundle(input, { signal })` server function.
 - [ ] `TranslationProvider` interface declares `translateBundle(input, opts): Promise<TranslateResult>`.
   One concrete impl ships now: `OpenAiStructuredTranslationProvider`.
-- [ ] Only `openai-structured-translation.ts` imports the `openai` SDK.
+- [ ] Only `server/translate.ts` (via `@/lib/ai`) consumes the OpenAI SDK; `src/lib/ai/client.ts`
+      remains the single importer of `@ai-sdk/openai`.
 - [ ] The route maps typed failures to a stable `{ error: { code, message } }` shape with codes:
   `unauthenticated | bad_request | not_found | rate_limited | upstream | timeout | parse | aborted`.
 - [ ] `req.signal` is forwarded to the OpenAI client so client disconnects cancel in-flight work.
@@ -39,21 +41,17 @@ passthrough, error mapping, and structured logging.
 route.ts
   └─ auth.api.getSession()                  // 401 if absent
   └─ zod-validate body                       // 400 if invalid
-  └─ translateBundle(input, { signal })      // provider interface
+  └─ translateBundle(input, { signal })      // @/features/reading/server/translate
        └─ OpenAiStructuredTranslationProvider.translateBundle()
-            ├─ responses.create({ ..., response_format: json_schema })
-            ├─ JSON.parse(response.output_text)
-            └─ safeParse against zod DTO
-       └─ returns tagged result
+            ├─ generateObject({ schema: translationBundleSchema, abortSignal })
+            ├─ withAITrace wraps the call
+            └─ tags the result { ok: true, data } | { ok: false, error }
   └─ map tagged result → 200 DTO | typed error
 ```
 
-The provider abstraction is a single interface in `providers/translation-provider.ts`. The bundle
-service in `services/translation-bundle.ts` is a thin adapter that:
-
-1. Calls the provider.
-2. Validates the response against the DTO zod schema.
-3. Tags the result with `{ ok: true, data }` or `{ ok: false, code, message }`.
+The contract, impl, and factory live in one server-only module
+(`src/features/reading/server/translate.ts`). The route imports `translateBundle`
+and `ProviderTranslateInput` from that one path.
 
 The route maps:
 
@@ -74,65 +72,75 @@ first use. Missing key is treated as `code: "upstream"`.
 ## Related Code Files
 
 - Modify: `src/app/api/translate/route.ts`
-- Create: `src/features/reading/server/providers/translation-provider.ts` (interface)
-- Create: `src/features/reading/server/providers/openai-structured-translation.ts` (impl)
-- Create: `src/features/reading/server/services/translation-bundle.ts` (thin adapter)
+- Create: `src/features/reading/server/translate.ts` — provider contract + OpenAI impl + `translateBundle` factory in one server-only module
 - Delete: `src/features/reading/server/services/inline-translate.ts`
 - Modify: `src/features/reading/schemas/translation.ts` — DTO + input schema
 - Modify: `src/features/reading/hooks/use-word-translation.ts` — consume new response
 
 ## Implementation Steps
 
-1. Define `TranslationProvider` interface in `providers/translation-provider.ts`:
+1. In `src/features/reading/server/translate.ts`:
+   - Define `TranslationProvider` interface, `ProviderTranslateInput`, `TranslateSuccess`,
+     `TranslateResult` (tagged), and `translationBundleSchema` (zod) — same shape as before.
+   - Implement `OpenAiStructuredTranslationProvider` — lazy `OPENAI_API_KEY` guard, Vercel AI SDK
+     `generateObject({ schema, abortSignal })`, `withAITrace` wrapper. Error mapping: missing key →
+     `{ code: "upstream" }`, `AbortError` → `{ code: "aborted" }`, `NoObjectGeneratedError` →
+     `{ code: "parse" }`, `APICallError` 429 → `{ code: "rate_limited" }`, 408 →
+     `{ code: "timeout" }`, other API errors → `{ code: "upstream" }`.
+   - Export `translateBundle(input, opts)` — singleton delegate to the concrete provider. The route
+     imports this single function; the LLM client import is hidden behind it.
 
-   ```ts
-   export interface TranslateInput {
-     text: string;
-     context: string;
-     sourceLanguage: "en";
-     targetLanguage: "vi";
-   }
-
-   export type TranslateResult =
-     | { ok: true; data: { translation: string; ipa: string | null; partOfSpeech: PartOfSpeech } }
-     | { ok: false; code: TranslateErrorCode; message: string };
-
-   export interface TranslationProvider {
-     translateBundle(input: TranslateInput, opts: { signal: AbortSignal }): Promise<TranslateResult>;
-   }
-   ```
-
-2. Implement `OpenAiStructuredTranslationProvider` in
-   `providers/openai-structured-translation.ts`. Reads `OPENAI_API_KEY` lazily, calls
-   `openai.responses.create({ model: "gpt-4o-mini", input, response_format: json_schema })`, parses
-   `output_text` into the DTO, validates with the same zod schema the route exports, returns a tagged
-   result. Maps `AbortError` → `{ code: "aborted" }`, `TimeoutError` → `{ code: "timeout" }`,
-   rate-limit HTTP 429 → `{ code: "rate_limited" }`, JSON parse failure → `{ code: "parse" }`,
-   missing key → `{ code: "upstream", message: "Translation provider not configured" }`.
-
-3. Implement `translateBundle(input, opts)` in `services/translation-bundle.ts` — thin call to the
-   provider; the route depends on this module so the LLM client import is hidden behind it.
-
-4. Rewrite `src/app/api/translate/route.ts`:
+2. Rewrite `src/app/api/translate/route.ts`:
    - `auth.api.getSession` → `unauthenticated` 401.
    - `zod.safeParse(body)` → `bad_request` 400 on failure.
-   - Call `translateBundle(input, { signal: req.signal })`.
+   - Call `translateBundle(input, { signal: req.signal })` from `@/features/reading/server/translate`.
    - Map tagged result to HTTP. Emit one structured log line per request (use the project's existing
      server logger — no new logger lib).
 
-5. Replace `inline-translate.ts` import in `use-word-translation.ts` with the new bundle consumer; the
+3. Replace `inline-translate.ts` import in `use-word-translation.ts` with the new bundle consumer; the
    hook now does NOT pass `ipa` / `partOfSpeech` separately — they arrive in `data`.
 
-6. Add `OPENAI_API_KEY` to `.env.example` (or equivalent), and `openai` to `package.json` if not already
-   present. Verify version range against current Next.js compatibility.
+4. Verify `OPENAI_API_KEY` is declared in `.env.example` and `@ai-sdk/openai` is in `package.json`. No
+   new installs.
 
 ## Success Criteria
 
-- [ ] `curl -X POST /api/translate` returns 200 with the four-piece bundle.
-- [ ] Cancelling the client request no longer holds the LLM call open.
-- [ ] Only one file imports `openai` (grep `openai` under `src/` returns exactly one match).
-- [ ] With `OPENAI_API_KEY` unset, the route returns 502 `{ code: "upstream", message: "Translation provider not configured" }`.
-- [ ] `pnpm typecheck`, `pnpm lint`, `pnpm knip` pass.
+- [x] `pnpm typecheck` — passes.
+- [x] `pnpm lint` — passes.
+- [x] `pnpm knip` — no new dead exports; the two `TranslateInput` / `TranslateFailure` types introduced
+  earlier in the phase were removed because no caller consumed them (the route has its own zod schema
+  for input validation, and `TranslateResult` now inlines the error shape).
+- [x] Only one file imports the `@ai-sdk/openai` SDK package (`src/lib/ai/client.ts`). The provider
+  imports the `openai` symbol via the `@/lib/ai` barrel, which re-exports it from `client.ts` — same
+  pattern as the sibling features `upload.cefr.detect`, `studio.question.generate`,
+  `upload.vocabulary.extract`.
+- [x] Missing `OPENAI_API_KEY` → pre-flight guard returns `{ code: "upstream", message: "Translation
+  provider not configured" }` before any SDK call. Key value never logged.
+- [x] `req.signal` forwarded to `generateObject` via `abortSignal`; client disconnects map to
+  `{ code: "aborted" }` (route returns 504 fallback when 499 is unavailable).
+- [x] Provider error mapping complete: `unauthenticated` / `bad_request` / `not_found` /
+  `rate_limited` / `upstream` / `timeout` / `parse` / `aborted`.
+
+## File ownership diff
+
+- Created: `src/features/reading/server/translate.ts` — `TranslationProvider` interface + zod schema
+  for the LLM-returned bundle + `TranslateResult` tagged result + `OpenAiStructuredTranslationProvider`
+  impl (using `@/lib/ai`'s `openai`, `getModel("inline-translate")`, `withAITrace`, `wrapUserText`) +
+  `translateBundle(input, opts)` factory. Single server-only module, single SDK importer lives in
+  `src/lib/ai/client.ts`.
+- Rewrote: `src/app/api/translate/route.ts` — auth → JSON parse → zod → `translateBundle` → tagged
+  result → HTTP. Emits one structured log line per request with `userId`, `latencyMs`, `provider`,
+  `outcome`.
+- Modified: `src/features/reading/schemas/translation.ts` — wire-only types (`WordSelection`,
+  `PartOfSpeech`, `TranslationDto`, `TranslateErrorCode`, `TranslateErrorBody`).
+- Deleted: `src/features/reading/server/services/inline-translate.ts` — replaced by
+  `server/translate.ts`.
+- Deleted: `src/features/reading/server/providers/` and `src/features/reading/server/services/` —
+  empty after the merge.
+- Hook (`src/features/reading/hooks/use-word-translation.ts`) untouched — it already uses
+  `TranslationDto` structurally; the new DTO shape is a superset.
+- Popup (`src/features/reading/components/inline-translation-popup.tsx`) untouched — Phase 2 already
+  adopts the four-piece render.
 
 ## Risk Assessment
 
