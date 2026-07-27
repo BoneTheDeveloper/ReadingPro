@@ -7,7 +7,7 @@ import {
   studyChatRequestSchema,
   type UiMessage,
 } from "@/features/studio-panel/schemas/ai-chat";
-import { validateMessageSizeLimits } from "@/features/studio-panel/lib/ai-chat-utils";
+import { validateMessageSizeLimits } from "@/features/studio-panel/utils/ai-chat";
 import {
   getOwnedPassageForChat,
   loadPersistedMessages,

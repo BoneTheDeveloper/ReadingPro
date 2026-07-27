@@ -152,5 +152,3 @@ export function validateTextContent(text: string): FileValidationResult {
  */
 
 // ============ UTILITIES ============
-
-

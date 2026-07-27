@@ -9,7 +9,7 @@ import { inngest } from "@/inngest";
 import { createUploadProcessEvent } from "@/features/upload/server/inngest/events";
 import {
   validateTextContent,
-} from "@/features/upload/lib/upload-validation";
+} from "@/features/upload/utils/upload-validation";
 import { toPassageData, type PassageModel } from "@/types/passage";
 import { extractVideoId, isValidYouTubeUrl } from "@/utils/youtube-url";
 import { fetchTranscript } from "../services/parsers/youtube-transcript";

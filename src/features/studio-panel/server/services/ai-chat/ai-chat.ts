@@ -7,7 +7,7 @@ import {
   MAX_PASSAGE_CHARS,
   type UiMessage,
 } from "@/features/studio-panel/schemas/ai-chat";
-import { truncateToRecentTurns, extractTextContent } from "@/features/studio-panel/lib/ai-chat-utils";
+import { truncateToRecentTurns, extractTextContent } from "@/features/studio-panel/utils/ai-chat";
 
 const log = moduleLog("studio-panel:chat");
 

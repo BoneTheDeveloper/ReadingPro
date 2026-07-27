@@ -12,14 +12,17 @@ const PdfViewer = dynamic(
     )
   }
 );
-import { useRef, } from "react";
+import { useRef, useState } from "react";
 import { FileText, FileSearch, Plus, FileType } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getCEFRShortLabel } from "@/utils/cefr";
 import { getCEFRBadgeVariant } from "./cefr-badge";
 import { Badge } from "@/components/ui/badge";
+import { InlineTranslationPopup } from "./inline-translation-popup";
 import { useScrollProgress } from "@/features/reading/hooks/use-scroll-progress";
 import { useContentState } from "@/features/reading/hooks/use-content-state";
+import { selectionToWordSelection } from "@/features/reading/utils/selection-to-word-selection";
+import type { WordSelectionAnchor } from "@/features/reading/utils/selection-to-word-selection";
 import type { PassageData } from "@/types/passage";
 import { YouTubeEmbed } from "./youtube-embed";
 
@@ -33,18 +36,40 @@ export function ContentPanel({
   const {
     viewMode,
     setViewMode,
+    selectedWordInfo,
+    translationState,
+    handleWordSelection,
+    translateWord,
   } = useContentState({ passageId: passage?.id });
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const [wordAnchor, setWordAnchor] = useState<WordSelectionAnchor | null>(null);
   const progress = useScrollProgress(scrollRef);
   const pdfBlobPathname =
     viewMode === "pdf" && passage?.filePath ? passage.filePath : null;
 
+  const clearTranslation = () => {
+    setWordAnchor(null);
+    handleWordSelection(null);
+    window.getSelection()?.removeAllRanges();
+  };
 
-
-
-
+  const handlePassageMouseUp = () => {
+    if (!passage || viewMode !== "passage") return;
+    const anchor = selectionToWordSelection(
+      window.getSelection(),
+      contentRef.current,
+      passage.id,
+    );
+    if (!anchor) {
+      setWordAnchor(null);
+      handleWordSelection(null);
+      return;
+    }
+    setWordAnchor(anchor);
+    handleWordSelection(anchor.selection);
+  };
   if (!passage) {
     return (
       <div className="flex items-center justify-center h-full min-h-100">
@@ -151,6 +176,7 @@ export function ContentPanel({
             <div
               ref={contentRef}
               className="reading-content text-foreground"
+              onMouseUp={handlePassageMouseUp}
             >
               {passage.content.split("\n\n").map((paragraph, i) => (
                 <p key={i} className="mb-6 last:mb-0">
@@ -161,6 +187,12 @@ export function ContentPanel({
           </div>
         )}
       </div>
+      <InlineTranslationPopup
+        anchor={selectedWordInfo && wordAnchor && selectedWordInfo.sourceId === wordAnchor.selection.sourceId ? wordAnchor : null}
+        state={translationState}
+        onTranslate={translateWord}
+        onClose={clearTranslation}
+      />
     </div>
   );
 }

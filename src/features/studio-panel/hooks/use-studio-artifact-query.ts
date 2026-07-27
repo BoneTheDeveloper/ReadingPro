@@ -22,7 +22,7 @@ import {
   subscribe,
   updateEntryArtifacts,
   type Status,
-} from "@/features/studio-panel/lib/artifact-cache";
+} from "@/features/studio-panel/utils/artifact-cache";
 import type {
   ArtifactRef,
   ArtifactDetailCacheEntry,

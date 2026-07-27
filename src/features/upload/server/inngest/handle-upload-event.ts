@@ -11,7 +11,7 @@ import {
 } from "@/features/upload/server/services/upload-ai-pipeline";
 import { downloadFile, deleteFile } from "./blob";
 import { parsePDF } from "@/features/upload/server/services/parsers/pdf-parser";
-import { validateFileContent } from "@/features/upload/lib/upload-validation";
+import { validateFileContent } from "@/features/upload/utils/upload-validation";
 import type { UploadPipelineInput } from "@/features/upload/server/services/upload-ai-pipeline";
 
 export const processUploadJob = inngest.createFunction(

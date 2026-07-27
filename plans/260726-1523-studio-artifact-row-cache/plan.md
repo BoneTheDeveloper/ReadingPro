@@ -66,7 +66,7 @@ None. Searched existing plans in `plans/`; no overlap with `260726-1235-direct-p
 ## Files Touched
 
 - Modify: `src/features/studio-panel/hooks/use-studio-artifact-query.ts`
-- Add: `src/features/studio-panel/lib/artifact-cache.ts` (module-level store with `getEntry`, `subscribe`, `getSnapshot` plain functions — colocated with `ai-chat-utils.ts`; not a hook because it does not call `useState` / `useEffect` / `useSyncExternalStore`)
+- Add: `src/features/studio-panel/utils/artifact-cache.ts` (module-level store with `getEntry`, `subscribe`, `getSnapshot` plain functions — colocated with `ai-chat-utils.ts`; not a hook because it does not call `useState` / `useEffect` / `useSyncExternalStore`)
 - No changes to `default-studio-view.tsx`, `artifact-row.tsx`, server actions, prisma, or schemas.
 
 ## Success Criteria

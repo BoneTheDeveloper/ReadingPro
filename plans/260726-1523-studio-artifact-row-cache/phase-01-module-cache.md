@@ -28,7 +28,7 @@ Promote the per-passage artifact cache out of the component into a module-level 
 
 ## Architecture
 
-`src/features/studio-panel/lib/artifact-cache.ts` (new file — plain module-level store, not a hook):
+`src/features/studio-panel/utils/artifact-cache.ts` (new file — plain module-level store, not a hook):
 
 ```ts
 "use client";
@@ -132,7 +132,7 @@ Notes:
 ## Related Code Files
 
 - Modify: `src/features/studio-panel/hooks/use-studio-artifact-query.ts`
-- Create: `src/features/studio-panel/lib/artifact-cache.ts` (plain module — exports `getEntry`, `subscribe`, `getSnapshot`, `notifyEntry`. No `use*` calls.)
+- Create: `src/features/studio-panel/utils/artifact-cache.ts` (plain module — exports `getEntry`, `subscribe`, `getSnapshot`, `notifyEntry`. No `use*` calls.)
 - Read for context: `src/features/studio-panel/components/studio-panel.tsx`, `src/features/studio-panel/server/actions/artifact.ts`
 
 ## Implementation Steps
