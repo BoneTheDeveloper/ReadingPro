@@ -6,14 +6,11 @@ allowBuilds:
   "@sentry/cli": true
   prisma: true
   sharp: true
-  supabase: true
   msw: false
   unrs-resolver: false
   "@parcel/watcher": true
   "@swc/core": true
   esbuild: true
-  "@clerk/shared": false
-  protobufjs: set this to true or false
 
 minimumReleaseAgeExclude:
   - '@ai-sdk/react@4.0.17'
