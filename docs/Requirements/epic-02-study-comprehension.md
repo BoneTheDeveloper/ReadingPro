@@ -5,13 +5,9 @@
 The learner reads a passage in a focused workspace and checks how well they understood it
 through a simplified view, comprehension questions, and a flashcard self-test.
 
----
-
----
 
 ## US-06 · Answer comprehension questions
 
-**Priority:** Must **Status:** Implemented
 
 **As a** learner, **I want** to answer comprehension questions with feedback and source
 citations, **so that** I can check my understanding of a passage.
@@ -31,14 +27,9 @@ Scenario: No option selected
   Then it is disabled until I choose an answer
 ```
 
-**Traceability:** Use case [UC-03](../use-cases.md#uc-03-take-flashcard-test) ·
-Scope: Study · Tests: [test-scenarios.md](../../Testing/test-scenarios.md)
-
----
 
 ## US-07 · Take a flashcard test
 
-**Priority:** Should **Status:** Implemented
 
 **As a** learner, **I want** to run through a passage's questions as a flashcard test, **so
 that** I get a quick score of how well I understood it.
@@ -56,8 +47,3 @@ Scenario: All questions answered
   When I continue
   Then the system shows the results summary directly
 ```
-
-**Traceability:** Use case [UC-03](../use-cases.md#uc-03-take-flashcard-test) ·
-Scope: Study · Tests: [test-scenarios.md](../../Testing/test-scenarios.md)
-
----

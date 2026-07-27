@@ -10,8 +10,6 @@ words, with their passage context, into a word bank.
 
 ## US-12 · Translate a selection in the study page
 
-**Priority:** Must **Status:** Implemented
-
 **As a** learner, **I want** to translate a selected phrase from a passage I own, **so that** I
 understand difficult text in my language.
 
@@ -34,13 +32,10 @@ Scenario: Cached translation
   Then the system returns the cached translation without re-calling the model
 ```
 
-**Traceability:** Use case [UC-09](../use-cases.md#uc-09-translate-selection) ·
 
 ---
 
 ## US-13 · Translate and look up on a standalone page
-
-**Priority:** Should **Status:** Planned
 
 **As a** learner, **I want** a dedicated translate-and-dictionary page outside the study
 workspace, **so that** I can look up and save words even when I am not reading a passage.
@@ -55,9 +50,6 @@ Scenario: Look up a word standalone
   And I can save it to my word bank from there
 ```
 
-**Traceability:** Use case _(to author)_ · Scope: Translation / Dictionary · Tests: _pending_
-
----
 
 ## US-14 · Search the dictionary
 
@@ -80,11 +72,6 @@ Scenario: No match
   Then the system returns an empty result with suggestions
 ```
 
-**Traceability:** Use case [UC-11](../use-cases.md#uc-11-search-dictionary) ·
-Scope: Dictionary · Tests: [test-scenarios.md](../../Testing/test-scenarios.md)
-
----
-
 ## US-15 · Save a word with its passage context
 
 **Priority:** Must **Status:** Implemented
@@ -106,6 +93,3 @@ Scenario: Save a duplicate
   When I save it again
   Then the existing entry is updated in place, not duplicated
 ```
-
-**Traceability:** Use case [UC-10](../use-cases.md#uc-10-save-vocabulary) ·
-Scope: Vocabulary · Tests: [test-scenarios.md](../../Testing/test-scenarios.md)

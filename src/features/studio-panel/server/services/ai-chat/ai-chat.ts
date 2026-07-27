@@ -94,7 +94,7 @@ export async function streamStudyChat(params: {
     ${passageContent}
   `);
 
-  const modelId = getModel("studio.chat");
+  const modelId = getModel("ai-chat");
 
   log.info(
     {

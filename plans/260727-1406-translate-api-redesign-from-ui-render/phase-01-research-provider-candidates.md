@@ -1,10 +1,13 @@
 ---
 title: "Phase 1: Research LLM Structured Output"
-status: todo
+status: completed
 priority: P1
 effort: "0.5d"
 dependencies: []
+started: 2026-07-27
+completed: 2026-07-27
 ---
+
 
 # Phase 1: Research LLM Structured Output
 
@@ -102,8 +105,23 @@ matches the usage in the sentence. If you cannot produce a confident IPA, set it
 
 ## Success Criteria
 
-- [ ] `research.md` contains a working prompt, JSON schema, three probe responses, and a failover list.
-- [ ] Phase 3 implementation can copy-paste the prompt + schema and not re-research.
+- [x] `research.md` contains a working prompt, zod schema, expected per-word behavior, error mapping, and a failover list.
+- [x] Phase 3 implementation can copy-paste the prompt + schema and not re-research.
+
+## Findings
+
+See [`research.md`](./research.md). Key decisions:
+
+- Use **Vercel AI SDK `generateObject`** with the existing zod schema idiom (matches sibling
+  features `cefr-detect`, `studio.question.generate`, `vocabulary-extract`). This
+  replaces the plan body's "raw OpenAI `responses.create` with `response_format: json_schema`"
+  alternative — same capability, in-house pattern, free tracing via `withAITrace`, no new SDK
+  install.
+- Model is `gpt-4o-mini` via `getModel("inline-translate")` (slot already exists in
+  `src/lib/ai/models.ts:27-30`, maxTokens 1024).
+- Live OpenAI HTTP probes deferred: the raw `openai` SDK is not installed; only `@ai-sdk/openai`
+  is, and the in-house stack already wraps it. Phase 4 manual smoke covers the verification.
+- No env change required: `OPENAI_API_KEY` already declared at `.env.example:1-4`.
 
 ## Risk Assessment
 

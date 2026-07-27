@@ -1,9 +1,9 @@
 ---
 title: "Phase 4: Verification, Manual Smoke, & Docs"
-status: todo
+status: pending
 priority: P2
 effort: "0.5d"
-dependencies: []
+dependencies: [phase-03]
 ---
 
 # Phase 4: Verification, Manual Smoke, & Docs

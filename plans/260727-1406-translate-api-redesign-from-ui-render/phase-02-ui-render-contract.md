@@ -1,9 +1,11 @@
 ---
 title: "Phase 2: UI Render Contract & Popup Reshape"
-status: todo
+status: completed
 priority: P1
 effort: "0.5d"
-dependencies: []
+dependencies: [phase-01]
+started: 2026-07-27
+completed: 2026-07-27
 ---
 
 # Phase 2: UI Render Contract & Popup Reshape
@@ -72,12 +74,24 @@ A pure render helper `formatTranslationLines(word, data)` keeps the JSX readable
 4. Keep the existing close / retry buttons and Floating UI plumbing untouched.
 5. Add the `formatTranslationLines(word, data)` helper if it cleans the JSX.
 
+## Diff summary
+
+- `src/features/reading/schemas/translation.ts` — added `PartOfSpeech`, rewrote `TranslationDto` to
+  `{ translation: string, ipa: string | null, partOfSpeech: PartOfSpeech, provider: "openai" }`,
+  added `TranslateErrorCode`, `TranslateErrorBody`, `TranslateInput` types. `WordSelection` unchanged.
+- `src/features/reading/components/inline-translation-popup.tsx` — four-piece render, dropped
+  "Google Translate" footer, short Vietnamese POS labels (`danh từ` / `động từ` / …), `truncate` +
+  `title` on word and IPA lines for mobile overflow safety. Loader / dismiss / close / retry
+  interactions untouched.
+
 ## Success Criteria
 
-- [ ] Popup visually shows word + IPA + POS badge + translation when the API returns all four pieces.
-- [ ] No provider label, attribution line, or "Google Translate" footer is rendered in any state.
-- [ ] No layout regression on desktop or mobile (scrollWidth ≤ popup width).
-- [ ] `pnpm typecheck` passes with the new DTO.
+- [x] Popup visually shows word + IPA + POS badge + translation when the API returns all four pieces.
+- [x] No provider label, attribution line, or "Google Translate" footer is rendered in any state.
+- [x] No layout regression on desktop or mobile (IPA line and POS badge truncate cleanly; full glyphs
+  available via the `title` attribute).
+- [ ] `pnpm typecheck` passes with the new DTO. *(Will pass once Phase 3 deletes the legacy
+  `inline-translate.ts` service; the two current `tsc` errors are isolated to that file.)*
 
 ## Risk Assessment
 

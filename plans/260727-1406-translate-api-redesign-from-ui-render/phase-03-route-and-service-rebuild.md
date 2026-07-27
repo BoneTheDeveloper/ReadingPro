@@ -1,9 +1,10 @@
 ---
 title: "Phase 3: Route + LLM Provider"
-status: todo
+status: in_progress
 priority: P1
 effort: "1d"
-dependencies: []
+dependencies: [phase-01, phase-02]
+started: 2026-07-27
 ---
 
 # Phase 3: Route + LLM Provider

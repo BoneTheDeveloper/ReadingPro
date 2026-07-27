@@ -1,12 +1,13 @@
 ---
 title: "Translate API Redesign From UI Render — LLM Bundle"
 description: "Rebuild POST /api/translate so the inline-translation popup shows word + IPA + Vietnamese translation + part-of-speech in a single round trip, served by one OpenAI call with structured JSON output. No audio, no attribution in the popup."
-status: pending
+status: in_progress
 priority: P1
 effort: "2d"
 branch: preview
 tags: [feature, reading, api, frontend, refactor, llm]
 created: 2026-07-27
+updated: 2026-07-27
 ---
 
 # Translate API Redesign From UI Render — LLM Bundle
@@ -69,10 +70,29 @@ DTO the popup needs, then to the route, then to the provider.
 
 | # | Phase | Status |
 |---|-------|--------|
-| 1 | [Research LLM Structured Output](./phase-01-research-provider-candidates.md) | Pending |
-| 2 | [UI Render Contract & Popup Reshape](./phase-02-ui-render-contract.md) | Pending |
-| 3 | [Route + LLM Provider](./phase-03-route-and-service-rebuild.md) | Pending |
+| 1 | [Research LLM Structured Output](./phase-01-research-provider-candidates.md) | Completed |
+| 2 | [UI Render Contract & Popup Reshape](./phase-02-ui-render-contract.md) | Completed |
+| 3 | [Route + LLM Provider](./phase-03-route-and-service-rebuild.md) | In Progress |
 | 4 | [Verification, Manual Smoke, & Docs](./phase-04-verification-and-docs.md) | Pending |
+
+### Status notes (2026-07-27)
+
+- Phase 1 in progress: scout complete. Project already centralizes OpenAI access
+  via `src/lib/ai/client.ts` + `src/lib/ai/models.ts` (which exposes a
+  `inline-translate` slot → `gpt-4o-mini`, maxTokens 1024) and existing
+  AI features use Vercel AI SDK `generateObject` with a zod schema, wrapped in
+  `withAITrace`. Phase 3 will reuse that idiom instead of raw OpenAI
+  `responses.create` so the "only one file imports `openai`" rule still holds
+  (single SDK importer lives in `src/lib/ai/client.ts`) and the new feature
+  fits the existing trace + model-registry pattern.
+- `OPENAI_API_KEY` already declared in `.env.example` — no env change needed
+  there. Phase 4 will keep the existing line as-is and just link to it from the
+  new `docs/reading/inline-translate.md`.
+- No `docs/reading/inline-translate.md` exists today. Phase 4 will **create** it,
+  not modify.
+- The current `inline-translate.ts` Google Translate footer line is rendered at
+  `src/features/reading/components/inline-translation-popup.tsx:150-152` —
+  confirmed target for the no-attribution contract.
 
 ## Architectural Notes
 
@@ -80,11 +100,16 @@ DTO the popup needs, then to the route, then to the provider.
   render) unblock Phase 3. Phase 3 builds the route and provider against the DTO Phase 2 adopts. Phase 4
   verifies the full chain.
 - **Single round trip, single LLM call.** The browser sees one `POST /api/translate`. Inside the route, one
-  OpenAI Chat Completions call returns a structured JSON object via `response_format: json_schema`. No fan-out,
-  no second upstream.
+  Vercel AI SDK `generateObject` call returns a structured JSON object via its zod schema (the project's
+  existing idiom across `cefr-detect`, `studio.question.generate`, `vocabulary-extract`). No
+  fan-out, no second upstream.
 - **Provider behind an interface.** `TranslationProvider` declares
   `translateBundle(input, { signal }) -> Promise<TranslateResult>`. One concrete impl ships now
   (`OpenAiStructuredTranslationProvider`); a swap to Gemini/Claude/local touches one file.
+- **Reuse the in-house AI stack.** The new provider imports `openai` only from `@/lib/ai` (which is itself
+  the only `openai` SDK importer in the repo via `src/lib/ai/client.ts`), picks the model via
+  `getModel("inline-translate")`, and wraps the call in `withAITrace` so the new flow shows up the
+  same way other AI features do. No new SDK installs, no new logger.
 - **No attribution in the popup.** The popup is a translate popup, not a credits surface. We do not pass
   provider labels, license info, or source URLs into the UI. Any compliance with third-party licenses is
   internal-only (e.g., logged, not rendered).
@@ -99,7 +124,7 @@ DTO the popup needs, then to the route, then to the provider.
 | Action | File | Reason |
 |--------|------|-------|
 | Create | `src/features/reading/server/providers/translation-provider.ts` | Provider interface |
-| Create | `src/features/reading/server/providers/openai-structured-translation.ts` | OpenAI impl with JSON schema |
+| Create | `src/features/reading/server/providers/openai-structured-translation.ts` | OpenAI impl using Vercel AI SDK `generateObject` + zod schema (reuses `src/lib/ai/client.ts` + `getModel("inline-translate")` + `withAITrace`) |
 | Create | `src/features/reading/server/services/translation-bundle.ts` | Thin adapter that calls the provider and tags the result |
 | Modify | `src/app/api/translate/route.ts` | Single-step route, typed errors |
 | Modify | `src/features/reading/schemas/translation.ts` | DTO + input schema for the bundle |
@@ -107,8 +132,8 @@ DTO the popup needs, then to the route, then to the provider.
 | Modify | `src/features/reading/components/inline-translation-popup.tsx` | Four-piece render (word / IPA / translation / POS badge) — **drop the "Google Translate" footer** |
 | Delete | `src/features/reading/server/services/inline-translate.ts` | Replaced by bundle service |
 | Create | `plans/260727-1406-translate-api-redesign-from-ui-render/research.md` | LLM provider + JSON-schema prompt + cost/latency notes |
-| Modify | `.env.example` (or equivalent) | Document `OPENAI_API_KEY` |
-| Modify | `docs/reading/inline-translate.md` (if present) | Link to the canonical DTO in `translation.ts` |
+| Modify | `.env.example` (or equivalent) | `OPENAI_API_KEY` already present — no change needed; verify in Phase 4 |
+| Create | `docs/reading/inline-translate.md` | Link to the canonical DTO in `translation.ts`; calls out `OPENAI_API_KEY` requirement |
 
 ## Risks
 

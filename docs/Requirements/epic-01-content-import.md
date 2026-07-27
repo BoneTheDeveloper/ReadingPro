@@ -3,13 +3,11 @@
 **PRD Solution area:** 1. Bring any passage
 
 The learner turns content from any source into a study passage. Sources: pasted text, PDF,
-YouTube link (via transcription), web link, and paper images (via OCR).
+YouTube link (via transcription)
 
 ---
 
 ## US-01 · Paste English text
-
-**Priority:** Must **Status:** Implemented
 
 **As a** learner, **I want** to paste English text with an optional title, **so that** I can
 turn my own material into a study passage.
@@ -28,14 +26,10 @@ Scenario: Text fails validation
   Then the system rejects it with an error and lets me retry
 ```
 
-**Traceability:** Use case [UC-01](../use-cases.md#uc-01-upload-and-analyze-content) ·
-Scope: Import · Tests: [test-scenarios.md](../../Testing/test-scenarios.md)
-
 ---
 
 ## US-02 · Upload a PDF
 
-**Priority:** Must **Status:** Implemented
 
 **As a** learner, **I want** to upload a PDF, **so that** the app extracts its text into a
 study passage.
@@ -56,14 +50,11 @@ Scenario: Unsupported or oversized file
 
 - Uploaded files are private and tied to my account.
 
-**Traceability:** Use case [UC-01](../use-cases.md#uc-01-upload-and-analyze-content) ·
-Scope: Import · Tests: [test-scenarios.md](../../Testing/test-scenarios.md)
 
 ---
 
 ## US-03 · Import from a YouTube link
 
-**Priority:** Should **Status:** Planned
 
 **As a** learner, **I want** to import a YouTube link, **so that** I can study its spoken
 content as a passage without paying for heavy media processing.
@@ -83,57 +74,3 @@ Scenario: Video has no usable transcript
 ```
 
 - Transcription is the import path (chosen for cost efficiency over re-processing audio).
-
-**Traceability:** Use case _(to author)_ · Scope: Import · Tests: _pending_
-
----
-
-## US-04 · Import from a web link
-
-**Priority:** Should **Status:** Planned
-
-**As a** learner, **I want** to import a web article link, **so that** I can study online
-reading material as a passage.
-
-**Acceptance criteria**
-
-```gherkin
-Scenario: Import a readable article
-  Given I paste a web link to an article
-  When I submit
-  Then the system extracts the main text and creates a passage
-
-Scenario: Page content cannot be extracted
-  Given the page has no extractable article text
-  When I submit
-  Then the system explains the import failed and suggests pasting text instead
-```
-
-**Traceability:** Use case _(to author)_ · Scope: Import · Tests: _pending_
-
----
-
-## US-05 · Import a paper passage via OCR
-
-**Priority:** Could **Status:** Planned
-
-**As a** learner, **I want** to capture a paper passage with my camera or an image, **so that**
-printed material I read offline becomes a study passage.
-
-**Acceptance criteria**
-
-```gherkin
-Scenario: OCR a clear image
-  Given I upload a clear image of printed English text
-  When I submit
-  Then the system runs OCR and creates a passage from the recognized text
-
-Scenario: Image is unreadable
-  Given the image is too blurry or low-contrast to recognize
-  When I submit
-  Then the system reports the text could not be read and lets me retry
-```
-
-- The learner can correct recognized text before the passage is finalized.
-
-**Traceability:** Use case _(to author)_ · Scope: Import · Tests: _pending_

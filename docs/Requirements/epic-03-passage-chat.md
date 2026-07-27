@@ -5,11 +5,8 @@
 The learner uses a passage-grounded chat to dig into the content — not only to study, but to
 research and pull more information about what the passage covers.
 
----
 
 ## US-10 · Ask a question grounded in the passage
-
-**Priority:** Must **Status:** Implemented
 
 **As a** learner, **I want** to ask a tutor question about the selected passage, **so that** I
 get contextual explanations while reading.
@@ -29,14 +26,10 @@ Scenario: Passage not owned
   Then the system rejects the request
 ```
 
-**Traceability:** Use case [UC-12](../use-cases.md#uc-12-ask-study-chat) ·
-Scope: AI · Tests: [test-scenarios.md](../../Testing/test-scenarios.md)
-
 ---
 
 ## US-11 · Research deeper through chat
 
-**Priority:** Should **Status:** Implemented
 
 **As a** learner, **I want** to ask follow-up and research questions that go beyond literal
 comprehension, **so that** I can learn more about the topic the passage covers.
@@ -51,6 +44,3 @@ Scenario: Continue a research thread
 ```
 
 - Chat is scoped to the passage I own; answers stay grounded in that context.
-
-**Traceability:** Use case [UC-12](../use-cases.md#uc-12-ask-study-chat) ·
-Scope: AI · Tests: [test-scenarios.md](../../Testing/test-scenarios.md)

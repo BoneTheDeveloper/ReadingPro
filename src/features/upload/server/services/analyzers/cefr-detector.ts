@@ -28,7 +28,7 @@ Respond with only a valid JSON object.`;
  * Detect CEFR level from text using AI.
  */
 export async function detectCefrLevel(text: string): Promise<CefrResult> {
-  const modelId = getModel("upload.cefr.detect");
+  const modelId = getModel("cefr-detect");
 
   const { object } = await withAITrace(
     { operation: "cefr-detection", feature: "upload", model: modelId },

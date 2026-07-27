@@ -19,7 +19,7 @@ export async function generateComprehensionQuestions(
       .map((line, i) => `${i + 1}: ${line}`)
       .join("\n");
 
-    const modelId = getModel("studio.question.generate");
+    const modelId = getModel("question-generate");
 
     const { object } = await withAITrace(
       { operation: "generate-questions", feature: "studio-panel", model: modelId },

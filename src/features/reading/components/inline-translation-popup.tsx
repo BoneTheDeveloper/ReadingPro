@@ -16,6 +16,7 @@ import { useMemo, useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
 import type { TranslationState } from "@/features/reading/hooks/use-word-translation";
+import type { PartOfSpeech, TranslationDto } from "@/features/reading/schemas/translation";
 import type { WordSelectionAnchor } from "@/features/reading/utils/selection-to-word-selection";
 
 interface InlineTranslationPopupProps {
@@ -23,6 +24,27 @@ interface InlineTranslationPopupProps {
   state: TranslationState;
   onTranslate: () => void;
   onClose: () => void;
+}
+
+// Short labels keep the badge a small pill on mobile even for longer POS
+// names like "interjection". The popup only renders the badge when the LLM
+// returned something other than "unknown".
+const PART_OF_SPEECH_LABEL: Record<Exclude<PartOfSpeech, "unknown">, string> = {
+  noun: "danh từ",
+  verb: "động từ",
+  adjective: "tính từ",
+  adverb: "trạng từ",
+  pronoun: "đại từ",
+  preposition: "giới từ",
+  conjunction: "liên từ",
+  interjection: "thán từ",
+  determiner: "loại từ",
+};
+
+function partOfSpeechBadge(data: TranslationDto): { label: string; aria: string } | null {
+  if (data.partOfSpeech === "unknown") return null;
+  const label = PART_OF_SPEECH_LABEL[data.partOfSpeech];
+  return { label, aria: `Loại từ: ${label}` };
 }
 
 export function InlineTranslationPopup({
@@ -78,6 +100,8 @@ export function InlineTranslationPopup({
 
   const word = anchor.selection.selectedText;
   const translation = state.data?.translation?.trim() ?? "";
+  const ipa = state.data?.ipa ?? null;
+  const posBadge = state.data ? partOfSpeechBadge(state.data) : null;
   const compact = state.status === "ready" || state.status === "idle";
 
   return (
@@ -105,19 +129,41 @@ export function InlineTranslationPopup({
         ) : (
           <div className="space-y-3" aria-live="polite">
             <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <div className="min-w-0">
+                <p
+                  title={word}
+                  className="truncate text-base font-semibold text-foreground"
+                >
                   {word}
                 </p>
+
                 {state.status === "loading" ? (
                   <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
                     <LoaderCircle className="size-4 animate-spin" />
                     Đang dịch...
                   </div>
                 ) : state.status === "success" && translation ? (
-                  <p className="mt-1 text-lg font-semibold text-foreground">
-                    {translation}
-                  </p>
+                  <div className="mt-1 space-y-1">
+                    {ipa !== null && (
+                      <p
+                        title={ipa}
+                        className="truncate font-mono text-xs text-muted-foreground"
+                      >
+                        {ipa}
+                      </p>
+                    )}
+                    {posBadge && (
+                      <span
+                        aria-label={posBadge.aria}
+                        className="inline-flex items-center rounded-full border border-border bg-muted px-2 py-0.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground"
+                      >
+                        {posBadge.label}
+                      </span>
+                    )}
+                    <p className="text-lg font-semibold text-foreground">
+                      {translation}
+                    </p>
+                  </div>
                 ) : state.status === "success" ? (
                   <p className="mt-1 text-sm text-muted-foreground">
                     Không tìm thấy bản dịch
@@ -144,12 +190,6 @@ export function InlineTranslationPopup({
                 <RotateCcw />
                 Thử lại
               </Button>
-            )}
-
-            {state.status === "success" && translation && (
-              <p className="border-t border-border pt-2 text-[11px] text-muted-foreground">
-                Google Translate
-              </p>
             )}
           </div>
         )}
