@@ -207,7 +207,7 @@ function SegmentedToggle<T extends string>({
   options: { value: T; label: string; disabled?: boolean }[];
 }) {
   return (
-    <div className="inline-flex bg-paper border border-border p-[3px]">
+    <div className="inline-flex bg-paper border border-border rounded-[11px] p-[3px]">
       {options.map((opt) => {
         const active = opt.value === value;
         return (
@@ -217,12 +217,12 @@ function SegmentedToggle<T extends string>({
             onClick={() => !opt.disabled && onChange(opt.value)}
             disabled={opt.disabled}
             className={cn(
-              "px-3.5 py-1.5 text-xs font-semibold transition-all",
+              "px-3.5 py-1.5 rounded-lg text-xs transition-all duration-140",
               active
-                ? "bg-surface text-primary shadow-sm"
+                ? "bg-surface text-primary font-semibold shadow-sm"
                 : opt.disabled
-                  ? "text-muted-foreground/40 cursor-not-allowed"
-                  : "text-muted-foreground hover:text-foreground",
+                  ? "text-muted-foreground/40 font-medium cursor-not-allowed"
+                  : "text-ink-3 font-medium hover:text-foreground cursor-pointer",
             )}
           >
             {opt.label}

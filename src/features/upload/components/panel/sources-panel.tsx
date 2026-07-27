@@ -3,12 +3,15 @@
 import { useState, useMemo } from "react";
 import {
   Plus,
+  File,
   FileText,
   Search,
   MoreVertical,
   Trash2,
-  PanelLeft,
-  Video,
+  PlayCircle,
+  PanelLeftClose,
+  PanelLeftOpen,
+  type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -21,6 +24,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { SourceType } from "@/types/passage";
+
+/**
+ * Each source type carries its own icon + tinted chip so a source is
+ * identifiable at a glance: text = indigo, PDF = amber, video = coral.
+ */
+const SOURCE_TYPE_VISUAL: Record<SourceType, { icon: LucideIcon; chip: string }> = {
+  TEXT: { icon: FileText, chip: "bg-indigo-soft text-primary" },
+  PDF: { icon: File, chip: "bg-amber-soft text-amber-text" },
+  YOUTUBE: { icon: PlayCircle, chip: "bg-coral-soft text-coral-hover" },
+};
 
 export interface DocumentItem {
   id: string;
@@ -61,12 +74,17 @@ export function SourcesPanel({
       <Card className="h-full flex flex-col overflow-hidden bg-panel rounded-none">
         <CardContent className="p-0 flex flex-col h-full items-center">
           <div className="w-full p-2 flex justify-center border-b border-border">
-            <Button variant="ghost" size="icon" onClick={onToggleCollapse} className="h-8 w-8 text-muted-foreground hover:text-foreground" >
-              <PanelLeft className="w-5 h-5" />
-            </Button>
+            <button
+              type="button"
+              onClick={onToggleCollapse}
+              aria-label="Mở rộng bảng nguồn"
+              className="w-[30px] h-[30px] rounded-[9px] border border-border bg-surface text-muted-foreground inline-flex items-center justify-center transition-all duration-140 hover:border-primary hover:text-primary cursor-pointer"
+            >
+              <PanelLeftOpen className="w-4 h-4" />
+            </button>
           </div>
           <div className="w-full px-2 pt-2 pb-1 flex justify-center">
-            <Button variant="ghost" size="icon" onClick={onOpenUploadModal} className="h-9 w-9 text-muted-foreground hover:text-foreground" title="Thêm nguồn">
+            <Button variant="ghost" size="icon" onClick={onOpenUploadModal} className="h-9 w-9 text-muted-foreground hover:text-primary" title="Thêm nguồn">
               <Plus className="w-5 h-5" />
             </Button>
           </div>
@@ -74,12 +92,11 @@ export function SourcesPanel({
             <div className="flex flex-col items-center gap-1">
               {documents.map((doc) => {
                 const isActive = activeId === doc.id;
-                const isYoutube = doc.sourceType === "YOUTUBE";
-                const DocIcon = isYoutube ? Video : FileText;
+                const { icon: DocIcon, chip } = SOURCE_TYPE_VISUAL[doc.sourceType];
                 return (
                   <button key={doc.id} onClick={() => onSelect(doc.id)} title={doc.title}
-                    className={cn("w-11 h-11 rounded-lg flex items-center justify-center transition-colors cursor-pointer",
-                      isActive ? "bg-primary/10 text-primary" : "text-ink-3 hover:bg-primary/10 hover:text-primary"
+                    className={cn("w-11 h-11 rounded-[13px] flex items-center justify-center transition-colors cursor-pointer",
+                      isActive ? "bg-indigo-soft text-primary" : cn(chip, "opacity-70 hover:opacity-100")
                     )}>
                     <DocIcon className="w-5 h-5" />
                   </button>
@@ -96,10 +113,15 @@ export function SourcesPanel({
     <Card className="h-full flex flex-col overflow-hidden bg-panel rounded-none">
       <CardContent className="p-0 flex flex-col h-full">
         <div className="h-[54px] px-4 flex items-center justify-between border-b border-border">
-          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Nguồn</h2>
-          <Button variant="ghost" size="icon" onClick={onToggleCollapse} className="h-[30px] w-[30px] rounded-[9px] text-muted-foreground hover:text-primary">
-            <PanelLeft className="w-4 h-4" />
-          </Button>
+          <h2 className="text-[11px] font-bold text-ink-3 uppercase tracking-[0.13em]">Nguồn</h2>
+          <button
+            type="button"
+            onClick={onToggleCollapse}
+            aria-label="Thu gọn bảng nguồn"
+            className="w-[30px] h-[30px] rounded-[9px] border border-border bg-surface text-muted-foreground inline-flex items-center justify-center transition-all duration-140 hover:border-primary hover:text-primary cursor-pointer"
+          >
+            <PanelLeftClose className="w-4 h-4" />
+          </button>
         </div>
         <div className="px-3 pt-3 pb-2">
           <div className="relative">
@@ -108,17 +130,17 @@ export function SourcesPanel({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Tìm nguồn..."
-              className="pl-9 h-9 bg-paper border-border text-[13px]"
+              className="pl-9 h-9 rounded-[11px] bg-surface border-border text-[13px]"
             />
           </div>
+          <button type="button" onClick={onOpenUploadModal}
+            className="w-full mt-1 inline-flex items-center justify-center gap-[7px] px-3 py-[11px] rounded-[13px] border-[1.5px] border-dashed border-border-strong text-xs font-semibold text-ink-3 hover:border-primary hover:text-primary hover:bg-surface transition-all duration-140 cursor-pointer">
+            <Plus className="w-[15px] h-[15px]" />
+            Thêm nguồn
+          </button>
         </div>
-        <div className="flex-1 overflow-y-auto panel-scroll px-2.5 pb-3">
+        <div className="flex-1 overflow-y-auto panel-scroll px-2.5 pt-1 pb-3">
           <div className="flex flex-col gap-[3px]">
-            <button type="button" onClick={onOpenUploadModal}
-              className="w-full mb-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-[13px] border-[1.5px] border-dashed border-border-strong text-xs font-semibold text-muted-foreground hover:border-primary hover:text-primary hover:bg-surface transition-all disabled:opacity-50">
-              <Plus className="w-3.5 h-3.5" />
-              Thêm nguồn
-            </button>
             {uploadError && (
               <UploadErrorRow error={uploadError} onDismiss={onClearUploadError ?? (() => {})} />
             )}
@@ -189,22 +211,21 @@ function UploadErrorRow({ error, onDismiss }: { error: string; onDismiss: () => 
 function SourceRow({ doc, active, onSelect, onDelete }: {
   doc: DocumentItem; active: boolean; onSelect: () => void; onDelete: () => void;
 }) {
-  const isYoutube = doc.sourceType === "YOUTUBE";
-  const DocIcon = isYoutube ? Video : FileText;
+  const { icon: DocIcon, chip } = SOURCE_TYPE_VISUAL[doc.sourceType];
 
   return (
     <div role="button" tabIndex={0} onClick={onSelect} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onSelect(); }}
-      className={cn("w-full p-2.5 text-left flex items-center gap-2.5 rounded-[13px] transition-colors border group cursor-pointer",
-        active ? "bg-primary/10 border-primary/20" : "border-transparent hover:bg-surface hover:border-border"
+      className={cn("w-full px-[11px] py-2.5 text-left flex items-center gap-[11px] rounded-[13px] transition-all duration-140 border group cursor-pointer",
+        active ? "bg-indigo-soft border-indigo-soft-border" : "border-transparent hover:bg-surface hover:border-border"
       )}>
       <div className={cn("w-8 h-8 rounded-[10px] flex items-center justify-center shrink-0",
-        active ? "bg-surface text-primary shadow-sm" : "bg-indigo-soft text-ink-3"
+        active ? "bg-surface text-primary shadow-sm" : chip
       )}>
         <DocIcon className="w-4 h-4" />
       </div>
       <div className="flex-1 overflow-hidden">
         <h4 className={cn("text-[13px] truncate leading-tight", active ? "font-semibold text-primary" : "font-medium text-foreground")}>{doc.title}</h4>
-        <p className="text-[11px] text-muted-foreground truncate mt-0.5">{doc.date}</p>
+        <p className={cn("text-[11px] truncate mt-px", active ? "text-primary/60" : "text-ink-3")}>{doc.date}</p>
       </div>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
