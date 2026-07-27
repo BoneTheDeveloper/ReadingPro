@@ -4,7 +4,6 @@
  */
 
 import { generateObject } from "ai";
-import { openai, getModel, withAITrace } from "@/lib/ai";
 import { z } from "zod";
 
 type CEFRLevel = "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
@@ -28,18 +27,12 @@ Respond with only a valid JSON object.`;
  * Detect CEFR level from text using AI.
  */
 export async function detectCefrLevel(text: string): Promise<CefrResult> {
-  const modelId = getModel("cefr-detect");
-
-  const { object } = await withAITrace(
-    { operation: "cefr-detection", feature: "upload", model: modelId },
-    () =>
-      generateObject({
-        model: openai(modelId),
-        schema: cefrSchema,
-        system: CEFR_PROMPT,
-        prompt: `Determine the CEFR level of this text:\n\n${text.slice(0, 5000)}`,
-      })
-  );
+  const { object } = await generateObject({
+    model: "openai/gpt-4o-mini",
+    schema: cefrSchema,
+    system: CEFR_PROMPT,
+    prompt: `Determine the CEFR level of this text:\n\n${text.slice(0, 5000)}`,
+  });
 
   return { cefrLevel: object.level };
 }

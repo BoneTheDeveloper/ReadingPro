@@ -4,8 +4,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import type {
   TranslationDto,
-  WordSelection,
 } from "@/features/reading/schemas/translation";
+
+import type {
+  WordSelection
+} from "@/features/reading/utils/word-selection";
 
 type TranslationStatus = "idle" | "ready" | "loading" | "success" | "error";
 

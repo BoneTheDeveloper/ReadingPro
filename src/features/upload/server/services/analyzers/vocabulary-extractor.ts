@@ -4,7 +4,6 @@
  */
 
 import { generateObject } from "ai";
-import { openai, getModel, withAITrace } from "@/lib/ai";
 import { z } from "zod";
 
 export interface VocabularyResult {
@@ -25,18 +24,12 @@ Respond with only a valid JSON object.`;
  * Extract vocabulary from text using AI.
  */
 export async function extractVocabulary(text: string): Promise<VocabularyResult> {
-  const modelId = getModel("vocabulary-extract");
-
-  const { object } = await withAITrace(
-    { operation: "vocab-extraction", feature: "upload", model: modelId },
-    () =>
-      generateObject({
-        model: openai(modelId),
-        schema: vocabSchema,
-        system: VOCAB_PROMPT,
-        prompt: `Extract key vocabulary from:\n\n${text.slice(0, 5000)}`,
-      })
-  );
+  const { object } = await generateObject({
+    model: "openai/gpt-4o-mini",
+    schema: vocabSchema,
+    system: VOCAB_PROMPT,
+    prompt: `Extract key vocabulary from:\n\n${text.slice(0, 5000)}`,
+  });
 
   return { vocabulary: object.vocabulary };
 }

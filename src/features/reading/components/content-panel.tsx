@@ -21,8 +21,8 @@ import { Badge } from "@/components/ui/badge";
 import { InlineTranslationPopup } from "./inline-translation-popup";
 import { useScrollProgress } from "@/features/reading/hooks/use-scroll-progress";
 import { useContentState } from "@/features/reading/hooks/use-content-state";
-import { selectionToWordSelection } from "@/features/reading/utils/selection-to-word-selection";
-import type { WordSelectionAnchor } from "@/features/reading/utils/selection-to-word-selection";
+import { selectionToWordSelection } from "@/features/reading/utils/word-selection";
+import type { WordSelectionAnchor } from "@/features/reading/utils/word-selection";
 import type { PassageData } from "@/types/passage";
 import { YouTubeEmbed } from "./youtube-embed";
 

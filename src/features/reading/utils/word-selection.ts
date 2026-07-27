@@ -1,12 +1,10 @@
-import type { WordSelection } from "@/features/reading/schemas/translation";
+export type WordSelection = {
+  selectedText: string;
+  contextSentence: string;
+  sourceId: string;
+  targetLanguage: "vi";
+};
 
-/**
- * Live selection bundle passed from the passage to the Floating UI popup.
- *
- * The selection helper keeps the `Range` so the popup's positioning effect can
- * re-read coordinates after scroll or layout changes. `rect` is a snapshot taken
- * at `mouseup` time so callers can use it synchronously when needed.
- */
 export type WordSelectionAnchor = {
   selection: WordSelection;
   range: Range;

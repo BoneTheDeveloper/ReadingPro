@@ -17,7 +17,7 @@ import { useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import type { TranslationState } from "@/features/reading/hooks/use-word-translation";
 import type { PartOfSpeech, TranslationDto } from "@/features/reading/schemas/translation";
-import type { WordSelectionAnchor } from "@/features/reading/utils/selection-to-word-selection";
+import type { WordSelectionAnchor } from "@/features/reading/utils/word-selection";
 
 interface InlineTranslationPopupProps {
   anchor: WordSelectionAnchor | null;

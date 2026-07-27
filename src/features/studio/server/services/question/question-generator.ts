@@ -1,6 +1,5 @@
 import "server-only";
 import { generateObject } from "ai";
-import { openai, getModel, wrapUserText, withAITrace } from "@/lib/ai";
 import { moduleLog } from "@/lib/logger";
 import {
   questionGenerationDataSchema,
@@ -19,20 +18,14 @@ export async function generateComprehensionQuestions(
       .map((line, i) => `${i + 1}: ${line}`)
       .join("\n");
 
-    const modelId = getModel("question-generate");
+    const { object } = await generateObject({
+      model: "openai/gpt-4o-mini",
+      schema: questionGenerationDataSchema,
+      system: `You are an expert English language educator. Generate multiple-choice reading comprehension questions that: test understanding (not memory), have clear answers from text, include line number citations, range factual to inferential, cover different parts of passage. Wrong answers should be plausible but clearly incorrect.`,
+      prompt: `Generate ${questionCount} reading comprehension questions for this passage:
 
-    const { object } = await withAITrace(
-      { operation: "generate-questions", feature: "studio-panel", model: modelId },
-      () =>
-        generateObject({
-          model: openai(modelId),
-          schema: questionGenerationDataSchema,
-          system: `You are an expert English language educator. Generate multiple-choice reading comprehension questions that: test understanding (not memory), have clear answers from text, include line number citations, range factual to inferential, cover different parts of passage. Wrong answers should be plausible but clearly incorrect.`,
-          prompt: `Generate ${questionCount} reading comprehension questions for this passage:
-
-${wrapUserText(numberedPassage)}`,
-        })
-    );
+${numberedPassage}`,
+    });
 
     return object;
   } catch (error) {

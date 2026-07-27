@@ -1,5 +1,4 @@
 import "server-only";
-import { openai, getModel, wrapUserText } from "@/lib/ai";
 import { convertToModelMessages, streamText } from "ai";
 import { prisma } from "@/lib/prisma";
 import { moduleLog } from "@/lib/logger";
@@ -86,20 +85,17 @@ export async function streamStudyChat(params: {
   const recentMessages = truncateToRecentTurns(combinedMessages);
   const modelMessages = await convertToModelMessages(recentMessages);
 
-  const passageContext = wrapUserText(`
+  const passageContext = `
     Passage title: ${passage.title}
     Passage ID: ${passage.id}
 
     Passage content:
     ${passageContent}
-  `);
-
-  const modelId = getModel("ai-chat");
+  `;
 
   log.info(
     {
       context: {
-        modelId,
         incomingCount: incomingMessages.length,
         persistedCount: persistedMessages.length,
         recentCount: recentMessages.length,
@@ -110,7 +106,7 @@ export async function streamStudyChat(params: {
   );
 
   return streamText({
-    model: openai(modelId),
+    model: "openai/gpt-4o-mini",
     system: [
       "You are an encouraging English reading comprehension tutor.",
       "Answer only about the selected passage unless the learner asks for general study strategy.",
