@@ -10,7 +10,7 @@ import { AppError } from "@/lib/error/app-error";
 
 export const POST = withErrorHandling("create-question", async (request) => {
   const { user } = await requireApiSession();
-  const { passageId } = z.object({ passageId: z.uuid() }).parse(await request.json);
+  const { passageId } = z.object({ passageId: z.uuid() }).parse(await request.json());
 
   // ── 1. Get passage ───────────────────────────────────────────
   const passage = await findPassageForUser(user.id, passageId);

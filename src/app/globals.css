@@ -65,6 +65,7 @@
     --color-coral-hover: var(--coral-hover);
     --color-coral-soft: var(--coral-soft);
     --color-coral-text: var(--coral-text);
+    --color-indigo-hover: var(--indigo-hover);
     --color-indigo-soft: var(--indigo-soft);
     --color-indigo-soft-border: var(--indigo-soft-border);
     --color-amber: var(--amber);
@@ -120,6 +121,7 @@
     /* Primary — Indigo */
     --primary: #5A4FE0;
     --primary-foreground: #FFFFFF;
+    --indigo-hover: #4A3FD0;
     --ring: #5A4FE0;
 
     /* Secondary — neutral surface (button styling refined in primitives) */
@@ -246,6 +248,7 @@
     /* Primary - Navy, lifted for dark surfaces */
     --primary: #8FB4E8;
     --primary-foreground: #0E1726;
+    --indigo-hover: #A9C7EE;
     --ring: #A9C7EE;
 
     /* Secondary */

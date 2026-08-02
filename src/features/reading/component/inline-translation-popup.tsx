@@ -11,7 +11,7 @@ import {
   useInteractions,
   useRole,
 } from "@floating-ui/react";
-import { Languages, LoaderCircle, RotateCcw, X } from "lucide-react";
+import { Bookmark, Languages, LoaderCircle, RotateCcw, Volume2, X } from "lucide-react";
 import { useMemo, useEffect } from "react";
 
 import { Button } from "@/component/ui/button";
@@ -64,7 +64,7 @@ export function InlineTranslationPopup({
     placement: "bottom",
     strategy: "fixed",
     middleware: [
-      offset(8),
+      offset(10),
       flip({ fallbackPlacements: ["top"] }),
       shift({ padding: 8 }),
     ],
@@ -90,8 +90,8 @@ export function InlineTranslationPopup({
 
   const dismiss = useDismiss(floatingContext, {
     enabled: isOpen,
-    escapeKey: true,
-    outsidePress: false,
+    escapeKey: !isExpanded,
+    outsidePress: !isExpanded,
   });
   const role = useRole(floatingContext, {
     role: isExpanded ? "dialog" : "tooltip",
@@ -113,80 +113,129 @@ export function InlineTranslationPopup({
         style={floatingStyles}
         className={
           isExpanded
-            ? "z-50 w-[min(20rem,calc(100vw-1rem))] rounded-xl border border-border bg-surface p-4 text-foreground shadow-[0_4px_12px_rgba(0,0,0,.06),0_18px_40px_rgba(0,0,0,.10)]"
+            ? "z-50 w-max min-w-[210px] max-w-[min(20rem,calc(100vw-1rem))] rounded-[18px] border border-border bg-surface p-3.5 text-foreground shadow-popup"
             : "z-50"
         }
         {...getFloatingProps()}
       >
         {!isExpanded ? (
-          <button
+          <Button
             type="button"
+            size="xs"
             onClick={onTranslate}
             aria-label={`Dịch từ ${word}`}
-            className="flex size-9 items-center justify-center rounded-full border border-primary/20 bg-primary text-primary-foreground shadow-indigo transition-transform hover:-translate-y-px focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+            // before: pseudo-element extends the tap area to 44px without changing the pill's visual size
+            className="relative gap-1.5 rounded-full px-3 before:absolute before:-inset-2 before:content-['']"
           >
-            <Languages className="size-4" />
-          </button>
+            <Languages />
+            Dịch
+          </Button>
         ) : (
-          <div className="space-y-3" aria-live="polite">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p
-                  title={word}
-                  className="truncate text-base font-semibold text-foreground"
+          <div aria-live="polite">
+            {isPending ? (
+              <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <LoaderCircle className="size-4 animate-spin" />
+                  Đang dịch...
+                </div>
+                <button
+                  type="button"
+                  onMouseDown={onClose}
+                  onTouchStart={onClose}
+                  aria-label="Đóng bản dịch"
+                  className="relative ml-auto flex size-[30px] shrink-0 items-center justify-center rounded-[9px] text-foreground transition-colors before:absolute before:-inset-1.5 before:content-[''] hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
                 >
-                  {word}
+                  <X className="size-[19px]" strokeWidth={2.2} />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-start gap-2.5">
+                <div className="min-w-0 flex-1">
+                  <p
+                    title={word}
+                    className="truncate font-serif text-[17px] leading-[1.35] font-semibold text-foreground"
+                  >
+                    {word}
+                  </p>
+
+                  {error ? (
+                    <p className="mt-1 text-sm text-coral">
+                      Không thể dịch từ này. Vui lòng thử lại.
+                    </p>
+                  ) : translation ? (
+                    <>
+                      <div className="mt-1.5 flex flex-wrap items-center gap-[7px]">
+                        {ipa !== null && (
+                          <span title={ipa} className="truncate font-mono text-xs text-ink-3">
+                            {ipa}
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          className="relative flex size-6 items-center justify-center rounded-lg text-muted-foreground transition-colors before:absolute before:-inset-2 before:content-[''] hover:bg-indigo-soft hover:text-indigo-hover focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                        >
+                          <Volume2 className="size-[15px]" />
+                        </button>
+                      </div>
+                      {posBadge && (
+                        <span
+                          aria-label={posBadge.aria}
+                          className="mt-1.5 inline-flex items-center rounded-full border border-border bg-muted px-2.5 py-[3px] text-[10px] font-bold tracking-[0.07em] uppercase text-muted-foreground"
+                        >
+                          {posBadge.label}
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Không tìm thấy bản dịch
+                    </p>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onMouseDown={onClose}
+                  onTouchStart={onClose}
+                  aria-label="Đóng bản dịch"
+                  className="relative flex size-[30px] shrink-0 items-center justify-center rounded-[9px] text-foreground transition-colors before:absolute before:-inset-1.5 before:content-[''] hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                >
+                  <X className="size-[19px]" strokeWidth={2.2} />
+                </button>
+              </div>
+            )}
+
+            {translation && !isPending && !error && (
+              <div className="mt-3 border-t border-border pt-3">
+                <p className="font-serif text-[19px] leading-[1.35] font-semibold text-primary">
+                  {translation}
                 </p>
 
-                {isPending ? (
-                  <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
-                    <LoaderCircle className="size-4 animate-spin" />
-                    Đang dịch...
-                  </div>
-                ) : error ? (
-                  <p className="mt-1 text-sm text-coral">
-                    Không thể dịch từ này. Vui lòng thử lại.
-                  </p>
-                ) : translation ? (
-                  <div className="mt-1 space-y-1">
-                    {ipa !== null && (
-                      <p
-                        title={ipa}
-                        className="truncate font-mono text-xs text-muted-foreground"
-                      >
-                        {ipa}
-                      </p>
-                    )}
-                    {posBadge && (
-                      <span
-                        aria-label={posBadge.aria}
-                        className="inline-flex items-center rounded-full border border-border bg-muted px-2 py-0.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground"
-                      >
-                        {posBadge.label}
-                      </span>
-                    )}
-                    <p className="text-lg font-semibold text-foreground">
-                      {translation}
-                    </p>
-                  </div>
-                ) : (
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Không tìm thấy bản dịch
-                  </p>
-                )}
+                {/* Selected source text — repeats the headword, since translation is single-word */}
+                <div className="mt-3 border-t border-border pt-[11px] text-[13px] leading-normal text-ink-3">
+                  Văn bản đã chọn:{" "}
+                  <span className="font-serif text-sm font-semibold text-foreground">
+                    {word}
+                  </span>
+                </div>
+
+                <Button
+                  type="button"
+                  className="mt-3 w-full gap-[7px] rounded-[12px] text-[13px]"
+                >
+                  <Bookmark className="size-3.5" />
+                  Lưu
+                </Button>
               </div>
-              <button
-                type="button"
-                onClick={onClose}
-                aria-label="Đóng bản dịch"
-                className="flex size-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-              >
-                <X className="size-4" />
-              </button>
-            </div>
+            )}
 
             {(error || (!isPending && !translation)) && (
-              <Button type="button" variant="secondary" size="sm" onClick={onTranslate}>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={onTranslate}
+                className="mt-3"
+              >
                 <RotateCcw />
                 Thử lại
               </Button>
