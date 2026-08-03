@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { CEFRLevel, SourceType } from "@/generated/prisma/enums";
+import { CEFRLevel, ProcessingStatus, SourceType } from "@/generated/prisma/enums";
 
 export const passageSchema = z.object({
   id: z.string(),
@@ -12,12 +12,16 @@ export const passageSchema = z.object({
   filePath: z.string().nullable(),
   createdAt: z.coerce.date(),
   youtubeUrl: z.string().nullable(),
+  status: z.enum(ProcessingStatus),
+  statusError: z.string().nullable(),
 });
 
 const passageListItemSchema = passageSchema.pick({
   id: true,
   title: true,
   sourceType: true,
+  status: true,
+  statusError: true,
   createdAt: true,
 });
 
@@ -30,17 +34,17 @@ export type PassageListItem = z.infer<typeof passageListItemSchema>;
 export const CreatePassageInputSchema = z.discriminatedUnion("sourceType", [
   z.object({
     sourceType: z.literal("TEXT"),
-    title: z.string().trim().min(1).max(200),
-    text: z.string().trim().min(50, "Nội dung quá ngắn").max(100_000, "Nội dung quá dài"),
+    title: z.string().trim(),
+    text: z.string().trim(),
   }),
   z.object({
     sourceType: z.literal("PDF"),
-    title: z.string().trim().min(1).max(200),
-    text: z.string().trim().min(50, "Nội dung quá ngắn").max(100_000, "Nội dung quá dài"),
+    title: z.string().trim(),
+    text: z.string().trim(),
   }),
   z.object({
     sourceType: z.literal("YOUTUBE"),
-    title: z.string().trim().min(1).max(200),
+    title: z.string().trim(),
     youtubeUrl: z.string().trim().url(),
   }),
 ]);

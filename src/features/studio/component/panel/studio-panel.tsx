@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useCallback } from "react";
 import { StudioArtifactType } from "@/generated/prisma/enums";
 import type { StudioPanelView, StudioGridId } from "./studio-icon-list";
-import { STUDIO_TILES } from "./studio-icon-list";
 import { CollapsedSidebar } from "./collapsed-sidebar";
 import { DefaultStudioView } from "./default-studio-view";
 import { StudioDetailView } from "../view/studio-detail-view";
@@ -11,78 +10,63 @@ import { AiChatPanel } from "../view/ai-chat/ai-chat";
 import { QuestionDetailView } from "../view/questions/question-detail-view";
 import { useArtifactList } from "../../queries";
 import { useGenerateQuestion, useDeleteArtifact } from "../../mutations";
-import { useArtifactPending } from "../../hook/use-artifact-pending";
 import { useChatSession } from "../../hook/use-chat-session";
 
 interface StudioPanelProps {
   passageId: string | null;
+  view: StudioPanelView;
+  onViewChange: (view: StudioPanelView) => void;
   collapsed?: boolean;
   onToggleCollapse: () => void;
 }
 
 export function StudioPanel({
   passageId,
+  view,
+  onViewChange,
   collapsed = false,
   onToggleCollapse,
 }: StudioPanelProps) {
-  const [view, setView] = useState<StudioPanelView>(null);
-
   const artifactsQuery = useArtifactList(passageId);
   const generateQuestion = useGenerateQuestion();
   const deleteArtifact = useDeleteArtifact();
-  const pendingEntries = useArtifactPending(passageId);
   const { setLocalChatPrefill } = useChatSession(view?.contentType === "chat");
 
-  const closeView = useCallback(() => setView(null), []);
+  const closeView = useCallback(() => onViewChange(null), [onViewChange]);
 
-  const openChat = useCallback(() => {
-    setLocalChatPrefill(null);
-    setView({ contentType: "chat" });
-  }, [setLocalChatPrefill]);
-
-  const openArtifact = useCallback(
-    (type: StudioGridId, id: string) => {
-      if (type === "CHAT") {
-        openChat();
-      } else {
-        setView({ contentType: "question", artifactId: id });
+  const openView = useCallback(
+    (id: StudioGridId, artifactId?: string) => {
+      if (id === "CHAT") {
+        setLocalChatPrefill(null);
+        onViewChange({ contentType: "chat" });
+        return;
       }
+      if (!artifactId) return;
+      onViewChange({ contentType: "question", artifactId });
     },
-    [openChat],
+    [setLocalChatPrefill, onViewChange],
   );
 
-  const handleActionClick = useCallback(
+  // Tile click on a generation tile kicks off an async artifact creation.
+  // The CHAT tile is routed by DefaultStudioView directly to onSelectChat.
+  const handleGenerate = useCallback(
     (actionId: StudioGridId) => {
       if (!passageId) return;
-      const tile = STUDIO_TILES.find((t) => t.gridId === actionId);
-      if (!tile) return;
-
-      switch (tile.kind) {
-        case "open":
-          break;
-        case "generate":
-          if (actionId === StudioArtifactType.QUESTION) {
-            generateQuestion.mutate(passageId);
-          }
-          // FLASHCARD: Phase 6
-          break;
-        default: {
-          const _exhaustive: never = tile;
-          return _exhaustive;
-        }
+      if (actionId === StudioArtifactType.QUESTION) {
+        generateQuestion.mutate(passageId);
       }
+      // FLASHCARD: Phase 6
     },
     [passageId, generateQuestion],
   );
 
-  // Render detail view
+  if (collapsed) {
+    return <CollapsedSidebar onToggleCollapse={onToggleCollapse} />;
+  }
+
   if (view?.contentType === "chat" && passageId) {
     return (
-      <StudioDetailView
-        title="Trò chuyện"
-        onClose={closeView}
-        onToggleCollapse={onToggleCollapse}
-      >
+      <StudioDetailView title="Trò chuyện" onClose={closeView}>
         <AiChatPanel
           key={passageId}
           passageId={passageId}
@@ -102,22 +86,22 @@ export function StudioPanel({
     );
   }
 
-  if (collapsed) {
-    return <CollapsedSidebar onToggleCollapse={onToggleCollapse} />;
-  }
+  const artifacts = artifactsQuery.data ?? [];
+  const pendingTypes = artifacts.some(
+    (a) => a.status === "PENDING" && a.type === StudioArtifactType.QUESTION,
+  )
+    ? [StudioArtifactType.QUESTION]
+    : [];
 
   return (
     <DefaultStudioView
-      artifacts={artifactsQuery.data ?? []}
-      pendingEntries={pendingEntries}
+      artifacts={artifacts}
       hasActivePassage={!!passageId}
-      pendingTypes={
-        generateQuestion.isPending ? [StudioArtifactType.QUESTION] : []
-      }
+      pendingTypes={pendingTypes}
       onToggleCollapse={onToggleCollapse}
-      onSelectChat={openChat}
-      onSelectAction={handleActionClick}
-      onOpenArtifact={openArtifact}
+      onSelectChat={() => openView("CHAT")}
+      onSelectAction={handleGenerate}
+      onOpenArtifact={(type, id) => openView(type, id)}
       onDeleteArtifact={
         passageId
           ? (artifactId) => deleteArtifact.mutate({ artifactId, passageId })

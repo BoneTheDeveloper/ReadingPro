@@ -1,33 +1,34 @@
 "use client";
 
-import { DefaultSourceView, SourceProcessingItem, SourceErrorItem } from "./default-source-view";
+import { DefaultSourceView, SourceErrorItem } from "./default-source-view";
 import { CollapsedSourcesPanel } from "./collapsed-sources-panel";
 import type { PassageListItem } from "@/features/passage/schema";
 
 interface SourcesPanelProps {
   items: PassageListItem[];
-  pendingUpload?: { title: string } | null;
   activeId: string | null;
   onSelect: (id: string) => void;
   onOpenUploadModal: () => void;
   onDelete: (id: string) => void;
   collapsed?: boolean;
   onToggleCollapse: () => void;
-  uploadError?: string | null;
-  onClearUploadError?: () => void;
+  // Pre-submit client validation errors (file too short, bad youtube URL).
+  // Rendered above the source list and dismissible. Server-side errors
+  // (FAILED rows) are rendered inline as part of `items`.
+  clientError?: string | null;
+  onClearClientError?: () => void;
 }
 
 export function SourcesPanel({
   items,
-  pendingUpload = null,
   activeId,
   onSelect,
   onOpenUploadModal,
   onDelete,
   collapsed = false,
   onToggleCollapse,
-  uploadError,
-  onClearUploadError,
+  clientError,
+  onClearClientError,
 }: SourcesPanelProps) {
   if (collapsed) {
     return (
@@ -50,13 +51,12 @@ export function SourcesPanel({
       onOpenUploadModal={onOpenUploadModal}
       onToggleCollapse={onToggleCollapse}
     >
-      {uploadError && (
+      {clientError && (
         <SourceErrorItem
-          error={uploadError}
-          onDismiss={onClearUploadError ?? (() => {})}
+          error={clientError}
+          onDismiss={onClearClientError ?? (() => {})}
         />
       )}
-      {pendingUpload && <SourceProcessingItem title={pendingUpload.title} />}
     </DefaultSourceView>
   );
 }

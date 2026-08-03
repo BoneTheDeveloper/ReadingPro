@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Group, Panel, Separator } from "react-resizable-panels";
 import { SourcesPanel } from "@/features/passage/component/panel/sources-panel";
 import { ContentPanel } from "@/features/reading/component/content-panel";
@@ -10,11 +11,80 @@ import { usePassage } from "@/features/passage/queries";
 import { useUploadFlow } from "@/features/passage/hook/use-upload-flow";
 import { useStudyPanelLayout } from "../_hook/use-study-panel-layout";
 
+import type { RefObject } from "react";
+import type { PanelImperativeHandle } from "react-resizable-panels";
+import type { Passage } from "@/features/passage/schema";
+import type { StudioPanelView } from "@/features/studio/component/panel/studio-icon-list";
+
+
+const STUDIO_VIEW_SIZE = {
+  chat: 400,
+  question: 500,
+} as const satisfies Record<NonNullable<StudioPanelView>["contentType"], number>;
+
+interface StudioSlotProps {
+  passageId: string | null;
+  panelRef: RefObject<PanelImperativeHandle | null>;
+  collapsed: boolean;
+  onToggleCollapse: () => void;
+}
+
+/**
+ * Owns the studio's `view` state. Mounted with a passage-derived key so the
+ * open view resets on passage change without a reset effect — an artifact view
+ * is only meaningful for the passage it was opened from.
+ */
+function StudioSlot({
+  passageId,
+  panelRef,
+  collapsed,
+  onToggleCollapse,
+}: StudioSlotProps) {
+  const [view, setView] = useState<StudioPanelView>(null);
+
+  // Syncs with the panel's imperative handle (outside React), so it belongs in
+  // an effect: the size can only be read after the layout has committed.
+  useEffect(() => {
+    if (!view) return;
+
+    const panel = panelRef.current;
+    if (!panel || panel.isCollapsed()) return;
+
+    const target = STUDIO_VIEW_SIZE[view.contentType];
+    if (panel.getSize().inPixels < target) {
+      panel.resize(`${target}px`);
+    }
+  }, [view, panelRef]);
+
+  return (
+    <StudioPanel
+      passageId={passageId}
+      collapsed={collapsed}
+      onToggleCollapse={onToggleCollapse}
+      view={view}
+      onViewChange={setView}
+    />
+  );
+}
+
 export function StudyWorkspace() {
   const library = usePassageLibrary();
-  const detail = usePassage(library.activeId);
-  const upload = useUploadFlow(library.upsert);
+  const upload = useUploadFlow();
   const layout = useStudyPanelLayout();
+
+  const handleCreated = (passage: Passage) => {
+    library.upsert(passage);
+    upload.closeModal();
+  };
+
+  // Only pass COMPLETED passages to detail/studio. PENDING/FAILED rows are
+  // visible in the source list but cannot drive detail or artifact generation.
+  const activePassage = (library.passages ?? []).find(
+    (p) => p.id === library.activeId && p.status === "COMPLETED",
+  );
+  const detailPassageId = activePassage ? library.activeId : null;
+  const detail = usePassage(detailPassageId);
+  const contentKey = detailPassageId ?? "empty";
 
   return (
     <>
@@ -42,25 +112,20 @@ export function StudyWorkspace() {
               activeId={library.activeId}
               onSelect={library.select}
               onOpenUploadModal={upload.openModal}
-              pendingUpload={
-                upload.uploadingFileName
-                  ? { title: upload.uploadingFileName }
-                  : null
-              }
               onDelete={library.remove}
               collapsed={layout.leftPanelCollapsed}
               onToggleCollapse={layout.toggleLeft}
-              uploadError={upload.error}
-              onClearUploadError={upload.clearError}
+              clientError={upload.clientError}
+              onClearClientError={upload.clearClientError}
             />
           </Panel>
 
           <Separator disabled={layout.leftPanelCollapsed} className="w-1" />
 
-          <Panel id="content" minSize={400}>
+          <Panel id="content" minSize="400px">
             <div className="h-full bg-surface flex flex-col overflow-hidden">
               <ContentPanel
-                key={library.activeId ?? "empty"}
+                key={contentKey}
                 passage={detail.data ?? null}
                 isLoading={detail.isPending}
                 onOpenUploadModal={upload.openModal}
@@ -79,8 +144,10 @@ export function StudyWorkspace() {
             collapsible={true}
             onResize={layout.handleRightResize}
           >
-            <StudioPanel
-              passageId={library.activeId}
+            <StudioSlot
+              key={contentKey}
+              passageId={detailPassageId}
+              panelRef={layout.rightPanelRef}
               collapsed={layout.rightPanelCollapsed}
               onToggleCollapse={layout.toggleRight}
             />
@@ -92,9 +159,8 @@ export function StudyWorkspace() {
       <UploadModal
         isOpen={upload.isModalOpen}
         onClose={upload.closeModal}
-        onUploadStart={upload.start}
-        onUploadComplete={upload.complete}
-        onUploadError={upload.fail}
+        onCreated={handleCreated}
+        onClientError={upload.setClientError}
       />
     </>
   );

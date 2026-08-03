@@ -1,12 +1,14 @@
 import { z } from "zod";
 import { questionProgressSchema } from "./question";
 import { flashcardProgressSchema } from "./flashcard";
-import { StudioArtifactType } from "@/generated/prisma/enums";
+import { ProcessingStatus, StudioArtifactType } from "@/generated/prisma/enums";
 
 const artifactCommon = {
   id: z.string(),
   passageId: z.string(),
   createdAt: z.coerce.date(),
+  status: z.enum(ProcessingStatus),
+  statusError: z.string().nullable(),
 } as const;
 
 const questionVariant = z.object({

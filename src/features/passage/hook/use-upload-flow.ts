@@ -1,54 +1,27 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import type { Passage } from "@/features/passage/schema";
 
-export function useUploadFlow(onComplete: (passage: Passage) => void) {
+export function useUploadFlow() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [uploadingFileName, setUploadingFileName] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const isUploading = uploadingFileName !== null;
+  const [clientError, setClientError] = useState<string | null>(null);
 
   const openModal = useCallback(() => {
-    if (isUploading) return;
     setIsModalOpen(true);
-    setError(null);
-  }, [isUploading]);
-
-  const closeModal = useCallback(() => setIsModalOpen(false), []);
-
-  const start = useCallback((fileName: string) => {
-    setUploadingFileName(fileName);
-    setError(null);
+    setClientError(null);
   }, []);
 
-  const complete = useCallback(
-    (passage: Passage) => {
-      setUploadingFileName(null);
-      setIsModalOpen(false);
-      onComplete(passage);
-    },
-    [onComplete],
-  );
-
-  const fail = useCallback((message: string) => {
-    setError(message);
-    setUploadingFileName(null);
+  const closeModal = useCallback(() => {
+    setIsModalOpen(false);
+    setClientError(null);
   }, []);
-
-  const clearError = useCallback(() => setError(null), []);
 
   return {
     isModalOpen,
-    uploadingFileName,
-    isUploading,
-    error,
+    clientError,
     openModal,
     closeModal,
-    start,
-    complete,
-    fail,
-    clearError,
+    setClientError,
+    clearClientError: useCallback(() => setClientError(null), []),
   };
 }

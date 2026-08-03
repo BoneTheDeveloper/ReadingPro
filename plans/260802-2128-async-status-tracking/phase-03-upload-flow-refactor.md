@@ -1,6 +1,6 @@
 ---
 title: "Phase 3: Upload flow refactor"
-status: todo
+status: completed
 priority: P1
 effort: "0.5d"
 dependencies: ["phase-02-artifact-async-status"]

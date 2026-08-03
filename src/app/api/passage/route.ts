@@ -1,8 +1,9 @@
+import { after } from "next/server";
 import { withErrorHandling } from "@/lib/error/with-error-handling";
 import { requireApiSession } from "@/lib/auth/session";
 import { createPassageForUser, listPassagesForUser } from "@/features/passage/server/service/passage-crud";
 import { preprocessPassage, prepareForAIProcessing } from "@/features/passage/server/service/passage-preprocessing";
-import { processPassage } from "@/features/passage/server/service/passage-processing";
+import { runPassageProcessing } from "@/features/passage/server/service/passage-processing";
 import { CreatePassageInputSchema } from "@/features/passage/schema";
 
 export const GET = withErrorHandling("passages", async () => {
@@ -11,26 +12,33 @@ export const GET = withErrorHandling("passages", async () => {
   return Response.json(passages);
 });
 
+
+export const maxDuration = 200;
+
 export const POST = withErrorHandling("create-passage", async (req) => {
   const { user } = await requireApiSession();
   const input = CreatePassageInputSchema.parse(await req.json());
 
-  // ── Stage 1-4: Preprocess text (extract → clean → normalize → validate) ──
   const { normalized } = await preprocessPassage(input);
 
-  // ── Stage 5: AI processing (clean + CEFR + title) ──────────────────────
-  const { text: content, cefrLevel: aiCefrLevel, title } = await processPassage(
-    prepareForAIProcessing(normalized),
-    input.title,
-  );
+  const cleanedForAI = prepareForAIProcessing(normalized);
 
   const passage = await createPassageForUser({
     userId: user.id,
-    title: title.slice(0, 200),
-    content,
+    title: input.title.slice(0, 200),
+    content: cleanedForAI,
     sourceType: input.sourceType,
-    cefrLevel: aiCefrLevel ?? undefined,
     youtubeUrl: input.sourceType === "YOUTUBE" ? input.youtubeUrl : null,
+    status: "PENDING",
+  });
+
+  after(() => {
+    void runPassageProcessing({
+      userId: user.id,
+      passageId: passage.id,
+      cleanedText: cleanedForAI,
+      userTitle: input.title,
+    });
   });
 
   return Response.json(passage, { status: 201 });

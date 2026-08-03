@@ -156,11 +156,13 @@ export function QuestionContent({
                   )}>
                     {label}
                   </span>
-                  <span className={cn("text-base pt-0.5", !showFeedback && isSelected && "font-semibold text-foreground", !showFeedback && !isSelected && "text-foreground")}>
+                  <span className={cn("text-base pt-0.5 flex-1", !showFeedback && isSelected && "font-semibold text-foreground", !showFeedback && !isSelected && "text-foreground")}>
                     {optionText}
                   </span>
-                  {showFeedback && isCorrect && <CheckCircle className="w-5 h-5 text-success shrink-0 mt-0.5" />}
-                  {showFeedback && isSelected && !isCorrect && <XCircle className="w-5 h-5 text-danger shrink-0 mt-0.5" />}
+                  <span className="w-5 h-5 shrink-0 mt-0.5 flex items-center justify-center">
+                    {showFeedback && isCorrect && <CheckCircle className="w-5 h-5 text-success" />}
+                    {showFeedback && isSelected && !isCorrect && <XCircle className="w-5 h-5 text-danger" />}
+                  </span>
                 </button>
               );
             })}
@@ -174,13 +176,6 @@ export function QuestionContent({
             </Button>
           ) : (
             <div className="flex-1 space-y-3">
-              <div className={cn("p-4 rounded-xl text-sm", selectedAnswer === currentQuestion.correctIndex ? "bg-success-soft/60 border border-success/30" : "bg-danger-soft/60 border border-danger/20")}>
-                <div className={cn("flex items-center gap-1.5 mb-1 font-semibold", selectedAnswer === currentQuestion.correctIndex ? "text-success" : "text-danger")}>
-                  {selectedAnswer === currentQuestion.correctIndex ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
-                  <span>{selectedAnswer === currentQuestion.correctIndex ? "Chính xác!" : "Chưa đúng lắm"}</span>
-                </div>
-                <p className="text-foreground/80">{currentQuestion.explanation}</p>
-              </div>
               <Button onClick={handleNext} className="w-full">
                 {currentIndex < questions.length - 1 ? (
                   <>Câu tiếp theo <ArrowRight className="w-4 h-4" /></>
@@ -188,6 +183,13 @@ export function QuestionContent({
                   "Xem kết quả"
                 )}
               </Button>
+              <div className={cn("p-4 rounded-xl text-sm", selectedAnswer === currentQuestion.correctIndex ? "bg-success-soft/60 border border-success/30" : "bg-danger-soft/60 border border-danger/20")}>
+                <div className={cn("flex items-center gap-1.5 mb-1 font-semibold", selectedAnswer === currentQuestion.correctIndex ? "text-success" : "text-danger")}>
+                  {selectedAnswer === currentQuestion.correctIndex ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+                  <span>{selectedAnswer === currentQuestion.correctIndex ? "Chính xác!" : "Chưa đúng lắm"}</span>
+                </div>
+                <p className="text-foreground/80">{currentQuestion.explanation}</p>
+              </div>
             </div>
           )}
         </div>

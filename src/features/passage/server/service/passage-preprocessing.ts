@@ -30,13 +30,6 @@ async function extractRawText(input: CreatePassageInput): Promise<string> {
 }
 
 
-function validatePreprocessedText(text: string): void {
-  if (text.length < TEXT_INPUT_LIMITS.MIN_LENGTH) {
-    throw new AppError(400, "VALIDATION", "Nội dung quá ngắn");
-  }
-}
-
-
 export async function preprocessPassage(
   input: CreatePassageInput,
 ): Promise<PreprocessedText> {
@@ -49,9 +42,6 @@ export async function preprocessPassage(
   // Stage 3: Universal normalization
   const normalized = coreNormalize(cleaned);
 
-  // Stage 4: Validate
-  validatePreprocessedText(normalized);
-
   return {
     normalized,
     isFromYouTube: input.sourceType === "YOUTUBE",
@@ -59,5 +49,5 @@ export async function preprocessPassage(
 }
 
 export function prepareForAIProcessing(normalizedText: string): string {
-  return normalizedText.slice(0, TEXT_INPUT_LIMITS.MAX_LENGTH);
+  return normalizedText;
 }

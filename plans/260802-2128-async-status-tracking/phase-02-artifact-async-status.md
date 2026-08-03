@@ -1,6 +1,6 @@
 ---
 title: "Phase 2: StudioArtifact async status"
-status: todo
+status: completed
 priority: P1
 effort: "0.5d"
 dependencies: ["phase-01-schema-passage-async"]

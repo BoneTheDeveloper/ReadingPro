@@ -117,30 +117,6 @@ export function DefaultSourceView({
 }
 
 /* States */
-export function SourceProcessingItem({ title }: { title: string }) {
-  return (
-    <div className="w-full p-2.5 flex items-center gap-2.5 rounded-[13px] border border-transparent relative overflow-hidden cursor-not-allowed opacity-70">
-      <div className="absolute inset-0 z-0 bg-accent animate-[upload-fill_2.8s_ease-in-out_forwards]">
-        <div className="absolute inset-y-0 w-16 right-0 bg-linear-to-r from-transparent via-white/55 to-transparent animate-[upload-shimmer_1.4s_ease-in-out_infinite]" />
-      </div>
-      <div className="relative z-10 w-8 h-8 rounded-[10px] flex items-center justify-center shrink-0 bg-accent text-primary">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-          <polyline points="14 2 14 8 20 8" />
-        </svg>
-      </div>
-      <div className="relative z-10 flex-1 overflow-hidden">
-        <h4 className="text-[13px] font-medium truncate leading-tight text-foreground">
-          {title}
-        </h4>
-        <p className="text-[11px] truncate mt-0.5 text-muted-foreground">
-          Đang xử lý...
-        </p>
-      </div>
-    </div>
-  );
-}
-
 export function SourceErrorItem({
   error,
   onDismiss,

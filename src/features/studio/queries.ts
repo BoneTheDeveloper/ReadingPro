@@ -3,14 +3,7 @@ import {
   studioArtifactListItemSchema,
   type StudioArtifactListItem,
 } from "@/features/studio/schema/artifact";
-
-/* ─── Keys ─────────────────────────────────────────────────────────── */
-
-export const artifactKeys = {
-  all: ["artifacts"] as const,
-  list: (passageId: string) => ["artifacts", "list", passageId] as const,
-  detail: (artifactId: string) => ["artifacts", "detail", artifactId] as const,
-};
+import { artifactKeys } from "./query-keys";
 
 /* ─── Fetchers ─────────────────────────────────────────────────────── */
 
@@ -37,6 +30,14 @@ export function useArtifactList(passageId: string | null) {
     queryKey: artifactKeys.list(passageId ?? ""),
     queryFn: ({ signal }) => fetchArtifactList(passageId!, signal),
     enabled: Boolean(passageId),
+    // Poll while any artifact is non-terminal; stop once all reach terminal.
+    refetchInterval: (query) => {
+      const artifacts = query.state.data ?? [];
+      const hasPending = artifacts.some(
+        (a) => a.status !== "COMPLETED" && a.status !== "FAILED",
+      );
+      return hasPending ? 2000 : false;
+    },
   });
 }
 

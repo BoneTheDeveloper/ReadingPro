@@ -20,9 +20,14 @@ import type { Passage, CreatePassageInput } from "@/features/passage/schema";
 export interface UploadModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onUploadStart?: (fileName: string) => void;
-  onUploadComplete?: (passage: Passage) => void;
-  onUploadError?: (error: string) => void;
+  // Called on successful POST. The workspace uses this to select the new
+  // passage and close the modal. The server-side row already exists at this
+  // point (status: PENDING) — the polling query picks it up.
+  onCreated?: (passage: Passage) => void;
+  // Client-side validation errors before submission (file too short, bad
+  // youtube URL, etc.) are surfaced here so the workspace can render them
+  // above the source list. Server-side errors stay on the row.
+  onClientError?: (message: string) => void;
 }
 
 type InputMode = "file" | "paste-text" | "youtube" | null;
@@ -43,37 +48,37 @@ function SourceButton({ icon: Icon, label, desc, onClick, disabled }: {
   );
 }
 
-export function UploadModal({ isOpen, onClose, onUploadStart, onUploadComplete, onUploadError }: UploadModalProps) {
+export function UploadModal({ isOpen, onClose, onCreated, onClientError }: UploadModalProps) {
   const [activeMode, setActiveMode] = useState<InputMode>(null);
   const mutation = useCreatePassage();
 
-  const submit = (input: CreatePassageInput, title: string) => {
-    onClose();
-    onUploadStart?.(title);
+  const submit = (input: CreatePassageInput) => {
     mutation.mutate(input, {
-      onSuccess: onUploadComplete,
-      onError: (err) => onUploadError?.(err.message),
+      onSuccess: (passage) => {
+        onCreated?.(passage);
+      },
+      onError: (err) => onClientError?.(err.message),
     });
   };
 
   const handlePdfSelect = async (file: File) => {
     const title = file.name.replace(/\.pdf$/i, "");
-    submit({ sourceType: "PDF", title, text: await extractPdfText(file) }, title);
+    submit({ sourceType: "PDF", title, text: await extractPdfText(file) });
   };
 
   const handleTxtSelect = async (file: File) => {
     const title = file.name.replace(/\.txt$/i, "");
-    submit({ sourceType: "TEXT", title, text: await file.text() }, title);
+    submit({ sourceType: "TEXT", title, text: await file.text() });
   };
 
   const handleTextSubmit = (text: string) => {
     if (!text.trim()) return;
-    submit({ sourceType: "TEXT", title: "Pasted Text", text }, "Pasted Text");
+    submit({ sourceType: "TEXT", title: "Pasted Text", text });
   };
 
   const handleYouTubeSubmit = async (url: string) => {
     if (!url.trim()) return;
-    submit({ sourceType: "YOUTUBE", title: "YouTube Video", youtubeUrl: url }, "YouTube Video");
+    submit({ sourceType: "YOUTUBE", title: "YouTube Video", youtubeUrl: url });
   };
 
   const handleBack = () => setActiveMode(null);

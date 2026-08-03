@@ -1,26 +1,16 @@
 "use client";
 
 import { useEffect } from "react";
-import { PanelRight, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { Card, CardContent } from "@/component/ui/card";
-import { Button } from "@/component/ui/button";
 
 interface StudioDetailViewProps {
   title: string;
   onClose: () => void;
-  onToggleCollapse?: () => void;
-  size?: "default" | "expanded";
   children: React.ReactNode;
 }
 
-export function StudioDetailView({
-  title,
-  onClose,
-  onToggleCollapse,
-  size: _size = "default",
-  children,
-}: StudioDetailViewProps) {
-  // Handle Escape key to close the panel
+export function StudioDetailView({ title, onClose, children }: StudioDetailViewProps) {
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") {
@@ -44,21 +34,8 @@ export function StudioDetailView({
             <ChevronRight className="w-3 h-3" />
             {title}
           </button>
-          {onToggleCollapse && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onToggleCollapse}
-              className="h-7 w-7 text-muted-foreground hover:text-foreground"
-              aria-label="Collapse studio panel"
-            >
-              <PanelRight className="w-4 h-4" />
-            </Button>
-          )}
         </div>
-        <div className="flex-1 overflow-y-auto panel-scroll relative">
-          {children}
-        </div>
+        <div className="flex-1 overflow-y-auto panel-scroll relative">{children}</div>
       </CardContent>
     </Card>
   );

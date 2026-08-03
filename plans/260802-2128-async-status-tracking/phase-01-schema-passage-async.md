@@ -1,6 +1,6 @@
 ---
 title: "Phase 1: Schema + Passage async status"
-status: todo
+status: completed
 priority: P1
 effort: "0.5d"
 dependencies: []

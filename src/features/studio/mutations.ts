@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { artifactKeys } from "./queries";
+import { artifactKeys } from "./query-keys";
 import type { StudioArtifactListItem } from "@/features/studio/schema/artifact";
 import { StudioArtifactType } from "@/generated/prisma/enums";
 

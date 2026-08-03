@@ -6,13 +6,11 @@ import { Button } from "@/component/ui/button";
 import { StudioGrid, StudioEmptyState } from "./studio-grid";
 import { ArtifactListItem } from "./artifact-list-item";
 import { ARTIFACT_META, type StudioGridId } from "./studio-icon-list";
-import { StudioArtifactType } from "@/generated/prisma/enums";
+import { ProcessingStatus, StudioArtifactType } from "@/generated/prisma/enums";
 import type { StudioArtifactListItem } from "@/features/studio/schema/artifact";
-import type { PendingEntry } from "@/features/studio/hook/use-artifact-pending";
 
 interface DefaultStudioViewProps {
   artifacts: StudioArtifactListItem[];
-  pendingEntries: PendingEntry[];
   hasActivePassage: boolean;
   pendingTypes: StudioArtifactType[];
   onToggleCollapse: () => void;
@@ -20,6 +18,12 @@ interface DefaultStudioViewProps {
   onSelectAction: (actionId: StudioGridId) => void;
   onOpenArtifact: (type: StudioGridId, id: string) => void;
   onDeleteArtifact?: (artifactId: string) => void;
+}
+
+function mapProcessingStatus(status: ProcessingStatus): "ready" | "pending" | "failed" {
+  if (status === "COMPLETED") return "ready";
+  if (status === "FAILED") return "failed";
+  return "pending";
 }
 
 function artifactSubtitle(
@@ -33,7 +37,6 @@ function artifactSubtitle(
 
 export function DefaultStudioView({
   artifacts,
-  pendingEntries,
   hasActivePassage,
   pendingTypes,
   onToggleCollapse,
@@ -72,46 +75,37 @@ export function DefaultStudioView({
           <div className="flex-1 h-px bg-border" />
         </div>
         <div className="flex-1 overflow-y-auto panel-scroll px-3 pb-4">
-          {pendingEntries.length > 0 && (
-            <div className="space-y-1.5 pt-0.25">
-              {pendingEntries.map((entry) => {
-                const isError = entry.status === "error";
-                const meta = ARTIFACT_META[StudioArtifactType.QUESTION];
-                return (
-                  <ArtifactListItem
-                    key={entry.submittedAt}
-                    title={meta.name}
-                    icon={meta.icon}
-                    status={isError ? "failed" : "pending"}
-                    subtitle={null}
-                    errorMessage={isError ? String(entry.error ?? "Lỗi không xác định") : null}
-                    onClick={() => {}}
-                  />
-                );
-              })}
-            </div>
-          )}
           {artifacts.length > 0 ? (
             <div className="space-y-1.5 pt-0.25">
               {artifacts.map((artifact) => {
                 const meta = ARTIFACT_META[artifact.type];
                 const subtitle = artifactSubtitle(artifact);
+                const listStatus = mapProcessingStatus(artifact.status);
                 return (
                   <ArtifactListItem
                     key={artifact.id}
                     title={meta.name}
                     icon={meta.icon}
-                    status="ready"
+                    status={listStatus}
                     subtitle={subtitle}
-                    onClick={() => onOpenArtifact(artifact.type, artifact.id)}
-                    onDelete={onDeleteArtifact ? () => onDeleteArtifact(artifact.id) : undefined}
+                    errorMessage={artifact.statusError}
+                    onClick={() => {
+                      if (artifact.status === "COMPLETED") {
+                        onOpenArtifact(artifact.type, artifact.id);
+                      }
+                    }}
+                    onDelete={
+                      onDeleteArtifact
+                        ? () => onDeleteArtifact(artifact.id)
+                        : undefined
+                    }
                   />
                 );
               })}
             </div>
-          ) : pendingEntries.length === 0 ? (
+          ) : (
             <StudioEmptyState hasActivePassage={hasActivePassage} />
-          ) : null}
+          )}
         </div>
       </CardContent>
     </Card>

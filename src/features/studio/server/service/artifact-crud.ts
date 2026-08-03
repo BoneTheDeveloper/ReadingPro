@@ -1,7 +1,7 @@
 import "server-only";
 import prisma from "@/lib/prisma";
 import { NotFoundError } from "@/lib/error/app-error";
-import { StudioArtifactType } from "@/generated/prisma/enums";
+import { ProcessingStatus, StudioArtifactType } from "@/generated/prisma/enums";
 import type { Prisma } from "@/generated/prisma/client";
 
 export async function listArtifactsForUser(userId: string, passageId: string) {
@@ -14,6 +14,8 @@ export async function listArtifactsForUser(userId: string, passageId: string) {
       type: true,
       createdAt: true,
       progress: true,
+      status: true,
+      statusError: true,
     },
   });
 }
@@ -28,6 +30,8 @@ export async function getArtifact(id: string, userId: string) {
       content: true,
       progress: true,
       createdAt: true,
+      status: true,
+      statusError: true,
     },
   });
   if (!artifact) throw new NotFoundError("Artifact", id);
@@ -38,14 +42,36 @@ export async function createArtifact(input: {
   passageId: string;
   userId: string;
   type: StudioArtifactType;
-  content: Prisma.InputJsonValue;
+  content?: Prisma.InputJsonValue;
+  status?: ProcessingStatus;
 }) {
   return prisma.studioArtifact.create({
     data: {
       passageId: input.passageId,
       userId: input.userId,
       type: input.type,
-      content: input.content,
+      content: input.content ?? undefined,
+      status: input.status ?? "COMPLETED",
+    },
+  });
+}
+
+// Atomic status update — used by the after() callback. Only the processing
+// step writes status: COMPLETED/FAILED. Error-status invariant: FAILED
+// requires statusError; COMPLETED clears it.
+export async function updateArtifactStatus(args: {
+  id: string;
+  userId: string;
+  status: ProcessingStatus;
+  statusError?: string | null;
+  content?: Prisma.InputJsonValue;
+}) {
+  return prisma.studioArtifact.update({
+    where: { id: args.id, userId: args.userId },
+    data: {
+      status: args.status,
+      statusError: args.statusError ?? null,
+      content: args.content ?? undefined,
     },
   });
 }

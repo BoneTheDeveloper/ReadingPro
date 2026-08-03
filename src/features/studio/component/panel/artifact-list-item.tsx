@@ -72,7 +72,7 @@ export function ArtifactListItem({
           </p>
         )}
       </div>
-      {onDelete && isReady && (
+      {onDelete && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button

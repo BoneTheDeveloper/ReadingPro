@@ -98,12 +98,15 @@ model Passage {
   filePath              String?                 @unique
   createdAt             DateTime                @default(now())
   youtubeUrl            String?
+  status                ProcessingStatus        @default(PENDING)
+  statusError           String?
   userProfile           UserProfile             @relation(fields: [userId], references: [id], onDelete: Cascade)
   studioArtifacts       StudioArtifact[]
   studyChatMessages     StudyChatMessage[]
 
   @@index([createdAt])
   @@index([userId])
+  @@index([status])
 }
 //studio-model
 model StudioArtifact {
@@ -112,13 +115,16 @@ model StudioArtifact {
   userId    String
   type      StudioArtifactType
   createdAt DateTime          @default(now())
-  content   Json
+  content   Json?
   progress  Json?
+  status    ProcessingStatus  @default(PENDING)
+  statusError String?
 
   passage   Passage           @relation(fields: [passageId], references: [id], onDelete: Cascade)
 
   @@index([passageId, createdAt(sort: Desc)])
   @@index([userId, createdAt(sort: Desc)])
+  @@index([status])
 }
 
 model StudyChatMessage {
@@ -151,14 +157,14 @@ model VocabularyItem {
   lastReviewedAt         DateTime?
   dictionaryEntryId      String?                  @db.Uuid
   dictionarySenseId      String?                  @db.Uuid
-  status                 VocabularyStatus         @default(NEW)
+  learningstatus         VocabularyStatus         @default(NEW)
   userProfile            UserProfile              @relation(fields: [userId], references: [id], onDelete: Cascade)
   vocabularyOccurrences  VocabularyOccurrence[]
   vocabularySetItems     VocabularySetItem[]
 
   @@unique([userId, normalizedText, targetLanguage, normalizedTranslation])
   @@index([userId, nextReviewAt])
-  @@index([userId, status])
+  @@index([userId, learningstatus])
 }
 
 model VocabularyOccurrence {
@@ -233,4 +239,10 @@ enum VocabularyStatus {
 enum StudioArtifactType {
   QUESTION
   FLASHCARD
+}
+
+enum ProcessingStatus {
+  PENDING    @map("pending")
+  COMPLETED  @map("completed")
+  FAILED     @map("failed")
 }
