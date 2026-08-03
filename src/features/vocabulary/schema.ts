@@ -24,3 +24,5 @@ export const VocabularyItemSchema = z.object({
 });
 
 export type VocabularyItem = z.infer<typeof VocabularyItemSchema>;
+
+export const vocabularyListSchema = z.array(VocabularyItemSchema);

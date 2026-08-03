@@ -1,6 +1,9 @@
 import "server-only";
 import prisma from "@/lib/prisma";
-import type { VocabularyInputParsed } from "@/features/vocabulary/schema";
+import type {
+  VocabularyInputParsed,
+  VocabularyItem,
+} from "@/features/vocabulary/schema";
 
 /**
  * Persist a vocabulary item for a user.
@@ -39,5 +42,20 @@ export async function storeVocabularyItemForUser(
       savedCount: { increment: 1 },
       updatedAt: new Date(),
     },
+  });
+}
+
+/**
+ * List every vocabulary item the user has saved, newest first.
+ *
+ * Returns the full row (matching the `VocabularyItem` schema) so the
+ * vocabulary page can render every column without a follow-up fetch.
+ */
+export async function listVocabularyItemsForUser(
+  userId: string,
+): Promise<VocabularyItem[]> {
+  return prisma.vocabularyItem.findMany({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
   });
 }

@@ -32,8 +32,8 @@ const features = [
   {
     icon: FileText,
     color: "text-[#F2664A] bg-[#FCE7E1]",
-    title: "Tóm tắt PDF",
-    description: "Tải lên bất kỳ PDF nào và nhận tóm tắt tức thì với từ vựng quan trọng được làm nổi bật.",
+    title: "Tóm tắt văn bản",
+    description: "Tải lên bất kỳ văn bản nào và nhận tóm tắt tức thì với từ vựng quan trọng được làm nổi bật.",
   },
   {
     icon: Brain,
@@ -44,8 +44,8 @@ const features = [
   {
     icon: Lightbulb,
     color: "text-[#C8842A] bg-[#FBEFD8]",
-    title: "Sơ đồ tư duy",
-    description: "Sơ đồ trực quan giúp bạn hiểu và ghi nhớ các văn bản phức tạp.",
+    title: "Dịch văn bản",
+    description: "Dịch tức thì và lưu từ vựng kèm theo ngữ cảnh của đoạn văn.",
   },
   {
     icon: MessageCircle,
@@ -77,12 +77,6 @@ export default function MarketingPage() {
                 className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
                 Tính năng
-              </a>
-              <a
-                href="#how-it-works"
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Cách hoạt động
               </a>
               <a
                 href="#pricing"
@@ -134,12 +128,6 @@ export default function MarketingPage() {
                   Trải nghiệm ngay
                   <ArrowRightIcon />
                 </Link>
-                <button
-                  type="button"
-                  className="bg-surface hover:bg-muted text-foreground font-semibold py-4 px-8 rounded-full transition-colors border border-border text-center flex items-center justify-center gap-2"
-                >
-                  Xem video
-                </button>
               </div>
             </div>
 
@@ -257,11 +245,23 @@ export default function MarketingPage() {
           </div>
           <div className="flex gap-4">
             <a
-              href="#"
+              href="https://github.com/BoneTheDeveloper/ReadingPro"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="ReadingPro trên GitHub"
               className="w-8 h-8 rounded-full bg-[#EAE5DB] flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-indigo-soft transition-colors"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.51 11.51 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.652.242 2.873.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.805 5.625-5.478 5.921.43.371.814 1.102.814 2.222 0 1.604-.015 2.896-.015 3.289 0 .322.217.696.826.578C20.565 22.092 24 17.598 24 12.297c0-6.627-5.373-12-12-12z" />
+              </svg>
+            </a>
+            <a
+              href="mailto:dacluc2k4@gmail.com"
+              aria-label="Liên hệ qua Gmail: dacluc2k4@gmail.com"
+              className="w-8 h-8 rounded-full bg-[#EAE5DB] flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-indigo-soft transition-colors"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 0 1 0 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L5.455 4.64 12 9.548l6.545-4.91 1.528-1.145C21.69 2.28 24 3.434 24 5.457z" />
               </svg>
             </a>
           </div>

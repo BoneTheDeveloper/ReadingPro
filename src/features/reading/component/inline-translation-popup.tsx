@@ -25,6 +25,7 @@ interface InlineTranslationPopupProps {
   error: Error | null;
   isPending: boolean;
   isSaving: boolean;
+  isSaved?: boolean;
   onTranslate: () => void;
   onClose: () => void;
   onSave: () => void;
@@ -52,6 +53,7 @@ export function InlineTranslationPopup({
   error,
   isPending,
   isSaving,
+  isSaved = false,
   onTranslate,
   onClose,
   onSave,
@@ -224,11 +226,12 @@ export function InlineTranslationPopup({
                 <Button
                   type="button"
                   onClick={onSave}
-                  disabled={isSaving}
+                  disabled={isSaving || isSaved}
+                  aria-label={isSaved ? "Đã lưu từ vựng" : "Lưu từ vựng"}
                   className="mt-3 w-full gap-[7px] rounded-[12px] text-[13px]"
                 >
                   <Bookmark className="size-3.5" />
-                  {isSaving ? "Đang lưu..." : "Lưu"}
+                  {isSaving ? "Đang lưu..." : isSaved ? "Đã lưu" : "Lưu"}
                 </Button>
               </div>
             )}

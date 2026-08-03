@@ -185,6 +185,7 @@ export function ContentPanel({
         error={error}
         isPending={isPending}
         isSaving={createVocabulary.isPending}
+        isSaved={createVocabulary.isSuccess}
         onTranslate={handleTranslateClick}
         onClose={clearTranslation}
         onSave={handleSaveVocabulary}
