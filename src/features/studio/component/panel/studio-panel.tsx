@@ -5,12 +5,10 @@ import { StudioArtifactType } from "@/generated/prisma/enums";
 import type { StudioPanelView, StudioGridId } from "./studio-icon-list";
 import { CollapsedSidebar } from "./collapsed-sidebar";
 import { DefaultStudioView } from "./default-studio-view";
-import { StudioDetailView } from "../view/studio-detail-view";
-import { AiChatPanel } from "../view/ai-chat/ai-chat";
+import { ChatDetailView } from "../view/ai-chat/chat-detail-view";
 import { QuestionDetailView } from "../view/questions/question-detail-view";
 import { useArtifactList } from "../../queries";
 import { useGenerateQuestion, useDeleteArtifact } from "../../mutations";
-import { useChatSession } from "../../hook/use-chat-session";
 
 interface StudioPanelProps {
   passageId: string | null;
@@ -30,21 +28,19 @@ export function StudioPanel({
   const artifactsQuery = useArtifactList(passageId);
   const generateQuestion = useGenerateQuestion();
   const deleteArtifact = useDeleteArtifact();
-  const { setLocalChatPrefill } = useChatSession(view?.contentType === "chat");
 
   const closeView = useCallback(() => onViewChange(null), [onViewChange]);
 
   const openView = useCallback(
     (id: StudioGridId, artifactId?: string) => {
       if (id === "CHAT") {
-        setLocalChatPrefill(null);
         onViewChange({ contentType: "chat" });
         return;
       }
       if (!artifactId) return;
       onViewChange({ contentType: "question", artifactId });
     },
-    [setLocalChatPrefill, onViewChange],
+    [onViewChange],
   );
 
   // Tile click on a generation tile kicks off an async artifact creation.
@@ -65,15 +61,7 @@ export function StudioPanel({
   }
 
   if (view?.contentType === "chat" && passageId) {
-    return (
-      <StudioDetailView title="Trò chuyện" onClose={closeView}>
-        <AiChatPanel
-          key={passageId}
-          passageId={passageId}
-          prefilledQuestion={null}
-        />
-      </StudioDetailView>
-    );
+    return <ChatDetailView key={passageId} passageId={passageId} onClose={closeView} />;
   }
 
   if (view?.contentType === "question") {
