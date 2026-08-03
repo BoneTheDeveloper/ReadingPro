@@ -1,11 +1,15 @@
 import { NextResponse } from "next/server";
 import { withErrorHandling } from "@/lib/error/with-error-handling";
 import { requireApiSession } from "@/lib/auth/session";
-import { studyChatRequestSchema } from "@/features/studio/schema/ai-chat";
-import { validateMessageSizeLimits } from "@/features/studio/util/chat-config";
 import {
-  generateMessageId,
+  chatHistoryResponseSchema,
+  MAX_TEXT_CHARS,
+  studyChatRequestSchema,
+} from "@/features/studio/schema/ai-chat";
+import {
+  getChatHistoryForUser,
   persistAssistantMessage,
+  persistUserMessage,
   resetHistoryForUser,
   streamStudyChat,
 } from "@/features/studio/server/service/ai-chat";
@@ -26,22 +30,29 @@ export const POST = withErrorHandling("ai-chat", async (req) => {
     );
   }
 
-  const { messages, passageId } = parsed.data;
-  const sizeError = validateMessageSizeLimits(messages);
-  if (sizeError) throw new AppError(400, "VALIDATION", sizeError);
+  const { messages, passageId, language } = parsed.data;
 
   const passage = await findPassageForUser(userId, passageId);
   if (!passage) throw new NotFoundError("Passage", passageId);
+
+  // Persist the user turn synchronously so it survives an immediate client
+  // abort before the streamed response finishes.
+  const latestUserMessage = [...messages].reverse().find((m) => m.role === "user");
+  if (latestUserMessage) {
+    await persistUserMessage(userId, passageId, latestUserMessage);
+  }
 
   const result = await streamStudyChat({
     userId,
     passageId,
     passage: { id: passage.id, content: passage.content, title: passage.title },
     messages,
+    language,
   });
 
+  // AI SDK documented persistence path: save the assistant turn when the
+  // stream finishes.
   return result.toUIMessageStreamResponse({
-    generateMessageId,
     onFinish: ({ responseMessage }) => {
       if (!responseMessage) return;
       void persistAssistantMessage(userId, passageId, responseMessage);
@@ -64,4 +75,27 @@ export const DELETE = withErrorHandling("ai-chat", async (req) => {
 
   await resetHistoryForUser(userId, passageId);
   return new NextResponse(null, { status: 204 });
+});
+
+export const GET = withErrorHandling("ai-chat", async (req) => {
+  const session = await requireApiSession();
+  const userId = session.user.id;
+
+  const { searchParams } = new URL(req.url);
+  const passageId = searchParams.get("passageId");
+  if (!passageId) {
+    throw new AppError(400, "VALIDATION", "passageId is required");
+  }
+
+  const passage = await findPassageForUser(userId, passageId);
+  if (!passage) throw new NotFoundError("Passage", passageId);
+
+  const history = await getChatHistoryForUser(userId, passageId);
+  const messages = history.map((row) => ({
+    id: row.id,
+    role: row.role as "user" | "assistant",
+    parts: [{ type: "text" as const, text: row.content.slice(0, MAX_TEXT_CHARS) }],
+  }));
+
+  return NextResponse.json(chatHistoryResponseSchema.parse({ messages }));
 });

@@ -68,7 +68,7 @@ export function ChatMessageList({
           )}
         </div>
       ))}
-      {isStreaming && messages[messages.length - 1]?.role === "user" && (
+      {isStreaming && (
         <div className="flex items-center gap-2 py-1 text-[13px] text-ink-3">
           <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
           <span>Đang trả lời…</span>

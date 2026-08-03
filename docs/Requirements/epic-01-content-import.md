@@ -2,15 +2,14 @@
 
 **PRD Solution area:** 1. Bring any passage
 
-The learner turns content from any source into a study passage. Sources: pasted text, PDF,
+Turns content from any source into a study passage. Sources: pasted text, PDF,
 YouTube link (via transcription)
 
 ---
 
 ## US-01 · Paste English text
 
-**As a** learner, **I want** to paste English text with an optional title, **so that** I can
-turn my own material into a study passage.
+User paste English text with an optional title
 
 **Acceptance criteria**
 
@@ -31,7 +30,7 @@ Scenario: Text fails validation
 ## US-02 · Upload a PDF
 
 
-**As a** learner, **I want** to upload a PDF, **so that** the app extracts its text into a
+User upload a PDF, the app extracts its text into a
 study passage.
 
 **Acceptance criteria**
@@ -56,8 +55,7 @@ Scenario: Unsupported or oversized file
 ## US-03 · Import from a YouTube link
 
 
-**As a** learner, **I want** to import a YouTube link, **so that** I can study its spoken
-content as a passage without paying for heavy media processing.
+Usser to import a YouTube link, 
 
 **Acceptance criteria**
 

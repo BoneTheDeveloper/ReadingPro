@@ -1,10 +1,13 @@
 import { z } from "zod";
-import { MAX_HISTORY_MESSAGES, MAX_TEXT_CHARS } from "../util/chat-config";
+
+export const MAX_TEXT_CHARS = 1_000;
+
+export type StudyChatLanguage = "vi" | "en";
 
 const uiMessageTextPartSchema = z
   .object({
     type: z.literal("text"),
-    text: z.string().max(MAX_TEXT_CHARS),
+    text: z.string().transform((value) => value.slice(0, MAX_TEXT_CHARS)),
   })
   .strict();
 
@@ -17,6 +20,21 @@ const uiMessageSchema = z
   .strict();
 
 export const studyChatRequestSchema = z.object({
-  messages: z.array(uiMessageSchema).max(MAX_HISTORY_MESSAGES).default([]),
+  messages: z.array(uiMessageSchema).max(24).default([]),
   passageId: z.string().min(1),
+  language: z.enum(["vi", "en"]).default("vi"),
 });
+
+const chatHistoryItemSchema = z
+  .object({
+    id: z.string().min(1),
+    role: z.enum(["user", "assistant"]),
+    parts: z.array(uiMessageTextPartSchema).min(1),
+  })
+  .strict();
+
+export const chatHistoryResponseSchema = z.object({
+  messages: z.array(chatHistoryItemSchema),
+});
+
+export type ChatHistoryMessage = z.infer<typeof chatHistoryItemSchema>;

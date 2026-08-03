@@ -11,12 +11,9 @@ latest run score.
 
 
 
-## US-14 · Organize words into sets manually
+## US-12 · Organize words into sets manually
 
-
-**As a** learner, **I want** to organize saved vocabulary into sets, **so that** I can group
-terms for focused review.
-
+Organize saved vocabulary into sets, 
 **Acceptance criteria**
 
 ```gherkin
@@ -26,10 +23,9 @@ Scenario: Create a manual set
   Then the set is saved and available for review
 ```
 
-## US-15 · Generate word sets automatically
+## US-13 · Generate word sets automatically
 
-**As a** learner, **I want** the app to build daily and weekly word sets automatically, **so
-that** I always have a fresh set to review without organizing it myself.
+The app can genareted word sets, the user can have a fresh set to review without organizing it myself.
 
 **Acceptance criteria**
 
@@ -44,10 +40,9 @@ Scenario: Auto daily/weekly set
 
 ---
 
-## US-16 · Review due cards with spaced repetition
+## US-14 · Review due cards with spaced repetition
 
-**As a** learner, **I want** to review due cards, **so that** spaced repetition schedules my
-next review at the right time.
+Review due cards through spaced repetition schedules 
 
 **Acceptance criteria**
 
@@ -66,10 +61,10 @@ Scenario: Nothing due
 
 ---
 
-## US-17 · Rate recall to schedule the next review
+## US-15 · Rate recall to schedule the next review
 
 
-**As a** learner, **I want** to rate how well I recalled each card, **so that** the schedule
+Rate how well I recalled each card, the schedule
 adapts to my actual retention.
 
 **Acceptance criteria**

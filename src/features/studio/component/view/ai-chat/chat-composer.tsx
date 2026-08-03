@@ -2,7 +2,7 @@
 
 import { useRef, type FormEvent, type KeyboardEvent } from "react";
 import { Send, Square } from "lucide-react";
-import { MAX_TEXT_CHARS } from "@/features/studio/util/chat-config";
+import type { StudyChatLanguage } from "@/features/studio/schema/ai-chat";
 
 interface ChatComposerProps {
   value: string;
@@ -10,6 +10,8 @@ interface ChatComposerProps {
   onSubmit: () => void;
   onStop: () => void;
   isStreaming: boolean;
+  language: StudyChatLanguage;
+  onLanguageChange: (language: StudyChatLanguage) => void;
 }
 
 export function ChatComposer({
@@ -18,10 +20,11 @@ export function ChatComposer({
   onSubmit,
   onStop,
   isStreaming,
+  language,
+  onLanguageChange,
 }: ChatComposerProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const canSend = value.trim().length > 0 && !isStreaming;
-  const remaining = MAX_TEXT_CHARS - value.length;
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -42,7 +45,7 @@ export function ChatComposer({
   };
 
   const handleChange = (next: string) => {
-    onChange(next.slice(0, MAX_TEXT_CHARS));
+    onChange(next);
     const el = textareaRef.current;
     if (!el) return;
     el.style.height = "auto";
@@ -62,26 +65,44 @@ export function ChatComposer({
           onKeyDown={handleKeyDown}
           placeholder="Hỏi về bài đọc…"
           rows={3}
-          maxLength={MAX_TEXT_CHARS}
           aria-label="Hỏi về bài đọc"
           className="w-full resize-none border-none bg-transparent pt-1 text-[13px] leading-[1.55] text-foreground placeholder:text-ink-3 outline-none min-h-[58px] max-h-[132px] overflow-y-auto panel-scroll"
         />
         <div className="flex items-center justify-between gap-2">
-          {/* TODO: ngôn ngữ trả lời — placeholder tĩnh, chưa nối backend */}
           <div
-            aria-hidden
+            role="radiogroup"
+            aria-label="Ngôn ngữ trả lời"
             title="Ngôn ngữ trả lời"
             className="flex items-center gap-[3px] rounded-full border border-border bg-muted p-0.5 text-[10px] font-bold"
           >
-            <span className="px-2 py-1 rounded-full text-ink-3">VI</span>
-            <span className="px-2 py-1 rounded-full bg-surface text-foreground shadow-card">
+            <button
+              type="button"
+              role="radio"
+              aria-checked={language === "vi"}
+              onClick={() => onLanguageChange("vi")}
+              className={`px-2 py-1 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                language === "vi"
+                  ? "bg-surface text-foreground shadow-card"
+                  : "text-ink-3 hover:text-foreground"
+              }`}
+            >
+              VI
+            </button>
+            <button
+              type="button"
+              role="radio"
+              aria-checked={language === "en"}
+              onClick={() => onLanguageChange("en")}
+              className={`px-2 py-1 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                language === "en"
+                  ? "bg-surface text-foreground shadow-card"
+                  : "text-ink-3 hover:text-foreground"
+              }`}
+            >
               EN
-            </span>
+            </button>
           </div>
           <div className="flex items-center gap-2">
-            {remaining <= 100 && (
-              <span className="text-[10px] text-ink-3 tabular-nums">{remaining}</span>
-            )}
             {isStreaming ? (
               <button
                 type="button"

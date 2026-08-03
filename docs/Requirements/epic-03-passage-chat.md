@@ -2,13 +2,13 @@
 
 **PRD Solution area:** 3. Go deeper through chat
 
-The learner uses a passage-grounded chat to dig into the content — not only to study, but to
+The usser uses a passage-grounded chat to dig into the content — not only to study, but to
 research and pull more information about what the passage covers.
 
 
 ## US-08 · Ask a question grounded in the passage
 
-**As a** learner, **I want** to ask a tutor question about the selected passage, **so that** I
+User  ask a tutor question about the selected passage to
 get contextual explanations while reading.
 
 **Acceptance criteria**
@@ -31,8 +31,8 @@ Scenario: Passage not owned
 ## US-09 · Research deeper through chat
 
 
-**As a** learner, **I want** to ask follow-up and research questions that go beyond literal
-comprehension, **so that** I can learn more about the topic the passage covers.
+User ask follow-up and research questions that go beyond literal
+comprehension
 
 **Acceptance criteria**
 

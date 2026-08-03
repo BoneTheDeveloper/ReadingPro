@@ -10,8 +10,8 @@ words, with their passage context, into a word bank.
 
 ## US-10 · Translate a selection in the study page
 
-**As a** learner, **I want** to translate a selected phrase from a passage I own, **so that** I
-understand difficult text in my language.
+Translate a selected phrase from a passage user own,
+understand difficult text in language.
 
 **Acceptance criteria**
 
@@ -33,51 +33,11 @@ Scenario: Cached translation
 ```
 
 
----
-
-## US-11 · Translate and look up on a standalone page
-
-**As a** learner, **I want** a dedicated translate-and-dictionary page outside the study
-workspace, **so that** I can look up and save words even when I am not reading a passage.
-
-**Acceptance criteria**
-
-```gherkin
-Scenario: Look up a word standalone
-  Given I am on the standalone translate/dictionary page
-  When I enter a word or phrase
-  Then the system returns its translation and dictionary entry
-  And I can save it to my word bank from there
-```
+## US-11 · Save a word with its passage context
 
 
-## US-12 · Search the dictionary
-
-**Priority:** Must **Status:** Implemented
-
-**As a** learner, **I want** to search the English-Vietnamese dictionary, **so that** I can
-look up headwords, aliases, or suggestions.
-
-**Acceptance criteria**
-
-```gherkin
-Scenario: Matching entries found
-  Given the seeded dictionary contains the query
-  When I search by headword or alias
-  Then the system returns matching entries grouped by headword
-
-Scenario: No match
-  Given the query has no exact match
-  When I search
-  Then the system returns an empty result with suggestions
-```
-
-## US-13 · Save a word with its passage context
-
-**Priority:** Must **Status:** Implemented
-
-**As a** learner, **I want** to save a selected word together with the context it appeared in,
-**so that** I review it later with the passage where I first met it.
+Save a selected word together with the context it appeared in,
+review it later with the passage where I first met it.
 
 **Acceptance criteria**
 

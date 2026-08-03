@@ -102,7 +102,7 @@ model Passage {
   statusError           String?
   userProfile           UserProfile             @relation(fields: [userId], references: [id], onDelete: Cascade)
   studioArtifacts       StudioArtifact[]
-  studyChatMessages     StudyChatMessage[]
+  ChatMessages     ChatMessage[]
 
   @@index([createdAt])
   @@index([userId])
@@ -127,7 +127,7 @@ model StudioArtifact {
   @@index([status])
 }
 
-model StudyChatMessage {
+model ChatMessage {
   id          String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId      String
   passageId   String      @db.Uuid

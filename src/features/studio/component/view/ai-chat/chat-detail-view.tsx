@@ -1,12 +1,18 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
-import { AlertCircle, RotateCw, Trash2 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { AlertCircle, Loader2, RotateCw, Trash2 } from "lucide-react";
 import { StudioDetailView } from "../studio-detail-view";
 import { ChatMessageList } from "./chat-message-list";
 import { ChatComposer } from "./chat-composer";
+import { useChatHistory, chatKeys } from "@/features/studio/queries";
+import type {
+  ChatHistoryMessage,
+  StudyChatLanguage,
+} from "@/features/studio/schema/ai-chat";
 
 interface ChatDetailViewProps {
   passageId: string;
@@ -14,48 +20,82 @@ interface ChatDetailViewProps {
 }
 
 export function ChatDetailView({ passageId, onClose }: ChatDetailViewProps) {
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const historyQuery = useChatHistory(passageId);
+
+  if (historyQuery.isPending) {
+    return (
+      <StudioDetailView title="Trò chuyện" onClose={onClose}>
+        <div className="flex h-full items-center justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        </div>
+      </StudioDetailView>
+    );
+  }
+
+  if (historyQuery.isError) {
+    return (
+      <StudioDetailView title="Trò chuyện" onClose={onClose}>
+        <div className="flex h-full items-center justify-center text-sm text-destructive">
+          {historyQuery.error.message}
+        </div>
+      </StudioDetailView>
+    );
+  }
+
+  return (
+    <ChatConversation
+      passageId={passageId}
+      onClose={onClose}
+      initialMessages={historyQuery.data ?? []}
+    />
+  );
+}
+
+interface ChatConversationProps extends ChatDetailViewProps {
+  initialMessages: ChatHistoryMessage[];
+}
+
+function ChatConversation({
+  passageId,
+  onClose,
+  initialMessages,
+}: ChatConversationProps) {
   const [input, setInput] = useState("");
+  const [language, setLanguage] = useState<StudyChatLanguage>("vi");
+  const queryClient = useQueryClient();
 
   const transport = useMemo(
     () =>
       new DefaultChatTransport({
         api: "/api/ai-chat",
-        body: { passageId },
       }),
-    [passageId],
+    [],
   );
 
-  const { messages, sendMessage, status, error, stop, regenerate, setMessages, clearError } =
-    useChat({ transport });
+  const { messages, sendMessage, status, error, stop, regenerate } =
+    useChat({ transport, messages: initialMessages });
   const isStreaming = status === "submitted" || status === "streaming";
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
-  }, [messages, isStreaming]);
 
   const handleSubmit = () => {
     const text = input.trim();
     if (!text || isStreaming) return;
     setInput("");
-    sendMessage({ text });
+    // Pass dynamic values per request — hook-level body is captured at
+    // mount and can go stale after subsequent sends.
+    sendMessage({ text }, { body: { passageId, language } });
   };
 
   const handleReset = async () => {
     if (isStreaming) return;
-    const confirmed = window.confirm(
-      "Xoá hội thoại này? Lịch sử trò chuyện của bài đọc sẽ bị xoá.",
-    );
-    if (!confirmed) return;
 
     const res = await fetch(`/api/ai-chat?passageId=${encodeURIComponent(passageId)}`, {
       method: "DELETE",
     });
     if (!res.ok) return;
 
-    setMessages([]);
-    clearError();
+    // Drop the cached history so the next mount doesn't show the deleted
+    // messages. `useChatHistory` will refetch on remount.
+    queryClient.removeQueries({ queryKey: chatKeys.history(passageId) });
   };
 
   const resetButton = (
@@ -74,14 +114,13 @@ export function ChatDetailView({ passageId, onClose }: ChatDetailViewProps) {
   return (
     <StudioDetailView title="Trò chuyện" onClose={onClose} action={resetButton}>
       <div className="flex flex-col h-full">
-        <div
-          ref={scrollRef}
-          className="flex-1 min-h-0 overflow-y-auto panel-scroll bg-paper"
-        >
+        <div className="flex-1 min-h-0 overflow-y-auto panel-scroll bg-paper">
           <ChatMessageList
             messages={messages}
             isStreaming={isStreaming}
-            onPickSuggestion={(text) => sendMessage({ text })}
+            onPickSuggestion={(text) =>
+              sendMessage({ text }, { body: { passageId, language } })
+            }
           />
         </div>
 
@@ -91,7 +130,7 @@ export function ChatDetailView({ passageId, onClose }: ChatDetailViewProps) {
             <p className="text-xs text-danger flex-1">Đã có lỗi xảy ra. Vui lòng thử lại.</p>
             <button
               type="button"
-              onClick={() => regenerate()}
+              onClick={() => regenerate({ body: { passageId, language } })}
               className="flex items-center gap-1 h-7 px-2 rounded-md text-xs font-medium text-danger transition-colors hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <RotateCw className="w-3 h-3" />
@@ -106,6 +145,8 @@ export function ChatDetailView({ passageId, onClose }: ChatDetailViewProps) {
           onSubmit={handleSubmit}
           onStop={stop}
           isStreaming={isStreaming}
+          language={language}
+          onLanguageChange={setLanguage}
         />
       </div>
     </StudioDetailView>

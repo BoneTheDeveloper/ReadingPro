@@ -9,11 +9,6 @@ export const GET = withErrorHandling("passages/[id]", async (_req, { params }) =
   const { user } = await requireApiSession();
   const { id } = z.object({ id: z.uuid() }).parse(await params);
   const passage = await findPassageForUser(user.id, id);
-
-  // Only COMPLETED passages have final AI-cleaned content. PENDING/FAILED
-  // rows are visible in the list (status + statusError) but the detail view
-  // cannot render meaningfully without final content, so block the read here.
-  // The list query is the source of truth for non-terminal status UX.
   if (!passage || passage.status !== "COMPLETED") {
     throw new AppError(404, "NOT_FOUND", "Passage is not ready");
   }

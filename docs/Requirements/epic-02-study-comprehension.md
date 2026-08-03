@@ -12,9 +12,8 @@ display mode of the other.
 
 ## US-06 · Answer comprehension questions
 
-
-**As a** learner, **I want** to answer comprehension questions with feedback and source
-citations, **so that** I can check my understanding of a passage.
+Answer comprehension questions with feedback and source
+citations, so the user can check my understanding of a passage.
 
 **Acceptance criteria**
 
@@ -34,9 +33,7 @@ Scenario: No option selected
 
 ## US-07 · Self-test with generated flashcards
 
-
-**As a** learner, **I want** to generate flashcards from a passage and run through them, **so
-that** I get a quick check of which terms and ideas from that passage I retained.
+Generate flashcards from a passage and run through them, so that the user can  get a quick check of which terms and ideas from that passage I retained.
 
 **Acceptance criteria**
 
