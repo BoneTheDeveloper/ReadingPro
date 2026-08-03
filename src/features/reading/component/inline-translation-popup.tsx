@@ -15,7 +15,8 @@ import { Bookmark, Languages, LoaderCircle, RotateCcw, Volume2, X } from "lucide
 import { useMemo, useEffect } from "react";
 
 import { Button } from "@/component/ui/button";
-import type { PartOfSpeech, Translation } from "@/features/reading/schema";
+import type { Translation } from "@/features/reading/schema";
+import type { PartOfSpeech } from "@/generated/prisma/enums";
 import type { WordSelectionAnchor } from "@/features/reading/utils/word-selection";
 
 interface InlineTranslationPopupProps {
@@ -23,24 +24,24 @@ interface InlineTranslationPopupProps {
   data: Translation | null;
   error: Error | null;
   isPending: boolean;
+  isSaving: boolean;
   onTranslate: () => void;
   onClose: () => void;
+  onSave: () => void;
 }
 
-const PART_OF_SPEECH_LABEL: Record<Exclude<PartOfSpeech, "unknown">, string> = {
-  noun: "danh từ",
-  verb: "động từ",
-  adjective: "tính từ",
-  adverb: "trạng từ",
-  pronoun: "đại từ",
-  preposition: "giới từ",
-  conjunction: "liên từ",
-  interjection: "thán từ",
-  determiner: "loại từ",
+const PART_OF_SPEECH_LABEL: Record<Exclude<PartOfSpeech, "OTHER">, string> = {
+  NOUN: "danh từ",
+  VERB: "động từ",
+  ADJECTIVE: "tính từ",
+  ADVERB: "trạng từ",
+  PREPOSITION: "giới từ",
+  CONJUNCTION: "liên từ",
+  PHRASE:"cụm từ"
 };
 
 function partOfSpeechBadge(data: Translation): { label: string; aria: string } | null {
-  if (data.partOfSpeech === "unknown") return null;
+  if (data.partOfSpeech === "OTHER") return null;
   const label = PART_OF_SPEECH_LABEL[data.partOfSpeech];
   return { label, aria: `Loại từ: ${label}` };
 }
@@ -50,8 +51,10 @@ export function InlineTranslationPopup({
   data,
   error,
   isPending,
+  isSaving,
   onTranslate,
   onClose,
+  onSave,
 }: InlineTranslationPopupProps) {
   const isOpen = anchor !== null;
   const isExpanded = isPending || data !== null || error !== null;
@@ -220,10 +223,12 @@ export function InlineTranslationPopup({
 
                 <Button
                   type="button"
+                  onClick={onSave}
+                  disabled={isSaving}
                   className="mt-3 w-full gap-[7px] rounded-[12px] text-[13px]"
                 >
                   <Bookmark className="size-3.5" />
-                  Lưu
+                  {isSaving ? "Đang lưu..." : "Lưu"}
                 </Button>
               </div>
             )}

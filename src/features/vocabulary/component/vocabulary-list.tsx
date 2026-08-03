@@ -5,19 +5,11 @@ import { Download, Plus, Search } from "lucide-react";
 import { Button } from "@/component/ui/button";
 import { Input } from "@/component/ui/input";
 import { cn } from "@/lib/utils";
-
-type VocabularyStatus = "NEW" | "LEARNING" | "MASTERED";
-
-interface VocabularyItemDto {
-  id: string;
-  displayText: string;
-  translation: string;
-  status: VocabularyStatus;
-  createdAt: string;
-}
+import { VocabularyStatus } from "@/generated/prisma/enums";
+import type { VocabularyItem } from "@/features/vocabulary/schema";
 
 interface VocabularyListProps {
-  items: VocabularyItemDto[];
+  items: VocabularyItem[];
   total: number;
   page: number;
   pageSize: number;
@@ -35,14 +27,14 @@ const STATUS_FILTERS: Array<"ALL" | VocabularyStatus> = [
   "ALL",
   "NEW",
   "LEARNING",
-  "MASTERED",
+  "MEMORIZED",
 ];
 
 const STATUS_LABEL: Record<VocabularyStatus | "ALL", string> = {
   ALL: "Tất cả",
   NEW: "Mới",
   LEARNING: "Đang học",
-  MASTERED: "Đã thuộc",
+  MEMORIZED: "Đã thuộc",
 };
 
 const STATUS_STYLE: Record<
@@ -51,7 +43,7 @@ const STATUS_STYLE: Record<
 > = {
   NEW: { bg: "#FBEFD8", color: "#A66A12", dot: "#EEA63C" },
   LEARNING: { bg: "#ECEAFB", color: "#4A3FD0", dot: "#5A4FE0" },
-  MASTERED: { bg: "#DDF3E7", color: "#1E7A4B", dot: "#2FA66A" },
+  MEMORIZED: { bg: "#DDF3E7", color: "#1E7A4B", dot: "#2FA66A" },
 };
 
 const FILTER_CHIP_BASE =
@@ -193,18 +185,13 @@ function TableRow({
   onStatusChange,
   onDelete,
 }: {
-  item: VocabularyItemDto;
+  item: VocabularyItem;
   onStatusChange: (id: string, status: VocabularyStatus) => void;
   onDelete: (id: string) => void;
 }) {
   const [hovered, setHovered] = useState(false);
-  const isMastered = item.status === "MASTERED";
-  const statusStyle = STATUS_STYLE[item.status as VocabularyStatus];
-  const STATUS_LABELS: Record<VocabularyStatus, string> = {
-    NEW: "Mới",
-    LEARNING: "Đang học",
-    MASTERED: "Đã thuộc",
-  };
+  const isMemorized = item.learningstatus === "MEMORIZED";
+  const statusStyle = STATUS_STYLE[item.learningstatus];
 
   const savedDate = item.createdAt
     ? new Intl.DateTimeFormat("en", {
@@ -226,7 +213,7 @@ function TableRow({
     >
       <div className="w-36 shrink-0">
         <span className="text-sm font-semibold text-[#221F2B]">
-          {item.displayText}
+          {item.term}
         </span>
       </div>
 
@@ -254,7 +241,7 @@ function TableRow({
             className="w-1.5 h-1.5 rounded-full shrink-0"
             style={{ background: statusStyle.dot }}
           />
-          {STATUS_LABELS[item.status as VocabularyStatus]}
+          {STATUS_LABEL[item.learningstatus]}
         </span>
       </div>
 
@@ -272,18 +259,18 @@ function TableRow({
       >
         <button
           type="button"
-          title={isMastered ? "Đánh dấu Đang học" : "Đánh dấu Đã thuộc"}
+          title={isMemorized ? "Đánh dấu Đang học" : "Đánh dấu Đã thuộc"}
           onClick={() =>
-            onStatusChange(item.id, isMastered ? "LEARNING" : "MASTERED")
+            onStatusChange(item.id, isMemorized ? "LEARNING" : "MEMORIZED")
           }
           className="flex items-center justify-center size-7 rounded-xl border transition-all cursor-pointer"
           style={{
-            borderColor: isMastered ? "#EAE5DB" : "#CFEEDD",
-            background: isMastered ? "#fff" : "#DDF3E7",
-            color: isMastered ? "#908B98" : "#1E7A4B",
+            borderColor: isMemorized ? "#EAE5DB" : "#CFEEDD",
+            background: isMemorized ? "#fff" : "#DDF3E7",
+            color: isMemorized ? "#908B98" : "#1E7A4B",
           }}
         >
-          {isMastered ? (
+          {isMemorized ? (
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
               <path d="M3 3v5h5" />

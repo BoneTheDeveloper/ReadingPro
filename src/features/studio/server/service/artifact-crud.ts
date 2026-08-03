@@ -54,9 +54,6 @@ export async function createArtifact(input: {
   });
 }
 
-// Atomic status update — used by the after() callback. Only the processing
-// step writes status: COMPLETED/FAILED. Error-status invariant: FAILED
-// requires statusError; COMPLETED clears it.
 export async function updateArtifactStatus(args: {
   id: string;
   userId: string;

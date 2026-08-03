@@ -6,6 +6,7 @@ import { CefrBadge } from "./cefr-badge";
 import { InlineTranslationPopup } from "./inline-translation-popup";
 import { useScrollProgress } from "@/features/reading/hook/use-scroll-progress";
 import { useTranslation } from "@/features/reading/mutations";
+import { useCreateVocabularyMutation } from "@/features/vocabulary/mutations";
 import { validateWordSelection } from "@/features/reading/utils/word-selection";
 import type { WordSelectionAnchor } from "@/features/reading/utils/word-selection";
 import type { Passage } from "@/features/passage/schema";
@@ -23,6 +24,7 @@ export function ContentPanel({
   );
   const [wordAnchor, setWordAnchor] = useState<WordSelectionAnchor | null>(null);
   const { data, error, isPending, translate, reset } = useTranslation();
+  const createVocabulary = useCreateVocabularyMutation();
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -62,6 +64,17 @@ export function ContentPanel({
   const handleTranslateClick = () => {
     if (!wordAnchor) return;
     translate(wordAnchor.word, wordAnchor.context);
+  };
+
+  const handleSaveVocabulary = () => {
+    if (!data || !wordAnchor) return;
+    createVocabulary.mutate({
+      term: wordAnchor.word,
+      translation: data.translation,
+      sourceLanguage: "en",
+      targetLanguage: "vi",
+      partofSpeech: data.partOfSpeech,
+    });
   };
   if (!passage) {
     return (
@@ -171,8 +184,10 @@ export function ContentPanel({
         data={data}
         error={error}
         isPending={isPending}
+        isSaving={createVocabulary.isPending}
         onTranslate={handleTranslateClick}
         onClose={clearTranslation}
+        onSave={handleSaveVocabulary}
       />
     </div>
   );

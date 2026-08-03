@@ -4,16 +4,8 @@ import { useState, useCallback } from "react";
 import { BookOpen, Library } from "lucide-react";
 import { VocabularyList } from "./vocabulary-list";
 import { VocabularySetList } from "./vocabulary-set-list";
-
-type VocabularyStatus = "NEW" | "LEARNING" | "MASTERED";
-
-interface VocabularyItemDto {
-  id: string;
-  displayText: string;
-  translation: string;
-  status: VocabularyStatus;
-  createdAt: string;
-}
+import { VocabularyStatus } from "@/generated/prisma/enums";
+import type { VocabularyItem } from "@/features/vocabulary/schema";
 
 interface VocabularyStatsDto {
   total: number;
@@ -33,7 +25,7 @@ interface VocabularySetDto {
 type ViewTab = "words" | "sets";
 
 interface VocabularyPageClientProps {
-  initialList: VocabularyItemDto[];
+  initialList: VocabularyItem[];
   initialTotal: number;
   initialStats: VocabularyStatsDto;
   initialSets: VocabularySetDto[];

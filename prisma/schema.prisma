@@ -140,48 +140,37 @@ model ChatMessage {
 model VocabularyItem {
   id                     String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId                 String
+
+  term                   String
+  targetLanguage         String
   translation            String
   sourceLanguage         String
-  targetLanguage         String
-  type                   String                   @default("WORD")
-  createdAt              DateTime                 @default(now())
-  updatedAt              DateTime
-  normalizedText         String                   @default("")
-  displayText            String                   @default("")
-  normalizedTranslation  String                   @default("")
+  partofSpeech           PartOfSpeech
+
   savedCount             Int                      @default(1)
+  learningstatus         VocabularyStatus         @default(NEW)
+
   nextReviewAt           DateTime?
   lastReviewedAt         DateTime?
-  dictionaryEntryId      String?                  @db.Uuid
-  dictionarySenseId      String?                  @db.Uuid
-  learningstatus         VocabularyStatus         @default(NEW)
+
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime
+
   userProfile            UserProfile              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  vocabularyOccurrences  VocabularyOccurrence[]
   vocabularySetItems     VocabularySetItem[]
 
-  @@unique([userId, normalizedText, targetLanguage, normalizedTranslation])
+  @@unique([userId, term, translation])
   @@index([userId, nextReviewAt])
   @@index([userId, learningstatus])
-}
-
-model VocabularyOccurrence {
-  id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  vocabularyItemId String           @db.Uuid
-  sourceId         String?          @db.Uuid
-  selectedText     String
-  contextSentence  String?
-  createdAt        DateTime         @default(now())
-  vocabularyItem   VocabularyItem   @relation(fields: [vocabularyItemId], references: [id], onDelete: Cascade)
-
-  @@unique([vocabularyItemId, sourceId, contextSentence])
-  @@index([sourceId])
 }
 
 model VocabularySetItem {
   id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   vocabularySetId  String           @db.Uuid
   vocabularyItemId String           @db.Uuid
+
   addedAt          DateTime         @default(now())
+
   vocabularyItem   VocabularyItem   @relation(fields: [vocabularyItemId], references: [id], onDelete: Cascade)
   vocabularySet    VocabularySet    @relation(fields: [vocabularySetId], references: [id], onDelete: Cascade)
 
@@ -193,10 +182,13 @@ model VocabularySet {
   userId               String
   name                 String
   type                 VocabularySetType
+
   periodStart          DateTime?
   periodEnd            DateTime?
+
   createdAt            DateTime               @default(now())
   updatedAt            DateTime
+
   vocabularySetItems   VocabularySetItem[]
   userProfile          UserProfile            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -222,15 +214,15 @@ enum SourceType {
 
 enum VocabularySetType {
   MANUAL
-  DAILY
-  WEEKLY
+  GENARATED
+  DEFAULT
 }
 
 
 enum VocabularyStatus {
-  NEW
-  LEARNING
-  MASTERED
+ NEW
+ LEARNING
+ MEMORIZED
 }
 
 enum StudioArtifactType {
@@ -241,4 +233,15 @@ enum StudioArtifactType {
 enum ProcessingStatus {
   PENDING    @map("pending")
   COMPLETED  @map("completed")
+}
+
+enum PartOfSpeech {
+  NOUN
+  VERB
+  ADJECTIVE
+  ADVERB
+  PREPOSITION
+  CONJUNCTION
+  PHRASE
+  OTHER
 }
