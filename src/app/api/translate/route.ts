@@ -4,6 +4,6 @@ import { translateWord } from "@/features/reading/server/service/translate";
 
 export const POST = withErrorHandling("translate", async (req) => {
   const input = TranslateInputSchema.parse(await req.json());
-  const translation = await translateWord(input, req.signal);
+  const translation = await translateWord(input);
   return Response.json(translation);
 });

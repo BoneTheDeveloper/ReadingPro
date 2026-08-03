@@ -1,5 +1,5 @@
 import "server-only";
-import { generateText, Output } from "ai";
+import { generateObject } from "ai";
 import {
   TranslationOutputSchema,
   type TranslateInput,
@@ -11,9 +11,8 @@ const TRANSLATION_SYSTEM_PROMPT = `You are translating a single English headword
 
 export async function translateWord(
   input: TranslateInput,
-  signal?: AbortSignal,
 ): Promise<Translation> {
-  const result = await generateText({
+  const result = await generateObject({
     model: "openai/gpt-4o-mini",
     maxOutputTokens: 1000,
     instructions: TRANSLATION_SYSTEM_PROMPT,
@@ -23,10 +22,9 @@ export async function translateWord(
       `Source language: ${input.sourceLanguage}`,
       `Target language: ${input.targetLanguage}`,
     ].join("\n\n"),
-    output: Output.object({ schema: TranslationOutputSchema }),
-    timeout: 30_000,
-    abortSignal: signal,
+    schema: TranslationOutputSchema,
+    abortSignal: AbortSignal.timeout(60000),
   });
 
-  return result.output;
+  return result.object;
 }
