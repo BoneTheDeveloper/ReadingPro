@@ -40,9 +40,13 @@ async function processPassage(
 
   const parsed = result.output;
 
+  if (!parsed) {
+    throw new Error("AI returned no structured output");
+  }
+
   return {
     text: parsed.text,
-    cefrLevel: parsed.cefrLevel ,
+    cefrLevel: parsed.cefrLevel,
     title: parsed.title,
   };
 }

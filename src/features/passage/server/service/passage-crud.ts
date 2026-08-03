@@ -26,7 +26,6 @@ export async function listPassagesForUser(
       title: true,
       sourceType: true,
       status: true,
-      statusError: true,
       createdAt: true,
     },
   });
@@ -81,7 +80,6 @@ export async function completePassageProcessing(args: {
       cefrLevel: args.cefrLevel,
       wordCount,
       status: "COMPLETED",
-      statusError: null,
     },
   });
 }

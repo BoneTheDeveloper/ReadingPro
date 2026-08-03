@@ -13,11 +13,9 @@ import { YouTubeEmbed } from "./youtube-embed";
 
 export function ContentPanel({
   passage,
-  isLoading = false,
   onOpenUploadModal,
 }: {
   passage: Passage | null;
-  isLoading?: boolean;
   onOpenUploadModal: () => void;
 }) {
   const [viewMode, setViewMode] = useState<"text" | "pdf" | "video">(
@@ -66,13 +64,6 @@ export function ContentPanel({
     translate(wordAnchor.word, wordAnchor.context);
   };
   if (!passage) {
-    if (isLoading) {
-      return (
-        <div className="flex items-center justify-center h-full min-h-100 text-sm text-muted-foreground">
-          Đang tải nội dung...
-        </div>
-      );
-    }
     return (
       <div className="flex items-center justify-center h-full min-h-100">
         <div className="text-center">

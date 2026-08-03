@@ -26,10 +26,20 @@ export const POST = withErrorHandling("create-question", async (request) => {
   });
 
   after(() => {
+    // Run in the background; never let a throw surface as an unhandled
+    // rejection. Surface failures to the server log so the operator sees
+    // them — the artifact stays PENDING until a future attempt succeeds.
     void generateAndStoreArtifact({
       artifactId: artifact.id,
       userId: user.id,
       passageId,
+    }).catch((err) => {
+      console.error("[artifact-generation] failed", {
+        artifactId: artifact.id,
+        passageId,
+        userId: user.id,
+        err,
+      });
     });
   });
 

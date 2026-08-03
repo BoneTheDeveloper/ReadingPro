@@ -27,7 +27,7 @@ export interface UploadModalProps {
   // Client-side validation errors before submission (file too short, bad
   // youtube URL, etc.) are surfaced here so the workspace can render them
   // above the source list. Server-side errors stay on the row.
-  onClientError?: (message: string) => void;
+  onClientError?: (title: string, message: string) => void;
 }
 
 type InputMode = "file" | "paste-text" | "youtube" | null;
@@ -58,7 +58,7 @@ export function UploadModal({ isOpen, onClose, onCreated, onClientError }: Uploa
         onCreated?.(passage);
       },
       onError: (err) => {
-        onClientError?.(err.message);
+        onClientError?.("Tải lên thất bại", err.message);
         onClose?.();
       },
     });

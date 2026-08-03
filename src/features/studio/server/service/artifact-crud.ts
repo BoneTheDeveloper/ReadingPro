@@ -15,7 +15,6 @@ export async function listArtifactsForUser(userId: string, passageId: string) {
       createdAt: true,
       progress: true,
       status: true,
-      statusError: true,
     },
   });
 }
@@ -31,7 +30,6 @@ export async function getArtifact(id: string, userId: string) {
       progress: true,
       createdAt: true,
       status: true,
-      statusError: true,
     },
   });
   if (!artifact) throw new NotFoundError("Artifact", id);
@@ -63,14 +61,12 @@ export async function updateArtifactStatus(args: {
   id: string;
   userId: string;
   status: ProcessingStatus;
-  statusError?: string | null;
   content?: Prisma.InputJsonValue;
 }) {
   return prisma.studioArtifact.update({
     where: { id: args.id, userId: args.userId },
     data: {
       status: args.status,
-      statusError: args.statusError ?? null,
       content: args.content ?? undefined,
     },
   });

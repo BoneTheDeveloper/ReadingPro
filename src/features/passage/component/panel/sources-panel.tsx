@@ -1,8 +1,10 @@
 "use client";
 
-import { DefaultSourceView, SourceErrorItem } from "./default-source-view";
+import { DefaultSourceView } from "./default-source-view";
+import { PassageErrorItem } from "./passage-error-item";
 import { CollapsedSourcesPanel } from "./collapsed-sources-panel";
 import type { PassageListItem } from "@/features/passage/schema";
+import type { WorkspaceError } from "@/features/passage/hook/use-upload-flow";
 
 interface SourcesPanelProps {
   items: PassageListItem[];
@@ -12,8 +14,12 @@ interface SourcesPanelProps {
   onDelete: (id: string) => void;
   collapsed?: boolean;
   onToggleCollapse: () => void;
-  clientError?: string | null;
-  onClearClientError?: () => void;
+  /**
+   * Workspace-level failures (create-passage, AI processing). Each renders
+   * its own inline SourceErrorItem; the id keeps dismiss per-record.
+   */
+  errors?: WorkspaceError[];
+  onDismissError?: (id: string) => void;
 }
 
 export function SourcesPanel({
@@ -24,8 +30,8 @@ export function SourcesPanel({
   onDelete,
   collapsed = false,
   onToggleCollapse,
-  clientError,
-  onClearClientError,
+  errors = [],
+  onDismissError,
 }: SourcesPanelProps) {
   if (collapsed) {
     return (
@@ -48,12 +54,14 @@ export function SourcesPanel({
       onOpenUploadModal={onOpenUploadModal}
       onToggleCollapse={onToggleCollapse}
     >
-      {clientError && (
-        <SourceErrorItem
-          error={clientError}
-          onDismiss={onClearClientError ?? (() => {})}
+      {errors.map((err) => (
+        <PassageErrorItem
+          key={err.id}
+          title={err.title}
+          error={err.message}
+          onDismiss={() => onDismissError?.(err.id)}
         />
-      )}
+      ))}
     </DefaultSourceView>
   );
 }

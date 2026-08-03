@@ -67,7 +67,7 @@ export default function MarketingPage() {
                 <BookIcon />
               </div>
               <span className="font-bold text-xl tracking-tight text-foreground">
-                English Reading
+                ReadingPro
               </span>
             </Link>
 
@@ -250,10 +250,10 @@ export default function MarketingPage() {
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-indigo-hover flex items-center justify-center text-white">
               <BookIcon />
             </div>
-            <span className="font-bold text-foreground">English Reading</span>
+            <span className="font-bold text-foreground">ReadingPro </span>
           </div>
           <div className="text-sm text-muted-foreground">
-            © 2026 English Reading
+            © 2026 ReadingPro
           </div>
           <div className="flex gap-4">
             <a

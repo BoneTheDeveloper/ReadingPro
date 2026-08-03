@@ -112,7 +112,7 @@ export function DashboardSidebar({ children, user }: DashboardSidebarProps) {
           </Tooltip>
           <GraduationCap className="w-5 h-5 text-primary" />
           <span className="font-semibold text-foreground text-sm">
-            English Reading
+            ReadingPro
           </span>
           <div className="ml-auto flex items-center gap-2">
             <AuthControls user={user} />
@@ -202,7 +202,7 @@ function MobileSidebarContent({
           </div>
           <div>
             <h1 className="text-sm font-bold text-foreground leading-tight">
-              English Reading
+              ReadingPro
             </h1>
             <p className="text-[11px] text-muted-foreground leading-tight">
               Training App

@@ -115,8 +115,8 @@ export function StudyWorkspace() {
               onDelete={library.remove}
               collapsed={layout.leftPanelCollapsed}
               onToggleCollapse={layout.toggleLeft}
-              clientError={upload.clientError}
-              onClearClientError={upload.clearClientError}
+              errors={upload.errors}
+              onDismissError={upload.dismissError}
             />
           </Panel>
 
@@ -127,7 +127,6 @@ export function StudyWorkspace() {
               <ContentPanel
                 key={contentKey}
                 passage={detail.data ?? null}
-                isLoading={detail.isPending}
                 onOpenUploadModal={upload.openModal}
               />
             </div>
@@ -160,7 +159,7 @@ export function StudyWorkspace() {
         isOpen={upload.isModalOpen}
         onClose={upload.closeModal}
         onCreated={handleCreated}
-        onClientError={upload.setClientError}
+        onClientError={(title, message) => upload.addError("upload", title, message)}
       />
     </>
   );

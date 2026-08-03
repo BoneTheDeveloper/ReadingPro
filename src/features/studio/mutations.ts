@@ -21,10 +21,17 @@ export function useGenerateQuestion() {
         const data = await res.json();
         throw new Error(data?.error?.message ?? "Tạo câu hỏi thất bại");
       }
-      return res.json();
+      return res.json() as Promise<{ artifact: StudioArtifactListItem }>;
     },
 
-    onSuccess: (_data, passageId) => {
+    // Seed the list cache so the new PENDING row appears immediately;
+    // useArtifactList's poll picks up the COMPLETED transition on the next
+    // tick. No second polling loop here.
+    onSuccess: ({ artifact }, passageId) => {
+      const key = artifactKeys.list(passageId);
+      queryClient.setQueryData<StudioArtifactListItem[]>(key, (prev) =>
+        prev ? [artifact, ...prev] : [artifact],
+      );
       queryClient.invalidateQueries({ queryKey: artifactKeys.list(passageId) });
     },
   });

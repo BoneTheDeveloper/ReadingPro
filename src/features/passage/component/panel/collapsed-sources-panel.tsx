@@ -56,7 +56,7 @@ export function CollapsedSourcesPanel({
 
         <div className="flex-1 overflow-y-auto panel-scroll w-full px-2 py-1">
           <div className="flex flex-col items-center gap-1">
-            {items.map((item) => {
+            {items.filter((item) => item.status === "COMPLETED").map((item) => {
               const isActive = activeId === item.id;
               const { icon: Icon, chip } = SOURCE_TYPE_VISUAL[item.sourceType];
               return (

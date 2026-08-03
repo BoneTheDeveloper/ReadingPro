@@ -66,23 +66,18 @@ export function usePassages() {
 }
 
 export function usePassage(passageId: string | null) {
+  // Detail is reactive only. The list query (usePassages) is the single
+  // polling loop while any row is non-terminal; status changes flow in via
+  // shared cache invalidation. A 404 here means the row exists but is still
+  // PENDING — the list poll will flip it to COMPLETED and re-render.
   const query = useQuery({
     queryKey: passageKeys.detail(passageId ?? ""),
     queryFn: ({ signal }) => fetchPassage(passageId!, signal),
     enabled: passageId !== null,
     placeholderData: keepPreviousData,
-    // Poll while AI processing is in flight; stop once terminal. A 404 here
-    // (PassageNotReady) means the row exists but is still PENDING — keep
-    // polling until the list query flips status to COMPLETED.
     retry: (failureCount, error) => {
       if (error instanceof PassageNotReady) return false;
       return failureCount < 3;
-    },
-    refetchInterval: (q) => {
-      // Stop polling once we have final data.
-      const status = q.state.data?.status;
-      if (status === "COMPLETED") return false;
-      return 2000;
     },
   });
 

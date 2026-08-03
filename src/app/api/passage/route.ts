@@ -33,11 +33,21 @@ export const POST = withErrorHandling("create-passage", async (req) => {
   });
 
   after(() => {
+    // Run in the background; never let a throw surface as an unhandled
+    // rejection that crashes the route lifecycle. Surface failures to the
+    // server log so the operator sees them — the row stays PENDING until
+    // a future processing attempt (or manual intervention) succeeds.
     void runPassageProcessing({
       userId: user.id,
       passageId: passage.id,
       cleanedText: cleanedForAI,
       userTitle: input.title,
+    }).catch((err) => {
+      console.error("[passage-processing] failed", {
+        passageId: passage.id,
+        userId: user.id,
+        err,
+      });
     });
   });
 
