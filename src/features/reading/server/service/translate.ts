@@ -24,7 +24,7 @@ export async function translateWord(
       `Target language: ${input.targetLanguage}`,
     ].join("\n\n"),
     output: Output.object({ schema: TranslationOutputSchema }),
-    timeout: 20_000,
+    timeout: 30_000,
     abortSignal: signal,
   });
 

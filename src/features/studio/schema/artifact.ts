@@ -8,7 +8,6 @@ const artifactCommon = {
   passageId: z.string(),
   createdAt: z.coerce.date(),
   status: z.enum(ProcessingStatus),
-  statusError: z.string().nullable(),
 } as const;
 
 const questionVariant = z.object({

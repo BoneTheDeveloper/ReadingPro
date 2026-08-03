@@ -11,12 +11,12 @@ import { passageKeys } from "./query-keys";
 
 /* ─── Fetchers ─────────────────────────────────────────────────────── */
 
-// 404 from GET /api/passage/[id] means the passage is still PENDING (or
-// FAILED). Treat that as a sentinel — don't throw, keep polling. The list
-// query is the source of truth for non-terminal status UX.
+// 404 from GET /api/passage/[id] means the passage is still PENDING.
+// Treat that as a sentinel — don't throw, keep polling. The list query
+// is the source of truth for non-terminal status UX.
 class PassageNotReady extends Error {
-  readonly status: "PENDING" | "FAILED";
-  constructor(status: "PENDING" | "FAILED") {
+  readonly status: "PENDING";
+  constructor(status: "PENDING") {
     super(`passage ${status}`);
     this.status = status;
   }
@@ -59,9 +59,7 @@ export function usePassages() {
     // terminal — most users will have a small number of in-flight passages.
     refetchInterval: (query) => {
       const items = query.state.data ?? [];
-      const hasPending = items.some(
-        (p) => p.status !== "COMPLETED" && p.status !== "FAILED",
-      );
+      const hasPending = items.some((p) => p.status !== "COMPLETED");
       return hasPending ? 2000 : false;
     },
   });
@@ -83,7 +81,7 @@ export function usePassage(passageId: string | null) {
     refetchInterval: (q) => {
       // Stop polling once we have final data.
       const status = q.state.data?.status;
-      if (status === "COMPLETED" || status === "FAILED") return false;
+      if (status === "COMPLETED") return false;
       return 2000;
     },
   });

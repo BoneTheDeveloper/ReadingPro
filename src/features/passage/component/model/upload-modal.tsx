@@ -57,7 +57,10 @@ export function UploadModal({ isOpen, onClose, onCreated, onClientError }: Uploa
       onSuccess: (passage) => {
         onCreated?.(passage);
       },
-      onError: (err) => onClientError?.(err.message),
+      onError: (err) => {
+        onClientError?.(err.message);
+        onClose?.();
+      },
     });
   };
 

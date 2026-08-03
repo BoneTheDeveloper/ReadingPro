@@ -45,9 +45,7 @@ export function useArtifactList(passageId: string | null) {
     // Poll while any artifact is non-terminal; stop once all reach terminal.
     refetchInterval: (query) => {
       const artifacts = query.state.data ?? [];
-      const hasPending = artifacts.some(
-        (a) => a.status !== "COMPLETED" && a.status !== "FAILED",
-      );
+      const hasPending = artifacts.some((a) => a.status !== "COMPLETED");
       return hasPending ? 2000 : false;
     },
   });

@@ -134,9 +134,9 @@ export function SourceErrorItem({
         </svg>
       </div>
       <div className="flex-1 overflow-hidden">
-        <h4 className="text-[13px] font-medium truncate leading-tight text-destructive">
+        <div className="text-[13px] font-medium truncate leading-tight text-destructive">
           Tải lên thất bại
-        </h4>
+        </div>
         <p className="text-[11px] truncate mt-0.5 text-muted-foreground">{error}</p>
       </div>
       <button

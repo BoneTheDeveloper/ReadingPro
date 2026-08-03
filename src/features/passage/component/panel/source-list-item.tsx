@@ -35,7 +35,6 @@ interface SourceListItemProps {
 export function SourceListItem({ item, active, onSelect, onDelete }: SourceListItemProps) {
   const { icon: Icon, chip } = SOURCE_TYPE_VISUAL[item.sourceType];
   const isPending = item.status === "PENDING";
-  const isFailed = item.status === "FAILED";
 
   return (
     <div
@@ -48,20 +47,21 @@ export function SourceListItem({ item, active, onSelect, onDelete }: SourceListI
       }}
       className={cn(
         "group w-full px-[11px] py-2.5 flex items-center gap-[11px] rounded-[13px] border transition-all",
-        isPending && "cursor-default opacity-70 border-transparent",
-        isFailed && "cursor-default border-destructive/20 bg-destructive/5",
-        !isPending && !isFailed && "cursor-pointer",
-        !isPending && !isFailed && active
-          ? "bg-indigo-soft border-indigo-soft-border"
-          : !isPending && !isFailed && "border-transparent hover:bg-surface hover:border-border",
+        isPending
+          ? "cursor-default opacity-70 border-transparent"
+          : active
+            ? "bg-indigo-soft border-indigo-soft-border cursor-pointer"
+            : "border-transparent hover:bg-surface hover:border-border cursor-pointer",
       )}
     >
       <div
         className={cn(
           "w-8 h-8 rounded-[10px] flex items-center justify-center shrink-0",
-          isPending && "bg-accent text-primary",
-          isFailed && "bg-destructive/10 text-destructive",
-          !isPending && !isFailed && (active ? "bg-surface text-primary shadow-sm" : chip),
+          isPending
+            ? "bg-accent text-primary"
+            : active
+              ? "bg-surface text-primary shadow-sm"
+              : chip,
         )}
       >
         {isPending ? (
@@ -71,28 +71,25 @@ export function SourceListItem({ item, active, onSelect, onDelete }: SourceListI
         )}
       </div>
       <div className="flex-1 overflow-hidden">
-        <h4
+        <div
           className={cn(
             "text-[13px] truncate leading-tight",
-            isFailed && "text-destructive",
-            !isFailed && active ? "font-semibold text-primary" : "font-medium text-foreground",
+            active ? "font-semibold text-primary" : "font-medium text-foreground",
           )}
         >
-          {item.title}
-        </h4>
+          {item.title || (isPending ? "Đang tạo bài đọc" : "")}
+        </div>
         <p
           className={cn(
             "text-[11px] truncate mt-px",
-            isPending && "text-muted-foreground",
-            isFailed && "text-muted-foreground",
-            !isPending && !isFailed && (active ? "text-primary/60" : "text-ink-3"),
+            isPending
+              ? "text-muted-foreground"
+              : active
+                ? "text-primary/60"
+                : "text-ink-3",
           )}
         >
-          {isPending
-            ? "Đang xử lý..."
-            : isFailed
-              ? (item.statusError ?? "Tải thất bại")
-              : formatDate(item.createdAt)}
+          {isPending ? "Đang xử lý..." : formatDate(item.createdAt)}
         </p>
       </div>
       <DropdownMenu>

@@ -99,7 +99,6 @@ model Passage {
   createdAt             DateTime                @default(now())
   youtubeUrl            String?
   status                ProcessingStatus        @default(PENDING)
-  statusError           String?
   userProfile           UserProfile             @relation(fields: [userId], references: [id], onDelete: Cascade)
   studioArtifacts       StudioArtifact[]
   ChatMessages     ChatMessage[]
@@ -118,8 +117,6 @@ model StudioArtifact {
   content   Json?
   progress  Json?
   status    ProcessingStatus  @default(PENDING)
-  statusError String?
-
   passage   Passage           @relation(fields: [passageId], references: [id], onDelete: Cascade)
 
   @@index([passageId, createdAt(sort: Desc)])
@@ -244,5 +241,4 @@ enum StudioArtifactType {
 enum ProcessingStatus {
   PENDING    @map("pending")
   COMPLETED  @map("completed")
-  FAILED     @map("failed")
 }

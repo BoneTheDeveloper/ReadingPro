@@ -13,7 +13,6 @@ export const passageSchema = z.object({
   createdAt: z.coerce.date(),
   youtubeUrl: z.string().nullable(),
   status: z.enum(ProcessingStatus),
-  statusError: z.string().nullable(),
 });
 
 const passageListItemSchema = passageSchema.pick({
@@ -21,7 +20,6 @@ const passageListItemSchema = passageSchema.pick({
   title: true,
   sourceType: true,
   status: true,
-  statusError: true,
   createdAt: true,
 });
 
@@ -62,5 +60,5 @@ export const DeepseekProcessPassageResponseSchema = z.object({
     .string()
     .min(1)
     .max(50)
-    .describe("Concise descriptive title (≤ 80 chars) capturing the main topic."),
+    .describe("Concise descriptive title capturing the main topic."),
 });

@@ -10,14 +10,13 @@ import {
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
 
-type ArtifactStatus = "ready" | "pending" | "failed";
+type ArtifactStatus = "ready" | "pending";
 
 interface ArtifactListItemProps {
   title: string;
   icon: LucideIcon;
   status: ArtifactStatus;
   subtitle: string | null;
-  errorMessage?: string | null;
   onClick: () => void;
   onDelete?: () => void;
 }
@@ -27,13 +26,11 @@ export function ArtifactListItem({
   icon: Icon,
   status,
   subtitle,
-  errorMessage,
   onClick,
   onDelete,
 }: ArtifactListItemProps) {
   const isReady = status === "ready";
   const isPending = status === "pending";
-  const isFailed = status === "failed";
 
   return (
     <div
@@ -44,13 +41,11 @@ export function ArtifactListItem({
         "group w-full flex items-center gap-2.5 px-3 py-2.5 text-left rounded-[13px] border transition-all outline-none",
         isPending && "border-primary/20 bg-primary/5 cursor-default",
         isReady && "border-border bg-surface hover:border-primary hover:-translate-y-px hover:shadow-card cursor-pointer",
-        isFailed && "border-destructive/20 bg-destructive/5 opacity-60 cursor-not-allowed",
       )}
     >
       <div className={cn(
         "w-8 h-8 rounded-[10px] flex items-center justify-center shrink-0",
-        isFailed ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary",
-        isPending && "animate-processing-fill",
+        isPending ? "bg-primary/10 text-primary animate-processing-fill" : "bg-primary/10 text-primary",
       )}>
         {isPending ? (
           <Loader2 className="w-4 h-4 animate-spin" strokeWidth={2} />
@@ -67,9 +62,11 @@ export function ArtifactListItem({
             {subtitle}
           </p>
         ) : (
-          <p className="text-[11px] text-muted-foreground truncate mt-0.5">
-            {isPending ? "Đang tạo..." : isFailed ? errorMessage : null}
-          </p>
+          isPending && (
+            <p className="text-[11px] text-muted-foreground truncate mt-0.5">
+              Đang tạo...
+            </p>
+          )
         )}
       </div>
       {onDelete && (

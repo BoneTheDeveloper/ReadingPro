@@ -32,26 +32,14 @@ async function generateComprehensionQuestions(
   return object;
 }
 
-// Runs after() the route handler has returned. Wraps the AI call so failures
-// flip the artifact row to FAILED instead of leaving it stuck on PENDING.
-// `after()` swallows errors into its own scope — this wrapper is the only
-// place status: FAILED is written for an artifact.
+
 export async function generateAndStoreArtifact(args: {
   artifactId: string;
   userId: string;
   passageId: string;
 }): Promise<void> {
-  try {
     const passage = await findPassageForUser(args.userId, args.passageId);
-    if (!passage) {
-      await updateArtifactStatus({
-        id: args.artifactId,
-        userId: args.userId,
-        status: "FAILED",
-        statusError: "Passage not found",
-      });
-      return;
-    }
+    if (!passage) return;
 
     const content = await generateComprehensionQuestions(passage.content, 5);
 
@@ -61,18 +49,4 @@ export async function generateAndStoreArtifact(args: {
       status: "COMPLETED",
       content: content as object,
     });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-
-    try {
-      await updateArtifactStatus({
-        id: args.artifactId,
-        userId: args.userId,
-        status: "FAILED",
-        statusError: message,
-      });
-    } catch {
-      // The DB write itself failed; nothing more we can do here.
-    }
-  }
 }

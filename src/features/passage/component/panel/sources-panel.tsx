@@ -12,9 +12,6 @@ interface SourcesPanelProps {
   onDelete: (id: string) => void;
   collapsed?: boolean;
   onToggleCollapse: () => void;
-  // Pre-submit client validation errors (file too short, bad youtube URL).
-  // Rendered above the source list and dismissible. Server-side errors
-  // (FAILED rows) are rendered inline as part of `items`.
   clientError?: string | null;
   onClearClientError?: () => void;
 }

@@ -1,13 +1,6 @@
 ## Docs
  Read the most relevant detailed doc before editing code.
 
-## Navigation
-
-- Do not read `node_modules` by default. If package API details are needed,
-  inspect `package.json` and the lockfile first, then read only the specific package files required.
-- When docs and code disagree, verify against code and ask the user about the conflict.
-
-
 ## Transport
 
 All client↔server I/O goes through Route Handlers.

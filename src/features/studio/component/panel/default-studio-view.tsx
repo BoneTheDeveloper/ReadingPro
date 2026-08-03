@@ -20,9 +20,8 @@ interface DefaultStudioViewProps {
   onDeleteArtifact?: (artifactId: string) => void;
 }
 
-function mapProcessingStatus(status: ProcessingStatus): "ready" | "pending" | "failed" {
+function mapProcessingStatus(status: ProcessingStatus): "ready" | "pending" {
   if (status === "COMPLETED") return "ready";
-  if (status === "FAILED") return "failed";
   return "pending";
 }
 
@@ -88,7 +87,6 @@ export function DefaultStudioView({
                     icon={meta.icon}
                     status={listStatus}
                     subtitle={subtitle}
-                    errorMessage={artifact.statusError}
                     onClick={() => {
                       if (artifact.status === "COMPLETED") {
                         onOpenArtifact(artifact.type, artifact.id);

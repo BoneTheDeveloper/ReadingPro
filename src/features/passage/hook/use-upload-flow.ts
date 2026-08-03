@@ -13,7 +13,6 @@ export function useUploadFlow() {
 
   const closeModal = useCallback(() => {
     setIsModalOpen(false);
-    setClientError(null);
   }, []);
 
   return {

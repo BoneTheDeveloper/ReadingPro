@@ -72,7 +72,7 @@ function ChatConversation({
     [],
   );
 
-  const { messages, sendMessage, status, error, stop, regenerate } =
+  const { messages, sendMessage, setMessages, status, error, stop, regenerate } =
     useChat({ transport, messages: initialMessages });
   const isStreaming = status === "submitted" || status === "streaming";
 
@@ -93,8 +93,9 @@ function ChatConversation({
     });
     if (!res.ok) return;
 
-    // Drop the cached history so the next mount doesn't show the deleted
-    // messages. `useChatHistory` will refetch on remount.
+    // Clear useChat's internal state so the UI re-renders empty. The React
+    // Query eviction below is belt-and-suspenders for the next mount.
+    setMessages([]);
     queryClient.removeQueries({ queryKey: chatKeys.history(passageId) });
   };
 

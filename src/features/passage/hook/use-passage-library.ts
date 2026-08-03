@@ -42,8 +42,8 @@ export function usePassageLibrary() {
   const upsert = useCallback(
     (passage: Passage) => {
       queryClient.setQueryData(passageKeys.detail(passage.id), passage);
-      const { id, title, sourceType, status, statusError, createdAt } = passage;
-      const item: PassageListItem = { id, title, sourceType, status, statusError, createdAt };
+      const { id, title, sourceType, status, createdAt } = passage;
+      const item: PassageListItem = { id, title, sourceType, status, createdAt };
       queryClient.setQueryData<PassageListItem[]>(
         passageKeys.list(),
         (prev = []) =>

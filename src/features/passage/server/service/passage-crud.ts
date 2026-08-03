@@ -85,17 +85,3 @@ export async function completePassageProcessing(args: {
     },
   });
 }
-
-export async function failPassageProcessing(args: {
-  userId: string;
-  passageId: string;
-  statusError: string;
-}): Promise<Passage> {
-  return prisma.passage.update({
-    where: { id: args.passageId, userId: args.userId },
-    data: {
-      status: "FAILED",
-      statusError: args.statusError,
-    },
-  });
-}

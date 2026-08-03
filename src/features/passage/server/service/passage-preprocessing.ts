@@ -1,6 +1,6 @@
 import { sourceCleaners, coreNormalize } from "@/features/passage/util/normalizer";
 import { fetchTranscript, extractVideoId } from "@/features/passage/util/youtube-helper";
-import { TEXT_INPUT_LIMITS, YOUTUBE_ERRORS } from "@/features/passage/util/upload-config";
+import {  YOUTUBE_ERRORS } from "@/features/passage/util/upload-config";
 import { AppError } from "@/lib/error/app-error";
 import type { CreatePassageInput } from "@/features/passage/schema";
 
