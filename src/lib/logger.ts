@@ -22,7 +22,7 @@ const prodOptions: pino.LoggerOptions = {
   timestamp: pino.stdTimeFunctions.isoTime,
 };
 
-export const baseLogger = pino({
+export const log = pino({
   base: isDev ? undefined : { env: process.env.VERCEL_ENV ?? "local" },
   level: process.env.LOG_LEVEL ?? (isDev ? "debug" : "info"),
   redact: {

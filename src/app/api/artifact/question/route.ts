@@ -7,9 +7,12 @@ import z from "zod";
 import { findPassageForUser } from "@/features/passage/server/service/passage-crud";
 import { createArtifact } from "@/features/studio/server/service/artifact-crud";
 import { generateAndStoreArtifact } from "@/features/studio/server/service/question-generator";
+import { deleteArtifact } from "@/features/studio/server/service/artifact-crud";
 import { AppError } from "@/lib/error/app-error";
+import { log } from "@/lib/logger";
+import * as Sentry from "@sentry/nextjs";
 
-export const maxDuration = 40;
+export const maxDuration = 60;
 
 export const POST = withErrorHandling("create-question", async (request) => {
   const { user } = await requireApiSession();
@@ -25,23 +28,17 @@ export const POST = withErrorHandling("create-question", async (request) => {
     status: "PENDING",
   });
 
-  after(() => {
-    // Run in the background; never let a throw surface as an unhandled
-    // rejection. Surface failures to the server log so the operator sees
-    // them — the artifact stays PENDING until a future attempt succeeds.
-    void generateAndStoreArtifact({
-      artifactId: artifact.id,
+  after(async () => {
+    try {
+      await generateAndStoreArtifact({ artifactId: artifact.id,
       userId: user.id,
-      passageId,
-    }).catch((err) => {
-      console.error("[artifact-generation] failed", {
-        artifactId: artifact.id,
-        passageId,
-        userId: user.id,
-        err,
-      });
-    });
-  });
+      passageId, });
+    } catch (err) {
+      log.error({ err, passageId: passage.id, userId: user.id }, "question genarated failed");
+      Sentry.captureException(err, { tags: { passageId: passage.id } });
+      await deleteArtifact(artifact.id, user.id);
+    }
+  })
 
   return Response.json({ artifact }, { status: 201 });
 });
