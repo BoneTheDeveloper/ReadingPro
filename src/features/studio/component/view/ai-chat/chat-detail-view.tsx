@@ -8,7 +8,7 @@ import { AlertCircle, Loader2, RotateCw, Trash2 } from "lucide-react";
 import { StudioDetailView } from "../studio-detail-view";
 import { ChatMessageList } from "./chat-message-list";
 import { ChatComposer } from "./chat-composer";
-import { useChatHistory, chatKeys } from "@/features/studio/queries";
+import { useChatHistory, chatKeys } from "@/features/studio/api/queries";
 import type {
   ChatHistoryMessage,
   StudyChatLanguage,

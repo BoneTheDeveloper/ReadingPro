@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { passageKeys } from "@/features/passage/query-keys";
+import { passageKeys } from "@/features/passage/api/query-keys";
 import {  type CreatePassageInput, type Passage, type PassageListItem } from "@/features/passage/schema";
 
 /* ─── Create ───────────────────────────────────────────────────────── */

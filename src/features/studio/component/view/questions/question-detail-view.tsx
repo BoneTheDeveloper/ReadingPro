@@ -5,8 +5,8 @@ import { Loader2 } from "lucide-react";
 import { StudioDetailView } from "../studio-detail-view";
 import { QuestionContent } from "./question-content";
 import { QuestionResults } from "./question-results";
-import { useArtifact } from "@/features/studio/queries";
-import { useRecordProgress } from "@/features/studio/mutations";
+import { useArtifact } from "@/features/studio/api/queries";
+import { useRecordProgress } from "@/features/studio/api/mutations";
 
 interface QuestionDetailViewProps {
   artifactId: string;

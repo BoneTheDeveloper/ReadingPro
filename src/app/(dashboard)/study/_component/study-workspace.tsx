@@ -7,7 +7,7 @@ import { ContentPanel } from "@/features/reading/component/content-panel";
 import { StudioPanel } from "@/features/studio/component/panel/studio-panel";
 import { UploadModal } from "@/features/passage/component/model/upload-modal";
 import { usePassageLibrary } from "@/features/passage/hook/use-passage-library";
-import { usePassage } from "@/features/passage/queries";
+import { usePassage } from "@/features/passage/api/queries";
 import { useUploadFlow } from "@/features/passage/hook/use-upload-flow";
 import { useStudyPanelLayout } from "../_hook/use-study-panel-layout";
 

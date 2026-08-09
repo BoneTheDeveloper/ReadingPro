@@ -7,8 +7,8 @@ import { CollapsedSidebar } from "./collapsed-sidebar";
 import { DefaultStudioView } from "./default-studio-view";
 import { ChatDetailView } from "../view/ai-chat/chat-detail-view";
 import { QuestionDetailView } from "../view/questions/question-detail-view";
-import { useArtifactList } from "../../queries";
-import { useGenerateQuestion, useDeleteArtifact } from "../../mutations";
+import { useArtifactList } from "../../api/queries";
+import { useGenerateQuestion, useDeleteArtifact } from "../../api/mutations";
 
 interface StudioPanelProps {
   passageId: string | null;

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Type, PlayCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useCreatePassage } from "@/features/passage/mutations";
+import { useCreatePassage } from "@/features/passage/api/mutations";
 import { extractPdfText } from "@/features/passage/util/pdf-parser";
 import {
   Dialog,

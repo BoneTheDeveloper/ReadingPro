@@ -2,15 +2,13 @@
 
 import { useCallback, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useDeletePassage } from "@/features/passage/mutations";
-import { usePassages } from "@/features/passage/queries";
-import { passageKeys } from "@/features/passage/query-keys";
+import { useDeletePassage } from "@/features/passage/api/mutations";
+import { usePassages } from "@/features/passage/api/queries";
+import { passageKeys } from "@/features/passage/api/query-keys";
 import type { Passage, PassageListItem } from "@/features/passage/schema";
 
 function getMostRecentPassageId(passages: PassageListItem[]): string | null {
-  // Only auto-select COMPLETED passages. PENDING/FAILED rows are not clickable
-  // in the source list and have no detail to render; landing on one would
-  // mount an empty ContentPanel with no usable data.
+
   const completed = passages.filter((p) => p.status === "COMPLETED");
   return (
     completed.reduce<PassageListItem | null>((latest, passage) => {

@@ -1,7 +1,7 @@
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { requirePageSession } from "@/lib/auth/session";
 import { listPassagesForUser } from "@/features/passage/server/service/passage-crud";
-import { passageKeys } from "@/features/passage/query-keys";
+import { passageKeys } from "@/features/passage/api/query-keys";
 import { getQueryClient } from "@/lib/query-client";
 import { StudyWorkspace } from "./_component/study-workspace";
 
