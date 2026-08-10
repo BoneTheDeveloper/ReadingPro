@@ -25,6 +25,9 @@ export const passageQueries = {
           ? skipToken
           : ({ signal }) =>
               fetchJson(`/api/passage/${passageId}`, passageSchema, { signal }),
-      placeholderData: keepPreviousData,
+      // Smooths passage → passage switching only. With no selection the
+      // previous passage must not survive as a placeholder — that is what kept
+      // a just-deleted passage on screen.
+      placeholderData: passageId === null ? undefined : keepPreviousData,
     }),
 };
