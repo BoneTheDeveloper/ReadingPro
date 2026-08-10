@@ -1,11 +1,17 @@
 "use client";
 
-import { useState } from "react";
-import { Download, Plus, Search } from "lucide-react";
+import { Download, MoreVertical, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { Button } from "@/component/ui/button";
 import { Input } from "@/component/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/component/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { VocabularyStatus } from "@/generated/prisma/enums";
+import { PartOfSpeech, VocabularyStatus } from "@/generated/prisma/enums";
 import type { VocabularyItem } from "@/features/vocabulary/schema";
 
 interface VocabularyListProps {
@@ -19,7 +25,8 @@ interface VocabularyListProps {
   onSearchChange: (value: string) => void;
   onStatusFilterChange: (status: VocabularyStatus | "ALL") => void;
   onPageChange: (page: number) => void;
-  onStatusChange: (id: string, status: VocabularyStatus) => void;
+  onAddClick: () => void;
+  onEdit: (item: VocabularyItem) => void;
   onDelete: (id: string) => void;
 }
 
@@ -46,6 +53,16 @@ const STATUS_STYLE: Record<
   MEMORIZED: { bg: "#DDF3E7", color: "#1E7A4B", dot: "#2FA66A" },
 };
 
+const POS_LABEL: Record<Exclude<PartOfSpeech, "OTHER">, string> = {
+  NOUN: "danh từ",
+  VERB: "động từ",
+  ADJECTIVE: "tính từ",
+  ADVERB: "trạng từ",
+  PREPOSITION: "giới từ",
+  CONJUNCTION: "liên từ",
+  PHRASE: "cụm từ",
+};
+
 const FILTER_CHIP_BASE =
   "px-3.5 py-1.5 rounded-full border text-xs font-semibold cursor-pointer transition-all";
 const FILTER_CHIP_OFF =
@@ -63,7 +80,8 @@ export function VocabularyList({
   onSearchChange,
   onStatusFilterChange,
   onPageChange,
-  onStatusChange,
+  onAddClick,
+  onEdit,
   onDelete,
 }: VocabularyListProps) {
   const totalPages = Math.ceil(total / pageSize);
@@ -112,6 +130,7 @@ export function VocabularyList({
         <Button
           size="sm"
           className="h-9 text-xs font-semibold gap-1.5 rounded-xl"
+          onClick={onAddClick}
         >
           <Plus className="size-3.5" strokeWidth={2.5} />
           Thêm từ
@@ -128,14 +147,14 @@ export function VocabularyList({
               Từ
             </span>
           </div>
+          <div className="w-24 shrink-0">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-[#908B98]">
+              Loại từ
+            </span>
+          </div>
           <div className="flex-1 min-w-0">
             <span className="text-[10px] font-bold uppercase tracking-widest text-[#908B98]">
               Nghĩa
-            </span>
-          </div>
-          <div className="w-16 shrink-0 text-center">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-[#908B98]">
-              Cấp
             </span>
           </div>
           <div className="w-24 shrink-0 text-center">
@@ -160,7 +179,7 @@ export function VocabularyList({
             <TableRow
               key={item.id}
               item={item}
-              onStatusChange={onStatusChange}
+              onEdit={onEdit}
               onDelete={onDelete}
             />
           ))
@@ -182,15 +201,13 @@ export function VocabularyList({
 
 function TableRow({
   item,
-  onStatusChange,
+  onEdit,
   onDelete,
 }: {
   item: VocabularyItem;
-  onStatusChange: (id: string, status: VocabularyStatus) => void;
+  onEdit: (item: VocabularyItem) => void;
   onDelete: (id: string) => void;
 }) {
-  const [hovered, setHovered] = useState(false);
-  const isMemorized = item.learningstatus === "MEMORIZED";
   const statusStyle = STATUS_STYLE[item.learningstatus];
 
   const savedDate = item.createdAt
@@ -204,17 +221,22 @@ function TableRow({
   return (
     <div
       className="flex items-center px-4 py-3 border-b border-[#EAE5DB] last:border-b-0 transition-colors"
-      style={{
-        background: hovered ? "#FAFAF4" : "#fff",
-        gap: "0",
-      }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      style={{ gap: "0" }}
     >
       <div className="w-36 shrink-0">
         <span className="text-sm font-semibold text-[#221F2B]">
           {item.term}
         </span>
+      </div>
+
+      <div className="w-24 shrink-0 pr-2">
+        {item.partofSpeech === "OTHER" ? (
+          <span className="text-xs text-[#908B98]">—</span>
+        ) : (
+          <span className="text-xs text-[#565160]">
+            {POS_LABEL[item.partofSpeech]}
+          </span>
+        )}
       </div>
 
       <div className="flex-1 min-w-0 pr-4">
@@ -223,12 +245,6 @@ function TableRow({
           title={item.translation}
         >
           {item.translation}
-        </span>
-      </div>
-
-      <div className="w-16 shrink-0 text-center">
-        <span className="inline-flex items-center rounded-full bg-[#F5F2EC] px-2.5 py-0.5 text-[10px] font-bold text-[#908B98]">
-          —
         </span>
       </div>
 
@@ -249,50 +265,37 @@ function TableRow({
         <span className="text-xs text-[#908B98]">{savedDate}</span>
       </div>
 
-      <div
-        className="w-16 shrink-0 flex gap-1.5 justify-end"
-        style={{
-          opacity: hovered ? 1 : 0,
-          pointerEvents: hovered ? "auto" : "none",
-          transition: "opacity 120ms",
-        }}
-      >
-        <button
-          type="button"
-          title={isMemorized ? "Đánh dấu Đang học" : "Đánh dấu Đã thuộc"}
-          onClick={() =>
-            onStatusChange(item.id, isMemorized ? "LEARNING" : "MEMORIZED")
-          }
-          className="flex items-center justify-center size-7 rounded-xl border transition-all cursor-pointer"
-          style={{
-            borderColor: isMemorized ? "#EAE5DB" : "#CFEEDD",
-            background: isMemorized ? "#fff" : "#DDF3E7",
-            color: isMemorized ? "#908B98" : "#1E7A4B",
-          }}
-        >
-          {isMemorized ? (
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-              <path d="M3 3v5h5" />
-            </svg>
-          ) : (
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20 6 9 17l-5-5" />
-            </svg>
-          )}
-        </button>
-
-        <button
-          type="button"
-          title="Xóa"
-          onClick={() => onDelete(item.id)}
-          className="flex items-center justify-center size-7 rounded-xl border border-[#EAE5DB] bg-white text-[#908B98] transition-all cursor-pointer hover:border-[#F2664A] hover:text-[#C8442B]"
-        >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M18 6 6 18" />
-            <path d="m6 6 12 12" />
-          </svg>
-        </button>
+      <div className="w-16 shrink-0 flex items-center justify-end pr-2">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              title="Tác vụ"
+              aria-label="Tác vụ"
+              aria-haspopup="menu"
+              className="relative flex items-center justify-center size-9 rounded-xl border border-[#EAE5DB] bg-white text-[#565160] transition-colors cursor-pointer hover:border-[#5A4FE0] hover:text-[#4A3FD0] focus-visible:ring-2 focus-visible:ring-[#5A4FE0]/40 focus-visible:outline-none before:content-[''] before:absolute before:inset-y-[-6px] before:left-[-6px] before:right-[-6px]"
+            >
+              <MoreVertical className="size-[15px]" strokeWidth={2} />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="min-w-[140px]">
+            <DropdownMenuItem
+              onSelect={() => onEdit(item)}
+              className="text-[#221F2B]"
+            >
+              <Pencil className="size-3.5 text-[#565160]" />
+              Sửa
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onSelect={() => onDelete(item.id)}
+              className="text-[#C8442B] focus:bg-[#FCEAE3] focus:text-[#C8442B]"
+            >
+              <Trash2 className="size-3.5 text-[#C8442B]" />
+              Xóa
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );

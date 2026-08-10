@@ -1,18 +1,19 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { BookOpen, Library } from "lucide-react";
 import { VocabularyList } from "./vocabulary-list";
 import { VocabularySetList } from "./vocabulary-set-list";
+import { VocabularyFormDialog } from "./vocabulary-form-dialog";
+import { vocabularyQueries } from "@/features/vocabulary/api/queries";
+import {
+  useCreateVocabularyMutation,
+  useDeleteVocabularyMutation,
+  useUpdateVocabularyMutation,
+} from "@/features/vocabulary/api/mutations";
 import { VocabularyStatus } from "@/generated/prisma/enums";
 import type { VocabularyItem } from "@/features/vocabulary/schema";
-
-interface VocabularyStatsDto {
-  total: number;
-  new: number;
-  learning: number;
-  known: number;
-}
 
 interface VocabularySetDto {
   id: string;
@@ -23,13 +24,6 @@ interface VocabularySetDto {
 }
 
 type ViewTab = "words" | "sets";
-
-interface VocabularyPageClientProps {
-  initialList: VocabularyItem[];
-  initialTotal: number;
-  initialStats: VocabularyStatsDto;
-  initialSets: VocabularySetDto[];
-}
 
 const TAB_BASE =
   "flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer";
@@ -72,12 +66,19 @@ function StatCard({
   );
 }
 
-export function VocabularyPageClient({
-  initialList,
-  initialTotal,
-  initialStats,
-  initialSets,
-}: VocabularyPageClientProps) {
+const STAT_CONFIG: Array<{
+  key: keyof import("@/features/vocabulary/schema").VocabularyStats;
+  label: string;
+  sublabel: string;
+  accent: string;
+}> = [
+  { key: "total", label: "Tổng", sublabel: "từ đã lưu", accent: "#221F2B" },
+  { key: "new", label: "Mới", sublabel: "chưa học", accent: "#EEA63C" },
+  { key: "learning", label: "Đang học", sublabel: "đang tiến", accent: "#5A4FE0" },
+  { key: "known", label: "Đã biết", sublabel: "đã thuộc", accent: "#2FA66A" },
+];
+
+export function VocabularyPageClient() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<VocabularyStatus | "ALL">(
@@ -85,33 +86,87 @@ export function VocabularyPageClient({
   );
   const [activeTab, setActiveTab] = useState<ViewTab>("words");
   const [creating, setCreating] = useState(false);
+  const [sets] = useState<VocabularySetDto[]>([]);
 
-  const [items, setItems] = useState(initialList);
-  const [total] = useState(initialTotal);
-  const [stats, setStats] = useState(initialStats);
-  const [sets, setSets] = useState(initialSets);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<VocabularyItem | null>(null);
 
-  const handleStatusChange = useCallback(
-    async (_id: string, _status: VocabularyStatus) => {
-      // TODO: implement update status
-    },
-    [],
+  const listQuery = useQuery(vocabularyQueries.list());
+  const statsQuery = useQuery(vocabularyQueries.stats());
+
+  const items = useMemo(() => listQuery.data ?? [], [listQuery.data]);
+  const stats = statsQuery.data;
+  const total = stats?.total ?? items.length;
+
+  const filteredItems = useMemo(
+    () =>
+      statusFilter === "ALL"
+        ? items
+        : items.filter((item) => item.learningstatus === statusFilter),
+    [items, statusFilter],
   );
 
-  const handleDelete = useCallback(async (id: string) => {
-    setItems((prev) => prev.filter((item) => item.id !== id));
-    setStats((prev) => ({ ...prev, total: prev.total - 1 }));
-  }, []);
+  const createItem = useCreateVocabularyMutation();
+  const updateItem = useUpdateVocabularyMutation();
+  const deleteItem = useDeleteVocabularyMutation();
 
-  const handleCreateSet = useCallback(async (_name: string) => {
+  const dialogMode: "create" | "edit" = editingItem ? "edit" : "create";
+  const dialogPending =
+    dialogMode === "edit" ? updateItem.isPending : createItem.isPending;
+
+  const closeDialog = () => {
+    setDialogOpen(false);
+    setEditingItem(null);
+  };
+
+  const handleDialogSubmit = (values: {
+    term: string;
+    translation: string;
+    partofSpeech: VocabularyItem["partofSpeech"];
+    learningstatus: VocabularyStatus;
+  }) => {
+    if (editingItem) {
+      updateItem.mutate(
+        { id: editingItem.id, ...values },
+        { onSuccess: closeDialog },
+      );
+    } else {
+      createItem.mutate(
+        {
+          term: values.term,
+          translation: values.translation,
+          partofSpeech: values.partofSpeech,
+          sourceLanguage: "en",
+          targetLanguage: "vi",
+        },
+        { onSuccess: closeDialog },
+      );
+    }
+  };
+
+  const handleAddClick = () => {
+    setEditingItem(null);
+    setDialogOpen(true);
+  };
+
+  const handleEdit = (item: VocabularyItem) => {
+    setEditingItem(item);
+    setDialogOpen(true);
+  };
+
+  const handleDelete = (id: string) => {
+    deleteItem.mutate(id);
+  };
+
+  const handleCreateSet = async (_name: string) => {
     setCreating(true);
     // TODO: implement create set
     setCreating(false);
-  }, []);
-
-  const handleDeleteSet = useCallback(async (id: string) => {
-    setSets((prev) => prev.filter((s) => s.id !== id));
-  }, []);
+  };
+  const handleDeleteSet = async (id: string) => {
+    // TODO: implement delete set — keeping local-only for now
+    void id;
+  };
 
   const wOn = activeTab === "words";
   const sOn = activeTab === "sets";
@@ -132,30 +187,15 @@ export function VocabularyPageClient({
           className="grid gap-3 mb-8"
           style={{ gridTemplateColumns: "repeat(4, 1fr)" }}
         >
-          <StatCard
-            label="Tổng"
-            value={stats.total}
-            sublabel="từ đã lưu"
-            accent="#221F2B"
-          />
-          <StatCard
-            label="Mới"
-            value={stats.new}
-            sublabel="chưa học"
-            accent="#EEA63C"
-          />
-          <StatCard
-            label="Đang học"
-            value={stats.learning}
-            sublabel="đang tiến"
-            accent="#5A4FE0"
-          />
-          <StatCard
-            label="Đã biết"
-            value={stats.known}
-            sublabel="đã thuộc"
-            accent="#2FA66A"
-          />
+          {STAT_CONFIG.map(({ key, label, sublabel, accent }) => (
+            <StatCard
+              key={key}
+              label={label}
+              value={stats?.[key] ?? 0}
+              sublabel={sublabel}
+              accent={accent}
+            />
+          ))}
         </div>
 
         <div className="flex bg-white border border-[#EAE5DB] rounded-xl p-0.5 max-w-xs mb-6">
@@ -173,7 +213,7 @@ export function VocabularyPageClient({
                 color: wOn ? "#fff" : "#908B98",
               }}
             >
-              {stats.total}
+              {total}
             </span>
           </button>
           <button
@@ -197,13 +237,13 @@ export function VocabularyPageClient({
 
         {activeTab === "words" && (
           <VocabularyList
-            items={items}
+            items={filteredItems}
             total={total}
             page={page}
             pageSize={20}
             search={search}
             statusFilter={statusFilter}
-            loading={false}
+            loading={listQuery.isPending}
             onSearchChange={(v) => {
               setSearch(v);
               setPage(1);
@@ -213,7 +253,8 @@ export function VocabularyPageClient({
               setPage(1);
             }}
             onPageChange={setPage}
-            onStatusChange={handleStatusChange}
+            onAddClick={handleAddClick}
+            onEdit={handleEdit}
             onDelete={handleDelete}
           />
         )}
@@ -228,6 +269,19 @@ export function VocabularyPageClient({
           />
         )}
       </div>
+
+      <VocabularyFormDialog
+        key={editingItem?.id ?? "new"}
+        open={dialogOpen}
+        mode={dialogMode}
+        item={editingItem}
+        pending={dialogPending}
+        onSubmit={handleDialogSubmit}
+        onOpenChange={(next) => {
+          setDialogOpen(next);
+          if (!next) setEditingItem(null);
+        }}
+      />
     </div>
   );
 }

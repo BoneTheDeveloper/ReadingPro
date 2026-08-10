@@ -1,19 +1,33 @@
+import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { requirePageSession } from "@/lib/auth/session";
-import { listVocabularyItemsForUser } from "@/features/vocabulary/server/services/vocabulary-crud";
+import { getQueryClient } from "@/lib/query-client";
+import {
+  listVocabularyItemsForUser,
+  listVocabularyStatsForUser,
+} from "@/features/vocabulary/server/services/vocabulary-crud";
+import { vocabularyQueries } from "@/features/vocabulary/api/queries";
 import { VocabularyPageClient } from "@/features/vocabulary/component/vocabulary-page";
-
-export const dynamic = "force-dynamic";
 
 export default async function VocabularyPage() {
   const { user } = await requirePageSession();
-  const items = await listVocabularyItemsForUser(user.id);
+  const queryClient = getQueryClient();
+
+  await Promise.all([
+    queryClient.prefetchQuery({
+      ...vocabularyQueries.list(),
+      queryFn: (): Promise<Awaited<ReturnType<typeof listVocabularyItemsForUser>>> =>
+        listVocabularyItemsForUser(user.id),
+    }),
+    queryClient.prefetchQuery({
+      ...vocabularyQueries.stats(),
+      queryFn: (): Promise<Awaited<ReturnType<typeof listVocabularyStatsForUser>>> =>
+        listVocabularyStatsForUser(user.id),
+    }),
+  ]);
 
   return (
-    <VocabularyPageClient
-      initialList={items}
-      initialTotal={items.length}
-      initialStats={{ total: 0, new: 0, learning: 0, known: 0 }}
-      initialSets={[]}
-    />
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <VocabularyPageClient />
+    </HydrationBoundary>
   );
 }
