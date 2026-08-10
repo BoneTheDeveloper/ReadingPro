@@ -11,7 +11,9 @@ import { withErrorHandling } from "@/lib/error/with-error-handling";
 import { AppError } from "@/lib/error/app-error";
 
 export const PATCH = withErrorHandling("artifacts/[id]/progress", async (request, { params }) => {
-  const { user } = await requireApiSession();
+  const auth = await requireApiSession();
+  if (!auth.ok) return auth.response;
+  const { user } = auth.session;
   const { id } = z.object({ id: z.uuid() }).parse(await params);
   const body = await request.json();
 

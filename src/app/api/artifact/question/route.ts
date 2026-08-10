@@ -15,7 +15,9 @@ import * as Sentry from "@sentry/nextjs";
 export const maxDuration = 60;
 
 export const POST = withErrorHandling("create-question", async (request) => {
-  const { user } = await requireApiSession();
+  const auth = await requireApiSession();
+  if (!auth.ok) return auth.response;
+  const { user } = auth.session;
   const { passageId } = z.object({ passageId: z.uuid() }).parse(await request.json());
 
   const passage = await findPassageForUser(user.id, passageId);

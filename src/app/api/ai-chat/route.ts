@@ -17,8 +17,9 @@ import { findPassageForUser } from "@/features/passage/server/service/passage-cr
 import { NotFoundError, AppError } from "@/lib/error/app-error";
 
 export const POST = withErrorHandling("ai-chat", async (req) => {
-  const session = await requireApiSession();
-  const userId = session.user.id;
+  const auth = await requireApiSession();
+  if (!auth.ok) return auth.response;
+  const userId = auth.session.user.id;
 
   const body = await req.json();
   const parsed = studyChatRequestSchema.safeParse(body);
@@ -61,8 +62,9 @@ export const POST = withErrorHandling("ai-chat", async (req) => {
 });
 
 export const DELETE = withErrorHandling("ai-chat", async (req) => {
-  const session = await requireApiSession();
-  const userId = session.user.id;
+  const auth = await requireApiSession();
+  if (!auth.ok) return auth.response;
+  const userId = auth.session.user.id;
 
   const { searchParams } = new URL(req.url);
   const passageId = searchParams.get("passageId");
@@ -78,8 +80,9 @@ export const DELETE = withErrorHandling("ai-chat", async (req) => {
 });
 
 export const GET = withErrorHandling("ai-chat", async (req) => {
-  const session = await requireApiSession();
-  const userId = session.user.id;
+  const auth = await requireApiSession();
+  if (!auth.ok) return auth.response;
+  const userId = auth.session.user.id;
 
   const { searchParams } = new URL(req.url);
   const passageId = searchParams.get("passageId");

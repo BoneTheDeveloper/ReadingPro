@@ -6,7 +6,9 @@ import { z } from "zod";
 
 
 export const GET = withErrorHandling("passages/[id]", async (_req, { params }) => {
-  const { user } = await requireApiSession();
+  const auth = await requireApiSession();
+  if (!auth.ok) return auth.response;
+  const { user } = auth.session;
   const { id } = z.object({ id: z.uuid() }).parse(await params);
   const passage = await findPassageForUser(user.id, id);
   if (!passage || passage.status !== "COMPLETED") {
@@ -17,7 +19,9 @@ export const GET = withErrorHandling("passages/[id]", async (_req, { params }) =
 });
 
 export const DELETE = withErrorHandling("passages/[id]", async (_req, { params }) => {
-  const { user } = await requireApiSession();
+  const auth = await requireApiSession();
+  if (!auth.ok) return auth.response;
+  const { user } = auth.session;
   const { id } = z.object({ id: z.uuid() }).parse(await params);
   await deletePassageForUser(user.id, id);
   return new Response(null, { status: 204 });

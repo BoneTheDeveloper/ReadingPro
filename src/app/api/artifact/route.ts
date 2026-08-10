@@ -4,7 +4,9 @@ import { listArtifactsForUser } from "@/features/studio/server/service/artifact-
 import { AppError } from "@/lib/error/app-error";
 
 export const GET = withErrorHandling("artifacts", async (request) => {
-  const { user } = await requireApiSession();
+  const auth = await requireApiSession();
+  if (!auth.ok) return auth.response;
+  const { user } = auth.session;
   const url = new URL(request.url);
   const passageId = url.searchParams.get("passageId");
 

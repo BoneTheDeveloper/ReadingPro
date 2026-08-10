@@ -8,7 +8,9 @@ import { CreatePassageInputSchema } from "@/features/passage/schema";
 import { log } from "@/lib/logger";
 import * as Sentry from "@sentry/nextjs";
 export const GET = withErrorHandling("passages", async () => {
-  const { user } = await requireApiSession();
+  const auth = await requireApiSession();
+  if (!auth.ok) return auth.response;
+  const { user } = auth.session;
   const passages = await listPassagesForUser(user.id);
   return Response.json(passages);
 });
@@ -17,7 +19,9 @@ export const GET = withErrorHandling("passages", async () => {
 export const maxDuration = 200;
 
 export const POST = withErrorHandling("create-passage", async (req) => {
-  const { user } = await requireApiSession();
+  const auth = await requireApiSession();
+  if (!auth.ok) return auth.response;
+  const { user } = auth.session;
   const input = CreatePassageInputSchema.parse(await req.json());
 
   const { normalized } = await preprocessPassage(input);

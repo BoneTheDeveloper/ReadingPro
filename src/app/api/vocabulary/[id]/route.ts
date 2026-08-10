@@ -12,7 +12,9 @@ import {
 export const PATCH = withErrorHandling(
   "vocabulary/[id]",
   async (req, { params }) => {
-    const { user } = await requireApiSession();
+    const auth = await requireApiSession();
+    if (!auth.ok) return auth.response;
+    const { user } = auth.session;
     const { id } = VocabularyIdParamSchema.parse(await params);
     const input = VocabularyUpdateInputSchema.parse(await req.json());
     const updated = await updateVocabularyItemForUser(user.id, id, input);
@@ -23,7 +25,9 @@ export const PATCH = withErrorHandling(
 export const DELETE = withErrorHandling(
   "vocabulary/[id]",
   async (_req, { params }) => {
-    const { user } = await requireApiSession();
+    const auth = await requireApiSession();
+    if (!auth.ok) return auth.response;
+    const { user } = auth.session;
     const { id } = VocabularyIdParamSchema.parse(await params);
     await deleteVocabularyItemForUser(user.id, id);
     return new Response(null, { status: 204 });
