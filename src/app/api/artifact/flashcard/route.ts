@@ -5,7 +5,7 @@ import { requireApiSession } from "@/lib/auth/session";
 import { StudioArtifactType } from "@/generated/prisma/enums";
 import z from "zod";
 import { findPassageForUser } from "@/features/passage/server/service/passage-crud";
-import { createArtifact, deleteArtifact } from "@/features/studio/server/service/artifact-crud";
+import { createArtifact, updateArtifactStatus } from "@/features/studio/server/service/artifact-crud";
 import { generateAndStoreArtifact } from "@/features/studio/server/service/artifact-generator";
 import { AppError } from "@/lib/error/app-error";
 import { log } from "@/lib/logger";
@@ -20,7 +20,11 @@ export const POST = withErrorHandling("create-flashcard", async (request) => {
   const { passageId } = z.object({ passageId: z.uuid() }).parse(await request.json());
 
   const passage = await findPassageForUser(user.id, passageId);
-  if (!passage) throw new AppError(404, "NOT_FOUND", "Passage not found");
+  // Content is empty until processing completes — generating from it would
+  // feed the model an empty passage.
+  if (!passage || passage.status !== "COMPLETED") {
+    throw new AppError(404, "NOT_FOUND", "Passage is not ready");
+  }
 
   const artifact = await createArtifact({
     passageId,
@@ -40,7 +44,7 @@ export const POST = withErrorHandling("create-flashcard", async (request) => {
     } catch (err) {
       log.error({ err, passageId: passage.id, userId: user.id }, "flashcard generation failed");
       Sentry.captureException(err, { tags: { passageId: passage.id } });
-      await deleteArtifact(artifact.id, user.id);
+      await updateArtifactStatus({ id: artifact.id, userId: user.id, status: "FAILED" });
     }
   });
 

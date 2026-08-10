@@ -20,9 +20,17 @@ interface DefaultStudioViewProps {
   onDeleteArtifact?: (artifactId: string) => void;
 }
 
-function mapProcessingStatus(status: ProcessingStatus): "ready" | "pending" {
-  if (status === "COMPLETED") return "ready";
-  return "pending";
+// Exhaustive on purpose: a new ProcessingStatus must be a compile error here,
+// not a tile that silently spins forever.
+function mapProcessingStatus(status: ProcessingStatus): "ready" | "pending" | "failed" {
+  switch (status) {
+    case ProcessingStatus.COMPLETED:
+      return "ready";
+    case ProcessingStatus.FAILED:
+      return "failed";
+    case ProcessingStatus.PENDING:
+      return "pending";
+  }
 }
 
 function artifactSubtitle(

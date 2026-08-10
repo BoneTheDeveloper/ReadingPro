@@ -1,6 +1,6 @@
 "use client";
 
-import { File, FileText, PlayCircle, Trash2, MoreVertical, Loader2, type LucideIcon } from "lucide-react";
+import { File, FileText, PlayCircle, Trash2, MoreVertical, Loader2, AlertTriangle, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -9,13 +9,26 @@ import {
   DropdownMenuItem,
 } from "@/component/ui/dropdown-menu";
 import type { PassageListItem } from "@/features/passage/schema";
-import type { SourceType } from "@/generated/prisma/enums";
+import { ProcessingStatus, type SourceType } from "@/generated/prisma/enums";
 
 const SOURCE_TYPE_VISUAL: Record<SourceType, { icon: LucideIcon; chip: string }> = {
   TEXT: { icon: FileText, chip: "bg-indigo-soft text-primary" },
   PDF: { icon: File, chip: "bg-amber-soft text-amber-text" },
   YOUTUBE: { icon: PlayCircle, chip: "bg-coral-soft text-coral-hover" },
 };
+
+// Exhaustive on purpose: a new ProcessingStatus must be a compile error here,
+// not a row that silently renders as normal and clickable.
+function mapProcessingStatus(status: ProcessingStatus): "ready" | "pending" | "failed" {
+  switch (status) {
+    case ProcessingStatus.COMPLETED:
+      return "ready";
+    case ProcessingStatus.FAILED:
+      return "failed";
+    case ProcessingStatus.PENDING:
+      return "pending";
+  }
+}
 
 function formatDate(createdAt: Date): string {
   return createdAt.toLocaleDateString("en-US", {
@@ -34,20 +47,24 @@ interface SourceListItemProps {
 
 export function SourceListItem({ item, active, onSelect, onDelete }: SourceListItemProps) {
   const { icon: Icon, chip } = SOURCE_TYPE_VISUAL[item.sourceType];
-  const isPending = item.status === "PENDING";
+  const state = mapProcessingStatus(item.status);
+  const isPending = state === "pending";
+  const isFailed = state === "failed";
+  // Only a ready row can be opened; pending has nothing yet, failed never will.
+  const isInteractive = state === "ready";
 
   return (
     <div
       role="button"
-      tabIndex={isPending ? -1 : 0}
-      onClick={isPending ? undefined : onSelect}
+      tabIndex={isInteractive ? 0 : -1}
+      onClick={isInteractive ? onSelect : undefined}
       onKeyDown={(e) => {
-        if (isPending) return;
+        if (!isInteractive) return;
         if (e.key === "Enter" || e.key === " ") onSelect();
       }}
       className={cn(
         "group w-full px-[11px] py-2.5 flex items-center gap-[11px] rounded-[13px] border transition-all",
-        isPending
+        !isInteractive
           ? "cursor-default opacity-70 border-transparent"
           : active
             ? "bg-indigo-soft border-indigo-soft-border cursor-pointer"
@@ -57,15 +74,19 @@ export function SourceListItem({ item, active, onSelect, onDelete }: SourceListI
       <div
         className={cn(
           "w-8 h-8 rounded-[10px] flex items-center justify-center shrink-0",
-          isPending
-            ? "bg-accent text-primary"
-            : active
-              ? "bg-surface text-primary shadow-sm"
-              : chip,
+          isFailed
+            ? "bg-destructive/10 text-destructive"
+            : isPending
+              ? "bg-accent text-primary"
+              : active
+                ? "bg-surface text-primary shadow-sm"
+                : chip,
         )}
       >
         {isPending ? (
           <Loader2 className="w-4 h-4 animate-spin" />
+        ) : isFailed ? (
+          <AlertTriangle className="w-4 h-4" />
         ) : (
           <Icon className="w-4 h-4" />
         )}
@@ -77,19 +98,25 @@ export function SourceListItem({ item, active, onSelect, onDelete }: SourceListI
             active ? "font-semibold text-primary" : "font-medium text-foreground",
           )}
         >
-          {item.title || (isPending ? "Đang tạo bài đọc" : "")}
+          {item.title || (isPending ? "Đang tạo bài đọc" : isFailed ? "Bài đọc lỗi" : "")}
         </div>
         <p
           className={cn(
             "text-[11px] truncate mt-px",
-            isPending
-              ? "text-muted-foreground"
-              : active
-                ? "text-primary/60"
-                : "text-ink-3",
+            isFailed
+              ? "text-destructive"
+              : isPending
+                ? "text-muted-foreground"
+                : active
+                  ? "text-primary/60"
+                  : "text-ink-3",
           )}
         >
-          {isPending ? "Đang xử lý..." : formatDate(item.createdAt)}
+          {isPending
+            ? "Đang xử lý..."
+            : isFailed
+              ? "Xử lý thất bại — xoá và tải lên lại"
+              : formatDate(item.createdAt)}
         </p>
       </div>
       <DropdownMenu>

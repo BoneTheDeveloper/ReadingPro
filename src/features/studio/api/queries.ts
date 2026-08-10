@@ -21,9 +21,9 @@ export const artifactQueries = {
                 studioArtifactListItemSchema.array(),
                 { signal },
               ),
-      // Poll while any artifact is non-terminal; stop once all reach terminal.
+      // Poll only while work is in flight; COMPLETED and FAILED are terminal.
       refetchInterval: (query) =>
-        (query.state.data ?? []).some((a) => a.status !== "COMPLETED") ? 2000 : false,
+        (query.state.data ?? []).some((a) => a.status === "PENDING") ? 2000 : false,
     }),
 
   detail: (artifactId: string | null) =>

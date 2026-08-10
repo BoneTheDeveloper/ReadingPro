@@ -121,7 +121,9 @@ export function StudyWorkspace() {
               <ContentPanel
                 key={contentKey}
                 passage={detail.data ?? null}
-                isLoading={detail.isPending}
+                // `isPending` stays true for a skipToken-disabled query, so the
+                // empty state would never render. `isLoading` = pending + fetching.
+                isLoading={detail.isLoading}
                 onOpenUploadModal={upload.openModal}
               />
             </div>

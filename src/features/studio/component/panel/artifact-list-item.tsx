@@ -1,6 +1,6 @@
 "use client";
 
-import { MoreVertical, Trash2, Loader2 } from "lucide-react";
+import { MoreVertical, Trash2, Loader2, AlertTriangle } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -10,7 +10,7 @@ import {
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
 
-type ArtifactStatus = "ready" | "pending";
+type ArtifactStatus = "ready" | "pending" | "failed";
 
 interface ArtifactListItemProps {
   title: string;
@@ -31,24 +31,30 @@ export function ArtifactListItem({
 }: ArtifactListItemProps) {
   const isReady = status === "ready";
   const isPending = status === "pending";
+  const isFailed = status === "failed";
 
   return (
     <div
       role="button"
-      tabIndex={0}
+      tabIndex={isReady ? 0 : -1}
       onClick={() => { if (isReady) onClick(); }}
       className={cn(
         "group w-full flex items-center gap-2.5 px-3 py-2.5 text-left rounded-[13px] border transition-all outline-none",
         isPending && "border-primary/20 bg-primary/5 cursor-default",
+        isFailed && "border-destructive/20 bg-destructive/5 cursor-default",
         isReady && "border-border bg-surface hover:border-primary hover:-translate-y-px hover:shadow-card cursor-pointer",
       )}
     >
       <div className={cn(
         "w-8 h-8 rounded-[10px] flex items-center justify-center shrink-0",
-        isPending ? "bg-primary/10 text-primary animate-processing-fill" : "bg-primary/10 text-primary",
+        isPending && "bg-primary/10 text-primary animate-processing-fill",
+        isFailed && "bg-destructive/10 text-destructive",
+        isReady && "bg-primary/10 text-primary",
       )}>
         {isPending ? (
           <Loader2 className="w-4 h-4 animate-spin" strokeWidth={2} />
+        ) : isFailed ? (
+          <AlertTriangle className="w-4 h-4" strokeWidth={2} />
         ) : (
           <Icon className="w-4 h-4" strokeWidth={2} />
         )}
@@ -57,7 +63,11 @@ export function ArtifactListItem({
         <p className="text-[12px] font-semibold text-foreground truncate leading-tight">
           {title}
         </p>
-        {subtitle ? (
+        {isFailed ? (
+          <p className="text-[11px] text-destructive truncate mt-0.5">
+            Tạo thất bại — xoá và tạo lại
+          </p>
+        ) : subtitle ? (
           <p className="text-[11px] font-semibold text-success mt-0.5">
             {subtitle}
           </p>

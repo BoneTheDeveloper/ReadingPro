@@ -1,7 +1,7 @@
 ---
 title: "background failure visibility"
 description: "Record background-job failure as a terminal FAILED status the client can read and render"
-status: pending
+status: complete
 priority: P1
 effort: "3h"
 tags: [error-handling, async, ui-state]

@@ -1,6 +1,6 @@
 ---
 title: "Phase 1: Client tolerates FAILED"
-status: todo
+status: complete
 ---
 
 # Phase 1: Client tolerates FAILED

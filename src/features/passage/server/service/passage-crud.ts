@@ -4,7 +4,7 @@ import type {
   Passage,
   PassageListItem,
 } from "@/features/passage/schema";
-import { CEFRLevel, ProcessingStatus, SourceType } from "@/generated/prisma/enums";
+import { CEFRLevel, SourceType } from "@/generated/prisma/enums";
 
 export async function findPassageForUser(
   userId: string,
@@ -39,26 +39,19 @@ export async function deletePassageForUser(userId: string, id: string) {
 
 export async function createPassageForUser(args: {
   userId: string;
-  title: string;
-  content: string;
   sourceType: SourceType;
   cefrLevel?: CEFRLevel;
   youtubeUrl?: string | null;
-  status?: ProcessingStatus;
 }): Promise<Passage> {
-  const wordCount = args.content.split(/\s+/).filter(Boolean).length;
 
   return prisma.passage.create({
     data: {
       userId: args.userId,
-      title: args.title.slice(0, 200),
-      content: args.content,
       cefrLevel: args.cefrLevel,
-      wordCount,
       sourceType: args.sourceType,
       filePath: null,
       youtubeUrl: args.sourceType === "YOUTUBE" ? args.youtubeUrl ?? null : null,
-      status: args.status ?? "PENDING",
+      status:  "PENDING",
     },
   });
 }
@@ -81,5 +74,20 @@ export async function completePassageProcessing(args: {
       wordCount,
       status: "COMPLETED",
     },
+  });
+}
+
+/**
+ * Terminal failure state for background processing. Keeps the row — and the
+ * user's uploaded content — so the failure is visible and deletable, instead
+ * of vanishing silently.
+ */
+export async function failPassageProcessing(args: {
+  userId: string;
+  passageId: string;
+}): Promise<Passage> {
+  return prisma.passage.update({
+    where: { id: args.passageId, userId: args.userId },
+    data: { status: "FAILED" },
   });
 }

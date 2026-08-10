@@ -1,6 +1,6 @@
 ---
 title: "Phase 2: Server writes FAILED"
-status: todo
+status: complete
 ---
 
 # Phase 2: Server writes FAILED

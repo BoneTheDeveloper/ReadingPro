@@ -32,7 +32,11 @@ async function processPassage(
           cleanedText,
         ].join("\n"),
         temperature: 0.2,
-        abortSignal: AbortSignal.timeout(200_000),
+        // Load-bearing: must stay strictly under `maxDuration` in
+        // src/app/api/passage/route.ts (200s). Aborting first turns a timeout
+        // into a catchable error the route can record as FAILED; letting the
+        // platform win kills the invocation and strands the row at PENDING.
+        abortSignal: AbortSignal.timeout(170_000),
       });
 
       if (!result.object) {
