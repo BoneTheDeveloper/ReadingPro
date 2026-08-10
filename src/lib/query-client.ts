@@ -19,6 +19,7 @@ function makeQueryClient() {
     }),
     mutationCache: new MutationCache({
       onError: (err, _v, _c, mutation) => {
+        if (isApiError(err) && err.status < 500) return;
         console.error("[mutation error]", err, mutation);
       },
     }),

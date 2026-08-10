@@ -8,13 +8,13 @@ import { isValidYouTubeUrl } from "@/features/passage/util/youtube-helper";
 import { YOUTUBE_ERRORS } from "@/features/passage/util/upload-config";
 
 interface YouTubeInputProps {
-  // Fire-and-forget: the caller submits through a mutation, so a failed upload
-  // surfaces on the workspace instead of coming back to this form.
   onSubmit: (url: string) => void;
   disabled?: boolean;
+  submitError?: string | null;
+  onEdit?: () => void;
 }
 
-export function YouTubeInput({ onSubmit, disabled }: YouTubeInputProps) {
+export function YouTubeInput({ onSubmit, disabled, submitError, onEdit }: YouTubeInputProps) {
   const [url, setUrl] = useState("");
   const [error, setError] = useState<string | null>(null);
 
@@ -26,6 +26,7 @@ export function YouTubeInput({ onSubmit, disabled }: YouTubeInputProps) {
       if (!text) return;
       setUrl(text);
       setError(null);
+      onEdit?.();
     } catch {}
   };
 
@@ -50,7 +51,7 @@ export function YouTubeInput({ onSubmit, disabled }: YouTubeInputProps) {
             type="url"
             placeholder="Nhập URL YouTube"
             value={url}
-            onChange={(e) => { setUrl(e.target.value); setError(null); }}
+            onChange={(e) => { setUrl(e.target.value); setError(null); onEdit?.(); }}
             className="pl-10 pr-10"
           />
           <button
@@ -65,7 +66,9 @@ export function YouTubeInput({ onSubmit, disabled }: YouTubeInputProps) {
           Chức năng chỉ hỗ trợ video có phụ đề.
         </p>
       </div>
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {(error ?? submitError) && (
+        <p className="text-sm text-destructive">{error ?? submitError}</p>
+      )}
       <Button type="submit" disabled={!isUrlFormatValid || disabled} className="w-full">
         Thêm
       </Button>

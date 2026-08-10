@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { useCreatePassageMutation } from "@/features/passage/api/mutations";
 import { extractPdfText } from "@/features/passage/util/pdf-parser";
 import { UPLOAD_ERRORS } from "@/features/passage/util/upload-config";
+import { isApiError } from "@/lib/api/fetch-json";
 import {
   Dialog,
   DialogContent,
@@ -21,9 +22,9 @@ import type { CreatePassageInput } from "@/features/passage/schema";
 export interface UploadModalProps {
   isOpen: boolean;
   onClose: () => void;
-  // Client-side validation errors before submission (file too short, bad
-  // youtube URL, etc.) are surfaced here so the workspace can render them
-  // above the source list. Server-side errors stay on the row.
+  // Only failures the user cannot act on from inside the modal reach here, so
+  // the workspace can render them above the source list. A rejected source the
+  // form can still fix stays inline on that form.
   onClientError?: (title: string, message: string) => void;
 }
 
@@ -47,9 +48,11 @@ function SourceButton({ icon: Icon, label, desc, onClick, disabled }: {
 
 export function UploadModal({ isOpen, onClose, onClientError }: UploadModalProps) {
   const [activeMode, setActiveMode] = useState<InputMode>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const mutation = useCreatePassageMutation();
 
   const submit = (input: CreatePassageInput) => {
+    setSubmitError(null);
     mutation.mutate(input, {
       // The mutation writes the new row into the list cache itself, so the
       // modal only has to get out of the way.
@@ -57,6 +60,14 @@ export function UploadModal({ isOpen, onClose, onClientError }: UploadModalProps
         handleClose();
       },
       onError: (err) => {
+        // A 400 on a YouTube submit means the video itself is unusable (no
+        // subtitles) — the user fixes that by trying another URL, so keep the
+        // form open with the message on it. Everything else is a real failure:
+        // hand it to the workspace and close.
+        if (isApiError(err) && err.status === 400 && activeMode === "youtube") {
+          setSubmitError(err.message);
+          return;
+        }
         onClientError?.(UPLOAD_ERRORS.FAILED, err.message);
         handleClose();
       },
@@ -83,8 +94,8 @@ export function UploadModal({ isOpen, onClose, onClientError }: UploadModalProps
     submit({ sourceType: "YOUTUBE", title: "YouTube Video", youtubeUrl: url });
   };
 
-  const handleBack = () => setActiveMode(null);
-  const handleClose = () => { setActiveMode(null); onClose(); };
+  const handleBack = () => { setActiveMode(null); setSubmitError(null); };
+  const handleClose = () => { setActiveMode(null); setSubmitError(null); onClose(); };
   const handleModeChange = (next: InputMode) => setActiveMode(next);
 
   return (
@@ -121,7 +132,12 @@ export function UploadModal({ isOpen, onClose, onClientError }: UploadModalProps
               <Button variant="ghost" onClick={handleBack} className="text-primary text-sm w-fit h-auto py-1 px-2 -ml-2 hover:bg-accent/50">
                 &larr; Quay lại nguồn
               </Button>
-              <YouTubeInput onSubmit={handleYouTubeSubmit} disabled={mutation.isPending} />
+              <YouTubeInput
+                onSubmit={handleYouTubeSubmit}
+                disabled={mutation.isPending}
+                submitError={submitError}
+                onEdit={() => setSubmitError(null)}
+              />
             </div>
           )}
         </div>
