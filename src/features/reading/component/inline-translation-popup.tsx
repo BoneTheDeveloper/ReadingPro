@@ -11,7 +11,7 @@ import {
   useInteractions,
   useRole,
 } from "@floating-ui/react";
-import { Bookmark, Languages, LoaderCircle, RotateCcw, Volume2, X } from "lucide-react";
+import { Bookmark, Languages, LoaderCircle, RotateCcw, X } from "lucide-react";
 import { useMemo, useEffect } from "react";
 
 import { Button } from "@/component/ui/button";
@@ -106,8 +106,8 @@ export function InlineTranslationPopup({
   if (!anchor) return null;
 
   const word = anchor.word;
+  const lemma = data?.lemma ?? "";
   const translation = data?.translation?.trim() ?? "";
-  const ipa = data?.ipa ?? null;
   const posBadge = data ? partOfSpeechBadge(data) : null;
 
   return (
@@ -157,10 +157,10 @@ export function InlineTranslationPopup({
               <div className="flex items-start gap-2.5">
                 <div className="min-w-0 flex-1">
                   <p
-                    title={word}
+                    title={lemma}
                     className="truncate font-serif text-[17px] leading-[1.35] font-semibold text-foreground"
                   >
-                    {word}
+                    {lemma}
                   </p>
 
                   {error ? (
@@ -169,19 +169,6 @@ export function InlineTranslationPopup({
                     </p>
                   ) : translation ? (
                     <>
-                      <div className="mt-1.5 flex flex-wrap items-center gap-[7px]">
-                        {ipa !== null && (
-                          <span title={ipa} className="truncate font-mono text-xs text-ink-3">
-                            {ipa}
-                          </span>
-                        )}
-                        <button
-                          type="button"
-                          className="relative flex size-6 items-center justify-center rounded-lg text-muted-foreground transition-colors before:absolute before:-inset-2 before:content-[''] hover:bg-indigo-soft hover:text-indigo-hover focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
-                        >
-                          <Volume2 className="size-[15px]" />
-                        </button>
-                      </div>
                       {posBadge && (
                         <span
                           aria-label={posBadge.aria}

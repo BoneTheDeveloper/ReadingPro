@@ -17,7 +17,7 @@ export type TranslateInput = z.infer<typeof TranslateInputSchema>;
 
 export const TranslationOutputSchema = z.object({
   translation: z.string().min(1),
-  ipa: z.string().nullable(),
+  lemma: z.string().min(1).max(80),
   partOfSpeech: z.enum(PartOfSpeech)
 });
 

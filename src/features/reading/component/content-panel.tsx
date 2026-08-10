@@ -70,7 +70,7 @@ export function ContentPanel({
     const result = translation.data;
     if (!result || !wordAnchor) return;
     createVocabulary.mutate({
-      term: wordAnchor.word,
+      term: result.lemma,
       translation: result.translation,
       sourceLanguage: "en",
       targetLanguage: "vi",
