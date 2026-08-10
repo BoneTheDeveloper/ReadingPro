@@ -14,7 +14,6 @@ import { useStudyPanelLayout } from "../_hook/use-study-panel-layout";
 
 import type { RefObject } from "react";
 import type { PanelImperativeHandle } from "react-resizable-panels";
-import type { Passage } from "@/features/passage/schema";
 import type { StudioPanelView } from "@/features/studio/component/panel/studio-icon-list";
 
 
@@ -69,23 +68,16 @@ function StudioSlot({
 }
 
 export function StudyWorkspace() {
+  const { data: passages = [] } = useQuery(passageQueries.list());
   const library = usePassageLibrary();
   const upload = useUploadFlow();
   const layout = useStudyPanelLayout();
 
-  const handleCreated = (passage: Passage) => {
-    library.upsert(passage);
-    upload.closeModal();
-  };
-
-  // Only pass COMPLETED passages to detail/studio. PENDING/FAILED rows are
-  // visible in the source list but cannot drive detail or artifact generation.
-  const activePassage = (library.passages ?? []).find(
-    (p) => p.id === library.activeId && p.status === "COMPLETED",
-  );
-  const detailPassageId = activePassage ? library.activeId : null;
-  const detail = useQuery(passageQueries.detail(detailPassageId));
-  const contentKey = detailPassageId ?? "empty";
+  // `activeId` is already resolved against the list and guaranteed COMPLETED,
+  // so PENDING/FAILED rows stay visible in the source list without ever
+  // driving detail or artifact generation.
+  const detail = useQuery(passageQueries.detail(library.activeId));
+  const contentKey = library.activeId ?? "empty";
 
   return (
     <>
@@ -109,7 +101,7 @@ export function StudyWorkspace() {
             onResize={layout.handleLeftResize}
           >
             <SourcesPanel
-              items={library.passages}
+              items={passages}
               activeId={library.activeId}
               onSelect={library.select}
               onOpenUploadModal={upload.openModal}
@@ -146,7 +138,7 @@ export function StudyWorkspace() {
           >
             <StudioSlot
               key={contentKey}
-              passageId={detailPassageId}
+              passageId={library.activeId}
               panelRef={layout.rightPanelRef}
               collapsed={layout.rightPanelCollapsed}
               onToggleCollapse={layout.toggleRight}
@@ -159,7 +151,6 @@ export function StudyWorkspace() {
       <UploadModal
         isOpen={upload.isModalOpen}
         onClose={upload.closeModal}
-        onCreated={handleCreated}
         onClientError={(title, message) => upload.addError("upload", title, message)}
       />
     </>

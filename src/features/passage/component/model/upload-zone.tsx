@@ -6,10 +6,11 @@ import { Upload, FileText, AlertCircle } from "lucide-react";
 import { FILE_LIMITS, FILE_ERRORS } from "@/features/passage/util/upload-config";
 import { cn } from "@/lib/utils";
 
+// Maps react-dropzone's rejection codes onto the shared message table.
 const REJECTION_MESSAGE: Record<string, string> = {
   "file-too-large": FILE_ERRORS.FILE_TOO_LARGE,
   "file-invalid-type": FILE_ERRORS.INVALID_TYPE,
-  "file-too-small": "File rỗng, vui lòng chọn file khác",
+  "file-too-small": FILE_ERRORS.EMPTY_FILE,
 };
 
 interface UploadZoneProps {
@@ -31,7 +32,7 @@ export function UploadZone({
     (accepted: File[], rejected: FileRejection[]) => {
       const code = rejected[0]?.errors[0]?.code;
       if (code) {
-        setError(REJECTION_MESSAGE[code] ?? "File không hợp lệ, vui lòng thử lại");
+        setError(REJECTION_MESSAGE[code] ?? FILE_ERRORS.INVALID_FALLBACK);
         return;
       }
 

@@ -12,10 +12,14 @@ export const FILE_LIMITS = {
   MAX_FILENAME_LENGTH: 100,
 } as const;
 
+// Every user-facing failure message lives here — client and server both read
+// from this file so the same condition never gets two different wordings.
+// Components must not author their own strings.
+
 export const TEXT_INPUT_ERRORS = {
   TOO_SHORT: "Văn bản quá ngắn tối thiểu 50 kí tự.",
   TOO_LONG: "Văn bản quá dài tối đa 100.000 kí tự.",
-  EMPTY: "Text content is empty.",
+  EMPTY: "Văn bản trống.",
 } as const;
 
 export const YOUTUBE_ERRORS = {
@@ -24,10 +28,15 @@ export const YOUTUBE_ERRORS = {
 } as const;
 
 export const FILE_ERRORS = {
-  FILE_TOO_LARGE: "File exceeds the 10MB limit.",
-  INVALID_TYPE: "Only PDF and plain text files are allowed.",
-  EMPTY_FILE: "The uploaded file is empty.",
-  CORRUPT_FILE: "File content does not match its extension.",
-  FILENAME_TOO_LONG: "Filename exceeds 100 character limit.",
-  INVALID_FILENAME: "Invalid filename.",
+  FILE_TOO_LARGE: "File vượt quá giới hạn 10MB.",
+  INVALID_TYPE: "Chỉ hỗ trợ file PDF và văn bản thuần.",
+  EMPTY_FILE: "File rỗng, vui lòng chọn file khác.",
+  CORRUPT_FILE: "Nội dung file không khớp với phần mở rộng.",
+  FILENAME_TOO_LONG: "Tên file vượt quá 100 kí tự.",
+  INVALID_FILENAME: "Tên file không hợp lệ.",
+  INVALID_FALLBACK: "File không hợp lệ, vui lòng thử lại.",
+} as const;
+
+export const UPLOAD_ERRORS = {
+  FAILED: "Tải lên thất bại",
 } as const;

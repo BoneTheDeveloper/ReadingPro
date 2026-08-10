@@ -5,15 +5,18 @@ import { PlayCircle, Clipboard } from "lucide-react";
 import { Button } from "@/component/ui/button";
 import { Input } from "@/component/ui/input";
 import { isValidYouTubeUrl } from "@/features/passage/util/youtube-helper";
+import { YOUTUBE_ERRORS } from "@/features/passage/util/upload-config";
 
 interface YouTubeInputProps {
-  onSubmit: (url: string) => Promise<void>;
+  // Fire-and-forget: the caller submits through a mutation, so a failed upload
+  // surfaces on the workspace instead of coming back to this form.
+  onSubmit: (url: string) => void;
+  disabled?: boolean;
 }
 
-export function YouTubeInput({ onSubmit }: YouTubeInputProps) {
+export function YouTubeInput({ onSubmit, disabled }: YouTubeInputProps) {
   const [url, setUrl] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isUrlFormatValid = useMemo(() => url.trim().length > 0 && isValidYouTubeUrl(url), [url]);
 
@@ -26,21 +29,14 @@ export function YouTubeInput({ onSubmit }: YouTubeInputProps) {
     } catch {}
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!isUrlFormatValid) {
-      setError("URL YouTube không hợp lệ");
+      setError(YOUTUBE_ERRORS.URL_INVALID);
       return;
     }
     setError(null);
-    setIsSubmitting(true);
-    try {
-      await onSubmit(url);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Tải lên thất bại");
-    } finally {
-      setIsSubmitting(false);
-    }
+    onSubmit(url);
   };
 
   return (
@@ -70,7 +66,7 @@ export function YouTubeInput({ onSubmit }: YouTubeInputProps) {
         </p>
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
-      <Button type="submit" disabled={!isUrlFormatValid || isSubmitting} className="w-full">
+      <Button type="submit" disabled={!isUrlFormatValid || disabled} className="w-full">
         Thêm
       </Button>
     </form>

@@ -13,6 +13,9 @@ import {
 /* ─── Create ───────────────────────────────────────────────────────── */
 
 export function useCreatePassageMutation() {
+  const queryClient = useQueryClient();
+  const listKey = passageQueries.list().queryKey;
+
   return useMutation({
     mutationKey: ["createPassage"],
     mutationFn: (input: CreatePassageInput) =>
@@ -21,6 +24,17 @@ export function useCreatePassageMutation() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(input),
       }),
+
+    // The row lands in the list immediately (status PENDING); the list's
+    // polling loop then drives it to COMPLETED. Deliberately no detail-cache
+    // write — the response body is the unprocessed passage, and AI processing
+    // rewrites content/title/cefrLevel server-side afterwards.
+    onSuccess: ({ id, title, sourceType, status, createdAt }) => {
+      queryClient.setQueryData(listKey, (prev: PassageListItem[] = []) => [
+        { id, title, sourceType, status, createdAt },
+        ...prev,
+      ]);
+    },
   });
 }
 

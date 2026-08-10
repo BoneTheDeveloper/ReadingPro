@@ -5,6 +5,7 @@ import { Type, PlayCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCreatePassageMutation } from "@/features/passage/api/mutations";
 import { extractPdfText } from "@/features/passage/util/pdf-parser";
+import { UPLOAD_ERRORS } from "@/features/passage/util/upload-config";
 import {
   Dialog,
   DialogContent,
@@ -15,15 +16,11 @@ import { Button } from "@/component/ui/button";
 import { TextInputArea } from "@/features/passage/component/model/paste-text-input-area";
 import { UploadZone } from "@/features/passage/component/model/upload-zone";
 import { YouTubeInput } from "@/features/passage/component/model/youtube-input";
-import type { Passage, CreatePassageInput } from "@/features/passage/schema";
+import type { CreatePassageInput } from "@/features/passage/schema";
 
 export interface UploadModalProps {
   isOpen: boolean;
   onClose: () => void;
-  // Called on successful POST. The workspace uses this to select the new
-  // passage and close the modal. The server-side row already exists at this
-  // point (status: PENDING) — the polling query picks it up.
-  onCreated?: (passage: Passage) => void;
   // Client-side validation errors before submission (file too short, bad
   // youtube URL, etc.) are surfaced here so the workspace can render them
   // above the source list. Server-side errors stay on the row.
@@ -48,18 +45,20 @@ function SourceButton({ icon: Icon, label, desc, onClick, disabled }: {
   );
 }
 
-export function UploadModal({ isOpen, onClose, onCreated, onClientError }: UploadModalProps) {
+export function UploadModal({ isOpen, onClose, onClientError }: UploadModalProps) {
   const [activeMode, setActiveMode] = useState<InputMode>(null);
   const mutation = useCreatePassageMutation();
 
   const submit = (input: CreatePassageInput) => {
     mutation.mutate(input, {
-      onSuccess: (passage) => {
-        onCreated?.(passage);
+      // The mutation writes the new row into the list cache itself, so the
+      // modal only has to get out of the way.
+      onSuccess: () => {
+        handleClose();
       },
       onError: (err) => {
-        onClientError?.("Tải lên thất bại", err.message);
-        onClose?.();
+        onClientError?.(UPLOAD_ERRORS.FAILED, err.message);
+        handleClose();
       },
     });
   };
@@ -79,7 +78,7 @@ export function UploadModal({ isOpen, onClose, onCreated, onClientError }: Uploa
     submit({ sourceType: "TEXT", title: "Pasted Text", text });
   };
 
-  const handleYouTubeSubmit = async (url: string) => {
+  const handleYouTubeSubmit = (url: string) => {
     if (!url.trim()) return;
     submit({ sourceType: "YOUTUBE", title: "YouTube Video", youtubeUrl: url });
   };
@@ -102,7 +101,7 @@ export function UploadModal({ isOpen, onClose, onCreated, onClientError }: Uploa
         <div className="px-5 pb-5 pt-1 flex-1 overflow-y-auto">
           {activeMode === null && (
             <>
-              <UploadZone onTxtSelect={handleTxtSelect} onPdfSelect={handlePdfSelect} variant="compact" />
+              <UploadZone onTxtSelect={handleTxtSelect} onPdfSelect={handlePdfSelect} variant="compact" disabled={mutation.isPending} />
               <div className="grid grid-cols-2 gap-3 mt-5">
                 <SourceButton icon={PlayCircle} label="YouTube" onClick={() => handleModeChange("youtube")} />
                 <SourceButton icon={Type} label="Dán văn bản" onClick={() => handleModeChange("paste-text")} />
@@ -114,7 +113,7 @@ export function UploadModal({ isOpen, onClose, onCreated, onClientError }: Uploa
               <Button variant="ghost" onClick={handleBack} className="text-primary text-sm w-fit h-auto py-1 px-2 -ml-2 hover:bg-accent/50">
                 &larr; Quay lại nguồn
               </Button>
-              <TextInputArea onSubmit={handleTextSubmit} />
+              <TextInputArea onSubmit={handleTextSubmit} disabled={mutation.isPending} />
             </div>
           )}
           {activeMode === "youtube" && (
@@ -122,7 +121,7 @@ export function UploadModal({ isOpen, onClose, onCreated, onClientError }: Uploa
               <Button variant="ghost" onClick={handleBack} className="text-primary text-sm w-fit h-auto py-1 px-2 -ml-2 hover:bg-accent/50">
                 &larr; Quay lại nguồn
               </Button>
-              <YouTubeInput onSubmit={handleYouTubeSubmit} />
+              <YouTubeInput onSubmit={handleYouTubeSubmit} disabled={mutation.isPending} />
             </div>
           )}
         </div>

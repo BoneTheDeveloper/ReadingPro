@@ -1,13 +1,15 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useEffect } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import { useDeletePassageMutation } from "@/features/passage/api/mutations";
 import { passageQueries } from "@/features/passage/api/queries";
-import type { Passage, PassageListItem } from "@/features/passage/schema";
+import type { PassageListItem } from "@/features/passage/schema";
+
+const PASSAGE_PARAM = "passageId";
 
 function getMostRecentPassageId(passages: PassageListItem[]): string | null {
-
   const completed = passages.filter((p) => p.status === "COMPLETED");
   return (
     completed.reduce<PassageListItem | null>((latest, passage) => {
@@ -17,60 +19,72 @@ function getMostRecentPassageId(passages: PassageListItem[]): string | null {
   );
 }
 
+/**
+ * Owns which passage the workspace is reading. The id lives in the URL
+ * (`?passageId=`) so a refresh, a bookmark, or a shared link all reopen the
+ * same passage.
+ */
 export function usePassageLibrary() {
-  const queryClient = useQueryClient();
-  const passagesQuery = useQuery(passageQueries.list());
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const { data: passages = [] } = useQuery(passageQueries.list());
   const deleteMutation = useDeletePassageMutation();
 
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const activeId = selectedId ?? getMostRecentPassageId(passagesQuery.data ?? []);
+  // Resolving the param against the list is the single COMPLETED guard: a
+  // stale, deleted, or hand-edited id reads as "nothing selected", so callers
+  // never have to re-check the status themselves.
+  const paramId = searchParams.get(PASSAGE_PARAM);
+  const activeId = passages.some((p) => p.id === paramId && p.status === "COMPLETED")
+    ? paramId
+    : null;
 
-  const [error, setError] = useState<string | null>(null);
+  const setActiveId = useCallback(
+    (id: string | null) => {
+      const next = new URLSearchParams(searchParams);
+      if (id) next.set(PASSAGE_PARAM, id);
+      else next.delete(PASSAGE_PARAM);
 
-  const select = useCallback((id: string) => {
-    const target = (passagesQuery.data ?? []).find((p) => p.id === id);
-    if (target && target.status !== "COMPLETED") return;
-    setSelectedId(id);
-    setError(null);
-  }, [passagesQuery.data]);
-
-  const upsert = useCallback(
-    (passage: Passage) => {
-      queryClient.setQueryData(passageQueries.detail(passage.id).queryKey, passage);
-      const { id, title, sourceType, status, createdAt } = passage;
-      const item: PassageListItem = { id, title, sourceType, status, createdAt };
-      queryClient.setQueryData(
-        passageQueries.list().queryKey,
-        (prev: PassageListItem[] = []) =>
-          prev.some((p) => p.id === item.id)
-            ? prev.map((p) => (p.id === item.id ? item : p))
-            : [item, ...prev],
-      );
-      setError(null);
+      const query = next.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
     },
-    [queryClient],
+    [pathname, router, searchParams],
+  );
+
+  // Opens the most recent passage when nothing is selected yet. Self-limiting:
+  // once the param resolves this returns early, so a passage finishing in the
+  // background can never pull the reader away from what they are reading.
+  useEffect(() => {
+    if (activeId) return;
+
+    const fallback = getMostRecentPassageId(passages);
+    if (fallback) setActiveId(fallback);
+  }, [activeId, passages, setActiveId]);
+
+  const select = useCallback(
+    (id: string) => {
+      const target = passages.find((p) => p.id === id);
+      if (target?.status !== "COMPLETED") return;
+      setActiveId(id);
+    },
+    [passages, setActiveId],
   );
 
   const remove = useCallback(
     (id: string) => {
       deleteMutation.mutate(id, {
-        onSuccess: () => setSelectedId((current) => (current === id ? null : current)),
-        onError: (err) => setError(err.message || "Xóa thất bại"),
+        onSuccess: () => {
+          if (id === activeId) setActiveId(null);
+        },
       });
     },
-    [deleteMutation],
+    [deleteMutation, activeId, setActiveId],
   );
 
-  const clearError = useCallback(() => setError(null), []);
-
   return {
-    passages: passagesQuery.data ?? [],
     activeId,
-    error,
     isDeleting: deleteMutation.isPending,
     select,
-    upsert,
     remove,
-    clearError,
   };
 }
