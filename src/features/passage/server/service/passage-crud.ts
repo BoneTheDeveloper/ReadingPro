@@ -68,7 +68,7 @@ export async function completePassageProcessing(args: {
   return prisma.passage.update({
     where: { id: args.passageId, userId: args.userId },
     data: {
-      title: args.title.slice(0, 200),
+      title: args.title,
       content: args.content,
       cefrLevel: args.cefrLevel,
       wordCount,

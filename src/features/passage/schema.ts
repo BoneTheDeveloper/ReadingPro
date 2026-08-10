@@ -51,7 +51,7 @@ export type CreatePassageInput = z.infer<typeof CreatePassageInputSchema>;
 
 // ── External API Response Schemas ─────────────────────────────────────────────
 
-export const DeepseekProcessPassageResponseSchema = z.object({
+export const passageProccesingOutputchema = z.object({
   text: z.string().describe("Cleaned passage text with fixed punctuation, capitalization, and paragraphs."),
   cefrLevel: z.nativeEnum(CEFRLevel).describe(
     "CEFR level of the passage (A1 beginner → C2 proficient).",
@@ -62,3 +62,7 @@ export const DeepseekProcessPassageResponseSchema = z.object({
     .max(50)
     .describe("Concise descriptive title capturing the main topic."),
 });
+
+export type PassageProccesingOuput = z.infer<
+  typeof passageProccesingOutputchema
+>;

@@ -1,9 +1,17 @@
 import "server-only";
 import { generateObject } from "ai";
-import { DeepseekProcessPassageResponseSchema } from "@/features/passage/schema";
+import {
+  passageProccesingOutputchema,
+  type PassageProccesingOuput,
+} from "@/features/passage/schema";
 import { completePassageProcessing } from "@/features/passage/server/service/passage-crud";
 
 const PROCESS_PROMPT = `You clean and analyze English passages for language learners.
+
+Return:
+- text: the cleaned passage, following the cleaning rules below
+- cefrLevel: the passage's CEFR level, one of A1, A2, B1, B2, C1, C2
+- title: a concise descriptive title (max 50 characters) capturing the main topic
 
 Cleaning:
 Restore capitalization (sentence starts, proper nouns, "I", acronyms, titles, brands) and terminal punctuation.
@@ -20,36 +28,22 @@ Keep unintelligible fragments as-is rather than guessing.`;
 async function processPassage(
   cleanedText: string,
   userTitle: string,
-) {
+): Promise<PassageProccesingOuput> {
+  const { object } = await generateObject({
+    model: "deepseek/deepseek-v4-flash",
+    schema: passageProccesingOutputchema,
+    abortSignal: AbortSignal.timeout(170_000),
+    instructions: PROCESS_PROMPT,
+    prompt: [
+      `User-supplied title: ${userTitle || "(none)"}`,
+      "Passage:",
+      cleanedText,
+    ].join("\n"),
+    temperature: 0.2,
+  });
 
-      const result = await generateObject({
-        model: "deepseek/deepseek-v4-flash",
-        schema: DeepseekProcessPassageResponseSchema,
-        system: PROCESS_PROMPT,
-        prompt: [
-          `User-supplied title: ${userTitle || "(none)"}`,
-          "Passage:",
-          cleanedText,
-        ].join("\n"),
-        temperature: 0.2,
-        // Load-bearing: must stay strictly under `maxDuration` in
-        // src/app/api/passage/route.ts (200s). Aborting first turns a timeout
-        // into a catchable error the route can record as FAILED; letting the
-        // platform win kills the invocation and strands the row at PENDING.
-        abortSignal: AbortSignal.timeout(170_000),
-      });
-
-      if (!result.object) {
-        throw new Error("No object generated");
-      }
-
-      return {
-        text: result.object.text,
-        cefrLevel: result.object.cefrLevel,
-        title: result.object.title,
-      };
+  return object;
 }
-
 
 export async function runPassageProcessing(args: {
   userId: string;
@@ -63,7 +57,7 @@ export async function runPassageProcessing(args: {
   );
 
    await completePassageProcessing({
-     userId: args.userId,
+    userId: args.userId,
     passageId: args.passageId,
     content: text,
     title,
