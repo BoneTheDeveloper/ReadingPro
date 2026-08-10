@@ -1,6 +1,6 @@
 "use client";
 import { useRef, useState } from "react";
-import { FileText, FileSearch, Plus, FileType } from "lucide-react";
+import { FileText, FileSearch, Plus, FileType, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CefrBadge } from "./cefr-badge";
 import { InlineTranslationPopup } from "./inline-translation-popup";
@@ -14,9 +14,11 @@ import { YouTubeEmbed } from "./youtube-embed";
 
 export function ContentPanel({
   passage,
+  isLoading,
   onOpenUploadModal,
 }: {
   passage: Passage | null;
+  isLoading: boolean;
   onOpenUploadModal: () => void;
 }) {
   const [viewMode, setViewMode] = useState<"text" | "pdf" | "video">(
@@ -78,12 +80,20 @@ export function ContentPanel({
     });
   };
   if (!passage) {
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center h-full">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
+            <span>Đang tải tài liệu...</span>
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="flex items-center justify-center h-full min-h-100">
         <div className="text-center">
-          <div className="w-12 h-12 bg-muted flex items-center justify-center mx-auto mb-4">
-            <FileSearch className="w-6 h-6 text-muted-foreground" />
-          </div>
+          <FileSearch className="w-7 h-7 text-muted-foreground mx-auto mb-4" aria-hidden />
           <p className="text-base font-medium text-foreground">
             Chọn tài liệu từ Nguồn
           </p>

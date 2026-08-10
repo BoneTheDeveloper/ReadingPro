@@ -7,6 +7,7 @@ import {
   VocabularyItemSchema,
   VocabularyUpdateInputSchema,
   type VocabularyInput,
+  type VocabularyItem,
   type VocabularyUpdateInput,
 } from "@/features/vocabulary/schema";
 import { vocabularyQueries } from "@/features/vocabulary/api/queries";
@@ -40,14 +41,35 @@ export function useUpdateVocabularyMutation() {
       queryClient.invalidateQueries({ queryKey: vocabularyQueries.all() }),
   });
 }
-
 export function useDeleteVocabularyMutation() {
   const queryClient = useQueryClient();
+  const listKey = vocabularyQueries.list().queryKey;
+
   return useMutation({
     mutationKey: ["vocabulary", "delete"] as const,
     mutationFn: (id: string) =>
       fetchJson(`/api/vocabulary/${id}`, z.void(), { method: "DELETE" }),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: vocabularyQueries.all() }),
+
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: listKey });
+
+      const previous = queryClient.getQueryData<VocabularyItem[]>(listKey);
+
+      queryClient.setQueryData<VocabularyItem[]>(listKey, (old) =>
+        old?.filter((v) => v.id !== id),
+      );
+
+      return { previous };
+    },
+
+    onError: (_err, _id, ctx) => {
+      if (ctx?.previous) {
+        queryClient.setQueryData(listKey, ctx.previous);
+      }
+    },
+
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: vocabularyQueries.all() });
+    },
   });
 }

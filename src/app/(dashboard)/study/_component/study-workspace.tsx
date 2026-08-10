@@ -121,6 +121,7 @@ export function StudyWorkspace() {
               <ContentPanel
                 key={contentKey}
                 passage={detail.data ?? null}
+                isLoading={detail.isPending}
                 onOpenUploadModal={upload.openModal}
               />
             </div>
