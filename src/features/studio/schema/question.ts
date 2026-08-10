@@ -23,3 +23,5 @@ export const questionProgressSchema = z.object({
   correctCount: z.number().int().nonnegative(),
   isCompleted: z.boolean(),
 });
+
+export type QuestionProgress = z.infer<typeof questionProgressSchema>;

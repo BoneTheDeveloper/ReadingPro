@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Group, Panel, Separator } from "react-resizable-panels";
 import { SourcesPanel } from "@/features/passage/component/panel/sources-panel";
 import { ContentPanel } from "@/features/reading/component/content-panel";
 import { StudioPanel } from "@/features/studio/component/panel/studio-panel";
 import { UploadModal } from "@/features/passage/component/model/upload-modal";
 import { usePassageLibrary } from "@/features/passage/hook/use-passage-library";
-import { usePassage } from "@/features/passage/api/queries";
+import { passageQueries } from "@/features/passage/api/queries";
 import { useUploadFlow } from "@/features/passage/hook/use-upload-flow";
 import { useStudyPanelLayout } from "../_hook/use-study-panel-layout";
 
@@ -83,7 +84,7 @@ export function StudyWorkspace() {
     (p) => p.id === library.activeId && p.status === "COMPLETED",
   );
   const detailPassageId = activePassage ? library.activeId : null;
-  const detail = usePassage(detailPassageId);
+  const detail = useQuery(passageQueries.detail(detailPassageId));
   const contentKey = detailPassageId ?? "empty";
 
   return (

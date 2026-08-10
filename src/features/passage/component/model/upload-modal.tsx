@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Type, PlayCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useCreatePassage } from "@/features/passage/api/mutations";
+import { useCreatePassageMutation } from "@/features/passage/api/mutations";
 import { extractPdfText } from "@/features/passage/util/pdf-parser";
 import {
   Dialog,
@@ -50,7 +50,7 @@ function SourceButton({ icon: Icon, label, desc, onClick, disabled }: {
 
 export function UploadModal({ isOpen, onClose, onCreated, onClientError }: UploadModalProps) {
   const [activeMode, setActiveMode] = useState<InputMode>(null);
-  const mutation = useCreatePassage();
+  const mutation = useCreatePassageMutation();
 
   const submit = (input: CreatePassageInput) => {
     mutation.mutate(input, {

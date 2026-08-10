@@ -1,10 +1,9 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { useDeletePassage } from "@/features/passage/api/mutations";
-import { usePassages } from "@/features/passage/api/queries";
-import { passageKeys } from "@/features/passage/api/query-keys";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useDeletePassageMutation } from "@/features/passage/api/mutations";
+import { passageQueries } from "@/features/passage/api/queries";
 import type { Passage, PassageListItem } from "@/features/passage/schema";
 
 function getMostRecentPassageId(passages: PassageListItem[]): string | null {
@@ -20,8 +19,8 @@ function getMostRecentPassageId(passages: PassageListItem[]): string | null {
 
 export function usePassageLibrary() {
   const queryClient = useQueryClient();
-  const passagesQuery = usePassages();
-  const deleteMutation = useDeletePassage();
+  const passagesQuery = useQuery(passageQueries.list());
+  const deleteMutation = useDeletePassageMutation();
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const activeId = selectedId ?? getMostRecentPassageId(passagesQuery.data ?? []);
@@ -29,8 +28,6 @@ export function usePassageLibrary() {
   const [error, setError] = useState<string | null>(null);
 
   const select = useCallback((id: string) => {
-    // Non-COMPLETED rows have no detail to render. Refuse selection so the
-    // workspace stays on a usable state.
     const target = (passagesQuery.data ?? []).find((p) => p.id === id);
     if (target && target.status !== "COMPLETED") return;
     setSelectedId(id);
@@ -39,12 +36,12 @@ export function usePassageLibrary() {
 
   const upsert = useCallback(
     (passage: Passage) => {
-      queryClient.setQueryData(passageKeys.detail(passage.id), passage);
+      queryClient.setQueryData(passageQueries.detail(passage.id).queryKey, passage);
       const { id, title, sourceType, status, createdAt } = passage;
       const item: PassageListItem = { id, title, sourceType, status, createdAt };
-      queryClient.setQueryData<PassageListItem[]>(
-        passageKeys.list(),
-        (prev = []) =>
+      queryClient.setQueryData(
+        passageQueries.list().queryKey,
+        (prev: PassageListItem[] = []) =>
           prev.some((p) => p.id === item.id)
             ? prev.map((p) => (p.id === item.id ? item : p))
             : [item, ...prev],

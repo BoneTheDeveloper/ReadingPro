@@ -21,9 +21,6 @@ owned workspace.
 | [Vocabulary capture](docs/Requirements/epic-04-vocabulary-capture.md) | Inline translation while reading, then save words with their context |
 | [Memorization & review](docs/Requirements/epic-05-memorization-review.md) | Group saved words into sets and review them on a schedule |
 
-Visual language — colors, surfaces, component rules — is defined in
-[`docs/design.md`](docs/design.md).
-
 ## Tech stack
 
 - **Next.js** (App Router) · **React** · **TypeScript**
@@ -53,18 +50,6 @@ src/
 ├─ lib/                       # auth, prisma, logger, query client, error helpers
 └─ generated/prisma/          # generated client — do not edit
 
-docs/                         # product requirements and design system
 prisma/schema.prisma          # database schema
 ```
 
-## Running locally
-
-```bash
-pnpm install
-cp .env.example .env    # fill in database, auth, and AI gateway values
-pnpm prisma db push
-pnpm dev                # http://localhost:3000
-```
-
-Conventions for transport, file layout, naming, and error handling live in
-[CLAUDE.md](CLAUDE.md).

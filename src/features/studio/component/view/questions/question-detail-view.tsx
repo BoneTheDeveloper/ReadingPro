@@ -5,8 +5,9 @@ import { Loader2 } from "lucide-react";
 import { StudioDetailView } from "../studio-detail-view";
 import { QuestionContent } from "./question-content";
 import { QuestionResults } from "./question-results";
-import { useArtifact } from "@/features/studio/api/queries";
-import { useRecordProgress } from "@/features/studio/api/mutations";
+import { useQuery } from "@tanstack/react-query";
+import { artifactQueries } from "@/features/studio/api/queries";
+import { useRecordProgressMutation } from "@/features/studio/api/mutations";
 
 interface QuestionDetailViewProps {
   artifactId: string;
@@ -20,8 +21,10 @@ interface Answer {
 }
 
 export function QuestionDetailView({ artifactId, passageId, onClose }: QuestionDetailViewProps) {
-  const { data, isLoading, isError, error } = useArtifact(artifactId);
-  const recordMutation = useRecordProgress();
+  const { data, isLoading, isError, error } = useQuery(
+    artifactQueries.detail(artifactId),
+  );
+  const recordMutation = useRecordProgressMutation();
 
   const [isComplete, setIsComplete] = useState(false);
   const [answers, setAnswers] = useState<Answer[]>([]);

@@ -3,12 +3,13 @@
 import { useMemo, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
-import { useQueryClient } from "@tanstack/react-query";
+import { useResetChatMutation } from "@/features/studio/api/mutations";
 import { AlertCircle, Loader2, RotateCw, Trash2 } from "lucide-react";
 import { StudioDetailView } from "../studio-detail-view";
 import { ChatMessageList } from "./chat-message-list";
 import { ChatComposer } from "./chat-composer";
-import { useChatHistory, chatKeys } from "@/features/studio/api/queries";
+import { useQuery } from "@tanstack/react-query";
+import { chatQueries } from "@/features/studio/api/queries";
 import type {
   ChatHistoryMessage,
   StudyChatLanguage,
@@ -20,7 +21,7 @@ interface ChatDetailViewProps {
 }
 
 export function ChatDetailView({ passageId, onClose }: ChatDetailViewProps) {
-  const historyQuery = useChatHistory(passageId);
+  const historyQuery = useQuery(chatQueries.history(passageId));
 
   if (historyQuery.isPending) {
     return (
@@ -62,7 +63,7 @@ function ChatConversation({
 }: ChatConversationProps) {
   const [input, setInput] = useState("");
   const [language, setLanguage] = useState<StudyChatLanguage>("vi");
-  const queryClient = useQueryClient();
+  const resetChat = useResetChatMutation();
 
   const transport = useMemo(
     () =>
@@ -85,18 +86,14 @@ function ChatConversation({
     sendMessage({ text }, { body: { passageId, language } });
   };
 
-  const handleReset = async () => {
+  const handleReset = () => {
     if (isStreaming) return;
 
-    const res = await fetch(`/api/ai-chat?passageId=${encodeURIComponent(passageId)}`, {
-      method: "DELETE",
+    // The mutation evicts the cached history; clearing useChat's internal
+    // state here is what makes the open conversation re-render empty.
+    resetChat.mutate(passageId, {
+      onSuccess: () => setMessages([]),
     });
-    if (!res.ok) return;
-
-    // Clear useChat's internal state so the UI re-renders empty. The React
-    // Query eviction below is belt-and-suspenders for the next mount.
-    setMessages([]);
-    queryClient.removeQueries({ queryKey: chatKeys.history(passageId) });
   };
 
   const resetButton = (

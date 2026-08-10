@@ -17,7 +17,7 @@ Never invent facts, names, numbers, or sentences.
 Keep the author's vocabulary and register. Do not simplify or "upgrade" word choice — learners need authentic English.
 Keep unintelligible fragments as-is rather than guessing.`;
 
-export async function processPassage(
+async function processPassage(
   cleanedText: string,
   userTitle: string,
 ) {

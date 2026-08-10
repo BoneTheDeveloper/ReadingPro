@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { questionProgressSchema } from "./question";
+import { questionContentSchema, questionProgressSchema } from "./question";
 import { flashcardProgressSchema } from "./flashcard";
 import { ProcessingStatus, StudioArtifactType } from "@/generated/prisma/enums";
 
@@ -30,3 +30,7 @@ export const studioArtifactListItemSchema = z.discriminatedUnion("type", [
 ]);
 
 export type StudioArtifactListItem = z.infer<typeof studioArtifactListItemSchema>;
+
+export const studioArtifactSchema = questionVariant
+  .extend(artifactCommon)
+  .extend({ content: questionContentSchema });

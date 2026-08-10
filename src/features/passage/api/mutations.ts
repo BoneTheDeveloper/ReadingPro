@@ -1,47 +1,45 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { passageKeys } from "@/features/passage/api/query-keys";
-import {  type CreatePassageInput, type Passage, type PassageListItem } from "@/features/passage/schema";
+import { z } from "zod";
+import { fetchJson } from "@/lib/api/fetch-json";
+import { passageQueries } from "@/features/passage/api/queries";
+import {
+  passageSchema,
+  type CreatePassageInput,
+  type PassageListItem,
+} from "@/features/passage/schema";
 
 /* ─── Create ───────────────────────────────────────────────────────── */
 
-export function useCreatePassage() {
+export function useCreatePassageMutation() {
   return useMutation({
     mutationKey: ["createPassage"],
-    mutationFn: async (input: CreatePassageInput): Promise<Passage> => {
-      const res = await fetch("/api/passage", {
+    mutationFn: (input: CreatePassageInput) =>
+      fetchJson("/api/passage", passageSchema, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(input),
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body?.error?.message || "Tạo thất bại");
-      }
-      return await res.json();
-    },
+      }),
   });
 }
 
 /* ─── Delete ───────────────────────────────────────────────────────── */
 
-export function useDeletePassage() {
+export function useDeletePassageMutation() {
   const queryClient = useQueryClient();
+  const listKey = passageQueries.list().queryKey;
 
   return useMutation({
     mutationFn: (passageId: string) =>
-      fetch(`/api/passage/${passageId}`, { method: "DELETE" }).then((res) => {
-        if (!res.ok) throw new Error("Xóa thất bại");
-      }),
+      fetchJson(`/api/passage/${passageId}`, z.void(), { method: "DELETE" }),
 
     onMutate: async (passageId) => {
-      await queryClient.cancelQueries({ queryKey: passageKeys.list() });
-      const previous = queryClient.getQueryData<PassageListItem[]>(passageKeys.list());
+      await queryClient.cancelQueries({ queryKey: listKey });
+      const previous = queryClient.getQueryData(listKey);
 
-      queryClient.setQueryData<PassageListItem[]>(
-        passageKeys.list(),
-        (prev = []) => prev.filter((p) => p.id !== passageId),
+      queryClient.setQueryData(listKey, (prev: PassageListItem[] = []) =>
+        prev.filter((p) => p.id !== passageId),
       );
 
       return { previous };
@@ -49,12 +47,14 @@ export function useDeletePassage() {
 
     onError: (_err, _passageId, ctx) => {
       if (ctx?.previous) {
-        queryClient.setQueryData(passageKeys.list(), ctx.previous);
+        queryClient.setQueryData(listKey, ctx.previous);
       }
     },
 
     onSuccess: (_data, passageId) => {
-      queryClient.removeQueries({ queryKey: passageKeys.detail(passageId) });
+      queryClient.removeQueries({
+        queryKey: passageQueries.detail(passageId).queryKey,
+      });
     },
   });
 }

@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { CefrBadge } from "./cefr-badge";
 import { InlineTranslationPopup } from "./inline-translation-popup";
 import { useScrollProgress } from "@/features/reading/hook/use-scroll-progress";
-import { useTranslation } from "@/features/reading/api/mutations";
+import { useTranslateMutation } from "@/features/reading/api/mutations";
 import { useCreateVocabularyMutation } from "@/features/vocabulary/api/mutations";
 import { validateWordSelection } from "@/features/reading/utils/word-selection";
 import type { WordSelectionAnchor } from "@/features/reading/utils/word-selection";
@@ -23,7 +23,7 @@ export function ContentPanel({
     "text",
   );
   const [wordAnchor, setWordAnchor] = useState<WordSelectionAnchor | null>(null);
-  const { data, error, isPending, translate, reset } = useTranslation();
+  const translation = useTranslateMutation();
   const createVocabulary = useCreateVocabularyMutation();
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -34,7 +34,7 @@ export function ContentPanel({
 
   const clearTranslation = () => {
     setWordAnchor(null);
-    reset();
+    translation.reset();
     window.getSelection()?.removeAllRanges();
   };
 
@@ -46,7 +46,7 @@ export function ContentPanel({
     );
     if (!next) {
       setWordAnchor(null);
-      reset();
+      translation.reset();
       return;
     }
     const current = wordAnchor;
@@ -58,22 +58,23 @@ export function ContentPanel({
       return;
     }
     setWordAnchor(next);
-    reset();
+    translation.reset();
   };
 
   const handleTranslateClick = () => {
     if (!wordAnchor) return;
-    translate(wordAnchor.word, wordAnchor.context);
+    translation.mutate({ word: wordAnchor.word, context: wordAnchor.context });
   };
 
   const handleSaveVocabulary = () => {
-    if (!data || !wordAnchor) return;
+    const result = translation.data;
+    if (!result || !wordAnchor) return;
     createVocabulary.mutate({
       term: wordAnchor.word,
-      translation: data.translation,
+      translation: result.translation,
       sourceLanguage: "en",
       targetLanguage: "vi",
-      partofSpeech: data.partOfSpeech,
+      partofSpeech: result.partOfSpeech,
     });
   };
   if (!passage) {
@@ -181,9 +182,9 @@ export function ContentPanel({
       </div>
       <InlineTranslationPopup
         anchor={wordAnchor}
-        data={data}
-        error={error}
-        isPending={isPending}
+        data={translation.data ?? null}
+        error={translation.error}
+        isPending={translation.isPending}
         isSaving={createVocabulary.isPending}
         isSaved={createVocabulary.isSuccess}
         onTranslate={handleTranslateClick}

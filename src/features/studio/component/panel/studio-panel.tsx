@@ -7,8 +7,12 @@ import { CollapsedSidebar } from "./collapsed-sidebar";
 import { DefaultStudioView } from "./default-studio-view";
 import { ChatDetailView } from "../view/ai-chat/chat-detail-view";
 import { QuestionDetailView } from "../view/questions/question-detail-view";
-import { useArtifactList } from "../../api/queries";
-import { useGenerateQuestion, useDeleteArtifact } from "../../api/mutations";
+import { useQuery } from "@tanstack/react-query";
+import { artifactQueries } from "../../api/queries";
+import {
+  useGenerateQuestionMutation,
+  useDeleteArtifactMutation,
+} from "../../api/mutations";
 
 interface StudioPanelProps {
   passageId: string | null;
@@ -25,9 +29,9 @@ export function StudioPanel({
   collapsed = false,
   onToggleCollapse,
 }: StudioPanelProps) {
-  const artifactsQuery = useArtifactList(passageId);
-  const generateQuestion = useGenerateQuestion();
-  const deleteArtifact = useDeleteArtifact();
+  const artifactsQuery = useQuery(artifactQueries.list(passageId));
+  const generateQuestion = useGenerateQuestionMutation();
+  const deleteArtifact = useDeleteArtifactMutation();
 
   const closeView = useCallback(() => onViewChange(null), [onViewChange]);
 

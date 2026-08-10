@@ -1,5 +1,5 @@
 import { QueryClient, QueryCache, MutationCache, isServer } from "@tanstack/react-query";
-import { isAppError } from "@/lib/error/app-error";
+import { isApiError } from "@/lib/api/fetch-json";
 
 function makeQueryClient() {
   return new QueryClient({
@@ -7,7 +7,7 @@ function makeQueryClient() {
       queries: {
         staleTime: 60 * 1000,
         retry: (count, err) =>
-          isAppError(err) && err.statusCode < 500 ? false : count < 3,
+          isApiError(err) && err.status < 500 ? false : count < 3,
         refetchOnWindowFocus: false,
       },
     },
