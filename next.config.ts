@@ -26,9 +26,7 @@ const csp = {
     isDev ? "ws://localhost:*" : "",
     "https://*.sentry.io",
     "https://vitals.vercel-insights.com",
-    // One Tap exchanges the ID token with our auth API.
     "https://accounts.google.com",
-    // Direct browser → Vercel Blob multipart upload.
     "https://*.blob.vercel-storage.com",
   ].filter(Boolean).join(" "),
   objectSrc: "object-src 'none'",
@@ -61,12 +59,7 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   distDir: process.env.NEXT_DIST_DIR ?? ".next",
   poweredByHeader: false,
-  // pdf-parse is a Node-only lib used by the upload worker; keep it external so
-  // it is not bundled/traced into the server build.
   serverExternalPackages: ["pino", "pino-pretty", "pdf-parse"],
-  experimental: {
-    // Vercel Blob direct uploads bypass the Server Action body limit.
-  },
   allowedDevOrigins: ["host.docker.internal"],
   turbopack: {
     root: process.cwd(),

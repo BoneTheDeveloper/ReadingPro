@@ -7,10 +7,12 @@ import { CollapsedSidebar } from "./collapsed-sidebar";
 import { DefaultStudioView } from "./default-studio-view";
 import { ChatDetailView } from "../view/ai-chat/chat-detail-view";
 import { QuestionDetailView } from "../view/questions/question-detail-view";
+import { FlashcardDetailView } from "../view/flashcards";
 import { useQuery } from "@tanstack/react-query";
 import { artifactQueries } from "../../api/queries";
 import {
   useGenerateQuestionMutation,
+  useGenerateFlashcardMutation,
   useDeleteArtifactMutation,
 } from "../../api/mutations";
 
@@ -31,6 +33,7 @@ export function StudioPanel({
 }: StudioPanelProps) {
   const artifactsQuery = useQuery(artifactQueries.list(passageId));
   const generateQuestion = useGenerateQuestionMutation();
+  const generateFlashcard = useGenerateFlashcardMutation();
   const deleteArtifact = useDeleteArtifactMutation();
 
   const closeView = useCallback(() => onViewChange(null), [onViewChange]);
@@ -42,6 +45,10 @@ export function StudioPanel({
         return;
       }
       if (!artifactId) return;
+      if (id === StudioArtifactType.FLASHCARD) {
+        onViewChange({ contentType: "flashcard", artifactId });
+        return;
+      }
       onViewChange({ contentType: "question", artifactId });
     },
     [onViewChange],
@@ -54,10 +61,11 @@ export function StudioPanel({
       if (!passageId) return;
       if (actionId === StudioArtifactType.QUESTION) {
         generateQuestion.mutate(passageId);
+      } else if (actionId === StudioArtifactType.FLASHCARD) {
+        generateFlashcard.mutate(passageId);
       }
-      // FLASHCARD: Phase 6
     },
-    [passageId, generateQuestion],
+    [passageId, generateQuestion, generateFlashcard],
   );
 
   if (collapsed) {
@@ -78,12 +86,20 @@ export function StudioPanel({
     );
   }
 
+  if (view?.contentType === "flashcard") {
+    return (
+      <FlashcardDetailView
+        artifactId={view.artifactId}
+        passageId={passageId ?? ""}
+        onClose={closeView}
+      />
+    );
+  }
+
   const artifacts = artifactsQuery.data ?? [];
-  const pendingTypes = artifacts.some(
-    (a) => a.status === "PENDING" && a.type === StudioArtifactType.QUESTION,
-  )
-    ? [StudioArtifactType.QUESTION]
-    : [];
+  const pendingTypes = artifacts
+    .filter((a) => a.status === "PENDING")
+    .map((a) => a.type);
 
   return (
     <DefaultStudioView

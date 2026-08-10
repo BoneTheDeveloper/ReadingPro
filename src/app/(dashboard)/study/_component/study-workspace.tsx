@@ -20,6 +20,7 @@ import type { StudioPanelView } from "@/features/studio/component/panel/studio-i
 const STUDIO_VIEW_SIZE = {
   chat: 400,
   question: 500,
+  flashcard: 500,
 } as const satisfies Record<NonNullable<StudioPanelView>["contentType"], number>;
 
 interface StudioSlotProps {

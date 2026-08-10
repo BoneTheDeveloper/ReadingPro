@@ -8,6 +8,7 @@ import { QuestionResults } from "./question-results";
 import { useQuery } from "@tanstack/react-query";
 import { artifactQueries } from "@/features/studio/api/queries";
 import { useRecordProgressMutation } from "@/features/studio/api/mutations";
+import type { StudioArtifact } from "@/features/studio/schema/artifact";
 
 interface QuestionDetailViewProps {
   artifactId: string;
@@ -80,11 +81,12 @@ export function QuestionDetailView({ artifactId, passageId, onClose }: QuestionD
 
   if (isComplete) {
     const correctCount = answers.filter((a) => a.isCorrect).length;
+    const questionData = data as Extract<StudioArtifact, { type: "QUESTION" }>;
     return (
       <StudioDetailView title="Câu hỏi" onClose={onClose}>
         <QuestionResults
           correctCount={correctCount}
-          totalQuestions={data.content.questions.length}
+          totalQuestions={questionData.content.questions.length}
           passageTitle=""
           onReset={handleReset}
           onNewPassage={onClose}
@@ -93,10 +95,11 @@ export function QuestionDetailView({ artifactId, passageId, onClose }: QuestionD
     );
   }
 
+  const questionData = data as Extract<StudioArtifact, { type: "QUESTION" }>;
   return (
     <StudioDetailView title="Câu hỏi" onClose={onClose}>
       <QuestionContent
-        questions={data.content.questions}
+        questions={questionData.content.questions}
         passageTitle=""
         onComplete={handleComplete}
       />

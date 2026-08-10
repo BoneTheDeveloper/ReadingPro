@@ -24,4 +24,5 @@ export const STUDIO_TILES: StudioTile[] = [
 export type StudioPanelView =
   | { contentType: "chat" }
   | { contentType: "question"; artifactId: string }
+  | { contentType: "flashcard"; artifactId: string }
   | null;

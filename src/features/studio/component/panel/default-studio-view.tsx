@@ -28,10 +28,12 @@ function mapProcessingStatus(status: ProcessingStatus): "ready" | "pending" {
 function artifactSubtitle(
   artifact: StudioArtifactListItem,
 ): string | null {
-  if (artifact.type !== StudioArtifactType.QUESTION) return null;
-  if (!artifact.progress) return null;
-  const total = artifact.progress.answers.filter((a) => a !== null).length;
-  return `${artifact.progress.correctCount}/${total}`;
+  if (artifact.type === StudioArtifactType.QUESTION) {
+    if (!artifact.progress) return null;
+    const total = artifact.progress.answers.filter((a) => a !== null).length;
+    return `${artifact.progress.correctCount}/${total}`;
+  }
+  return null;
 }
 
 export function DefaultStudioView({

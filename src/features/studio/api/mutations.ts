@@ -8,10 +8,10 @@ import {
   studioArtifactListItemSchema,
   type StudioArtifactListItem,
 } from "@/features/studio/schema/artifact";
-import type { QuestionProgress } from "@/features/studio/schema/question";
+import type { QuestionProgress, FlashcardProgress } from "@/features/studio/schema/artifact";
 import { StudioArtifactType } from "@/generated/prisma/enums";
 
-const generateQuestionResponseSchema = z.object({
+const generateArtifactResponseSchema = z.object({
   artifact: studioArtifactListItemSchema,
 });
 
@@ -21,7 +21,7 @@ export function useGenerateQuestionMutation() {
   return useMutation({
     mutationKey: ["artifact", "generate", StudioArtifactType.QUESTION],
     mutationFn: (passageId: string) =>
-      fetchJson("/api/artifact/question", generateQuestionResponseSchema, {
+      fetchJson("/api/artifact/question", generateArtifactResponseSchema, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ passageId }),
@@ -71,6 +71,69 @@ export function useRecordProgressMutation() {
         (old: StudioArtifactListItem[] | undefined) =>
           old?.map((a) =>
             a.id === artifactId && a.type === StudioArtifactType.QUESTION
+              ? { ...a, progress }
+              : a,
+          ),
+      );
+    },
+  });
+}
+
+// ─── Generate Flashcard Mutation ────────────────────────────────────
+
+export function useGenerateFlashcardMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: ["artifact", "generate", StudioArtifactType.FLASHCARD],
+    mutationFn: (passageId: string) =>
+      fetchJson("/api/artifact/flashcard", generateArtifactResponseSchema, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ passageId }),
+      }),
+
+    onSuccess: ({ artifact }, passageId) => {
+      queryClient.setQueryData(
+        artifactQueries.list(passageId).queryKey,
+        (prev: StudioArtifactListItem[] | undefined) =>
+          prev ? [artifact, ...prev] : [artifact],
+      );
+    },
+  });
+}
+
+// ─── Update Flashcard Progress Mutation ─────────────────────────────
+
+export function useUpdateFlashcardProgressMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      artifactId,
+      passageId: _passageId,
+      progress,
+    }: {
+      artifactId: string;
+      passageId: string;
+      progress: FlashcardProgress;
+    }) =>
+      fetchJson(
+        `/api/artifact/${artifactId}/progress`,
+        z.object({ success: z.boolean() }),
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ progress }),
+        },
+      ),
+
+    onSuccess: (_data, { artifactId, passageId, progress }) => {
+      queryClient.setQueryData(
+        artifactQueries.list(passageId).queryKey,
+        (old: StudioArtifactListItem[] | undefined) =>
+          old?.map((a) =>
+            a.id === artifactId && a.type === StudioArtifactType.FLASHCARD
               ? { ...a, progress }
               : a,
           ),
