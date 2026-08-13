@@ -47,7 +47,3 @@ export async function preprocessPassage(
     isFromYouTube: input.sourceType === "YOUTUBE",
   };
 }
-
-export function prepareForAIProcessing(normalizedText: string): string {
-  return normalizedText;
-}

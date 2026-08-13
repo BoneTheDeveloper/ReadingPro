@@ -51,18 +51,21 @@ export type CreatePassageInput = z.infer<typeof CreatePassageInputSchema>;
 
 // ── External API Response Schemas ─────────────────────────────────────────────
 
-export const passageProccesingOutputchema = z.object({
-  text: z.string().describe("Cleaned passage text with fixed punctuation, capitalization, and paragraphs."),
-  cefrLevel: z.nativeEnum(CEFRLevel).describe(
-    "CEFR level of the passage (A1 beginner → C2 proficient).",
-  ),
+/**
+ * Metadata only. The cleaned passage comes back from a separate plain-text
+ * call: wrapping a whole passage in a JSON string field pays escaping and
+ * schema-constrained decoding on the largest payload in the app, and ties the
+ * cheap title/level result to the slow one.
+ */
+export const passageMetadataSchema = z.object({
   title: z
     .string()
     .min(1)
     .max(50)
     .describe("Concise descriptive title capturing the main topic."),
+  cefrLevel: z
+    .enum(CEFRLevel)
+    .describe("CEFR level of the passage (A1 beginner → C2 proficient)."),
 });
 
-export type PassageProccesingOuput = z.infer<
-  typeof passageProccesingOutputchema
->;
+export type PassageMetadata = z.infer<typeof passageMetadataSchema>;

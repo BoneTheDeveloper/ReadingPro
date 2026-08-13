@@ -40,14 +40,12 @@ export async function deletePassageForUser(userId: string, id: string) {
 export async function createPassageForUser(args: {
   userId: string;
   sourceType: SourceType;
-  cefrLevel?: CEFRLevel;
   youtubeUrl?: string | null;
 }): Promise<Passage> {
 
   return prisma.passage.create({
     data: {
       userId: args.userId,
-      cefrLevel: args.cefrLevel,
       sourceType: args.sourceType,
       filePath: null,
       youtubeUrl: args.sourceType === "YOUTUBE" ? args.youtubeUrl ?? null : null,
