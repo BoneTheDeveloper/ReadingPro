@@ -1,12 +1,21 @@
 import "server-only";
-import { betterAuth, type BetterAuthOptions } from "better-auth";
+import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
+import { oAuthProxy } from "better-auth/plugins";
 import prisma from "@/lib/prisma";
 
+const productionUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
+  ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+  : "http://localhost:3000";
+
 export const auth = betterAuth({
-  database: prismaAdapter(prisma, {
-    provider: "postgresql",
-  }),
+  database: prismaAdapter(prisma, { provider: "postgresql" }),
+
+  baseURL: {
+    allowedHosts: ["*.vercel.app", "localhost:3000"],
+    fallback: productionUrl,
+  },
+
   socialProviders: {
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID ?? "",
@@ -14,30 +23,35 @@ export const auth = betterAuth({
       prompt: "select_account",
     },
   },
+
+  plugins: [
+    oAuthProxy({
+      productionURL: productionUrl,
+      secret: process.env.OAUTH_PROXY_SECRET,
+    }),
+  ],
+
+  trustedOrigins: [
+    "http://localhost:3000",
+    "https://*.vercel.app",
+  ],
+
   account: {
-    accountLinking: {
-      enabled: true,
-      trustedProviders: ["google"],
-    },
+    accountLinking: { enabled: true, trustedProviders: ["google"] },
   },
+
   user: {
     additionalFields: {
-      tier: {
-        type: "string",
-        required: false,
-        defaultValue: "FREE",
-      },
+      tier: { type: "string", required: false, defaultValue: "FREE" },
     },
   },
+
   session: {
     expiresIn: 60 * 60 * 24 * 7,
     updateAge: 60 * 60 * 24,
-    cookieCache: {
-      enabled: true,
-      maxAge: 5 * 60,
-      strategy: "compact",
-    },
+    cookieCache: { enabled: true, maxAge: 5 * 60, strategy: "compact" },
   },
+
   databaseHooks: {
     user: {
       create: {
@@ -51,4 +65,4 @@ export const auth = betterAuth({
       },
     },
   },
-} satisfies BetterAuthOptions);
+});
