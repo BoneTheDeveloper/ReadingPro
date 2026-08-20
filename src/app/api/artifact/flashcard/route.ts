@@ -11,7 +11,6 @@ import { AppError } from "@/lib/error/app-error";
 import { log } from "@/lib/logger";
 import * as Sentry from "@sentry/nextjs";
 
-export const maxDuration = 60;
 
 export const POST = withErrorHandling("create-flashcard", async (request) => {
   const auth = await requireApiSession();

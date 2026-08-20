@@ -13,8 +13,6 @@ export const GET = withErrorHandling("passages", async () => {
 });
 
 
-export const maxDuration = 300;
-
 export const POST = withErrorHandling("create-passage", async (req) => {
   const auth = await requireApiSession();
   if (!auth.ok) return auth.response;

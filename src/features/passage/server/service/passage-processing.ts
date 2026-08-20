@@ -73,36 +73,26 @@ function titleFromContent(content: string): string {
   return (lastSpace > 20 ? opening.slice(0, lastSpace) : opening).trim();
 }
 
-export interface PassageProcessingResult {
-  metadataError: unknown;
-  contentError: unknown;
-}
-
 export async function runPassageProcessing(args: {
   userId: string;
   passageId: string;
   normalizedText: string;
   userTitle: string;
-}): Promise<PassageProcessingResult> {
+}): Promise<void> {
   const [metadata, content] = await Promise.allSettled([
     generateMetadata(takeWords(args.normalizedText, METADATA_SAMPLE_WORDS)),
     cleanContent(args.normalizedText),
   ]);
 
-  const finalContent =
-    content.status === "fulfilled" ? content.value : args.normalizedText;
+  if (content.status === "rejected") throw content.reason;
+
   const meta = metadata.status === "fulfilled" ? metadata.value : null;
 
   await completePassageProcessing({
     userId: args.userId,
     passageId: args.passageId,
-    content: finalContent,
-    title: meta?.title || args.userTitle || titleFromContent(finalContent),
+    content: content.value,
+    title: meta?.title || args.userTitle || titleFromContent(content.value),
     cefrLevel: meta?.cefrLevel ?? null,
   });
-
-  return {
-    metadataError: metadata.status === "rejected" ? metadata.reason : null,
-    contentError: content.status === "rejected" ? content.reason : null,
-  };
 }

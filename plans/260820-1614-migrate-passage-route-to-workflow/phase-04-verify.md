@@ -1,7 +1,7 @@
 ---
 phase: 4
 title: "Verify + Test"
-status: pending
+status: complete
 priority: P2
 effort: "1h"
 dependencies: [3]
