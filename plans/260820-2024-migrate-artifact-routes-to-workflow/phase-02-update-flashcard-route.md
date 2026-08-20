@@ -1,10 +1,11 @@
 ---
 phase: 2
 title: "Update Flashcard Route"
-status: pending
+status: completed
 priority: P1
 effort: "0.5h"
 dependencies: [1]
+completed: 2026-08-20T21:02:00+07:00
 ---
 
 # Phase 2: Update Flashcard Route

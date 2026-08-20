@@ -1,16 +1,13 @@
 import "server-only";
-import { after } from "next/server";
 import { withErrorHandling } from "@/lib/error/with-error-handling";
 import { requireApiSession } from "@/lib/auth/session";
 import { StudioArtifactType } from "@/generated/prisma/enums";
 import z from "zod";
 import { findPassageForUser } from "@/features/passage/server/service/passage-crud";
-import { createArtifact, updateArtifactStatus } from "@/features/studio/server/service/artifact-crud";
-import { generateAndStoreArtifact } from "@/features/studio/server/service/artifact-generator";
+import { createArtifact } from "@/features/studio/server/service/artifact-crud";
 import { AppError } from "@/lib/error/app-error";
-import { log } from "@/lib/logger";
-import * as Sentry from "@sentry/nextjs";
-
+import { start } from "workflow/api";
+import { artifactGenerationWorkflow } from "@/workflows/artifact-generation/index";
 
 export const POST = withErrorHandling("create-question", async (request) => {
   const auth = await requireApiSession();
@@ -32,20 +29,12 @@ export const POST = withErrorHandling("create-question", async (request) => {
     status: "PENDING",
   });
 
-  after(async () => {
-    try {
-      await generateAndStoreArtifact({
-        artifactId: artifact.id,
-        userId: user.id,
-        passageId,
-        type: StudioArtifactType.QUESTION,
-      });
-    } catch (err) {
-      log.error({ err, passageId: passage.id, userId: user.id }, "question genarated failed");
-      Sentry.captureException(err, { tags: { passageId: passage.id } });
-      await updateArtifactStatus({ id: artifact.id, userId: user.id, status: "FAILED" });
-    }
-  })
+  await start(artifactGenerationWorkflow, [{
+    artifactId: artifact.id,
+    userId: user.id,
+    passageId,
+    type: StudioArtifactType.QUESTION,
+  }]);
 
   return Response.json({ artifact }, { status: 201 });
 });

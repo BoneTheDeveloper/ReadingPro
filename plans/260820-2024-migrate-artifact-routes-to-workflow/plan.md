@@ -1,11 +1,12 @@
 ---
 title: "migrate-artifact-routes-to-workflow"
 description: "Replace after() in POST /api/artifact/flashcard and /api/artifact/question with Vercel Workflow for durable, retryable artifact generation"
-status: draft
+status: completed
 priority: P1
 effort: "3h"
 tags: [workflow, vercel, ai, artifact, flashcard, question]
 created: 2026-08-20
+completed: 2026-08-20T21:04:00+07:00
 ---
 
 # migrate-artifact-routes-to-workflow
