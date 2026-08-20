@@ -61,11 +61,10 @@ export const passageMetadataSchema = z.object({
   title: z
     .string()
     .min(1)
-    .max(50)
     .describe("Concise descriptive title capturing the main topic."),
   cefrLevel: z
     .enum(CEFRLevel)
-    .describe("CEFR level of the passage (A1 beginner → C2 proficient)."),
+    .describe("CEFR level of the passage. Exactly one of: A1, A2, B1, B2, C1, C2."),
 });
 
 export type PassageMetadata = z.infer<typeof passageMetadataSchema>;
