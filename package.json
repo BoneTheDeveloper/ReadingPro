@@ -13,7 +13,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint",
     "postinstall": "prisma generate --generator client",
-    "db:generate": "prisma generate --generator client"
+    "db:generate": "prisma generate --generator client",
+    "workflow:inspect": "npx workflow inspect runs --web"
   },
   "dependencies": {
     "@ai-sdk/react": "^4.0.40",

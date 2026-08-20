@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "Update Route to Use Workflow"
-status: pending
+status: complete
 priority: P1
 effort: "1h"
 dependencies: [1, 2]

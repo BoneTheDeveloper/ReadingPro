@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Create Workflow Definition"
-status: pending
+status: complete
 priority: P1
 effort: "1h"
 dependencies: [1]

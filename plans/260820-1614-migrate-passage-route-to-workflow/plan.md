@@ -1,7 +1,7 @@
 ---
 title: "migrate-passage-route-to-workflow"
 description: "Replace after() in POST /api/passage with Vercel Workflow for durable, retryable passage processing"
-status: pending
+status: complete
 priority: P1
 effort: "4h"
 tags: [workflow, vercel, ai, passage]
