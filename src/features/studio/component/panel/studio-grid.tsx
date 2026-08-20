@@ -8,26 +8,33 @@ import { StudioArtifactType } from "@/generated/prisma/enums";
 interface StudioGridProps {
   hasActivePassage: boolean;
   pendingTypes: StudioArtifactType[];
+  questionPending: boolean;
+  flashcardPending: boolean;
   onSelect: (id: StudioGridId) => void;
 }
 
 export function StudioGrid({
   hasActivePassage,
   pendingTypes,
+  questionPending,
+  flashcardPending,
   onSelect,
 }: StudioGridProps) {
   return (
     <div className="px-3 pt-3 grid grid-cols-2 gap-2">
       {STUDIO_TILES.map((tile) => {
+        const isPendingMutation =
+          tile.kind === "generate" &&
+          ((tile.gridId === StudioArtifactType.QUESTION && questionPending) ||
+            (tile.gridId === StudioArtifactType.FLASHCARD && flashcardPending));
         const isGenerating = tile.kind === "generate" && pendingTypes.includes(tile.gridId);
-        const isOverCap = tile.kind === "generate" && pendingTypes.length >= 3;
-        const disabled = !hasActivePassage || isOverCap || isGenerating;
+        const disabled = !hasActivePassage || isPendingMutation || isGenerating;
 
         return (
           <button
             key={tile.gridId}
             type="button"
-            onClick={() => !disabled && onSelect(tile.gridId)}
+            onClick={() => onSelect(tile.gridId)}
             disabled={disabled}
             className={cn(
               "relative overflow-hidden flex flex-col items-center gap-1.5 px-2 py-3.5 rounded-[14px] border bg-surface transition-all",

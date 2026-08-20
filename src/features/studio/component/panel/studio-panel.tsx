@@ -106,6 +106,8 @@ export function StudioPanel({
       artifacts={artifacts}
       hasActivePassage={!!passageId}
       pendingTypes={pendingTypes}
+      questionPending={generateQuestion.isPending}
+      flashcardPending={generateFlashcard.isPending}
       onToggleCollapse={onToggleCollapse}
       onSelectChat={() => openView("CHAT")}
       onSelectAction={handleGenerate}

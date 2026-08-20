@@ -13,6 +13,8 @@ interface DefaultStudioViewProps {
   artifacts: StudioArtifactListItem[];
   hasActivePassage: boolean;
   pendingTypes: StudioArtifactType[];
+  questionPending: boolean;
+  flashcardPending: boolean;
   onToggleCollapse: () => void;
   onSelectChat: () => void;
   onSelectAction: (actionId: StudioGridId) => void;
@@ -48,6 +50,8 @@ export function DefaultStudioView({
   artifacts,
   hasActivePassage,
   pendingTypes,
+  questionPending,
+  flashcardPending,
   onToggleCollapse,
   onSelectChat,
   onSelectAction,
@@ -78,6 +82,8 @@ export function DefaultStudioView({
         <StudioGrid
           hasActivePassage={hasActivePassage}
           pendingTypes={pendingTypes}
+          questionPending={questionPending}
+          flashcardPending={flashcardPending}
           onSelect={handleSelect}
         />
         <div className="flex items-center gap-2.5 pt-3 px-4 pb-2">

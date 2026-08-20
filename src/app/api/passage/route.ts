@@ -4,6 +4,9 @@ import { createPassageForUser, listPassagesForUser } from "@/features/passage/se
 import { CreatePassageInputSchema } from "@/features/passage/schema";
 import { start } from "workflow/api";
 import { passageProcessingWorkflow } from "@/workflows/passage-processing/index";
+import { fetchTranscript, extractVideoId } from "@/features/passage/util/youtube-helper";
+import { YOUTUBE_ERRORS } from "@/features/passage/util/upload-config";
+
 export const GET = withErrorHandling("passages", async () => {
   const auth = await requireApiSession();
   if (!auth.ok) return auth.response;
@@ -21,20 +24,38 @@ export const POST = withErrorHandling("create-passage", async (req) => {
   // 1. Validate input
   const input = CreatePassageInputSchema.parse(await req.json());
 
-  // 2. Create passage with PENDING status
+  // 2. Early YouTube validation - fail fast if no transcript
+  if (input.sourceType === "YOUTUBE") {
+    const videoId = extractVideoId(input.youtubeUrl);
+    if (!videoId) {
+      return Response.json(
+        { error: { code: "VALIDATION", message: YOUTUBE_ERRORS.URL_INVALID } },
+        { status: 400 }
+      );
+    }
+    const transcript = await fetchTranscript(videoId);
+    if (!transcript) {
+      return Response.json(
+        { error: { code: "VALIDATION", message: YOUTUBE_ERRORS.NO_TRANSCRIPT } },
+        { status: 400 }
+      );
+    }
+  }
+
+  // 3. Create passage with PENDING status
   const passage = await createPassageForUser({
     userId: user.id,
     sourceType: input.sourceType,
     youtubeUrl: input.sourceType === "YOUTUBE" ? input.youtubeUrl : null,
   });
 
-  // 3. Trigger durable workflow
+  // 4. Trigger durable workflow
   await start(passageProcessingWorkflow, [{
     passageId: passage.id,
     input,
     userId: user.id,
   }]);
 
-  // 4. Return 202 Accepted immediately
+  // 5. Return 202 Accepted immediately
   return Response.json(passage, { status: 202 });
 });
