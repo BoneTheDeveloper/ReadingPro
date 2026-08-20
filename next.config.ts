@@ -1,3 +1,4 @@
+import { withWorkflow } from "workflow/next";
 import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 
@@ -82,8 +83,8 @@ const nextConfig: NextConfig = {
   },
 };
 
-// --- Sentry Wrapper ---
-export default withSentryConfig(nextConfig, {
+// --- Sentry + Workflow Wrapper ---
+export default withSentryConfig(withWorkflow(nextConfig), {
   org: process.env.SENTRY_ORG || "pham-dac-luc",
   project: process.env.SENTRY_PROJECT || "javascript-nextjs",
   authToken: process.env.SENTRY_AUTH_TOKEN,

@@ -12,6 +12,7 @@ allowBuilds:
   "@swc/core": true
   esbuild: true
   protobufjs: true
+  cbor-extract: set this to true or false
 minimumReleaseAgeExclude:
   - '@ai-sdk/react@4.0.17'
   - ai@7.0.16
