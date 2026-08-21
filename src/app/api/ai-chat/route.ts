@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { type UIMessage } from "ai";
 import { withErrorHandling } from "@/lib/error/with-error-handling";
 import { requireApiSession } from "@/lib/auth/session";
 import {
@@ -40,14 +41,14 @@ export const POST = withErrorHandling("ai-chat", async (req) => {
   // abort before the streamed response finishes.
   const latestUserMessage = [...messages].reverse().find((m) => m.role === "user");
   if (latestUserMessage) {
-    await persistUserMessage(userId, passageId, latestUserMessage);
+    await persistUserMessage(userId, passageId, latestUserMessage as UIMessage);
   }
 
   const result = await streamStudyChat({
     userId,
     passageId,
     passage: { id: passage.id, content: passage.content, title: passage.title },
-    messages,
+    messages: messages as UIMessage[],
     language,
   });
 
