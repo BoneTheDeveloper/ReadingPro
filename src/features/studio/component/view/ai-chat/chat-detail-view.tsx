@@ -1,19 +1,15 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport } from "ai";
-import { useResetChatMutation } from "@/features/studio/api/mutations";
 import { AlertCircle, Loader2, RotateCw, Trash2 } from "lucide-react";
 import { StudioDetailView } from "../studio-detail-view";
 import { ChatMessageList } from "./chat-message-list";
 import { ChatComposer } from "./chat-composer";
 import { useQuery } from "@tanstack/react-query";
 import { chatQueries } from "@/features/studio/api/queries";
-import type {
-  ChatHistoryMessage,
-  StudyChatLanguage,
-} from "@/features/studio/schema/ai-chat";
+import { useResetChatMutation } from "@/features/studio/api/mutations";
+import { useChatContext } from "./chat-context";
 
 interface ChatDetailViewProps {
   passageId: string;
@@ -43,38 +39,26 @@ export function ChatDetailView({ passageId, onClose }: ChatDetailViewProps) {
     );
   }
 
+  // Note: ChatConversation receives the seeded Chat instance from context.
+  // Messages are pre-loaded into the Chat instance during ChatProvider creation.
   return (
     <ChatConversation
       passageId={passageId}
       onClose={onClose}
-      initialMessages={historyQuery.data ?? []}
     />
   );
 }
 
-interface ChatConversationProps extends ChatDetailViewProps {
-  initialMessages: ChatHistoryMessage[];
-}
-
-function ChatConversation({
-  passageId,
-  onClose,
-  initialMessages,
-}: ChatConversationProps) {
+function ChatConversation({ passageId, onClose }: ChatDetailViewProps) {
   const [input, setInput] = useState("");
-  const [language, setLanguage] = useState<StudyChatLanguage>("vi");
+  const { chat, language, setLanguage, clearChatMessages } = useChatContext();
   const resetChat = useResetChatMutation();
 
-  const transport = useMemo(
-    () =>
-      new DefaultChatTransport({
-        api: "/api/ai-chat",
-      }),
-    [],
-  );
+  // Use the Chat instance from context - this reuses the same instance
+  // across panel close/open for the same passage.
+  // Messages are seeded in the Chat instance during ChatProvider creation.
+  const { messages, sendMessage, status, error, stop, regenerate } = useChat({ chat });
 
-  const { messages, sendMessage, setMessages, status, error, stop, regenerate } =
-    useChat({ transport, messages: initialMessages });
   const isStreaming = status === "submitted" || status === "streaming";
 
   const handleSubmit = () => {
@@ -89,10 +73,10 @@ function ChatConversation({
   const handleReset = () => {
     if (isStreaming) return;
 
-    // The mutation evicts the cached history; clearing useChat's internal
-    // state here is what makes the open conversation re-render empty.
+    // The mutation evicts the cached history; clearing chat's messages
+    // makes the open conversation re-render empty.
     resetChat.mutate(passageId, {
-      onSuccess: () => setMessages([]),
+      onSuccess: () => clearChatMessages(),
     });
   };
 

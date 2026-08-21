@@ -6,6 +6,7 @@ import type { StudioPanelView, StudioGridId } from "./studio-icon-list";
 import { CollapsedSidebar } from "./collapsed-sidebar";
 import { DefaultStudioView } from "./default-studio-view";
 import { ChatDetailView } from "../view/ai-chat/chat-detail-view";
+import { ChatProvider } from "../view/ai-chat/chat-context";
 import { QuestionDetailView } from "../view/questions/question-detail-view";
 import { FlashcardDetailView } from "../view/flashcards";
 import { useQuery } from "@tanstack/react-query";
@@ -72,51 +73,67 @@ export function StudioPanel({
     return <CollapsedSidebar onToggleCollapse={onToggleCollapse} />;
   }
 
-  if (view?.contentType === "chat" && passageId) {
-    return <ChatDetailView key={passageId} passageId={passageId} onClose={closeView} />;
-  }
-
-  if (view?.contentType === "question") {
+  // ChatProvider wraps both default view and chat panel so the Chat instance
+  // persists across panel close/open. key={passageId} forces remount when passage changes.
+  if (passageId) {
     return (
-      <QuestionDetailView
-        artifactId={view.artifactId}
-        passageId={passageId ?? ""}
-        onClose={closeView}
-      />
+      <ChatProvider key={passageId} passageId={passageId}>
+        {view?.contentType === "chat" && (
+          <ChatDetailView passageId={passageId} onClose={closeView} />
+        )}
+
+        {view?.contentType === "question" && (
+          <QuestionDetailView
+            artifactId={view.artifactId}
+            passageId={passageId}
+            onClose={closeView}
+          />
+        )}
+
+        {view?.contentType === "flashcard" && (
+          <FlashcardDetailView
+            artifactId={view.artifactId}
+            passageId={passageId}
+            onClose={closeView}
+          />
+        )}
+
+        {!view && (
+          <DefaultStudioView
+            artifacts={artifactsQuery.data ?? []}
+            hasActivePassage={true}
+            pendingTypes={
+              artifactsQuery.data
+                ?.filter((a) => a.status === "PENDING")
+                .map((a) => a.type) ?? []
+            }
+            questionPending={generateQuestion.isPending}
+            flashcardPending={generateFlashcard.isPending}
+            onToggleCollapse={onToggleCollapse}
+            onSelectChat={() => openView("CHAT")}
+            onSelectAction={handleGenerate}
+            onOpenArtifact={(type, id) => openView(type, id)}
+            onDeleteArtifact={(artifactId) =>
+              deleteArtifact.mutate({ artifactId, passageId })
+            }
+          />
+        )}
+      </ChatProvider>
     );
   }
-
-  if (view?.contentType === "flashcard") {
-    return (
-      <FlashcardDetailView
-        artifactId={view.artifactId}
-        passageId={passageId ?? ""}
-        onClose={closeView}
-      />
-    );
-  }
-
-  const artifacts = artifactsQuery.data ?? [];
-  const pendingTypes = artifacts
-    .filter((a) => a.status === "PENDING")
-    .map((a) => a.type);
 
   return (
     <DefaultStudioView
-      artifacts={artifacts}
-      hasActivePassage={!!passageId}
-      pendingTypes={pendingTypes}
+      artifacts={artifactsQuery.data ?? []}
+      hasActivePassage={false}
+      pendingTypes={[]}
       questionPending={generateQuestion.isPending}
       flashcardPending={generateFlashcard.isPending}
       onToggleCollapse={onToggleCollapse}
-      onSelectChat={() => openView("CHAT")}
-      onSelectAction={handleGenerate}
-      onOpenArtifact={(type, id) => openView(type, id)}
-      onDeleteArtifact={
-        passageId
-          ? (artifactId) => deleteArtifact.mutate({ artifactId, passageId })
-          : undefined
-      }
+      onSelectChat={() => {}}
+      onSelectAction={() => {}}
+      onOpenArtifact={() => {}}
+      onDeleteArtifact={undefined}
     />
   );
 }

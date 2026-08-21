@@ -16,7 +16,9 @@ import {
 import { User, LogOut, Settings } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { authClient } from "@/lib/auth/auth-client";
+import { clearAllChats } from "@/features/studio/component/view/ai-chat/chat-context";
 
 export interface AuthUser {
   name?: string | null;
@@ -35,8 +37,14 @@ export function AuthControls({
 }: AuthControlsProps) {
   const isRail = variant === "rail";
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const handleSignOut = async () => {
+    // Clear all Chat instances from the registry to prevent memory leaks
+    clearAllChats();
+    // Clear the query cache to remove all cached data
+    queryClient.clear();
+
     await authClient.signOut({
       fetchOptions: {
         onSuccess: () => {

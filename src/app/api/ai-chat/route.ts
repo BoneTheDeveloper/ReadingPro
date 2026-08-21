@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { type UIMessage } from "ai";
+import { type UIMessage, generateId } from "ai";
 import { withErrorHandling } from "@/lib/error/with-error-handling";
 import { requireApiSession } from "@/lib/auth/session";
 import {
@@ -53,8 +53,11 @@ export const POST = withErrorHandling("ai-chat", async (req) => {
   });
 
   // AI SDK documented persistence path: save the assistant turn when the
-  // stream finishes.
+  // stream finishes. Pass originalMessages and generateMessageId for
+  // consistent ID generation across client/server.
   return result.toUIMessageStreamResponse({
+    originalMessages: messages as UIMessage[],
+    generateMessageId: generateId,
     onFinish: ({ responseMessage }) => {
       if (!responseMessage) return;
       void persistAssistantMessage(userId, passageId, responseMessage);

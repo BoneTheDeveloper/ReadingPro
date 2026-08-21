@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: "Create ChatProvider with Context"
-status: pending
+status: completed
 priority: P1
 effort: 1.5h
 dependencies: []

@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Fix Route Handler with originalMessages"
-status: pending
+status: completed
 priority: P1
 effort: 1h
 dependencies: []

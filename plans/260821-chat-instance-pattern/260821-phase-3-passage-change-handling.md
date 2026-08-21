@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "Handle Passage Deletion & Logout Cleanup"
-status: pending
+status: completed
 priority: P2
 effort: 1h
 dependencies: [1, 2]

@@ -1,7 +1,7 @@
 ---
 title: "Chat Instance Pattern - Shared Chat State"
 description: "Refactor useChat to use Chat instance via Context so chat state persists across panel close/open"
-status: pending
+status: completed
 priority: P2
 effort: 3h
 tags: [frontend, refactor]
