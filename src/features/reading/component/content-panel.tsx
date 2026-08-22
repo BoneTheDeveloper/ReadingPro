@@ -25,6 +25,8 @@ export function ContentPanel({
     "text",
   );
   const [wordAnchor, setWordAnchor] = useState<WordSelectionAnchor | null>(null);
+  // Display state for isSaved - reset when selection or translation changes
+  const [isSaved, setIsSaved] = useState(false);
   const translation = useTranslateMutation();
   const createVocabulary = useCreateVocabularyMutation();
 
@@ -61,11 +63,13 @@ export function ContentPanel({
     }
     setWordAnchor(next);
     translation.reset();
+    setIsSaved(false); // Reset saved state when selection changes
   };
 
   const handleTranslateClick = () => {
     if (!wordAnchor) return;
     translation.mutate({ word: wordAnchor.word, context: wordAnchor.context });
+    setIsSaved(false); // Reset saved state when re-translating
   };
 
   const handleSaveVocabulary = () => {
@@ -78,6 +82,8 @@ export function ContentPanel({
       targetLanguage: "vi",
       partofSpeech: result.partOfSpeech,
     });
+    // Mark as saved (display state only)
+    setIsSaved(true);
   };
   if (!passage) {
     if (isLoading) {
@@ -196,7 +202,7 @@ export function ContentPanel({
         error={translation.error}
         isPending={translation.isPending}
         isSaving={createVocabulary.isPending}
-        isSaved={createVocabulary.isSuccess}
+        isSaved={isSaved}
         onTranslate={handleTranslateClick}
         onClose={clearTranslation}
         onSave={handleSaveVocabulary}

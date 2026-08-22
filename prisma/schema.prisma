@@ -90,8 +90,6 @@ model UserProfile {
 model Passage {
   id                    String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId                String
-  // Written by the background job, not at create time. A PENDING/FAILED row is
-  // never served (passages/[id] 404s on non-COMPLETED), so "" is unobservable.
   title                 String                  @default("")
   content               String                  @default("")
   cefrLevel             CEFRLevel?
