@@ -52,3 +52,11 @@ export const VocabularyStatsSchema = z.object({
 });
 
 export type VocabularyStats = z.infer<typeof VocabularyStatsSchema>;
+
+export const VocabularySetSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().trim().min(1),
+  itemCount: z.number().int().nonnegative().default(0),
+});
+
+export type VocabularySet = z.infer<typeof VocabularySetSchema>;

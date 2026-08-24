@@ -4,17 +4,11 @@ import { useCallback, useState } from "react";
 import { Loader2, Plus } from "lucide-react";
 import { Button } from "@/component/ui/button";
 import { Input } from "@/component/ui/input";
+import type { VocabularySet } from "@/features/vocabulary/schema";
 
-interface VocabularySetDto {
-  id: string;
-  name: string;
-  _count: {
-    vocabularySetItems: number;
-  };
-}
 
 interface VocabularySetListProps {
-  sets: VocabularySetDto[];
+  sets: VocabularySet[];
   loading: boolean;
   onCreateSet: (name: string) => void;
   onDeleteSet: (id: string) => void;
@@ -109,11 +103,11 @@ function SetCard({
   set,
   colorIndex,
 }: {
-  set: VocabularySetDto;
+  set: VocabularySet;
   colorIndex: number;
 }) {
   const col = SET_COLORS[colorIndex % SET_COLORS.length];
-  const itemCount = set._count.vocabularySetItems;
+  const itemCount = set.itemCount;
   const knownCount = Math.min(itemCount, Math.floor(itemCount * 0.3));
   const progress =
     itemCount > 0 ? Math.round((knownCount / itemCount) * 100) : 0;

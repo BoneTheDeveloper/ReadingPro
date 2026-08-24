@@ -13,15 +13,8 @@ import {
   useUpdateVocabularyMutation,
 } from "@/features/vocabulary/api/mutations";
 import { VocabularyStatus } from "@/generated/prisma/enums";
-import type { VocabularyItem } from "@/features/vocabulary/schema";
+import type { VocabularyItem, VocabularySet } from "@/features/vocabulary/schema";
 
-interface VocabularySetDto {
-  id: string;
-  name: string;
-  _count: {
-    vocabularySetItems: number;
-  };
-}
 
 type ViewTab = "words" | "sets";
 
@@ -86,7 +79,7 @@ export function VocabularyPageClient() {
   );
   const [activeTab, setActiveTab] = useState<ViewTab>("words");
   const [creating, setCreating] = useState(false);
-  const [sets] = useState<VocabularySetDto[]>([]);
+  const [sets] = useState<VocabularySet[]>([]);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<VocabularyItem | null>(null);
