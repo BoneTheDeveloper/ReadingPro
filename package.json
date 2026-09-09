@@ -5,7 +5,7 @@
   "engines": {
     "node": "24.x"
   },
-  "packageManager": "pnpm@11.18.0",
+  "packageManager": "pnpm@12.3.4",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "prisma generate --generator client && next build",
