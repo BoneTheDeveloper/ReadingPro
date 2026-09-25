@@ -22,7 +22,7 @@ export function withErrorHandling(name: string, handler: Handler) {
     });
 
     try {
-      return await handler(req, { ...routeCtx, log });
+      return await handler(req, { ...routeCtx, log: logger });
     } catch (error) {
       unstable_rethrow(error);
 
@@ -36,7 +36,7 @@ export function withErrorHandling(name: string, handler: Handler) {
 
       if (isAppError(error)) {
         if (error.isExpected) {
-          log.info({ code: error.code, details: error.details }, error.message);
+          logger.info({ code: error.code, details: error.details }, error.message);
           return error.toResponse();
         }
         logger.error({ err: error, details: error.details }, error.message);

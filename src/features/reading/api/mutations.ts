@@ -7,6 +7,8 @@ import { TranslationOutputSchema } from "@/features/reading/schema";
 export function useTranslateMutation() {
   return useMutation({
     mutationKey: ["translate"] as const,
+    // The translation popup renders the error inline.
+    meta: { silent: true },
     mutationFn: (input: { word: string; context: string }) =>
       fetchJson("/api/translate", TranslationOutputSchema, {
         method: "POST",

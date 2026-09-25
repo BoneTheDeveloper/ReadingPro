@@ -9,6 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 import { artifactQueries } from "@/features/studio/api/queries";
 import { useUpdateFlashcardProgressMutation } from "@/features/studio/api/mutations";
 import type { StudioArtifact } from "@/features/studio/schema/artifact";
+import { getErrorMessage } from "@/lib/api/error-message";
 
 interface FlashcardDetailViewProps {
   artifactId: string;
@@ -128,7 +129,7 @@ export function FlashcardDetailView({
     return (
       <StudioDetailView title="Flashcard" onClose={onClose}>
         <div className="flex flex-col items-center justify-center h-full gap-2 text-destructive">
-          <span className="text-sm">{error?.message ?? "Không tải được"}</span>
+          <span className="text-sm">{getErrorMessage(error)}</span>
         </div>
       </StudioDetailView>
     );

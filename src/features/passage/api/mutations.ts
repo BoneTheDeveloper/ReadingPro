@@ -18,6 +18,8 @@ export function useCreatePassageMutation() {
 
   return useMutation({
     mutationKey: ["createPassage"],
+    // The upload modal reports failures itself.
+    meta: { silent: true },
     mutationFn: (input: CreatePassageInput) =>
       fetchJson("/api/passage", passageSchema, {
         method: "POST",

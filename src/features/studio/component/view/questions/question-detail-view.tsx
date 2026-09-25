@@ -9,6 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 import { artifactQueries } from "@/features/studio/api/queries";
 import { useRecordProgressMutation } from "@/features/studio/api/mutations";
 import type { StudioArtifact } from "@/features/studio/schema/artifact";
+import { getErrorMessage } from "@/lib/api/error-message";
 
 interface QuestionDetailViewProps {
   artifactId: string;
@@ -63,7 +64,7 @@ export function QuestionDetailView({ artifactId, passageId, onClose }: QuestionD
     return (
       <StudioDetailView title="Câu hỏi" onClose={onClose}>
         <div className="flex flex-col items-center justify-center h-full gap-2 text-destructive">
-          <span className="text-sm">{error?.message ?? "Không tải được nội dung"}</span>
+          <span className="text-sm">{getErrorMessage(error)}</span>
         </div>
       </StudioDetailView>
     );

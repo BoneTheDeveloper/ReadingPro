@@ -10,6 +10,7 @@ import { useQuery } from "@tanstack/react-query";
 import { chatQueries } from "@/features/studio/api/queries";
 import { useResetChatMutation } from "@/features/studio/api/mutations";
 import { useChatContext } from "./chat-context";
+import { getErrorMessage } from "@/lib/api/error-message";
 
 interface ChatDetailViewProps {
   passageId: string;
@@ -33,7 +34,7 @@ export function ChatDetailView({ passageId, onClose }: ChatDetailViewProps) {
     return (
       <StudioDetailView title="Trò chuyện" onClose={onClose}>
         <div className="flex h-full items-center justify-center text-sm text-destructive">
-          {historyQuery.error.message}
+          {getErrorMessage(historyQuery.error)}
         </div>
       </StudioDetailView>
     );
