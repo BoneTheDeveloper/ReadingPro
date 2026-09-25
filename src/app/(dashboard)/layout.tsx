@@ -1,4 +1,5 @@
 import { requirePageSession } from "@/lib/auth/session";
+import { StoreProvider } from "@/lib/store/store-provider";
 import { DashboardSidebar } from "@/component/layout/dashboard-sidebar";
 
 export default async function DashboardLayout({
@@ -6,7 +7,15 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await requirePageSession();
+  const { user } = await requirePageSession();
 
-  return <DashboardSidebar user={session.user}>{children}</DashboardSidebar>;
+  return (
+    // Only plain fields go into the store; the session's Date fields would
+    // trip Redux's serializability check.
+    <StoreProvider
+      user={{ name: user.name, email: user.email, image: user.image }}
+    >
+      <DashboardSidebar>{children}</DashboardSidebar>
+    </StoreProvider>
+  );
 }

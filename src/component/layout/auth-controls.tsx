@@ -19,25 +19,18 @@ import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { authClient } from "@/lib/auth/auth-client";
 import { clearAllChats } from "@/features/studio/component/view/ai-chat/chat-context";
-
-export interface AuthUser {
-  name?: string | null;
-  email: string;
-  image?: string | null;
-}
+import { useAppSelector } from "@/lib/store/hooks";
+import { selectSessionUser } from "@/lib/store/session-slice";
 
 interface AuthControlsProps {
   variant?: "default" | "rail";
-  user: AuthUser;
 }
 
-export function AuthControls({
-  variant = "default",
-  user,
-}: AuthControlsProps) {
+export function AuthControls({ variant = "default" }: AuthControlsProps) {
   const isRail = variant === "rail";
   const router = useRouter();
   const queryClient = useQueryClient();
+  const user = useAppSelector(selectSessionUser);
 
   const handleSignOut = async () => {
     // Clear all Chat instances from the registry to prevent memory leaks
@@ -53,6 +46,8 @@ export function AuthControls({
       },
     });
   };
+
+  if (!user) return null;
 
   return (
     <DropdownMenu>

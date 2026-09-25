@@ -17,7 +17,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/component/ui/tooltip";
-import { AuthControls, type AuthUser } from "./auth-controls";
+import { AuthControls } from "./auth-controls";
 
 
 const RAIL_WIDTH_PX = 62;
@@ -29,10 +29,9 @@ const navItems = [
 
 interface DashboardSidebarProps {
   children: React.ReactNode;
-  user: AuthUser;
 }
 
-export function DashboardSidebar({ children, user }: DashboardSidebarProps) {
+export function DashboardSidebar({ children }: DashboardSidebarProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -62,7 +61,7 @@ export function DashboardSidebar({ children, user }: DashboardSidebarProps) {
           style={{ width: RAIL_WIDTH_PX }}
           className="hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 bg-rail items-center py-5 z-40"
         >
-          <SidebarContent isActive={isActive} user={user} />
+          <SidebarContent isActive={isActive} />
         </aside>
 
       {mobileOpen && (
@@ -81,7 +80,6 @@ export function DashboardSidebar({ children, user }: DashboardSidebarProps) {
         <MobileSidebarContent
           isActive={isActive}
           onNavigate={closeMobile}
-          user={user}
         />
       </aside>
 
@@ -115,7 +113,7 @@ export function DashboardSidebar({ children, user }: DashboardSidebarProps) {
             ReadingPro
           </span>
           <div className="ml-auto flex items-center gap-2">
-            <AuthControls user={user} />
+            <AuthControls />
           </div>
         </header>
         <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
@@ -129,10 +127,8 @@ export function DashboardSidebar({ children, user }: DashboardSidebarProps) {
 
 function SidebarContent({
   isActive,
-  user,
 }: {
   isActive: (href: string) => boolean;
-  user: AuthUser;
 }) {
   return (
     <div className="flex flex-col h-full w-full items-center">
@@ -172,7 +168,7 @@ function SidebarContent({
       </nav>
 
       <div className="mt-4 pt-4 w-full px-2 border-t border-white/10 flex flex-col items-center gap-3">
-        <AuthControls user={user} />
+        <AuthControls />
       </div>
     </div>
   );
@@ -181,11 +177,9 @@ function SidebarContent({
 function MobileSidebarContent({
   isActive,
   onNavigate,
-  user,
 }: {
   isActive: (href: string) => boolean;
   onNavigate: () => void;
-  user: AuthUser;
 }) {
   return (
     <div className="flex flex-col h-full">
@@ -239,7 +233,7 @@ function MobileSidebarContent({
       </nav>
 
       <div className="px-3 py-3 border-t border-border flex items-center justify-between">
-        <AuthControls user={user} />
+        <AuthControls />
       </div>
     </div>
   );
