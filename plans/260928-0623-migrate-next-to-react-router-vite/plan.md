@@ -1,6 +1,6 @@
 ---
 title: "Migrate Next.js to React Router + Vite with Hono on Nitro"
-description: "Replace Next.js 16 with a React Router v7 SPA (ssr: false, prerendered landing) built by Vite and a Hono API on Nitro, portable from Vercel to a long-running Node host, and remove Sentry."
+description: "Replace Next.js 16 with a React Router v8 SPA (ssr: false, prerendered landing) built by Vite and a Hono API on Nitro, portable from Vercel to a long-running Node host, and remove Sentry."
 status: pending
 priority: P1
 effort: 6d
@@ -16,10 +16,17 @@ created: 2026-09-28
 ## Overview
 
 Next.js is slow in dev and its SSR adds complexity with no benefit. Only the
-landing page needs SEO. Replace it with a React Router v7 SPA
+landing page needs SEO. Replace it with a React Router v8 SPA
 (`ssr: false`, `prerender: ["/"]`) and move the 13 API routes onto a
 Hono app served by Nitro. Nitro presets keep the same code deployable to Vercel
 now and to a long-running Node host later (no serverless timeouts).
+
+Frontend and backend stay separate, each on its documented setup. Vite builds
+the React Router SPA into `build/client`. Nitro builds the Hono backend and
+serves `build/client` as public assets, with `__spa-fallback.html` as the
+catch-all. In dev, Vite proxies `/api` to `nitro dev` on port 3001. React
+Router and `nitro/vite` in one Vite config is only documented for SSR, and it
+failed to build in SPA mode in the Phase 1 spike, so it is not used.
 
 Sentry is removed entirely rather than ported: there is no capacity to
 maintain it. Errors stay visible through pino logs on the server and
@@ -44,7 +51,7 @@ https://claude.ai/artifact/TeG85eSeZuBbSPDME5Spkd
 
 | # | Phase | Status |
 |---|-------|--------|
-| 1 | [Spike and Baseline](./phase-01-spike-and-baseline.md) | Pending |
+| 1 | [Spike and Baseline](./phase-01-spike-and-baseline.md) | Completed |
 | 2 | [Backend on Hono and Nitro](./phase-02-backend-hono-nitro.md) | Pending |
 | 3 | [Frontend on React Router](./phase-03-frontend-react-router.md) | Pending |
 | 4 | [Tooling Cleanup](./phase-04-tooling-cleanup.md) | Pending |
@@ -65,6 +72,9 @@ through a dev rewrite, so the backend is proven before the frontend moves.
 
 ## Key Risks
 
-- React Router framework mode and the Nitro Vite plugin may not share one Vite dev server. Phase 1 proves it or switches to the documented two-process fallback.
+- React Router 8.4 hangs after prerendering when built with plain `vite build` (open file watchers). Scripts must use the `react-router build` CLI, which exits normally.
+- Hashed static assets get no `cache-control` from Nitro by default. Set `maxAge` on `publicAssets` or a `routeRules` header for `/assets/**`.
+- `nitro build` auto-detects `vite.config.ts` and switches to the Vite builder, which empties the React Router client output. `nitro.config.ts` pins `builder: "rolldown"`.
+- Nitro v3 is still beta (`3.0.260903-beta`). Pin the exact version.
 - `import "server-only"` throws outside the React Server Components bundler condition; all 16 imports must go before server code runs on Nitro.
 - `better-auth` host and origin allowlists assume port 3000 and Next; wrong values break OAuth callbacks.

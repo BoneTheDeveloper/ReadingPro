@@ -18,8 +18,10 @@ and env naming match the new stack.
 
 1. `package.json`:
    - Remove `next`, `eslint-config-next`, `server-only`, `@tailwindcss/postcss`.
-   - Scripts: `dev` → the Phase 1 dev command; `build` →
-     `prisma generate --generator client && <react-router + nitro build>`;
+   - Scripts: `dev` → run `react-router dev` and `nitro dev --port 3001`
+     together (one small dev dependency such as `concurrently`); `build` →
+     `prisma generate --generator client && react-router build && nitro build`
+     (the `react-router` CLI, not `vite build`, which hangs after prerender);
      `start` → `node .output/server/index.mjs`; keep `typecheck`, `lint`,
      `postinstall`, `db:generate`, `workflow:inspect`.
 2. Delete `next.config.ts`, `src/proxy.ts`, `next-env.d.ts` (if present), `.next/` from `.gitignore` → add `build/`, `.output/`, `.nitro/`, `.react-router/`.

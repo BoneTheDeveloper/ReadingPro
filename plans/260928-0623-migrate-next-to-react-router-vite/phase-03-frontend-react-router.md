@@ -11,7 +11,7 @@ dependencies: [2]
 
 ## Goal
 
-Replace the Next App Router with React Router v7 framework mode
+Replace the Next App Router with React Router v8 framework mode
 (`ssr: false`, `prerender: ["/"]`), keeping every screen and interaction the same.
 
 ## Key Insights
@@ -44,9 +44,11 @@ src/app/routes/
 
 ## Tasks & Steps
 
-1. Add deps: `react-router`, `@react-router/dev`, `vite`, `@vitejs/plugin-react` (if required by the Phase 1 layout), `@tailwindcss/vite`, `@fontsource-variable/plus-jakarta-sans`, `@fontsource/lora`, `@fontsource-variable/jetbrains-mono` (self-hosted fonts keep CSP `font-src 'self'` sufficient).
-2. Create `react-router.config.ts` and `vite.config.ts` per the Phase 1 layout;
-   move Tailwind from `postcss.config.mjs` to `@tailwindcss/vite`.
+1. Add deps: `react-router`, `@react-router/dev`, `vite`, `@tailwindcss/vite`, `@fontsource-variable/plus-jakarta-sans`, `@fontsource/lora`, `@fontsource-variable/jetbrains-mono` (self-hosted fonts keep CSP `font-src 'self'` sufficient).
+2. Create `react-router.config.ts` and `vite.config.ts` from the Phase 1 spike
+   report: `vite.config.ts` holds only `tailwindcss()` and `reactRouter()`, plus
+   `server.proxy["/api"]` → `http://localhost:3001` (Nitro dev). No Nitro plugin.
+   Move Tailwind from `postcss.config.mjs` to `@tailwindcss/vite`.
 3. `root.tsx`: port `src/app/layout.tsx`. Keep CSS variable names
    `--font-jakarta`, `--font-lora`, `--font-jetbrains-mono` in `globals.css`,
    pointing at the Fontsource families, so no component class changes.
@@ -101,6 +103,7 @@ src/app/routes/
 ## Risks
 
 - Brief blank frame on dashboard load while `clientLoader` fetches the session → add `HydrateFallback` with the existing loading skeleton.
+- AI chat stream buffered by the Vite dev proxy → check chunks arrive incrementally in the network tab.
 - `useSearchParams` semantics differ (setter vs `router.replace`) → keep the existing update helper and swap only its implementation.
 
 ## Rollback

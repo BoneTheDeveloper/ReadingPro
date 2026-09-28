@@ -49,7 +49,7 @@ src/server/
   routes/vocabulary.ts   /api/vocabulary, /:id, /stats
   routes/translate.ts    POST /api/translate
   routes/ai-chat.ts      GET/POST/DELETE /api/ai-chat
-nitro.config.ts or vite.config.ts   (per Phase 1 decision) routes "/api/**" → src/server/app.ts
+nitro.config.ts          builder "rolldown", modules ["workflow/nitro"], routes "/api/**" → src/server/app.ts, dev port 3001
 ```
 
 Handler adapter in `src/lib/error/with-error-handling.ts`:
@@ -82,14 +82,19 @@ Handler adapter in `src/lib/error/with-error-handling.ts`:
    `src/app/api/**/route.ts` unchanged. Replace `NextResponse` in `ai-chat` with
    `Response`. Keep `toUIMessageStreamResponse()` as the returned Response.
 7. Mount better-auth: `app.on(["GET","POST"], "/api/auth/*", (c) => auth.handler(c.req.raw))`.
-8. Update `src/lib/auth/auth.ts`: add the Nitro dev origin (port from Phase 1)
-   to `baseURL.allowedHosts` and `trustedOrigins`; keep `*.vercel.app` rules
-   and the `oAuthProxy` plugin unchanged.
+8. Update `src/lib/auth/auth.ts`: the browser origin stays `localhost:3000`
+   (Next now, Vite in Phase 3, both proxying `/api` to Nitro), so OAuth
+   callbacks keep that host. Add `localhost:3001` to `baseURL.allowedHosts` and
+   `trustedOrigins` only for direct calls to Nitro; keep `*.vercel.app` rules
+   and the `oAuthProxy` plugin unchanged. Confirm the proxy forwards the
+   original `Host` / `X-Forwarded-Host`.
 9. Port CSP and security headers from `next.config.ts` into one module
    (`src/server/security-headers.ts`) and apply them through Nitro
-   `routeRules` for `/**` so static assets and API share them.
-10. Workflows: register via the Phase 1 mechanism (`workflow/nitro` module or
-    `workflow()` Vite plugin). `start()` calls in routes stay unchanged.
+   `routeRules` for `/**` so static assets and API share them. Add
+   `cache-control: public, max-age=31536000, immutable` for `/assets/**`
+   (Nitro sets none by default; see the spike report).
+10. Workflows: register with the `workflow/nitro` module in `nitro.config.ts`,
+    as the Workflow SDK Hono guide documents. `start()` calls in routes stay unchanged.
 11. Temporary bridge: add a dev-only rewrite in `next.config.ts`
     (`/api/:path*` → Nitro dev URL) and remove `src/app/api/**` so the Next
     frontend exercises the new backend.
@@ -97,7 +102,7 @@ Handler adapter in `src/lib/error/with-error-handling.ts`:
 
 ## Files
 
-- Create: `src/server/app.ts`, `src/server/routes/{passage,artifact,vocabulary,translate,ai-chat}.ts`, `src/server/security-headers.ts`, `nitro.config.ts` (if layout B)
+- Create: `src/server/app.ts`, `src/server/routes/{passage,artifact,vocabulary,translate,ai-chat}.ts`, `src/server/security-headers.ts`, `nitro.config.ts`
 - Modify: `src/lib/auth/session.ts`, `src/lib/auth/auth.ts`, `src/lib/error/with-error-handling.ts`, `src/app/(dashboard)/error.tsx`, `src/app/global-error.tsx`, 16 files importing `server-only`, `next.config.ts` (Sentry removal, temporary rewrite), `package.json`, `pnpm-workspace.yaml`, `README.md`
 - Delete: `src/app/api/**` (13 `route.ts`), `src/sentry.server.config.ts`, `src/sentry.edge.config.ts`, `src/instrumentation.ts`, `src/instrumentation-client.ts`
 

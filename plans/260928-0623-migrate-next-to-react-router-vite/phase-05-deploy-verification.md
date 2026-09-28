@@ -29,12 +29,14 @@ move off Vercel needs config only.
 1. Ask the user before changing the Vercel project settings (framework preset,
    build command, output directory, Sentry env removal from Phase 4).
 2. `NITRO_PRESET=vercel pnpm build` locally; inspect `.vercel/output/config.json`
-   for routes, headers, and the functions region.
+   for routes, headers, and the functions region, and confirm
+   `.vercel/output/static/` holds `index.html` and `__spa-fallback.html`.
 3. Deploy a preview with `vercel deploy` (not `--prod`).
 4. Run the acceptance checks on the preview URL:
    - `curl -sI <preview>/` shows CSP, HSTS, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`;
    - `curl -s <preview>/ | grep "Tóm tắt văn bản"` finds prerendered copy;
    - `curl -sI <preview>/api/passage` → 401 with the same headers;
+   - a deep link such as `curl -s <preview>/study` returns the SPA fallback HTML (200), not a 404;
    - Google sign-in through `oAuthProxy` on the preview domain;
    - create a passage (text, PDF upload, YouTube) → COMPLETED; generate flashcard + question → COMPLETED (check `pnpm workflow:inspect`);
    - AI chat streams incrementally; history persists;
