@@ -1,5 +1,4 @@
 import { withWorkflow } from "workflow/next";
-import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 
 const isDev = process.env.NODE_ENV !== "production";
@@ -25,7 +24,6 @@ const csp = {
     "connect-src 'self'",
     isDev ? "http://localhost:*" : "",
     isDev ? "ws://localhost:*" : "",
-    "https://*.sentry.io",
     "https://vitals.vercel-insights.com",
     "https://accounts.google.com",
     "https://*.blob.vercel-storage.com",
@@ -81,14 +79,13 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  // Temporary bridge while the frontend is still on Next: the API now lives
+  // on the Nitro dev server (`nitro dev --port 3001`).
+  async rewrites() {
+    return isDev
+      ? [{ source: "/api/:path*", destination: "http://localhost:3001/api/:path*" }]
+      : [];
+  },
 };
 
-// --- Sentry + Workflow Wrapper ---
-export default withSentryConfig(withWorkflow(nextConfig), {
-  org: process.env.SENTRY_ORG || "pham-dac-luc",
-  project: process.env.SENTRY_PROJECT || "javascript-nextjs",
-  authToken: process.env.SENTRY_AUTH_TOKEN,
-  silent: !process.env.CI,
-  widenClientFileUpload: true,
-  tunnelRoute: "/monitoring",
-});
+export default withWorkflow(nextConfig);

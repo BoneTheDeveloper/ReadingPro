@@ -44,7 +44,7 @@ https://claude.ai/artifact/TeG85eSeZuBbSPDME5Spkd
   TanStack Query, Zod, pino, current CSP and security headers (minus Sentry origins). Node 24, pnpm.
   Vercel `sin1` stays the deploy target for now.
 - **Non-goals:** No UI/UX changes, no DB schema changes, no rewrite of
-  `src/features/*/server` or `src/workflows/*` logic. Moving production off
+  `src/server/services/*` (formerly `src/features/*/server`) or `src/workflows/*` logic. Moving production off
   Vercel (Postgres World, Docker hosting) is a later plan. No replacement error-tracking service.
 
 ## Phases
@@ -52,8 +52,8 @@ https://claude.ai/artifact/TeG85eSeZuBbSPDME5Spkd
 | # | Phase | Status |
 |---|-------|--------|
 | 1 | [Spike and Baseline](./phase-01-spike-and-baseline.md) | Completed |
-| 2 | [Backend on Hono and Nitro](./phase-02-backend-hono-nitro.md) | In progress |
-| 3 | [Frontend on React Router](./phase-03-frontend-react-router.md) | Pending |
+| 2 | [Backend on Hono and Nitro](./phase-02-backend-hono-nitro.md) | Completed |
+| 3 | [Frontend on React Router](./phase-03-frontend-react-router.md) | In progress |
 | 4 | [Tooling Cleanup](./phase-04-tooling-cleanup.md) | Pending |
 | 5 | [Deploy Verification](./phase-05-deploy-verification.md) | Pending |
 

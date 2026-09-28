@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Backend on Hono and Nitro"
-status: in-progress
+status: completed
 priority: P1
 effort: "2d"
 dependencies: [1]
@@ -17,8 +17,10 @@ prove it by running the existing Next frontend against it.
 
 ## Key Insights
 
-- Business logic in `src/features/*/server/service` and `src/workflows/*` has
-  no `next/*` imports. It moves unchanged.
+- Business logic in the service layer and `src/workflows/*` has no `next/*`
+  imports. It moves unchanged. The service layer moved out of
+  `src/features/*/server/service(s)` into `src/server/services/<feature>/`
+  (user decision, 2026-09-28), next to the Hono routes; only import paths changed.
 - `src/lib/auth/session.ts` reads headers through `next/headers` and redirects
   through `next/navigation`. This is the only real coupling in the auth path.
 - `import "server-only"` (16 files) throws when imported without the
@@ -49,6 +51,11 @@ src/server/
   routes/vocabulary.ts   /api/vocabulary, /:id, /stats
   routes/translate.ts    POST /api/translate
   routes/ai-chat.ts      GET/POST/DELETE /api/ai-chat
+  security-headers.ts    CSP and security headers, applied through Nitro routeRules
+  services/passage/      passage-crud, passage-preprocessing, passage-processing
+  services/reading/      translate
+  services/studio/       ai-chat, artifact-crud, artifact-generator, artifact-progress
+  services/vocabulary/   vocabulary-crud
 nitro.config.ts          builder "rolldown", modules ["workflow/nitro"], routes "/api/**" → src/server/app.ts, dev port 3001
 ```
 
@@ -85,8 +92,11 @@ Handler adapter in `src/lib/error/with-error-handling.ts`:
 7. Mount better-auth: `app.on(["GET","POST"], "/api/auth/*", (c) => auth.handler(c.req.raw))`.
 8. Update `src/lib/auth/auth.ts`: the browser origin stays `localhost:3000`
    (Next now, Vite in Phase 3, both proxying `/api` to Nitro), so OAuth
-   callbacks keep that host. Add `localhost:3001` to `baseURL.allowedHosts` and
-   `trustedOrigins` only for direct calls to Nitro; keep `*.vercel.app` rules
+   callbacks keep that host. Do **not** add `localhost:3001` to
+   `baseURL.allowedHosts` or `trustedOrigins`: the Next rewrite forwards
+   `Host: localhost:3001`, and allowing it sent the post-login redirect to
+   `http://localhost:3001/study` (Nitro 404). Leaving it out makes better-auth
+   use `fallback` (`http://localhost:3000`). Keep `*.vercel.app` rules
    and the `oAuthProxy` plugin unchanged. Confirm the proxy forwards the
    original `Host` / `X-Forwarded-Host`.
 9. Port CSP and security headers from `next.config.ts` into one module
@@ -109,14 +119,14 @@ Handler adapter in `src/lib/error/with-error-handling.ts`:
 
 ## Todo
 
-- [ ] Sentry removed: package, 4 config files, calls done; `next.config.ts` (`withSentryConfig`, tunnel, CSP origin) still open
+- [x] Sentry removed: package, 4 config files, CSP origin, tunnel, calls
 - [x] `server-only` imports removed (0 matches)
 - [x] `session.ts` takes headers explicitly; all route call sites updated
 - [x] `withErrorHandling` free of `next/*`
 - [x] 13 routes ported to Hono routers with unchanged bodies
 - [x] better-auth mounted at `/api/auth/*`, origins updated
 - [x] Security headers via `routeRules`
-- [ ] Next frontend works end to end against Nitro via dev rewrite
+- [x] Next frontend works end to end against Nitro via dev rewrite (user-verified 2026-09-28)
 
 ## Findings (2026-09-28)
 
