@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Backend on Hono and Nitro"
-status: pending
+status: in-progress
 priority: P1
 effort: "2d"
 dependencies: [1]
@@ -74,7 +74,8 @@ Handler adapter in `src/lib/error/with-error-handling.ts`:
 4. Refactor `src/lib/auth/session.ts`:
    - `getSession(headers: Headers)` calls `auth.api.getSession({ headers })`; drop React `cache`.
    - `requireApiSession(req: Request)` passes `req.headers`.
-   - Delete `requirePageSession` in Phase 3 once no page uses it (keep until then for the running Next frontend).
+   - `requirePageSession` and a cached `getPageSession` move to `src/lib/auth/page-session.ts`
+     (Next pages only), so the Nitro bundle never imports `next/*`. Delete that file in Phase 3.
    - Update all 13 route call sites from `requireApiSession()` to `requireApiSession(req)`.
 5. Refactor `withErrorHandling`: drop `unstable_rethrow`; export a Hono-facing wrapper that builds `{ params, log }`
    from the Hono context and calls the existing handler signature.
@@ -108,14 +109,31 @@ Handler adapter in `src/lib/error/with-error-handling.ts`:
 
 ## Todo
 
-- [ ] Sentry removed: package, 4 config files, CSP origin, tunnel, calls
-- [ ] `server-only` imports removed (0 matches)
-- [ ] `session.ts` takes headers explicitly; 13 call sites updated
-- [ ] `withErrorHandling` free of `next/*`
-- [ ] 13 routes ported to Hono routers with unchanged bodies
-- [ ] better-auth mounted at `/api/auth/*`, origins updated
-- [ ] Security headers via `routeRules`
+- [ ] Sentry removed: package, 4 config files, calls done; `next.config.ts` (`withSentryConfig`, tunnel, CSP origin) still open
+- [x] `server-only` imports removed (0 matches)
+- [x] `session.ts` takes headers explicitly; all route call sites updated
+- [x] `withErrorHandling` free of `next/*`
+- [x] 13 routes ported to Hono routers with unchanged bodies
+- [x] better-auth mounted at `/api/auth/*`, origins updated
+- [x] Security headers via `routeRules`
 - [ ] Next frontend works end to end against Nitro via dev rewrite
+
+## Findings (2026-09-28)
+
+- `nitro dev` on 3001: 401 envelope with CSP on `/api/passage`, `get-session`
+  answers, Zod 400 logged by pino, unknown `/api/*` is a Hono 404, Google
+  `redirect_uri` stays `localhost:3000` when `X-Forwarded-Host` is 3000.
+  Workflow SDK built 2 workflows / 9 steps.
+- `NODE_ENV` is unset while `nitro build` loads `nitro.config.ts`, so the dev
+  CSP (`'unsafe-eval'`, `localhost:*`) leaked into production. Dev relaxations
+  now live under `$development`.
+- The built server must run with `NODE_ENV=production`; otherwise the logger
+  picks the pino-pretty transport, whose worker cannot load from the bundle
+  and crashes the process.
+- Nitro `3.0.260903-beta` emits Vercel header routes without `continue: true`
+  (fixed upstream in nitrojs/nitro#4652, merged 2026-09-22, not released). On
+  Vercel the `/(.*)` header route would stop routing before `/__server`, so
+  `/api/**` and the SPA fallback would 404. Must be resolved before Phase 5.
 
 ## Verification
 

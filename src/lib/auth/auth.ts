@@ -1,4 +1,3 @@
-import "server-only";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { oAuthProxy } from "better-auth/plugins";
@@ -12,7 +11,8 @@ export const auth = betterAuth({
   database: prismaAdapter(prisma, { provider: "postgresql" }),
 
   baseURL: {
-    allowedHosts: ["*.vercel.app", "localhost:3000"],
+    // 3001 is the API server itself; the browser origin stays 3000 via the dev proxy.
+    allowedHosts: ["*.vercel.app", "localhost:3000", "localhost:3001"],
     fallback: productionUrl,
   },
 
@@ -33,6 +33,7 @@ export const auth = betterAuth({
 
   trustedOrigins: [
     "http://localhost:3000",
+    "http://localhost:3001",
     "https://*.vercel.app",
   ],
 

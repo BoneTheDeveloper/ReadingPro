@@ -1,10 +1,9 @@
-import "server-only";
 import { generateObject, generateText } from "ai";
 import {
   passageMetadataSchema,
   type PassageMetadata,
 } from "@/features/passage/schema";
-import { completePassageProcessing } from "@/features/passage/server/service/passage-crud";
+import { completePassageProcessing } from "@/server/services/passage/passage-crud";
 
 const MODEL = "deepseek/deepseek-v4-flash";
 const AI_TIMEOUT_MS = 170_000;

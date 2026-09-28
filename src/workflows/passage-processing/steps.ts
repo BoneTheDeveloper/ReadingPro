@@ -1,10 +1,9 @@
 /**
  * Step functions for passage processing.
  */
-import "server-only";
-import { preprocessPassage } from "@/features/passage/server/service/passage-preprocessing";
-import { runPassageProcessing } from "@/features/passage/server/service/passage-processing";
-import { failPassageProcessing } from "@/features/passage/server/service/passage-crud";
+import { preprocessPassage } from "@/server/services/passage/passage-preprocessing";
+import { runPassageProcessing } from "@/server/services/passage/passage-processing";
+import { failPassageProcessing } from "@/server/services/passage/passage-crud";
 import type { CreatePassageInput } from "@/features/passage/schema";
 
 export interface PassageProcessingInput {

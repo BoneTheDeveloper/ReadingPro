@@ -22,7 +22,7 @@ and env naming match the new stack.
      together (one small dev dependency such as `concurrently`); `build` →
      `prisma generate --generator client && react-router build && nitro build`
      (the `react-router` CLI, not `vite build`, which hangs after prerender);
-     `start` → `node .output/server/index.mjs`; keep `typecheck`, `lint`,
+     `start` → `NODE_ENV=production node .output/server/index.mjs` (without it the logger loads pino-pretty and the worker crashes); keep `typecheck`, `lint`,
      `postinstall`, `db:generate`, `workflow:inspect`.
 2. Delete `next.config.ts`, `src/proxy.ts`, `next-env.d.ts` (if present), `.next/` from `.gitignore` → add `build/`, `.output/`, `.nitro/`, `.react-router/`.
 3. `tsconfig.json`: drop the `next` plugin and `.next/types` includes; add

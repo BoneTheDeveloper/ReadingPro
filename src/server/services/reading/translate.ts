@@ -1,4 +1,3 @@
-import "server-only";
 import { generateObject } from "ai";
 import {
   TranslationOutputSchema,

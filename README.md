@@ -29,7 +29,7 @@ owned workspace.
 - **Prisma** · **PostgreSQL**
 - **Better Auth** (Google sign-in)
 - **Vercel AI SDK** for translation, passage processing, questions, and chat
-- **Sentry** · **pino** for errors and logs
+- **pino** for errors and logs
 - **pnpm** · deployed on **Vercel**
 
 ## Directory map

@@ -1,4 +1,4 @@
-import { requirePageSession } from "@/lib/auth/session";
+import { requirePageSession } from "@/lib/auth/page-session";
 import { Button } from "@/component/ui/button";
 import { Input } from "@/component/ui/input";
 import { Label } from "@/component/ui/label";

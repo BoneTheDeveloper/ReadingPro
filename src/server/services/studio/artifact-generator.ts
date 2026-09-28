@@ -1,7 +1,6 @@
-import "server-only";
 import { generateObject } from "ai";
-import { updateArtifactStatus } from "@/features/studio/server/service/artifact-crud";
-import { findPassageForUser } from "@/features/passage/server/service/passage-crud";
+import { updateArtifactStatus } from "@/server/services/studio/artifact-crud";
+import { findPassageForUser } from "@/server/services/passage/passage-crud";
 import { NotFoundError } from "@/lib/error/app-error";
 import {
   questionContentSchema,

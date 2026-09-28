@@ -49,6 +49,9 @@ src/app/routes/
    report: `vite.config.ts` holds only `tailwindcss()` and `reactRouter()`, plus
    `server.proxy["/api"]` → `http://localhost:3001` (Nitro dev). No Nitro plugin.
    Move Tailwind from `postcss.config.mjs` to `@tailwindcss/vite`.
+   In `nitro.config.ts` add the spike's `$production` block:
+   `publicAssets: [{ dir: "./build/client", baseURL: "/" }]` and
+   `renderer: { template: "./build/client/__spa-fallback.html", static: true }`.
 3. `root.tsx`: port `src/app/layout.tsx`. Keep CSS variable names
    `--font-jakarta`, `--font-lora`, `--font-jetbrains-mono` in `globals.css`,
    pointing at the Fontsource families, so no component class changes.
@@ -71,7 +74,7 @@ src/app/routes/
    `src/app/global-error.tsx` into route `ErrorBoundary` exports; use
    `useRouteError()`, `console.error`, and a "Thử lại" button
    that calls `navigate(0)` or revalidates.
-7. Delete `requirePageSession` from `session.ts` and the old
+7. Delete `src/lib/auth/page-session.ts` (`requirePageSession`) and the old
    `src/app/(auth)`, `(dashboard)`, `(marketing)`, `layout.tsx`, `provider.tsx`
    (moved), `global-error.tsx`.
 8. Remove the temporary `next.config.ts` rewrite from Phase 2.
@@ -79,7 +82,7 @@ src/app/routes/
 ## Files
 
 - Create: `react-router.config.ts`, `vite.config.ts`, `src/app/root.tsx`, `src/app/routes.ts`, `src/app/routes/{marketing,login,dashboard-layout,study,vocabulary,account}.tsx`
-- Modify: `src/app/globals.css`, `src/component/layout/dashboard-sidebar.tsx`, `src/component/layout/auth-controls.tsx`, `src/features/passage/hook/use-passage-library.ts`, `src/lib/auth/session.ts`, `src/app/(dashboard)/study/_component/*` and `_hook/*` (move under routes folder or `src/features/studio`)
+- Modify: `src/app/globals.css`, `src/component/layout/dashboard-sidebar.tsx`, `src/component/layout/auth-controls.tsx`, `src/features/passage/hook/use-passage-library.ts`, `nitro.config.ts`, delete `src/lib/auth/page-session.ts`, `src/app/(dashboard)/study/_component/*` and `_hook/*` (move under routes folder or `src/features/studio`)
 - Delete: `src/app/layout.tsx`, `src/app/(auth)/**`, `src/app/(dashboard)/**` (after moving `_component`/`_hook`), `src/app/(marketing)/**`, `src/app/global-error.tsx`, `postcss.config.mjs`
 
 ## Todo

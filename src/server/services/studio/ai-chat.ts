@@ -1,4 +1,3 @@
-import "server-only";
 import { convertToModelMessages, streamText, type UIMessage } from "ai";
 import prisma from "@/lib/prisma";
 import { MAX_TEXT_CHARS, type StudyChatLanguage } from "@/features/studio/schema/ai-chat";

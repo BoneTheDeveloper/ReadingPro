@@ -1,18 +1,8 @@
-import "server-only";
-import { cache } from "react";
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
 import { auth } from "./auth";
 import { AppError } from "@/lib/error/app-error";
 
-export const getSession = cache(async () => {
-  return auth.api.getSession({ headers: await headers() });
-});
-
-export async function requirePageSession() {
-  const session = await getSession();
-  if (!session) redirect("/login");
-  return session;
+export function getSession(headers: Headers) {
+  return auth.api.getSession({ headers });
 }
 
 type ApiSession = NonNullable<Awaited<ReturnType<typeof getSession>>>;
@@ -26,8 +16,8 @@ type SessionGuard =
   | { ok: true; session: ApiSession }
   | { ok: false; response: Response };
 
-export async function requireApiSession(): Promise<SessionGuard> {
-  const session = await getSession();
+export async function requireApiSession(req: Request): Promise<SessionGuard> {
+  const session = await getSession(req.headers);
   if (!session) {
     return {
       ok: false,

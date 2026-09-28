@@ -1,9 +1,8 @@
 /**
  * Step functions for artifact generation.
  */
-import "server-only";
-import { generateAndStoreArtifact } from "@/features/studio/server/service/artifact-generator";
-import { updateArtifactStatus } from "@/features/studio/server/service/artifact-crud";
+import { generateAndStoreArtifact } from "@/server/services/studio/artifact-generator";
+import { updateArtifactStatus } from "@/server/services/studio/artifact-crud";
 import { StudioArtifactType } from "@/generated/prisma/enums";
 
 export interface ArtifactGenerationInput {

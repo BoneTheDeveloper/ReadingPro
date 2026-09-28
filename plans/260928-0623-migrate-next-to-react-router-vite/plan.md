@@ -52,7 +52,7 @@ https://claude.ai/artifact/TeG85eSeZuBbSPDME5Spkd
 | # | Phase | Status |
 |---|-------|--------|
 | 1 | [Spike and Baseline](./phase-01-spike-and-baseline.md) | Completed |
-| 2 | [Backend on Hono and Nitro](./phase-02-backend-hono-nitro.md) | Pending |
+| 2 | [Backend on Hono and Nitro](./phase-02-backend-hono-nitro.md) | In progress |
 | 3 | [Frontend on React Router](./phase-03-frontend-react-router.md) | Pending |
 | 4 | [Tooling Cleanup](./phase-04-tooling-cleanup.md) | Pending |
 | 5 | [Deploy Verification](./phase-05-deploy-verification.md) | Pending |
@@ -76,5 +76,6 @@ through a dev rewrite, so the backend is proven before the frontend moves.
 - Hashed static assets get no `cache-control` from Nitro by default. Set `maxAge` on `publicAssets` or a `routeRules` header for `/assets/**`.
 - `nitro build` auto-detects `vite.config.ts` and switches to the Vite builder, which empties the React Router client output. `nitro.config.ts` pins `builder: "rolldown"`.
 - Nitro v3 is still beta (`3.0.260903-beta`). Pin the exact version.
+- Nitro `3.0.260903-beta` writes Vercel header routes without `continue: true` (fixed in nitrojs/nitro#4652, unreleased), which would 404 `/api/**` on Vercel. Needs a newer Nitro or a patch before Phase 5.
 - `import "server-only"` throws outside the React Server Components bundler condition; all 16 imports must go before server code runs on Nitro.
 - `better-auth` host and origin allowlists assume port 3000 and Next; wrong values break OAuth callbacks.

@@ -1,4 +1,3 @@
-import "server-only";
 import prisma from "@/lib/prisma";
 import { NotFoundError } from "@/lib/error/app-error";
 import { ProcessingStatus, StudioArtifactType } from "@/generated/prisma/enums";

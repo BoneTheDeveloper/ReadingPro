@@ -1,10 +1,10 @@
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
-import { requirePageSession } from "@/lib/auth/session";
+import { requirePageSession } from "@/lib/auth/page-session";
 import { getQueryClient } from "@/lib/query-client";
 import {
   listVocabularyItemsForUser,
   listVocabularyStatsForUser,
-} from "@/features/vocabulary/server/services/vocabulary-crud";
+} from "@/server/services/vocabulary/vocabulary-crud";
 import { vocabularyQueries } from "@/features/vocabulary/api/queries";
 import { VocabularyPageClient } from "@/features/vocabulary/component/vocabulary-page";
 

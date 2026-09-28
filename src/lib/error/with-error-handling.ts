@@ -1,19 +1,16 @@
-import "server-only";
-import { unstable_rethrow } from "next/navigation";
+import type { Context } from "hono";
 import { ZodError } from "zod";
-import * as Sentry from "@sentry/nextjs";
 import { log } from "@/lib/logger";
 import { isAppError, internalErrorBody, ERROR_CODES } from "@/lib/error/app-error";
 import type pino from "pino";
 
-type RouteContext = { params: Promise<Record<string, string>> };
-
-type HandlerCtx = RouteContext & { log: pino.Logger };
+type HandlerCtx = { params: Promise<Record<string, string>>; log: pino.Logger };
 
 type Handler = (req: Request, ctx: HandlerCtx) => Promise<Response>;
 
 export function withErrorHandling(name: string, handler: Handler) {
-  return async (req: Request, routeCtx: RouteContext): Promise<Response> => {
+  return async (c: Context): Promise<Response> => {
+    const req = c.req.raw;
     const requestId = req.headers.get("x-request-id") ?? crypto.randomUUID();
     const logger = log.child({
       route: name,
@@ -22,10 +19,8 @@ export function withErrorHandling(name: string, handler: Handler) {
     });
 
     try {
-      return await handler(req, { ...routeCtx, log: logger });
+      return await handler(req, { params: Promise.resolve(c.req.param()), log: logger });
     } catch (error) {
-      unstable_rethrow(error);
-
       if (error instanceof ZodError) {
         logger.info({ issues: error.issues }, "validation failed");
         return Response.json(
@@ -40,12 +35,10 @@ export function withErrorHandling(name: string, handler: Handler) {
           return error.toResponse();
         }
         logger.error({ err: error, details: error.details }, error.message);
-        Sentry.captureException(error, { tags: { route: name, requestId } });
         return Response.json(internalErrorBody(), { status: 500 });
       }
 
       logger.error({ err: error }, "unhandled error");
-      Sentry.captureException(error, { tags: { route: name, requestId } });
       return Response.json(internalErrorBody(), { status: 500 });
     }
   };

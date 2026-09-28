@@ -1,4 +1,4 @@
-import { requirePageSession } from "@/lib/auth/session";
+import { requirePageSession } from "@/lib/auth/page-session";
 import { StoreProvider } from "@/lib/store/store-provider";
 import { DashboardSidebar } from "@/component/layout/dashboard-sidebar";
 
