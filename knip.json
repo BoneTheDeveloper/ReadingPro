@@ -1,7 +1,8 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
-  "next": true,
+  "entry": ["src/server/app.ts"],
   "ignoreDependencies": [
-    "pino-pretty"
+    "pino-pretty",
+    "@react-router/node"
   ]
 }

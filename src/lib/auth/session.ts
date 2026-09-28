@@ -1,7 +1,7 @@
 import { auth } from "./auth";
 import { AppError } from "@/lib/error/app-error";
 
-export function getSession(headers: Headers) {
+function getSession(headers: Headers) {
   return auth.api.getSession({ headers });
 }
 

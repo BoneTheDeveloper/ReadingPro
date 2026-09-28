@@ -79,4 +79,44 @@ Scripts are in the session scratchpad and are not committed:
 
 ## Post-migration results
 
-To be appended in Phases 4 and 5 using the same method.
+### Phase 4: React Router + Vite and Nitro (2026-09-28)
+
+Same machine. `pnpm dev` now runs `react-router dev` (3000) and `nitro dev`
+(3001) under `concurrently`. The first `/study` load is timed differently
+from the baseline, and it is the stricter measure. Instead of one `curl`, a
+headless Chromium loads `/study` until the page settles. That load includes
+Vite's dependency optimization, every module the page imports, Chromium's own
+startup, and the client redirect to the login form. The baseline `curl` only
+waited for Next's server compile.
+
+| Run | Ready | First `/study` (browser) | `/login` | Re-request after edit | Peak RSS (tree) |
+|---|---|---|---|---|---|
+| Cold 1 | 991 ms | 3.8 s | 25 ms | 28 ms | 1970 MB |
+| Cold 2 | 992 ms | 3.7 s | 14 ms | 25 ms | 2153 MB |
+| Cold 3 | 990 ms | 4.4 s | 19 ms | 17 ms | 2152 MB |
+| **Cold median** | **991 ms** | **3.8 s** | **19 ms** | **25 ms** | **2152 MB** |
+| Warm median (3 runs) | 1117 ms | 3.4 s | 17 ms | 28 ms | 1308 MB |
+
+- "Cold" deletes the Vite dependency cache and `.nitro` before each run.
+- "Ready" is when both servers are listening.
+- "Re-request after edit" appends a comment to `studio-panel.tsx` and times
+  Vite serving the changed module. It is still a server-side proxy for HMR.
+
+`pnpm build` (`prisma generate` + `react-router build` + `nitro build`):
+
+| Run | Wall time | Peak RSS (largest process) |
+|---|---|---|
+| 1 | 7.4 s | 1092 MB |
+| 2 | 8.2 s | 1007 MB |
+| 3 | 7.8 s | 1048 MB |
+| **Median** | **7.8 s** | **1048 MB** |
+
+**Compared with Next:**
+
+| Metric | Next | Now |
+|---|---|---|
+| First `/study`, cold | 17.0 s | 3.8 s, about 4.5× faster, and this figure includes browser work the baseline left out |
+| Warm start | 4.9 to 22.7 s, erratic | 3.4 s, steady |
+| Re-request after an edit | 462 ms | 25 ms |
+| Peak dev memory | 2854 MB | 2152 MB cold, 1308 MB warm |
+| Build | 36.3 s | 7.8 s |

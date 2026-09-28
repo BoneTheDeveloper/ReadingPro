@@ -53,8 +53,8 @@ https://claude.ai/artifact/TeG85eSeZuBbSPDME5Spkd
 |---|-------|--------|
 | 1 | [Spike and Baseline](./phase-01-spike-and-baseline.md) | Completed |
 | 2 | [Backend on Hono and Nitro](./phase-02-backend-hono-nitro.md) | Completed |
-| 3 | [Frontend on React Router](./phase-03-frontend-react-router.md) | In progress |
-| 4 | [Tooling Cleanup](./phase-04-tooling-cleanup.md) | Pending |
+| 3 | [Frontend on React Router](./phase-03-frontend-react-router.md) | Completed |
+| 4 | [Tooling Cleanup](./phase-04-tooling-cleanup.md) | In progress |
 | 5 | [Deploy Verification](./phase-05-deploy-verification.md) | Pending |
 
 Phases run in order. Phase 2 is verified against the existing Next frontend

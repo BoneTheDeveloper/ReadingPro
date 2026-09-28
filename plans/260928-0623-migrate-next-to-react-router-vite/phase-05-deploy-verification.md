@@ -40,6 +40,8 @@ move off Vercel needs config only.
    - Google sign-in through `oAuthProxy` on the preview domain;
    - create a passage (text, PDF upload, YouTube) → COMPLETED; generate flashcard + question → COMPLETED (check `pnpm workflow:inspect`);
    - AI chat streams incrementally; history persists;
+   - `/study?passageId=<id>` reload reopens the same passage; deleting it clears the param;
+   - dashboard pages (study, vocabulary, account) match the Next version visually;
    - expired session → toast + single redirect to `/login`;
    - a forced server error appears in Vercel runtime logs as a pino JSON line with `route` and `requestId`;
    - no browser request goes to `*.sentry.io` or `/monitoring`.

@@ -1,10 +1,11 @@
 # dependencies
 /node_modules
 
-# next.js
-/.next/
 # production
 /build
+/.output/
+/.nitro/
+/.react-router/
 
 
 # env files
@@ -16,7 +17,6 @@
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
 
 /src/generated/prisma
 
@@ -25,8 +25,6 @@ next-env.d.ts
 .codex
 .vscode
 
-# Workflow SDK generated routes
-src/app/.well-known/workflow/
-/.swc
+# Workflow SDK local world data
 .workflow-data
-/.react-router/
+/.swc

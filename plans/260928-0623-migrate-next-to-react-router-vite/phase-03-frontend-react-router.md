@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "Frontend on React Router"
-status: pending
+status: completed
 priority: P1
 effort: "1.5d"
 dependencies: [2]
@@ -87,12 +87,13 @@ src/app/routes/
 
 ## Todo
 
-- [ ] Vite + React Router config in place, Tailwind via Vite plugin
-- [ ] Root layout with self-hosted fonts and providers
-- [ ] 5 routes ported; auth guard in dashboard layout `clientLoader`
-- [ ] `next/link`, `next/navigation`, `next/font` fully replaced
-- [ ] Error boundaries ported to route `ErrorBoundary` exports
-- [ ] Old Next app files deleted
+- [x] Vite + React Router config in place, Tailwind via Vite plugin
+- [x] Root layout with self-hosted fonts and providers
+- [x] 5 routes ported; auth guard in dashboard layout (`clientMiddleware`)
+- [x] `next/link`, `next/navigation`, `next/font` fully replaced
+- [x] Error boundaries ported to route `ErrorBoundary` exports
+- [x] Old Next app files deleted
+- [x] Phase marked complete by the user; signed-in browser checks carried to Phase 5
 
 ## Verification
 
@@ -102,6 +103,47 @@ src/app/routes/
 - Let a session expire (delete the session row) → next query shows the toast flow and redirects to `/login` once.
 - Build output contains `build/client/index.html` with the marketing copy ("Tóm tắt văn bản") in the raw HTML.
 - Visual check of all 5 pages against the Next version: fonts, sidebar, dark/light states unchanged.
+
+## Implementation notes (2026-09-28)
+
+- The auth guard is a `clientMiddleware` on the dashboard layout, not a layout
+  `clientLoader`. Middleware finishes before page loaders start, so a
+  signed-out visit redirects once instead of racing page queries into 401s.
+  The layout `clientLoader` reads the user from router context.
+- Page loaders use `prefetchQuery` (never throws), matching the old server
+  `prefetchQuery`; a failing query renders the page's own error state.
+- The dashboard `ErrorBoundary` is exported from each page route (study,
+  vocabulary, account), so errors render inside the sidebar as Next's
+  segment `error.tsx` did. The root `ErrorBoundary` replaces `global-error.tsx`
+  and also shows a 404 for unknown paths.
+- One `HydrateFallback` on root (empty background). SPA mode renders the root
+  one, so per-route fallbacks were redundant.
+- Fonts use `@fontsource-variable/lora` instead of `@fontsource/lora`, so every
+  Lora weight loads as it did with `next/font`.
+- React bumped 19.2.6 → 19.2.7 (React Router 8.4 peer minimum).
+- Study workspace moved to `src/features/studio/{component,hook}`; favicon to `public/`.
+- Pulled forward from Phase 4 because the grep check needs it: `src/proxy.ts`
+  deleted, `/.react-router/` added to `.gitignore`.
+- Client middleware runs on every navigation, so each `?passageId=` change
+  fetches `/api/auth/get-session` once (cookie-cached on the server). Next also
+  made a server round trip per `router.replace`.
+
+## Verification results (2026-09-28)
+
+- `grep -rE "from ['\"]next" src` returns nothing. `tsc` passes (with the stale
+  `.next/types` excluded; Phase 4 drops those includes). ESLint: 0 errors.
+- `react-router build` exits in 5 s; `index.html` contains "Tóm tắt văn bản",
+  `__spa-fallback.html` does not.
+- `NITRO_PRESET=node-server nitro build` plus a boot: `/` is prerendered,
+  `/study` and `/login` get the fallback, `/assets/*` have an immutable
+  cache-control, CSP and HSTS are on HTML, and an unknown `/api/nope` is a 404 from Hono.
+- Dev (`react-router dev` on 3000 + `nitro dev` on 3001), headless Chromium,
+  signed out: `/study`, `/vocabulary`, `/account` land on the login form; `/`
+  renders with self-hosted fonts; no console errors once Vite's first
+  dependency optimization is done.
+- **Not yet verified (needs a signed-in browser):** Google sign-in → `/study`,
+  dashboard render, `?passageId=` reload and delete, session-expiry toast, AI
+  chat stream through the proxy, visual comparison of the dashboard pages.
 
 ## Risks
 

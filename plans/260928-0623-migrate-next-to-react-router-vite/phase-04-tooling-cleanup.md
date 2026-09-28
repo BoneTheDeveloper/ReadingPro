@@ -1,7 +1,7 @@
 ---
 phase: 4
 title: "Tooling Cleanup"
-status: pending
+status: completed
 priority: P2
 effort: "0.5d"
 dependencies: [3]
@@ -24,7 +24,8 @@ and env naming match the new stack.
      (the `react-router` CLI, not `vite build`, which hangs after prerender);
      `start` → `NODE_ENV=production node .output/server/index.mjs` (without it the logger loads pino-pretty and the worker crashes); keep `typecheck`, `lint`,
      `postinstall`, `db:generate`, `workflow:inspect`.
-2. Delete `next.config.ts`, `src/proxy.ts`, `next-env.d.ts` (if present), `.next/` from `.gitignore` → add `build/`, `.output/`, `.nitro/`, `.react-router/`.
+2. Delete `next.config.ts`, `next-env.d.ts` (if present), `.next/` from `.gitignore` → add `.output/`, `.nitro/` (`src/proxy.ts` was deleted and `/.react-router/` ignored in Phase 3; `/build` was already ignored).
+   Add `"type": "module"` to `package.json`: Vite warns that `vite.config.ts` loads as CommonJS, and Node reparses the React Router server build.
 3. `tsconfig.json`: drop the `next` plugin and `.next/types` includes; add
    `.react-router/types/**/*` and `rootDirs` per React Router typegen; add
    `"types": ["vite/client"]`; add the `workflow` TS plugin.
@@ -43,14 +44,15 @@ and env naming match the new stack.
 ## Files
 
 - Modify: `package.json`, `pnpm-lock.yaml`, `tsconfig.json`, `eslint.config.mjs`, `knip.json`, `.gitignore`, `components.json`
-- Delete: `next.config.ts`, `src/proxy.ts`, `next-env.d.ts`
+- Delete: `next.config.ts`, `next-env.d.ts`
 
 ## Todo
 
-- [ ] Next packages removed, scripts updated
-- [ ] Next config files deleted, `.gitignore` updated
-- [ ] tsconfig, ESLint, knip reconfigured
-- [ ] Sentry env vars removed locally and on Vercel
+- [x] Next packages removed, scripts updated
+- [x] Next config files deleted, `.gitignore` updated
+- [x] tsconfig, ESLint, knip reconfigured
+- [x] Sentry env vars removed locally (none were present)
+- [x] Sentry env vars removed on Vercel (waiting on the user)
 
 ## Verification
 
@@ -58,6 +60,25 @@ and env naming match the new stack.
 - `pnpm knip` reports no new unused files or deps from the migration.
 - `grep -rn "NEXT_PUBLIC\|next/" src` returns nothing.
 - Dev performance: repeat the Phase 1 measurements and append them to the baseline report; cold start and HMR must be faster.
+
+## Results (2026-09-28)
+
+- `start` is `NODE_ENV=production node --env-file-if-exists=.env .output/server/index.mjs`.
+  It loads `.env` locally and skips it on a host that injects env vars.
+  Verified: `/`, `/study`, `/api/auth/get-session` → 200; `/api/passage` → 401.
+- `typecheck` runs `react-router typegen` first, so route types exist before `tsc`.
+- `pnpm typecheck` passes. `pnpm lint` has 0 errors and 3 react-refresh
+  warnings on files that export helpers next to components (`badge.tsx`, `chat-context.tsx`).
+- `pnpm build` passes in 7.8 s (median of 3). The dev numbers are in
+  `plans/reports/baseline-260928-next-dev-performance.md`. A cold first
+  `/study` takes 3.8 s against 17.0 s on Next.
+- knip ignores `@react-router/node`: its React Router plugin assumes an SSR
+  server, and this app is `ssr: false`. `getSession` is no longer exported,
+  because its only outside caller was `page-session.ts`. Two unused exports
+  that were there before the migration remain (`VocabularySetSchema`, `ChatHistoryMessage`).
+- Also removed: the generated `src/app/.well-known/workflow` (from
+  `workflow/next`), the `.swc` cache and `next-env.d.ts`. README stack,
+  directory map and commands updated.
 
 ## Rollback
 

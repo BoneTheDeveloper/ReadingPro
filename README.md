@@ -23,7 +23,8 @@ owned workspace.
 
 ## Tech stack
 
-- **Next.js** (App Router) · **React** · **TypeScript**
+- **React Router** (SPA mode, landing page prerendered) · **Vite** · **React** · **TypeScript**
+- **Hono** API on **Nitro** · **Workflow SDK** for background processing
 - **Tailwind CSS** · **shadcn/ui** (Radix primitives)
 - **TanStack Query** for client data
 - **Prisma** · **PostgreSQL**
@@ -37,15 +38,16 @@ owned workspace.
 ```
 src/
 ├─ app/
-│  ├─ (marketing)/            # public landing
-│  ├─ (auth)/login/           # sign-in
-│  ├─ (dashboard)/            # study, vocabulary, account
-│  └─ api/                    # route handlers
+│  ├─ root.tsx                # document shell, providers, error boundary
+│  ├─ routes.ts               # route config
+│  └─ routes/                 # marketing, login, dashboard layout, study, vocabulary, account
 ├─ features/
 │  ├─ passage/                # import, preprocessing, library panel
 │  ├─ reading/                # reader panel, selection, inline translation
-│  ├─ studio/                 # artifacts: questions, flashcards, passage chat
+│  ├─ studio/                 # study workspace; artifacts: questions, flashcards, passage chat
 │  └─ vocabulary/             # word bank and sets
+├─ server/                    # Hono app (app.ts), API routes, services
+├─ workflows/                 # Workflow SDK background jobs
 ├─ component/                 # shared UI (shadcn/ui in component/ui)
 ├─ lib/                       # auth, prisma, logger, query client, error helpers
 └─ generated/prisma/          # generated client — do not edit
@@ -53,3 +55,10 @@ src/
 prisma/schema.prisma          # database schema
 ```
 
+## Development
+
+```
+pnpm dev        # Vite on :3000 (proxies /api) + Nitro API on :3001
+pnpm build      # prisma generate, react-router build, nitro build
+pnpm start      # serve .output with .env loaded
+```
