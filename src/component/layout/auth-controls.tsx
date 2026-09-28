@@ -14,8 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/component/ui/dropdown-menu";
 import { User, LogOut, Settings } from "lucide-react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { Link, useNavigate } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { authClient } from "@/lib/auth/auth-client";
 import { clearAllChats } from "@/features/studio/component/view/ai-chat/chat-context";
@@ -28,7 +27,7 @@ interface AuthControlsProps {
 
 export function AuthControls({ variant = "default" }: AuthControlsProps) {
   const isRail = variant === "rail";
-  const router = useRouter();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const user = useAppSelector(selectSessionUser);
 
@@ -41,7 +40,7 @@ export function AuthControls({ variant = "default" }: AuthControlsProps) {
     await authClient.signOut({
       fetchOptions: {
         onSuccess: () => {
-          router.push("/");
+          navigate("/");
         },
       },
     });
@@ -89,7 +88,7 @@ export function AuthControls({ variant = "default" }: AuthControlsProps) {
         <DropdownMenuSeparator />
 
         <DropdownMenuItem asChild>
-          <Link href="/account" className="cursor-pointer w-full">
+          <Link to="/account" className="cursor-pointer w-full">
             <Settings className="w-4 h-4 mr-2" />
             Cài đặt
           </Link>

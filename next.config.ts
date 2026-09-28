@@ -79,13 +79,6 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  // Temporary bridge while the frontend is still on Next: the API now lives
-  // on the Nitro dev server (`nitro dev --port 3001`).
-  async rewrites() {
-    return isDev
-      ? [{ source: "/api/:path*", destination: "http://localhost:3001/api/:path*" }]
-      : [];
-  },
 };
 
 export default withWorkflow(nextConfig);

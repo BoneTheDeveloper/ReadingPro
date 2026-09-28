@@ -29,3 +29,4 @@ next-env.d.ts
 src/app/.well-known/workflow/
 /.swc
 .workflow-data
+/.react-router/

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useDeletePassageMutation } from "@/features/passage/api/mutations";
 import { passageQueries } from "@/features/passage/api/queries";
@@ -25,9 +25,7 @@ function getMostRecentPassageId(passages: PassageListItem[]): string | null {
  * same passage.
  */
 export function usePassageLibrary() {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { data: passages = [] } = useQuery(passageQueries.list());
   const deleteMutation = useDeletePassageMutation();
 
@@ -45,10 +43,9 @@ export function usePassageLibrary() {
       if (id) next.set(PASSAGE_PARAM, id);
       else next.delete(PASSAGE_PARAM);
 
-      const query = next.toString();
-      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+      setSearchParams(next, { replace: true, preventScrollReset: true });
     },
-    [pathname, router, searchParams],
+    [searchParams, setSearchParams],
   );
 
   // Opens the most recent passage when nothing is selected yet. Self-limiting:

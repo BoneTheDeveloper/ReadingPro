@@ -10,7 +10,7 @@ import { UploadModal } from "@/features/passage/component/model/upload-modal";
 import { usePassageLibrary } from "@/features/passage/hook/use-passage-library";
 import { passageQueries } from "@/features/passage/api/queries";
 import { useUploadFlow } from "@/features/passage/hook/use-upload-flow";
-import { useStudyPanelLayout } from "../_hook/use-study-panel-layout";
+import { useStudyPanelLayout } from "@/features/studio/hook/use-study-panel-layout";
 
 import type { RefObject } from "react";
 import type { PanelImperativeHandle } from "react-resizable-panels";

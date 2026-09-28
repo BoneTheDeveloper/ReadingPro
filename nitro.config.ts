@@ -20,4 +20,11 @@ export default defineConfig({
   $development: {
     routeRules: { "/**": { headers: securityHeaders(true) } },
   },
+  // Serve the React Router client build (`react-router build` runs first).
+  // The renderer is the lowest-priority catch-all, so the SPA fallback only
+  // answers paths no API route or static file matched.
+  $production: {
+    publicAssets: [{ dir: "./build/client", baseURL: "/" }],
+    renderer: { template: "./build/client/__spa-fallback.html", static: true },
+  },
 });
