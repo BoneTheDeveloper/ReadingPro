@@ -1,27 +1,10 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useState,
-  useCallback,
-  useMemo,
-} from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Chat, type UIMessage } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import type { StudyChatLanguage } from "@/shared/contracts/studio-chat";
-
-interface ChatContextValue {
-  chat: Chat<UIMessage>;
-  language: StudyChatLanguage;
-  setLanguage: (language: StudyChatLanguage) => void;
-  clearChatMessages: () => void;
-}
-
-const ChatContext = createContext<ChatContextValue | null>(null);
-
-// Global registry for logout cleanup
-const chatRegistry = new Set<Chat<UIMessage>>();
+import { ChatContext, registerChat } from "./chat-context";
 
 /**
  * ChatProvider holds a Chat instance per passageId.
@@ -50,7 +33,7 @@ export function ChatProvider({
       messages: initialMessages,
       transport: new DefaultChatTransport({ api: "/api/ai-chat" }),
     });
-    chatRegistry.add(newChat);
+    registerChat(newChat);
     return newChat;
   });
 
@@ -67,26 +50,4 @@ export function ChatProvider({
   return (
     <ChatContext.Provider value={value}>{children}</ChatContext.Provider>
   );
-}
-
-/**
- * Clear all Chat instances from the registry.
- * Call this on logout to prevent memory leaks.
- */
-export function clearAllChats(): void {
-  chatRegistry.forEach((chat) => {
-    chat.messages = [];
-  });
-  chatRegistry.clear();
-}
-
-export function useChatContext(): ChatContextValue {
-  const ctx = useContext(ChatContext);
-  if (!ctx) {
-    throw new Error(
-      "useChatContext must be used within a ChatProvider. " +
-        "Wrap your component tree with <ChatProvider passageId={...}>",
-    );
-  }
-  return ctx;
 }

@@ -58,14 +58,4 @@ function Badge({
   );
 }
 
-export const CEFR_BADGE_VARIANT = {
-  A1: "cefrA1",
-  A2: "cefrA2",
-  B1: "cefrB1",
-  B2: "cefrB2",
-  C1: "cefrC1",
-  C2: "cefrC2",
-} as const satisfies Record<string, BadgeVariant>;
-
-
 export { Badge };

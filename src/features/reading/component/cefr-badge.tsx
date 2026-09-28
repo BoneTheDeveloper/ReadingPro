@@ -1,7 +1,16 @@
 import type { CEFRLevel } from "@/generated/prisma/enums";
-import { Badge, CEFR_BADGE_VARIANT } from "@/component/ui/badge";
+import { Badge, type BadgeVariant } from "@/component/ui/badge";
 
 const FALLBACK_LEVEL: CEFRLevel = "B2";
+
+const CEFR_BADGE_VARIANT = {
+  A1: "cefrA1",
+  A2: "cefrA2",
+  B1: "cefrB1",
+  B2: "cefrB2",
+  C1: "cefrC1",
+  C2: "cefrC2",
+} as const satisfies Record<CEFRLevel, BadgeVariant>;
 
 export function CefrBadge({
   level,
