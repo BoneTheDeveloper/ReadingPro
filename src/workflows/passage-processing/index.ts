@@ -2,7 +2,7 @@
  * Passage processing workflow.
  * Orchestrates preprocessing and AI processing with durable execution.
  */
-import type { CreatePassageInput } from "@/features/passage/schema";
+import type { CreatePassageInput } from "@/shared/contracts/passage";
 import { preprocessStep, aiProcessStep, failStep } from "./steps";
 
 export interface PassageProcessingInput {

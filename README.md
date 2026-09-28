@@ -23,33 +23,60 @@ owned workspace.
 
 ## Tech stack
 
-- **Next.js** (App Router) · **React** · **TypeScript**
+- **React Router** (SPA mode, landing page prerendered) · **Vite** · **React** · **TypeScript**
+- **Hono** API on **Nitro** · **Workflow SDK** for background processing
 - **Tailwind CSS** · **shadcn/ui** (Radix primitives)
 - **TanStack Query** for client data
 - **Prisma** · **PostgreSQL**
 - **Better Auth** (Google sign-in)
 - **Vercel AI SDK** for translation, passage processing, questions, and chat
-- **Sentry** · **pino** for errors and logs
+- **pino** for errors and logs
 - **pnpm** · deployed on **Vercel**
 
 ## Directory map
 
 ```
 src/
+│  ── client (browser bundle) ──
 ├─ app/
-│  ├─ (marketing)/            # public landing
-│  ├─ (auth)/login/           # sign-in
-│  ├─ (dashboard)/            # study, vocabulary, account
-│  └─ api/                    # route handlers
+│  ├─ root.tsx                # document shell, providers, error boundary
+│  ├─ routes.ts               # route config
+│  └─ routes/                 # marketing, login, dashboard layout, study, vocabulary, account
 ├─ features/
-│  ├─ passage/                # import, preprocessing, library panel
+│  ├─ passage/                # import UI, library panel
 │  ├─ reading/                # reader panel, selection, inline translation
-│  ├─ studio/                 # artifacts: questions, flashcards, passage chat
+│  ├─ studio/                 # study workspace; artifacts: questions, flashcards, passage chat
 │  └─ vocabulary/             # word bank and sets
 ├─ component/                 # shared UI (shadcn/ui in component/ui)
-├─ lib/                       # auth, prisma, logger, query client, error helpers
+├─ lib/                       # auth client, fetch helpers, query client, store
+│  ── shared (imported by both sides) ──
+├─ shared/
+│  ├─ contracts/              # Zod request/response schemas and their types, API error shape
+│  └─ passage/                # upload limits and messages, YouTube URL parsing
+│  ── server (Nitro) ──
+├─ server/
+│  ├─ app.ts, routes/         # Hono app and API routes
+│  ├─ services/               # business logic per feature (database, AI, network)
+│  ├─ util/                   # pure helpers with no I/O: text normalization, passage text, chat messages
+│  └─ lib/                    # auth, session, prisma, logger, error helpers
+├─ workflows/                 # Workflow SDK background jobs
 └─ generated/prisma/          # generated client — do not edit
 
 prisma/schema.prisma          # database schema
 ```
 
+Client and server code only meet in `src/shared/`. ESLint (`no-restricted-imports`
+in `eslint.config.mjs`) enforces this. Client code may also import
+`@/generated/prisma/enums`, which is browser-safe.
+
+## Development
+
+```
+pnpm dev        # dev:api + dev:web together
+pnpm dev:web    # Vite on :3000 only (proxies /api to :3001)
+pnpm dev:api    # Nitro API on :3001 only
+pnpm build      # prisma generate, build:web, then build:api
+pnpm build:web  # react-router build → build/client
+pnpm build:api  # nitro build → .output (bundles build/client, so run build:web first)
+pnpm start      # serve .output with .env loaded
+```

@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 import { Loader2, Plus } from "lucide-react";
 import { Button } from "@/component/ui/button";
 import { Input } from "@/component/ui/input";
-import type { VocabularySet } from "@/features/vocabulary/schema";
+import type { VocabularySet } from "@/shared/contracts/vocabulary";
 
 
 interface VocabularySetListProps {

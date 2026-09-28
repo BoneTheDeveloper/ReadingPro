@@ -7,7 +7,7 @@ import { StudioGrid, StudioEmptyState } from "./studio-grid";
 import { ArtifactListItem } from "./artifact-list-item";
 import { ARTIFACT_META, type StudioGridId } from "./studio-icon-list";
 import { ProcessingStatus, StudioArtifactType } from "@/generated/prisma/enums";
-import type { StudioArtifactListItem } from "@/features/studio/schema/artifact";
+import type { StudioArtifactListItem } from "@/shared/contracts/studio-artifact";
 
 interface DefaultStudioViewProps {
   artifacts: StudioArtifactListItem[];

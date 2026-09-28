@@ -17,7 +17,7 @@ import {
   VocabularyUpdateInputSchema,
   type VocabularyItem,
   type VocabularyUpdateInput,
-} from "@/features/vocabulary/schema";
+} from "@/shared/contracts/vocabulary";
 
 const POS_OPTIONS: Array<{ value: PartOfSpeech; label: string }> = [
   { value: "NOUN", label: "Danh từ" },

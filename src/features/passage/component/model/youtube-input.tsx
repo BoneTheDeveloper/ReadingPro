@@ -4,8 +4,8 @@ import { useState, useMemo } from "react";
 import { PlayCircle, Clipboard } from "lucide-react";
 import { Button } from "@/component/ui/button";
 import { Input } from "@/component/ui/input";
-import { isValidYouTubeUrl } from "@/features/passage/util/youtube-helper";
-import { YOUTUBE_ERRORS } from "@/features/passage/util/upload-config";
+import { isValidYouTubeUrl } from "@/shared/passage/youtube-url";
+import { YOUTUBE_ERRORS } from "@/shared/passage/upload-config";
 
 interface YouTubeInputProps {
   onSubmit: (url: string) => void;

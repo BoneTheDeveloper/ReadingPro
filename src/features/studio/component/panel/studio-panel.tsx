@@ -6,7 +6,7 @@ import type { StudioPanelView, StudioGridId } from "./studio-icon-list";
 import { CollapsedSidebar } from "./collapsed-sidebar";
 import { DefaultStudioView } from "./default-studio-view";
 import { ChatDetailView } from "../view/ai-chat/chat-detail-view";
-import { ChatProvider } from "../view/ai-chat/chat-context";
+import { ChatProvider } from "../view/ai-chat/chat-provider";
 import { QuestionDetailView } from "../view/questions/question-detail-view";
 import { FlashcardDetailView } from "../view/flashcards";
 import { useQuery } from "@tanstack/react-query";

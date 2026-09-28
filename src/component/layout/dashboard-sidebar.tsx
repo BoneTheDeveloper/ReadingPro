@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Link, useLocation } from "react-router";
 import {
   BookOpen,
   GraduationCap,
@@ -32,7 +31,7 @@ interface DashboardSidebarProps {
 }
 
 export function DashboardSidebar({ children }: DashboardSidebarProps) {
-  const pathname = usePathname();
+  const { pathname } = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const closeMobile = useCallback(() => setMobileOpen(false), []);
@@ -149,7 +148,7 @@ function SidebarContent({
             <Tooltip key={item.href}>
               <TooltipTrigger asChild>
                 <Link
-                  href={item.href}
+                  to={item.href}
                   aria-label={item.label}
                   className={cn(
                     "w-10 h-10 flex justify-center items-center rounded-[13px] transition-all",
@@ -211,7 +210,7 @@ function MobileSidebarContent({
           return (
             <Link
               key={item.href}
-              href={item.href}
+              to={item.href}
               onClick={onNavigate}
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",

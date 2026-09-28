@@ -9,7 +9,7 @@ import { useTranslateMutation } from "@/features/reading/api/mutations";
 import { useCreateVocabularyMutation } from "@/features/vocabulary/api/mutations";
 import { validateWordSelection } from "@/features/reading/utils/word-selection";
 import type { WordSelectionAnchor } from "@/features/reading/utils/word-selection";
-import type { Passage } from "@/features/passage/schema";
+import type { Passage } from "@/shared/contracts/passage";
 import { YouTubeEmbed } from "./youtube-embed";
 
 export function ContentPanel({

@@ -12,7 +12,7 @@ import {
 } from "@/component/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { PartOfSpeech, VocabularyStatus } from "@/generated/prisma/enums";
-import type { VocabularyItem } from "@/features/vocabulary/schema";
+import type { VocabularyItem } from "@/shared/contracts/vocabulary";
 
 interface VocabularyListProps {
   items: VocabularyItem[];

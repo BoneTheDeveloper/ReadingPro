@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/component/ui/card";
 import { Button } from "@/component/ui/button";
 import { Input } from "@/component/ui/input";
 import { SourceListItem } from "./source-list-item";
-import type { PassageListItem } from "@/features/passage/schema";
+import type { PassageListItem } from "@/shared/contracts/passage";
 
 interface DefaultSourceHeaderProps {
   onToggleCollapse: () => void;

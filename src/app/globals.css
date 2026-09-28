@@ -103,6 +103,11 @@
 }
 
 :root {
+    /* Self-hosted Fontsource families (imported in root.tsx) */
+    --font-jakarta: "Plus Jakarta Sans Variable", ui-sans-serif, system-ui, sans-serif;
+    --font-lora: "Lora Variable", ui-serif, Georgia, serif;
+    --font-jetbrains-mono: "JetBrains Mono Variable", ui-monospace, monospace;
+
     /* Base surfaces — warm paper */
     --background: #F5F2EC; /* paper */
     --foreground: #221F2B; /* ink */
