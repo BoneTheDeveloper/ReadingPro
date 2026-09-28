@@ -72,7 +72,11 @@ in `eslint.config.mjs`) enforces this. Client code may also import
 ## Development
 
 ```
-pnpm dev        # Vite on :3000 (proxies /api) + Nitro API on :3001
-pnpm build      # prisma generate, react-router build, nitro build
+pnpm dev        # dev:api + dev:web together
+pnpm dev:web    # Vite on :3000 only (proxies /api to :3001)
+pnpm dev:api    # Nitro API on :3001 only
+pnpm build      # prisma generate, build:web, then build:api
+pnpm build:web  # react-router build → build/client
+pnpm build:api  # nitro build → .output (bundles build/client, so run build:web first)
 pnpm start      # serve .output with .env loaded
 ```
