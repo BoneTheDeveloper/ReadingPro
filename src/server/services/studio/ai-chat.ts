@@ -1,15 +1,8 @@
 import { convertToModelMessages, streamText, type UIMessage } from "ai";
-import prisma from "@/lib/prisma";
-import { MAX_TEXT_CHARS, type StudyChatLanguage } from "@/features/studio/schema/ai-chat";
+import prisma from "@/server/lib/prisma";
+import { MAX_TEXT_CHARS, type StudyChatLanguage } from "@/shared/contracts/studio-chat";
+import { extractAssistantText } from "@/server/util/chat-message";
 
-
-function extractAssistantText(message: UIMessage): string {
-  return message.parts
-    .filter((part): part is { type: "text"; text: string } => part.type === "text")
-    .map((part) => part.text)
-    .join("\n")
-    .trim();
-}
 const STUDY_CHAT_SYSTEM_PROMPT_EN = [
   "You are an encouraging English reading comprehension tutor.",
   "Answer only about the selected passage unless the learner asks for general study strategy.",

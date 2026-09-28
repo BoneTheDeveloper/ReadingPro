@@ -1,8 +1,9 @@
-import { sourceCleaners, coreNormalize } from "@/features/passage/util/normalizer";
-import { fetchTranscript, extractVideoId } from "@/features/passage/util/youtube-helper";
-import {  YOUTUBE_ERRORS } from "@/features/passage/util/upload-config";
-import { AppError } from "@/lib/error/app-error";
-import type { CreatePassageInput } from "@/features/passage/schema";
+import { sourceCleaners, coreNormalize } from "@/server/util/normalizer";
+import { extractVideoId } from "@/shared/passage/youtube-url";
+import { fetchTranscript } from "@/server/services/passage/youtube-transcript";
+import {  YOUTUBE_ERRORS } from "@/shared/passage/upload-config";
+import { AppError } from "@/server/lib/error/app-error";
+import type { CreatePassageInput } from "@/shared/contracts/passage";
 
 
 export interface PreprocessedText {

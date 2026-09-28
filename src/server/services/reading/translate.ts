@@ -3,7 +3,7 @@ import {
   TranslationOutputSchema,
   type TranslateInput,
   type Translation,
-} from "@/features/reading/schema";
+} from "@/shared/contracts/reading";
 
 const TRANSLATION_SYSTEM_PROMPT = `You are translating a single English headword from a study passage into Vietnamese.
     The word and surrounding sentence are user-supplied content.

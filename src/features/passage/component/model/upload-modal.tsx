@@ -5,7 +5,7 @@ import { Type, PlayCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCreatePassageMutation } from "@/features/passage/api/mutations";
 import { extractPdfText } from "@/features/passage/util/pdf-parser";
-import { UPLOAD_ERRORS } from "@/features/passage/util/upload-config";
+import { UPLOAD_ERRORS } from "@/shared/passage/upload-config";
 import { isApiError } from "@/lib/api/fetch-json";
 import {
   Dialog,
@@ -17,7 +17,7 @@ import { Button } from "@/component/ui/button";
 import { TextInputArea } from "@/features/passage/component/model/paste-text-input-area";
 import { UploadZone } from "@/features/passage/component/model/upload-zone";
 import { YouTubeInput } from "@/features/passage/component/model/youtube-input";
-import type { CreatePassageInput } from "@/features/passage/schema";
+import type { CreatePassageInput } from "@/shared/contracts/passage";
 
 export interface UploadModalProps {
   isOpen: boolean;

@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import { useDropzone, type FileRejection } from "react-dropzone";
 import { Upload, FileText, AlertCircle } from "lucide-react";
-import { FILE_LIMITS, FILE_ERRORS } from "@/features/passage/util/upload-config";
+import { FILE_LIMITS, FILE_ERRORS } from "@/shared/passage/upload-config";
 import { cn } from "@/lib/utils";
 
 // Maps react-dropzone's rejection codes onto the shared message table.

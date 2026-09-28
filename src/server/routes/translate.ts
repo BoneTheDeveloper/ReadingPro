@@ -1,6 +1,6 @@
 import { Hono } from "hono";
-import { withErrorHandling } from "@/lib/error/with-error-handling";
-import { TranslateInputSchema } from "@/features/reading/schema";
+import { withErrorHandling } from "@/server/lib/error/with-error-handling";
+import { TranslateInputSchema } from "@/shared/contracts/reading";
 import { translateWord } from "@/server/services/reading/translate";
 
 export const translateRoutes = new Hono();

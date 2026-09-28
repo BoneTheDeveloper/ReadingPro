@@ -15,7 +15,7 @@ import { Bookmark, Languages, LoaderCircle, RotateCcw, X } from "lucide-react";
 import { useMemo, useEffect } from "react";
 
 import { Button } from "@/component/ui/button";
-import type { Translation } from "@/features/reading/schema";
+import type { Translation } from "@/shared/contracts/reading";
 import type { PartOfSpeech } from "@/generated/prisma/enums";
 import type { WordSelectionAnchor } from "@/features/reading/utils/word-selection";
 

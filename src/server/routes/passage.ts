@@ -1,18 +1,19 @@
 import { Hono } from "hono";
-import { withErrorHandling } from "@/lib/error/with-error-handling";
-import { requireApiSession } from "@/lib/auth/session";
+import { withErrorHandling } from "@/server/lib/error/with-error-handling";
+import { requireApiSession } from "@/server/lib/auth/session";
 import {
   createPassageForUser,
   deletePassageForUser,
   findPassageForUser,
   listPassagesForUser,
 } from "@/server/services/passage/passage-crud";
-import { CreatePassageInputSchema } from "@/features/passage/schema";
+import { CreatePassageInputSchema } from "@/shared/contracts/passage";
 import { start } from "workflow/api";
 import { passageProcessingWorkflow } from "@/workflows/passage-processing/index";
-import { fetchTranscript, extractVideoId } from "@/features/passage/util/youtube-helper";
-import { YOUTUBE_ERRORS } from "@/features/passage/util/upload-config";
-import { AppError } from "@/lib/error/app-error";
+import { extractVideoId } from "@/shared/passage/youtube-url";
+import { fetchTranscript } from "@/server/services/passage/youtube-transcript";
+import { YOUTUBE_ERRORS } from "@/shared/passage/upload-config";
+import { AppError } from "@/server/lib/error/app-error";
 import { z } from "zod";
 
 export const passageRoutes = new Hono();

@@ -37,23 +37,37 @@ owned workspace.
 
 ```
 src/
+│  ── client (browser bundle) ──
 ├─ app/
 │  ├─ root.tsx                # document shell, providers, error boundary
 │  ├─ routes.ts               # route config
 │  └─ routes/                 # marketing, login, dashboard layout, study, vocabulary, account
 ├─ features/
-│  ├─ passage/                # import, preprocessing, library panel
+│  ├─ passage/                # import UI, library panel
 │  ├─ reading/                # reader panel, selection, inline translation
 │  ├─ studio/                 # study workspace; artifacts: questions, flashcards, passage chat
 │  └─ vocabulary/             # word bank and sets
-├─ server/                    # Hono app (app.ts), API routes, services
-├─ workflows/                 # Workflow SDK background jobs
 ├─ component/                 # shared UI (shadcn/ui in component/ui)
-├─ lib/                       # auth, prisma, logger, query client, error helpers
+├─ lib/                       # auth client, fetch helpers, query client, store
+│  ── shared (imported by both sides) ──
+├─ shared/
+│  ├─ contracts/              # Zod request/response schemas and their types, API error shape
+│  └─ passage/                # upload limits and messages, YouTube URL parsing
+│  ── server (Nitro) ──
+├─ server/
+│  ├─ app.ts, routes/         # Hono app and API routes
+│  ├─ services/               # business logic per feature (database, AI, network)
+│  ├─ util/                   # pure helpers with no I/O: text normalization, passage text, chat messages
+│  └─ lib/                    # auth, session, prisma, logger, error helpers
+├─ workflows/                 # Workflow SDK background jobs
 └─ generated/prisma/          # generated client — do not edit
 
 prisma/schema.prisma          # database schema
 ```
+
+Client and server code only meet in `src/shared/`. ESLint (`no-restricted-imports`
+in `eslint.config.mjs`) enforces this. Client code may also import
+`@/generated/prisma/enums`, which is browser-safe.
 
 ## Development
 

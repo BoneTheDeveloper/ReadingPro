@@ -13,7 +13,7 @@ import {
   useUpdateVocabularyMutation,
 } from "@/features/vocabulary/api/mutations";
 import { VocabularyStatus } from "@/generated/prisma/enums";
-import type { VocabularyItem, VocabularySet } from "@/features/vocabulary/schema";
+import type { VocabularyItem, VocabularySet } from "@/shared/contracts/vocabulary";
 
 
 type ViewTab = "words" | "sets";
@@ -60,7 +60,7 @@ function StatCard({
 }
 
 const STAT_CONFIG: Array<{
-  key: keyof import("@/features/vocabulary/schema").VocabularyStats;
+  key: keyof import("@/shared/contracts/vocabulary").VocabularyStats;
   label: string;
   sublabel: string;
   accent: string;

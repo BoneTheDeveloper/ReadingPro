@@ -1,6 +1,6 @@
 import { Hono } from "hono";
-import { withErrorHandling } from "@/lib/error/with-error-handling";
-import { requireApiSession } from "@/lib/auth/session";
+import { withErrorHandling } from "@/server/lib/error/with-error-handling";
+import { requireApiSession } from "@/server/lib/auth/session";
 import {
   deleteVocabularyItemForUser,
   listVocabularyItemsForUser,
@@ -12,7 +12,7 @@ import {
   VocabularyIdParamSchema,
   VocabularyInputSchema,
   VocabularyUpdateInputSchema,
-} from "@/features/vocabulary/schema";
+} from "@/shared/contracts/vocabulary";
 
 export const vocabularyRoutes = new Hono();
 

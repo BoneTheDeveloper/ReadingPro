@@ -1,11 +1,11 @@
-import prisma from "@/lib/prisma";
-import { NotFoundError } from "@/lib/error/app-error";
+import prisma from "@/server/lib/prisma";
+import { NotFoundError } from "@/server/lib/error/app-error";
 import type {
   VocabularyInputParsed,
   VocabularyItem,
   VocabularyStats,
   VocabularyUpdateInput,
-} from "@/features/vocabulary/schema";
+} from "@/shared/contracts/vocabulary";
 
 export async function storeVocabularyItemForUser(
   userId: string,

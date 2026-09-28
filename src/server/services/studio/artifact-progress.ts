@@ -1,5 +1,5 @@
 import { Prisma } from "@/generated/prisma/client";
-import prisma from "@/lib/prisma";
+import prisma from "@/server/lib/prisma";
 
 export async function updateArtifactProgress(
   id: string,

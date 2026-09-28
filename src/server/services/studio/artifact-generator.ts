@@ -1,13 +1,13 @@
 import { generateObject } from "ai";
 import { updateArtifactStatus } from "@/server/services/studio/artifact-crud";
 import { findPassageForUser } from "@/server/services/passage/passage-crud";
-import { NotFoundError } from "@/lib/error/app-error";
+import { NotFoundError } from "@/server/lib/error/app-error";
 import {
   questionContentSchema,
   flashcardContentSchema,
   type QuestionContent,
   type FlashcardContent,
-} from "@/features/studio/schema/artifact";
+} from "@/shared/contracts/studio-artifact";
 import { StudioArtifactType } from "@/generated/prisma/enums";
 
 // ─── Prompt templates ─────────────────────────────────────────────

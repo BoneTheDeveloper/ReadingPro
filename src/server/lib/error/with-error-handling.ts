@@ -1,7 +1,8 @@
 import type { Context } from "hono";
 import { ZodError } from "zod";
-import { log } from "@/lib/logger";
-import { isAppError, internalErrorBody, ERROR_CODES } from "@/lib/error/app-error";
+import { log } from "@/server/lib/logger";
+import { isAppError, internalErrorBody } from "@/server/lib/error/app-error";
+import { ERROR_CODES } from "@/shared/contracts/api-error";
 import type pino from "pino";
 
 type HandlerCtx = { params: Promise<Record<string, string>>; log: pino.Logger };

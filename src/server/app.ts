@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { auth } from "@/lib/auth/auth";
+import { auth } from "@/server/lib/auth/auth";
 import { passageRoutes } from "./routes/passage";
 import { artifactRoutes } from "./routes/artifact";
 import { vocabularyRoutes } from "./routes/vocabulary";

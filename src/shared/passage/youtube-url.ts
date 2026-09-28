@@ -1,23 +1,3 @@
-import { YoutubeTranscript } from "youtube-transcript";
-
-export async function fetchTranscript(
-  videoId: string
-): Promise<string | null> {
-  try {
-    const transcript = await YoutubeTranscript.fetchTranscript(videoId, {
-      lang: "en",
-    });
-
-    if (!transcript || transcript.length === 0) {
-      return null;
-    }
-
-    return transcript.map((item) => item.text).join(" ");
-  } catch {
-    return null;
-  }
-}
-
 export function extractVideoId(url: string): string | null {
   if (!url) return null;
   const trimmed = url.trim();
@@ -32,7 +12,6 @@ export function extractVideoId(url: string): string | null {
 
   return null;
 }
-
 
 export function isValidYouTubeUrl(url: string): boolean {
   return extractVideoId(url) !== null;

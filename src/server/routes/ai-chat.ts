@@ -1,12 +1,12 @@
 import { Hono } from "hono";
 import { type UIMessage, generateId } from "ai";
-import { withErrorHandling } from "@/lib/error/with-error-handling";
-import { requireApiSession } from "@/lib/auth/session";
+import { withErrorHandling } from "@/server/lib/error/with-error-handling";
+import { requireApiSession } from "@/server/lib/auth/session";
 import {
   chatHistoryResponseSchema,
   MAX_TEXT_CHARS,
   studyChatRequestSchema,
-} from "@/features/studio/schema/ai-chat";
+} from "@/shared/contracts/studio-chat";
 import {
   getChatHistoryForUser,
   persistAssistantMessage,
@@ -15,7 +15,7 @@ import {
   streamStudyChat,
 } from "@/server/services/studio/ai-chat";
 import { findPassageForUser } from "@/server/services/passage/passage-crud";
-import { NotFoundError, AppError } from "@/lib/error/app-error";
+import { NotFoundError, AppError } from "@/server/lib/error/app-error";
 
 export const aiChatRoutes = new Hono();
 

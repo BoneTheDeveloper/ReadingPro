@@ -4,7 +4,7 @@ import { Plus, FileText, File, PlayCircle, PanelRight } from "lucide-react";
 import { Card, CardContent } from "@/component/ui/card";
 import { Button } from "@/component/ui/button";
 import { cn } from "@/lib/utils";
-import type { PassageListItem } from "@/features/passage/schema";
+import type { PassageListItem } from "@/shared/contracts/passage";
 import type { SourceType } from "@/generated/prisma/enums";
 
 const SOURCE_TYPE_VISUAL: Record<SourceType, { icon: typeof FileText; chip: string }> = {

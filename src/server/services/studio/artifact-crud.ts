@@ -1,5 +1,5 @@
-import prisma from "@/lib/prisma";
-import { NotFoundError } from "@/lib/error/app-error";
+import prisma from "@/server/lib/prisma";
+import { NotFoundError } from "@/server/lib/error/app-error";
 import { ProcessingStatus, StudioArtifactType } from "@/generated/prisma/enums";
 import type { Prisma } from "@/generated/prisma/client";
 

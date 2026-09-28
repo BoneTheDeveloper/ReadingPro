@@ -9,7 +9,7 @@ import {
 } from "react";
 import { Chat, type UIMessage } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
-import type { StudyChatLanguage } from "@/features/studio/schema/ai-chat";
+import type { StudyChatLanguage } from "@/shared/contracts/studio-chat";
 
 interface ChatContextValue {
   chat: Chat<UIMessage>;

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { FileText, AlertCircle } from "lucide-react";
-import { TEXT_INPUT_LIMITS, TEXT_INPUT_ERRORS } from "@/features/passage/util/upload-config";
+import { TEXT_INPUT_LIMITS, TEXT_INPUT_ERRORS } from "@/shared/passage/upload-config";
 import { Button } from "@/component/ui/button";
 import { Textarea } from "@/component/ui/textarea";
 

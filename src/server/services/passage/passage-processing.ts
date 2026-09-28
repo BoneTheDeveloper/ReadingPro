@@ -2,8 +2,9 @@ import { generateObject, generateText } from "ai";
 import {
   passageMetadataSchema,
   type PassageMetadata,
-} from "@/features/passage/schema";
+} from "@/shared/contracts/passage";
 import { completePassageProcessing } from "@/server/services/passage/passage-crud";
+import { takeWords, titleFromContent } from "@/server/util/passage-text";
 
 const MODEL = "deepseek/deepseek-v4-flash";
 const AI_TIMEOUT_MS = 170_000;
@@ -73,17 +74,6 @@ async function generatePassage(text: string): Promise<string> {
   if (!trimmed) throw new Error("generation returned empty passage");
 
   return trimmed;
-}
-
-function takeWords(text: string, count: number): string {
-  const words = text.split(/\s+/);
-  return words.length <= count ? text : words.slice(0, count).join(" ");
-}
-
-function titleFromContent(content: string): string {
-  const opening = content.trim().slice(0, 50);
-  const lastSpace = opening.lastIndexOf(" ");
-  return (lastSpace > 20 ? opening.slice(0, lastSpace) : opening).trim();
 }
 
 export async function runPassageProcessing(args: {

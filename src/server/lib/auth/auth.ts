@@ -1,7 +1,7 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { oAuthProxy } from "better-auth/plugins";
-import prisma from "@/lib/prisma";
+import prisma from "@/server/lib/prisma";
 
 const productionUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
   ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
