@@ -8,7 +8,7 @@ import {
 } from "react-router";
 import { authClient } from "@/client/lib/auth/auth-client";
 import { StoreProvider } from "@/client/lib/store/store-provider";
-import { DashboardSidebar } from "@/client/component/layout/dashboard-sidebar";
+import { DashboardSidebar } from "@/client/components/layout/dashboard-sidebar";
 import type { SessionUser } from "@/client/lib/store/session-slice";
 
 const sessionUserContext = createContext<SessionUser>();

@@ -1,12 +1,12 @@
 import { useAppSelector } from "@/client/lib/store/hooks";
 import { selectSessionUser } from "@/client/lib/store/session-slice";
-import { Button } from "@/client/component/ui/button";
-import { Input } from "@/client/component/ui/input";
-import { Label } from "@/client/component/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/client/component/ui/card";
-import { Separator } from "@/client/component/ui/separator";
+import { Button } from "@/client/components/ui/button";
+import { Input } from "@/client/components/ui/input";
+import { Label } from "@/client/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/client/components/ui/card";
+import { Separator } from "@/client/components/ui/separator";
 
-export { DashboardError as ErrorBoundary } from "@/client/component/layout/dashboard-error";
+export { DashboardError as ErrorBoundary } from "@/client/components/layout/dashboard-error";
 
 export default function AccountRoute() {
   const user = useAppSelector(selectSessionUser);

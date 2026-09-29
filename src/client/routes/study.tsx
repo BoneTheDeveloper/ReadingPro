@@ -1,8 +1,8 @@
 import { getQueryClient } from "@/client/lib/query-client";
-import { passageQueries } from "@/client/features/passage/api/queries";
-import { StudyWorkspace } from "@/client/features/studio/component/study-workspace";
+import { passageQueries } from "@/client/features/passage";
+import { StudyWorkspace } from "@/client/features/studio";
 
-export { DashboardError as ErrorBoundary } from "@/client/component/layout/dashboard-error";
+export { DashboardError as ErrorBoundary } from "@/client/components/layout/dashboard-error";
 
 export async function clientLoader() {
   await getQueryClient().prefetchQuery(passageQueries.list());

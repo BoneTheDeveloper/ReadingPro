@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { fetchJson } from "@/client/lib/api/fetch-json";
-import { artifactQueries, chatQueries } from "@/client/features/studio/api/queries";
+import { artifactQueries, chatQueries } from "./queries";
 import {
   studioArtifactListItemSchema,
   type StudioArtifactListItem,

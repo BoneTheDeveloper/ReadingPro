@@ -42,12 +42,13 @@ src/
 │  ├─ root.tsx                # document shell, providers, error boundary
 │  ├─ routes.ts               # route config
 │  ├─ routes/                 # marketing, login, dashboard layout, study, vocabulary, account
-│  ├─ features/
+│  ├─ features/               # one folder per domain; import it through its index.ts
+│  │  ├─ auth/                # login form, account controls
 │  │  ├─ passage/             # import UI, library panel
 │  │  ├─ reading/             # reader panel, selection, inline translation
 │  │  ├─ studio/              # study workspace; artifacts: questions, flashcards, passage chat
 │  │  └─ vocabulary/          # word bank and sets
-│  ├─ component/              # shared UI (shadcn/ui in component/ui)
+│  ├─ components/             # shared UI: layout and shadcn/ui (components/ui)
 │  └─ lib/                    # auth client, fetch helpers, query client, store
 │  ── shared (imported by both sides) ──
 ├─ shared/

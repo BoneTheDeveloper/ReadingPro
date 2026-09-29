@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { fetchJson } from "@/client/lib/api/fetch-json";
-import { passageQueries } from "@/client/features/passage/api/queries";
+import { passageQueries } from "./queries";
 import {
   passageSchema,
   type CreatePassageInput,

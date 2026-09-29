@@ -10,7 +10,7 @@ import {
   type VocabularyItem,
   type VocabularyUpdateInput,
 } from "@/shared/contracts/vocabulary";
-import { vocabularyQueries } from "@/client/features/vocabulary/api/queries";
+import { vocabularyQueries } from "./queries";
 
 export function useCreateVocabularyMutation() {
   const queryClient = useQueryClient();

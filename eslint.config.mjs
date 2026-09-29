@@ -39,6 +39,9 @@ export default defineConfig([
         patterns: [{
           group: ["@/server/*", "@/workflows/*", "@/generated/prisma/*", "!@/generated/prisma/enums"],
           message: "Client code may only reach the server through src/shared contracts.",
+        }, {
+          group: ["@/client/features/*/*"],
+          message: "Import a feature through its index.ts.",
         }],
       }],
     },

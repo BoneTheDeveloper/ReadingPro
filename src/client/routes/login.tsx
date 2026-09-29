@@ -1,6 +1,6 @@
 import { redirect } from "react-router";
 import { authClient } from "@/client/lib/auth/auth-client";
-import { LoginForm } from "@/client/component/auth/login-form";
+import { LoginForm } from "@/client/features/auth";
 
 export async function clientLoader() {
   const { data: session } = await authClient.getSession();

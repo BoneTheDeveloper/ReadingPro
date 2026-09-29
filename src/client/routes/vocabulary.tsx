@@ -1,8 +1,7 @@
 import { getQueryClient } from "@/client/lib/query-client";
-import { vocabularyQueries } from "@/client/features/vocabulary/api/queries";
-import { VocabularyPageClient } from "@/client/features/vocabulary/component/vocabulary-page";
+import { vocabularyQueries, VocabularyPageClient } from "@/client/features/vocabulary";
 
-export { DashboardError as ErrorBoundary } from "@/client/component/layout/dashboard-error";
+export { DashboardError as ErrorBoundary } from "@/client/components/layout/dashboard-error";
 
 export async function clientLoader() {
   const queryClient = getQueryClient();
