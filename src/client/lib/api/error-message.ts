@@ -1,4 +1,4 @@
-import type { ErrorCode } from "@/shared/contracts/api-error";
+import type { ErrorCode } from "@/shared/api-error";
 import { isApiError } from "@/client/lib/api/fetch-json";
 
 

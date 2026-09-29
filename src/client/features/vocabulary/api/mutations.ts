@@ -9,7 +9,7 @@ import {
   type VocabularyInput,
   type VocabularyItem,
   type VocabularyUpdateInput,
-} from "@/shared/contracts/vocabulary";
+} from "@/shared/vocabulary/schema";
 import { vocabularyQueries } from "./queries";
 
 export function useCreateVocabularyMutation() {

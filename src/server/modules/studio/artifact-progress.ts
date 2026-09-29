@@ -1,4 +1,4 @@
-import { Prisma } from "@/generated/prisma/client";
+import { Prisma } from "@/server/db/generated/client";
 import prisma from "@/server/lib/prisma";
 
 export async function updateArtifactProgress(

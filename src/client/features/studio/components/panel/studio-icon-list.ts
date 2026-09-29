@@ -1,5 +1,5 @@
 import { ListChecks, Layers, MessageCircle, type LucideIcon } from "lucide-react";
-import { StudioArtifactType } from "@/generated/prisma/enums";
+import { StudioArtifactType } from "@/shared/enums";
 
 export type StudioGridId = StudioArtifactType | "CHAT";
 

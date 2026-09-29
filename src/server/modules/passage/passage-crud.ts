@@ -2,8 +2,8 @@ import prisma from "@/server/lib/prisma";
 import type {
   Passage,
   PassageListItem,
-} from "@/shared/contracts/passage";
-import { CEFRLevel, SourceType } from "@/generated/prisma/enums";
+} from "@/shared/passage/schema";
+import { CEFRLevel, SourceType } from "@/server/db/generated/enums";
 
 export async function findPassageForUser(
   userId: string,

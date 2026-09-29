@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 
-import { PartOfSpeech } from "@/generated/prisma/enums";
+import { PartOfSpeech } from "@/shared/enums";
 
 
 export const TranslateInputSchema = z.object({

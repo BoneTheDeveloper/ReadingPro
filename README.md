@@ -52,26 +52,31 @@ src/
 │  └─ lib/                    # auth client, fetch helpers, query client, store
 │  ── shared (imported by both sides) ──
 ├─ shared/
-│  ├─ contracts/              # Zod request/response schemas and their types, API error shape
-│  └─ passage/                # upload limits and messages, YouTube URL parsing
+│  ├─ api-error.ts            # API error envelope and codes
+│  ├─ enums.ts                # browser-safe copies of Prisma enums (sync-checked on the server)
+│  ├─ passage/                # passage schemas, upload limits and messages, YouTube URL parsing
+│  ├─ reading/                # translation schemas
+│  ├─ studio/                 # artifact and chat schemas
+│  └─ vocabulary/             # vocabulary schemas
 │  ── server (Nitro) ──
-├─ server/
-│  ├─ app.ts                  # Hono app; mounts each module's routes under /api
-│  ├─ modules/                # one folder per domain: routes, services, helpers, workflows
-│  │  ├─ auth/                # better-auth instance, API session guard
-│  │  ├─ passage/             # import, normalization, processing workflow
-│  │  ├─ reading/             # word translation
-│  │  ├─ studio/              # artifacts, generation workflow, passage chat
-│  │  └─ vocabulary/          # word bank CRUD
-│  └─ lib/                    # prisma, logger, error helpers
-└─ generated/prisma/          # generated client — do not edit
+└─ server/
+   ├─ app.ts                  # Hono app; mounts each module's routes under /api
+   ├─ modules/                # one folder per domain: routes, services, helpers, workflows
+   │  ├─ auth/                # better-auth instance, API session guard
+   │  ├─ passage/             # import, normalization, processing workflow
+   │  ├─ reading/             # word translation
+   │  ├─ studio/              # artifacts, generation workflow, passage chat
+   │  └─ vocabulary/          # word bank CRUD
+   ├─ lib/                    # prisma, logger, error helpers, enum sync check
+   └─ db/generated/           # generated Prisma client — do not edit
 
 prisma/schema.prisma          # database schema
 ```
 
 Client and server code only meet in `src/shared/`. ESLint (`no-restricted-imports`
-in `eslint.config.mjs`) enforces this. Client code may also import
-`@/generated/prisma/enums`, which is browser-safe.
+in `eslint.config.mjs`) enforces this. Client code gets Prisma enums from
+`@/shared/enums`; `src/server/lib/enum-sync.ts` fails typecheck if they drift
+from the schema.
 
 ## Development
 

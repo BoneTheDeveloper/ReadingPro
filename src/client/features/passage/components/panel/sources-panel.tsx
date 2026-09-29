@@ -3,7 +3,7 @@
 import { DefaultSourceView } from "./default-source-view";
 import { PassageErrorItem } from "./passage-error-item";
 import { CollapsedSourcesPanel } from "./collapsed-sources-panel";
-import type { PassageListItem } from "@/shared/contracts/passage";
+import type { PassageListItem } from "@/shared/passage/schema";
 import type { WorkspaceError } from "../../hooks/use-upload-flow";
 
 interface SourcesPanelProps {

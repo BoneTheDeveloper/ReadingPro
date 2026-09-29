@@ -15,8 +15,8 @@ import { Bookmark, Languages, LoaderCircle, RotateCcw, X } from "lucide-react";
 import { useMemo, useEffect } from "react";
 
 import { Button } from "@/client/components/ui/button";
-import type { Translation } from "@/shared/contracts/reading";
-import type { PartOfSpeech } from "@/generated/prisma/enums";
+import type { Translation } from "@/shared/reading/schema";
+import type { PartOfSpeech } from "@/shared/enums";
 import type { WordSelectionAnchor } from "../lib/word-selection";
 
 interface InlineTranslationPopupProps {

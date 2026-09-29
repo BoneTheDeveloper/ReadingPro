@@ -5,7 +5,7 @@ import { useSearchParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useDeletePassageMutation } from "../api/mutations";
 import { passageQueries } from "../api/queries";
-import type { PassageListItem } from "@/shared/contracts/passage";
+import type { PassageListItem } from "@/shared/passage/schema";
 
 const PASSAGE_PARAM = "passageId";
 

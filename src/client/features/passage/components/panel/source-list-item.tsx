@@ -8,8 +8,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/client/components/ui/dropdown-menu";
-import type { PassageListItem } from "@/shared/contracts/passage";
-import { ProcessingStatus, type SourceType } from "@/generated/prisma/enums";
+import type { PassageListItem } from "@/shared/passage/schema";
+import { ProcessingStatus, type SourceType } from "@/shared/enums";
 
 const SOURCE_TYPE_VISUAL: Record<SourceType, { icon: LucideIcon; chip: string }> = {
   TEXT: { icon: FileText, chip: "bg-indigo-soft text-primary" },

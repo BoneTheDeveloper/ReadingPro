@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { StudioArtifactType } from "@/generated/prisma/enums";
+import { StudioArtifactType } from "@/shared/enums";
 import type { StudioPanelView, StudioGridId } from "./studio-icon-list";
 import { CollapsedSidebar } from "./collapsed-sidebar";
 import { DefaultStudioView } from "./default-studio-view";

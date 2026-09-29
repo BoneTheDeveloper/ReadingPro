@@ -3,7 +3,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { Chat, type UIMessage } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
-import type { StudyChatLanguage } from "@/shared/contracts/studio-chat";
+import type { StudyChatLanguage } from "@/shared/studio/chat";
 import { ChatContext, registerChat } from "./chat-context";
 
 /**

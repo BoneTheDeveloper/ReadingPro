@@ -3,8 +3,8 @@ import { fetchJson } from "@/client/lib/api/fetch-json";
 import {
   studioArtifactListItemSchema,
   studioArtifactSchema,
-} from "@/shared/contracts/studio-artifact";
-import { chatHistoryResponseSchema } from "@/shared/contracts/studio-chat";
+} from "@/shared/studio/artifact";
+import { chatHistoryResponseSchema } from "@/shared/studio/chat";
 
 export const artifactQueries = {
   all: () => ["artifacts"] as const,

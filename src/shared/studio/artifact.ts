@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ProcessingStatus, StudioArtifactType } from "@/generated/prisma/enums";
+import { ProcessingStatus, StudioArtifactType } from "@/shared/enums";
 
 // ─── Question Content ──────────────────────────────────────────────
 

@@ -2,7 +2,7 @@
 
 import { useMutation } from "@tanstack/react-query";
 import { fetchJson } from "@/client/lib/api/fetch-json";
-import { TranslationOutputSchema } from "@/shared/contracts/reading";
+import { TranslationOutputSchema } from "@/shared/reading/schema";
 
 export function useTranslateMutation() {
   return useMutation({

@@ -3,7 +3,7 @@
  */
 import { generateAndStoreArtifact } from "../artifact-generator";
 import { updateArtifactStatus } from "../artifact-crud";
-import { StudioArtifactType } from "@/generated/prisma/enums";
+import { StudioArtifactType } from "@/server/db/generated/enums";
 
 export interface ArtifactGenerationInput {
   artifactId: string;

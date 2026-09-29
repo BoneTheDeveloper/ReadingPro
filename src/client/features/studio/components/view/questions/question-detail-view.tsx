@@ -8,7 +8,7 @@ import { QuestionResults } from "./question-results";
 import { useQuery } from "@tanstack/react-query";
 import { artifactQueries } from "../../../api/queries";
 import { useRecordProgressMutation } from "../../../api/mutations";
-import type { StudioArtifact } from "@/shared/contracts/studio-artifact";
+import type { StudioArtifact } from "@/shared/studio/artifact";
 import { getErrorMessage } from "@/client/lib/api/error-message";
 
 interface QuestionDetailViewProps {

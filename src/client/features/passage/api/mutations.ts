@@ -8,7 +8,7 @@ import {
   passageSchema,
   type CreatePassageInput,
   type PassageListItem,
-} from "@/shared/contracts/passage";
+} from "@/shared/passage/schema";
 
 /* ─── Create ───────────────────────────────────────────────────────── */
 

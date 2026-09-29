@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { CEFRLevel, ProcessingStatus, SourceType } from "@/generated/prisma/enums";
+import { CEFRLevel, ProcessingStatus, SourceType } from "@/shared/enums";
 
 export const passageSchema = z.object({
   id: z.string(),

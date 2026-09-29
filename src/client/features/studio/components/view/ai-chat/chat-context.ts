@@ -1,6 +1,6 @@
 import { createContext, useContext } from "react";
 import type { Chat, UIMessage } from "@ai-sdk/react";
-import type { StudyChatLanguage } from "@/shared/contracts/studio-chat";
+import type { StudyChatLanguage } from "@/shared/studio/chat";
 
 export interface ChatContextValue {
   chat: Chat<UIMessage>;

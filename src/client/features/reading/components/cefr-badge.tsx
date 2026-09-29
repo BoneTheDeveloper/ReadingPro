@@ -1,4 +1,4 @@
-import type { CEFRLevel } from "@/generated/prisma/enums";
+import type { CEFRLevel } from "@/shared/enums";
 import { Badge, type BadgeVariant } from "@/client/components/ui/badge";
 
 const FALLBACK_LEVEL: CEFRLevel = "B2";

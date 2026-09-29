@@ -17,7 +17,7 @@ import { Button } from "@/client/components/ui/button";
 import { TextInputArea } from "./paste-text-input-area";
 import { UploadZone } from "./upload-zone";
 import { YouTubeInput } from "./youtube-input";
-import type { CreatePassageInput } from "@/shared/contracts/passage";
+import type { CreatePassageInput } from "@/shared/passage/schema";
 
 export interface UploadModalProps {
   isOpen: boolean;

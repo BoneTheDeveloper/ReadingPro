@@ -7,8 +7,8 @@ import {
   flashcardContentSchema,
   type QuestionContent,
   type FlashcardContent,
-} from "@/shared/contracts/studio-artifact";
-import { StudioArtifactType } from "@/generated/prisma/enums";
+} from "@/shared/studio/artifact";
+import { StudioArtifactType } from "@/server/db/generated/enums";
 
 // ─── Prompt templates ─────────────────────────────────────────────
 

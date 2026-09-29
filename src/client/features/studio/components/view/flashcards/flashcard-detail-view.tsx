@@ -8,7 +8,7 @@ import { Button } from "@/client/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { artifactQueries } from "../../../api/queries";
 import { useUpdateFlashcardProgressMutation } from "../../../api/mutations";
-import type { StudioArtifact } from "@/shared/contracts/studio-artifact";
+import type { StudioArtifact } from "@/shared/studio/artifact";
 import { getErrorMessage } from "@/client/lib/api/error-message";
 
 interface FlashcardDetailViewProps {

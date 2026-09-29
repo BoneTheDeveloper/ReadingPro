@@ -5,7 +5,7 @@ import type {
   VocabularyItem,
   VocabularyStats,
   VocabularyUpdateInput,
-} from "@/shared/contracts/vocabulary";
+} from "@/shared/vocabulary/schema";
 
 export async function storeVocabularyItemForUser(
   userId: string,

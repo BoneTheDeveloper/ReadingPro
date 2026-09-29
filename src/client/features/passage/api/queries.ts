@@ -1,6 +1,6 @@
 import { keepPreviousData, queryOptions, skipToken } from "@tanstack/react-query";
 import { fetchJson } from "@/client/lib/api/fetch-json";
-import { passageSchema, passageListSchema } from "@/shared/contracts/passage";
+import { passageSchema, passageListSchema } from "@/shared/passage/schema";
 
 export const passageQueries = {
   all: () => ["passages"] as const,

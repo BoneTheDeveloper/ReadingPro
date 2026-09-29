@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { PartOfSpeech, VocabularyStatus } from "@/generated/prisma/enums";
+import { PartOfSpeech, VocabularyStatus } from "@/shared/enums";
 
 export const VocabularyInputSchema = z.object({
   term: z.string().trim().min(1).max(80),

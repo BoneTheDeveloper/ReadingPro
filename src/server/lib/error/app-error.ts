@@ -1,4 +1,4 @@
-import { ERROR_CODES, type ApiErrorBody, type ErrorCode } from "@/shared/contracts/api-error";
+import { ERROR_CODES, type ApiErrorBody, type ErrorCode } from "@/shared/api-error";
 
 export class AppError extends Error {
   constructor(

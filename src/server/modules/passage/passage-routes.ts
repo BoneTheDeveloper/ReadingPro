@@ -7,7 +7,7 @@ import {
   findPassageForUser,
   listPassagesForUser,
 } from "./passage-crud";
-import { CreatePassageInputSchema } from "@/shared/contracts/passage";
+import { CreatePassageInputSchema } from "@/shared/passage/schema";
 import { start } from "workflow/api";
 import { passageProcessingWorkflow } from "./workflow/index";
 import { extractVideoId } from "@/shared/passage/youtube-url";

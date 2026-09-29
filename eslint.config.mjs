@@ -14,7 +14,7 @@ export default defineConfig([
     ".react-router/**",
     ".vercel/**",
     "coverage/**",
-    "src/generated/**",
+    "src/server/db/generated/**",
   ]),
 
   {
@@ -37,7 +37,7 @@ export default defineConfig([
     rules: {
       "no-restricted-imports": ["error", {
         patterns: [{
-          group: ["@/server/*", "@/generated/prisma/*", "!@/generated/prisma/enums"],
+          group: ["@/server/*"],
           message: "Client code may only reach the server through src/shared contracts.",
         }, {
           group: ["@/client/features/*/*"],
@@ -62,8 +62,8 @@ export default defineConfig([
     rules: {
       "no-restricted-imports": ["error", {
         patterns: [{
-          regex: "^@/(?!shared/|generated/prisma/enums$)",
-          message: "src/shared may only import other shared modules and Prisma enums.",
+          regex: "^@/(?!shared/)",
+          message: "src/shared may only import other shared modules.",
         }],
       }],
     },

@@ -7,9 +7,9 @@ import { artifactQueries, chatQueries } from "./queries";
 import {
   studioArtifactListItemSchema,
   type StudioArtifactListItem,
-} from "@/shared/contracts/studio-artifact";
-import type { QuestionProgress, FlashcardProgress } from "@/shared/contracts/studio-artifact";
-import { StudioArtifactType } from "@/generated/prisma/enums";
+} from "@/shared/studio/artifact";
+import type { QuestionProgress, FlashcardProgress } from "@/shared/studio/artifact";
+import { StudioArtifactType } from "@/shared/enums";
 
 const generateArtifactResponseSchema = z.object({
   artifact: studioArtifactListItemSchema,

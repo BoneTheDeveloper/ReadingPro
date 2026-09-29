@@ -12,8 +12,8 @@ import {
   useDeleteVocabularyMutation,
   useUpdateVocabularyMutation,
 } from "../api/mutations";
-import { VocabularyStatus } from "@/generated/prisma/enums";
-import type { VocabularyItem, VocabularySet } from "@/shared/contracts/vocabulary";
+import { VocabularyStatus } from "@/shared/enums";
+import type { VocabularyItem, VocabularySet } from "@/shared/vocabulary/schema";
 
 
 type ViewTab = "words" | "sets";
@@ -60,7 +60,7 @@ function StatCard({
 }
 
 const STAT_CONFIG: Array<{
-  key: keyof import("@/shared/contracts/vocabulary").VocabularyStats;
+  key: keyof import("@/shared/vocabulary/schema").VocabularyStats;
   label: string;
   sublabel: string;
   accent: string;

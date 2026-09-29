@@ -3,7 +3,7 @@ import { fetchJson } from "@/client/lib/api/fetch-json";
 import {
   VocabularyListResponseSchema,
   VocabularyStatsSchema,
-} from "@/shared/contracts/vocabulary";
+} from "@/shared/vocabulary/schema";
 
 export const vocabularyQueries = {
   all: () => ["vocabulary"] as const,

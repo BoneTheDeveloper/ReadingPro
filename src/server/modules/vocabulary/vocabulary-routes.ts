@@ -12,7 +12,7 @@ import {
   VocabularyIdParamSchema,
   VocabularyInputSchema,
   VocabularyUpdateInputSchema,
-} from "@/shared/contracts/vocabulary";
+} from "@/shared/vocabulary/schema";
 
 export const vocabularyRoutes = new Hono();
 

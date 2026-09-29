@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { withErrorHandling } from "@/server/lib/error/with-error-handling";
 import { requireApiSession } from "@/server/modules/auth/session";
-import { StudioArtifactType } from "@/generated/prisma/enums";
+import { StudioArtifactType } from "@/server/db/generated/enums";
 import { z } from "zod";
 import { findPassageForUser } from "@/server/modules/passage/passage-crud";
 import {
@@ -14,7 +14,7 @@ import { updateArtifactProgress } from "./artifact-progress";
 import {
   questionProgressSchema,
   flashcardProgressSchema,
-} from "@/shared/contracts/studio-artifact";
+} from "@/shared/studio/artifact";
 import { AppError, NotFoundError } from "@/server/lib/error/app-error";
 import { start } from "workflow/api";
 import { artifactGenerationWorkflow } from "./workflow/index";

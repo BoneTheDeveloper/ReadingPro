@@ -1,6 +1,6 @@
 import { convertToModelMessages, streamText, type UIMessage } from "ai";
 import prisma from "@/server/lib/prisma";
-import { MAX_TEXT_CHARS, type StudyChatLanguage } from "@/shared/contracts/studio-chat";
+import { MAX_TEXT_CHARS, type StudyChatLanguage } from "@/shared/studio/chat";
 import { extractAssistantText } from "./chat-message";
 
 const STUDY_CHAT_SYSTEM_PROMPT_EN = [

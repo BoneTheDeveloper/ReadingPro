@@ -4,7 +4,7 @@
 import { preprocessPassage } from "../passage-preprocessing";
 import { runPassageProcessing } from "../passage-processing";
 import { failPassageProcessing } from "../passage-crud";
-import type { CreatePassageInput } from "@/shared/contracts/passage";
+import type { CreatePassageInput } from "@/shared/passage/schema";
 
 export interface PassageProcessingInput {
   passageId: string;

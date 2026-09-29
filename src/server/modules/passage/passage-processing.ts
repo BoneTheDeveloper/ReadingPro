@@ -2,7 +2,7 @@ import { generateObject, generateText } from "ai";
 import {
   passageMetadataSchema,
   type PassageMetadata,
-} from "@/shared/contracts/passage";
+} from "@/shared/passage/schema";
 import { completePassageProcessing } from "./passage-crud";
 import { takeWords, titleFromContent } from "./passage-text";
 

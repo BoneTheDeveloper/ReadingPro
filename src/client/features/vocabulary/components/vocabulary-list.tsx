@@ -11,8 +11,8 @@ import {
   DropdownMenuTrigger,
 } from "@/client/components/ui/dropdown-menu";
 import { cn } from "@/client/lib/utils";
-import { PartOfSpeech, VocabularyStatus } from "@/generated/prisma/enums";
-import type { VocabularyItem } from "@/shared/contracts/vocabulary";
+import { PartOfSpeech, VocabularyStatus } from "@/shared/enums";
+import type { VocabularyItem } from "@/shared/vocabulary/schema";
 
 interface VocabularyListProps {
   items: VocabularyItem[];

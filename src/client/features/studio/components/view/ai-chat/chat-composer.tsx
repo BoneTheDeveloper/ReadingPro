@@ -2,7 +2,7 @@
 
 import { useRef, type FormEvent, type KeyboardEvent } from "react";
 import { Send, Square } from "lucide-react";
-import type { StudyChatLanguage } from "@/shared/contracts/studio-chat";
+import type { StudyChatLanguage } from "@/shared/studio/chat";
 
 interface ChatComposerProps {
   value: string;

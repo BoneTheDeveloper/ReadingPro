@@ -6,7 +6,7 @@ import {
   chatHistoryResponseSchema,
   MAX_TEXT_CHARS,
   studyChatRequestSchema,
-} from "@/shared/contracts/studio-chat";
+} from "@/shared/studio/chat";
 import {
   getChatHistoryForUser,
   persistAssistantMessage,

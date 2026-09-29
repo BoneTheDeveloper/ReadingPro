@@ -12,12 +12,12 @@ import { Button } from "@/client/components/ui/button";
 import { Input } from "@/client/components/ui/input";
 import { Label } from "@/client/components/ui/label";
 import { Textarea } from "@/client/components/ui/textarea";
-import { PartOfSpeech, VocabularyStatus } from "@/generated/prisma/enums";
+import { PartOfSpeech, VocabularyStatus } from "@/shared/enums";
 import {
   VocabularyUpdateInputSchema,
   type VocabularyItem,
   type VocabularyUpdateInput,
-} from "@/shared/contracts/vocabulary";
+} from "@/shared/vocabulary/schema";
 
 const POS_OPTIONS: Array<{ value: PartOfSpeech; label: string }> = [
   { value: "NOUN", label: "Danh từ" },

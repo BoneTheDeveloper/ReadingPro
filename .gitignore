@@ -18,7 +18,7 @@
 # typescript
 *.tsbuildinfo
 
-/src/generated/prisma
+/src/server/db/generated
 
 # agent file
 .claude

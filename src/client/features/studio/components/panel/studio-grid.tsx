@@ -3,7 +3,7 @@
 import { BookOpen, Sparkles, Loader2 } from "lucide-react";
 import { cn } from "@/client/lib/utils";
 import { STUDIO_TILES, type StudioGridId } from "./studio-icon-list";
-import { StudioArtifactType } from "@/generated/prisma/enums";
+import { StudioArtifactType } from "@/shared/enums";
 
 interface StudioGridProps {
   hasActivePassage: boolean;

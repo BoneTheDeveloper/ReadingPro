@@ -1,7 +1,7 @@
 import prisma from "@/server/lib/prisma";
 import { NotFoundError } from "@/server/lib/error/app-error";
-import { ProcessingStatus, StudioArtifactType } from "@/generated/prisma/enums";
-import type { Prisma } from "@/generated/prisma/client";
+import { ProcessingStatus, StudioArtifactType } from "@/server/db/generated/enums";
+import type { Prisma } from "@/server/db/generated/client";
 
 export async function listArtifactsForUser(userId: string, passageId: string) {
   return prisma.studioArtifact.findMany({
