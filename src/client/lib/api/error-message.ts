@@ -34,6 +34,7 @@ const CODE_MESSAGES: Record<ErrorCode, string> = {
 
 const MESSAGES: Record<ErrorMessageKey, string> = {
   "request.invalid": CODE_MESSAGES.VALIDATION,
+  "route.not_found": CODE_MESSAGES.NOT_FOUND,
   "auth.required": CODE_MESSAGES.UNAUTHORIZED,
   "internal": CODE_MESSAGES.INTERNAL,
   "passage.not_found": "Không tìm thấy bài đọc.",

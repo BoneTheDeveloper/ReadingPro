@@ -40,27 +40,29 @@ const INTERNAL_ERROR = new AppError("internal", "Internal server error");
 
 /** Maps every error thrown by an API route to the `ApiErrorBody` envelope. */
 export const onError: ErrorHandler<AppEnv> = (error, c) => {
-  // Errors thrown before requestContext ran (the auth handler) have no request logger.
+  // Falls back to the root logger if requestContext never ran.
   const logger = (c.get("log") ?? log).child({ route: c.req.routePath });
+  const appError = toAppError(error);
+  c.set("errorReason", appError.reason);
 
-  if (error instanceof ZodError) {
-    logger.info({ issues: error.issues }, "validation failed");
-    const invalid = new AppError("request.invalid", error.issues[0]?.message || "Invalid input", error.issues);
-    return c.json(invalid.toBody(), invalid.status);
-  }
-
-  // Raised by Hono itself, e.g. a malformed JSON body in zValidator.
-  if (error instanceof HTTPException && error.status < 500) {
-    logger.info({ status: error.status }, error.message);
-    const invalid = new AppError("request.invalid", error.message);
-    return c.json(invalid.toBody(), invalid.status);
-  }
-
-  if (error instanceof AppError && error.status < 500) {
-    logger.info({ reason: error.reason, details: error.details }, error.message);
-    return c.json(error.toBody(), error.status);
+  // Expected failures are already visible on the access line; details only matter while debugging.
+  if (appError.status < 500) {
+    logger.debug({ reason: appError.reason, details: appError.details }, appError.message);
+    return c.json(appError.toBody(), appError.status);
   }
 
   logger.error({ err: error }, error instanceof AppError ? error.message : "unhandled error");
   return c.json(INTERNAL_ERROR.toBody(), INTERNAL_ERROR.status);
 };
+
+function toAppError(error: Error): AppError {
+  if (error instanceof ZodError) {
+    return new AppError("request.invalid", error.issues[0]?.message || "Invalid input", error.issues);
+  }
+  // Raised by Hono itself, e.g. a malformed JSON body in zValidator.
+  if (error instanceof HTTPException && error.status < 500) {
+    return new AppError("request.invalid", error.message);
+  }
+  if (error instanceof AppError) return error;
+  return INTERNAL_ERROR;
+}

@@ -17,6 +17,7 @@ export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES];
  */
 export const ERROR_REASONS = {
   "request.invalid": { status: 400, code: ERROR_CODES.VALIDATION },
+  "route.not_found": { status: 404, code: ERROR_CODES.NOT_FOUND },
   "auth.required": { status: 401, code: ERROR_CODES.UNAUTHORIZED },
   "passage.not_found": { status: 404, code: ERROR_CODES.NOT_FOUND },
   "passage.not_ready": { status: 404, code: ERROR_CODES.NOT_FOUND },
