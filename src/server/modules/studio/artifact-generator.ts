@@ -1,7 +1,7 @@
 import { generateObject } from "ai";
 import { updateArtifactStatus } from "./artifact-crud";
 import { findPassageForUser } from "@/server/modules/passage/passage-crud";
-import { NotFoundError } from "@/server/lib/error/app-error";
+import { AppError } from "@/server/lib/errors";
 import {
   questionContentSchema,
   flashcardContentSchema,
@@ -73,7 +73,7 @@ export async function generateAndStoreArtifact(args: {
   type: StudioArtifactType;
 }): Promise<void> {
   const passage = await findPassageForUser(args.userId, args.passageId);
-  if (!passage) throw new NotFoundError("Passage", args.passageId);
+  if (!passage) throw new AppError("passage.not_found", "Passage not found", { id: args.passageId });
 
   const generate = generators[args.type];
   if (!generate) {

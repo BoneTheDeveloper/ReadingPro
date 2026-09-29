@@ -1,8 +1,28 @@
-import type { ErrorCode } from "@/shared/api-error";
+import type { ErrorCode, ErrorReason } from "@/shared/api-error";
 import { isApiError } from "@/client/lib/api/fetch-json";
 
+/** Failures the browser catches before sending a request. */
+type ClientErrorReason =
+  | "text.too_short"
+  | "text.too_long"
+  | "text.empty"
+  | "file.too_large"
+  | "file.invalid_type"
+  | "file.empty"
+  | "file.corrupt"
+  | "file.filename_too_long"
+  | "file.invalid_filename"
+  | "file.invalid"
+  | "upload.failed";
 
-const MESSAGES: Record<ErrorCode, string> = {
+export type ErrorMessageKey = ErrorReason | ClientErrorReason;
+
+// Every user-facing error string lives in this file; components and the server
+// pass keys, never text. Vietnamese is the only locale for now: when an i18n
+// library arrives, these two tables become its catalog and the keys stay.
+
+/** Fallback per category, for responses whose reason this client does not know. */
+const CODE_MESSAGES: Record<ErrorCode, string> = {
   VALIDATION: "Dữ liệu không hợp lệ. Vui lòng kiểm tra lại.",
   UNAUTHORIZED: "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
   FORBIDDEN: "Bạn không có quyền thực hiện thao tác này.",
@@ -12,9 +32,39 @@ const MESSAGES: Record<ErrorCode, string> = {
   INTERNAL: "Đã có lỗi xảy ra. Vui lòng thử lại.",
 };
 
+const MESSAGES: Record<ErrorMessageKey, string> = {
+  "request.invalid": CODE_MESSAGES.VALIDATION,
+  "auth.required": CODE_MESSAGES.UNAUTHORIZED,
+  "internal": CODE_MESSAGES.INTERNAL,
+  "passage.not_found": "Không tìm thấy bài đọc.",
+  "passage.not_ready": "Bài đọc chưa xử lý xong. Vui lòng thử lại sau.",
+  "artifact.not_found": "Không tìm thấy nội dung học tập.",
+  "vocabulary.not_found": "Không tìm thấy từ vựng.",
+  "youtube.url_invalid": "YouTube URL không hợp lệ",
+  "youtube.no_transcript": "Video không có phụ đề",
+  "chat.invalid_request": "Yêu cầu không hợp lệ. Hãy chọn bài đọc và nhập tin nhắn.",
+  "text.too_short": "Văn bản quá ngắn tối.",
+  "text.too_long": "Văn bản quá dài.",
+  "text.empty": "Văn bản trống.",
+  "file.too_large": "File vượt quá giới hạn 10MB.",
+  "file.invalid_type": "Chỉ hỗ trợ file PDF và văn bản thuần.",
+  "file.empty": "File rỗng, vui lòng chọn file khác.",
+  "file.corrupt": "Nội dung file không khớp với phần mở rộng.",
+  "file.filename_too_long": "Tên file vượt quá 100 kí tự.",
+  "file.invalid_filename": "Tên file không hợp lệ.",
+  "file.invalid": "File không hợp lệ, vui lòng thử lại.",
+  "upload.failed": "Tải lên thất bại",
+};
+
+export function errorText(key: ErrorMessageKey): string {
+  return MESSAGES[key];
+}
+
+/** User-facing text for any thrown value: by reason, then by category, then generic. */
 export function getErrorMessage(error: unknown): string {
-  if (isApiError(error) && error.code in MESSAGES) {
-    return MESSAGES[error.code as ErrorCode];
+  if (isApiError(error)) {
+    if (error.reason && error.reason in MESSAGES) return MESSAGES[error.reason as ErrorMessageKey];
+    if (error.code in CODE_MESSAGES) return CODE_MESSAGES[error.code as ErrorCode];
   }
-  return MESSAGES.INTERNAL;
+  return CODE_MESSAGES.INTERNAL;
 }

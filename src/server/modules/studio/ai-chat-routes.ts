@@ -15,24 +15,20 @@ import {
   streamStudyChat,
 } from "./ai-chat";
 import { findPassageForUser } from "@/server/modules/passage/passage-crud";
-import { NotFoundError, AppError } from "@/server/lib/error/app-error";
+import { AppError } from "@/server/lib/errors";
 import type { AuthEnv } from "@/server/env";
 
 export const aiChatRoutes = new Hono<AuthEnv>()
   .use(requireSession)
   .post(
     "/",
-    validate(
-      "json",
-      studyChatRequestSchema,
-      "Invalid chat request. Select a passage and enter a message.",
-    ),
+    validate("json", studyChatRequestSchema, "chat.invalid_request"),
     async (c) => {
       const userId = c.var.user.id;
       const { messages, passageId, language } = c.req.valid("json");
 
       const passage = await findPassageForUser(userId, passageId);
-      if (!passage) throw new NotFoundError("Passage", passageId);
+      if (!passage) throw new AppError("passage.not_found", "Passage not found", { id: passageId });
 
       // Persist the user turn synchronously so it survives an immediate client
       // abort before the streamed response finishes.
@@ -67,11 +63,11 @@ export const aiChatRoutes = new Hono<AuthEnv>()
 
     const passageId = c.req.query("passageId");
     if (!passageId) {
-      throw new AppError(400, "VALIDATION", "passageId is required");
+      throw new AppError("request.invalid", "passageId is required");
     }
 
     const passage = await findPassageForUser(userId, passageId);
-    if (!passage) throw new NotFoundError("Passage", passageId);
+    if (!passage) throw new AppError("passage.not_found", "Passage not found", { id: passageId });
 
     await resetHistoryForUser(userId, passageId);
     return c.body(null, 204);
@@ -81,11 +77,11 @@ export const aiChatRoutes = new Hono<AuthEnv>()
 
     const passageId = c.req.query("passageId");
     if (!passageId) {
-      throw new AppError(400, "VALIDATION", "passageId is required");
+      throw new AppError("request.invalid", "passageId is required");
     }
 
     const passage = await findPassageForUser(userId, passageId);
-    if (!passage) throw new NotFoundError("Passage", passageId);
+    if (!passage) throw new AppError("passage.not_found", "Passage not found", { id: passageId });
 
     const history = await getChatHistoryForUser(userId, passageId);
     const messages = history.map((row) => ({

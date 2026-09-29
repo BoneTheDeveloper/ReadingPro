@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { auth } from "@/server/modules/auth/auth";
 import { requestContext } from "@/server/middleware/request-context";
-import { onError } from "@/server/lib/error/on-error";
+import { onError } from "@/server/lib/errors";
 import { passageRoutes } from "@/server/modules/passage/passage-routes";
 import { artifactRoutes } from "@/server/modules/studio/artifact-routes";
 import { vocabularyRoutes } from "@/server/modules/vocabulary/vocabulary-routes";

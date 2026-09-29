@@ -1,5 +1,5 @@
 import prisma from "@/server/lib/prisma";
-import { NotFoundError } from "@/server/lib/error/app-error";
+import { AppError } from "@/server/lib/errors";
 import { ProcessingStatus, StudioArtifactType } from "@/server/db/generated/enums";
 import type { Prisma } from "@/server/db/generated/client";
 
@@ -31,7 +31,7 @@ export async function getArtifact(id: string, userId: string) {
       status: true,
     },
   });
-  if (!artifact) throw new NotFoundError("Artifact", id);
+  if (!artifact) throw new AppError("artifact.not_found", "Artifact not found", { id: id });
   return artifact;
 }
 

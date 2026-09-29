@@ -2,14 +2,15 @@
 
 import { useState } from "react";
 import { FileText, AlertCircle } from "lucide-react";
-import { TEXT_INPUT_LIMITS, TEXT_INPUT_ERRORS } from "@/shared/passage/upload-config";
+import { TEXT_INPUT_LIMITS } from "@/shared/passage/upload-config";
+import { errorText } from "@/client/lib/api/error-message";
 import { Button } from "@/client/components/ui/button";
 import { Textarea } from "@/client/components/ui/textarea";
 
 function getTextError(text: string): string | undefined {
   const len = text.trim().length;
-  if (len < TEXT_INPUT_LIMITS.MIN_LENGTH) return TEXT_INPUT_ERRORS.TOO_SHORT;
-  if (len > TEXT_INPUT_LIMITS.MAX_LENGTH) return TEXT_INPUT_ERRORS.TOO_LONG;
+  if (len < TEXT_INPUT_LIMITS.MIN_LENGTH) return errorText("text.too_short");
+  if (len > TEXT_INPUT_LIMITS.MAX_LENGTH) return errorText("text.too_long");
 }
 interface TextInputAreaProps {
   onSubmit: (text: string) => void;

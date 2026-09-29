@@ -9,6 +9,8 @@ export class ApiError extends Error {
   constructor(
     readonly status: number,
     readonly code: string,
+    /** Translation key for the failure; absent when the response was not an API envelope. */
+    readonly reason: string | undefined,
     message: string,
     readonly details?: unknown,
   ) {
@@ -25,7 +27,7 @@ export function isApiError(error: unknown): error is ApiError {
 /**
  * The single transport for every queryFn/mutationFn: parses success bodies
  * through Zod and turns failures into a typed ApiError carrying the server's
- * { code, message }.
+ * { code, reason, message }. Show it to users with getErrorMessage, never `.message`.
  */
 export async function fetchJson<T>(
   url: string,
@@ -39,14 +41,15 @@ export async function fetchJson<T>(
     // pages) will not match the envelope; fall back to a generic message
     // rather than surfacing raw markup to the user.
     const body = (await res.json().catch(() => null)) as
-      | { error?: { code?: unknown; message?: unknown; details?: unknown } }
+      | { error?: { code?: unknown; reason?: unknown; message?: unknown; details?: unknown } }
       | null;
     const err = body?.error;
 
     throw new ApiError(
       res.status,
       typeof err?.code === "string" ? err.code : "INTERNAL",
-      typeof err?.message === "string" ? err.message : "Đã có lỗi xảy ra",
+      typeof err?.reason === "string" ? err.reason : undefined,
+      typeof err?.message === "string" ? err.message : `Request failed with status ${res.status}`,
       err?.details,
     );
   }

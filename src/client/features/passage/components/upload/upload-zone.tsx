@@ -3,14 +3,15 @@
 import { useCallback, useState } from "react";
 import { useDropzone, type FileRejection } from "react-dropzone";
 import { Upload, FileText, AlertCircle } from "lucide-react";
-import { FILE_LIMITS, FILE_ERRORS } from "@/shared/passage/upload-config";
+import { FILE_LIMITS } from "@/shared/passage/upload-config";
+import { errorText, type ErrorMessageKey } from "@/client/lib/api/error-message";
 import { cn } from "@/client/lib/utils";
 
-// Maps react-dropzone's rejection codes onto the shared message table.
-const REJECTION_MESSAGE: Record<string, string> = {
-  "file-too-large": FILE_ERRORS.FILE_TOO_LARGE,
-  "file-invalid-type": FILE_ERRORS.INVALID_TYPE,
-  "file-too-small": FILE_ERRORS.EMPTY_FILE,
+// Maps react-dropzone's rejection codes onto error message keys.
+const REJECTION_REASON: Record<string, ErrorMessageKey> = {
+  "file-too-large": "file.too_large",
+  "file-invalid-type": "file.invalid_type",
+  "file-too-small": "file.empty",
 };
 
 interface UploadZoneProps {
@@ -32,7 +33,7 @@ export function UploadZone({
     (accepted: File[], rejected: FileRejection[]) => {
       const code = rejected[0]?.errors[0]?.code;
       if (code) {
-        setError(REJECTION_MESSAGE[code] ?? FILE_ERRORS.INVALID_FALLBACK);
+        setError(errorText(REJECTION_REASON[code] ?? "file.invalid"));
         return;
       }
 

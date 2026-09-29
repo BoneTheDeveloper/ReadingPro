@@ -1,5 +1,5 @@
 import prisma from "@/server/lib/prisma";
-import { NotFoundError } from "@/server/lib/error/app-error";
+import { AppError } from "@/server/lib/errors";
 import type {
   VocabularyInputParsed,
   VocabularyItem,
@@ -53,7 +53,7 @@ export async function deleteVocabularyItemForUser(
     where: { id, userId },
     select: { id: true },
   });
-  if (!existing) throw new NotFoundError("VocabularyItem", id);
+  if (!existing) throw new AppError("vocabulary.not_found", "VocabularyItem not found", { id: id });
   await prisma.vocabularyItem.delete({ where: { id } });
 }
 
@@ -66,7 +66,7 @@ export async function updateVocabularyItemForUser(
     where: { id, userId },
     select: { id: true },
   });
-  if (!existing) throw new NotFoundError("VocabularyItem", id);
+  if (!existing) throw new AppError("vocabulary.not_found", "VocabularyItem not found", { id: id });
   return prisma.vocabularyItem.update({
     where: { id },
     data: {

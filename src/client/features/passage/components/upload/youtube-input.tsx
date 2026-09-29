@@ -5,7 +5,7 @@ import { PlayCircle, Clipboard } from "lucide-react";
 import { Button } from "@/client/components/ui/button";
 import { Input } from "@/client/components/ui/input";
 import { isValidYouTubeUrl } from "@/shared/passage/youtube-url";
-import { YOUTUBE_ERRORS } from "@/shared/passage/upload-config";
+import { errorText } from "@/client/lib/api/error-message";
 
 interface YouTubeInputProps {
   onSubmit: (url: string) => void;
@@ -33,7 +33,7 @@ export function YouTubeInput({ onSubmit, disabled, submitError, onEdit }: YouTub
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!isUrlFormatValid) {
-      setError(YOUTUBE_ERRORS.URL_INVALID);
+      setError(errorText("youtube.url_invalid"));
       return;
     }
     setError(null);

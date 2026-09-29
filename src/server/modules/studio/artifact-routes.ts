@@ -15,7 +15,7 @@ import {
   questionProgressSchema,
   flashcardProgressSchema,
 } from "@/shared/studio/artifact";
-import { AppError, NotFoundError } from "@/server/lib/error/app-error";
+import { AppError } from "@/server/lib/errors";
 import { start } from "workflow/api";
 import { artifactGenerationWorkflow } from "./workflow/index";
 import type { AuthEnv } from "@/server/env";
@@ -28,7 +28,7 @@ export const artifactRoutes = new Hono<AuthEnv>()
   .get("/", async (c) => {
     const passageId = c.req.query("passageId");
 
-    if (!passageId) throw new AppError(400, "VALIDATION", "passageId is required");
+    if (!passageId) throw new AppError("request.invalid", "passageId is required");
 
     const artifacts = await listArtifactsForUser(c.var.user.id, passageId);
     return c.json(artifacts);
@@ -41,7 +41,7 @@ export const artifactRoutes = new Hono<AuthEnv>()
     // Content is empty until processing completes — generating from it would
     // feed the model an empty passage.
     if (!passage || passage.status !== "COMPLETED") {
-      throw new AppError(404, "NOT_FOUND", "Passage is not ready");
+      throw new AppError("passage.not_ready", "Passage is not ready");
     }
 
     const artifact = await createArtifact({
@@ -68,7 +68,7 @@ export const artifactRoutes = new Hono<AuthEnv>()
     // Content is empty until processing completes — generating from it would
     // feed the model an empty passage.
     if (!passage || passage.status !== "COMPLETED") {
-      throw new AppError(404, "NOT_FOUND", "Passage is not ready");
+      throw new AppError("passage.not_ready", "Passage is not ready");
     }
 
     const artifact = await createArtifact({
@@ -92,7 +92,7 @@ export const artifactRoutes = new Hono<AuthEnv>()
     const artifact = await getArtifact(id, c.var.user.id);
     // Mirrors passages/[id]: a non-terminal or failed artifact has no content to
     // serve, so it is 404 rather than a 200 with a null body.
-    if (artifact.status !== "COMPLETED") throw new NotFoundError("Artifact", id);
+    if (artifact.status !== "COMPLETED") throw new AppError("artifact.not_found", "Artifact not found", { id: id });
     return c.json(artifact);
   })
   .delete("/:id", validate("param", ArtifactIdParamSchema), async (c) => {
@@ -119,7 +119,7 @@ export const artifactRoutes = new Hono<AuthEnv>()
         break;
       }
       default:
-        throw new AppError(400, "VALIDATION", `Unknown artifact type: ${artifact.type}`);
+        throw new AppError("request.invalid", `Unknown artifact type: ${artifact.type}`);
     }
 
     await updateArtifactProgress(id, user.id, progress);

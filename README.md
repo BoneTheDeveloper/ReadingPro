@@ -52,9 +52,9 @@ src/
 │  └─ lib/                    # auth client, fetch helpers, query client, store
 │  ── shared (imported by both sides) ──
 ├─ shared/
-│  ├─ api-error.ts            # API error envelope and codes
+│  ├─ api-error.ts            # API error envelope, codes and reasons (translation keys)
 │  ├─ enums.ts                # browser-safe copies of Prisma enums (sync-checked on the server)
-│  ├─ passage/                # passage schemas, upload limits and messages, YouTube URL parsing
+│  ├─ passage/                # passage schemas, upload limits, YouTube URL parsing
 │  ├─ reading/                # translation schemas
 │  ├─ studio/                 # artifact and chat schemas
 │  └─ vocabulary/             # vocabulary schemas
@@ -79,6 +79,12 @@ Client and server code only meet in `src/shared/`. ESLint (`no-restricted-import
 in `eslint.config.mjs`) enforces this. Client code gets Prisma enums from
 `@/shared/enums`; `src/server/lib/enum-sync.ts` fails typecheck if they drift
 from the schema.
+
+API errors use one envelope, `{ error: { code, reason, message, details? } }`
+(`src/shared/api-error.ts`). Server code throws `new AppError(reason, message)`;
+`reason` fixes the status and code, and `message` is English for logs only. The
+client turns reasons into user-facing text in `src/client/lib/api/error-message.ts`,
+the single catalog of error strings, so adding a language means translating that file.
 
 ## Development
 

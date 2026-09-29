@@ -5,8 +5,8 @@ import { Type, PlayCircle } from "lucide-react";
 import { cn } from "@/client/lib/utils";
 import { useCreatePassageMutation } from "../../api/mutations";
 import { extractPdfText } from "../../lib/pdf-parser";
-import { UPLOAD_ERRORS } from "@/shared/passage/upload-config";
 import { isApiError } from "@/client/lib/api/fetch-json";
+import { errorText, getErrorMessage } from "@/client/lib/api/error-message";
 import {
   Dialog,
   DialogContent,
@@ -65,10 +65,10 @@ export function UploadModal({ isOpen, onClose, onClientError }: UploadModalProps
         // form open with the message on it. Everything else is a real failure:
         // hand it to the workspace and close.
         if (isApiError(err) && err.status === 400 && activeMode === "youtube") {
-          setSubmitError(err.message);
+          setSubmitError(getErrorMessage(err));
           return;
         }
-        onClientError?.(UPLOAD_ERRORS.FAILED, err.message);
+        onClientError?.(errorText("upload.failed"), getErrorMessage(err));
         handleClose();
       },
     });

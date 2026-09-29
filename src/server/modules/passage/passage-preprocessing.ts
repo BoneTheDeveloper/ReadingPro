@@ -1,8 +1,7 @@
 import { sourceCleaners, coreNormalize } from "./normalizer";
 import { extractVideoId } from "@/shared/passage/youtube-url";
 import { fetchTranscript } from "./youtube-transcript";
-import {  YOUTUBE_ERRORS } from "@/shared/passage/upload-config";
-import { AppError } from "@/server/lib/error/app-error";
+import { AppError } from "@/server/lib/errors";
 import type { CreatePassageInput } from "@/shared/passage/schema";
 
 
@@ -16,12 +15,12 @@ async function extractRawText(input: CreatePassageInput): Promise<string> {
   if (input.sourceType === "YOUTUBE") {
     const videoId = extractVideoId(input.youtubeUrl);
     if (!videoId) {
-      throw new AppError(400, "VALIDATION", YOUTUBE_ERRORS.URL_INVALID);
+      throw new AppError("youtube.url_invalid", "YouTube URL is invalid");
     }
 
     const transcript = await fetchTranscript(videoId);
     if (!transcript) {
-      throw new AppError(400, "VALIDATION", YOUTUBE_ERRORS.NO_TRANSCRIPT);
+      throw new AppError("youtube.no_transcript", "Video has no transcript");
     }
 
     return transcript;

@@ -12,8 +12,7 @@ import { start } from "workflow/api";
 import { passageProcessingWorkflow } from "./workflow/index";
 import { extractVideoId } from "@/shared/passage/youtube-url";
 import { fetchTranscript } from "./youtube-transcript";
-import { YOUTUBE_ERRORS } from "@/shared/passage/upload-config";
-import { AppError } from "@/server/lib/error/app-error";
+import { AppError } from "@/server/lib/errors";
 import { z } from "zod";
 import type { AuthEnv } from "@/server/env";
 
@@ -32,19 +31,9 @@ export const passageRoutes = new Hono<AuthEnv>()
     // Early YouTube validation - fail fast if no transcript
     if (input.sourceType === "YOUTUBE") {
       const videoId = extractVideoId(input.youtubeUrl);
-      if (!videoId) {
-        return c.json(
-          { error: { code: "VALIDATION", message: YOUTUBE_ERRORS.URL_INVALID } },
-          400,
-        );
-      }
+      if (!videoId) throw new AppError("youtube.url_invalid", "YouTube URL is invalid");
       const transcript = await fetchTranscript(videoId);
-      if (!transcript) {
-        return c.json(
-          { error: { code: "VALIDATION", message: YOUTUBE_ERRORS.NO_TRANSCRIPT } },
-          400,
-        );
-      }
+      if (!transcript) throw new AppError("youtube.no_transcript", "Video has no transcript");
     }
 
     // Create passage with PENDING status
@@ -68,7 +57,7 @@ export const passageRoutes = new Hono<AuthEnv>()
     const { id } = c.req.valid("param");
     const passage = await findPassageForUser(c.var.user.id, id);
     if (!passage || passage.status !== "COMPLETED") {
-      throw new AppError(404, "NOT_FOUND", "Passage is not ready");
+      throw new AppError("passage.not_ready", "Passage is not ready");
     }
 
     return c.json(passage);
