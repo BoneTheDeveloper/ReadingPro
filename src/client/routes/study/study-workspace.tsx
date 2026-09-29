@@ -5,12 +5,11 @@ import { useQuery } from "@tanstack/react-query";
 import { Group, Panel, Separator } from "react-resizable-panels";
 import { SourcesPanel, UploadModal, usePassageLibrary, passageQueries, useUploadFlow } from "@/client/features/passage";
 import { ContentPanel } from "@/client/features/reading";
-import { StudioPanel } from "./panel/studio-panel";
-import { useStudyPanelLayout } from "../hooks/use-study-panel-layout";
+import { StudioPanel, type StudioPanelView } from "@/client/features/studio";
+import { useStudyPanelLayout } from "./use-study-panel-layout";
 
 import type { RefObject } from "react";
 import type { PanelImperativeHandle } from "react-resizable-panels";
-import type { StudioPanelView } from "./panel/studio-icon-list";
 
 
 const STUDIO_VIEW_SIZE = {

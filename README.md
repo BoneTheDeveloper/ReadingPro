@@ -42,6 +42,7 @@ src/
 │  ├─ root.tsx                # document shell, providers, error boundary
 │  ├─ routes.ts               # route config
 │  ├─ routes/                 # marketing, login, dashboard layout, study, vocabulary, account
+│  │  └─ study/               # study page view: composes passage, reading and studio panels
 │  ├─ features/               # one folder per domain; import it through its index.ts
 │  │  ├─ auth/                # login form, account controls
 │  │  ├─ passage/             # import UI, library panel
