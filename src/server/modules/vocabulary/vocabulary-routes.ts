@@ -1,13 +1,13 @@
 import { Hono } from "hono";
 import { withErrorHandling } from "@/server/lib/error/with-error-handling";
-import { requireApiSession } from "@/server/lib/auth/session";
+import { requireApiSession } from "@/server/modules/auth/session";
 import {
   deleteVocabularyItemForUser,
   listVocabularyItemsForUser,
   listVocabularyStatsForUser,
   storeVocabularyItemForUser,
   updateVocabularyItemForUser,
-} from "@/server/services/vocabulary/vocabulary-crud";
+} from "./vocabulary-crud";
 import {
   VocabularyIdParamSchema,
   VocabularyInputSchema,

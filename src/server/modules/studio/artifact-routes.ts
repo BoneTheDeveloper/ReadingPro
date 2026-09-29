@@ -1,23 +1,23 @@
 import { Hono } from "hono";
 import { withErrorHandling } from "@/server/lib/error/with-error-handling";
-import { requireApiSession } from "@/server/lib/auth/session";
+import { requireApiSession } from "@/server/modules/auth/session";
 import { StudioArtifactType } from "@/generated/prisma/enums";
 import { z } from "zod";
-import { findPassageForUser } from "@/server/services/passage/passage-crud";
+import { findPassageForUser } from "@/server/modules/passage/passage-crud";
 import {
   createArtifact,
   deleteArtifact,
   getArtifact,
   listArtifactsForUser,
-} from "@/server/services/studio/artifact-crud";
-import { updateArtifactProgress } from "@/server/services/studio/artifact-progress";
+} from "./artifact-crud";
+import { updateArtifactProgress } from "./artifact-progress";
 import {
   questionProgressSchema,
   flashcardProgressSchema,
 } from "@/shared/contracts/studio-artifact";
 import { AppError, NotFoundError } from "@/server/lib/error/app-error";
 import { start } from "workflow/api";
-import { artifactGenerationWorkflow } from "@/workflows/artifact-generation/index";
+import { artifactGenerationWorkflow } from "./workflow/index";
 
 export const artifactRoutes = new Hono();
 

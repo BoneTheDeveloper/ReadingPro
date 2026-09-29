@@ -1,6 +1,6 @@
-import { sourceCleaners, coreNormalize } from "@/server/util/normalizer";
+import { sourceCleaners, coreNormalize } from "./normalizer";
 import { extractVideoId } from "@/shared/passage/youtube-url";
-import { fetchTranscript } from "@/server/services/passage/youtube-transcript";
+import { fetchTranscript } from "./youtube-transcript";
 import {  YOUTUBE_ERRORS } from "@/shared/passage/upload-config";
 import { AppError } from "@/server/lib/error/app-error";
 import type { CreatePassageInput } from "@/shared/contracts/passage";

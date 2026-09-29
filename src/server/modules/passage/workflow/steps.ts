@@ -1,9 +1,9 @@
 /**
  * Step functions for passage processing.
  */
-import { preprocessPassage } from "@/server/services/passage/passage-preprocessing";
-import { runPassageProcessing } from "@/server/services/passage/passage-processing";
-import { failPassageProcessing } from "@/server/services/passage/passage-crud";
+import { preprocessPassage } from "../passage-preprocessing";
+import { runPassageProcessing } from "../passage-processing";
+import { failPassageProcessing } from "../passage-crud";
 import type { CreatePassageInput } from "@/shared/contracts/passage";
 
 export interface PassageProcessingInput {

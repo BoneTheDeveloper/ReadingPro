@@ -37,7 +37,7 @@ export default defineConfig([
     rules: {
       "no-restricted-imports": ["error", {
         patterns: [{
-          group: ["@/server/*", "@/workflows/*", "@/generated/prisma/*", "!@/generated/prisma/enums"],
+          group: ["@/server/*", "@/generated/prisma/*", "!@/generated/prisma/enums"],
           message: "Client code may only reach the server through src/shared contracts.",
         }, {
           group: ["@/client/features/*/*"],
@@ -47,7 +47,7 @@ export default defineConfig([
     },
   },
   {
-    files: ["src/{server,workflows}/**/*.ts"],
+    files: ["src/server/**/*.ts"],
     rules: {
       "no-restricted-imports": ["error", {
         patterns: [{

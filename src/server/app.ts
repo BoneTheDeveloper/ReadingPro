@@ -1,10 +1,10 @@
 import { Hono } from "hono";
-import { auth } from "@/server/lib/auth/auth";
-import { passageRoutes } from "./routes/passage";
-import { artifactRoutes } from "./routes/artifact";
-import { vocabularyRoutes } from "./routes/vocabulary";
-import { translateRoutes } from "./routes/translate";
-import { aiChatRoutes } from "./routes/ai-chat";
+import { auth } from "@/server/modules/auth/auth";
+import { passageRoutes } from "@/server/modules/passage/passage-routes";
+import { artifactRoutes } from "@/server/modules/studio/artifact-routes";
+import { vocabularyRoutes } from "@/server/modules/vocabulary/vocabulary-routes";
+import { translateRoutes } from "@/server/modules/reading/translate-routes";
+import { aiChatRoutes } from "@/server/modules/studio/ai-chat-routes";
 
 const app = new Hono().basePath("/api");
 

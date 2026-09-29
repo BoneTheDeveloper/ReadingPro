@@ -3,8 +3,8 @@ import {
   passageMetadataSchema,
   type PassageMetadata,
 } from "@/shared/contracts/passage";
-import { completePassageProcessing } from "@/server/services/passage/passage-crud";
-import { takeWords, titleFromContent } from "@/server/util/passage-text";
+import { completePassageProcessing } from "./passage-crud";
+import { takeWords, titleFromContent } from "./passage-text";
 
 const MODEL = "deepseek/deepseek-v4-flash";
 const AI_TIMEOUT_MS = 170_000;

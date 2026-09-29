@@ -56,11 +56,14 @@ src/
 │  └─ passage/                # upload limits and messages, YouTube URL parsing
 │  ── server (Nitro) ──
 ├─ server/
-│  ├─ app.ts, routes/         # Hono app and API routes
-│  ├─ services/               # business logic per feature (database, AI, network)
-│  ├─ util/                   # pure helpers with no I/O: text normalization, passage text, chat messages
-│  └─ lib/                    # auth, session, prisma, logger, error helpers
-├─ workflows/                 # Workflow SDK background jobs
+│  ├─ app.ts                  # Hono app; mounts each module's routes under /api
+│  ├─ modules/                # one folder per domain: routes, services, helpers, workflows
+│  │  ├─ auth/                # better-auth instance, API session guard
+│  │  ├─ passage/             # import, normalization, processing workflow
+│  │  ├─ reading/             # word translation
+│  │  ├─ studio/              # artifacts, generation workflow, passage chat
+│  │  └─ vocabulary/          # word bank CRUD
+│  └─ lib/                    # prisma, logger, error helpers
 └─ generated/prisma/          # generated client — do not edit
 
 prisma/schema.prisma          # database schema

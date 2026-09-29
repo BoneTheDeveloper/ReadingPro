@@ -1,17 +1,17 @@
 import { Hono } from "hono";
 import { withErrorHandling } from "@/server/lib/error/with-error-handling";
-import { requireApiSession } from "@/server/lib/auth/session";
+import { requireApiSession } from "@/server/modules/auth/session";
 import {
   createPassageForUser,
   deletePassageForUser,
   findPassageForUser,
   listPassagesForUser,
-} from "@/server/services/passage/passage-crud";
+} from "./passage-crud";
 import { CreatePassageInputSchema } from "@/shared/contracts/passage";
 import { start } from "workflow/api";
-import { passageProcessingWorkflow } from "@/workflows/passage-processing/index";
+import { passageProcessingWorkflow } from "./workflow/index";
 import { extractVideoId } from "@/shared/passage/youtube-url";
-import { fetchTranscript } from "@/server/services/passage/youtube-transcript";
+import { fetchTranscript } from "./youtube-transcript";
 import { YOUTUBE_ERRORS } from "@/shared/passage/upload-config";
 import { AppError } from "@/server/lib/error/app-error";
 import { z } from "zod";

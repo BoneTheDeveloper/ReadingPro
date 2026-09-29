@@ -1,6 +1,6 @@
 import { generateObject } from "ai";
-import { updateArtifactStatus } from "@/server/services/studio/artifact-crud";
-import { findPassageForUser } from "@/server/services/passage/passage-crud";
+import { updateArtifactStatus } from "./artifact-crud";
+import { findPassageForUser } from "@/server/modules/passage/passage-crud";
 import { NotFoundError } from "@/server/lib/error/app-error";
 import {
   questionContentSchema,
