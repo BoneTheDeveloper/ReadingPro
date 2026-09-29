@@ -8,6 +8,17 @@ export default defineConfig({
   resolve: {
     alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
   },
+  build: {
+    rolldownOptions: {
+      treeshake: {
+        // Feature entry points only re-export. Without this, importing one
+        // export pulls the whole feature into the importer's chunk.
+        moduleSideEffects: [
+          { test: /\/src\/client\/features\/[^/]+\/index\.ts$/, sideEffects: false },
+        ],
+      },
+    },
+  },
   server: {
     port: 3000,
     strictPort: true,

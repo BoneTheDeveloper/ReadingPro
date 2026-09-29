@@ -38,36 +38,54 @@ owned workspace.
 ```
 src/
 │  ── client (browser bundle) ──
-├─ app/
+├─ client/                    # React Router appDirectory
 │  ├─ root.tsx                # document shell, providers, error boundary
 │  ├─ routes.ts               # route config
-│  └─ routes/                 # marketing, login, dashboard layout, study, vocabulary, account
-├─ features/
-│  ├─ passage/                # import UI, library panel
-│  ├─ reading/                # reader panel, selection, inline translation
-│  ├─ studio/                 # study workspace; artifacts: questions, flashcards, passage chat
-│  └─ vocabulary/             # word bank and sets
-├─ component/                 # shared UI (shadcn/ui in component/ui)
-├─ lib/                       # auth client, fetch helpers, query client, store
+│  ├─ routes/                 # marketing, login, dashboard layout, study, vocabulary, account
+│  │  └─ study/               # study page view: composes passage, reading and studio panels
+│  ├─ features/               # one folder per domain; import it through its index.ts
+│  │  ├─ auth/                # login form, account controls
+│  │  ├─ passage/             # import UI, library panel
+│  │  ├─ reading/             # reader panel, selection, inline translation
+│  │  ├─ studio/              # study workspace; artifacts: questions, flashcards, passage chat
+│  │  └─ vocabulary/          # word bank and sets
+│  ├─ components/             # shared UI: layout and shadcn/ui (components/ui)
+│  └─ lib/                    # auth client, fetch helpers, query client, store
 │  ── shared (imported by both sides) ──
 ├─ shared/
-│  ├─ contracts/              # Zod request/response schemas and their types, API error shape
-│  └─ passage/                # upload limits and messages, YouTube URL parsing
+│  ├─ api-error.ts            # API error envelope, codes and reasons (translation keys)
+│  ├─ enums.ts                # browser-safe copies of Prisma enums (sync-checked on the server)
+│  ├─ passage/                # passage schemas, upload limits, YouTube URL parsing
+│  ├─ reading/                # translation schemas
+│  ├─ studio/                 # artifact and chat schemas
+│  └─ vocabulary/             # vocabulary schemas
 │  ── server (Nitro) ──
-├─ server/
-│  ├─ app.ts, routes/         # Hono app and API routes
-│  ├─ services/               # business logic per feature (database, AI, network)
-│  ├─ util/                   # pure helpers with no I/O: text normalization, passage text, chat messages
-│  └─ lib/                    # auth, session, prisma, logger, error helpers
-├─ workflows/                 # Workflow SDK background jobs
-└─ generated/prisma/          # generated client — do not edit
+└─ server/
+   ├─ app.ts                  # Hono app: auth handler, request context, module routes, onError
+   ├─ env.ts                  # Hono context types (request logger, signed-in user)
+   ├─ middleware/             # request id and logger per request
+   ├─ modules/                # one folder per domain: routes, services, helpers, workflows
+   │  ├─ auth/                # better-auth instance, session middleware
+   │  ├─ passage/             # import, normalization, processing workflow
+   │  ├─ reading/             # word translation
+   │  ├─ studio/              # artifacts, generation workflow, passage chat
+   │  └─ vocabulary/          # word bank CRUD
+   ├─ lib/                    # prisma, logger, errors and onError, validation, enum sync check
+   └─ db/generated/           # generated Prisma client — do not edit
 
 prisma/schema.prisma          # database schema
 ```
 
 Client and server code only meet in `src/shared/`. ESLint (`no-restricted-imports`
-in `eslint.config.mjs`) enforces this. Client code may also import
-`@/generated/prisma/enums`, which is browser-safe.
+in `eslint.config.mjs`) enforces this. Client code gets Prisma enums from
+`@/shared/enums`; `src/server/lib/enum-sync.ts` fails typecheck if they drift
+from the schema.
+
+API errors use one envelope, `{ error: { code, reason, message, details? } }`
+(`src/shared/api-error.ts`). Server code throws `new AppError(reason, message)`;
+`reason` fixes the status and code, and `message` is English for logs only. The
+client turns reasons into user-facing text in `src/client/lib/api/error-message.ts`,
+the single catalog of error strings, so adding a language means translating that file.
 
 ## Development
 

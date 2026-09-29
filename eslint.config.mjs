@@ -14,7 +14,7 @@ export default defineConfig([
     ".react-router/**",
     ".vercel/**",
     "coverage/**",
-    "src/generated/**",
+    "src/server/db/generated/**",
   ]),
 
   {
@@ -33,22 +33,25 @@ export default defineConfig([
 
   // Runtime boundaries: the browser bundle and the Nitro server only meet in src/shared.
   {
-    files: ["src/{app,component,features,lib}/**/*.{ts,tsx}"],
+    files: ["src/client/**/*.{ts,tsx}"],
     rules: {
       "no-restricted-imports": ["error", {
         patterns: [{
-          group: ["@/server/*", "@/workflows/*", "@/generated/prisma/*", "!@/generated/prisma/enums"],
+          group: ["@/server/*"],
           message: "Client code may only reach the server through src/shared contracts.",
+        }, {
+          group: ["@/client/features/*/*"],
+          message: "Import a feature through its index.ts.",
         }],
       }],
     },
   },
   {
-    files: ["src/{server,workflows}/**/*.ts"],
+    files: ["src/server/**/*.ts"],
     rules: {
       "no-restricted-imports": ["error", {
         patterns: [{
-          group: ["@/app/*", "@/component/*", "@/features/*", "@/lib/*"],
+          group: ["@/client/*"],
           message: "Server code must not import client modules; move shared code to src/shared.",
         }],
       }],
@@ -59,8 +62,8 @@ export default defineConfig([
     rules: {
       "no-restricted-imports": ["error", {
         patterns: [{
-          regex: "^@/(?!shared/|generated/prisma/enums$)",
-          message: "src/shared may only import other shared modules and Prisma enums.",
+          regex: "^@/(?!shared/)",
+          message: "src/shared may only import other shared modules.",
         }],
       }],
     },
