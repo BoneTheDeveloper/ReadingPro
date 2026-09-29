@@ -15,13 +15,14 @@ const generateArtifactResponseSchema = z.object({
   artifact: studioArtifactListItemSchema,
 });
 
-export function useGenerateQuestionMutation() {
+/** Starts generating a question set or flashcard deck for a passage. */
+export function useGenerateArtifactMutation(type: StudioArtifactType) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationKey: ["artifact", "generate", StudioArtifactType.QUESTION],
+    mutationKey: ["artifact", "generate", type],
     mutationFn: (passageId: string) =>
-      fetchJson("/api/artifact/question", generateArtifactResponseSchema, {
+      fetchJson(`/api/artifact/${type.toLowerCase()}`, generateArtifactResponseSchema, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ passageId }),
@@ -41,18 +42,16 @@ export function useGenerateQuestionMutation() {
   });
 }
 
+type ProgressInput = { artifactId: string; passageId: string } & (
+  | { type: typeof StudioArtifactType.QUESTION; progress: QuestionProgress }
+  | { type: typeof StudioArtifactType.FLASHCARD; progress: FlashcardProgress }
+);
+
 export function useRecordProgressMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      artifactId,
-      progress,
-    }: {
-      artifactId: string;
-      passageId: string;
-      progress: QuestionProgress;
-    }) =>
+    mutationFn: ({ artifactId, progress }: ProgressInput) =>
       fetchJson(
         `/api/artifact/${artifactId}/progress`,
         z.object({ success: z.boolean() }),
@@ -63,78 +62,15 @@ export function useRecordProgressMutation() {
         },
       ),
 
-    onSuccess: (_data, { artifactId, passageId, progress }) => {
+    onSuccess: (_data, { artifactId, passageId, type, progress }) => {
       queryClient.setQueryData(
         artifactQueries.list(passageId).queryKey,
-        // Narrow to QUESTION: the progress route only accepts question
-        // progress, and the flashcard variant carries a different shape.
+        // Matching on type as well as id keeps each progress shape on its own
+        // artifact variant, which is what makes the cast below sound.
         (old: StudioArtifactListItem[] | undefined) =>
           old?.map((a) =>
-            a.id === artifactId && a.type === StudioArtifactType.QUESTION
-              ? { ...a, progress }
-              : a,
-          ),
-      );
-    },
-  });
-}
-
-// ─── Generate Flashcard Mutation ────────────────────────────────────
-
-export function useGenerateFlashcardMutation() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationKey: ["artifact", "generate", StudioArtifactType.FLASHCARD],
-    mutationFn: (passageId: string) =>
-      fetchJson("/api/artifact/flashcard", generateArtifactResponseSchema, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ passageId }),
-      }),
-
-    onSuccess: ({ artifact }, passageId) => {
-      queryClient.setQueryData(
-        artifactQueries.list(passageId).queryKey,
-        (prev: StudioArtifactListItem[] | undefined) =>
-          prev ? [artifact, ...prev] : [artifact],
-      );
-    },
-  });
-}
-
-// ─── Update Flashcard Progress Mutation ─────────────────────────────
-
-export function useUpdateFlashcardProgressMutation() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({
-      artifactId,
-      passageId: _passageId,
-      progress,
-    }: {
-      artifactId: string;
-      passageId: string;
-      progress: FlashcardProgress;
-    }) =>
-      fetchJson(
-        `/api/artifact/${artifactId}/progress`,
-        z.object({ success: z.boolean() }),
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ progress }),
-        },
-      ),
-
-    onSuccess: (_data, { artifactId, passageId, progress }) => {
-      queryClient.setQueryData(
-        artifactQueries.list(passageId).queryKey,
-        (old: StudioArtifactListItem[] | undefined) =>
-          old?.map((a) =>
-            a.id === artifactId && a.type === StudioArtifactType.FLASHCARD
-              ? { ...a, progress }
+            a.id === artifactId && a.type === type
+              ? ({ ...a, progress } as StudioArtifactListItem)
               : a,
           ),
       );

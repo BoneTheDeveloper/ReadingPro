@@ -1,5 +1,6 @@
 import { QueryClient, QueryCache, MutationCache, isServer } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { ZodError } from "zod";
 import { isApiError } from "@/client/lib/api/fetch-json";
 import { getErrorMessage } from "@/client/lib/api/error-message";
 
@@ -24,8 +25,9 @@ function makeQueryClient() {
     defaultOptions: {
       queries: {
         staleTime: 60 * 1000,
+        // Client errors and schema mismatches fail the same way on every try.
         retry: (count, err) =>
-          isApiError(err) && err.status < 500 ? false : count < 3,
+          (isApiError(err) && err.status < 500) || err instanceof ZodError ? false : count < 3,
         refetchOnWindowFocus: false,
       },
     },

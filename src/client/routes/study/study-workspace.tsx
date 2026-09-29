@@ -119,6 +119,7 @@ export function StudyWorkspace() {
                 // `isPending` stays true for a skipToken-disabled query, so the
                 // empty state would never render. `isLoading` = pending + fetching.
                 isLoading={detail.isLoading}
+                error={detail.error}
                 onOpenUploadModal={upload.openModal}
               />
             </div>

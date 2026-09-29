@@ -9,6 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 import { artifactQueries } from "../../../api/queries";
 import { useRecordProgressMutation } from "../../../api/mutations";
 import type { StudioArtifact } from "@/shared/studio/artifact";
+import { StudioArtifactType } from "@/shared/enums";
 import { getErrorMessage } from "@/client/lib/api/error-message";
 
 interface QuestionDetailViewProps {
@@ -39,7 +40,7 @@ export function QuestionDetailView({ artifactId, passageId, onClose }: QuestionD
       correctCount,
       isCompleted: true,
     };
-    recordMutation.mutate({ artifactId, passageId, progress });
+    recordMutation.mutate({ artifactId, passageId, type: StudioArtifactType.QUESTION, progress });
     setAnswers(finalAnswers);
     setIsComplete(true);
   }, [artifactId, passageId, recordMutation]);

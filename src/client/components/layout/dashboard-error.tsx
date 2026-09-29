@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { Link, useNavigate, useRouteError } from "react-router";
+import { getErrorMessage } from "@/client/lib/api/error-message";
 
 /**
  * Exported as the `ErrorBoundary` of each dashboard page route, so a page
@@ -16,9 +17,7 @@ export function DashboardError() {
   return (
     <div className="flex min-h-100 flex-col items-center justify-center gap-4 p-8 text-center">
       <h2 className="text-xl font-semibold">Đã xảy ra lỗi</h2>
-      <p className="text-sm text-muted-foreground">
-        Đã xảy ra lỗi không mong muốn. Vui lòng thử lại.
-      </p>
+      <p className="text-sm text-muted-foreground">{getErrorMessage(error)}</p>
       <div className="flex gap-3">
         <button
           type="button"

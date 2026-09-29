@@ -8,6 +8,7 @@ import { useScrollProgress } from "../hooks/use-scroll-progress";
 import { useTranslateMutation } from "../api/mutations";
 import { useCreateVocabularyMutation } from "@/client/features/vocabulary";
 import { validateWordSelection } from "../lib/word-selection";
+import { getErrorMessage } from "@/client/lib/api/error-message";
 import type { WordSelectionAnchor } from "../lib/word-selection";
 import type { Passage } from "@/shared/passage/schema";
 import { YouTubeEmbed } from "./youtube-embed";
@@ -15,10 +16,12 @@ import { YouTubeEmbed } from "./youtube-embed";
 export function ContentPanel({
   passage,
   isLoading,
+  error,
   onOpenUploadModal,
 }: {
   passage: Passage | null;
   isLoading: boolean;
+  error: Error | null;
   onOpenUploadModal: () => void;
 }) {
   const [viewMode, setViewMode] = useState<"text" | "pdf" | "video">(
@@ -93,6 +96,13 @@ export function ContentPanel({
             <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
             <span>Đang tải tài liệu...</span>
           </div>
+        </div>
+      );
+    }
+    if (error) {
+      return (
+        <div className="flex items-center justify-center h-full text-sm text-destructive">
+          {getErrorMessage(error)}
         </div>
       );
     }

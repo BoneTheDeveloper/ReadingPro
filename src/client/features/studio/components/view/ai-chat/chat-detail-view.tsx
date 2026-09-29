@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useChat } from "@ai-sdk/react";
+import { useChat, type UIMessage } from "@ai-sdk/react";
 import { AlertCircle, Loader2, RotateCw, Trash2 } from "lucide-react";
 import { StudioDetailView } from "../studio-detail-view";
 import { ChatMessageList } from "./chat-message-list";
@@ -40,24 +40,27 @@ export function ChatDetailView({ passageId, onClose }: ChatDetailViewProps) {
     );
   }
 
-  // Note: ChatConversation receives the seeded Chat instance from context.
-  // Messages are pre-loaded into the Chat instance during ChatProvider creation.
   return (
     <ChatConversation
       passageId={passageId}
+      history={historyQuery.data}
       onClose={onClose}
     />
   );
 }
 
-function ChatConversation({ passageId, onClose }: ChatDetailViewProps) {
+function ChatConversation({
+  passageId,
+  history,
+  onClose,
+}: ChatDetailViewProps & { history: UIMessage[] }) {
   const [input, setInput] = useState("");
-  const { chat, language, setLanguage, clearChatMessages } = useChatContext();
+  const { getChat, language, setLanguage, clearChatMessages } = useChatContext();
   const resetChat = useResetChatMutation();
 
-  // Use the Chat instance from context - this reuses the same instance
-  // across panel close/open for the same passage.
-  // Messages are seeded in the Chat instance during ChatProvider creation.
+  // The history seeds the chat only on its first open; later opens reuse the
+  // live instance from context, which already holds every turn.
+  const [chat] = useState(() => getChat(history));
   const { messages, sendMessage, status, error, stop, regenerate } = useChat({ chat });
 
   const isStreaming = status === "submitted" || status === "streaming";

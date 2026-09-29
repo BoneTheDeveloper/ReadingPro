@@ -1,10 +1,23 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import { Chat, type UIMessage } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
+import { useQueryClient } from "@tanstack/react-query";
 import type { StudyChatLanguage } from "@/shared/studio/chat";
+import { chatQueries } from "../../../api/queries";
 import { ChatContext, registerChat } from "./chat-context";
+
+/** The persisted shape of a conversation: the server stores text parts only. */
+function toHistory(messages: UIMessage[]) {
+  return messages.flatMap((message) => {
+    if (message.role === "system") return [];
+    const parts = message.parts.flatMap((part) =>
+      part.type === "text" ? [{ type: "text" as const, text: part.text }] : [],
+    );
+    return parts.length > 0 ? [{ id: message.id, role: message.role, parts }] : [];
+  });
+}
 
 /**
  * ChatProvider holds a Chat instance per passageId.
@@ -16,35 +29,45 @@ import { ChatContext, registerChat } from "./chat-context";
  */
 export function ChatProvider({
   passageId,
-  initialMessages = [],
   children,
 }: {
   passageId: string;
-  initialMessages?: UIMessage[];
   children: React.ReactNode;
 }) {
+  const queryClient = useQueryClient();
   const [language, setLanguage] = useState<StudyChatLanguage>("vi");
 
-  // useState ensures Chat instance persists across re-renders
-  // but NOT across unmount (which we want for passage change)
-  const [chat] = useState(() => {
-    const newChat = new Chat({
-      id: passageId,
-      messages: initialMessages,
-      transport: new DefaultChatTransport({ api: "/api/ai-chat" }),
-    });
-    registerChat(newChat);
-    return newChat;
-  });
+  // Created on the first open, seeded with the persisted history. Later opens
+  // reuse it, so a reply that is still streaming survives closing the panel.
+  const chatRef = useRef<Chat<UIMessage> | null>(null);
+
+  const getChat = useCallback(
+    (initialMessages: UIMessage[]) => {
+      if (!chatRef.current) {
+        chatRef.current = new Chat({
+          id: passageId,
+          messages: initialMessages,
+          transport: new DefaultChatTransport({ api: "/api/ai-chat" }),
+          // Keeps the cached history in step with the conversation, so coming
+          // back to this passage later seeds the latest turns, not a stale copy.
+          onFinish: ({ messages }) => {
+            queryClient.setQueryData(chatQueries.history(passageId).queryKey, toHistory(messages));
+          },
+        });
+        registerChat(chatRef.current);
+      }
+      return chatRef.current;
+    },
+    [passageId, queryClient],
+  );
 
   const clearChatMessages = useCallback(() => {
-    // eslint-disable-next-line react-hooks/immutability -- Chat.messages is a setter on the Chat class, not a mutable ref
-    chat.messages = [];
-  }, [chat]);
+    if (chatRef.current) chatRef.current.messages = [];
+  }, []);
 
   const value = useMemo(
-    () => ({ chat, language, setLanguage, clearChatMessages }),
-    [chat, language, clearChatMessages],
+    () => ({ getChat, language, setLanguage, clearChatMessages }),
+    [getChat, language, clearChatMessages],
   );
 
   return (

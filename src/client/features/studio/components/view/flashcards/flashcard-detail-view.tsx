@@ -7,8 +7,9 @@ import { FlashcardContent } from "./flashcard-content";
 import { Button } from "@/client/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { artifactQueries } from "../../../api/queries";
-import { useUpdateFlashcardProgressMutation } from "../../../api/mutations";
+import { useRecordProgressMutation } from "../../../api/mutations";
 import type { StudioArtifact } from "@/shared/studio/artifact";
+import { StudioArtifactType } from "@/shared/enums";
 import { getErrorMessage } from "@/client/lib/api/error-message";
 
 interface FlashcardDetailViewProps {
@@ -60,7 +61,7 @@ export function FlashcardDetailView({
   const { data, isLoading, isError, error } = useQuery(
     artifactQueries.detail(artifactId),
   );
-  const updateProgress = useUpdateFlashcardProgressMutation();
+  const updateProgress = useRecordProgressMutation();
 
   const flashcardData =
     data?.type === "FLASHCARD"
@@ -99,6 +100,7 @@ export function FlashcardDetailView({
     updateProgress.mutate({
       artifactId,
       passageId,
+      type: StudioArtifactType.FLASHCARD,
       progress: { queue: [] },
     });
     setViewState("finished");
@@ -109,6 +111,7 @@ export function FlashcardDetailView({
     updateProgress.mutate({
       artifactId,
       passageId,
+      type: StudioArtifactType.FLASHCARD,
       progress: { queue: DEFAULT_QUEUE },
     });
     setViewState("studying");

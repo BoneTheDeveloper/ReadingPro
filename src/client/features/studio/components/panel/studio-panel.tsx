@@ -12,8 +12,7 @@ import { FlashcardDetailView } from "../view/flashcards";
 import { useQuery } from "@tanstack/react-query";
 import { artifactQueries } from "../../api/queries";
 import {
-  useGenerateQuestionMutation,
-  useGenerateFlashcardMutation,
+  useGenerateArtifactMutation,
   useDeleteArtifactMutation,
 } from "../../api/mutations";
 
@@ -33,8 +32,8 @@ export function StudioPanel({
   onToggleCollapse,
 }: StudioPanelProps) {
   const artifactsQuery = useQuery(artifactQueries.list(passageId));
-  const generateQuestion = useGenerateQuestionMutation();
-  const generateFlashcard = useGenerateFlashcardMutation();
+  const generateQuestion = useGenerateArtifactMutation(StudioArtifactType.QUESTION);
+  const generateFlashcard = useGenerateArtifactMutation(StudioArtifactType.FLASHCARD);
   const deleteArtifact = useDeleteArtifactMutation();
 
   const closeView = useCallback(() => onViewChange(null), [onViewChange]);

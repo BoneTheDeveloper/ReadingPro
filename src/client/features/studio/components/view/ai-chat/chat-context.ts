@@ -3,7 +3,8 @@ import type { Chat, UIMessage } from "@ai-sdk/react";
 import type { StudyChatLanguage } from "@/shared/studio/chat";
 
 export interface ChatContextValue {
-  chat: Chat<UIMessage>;
+  /** Returns this passage's Chat, creating it with `initialMessages` on first use. */
+  getChat: (initialMessages: UIMessage[]) => Chat<UIMessage>;
   language: StudyChatLanguage;
   setLanguage: (language: StudyChatLanguage) => void;
   clearChatMessages: () => void;
