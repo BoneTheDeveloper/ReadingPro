@@ -25,10 +25,6 @@ export class AppError extends Error {
       },
     };
   }
-
-  toResponse(): Response {
-    return Response.json(this.toBody(), { status: this.statusCode });
-  }
 }
 
 

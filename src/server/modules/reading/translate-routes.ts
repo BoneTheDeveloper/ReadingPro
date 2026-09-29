@@ -1,12 +1,11 @@
 import { Hono } from "hono";
-import { withErrorHandling } from "@/server/lib/error/with-error-handling";
+import { validate } from "@/server/lib/validate";
 import { TranslateInputSchema } from "@/shared/reading/schema";
 import { translateWord } from "./translate";
+import type { AppEnv } from "@/server/env";
 
-export const translateRoutes = new Hono();
-
-translateRoutes.post("/", withErrorHandling("translate", async (req) => {
-  const input = TranslateInputSchema.parse(await req.json());
-  const translation = await translateWord(input);
-  return Response.json(translation);
-}));
+export const translateRoutes = new Hono<AppEnv>()
+  .post("/", validate("json", TranslateInputSchema), async (c) => {
+    const translation = await translateWord(c.req.valid("json"));
+    return c.json(translation);
+  });

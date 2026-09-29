@@ -2,8 +2,8 @@ import type { ZodType } from "zod";
 
 /**
  * Client-side mirror of the server's error envelope. Deliberately not a subclass
- * of AppError: that class models server-side throwing and carries toResponse(),
- * which would drag server code into the client bundle.
+ * of AppError: that class models server-side throwing, and importing it would
+ * drag server code into the client bundle.
  */
 export class ApiError extends Error {
   constructor(

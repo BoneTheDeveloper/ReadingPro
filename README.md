@@ -60,14 +60,16 @@ src/
 │  └─ vocabulary/             # vocabulary schemas
 │  ── server (Nitro) ──
 └─ server/
-   ├─ app.ts                  # Hono app; mounts each module's routes under /api
+   ├─ app.ts                  # Hono app: auth handler, request context, module routes, onError
+   ├─ env.ts                  # Hono context types (request logger, signed-in user)
+   ├─ middleware/             # request id and logger per request
    ├─ modules/                # one folder per domain: routes, services, helpers, workflows
-   │  ├─ auth/                # better-auth instance, API session guard
+   │  ├─ auth/                # better-auth instance, session middleware
    │  ├─ passage/             # import, normalization, processing workflow
    │  ├─ reading/             # word translation
    │  ├─ studio/              # artifacts, generation workflow, passage chat
    │  └─ vocabulary/          # word bank CRUD
-   ├─ lib/                    # prisma, logger, error helpers, enum sync check
+   ├─ lib/                    # prisma, logger, errors and onError, validation, enum sync check
    └─ db/generated/           # generated Prisma client — do not edit
 
 prisma/schema.prisma          # database schema
