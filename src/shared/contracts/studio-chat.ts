@@ -36,4 +36,3 @@ export const chatHistoryResponseSchema = z.object({
   messages: z.array(chatHistoryItemSchema),
 });
 
-export type ChatHistoryMessage = z.infer<typeof chatHistoryItemSchema>;
