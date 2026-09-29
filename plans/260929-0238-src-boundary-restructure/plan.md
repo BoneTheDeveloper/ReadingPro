@@ -1,7 +1,7 @@
 ---
 title: "Restructure src into client, server, and shared boundaries"
 description: "Group src/ by runtime first (client/, server/, shared/) and by domain inside each, then move Hono handlers onto native middleware, validation, and onError."
-status: pending
+status: in-progress
 priority: P2
 effort: 2d
 branch: bone/refactor/src-boundaries
@@ -87,14 +87,14 @@ runtime code paths.
 
 ## Success Criteria
 
-- [ ] `ls src` shows only `client`, `server`, `shared` (plus the gitignored Prisma output if it stays under `server/db`).
-- [ ] No folder named `component`, `hook`, `util`, or `utils` exists under `src/`.
-- [ ] `git grep -n "@/generated/prisma" src/shared src/client` returns nothing.
-- [ ] ESLint boundary rules use the globs `src/client/**`, `src/server/**`, `src/shared/**` and no folder list.
-- [ ] `git grep -n "withErrorHandling\|requireApiSession" src` returns nothing.
+- [x] `ls src` shows only `client`, `server`, `shared` (plus the gitignored Prisma output if it stays under `server/db`).
+- [x] No folder named `component`, `hook`, `util`, or `utils` exists under `src/`.
+- [x] `git grep -n "@/generated/prisma" src/shared src/client` returns nothing.
+- [x] ESLint boundary rules use the globs `src/client/**`, `src/server/**`, `src/shared/**` and no folder list.
+- [x] `git grep -n "withErrorHandling\|requireApiSession" src` returns nothing.
 - [ ] `pnpm typecheck`, `pnpm lint`, `pnpm build`, and `pnpm exec knip` pass after every phase.
 - [ ] Manual smoke on `pnpm dev:web` + `pnpm dev:api`: Google sign-in, import text/PDF/YouTube passage reaching COMPLETED, translate a word, AI chat stream, generate flashcards and questions reaching COMPLETED, vocabulary CRUD, unauthenticated `/api/passage` returns 401 with the same body as before.
-- [ ] README "Directory map" matches the new tree.
+- [x] README "Directory map" matches the new tree.
 
 ## Key Risks
 

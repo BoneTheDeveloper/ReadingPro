@@ -36,13 +36,13 @@ Current inconsistencies under `src/client/`:
 
 ## Tasks & Steps
 
-- [ ] Do the `git mv` operations above.
-- [ ] Rewrite imports: `@/client/component/` → `@/client/components/`, then per-feature `/component/` → `/components/`, `/hook/` → `/hooks/`, `/util/` and `/utils/` → `/lib/`, `components/model/` → `components/upload/`, and the two auth files. Fix relative imports (`./`, `../`) inside moved folders; `pnpm typecheck` lists any missed.
-- [ ] Create each feature `index.ts` exporting only what is used outside the feature today. Find that set with `git grep -n "@/client/features/<x>/" src/client | grep -v "src/client/features/<x>/"`.
-- [ ] Rewrite those cross-feature and route imports to `@/client/features/<x>`.
-- [ ] Add an ESLint rule for `src/client/**` that forbids deep imports into another feature: pattern group `["@/client/features/*/*"]` with message "Import a feature through its index.ts". Files inside a feature import their own files relatively, so the rule does not block them. If a feature must deep-import its own files by alias, convert those to relative imports.
-- [ ] Update `components.json` aliases and the README client map.
-- [ ] Commit: `refactor: unify client folder names and add feature entry points`.
+- [x] Do the `git mv` operations above.
+- [x] Rewrite imports: `@/client/component/` → `@/client/components/`, then per-feature `/component/` → `/components/`, `/hook/` → `/hooks/`, `/util/` and `/utils/` → `/lib/`, `components/model/` → `components/upload/`, and the two auth files. Fix relative imports (`./`, `../`) inside moved folders; `pnpm typecheck` lists any missed.
+- [x] Create each feature `index.ts` exporting only what is used outside the feature today. Find that set with `git grep -n "@/client/features/<x>/" src/client | grep -v "src/client/features/<x>/"`.
+- [x] Rewrite those cross-feature and route imports to `@/client/features/<x>`.
+- [x] Add an ESLint rule for `src/client/**` that forbids deep imports into another feature: pattern group `["@/client/features/*/*"]` with message "Import a feature through its index.ts". Files inside a feature import their own files relatively, so the rule does not block them. If a feature must deep-import its own files by alias, convert those to relative imports.
+- [x] Update `components.json` aliases and the README client map.
+- [x] Commit: `refactor: unify client folder names and add feature entry points`.
 
 ## Verification
 

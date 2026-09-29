@@ -46,12 +46,12 @@ Cross-domain calls that remain: studio routes and `artifact-generator` call
 
 ## Tasks & Steps
 
-- [ ] `git mv` each file per the table. Route files get a `-routes` suffix so a module's entry is obvious; other file names stay as they are.
-- [ ] Rewrite imports: `@/server/routes/`, `@/server/services/<d>/`, `@/server/util/`, `@/server/lib/auth/`, `@/workflows/<wf>/index` → the new module paths. Inside a module, use relative imports; across modules (studio → passage-crud), keep the `@/server/modules/passage/...` alias.
-- [ ] Keep `app.ts` mount paths exactly: `/passage`, `/artifact`, `/vocabulary`, `/translate`, `/ai-chat`, `/auth/*`.
-- [ ] Update ESLint: server block `files` → `["src/server/**/*.ts"]`; client block patterns drop `@/workflows/*` (folder no longer exists).
-- [ ] Update README server map (remove `workflows/`, `routes/`, `services/`, `util/`).
-- [ ] Commit: `refactor: group server code into domain modules`.
+- [x] `git mv` each file per the table. Route files get a `-routes` suffix so a module's entry is obvious; other file names stay as they are.
+- [x] Rewrite imports: `@/server/routes/`, `@/server/services/<d>/`, `@/server/util/`, `@/server/lib/auth/`, `@/workflows/<wf>/index` → the new module paths. Inside a module, use relative imports; across modules (studio → passage-crud), keep the `@/server/modules/passage/...` alias.
+- [x] Keep `app.ts` mount paths exactly: `/passage`, `/artifact`, `/vocabulary`, `/translate`, `/ai-chat`, `/auth/*`.
+- [x] Update ESLint: server block `files` → `["src/server/**/*.ts"]`; client block patterns drop `@/workflows/*` (folder no longer exists).
+- [x] Update README server map (remove `workflows/`, `routes/`, `services/`, `util/`).
+- [x] Commit: `refactor: group server code into domain modules`.
 
 ## Verification
 

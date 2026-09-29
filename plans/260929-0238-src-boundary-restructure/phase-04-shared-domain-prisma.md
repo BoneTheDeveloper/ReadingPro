@@ -34,14 +34,14 @@ Prisma code, and move the Prisma client output under `src/server/`.
 
 ## Tasks & Steps
 
-- [ ] Write `src/shared/enums.ts` by copying the member lists from the current generated `enums.ts`; keep member order identical.
-- [ ] Write `src/server/lib/enum-sync.ts` with a type-level equality helper per enum. Import it from `src/server/lib/prisma.ts` as a type-only side effect (or reference it so `knip` does not flag it; add it to `knip.json` entry if needed).
-- [ ] Replace `@/generated/prisma/enums` with `@/shared/enums` in shared contracts and all client files. Server files may keep using Prisma enums directly.
-- [ ] `git mv` the shared contract files; rewrite `@/shared/contracts/...` imports across client and server.
-- [ ] Change Prisma `output` to `../src/server/db/generated`, update `.gitignore` to `/src/server/db/generated`, run `pnpm db:generate`, delete the old `src/generated/`, and rewrite `@/generated/prisma/` → `@/server/db/generated/` in server files.
-- [ ] Update ESLint: client block bans `@/server/*` with no exception; shared block regex allows only `^@/shared/`.
-- [ ] Update the README directory map and the sentence about client importing `@/generated/prisma/enums`.
-- [ ] Commit: `refactor: organize shared by domain and decouple it from prisma`.
+- [x] Write `src/shared/enums.ts` by copying the member lists from the current generated `enums.ts`; keep member order identical.
+- [x] Write `src/server/lib/enum-sync.ts` with a type-level equality helper per enum. Import it from `src/server/lib/prisma.ts` as a type-only side effect (or reference it so `knip` does not flag it; add it to `knip.json` entry if needed).
+- [x] Replace `@/generated/prisma/enums` with `@/shared/enums` in shared contracts and all client files. Server files may keep using Prisma enums directly.
+- [x] `git mv` the shared contract files; rewrite `@/shared/contracts/...` imports across client and server.
+- [x] Change Prisma `output` to `../src/server/db/generated`, update `.gitignore` to `/src/server/db/generated`, run `pnpm db:generate`, delete the old `src/generated/`, and rewrite `@/generated/prisma/` → `@/server/db/generated/` in server files.
+- [x] Update ESLint: client block bans `@/server/*` with no exception; shared block regex allows only `^@/shared/`.
+- [x] Update the README directory map and the sentence about client importing `@/generated/prisma/enums`.
+- [x] Commit: `refactor: organize shared by domain and decouple it from prisma`.
 
 ## Verification
 

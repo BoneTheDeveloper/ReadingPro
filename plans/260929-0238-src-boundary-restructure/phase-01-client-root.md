@@ -39,18 +39,18 @@ Phase 2 so this phase is a pure move.
 
 ## Tasks & Steps
 
-- [ ] Create branch `bone/refactor/src-boundaries` from up-to-date `main`.
-- [ ] Record a baseline: run `pnpm typecheck && pnpm lint && pnpm build` on `main` and note where `.well-known/workflow` output lands (`find . -path ./node_modules -prune -o -name ".well-known" -print`).
-- [ ] `git mv src/app src/client`, then `git mv src/component src/features src/lib src/client/`. Delete the stale generated `src/client/.well-known/` if it moved along (it is self-gitignored).
-- [ ] Rewrite alias imports in `src/`:
+- [x] Create branch `bone/refactor/src-boundaries` from up-to-date `main`.
+- [x] Record a baseline: run `pnpm typecheck && pnpm lint && pnpm build` on `main` and note where `.well-known/workflow` output lands (`find . -path ./node_modules -prune -o -name ".well-known" -print`).
+- [x] `git mv src/app src/client`, then `git mv src/component src/features src/lib src/client/`. Delete the stale generated `src/client/.well-known/` if it moved along (it is self-gitignored).
+- [x] Rewrite alias imports in `src/`:
       `@/component/` → `@/client/component/`, `@/features/` → `@/client/features/`, `@/lib/` → `@/client/lib/`.
       Use `git grep -l` + `sed -i` and review the diff; server files must show zero changes.
-- [ ] Update `react-router.config.ts` `appDirectory` and `components.json` `tailwind.css`.
-- [ ] Replace the client ESLint block's `files` with `["src/client/**/*.{ts,tsx}"]`. Replace the server block's forbidden group `["@/app/*", "@/component/*", "@/features/*", "@/lib/*"]` with `["@/client/*"]`. Keep the client block's server/workflows/prisma bans as they are.
-- [ ] Run `pnpm typecheck` (this regenerates `.react-router/types` for the new appDirectory).
-- [ ] Run `pnpm build` and confirm where the Workflow SDK writes `.well-known/workflow`. If it no longer generates, or generates under a path Nitro does not serve, fix it via the `workflow/nitro` module options before continuing.
-- [ ] Update the client part of the README directory map.
-- [ ] Commit: `refactor: move browser code under src/client`.
+- [x] Update `react-router.config.ts` `appDirectory` and `components.json` `tailwind.css`.
+- [x] Replace the client ESLint block's `files` with `["src/client/**/*.{ts,tsx}"]`. Replace the server block's forbidden group `["@/app/*", "@/component/*", "@/features/*", "@/lib/*"]` with `["@/client/*"]`. Keep the client block's server/workflows/prisma bans as they are.
+- [x] Run `pnpm typecheck` (this regenerates `.react-router/types` for the new appDirectory).
+- [x] Run `pnpm build` and confirm where the Workflow SDK writes `.well-known/workflow`. If it no longer generates, or generates under a path Nitro does not serve, fix it via the `workflow/nitro` module options before continuing.
+- [x] Update the client part of the README directory map.
+- [x] Commit: `refactor: move browser code under src/client`.
 
 ## Verification
 

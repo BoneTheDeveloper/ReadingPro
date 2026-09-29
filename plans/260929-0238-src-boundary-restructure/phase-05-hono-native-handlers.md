@@ -37,15 +37,15 @@ single `app.onError`, without changing any request or response the client sees.
 
 ## Tasks & Steps
 
-- [ ] Before changing code, capture golden responses on `main`-equivalent code (end of Phase 4) for: unauthenticated GET `/api/passage`; POST `/api/passage` with an empty body; GET `/api/passage/not-a-uuid`; GET `/api/passage/<random-uuid>` (404); POST `/api/ai-chat` with `{}`; a forced 500 (temporarily throw in a service). Save status + body to `plans/260929-0238-src-boundary-restructure/reports/golden-errors.md`.
-- [ ] Add `@hono/zod-validator`; check its peer deps against installed `hono` and `zod`.
-- [ ] Write `env.ts`, `request-context.ts`, `require-session.ts`, `on-error.ts`, `validate.ts`. `on-error.ts` reuses `isAppError`, `internalErrorBody`, and `ERROR_CODES`; `ZodError` handling stays for `.parse()` calls inside services.
-- [ ] Rewrite `app.ts`: auth handler route first, then `requestContext`, then modules, then `onError`. Keep `basePath("/api")` and mount paths.
-- [ ] Convert route files one at a time, smallest first: `translate` → `vocabulary` → `passage` → `artifact` → `ai-chat`. After each, run `pnpm typecheck` and replay the golden requests for that route.
-- [ ] For `ai-chat`, pass the custom message (`"Invalid chat request. Select a passage and enter a message."`) to `validate`, and return the AI SDK stream `Response` directly.
-- [ ] Workflows still call services with plain arguments; confirm no service imports Hono: `git grep -ln 'from "hono' src/server/modules` lists only `*-routes.ts` files and `auth/require-session.ts`.
-- [ ] Delete `with-error-handling.ts` and `session.ts`.
-- [ ] Commit: `refactor: use hono middleware, validation and onError for api routes`.
+- [x] Before changing code, capture golden responses on `main`-equivalent code (end of Phase 4) for: unauthenticated GET `/api/passage`; POST `/api/passage` with an empty body; GET `/api/passage/not-a-uuid`; GET `/api/passage/<random-uuid>` (404); POST `/api/ai-chat` with `{}`; a forced 500 (temporarily throw in a service). Save status + body to `plans/260929-0238-src-boundary-restructure/reports/golden-errors.md`.
+- [x] Add `@hono/zod-validator`; check its peer deps against installed `hono` and `zod`.
+- [x] Write `env.ts`, `request-context.ts`, `require-session.ts`, `on-error.ts`, `validate.ts`. `on-error.ts` reuses `isAppError`, `internalErrorBody`, and `ERROR_CODES`; `ZodError` handling stays for `.parse()` calls inside services.
+- [x] Rewrite `app.ts`: auth handler route first, then `requestContext`, then modules, then `onError`. Keep `basePath("/api")` and mount paths.
+- [x] Convert route files one at a time, smallest first: `translate` → `vocabulary` → `passage` → `artifact` → `ai-chat`. After each, run `pnpm typecheck` and replay the golden requests for that route.
+- [x] For `ai-chat`, pass the custom message (`"Invalid chat request. Select a passage and enter a message."`) to `validate`, and return the AI SDK stream `Response` directly.
+- [x] Workflows still call services with plain arguments; confirm no service imports Hono: `git grep -ln 'from "hono' src/server/modules` lists only `*-routes.ts` files and `auth/require-session.ts`.
+- [x] Delete `with-error-handling.ts` and `session.ts`.
+- [x] Commit: `refactor: use hono middleware, validation and onError for api routes`.
 
 ## Verification
 
