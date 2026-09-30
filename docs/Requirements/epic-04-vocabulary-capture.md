@@ -19,7 +19,7 @@ understand difficult text in language.
 Scenario: Translate an owned selection
   Given I select English text in a passage I own
   When I request a translation
-  Then the system returns a translation and records it in cache and history
+  Then the system returns a translation and caches it for the current session
 
 Scenario: Selection invalid or not owned
   Given my selection exceeds limits or the passage is not mine
@@ -27,16 +27,19 @@ Scenario: Selection invalid or not owned
   Then the system rejects it with an error
 
 Scenario: Cached translation
-  Given the same selection was translated before
+  Given the same word in the same sentence was translated earlier in this session
   When I request it again
   Then the system returns the cached translation without re-calling the model
 ```
+
+- The cache lives on the client for the current session only. Translations are not
+  stored in the database, and there is no translation history.
 
 
 ## US-11 · Save a word with its passage context
 
 
-Save a selected word together with the context it appeared in,
+Save a selected word together with the sentence it appeared in,
 review it later with the passage where I first met it.
 
 **Acceptance criteria**
@@ -45,11 +48,18 @@ review it later with the passage where I first met it.
 Scenario: Save a new word
   Given I have selected a word in a passage I own
   When I save it
-  Then the word, its translation, and its source context are stored in my word bank
+  Then the word, its translation, the sentence it appeared in, and its passage are stored in my word bank
   And the word is marked NEW
 
 Scenario: Save a duplicate
-  Given the same word from the same context is already saved
+  Given the same word with the same translation is already saved
   When I save it again
   Then the existing entry is updated in place, not duplicated
+  And its first context sentence is kept
 ```
+
+- Each word keeps one context: the sentence where it was first saved. It is shown on the
+  back of the review card, not used as a translation cache.
+- "The same word with the same translation" means the same lemma and the same translation
+  after normalization: trimmed, whitespace collapsed, lowercased. "Run" / "run" and
+  "Chạy" / "chạy" are the same entry; "chạy" / "chạy bộ" are different entries.

@@ -2,8 +2,13 @@
 
 **PRD Solution area:** 5. Memorize them
 
-From the word bank the learner builds word sets — manually or automatically — and memorizes
-them through spaced repetition, with each word carrying its passage context into review.
+From the word bank the learner builds word sets — manually, or automatically with a Pro
+subscription — and memorizes them through one-way (English → Vietnamese) spaced repetition,
+with each word carrying its passage context into review.
+
+A set is only a container of words. The review schedule lives on each word and is shared by
+every set that contains it; scheduling settings (desired retention, new words per day) are
+per user, not per set.
 
 A card here is a word-bank entry reviewed on a schedule across passages. It is not the
 passage flashcard artifact of US-05, which belongs to a single passage and keeps only its
@@ -23,20 +28,26 @@ Scenario: Create a manual set
   Then the set is saved and available for review
 ```
 
-## US-13 · Generate word sets automatically
+## US-13 · Generate a word set automatically (Pro)
 
-The app can genareted word sets, the user can have a fresh set to review without organizing it myself.
+As a Pro subscriber, I can create a set in one step instead of picking words by hand.
 
 **Acceptance criteria**
 
 ```gherkin
-Scenario: Auto daily/weekly set
-  Given I have words in my word bank
-  When an automated set is generated
-  Then it contains due and new words and is offered for review
+Scenario: Generate a set
+  Given I am a Pro subscriber with words in my word bank
+  When I ask for a generated set of N words
+  Then the system creates a normal set with due words first, then NEW words, up to N
+
+Scenario: Not Pro
+  Given I am on the free tier
+  When I try to generate a set
+  Then the option is not available to me
 ```
 
-- Auto sets respect each word's status (NEW / LEARNING / MASTERED).
+- A generated set is an ordinary set: it has no special type or status and can be renamed,
+  edited, and deleted like a manual set.
 
 ---
 
@@ -76,4 +87,8 @@ Scenario: Rate a card
   Then the system updates the card's interval and next review date
 ```
 
-- A poor recall shortens the interval; a strong recall lengthens it.
+- Ratings are Again / Hard / Good / Easy. A poor recall shortens the interval; a strong
+  recall lengthens it.
+- Each word has one review status, set only by the scheduler: NEW (never reviewed),
+  LEARNING (first short learning steps), REVIEW (scheduled in days), RELEARNING (forgotten
+  during review, back to short steps). The learner cannot edit it by hand.
