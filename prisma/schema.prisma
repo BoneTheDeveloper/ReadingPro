@@ -54,7 +54,7 @@ model User {
   emailVerified    Boolean        @default(false)
   image            String?
   createdAt        DateTime       @default(now())
-  updatedAt        DateTime
+  updatedAt        DateTime       @updatedAt
   tier             String?        @default("FREE")
   accounts         Account[]
   userProfile      UserProfile?
@@ -80,11 +80,17 @@ model UserProfile {
   id                   String                  @id
   bio                  String?
   createdAt            DateTime                @default(now())
-  updatedAt            DateTime
+  updatedAt            DateTime                @updatedAt
+  timezone             String                  @default("Asia/Bangkok")
+  desiredRetention     Float                   @default(0.9)
+  dailyNewLimit        Int                     @default(10)
+  // Optimized FSRS weights; null means the library defaults.
+  fsrsParams           Json?
   passages             Passage[]
   user                 User                    @relation(fields: [id], references: [id], onDelete: Cascade)
   vocabularyItems      VocabularyItem[]
   vocabularySets       VocabularySet[]
+  reviewSessions       ReviewSession[]
 }
 
 model Passage {
@@ -102,6 +108,7 @@ model Passage {
   userProfile           UserProfile             @relation(fields: [userId], references: [id], onDelete: Cascade)
   studioArtifacts       StudioArtifact[]
   ChatMessages     ChatMessage[]
+  vocabularyItems       VocabularyItem[]
 
   @@index([createdAt])
   @@index([userId])
@@ -138,62 +145,111 @@ model ChatMessage {
 
 //vocabulary
 model VocabularyItem {
-  id                     String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId                 String
+  id                 String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId             String
 
-  term                   String
-  targetLanguage         String
-  translation            String
-  sourceLanguage         String
-  partofSpeech           PartOfSpeech
+  // Both normalized: trimmed, whitespace collapsed, lowercased.
+  term               String
+  targetLanguage     String
+  translation        String
+  sourceLanguage     String
+  partofSpeech       PartOfSpeech
 
-  savedCount             Int                      @default(1)
-  learningstatus         VocabularyStatus         @default(NEW)
+  savedCount         Int                 @default(1)
 
-  nextReviewAt           DateTime?
-  lastReviewedAt         DateTime?
+  // Where the word was first saved; shown on the back of the review card.
+  contextSentence    String?
+  passageId          String?             @db.Uuid
 
-  createdAt              DateTime                 @default(now())
-  updatedAt              DateTime
+  // Written only by the review scheduler. Names mirror the ts-fsrs Card type.
+  status             VocabularyStatus    @default(NEW)
+  dueAt              DateTime            @default(now())
+  stability          Float               @default(0)
+  difficulty         Float               @default(0)
+  scheduledDays      Int                 @default(0)
+  learningSteps      Int                 @default(0)
+  reps               Int                 @default(0)
+  lapses             Int                 @default(0)
+  lastReviewAt       DateTime?
 
-  userProfile            UserProfile              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  vocabularySetItems     VocabularySetItem[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  userProfile        UserProfile         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  passage            Passage?            @relation(fields: [passageId], references: [id], onDelete: SetNull)
+  vocabularySetItems VocabularySetItem[]
+  reviewLogs         ReviewLog[]
 
   @@unique([userId, term, translation])
-  @@index([userId, nextReviewAt])
-  @@index([userId, learningstatus])
+  @@index([userId, dueAt])
+  @@index([userId, status])
 }
 
 model VocabularySetItem {
-  id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  vocabularySetId  String           @db.Uuid
-  vocabularyItemId String           @db.Uuid
+  vocabularySetId  String         @db.Uuid
+  vocabularyItemId String         @db.Uuid
 
-  addedAt          DateTime         @default(now())
+  vocabularyItem   VocabularyItem @relation(fields: [vocabularyItemId], references: [id], onDelete: Cascade)
+  vocabularySet    VocabularySet  @relation(fields: [vocabularySetId], references: [id], onDelete: Cascade)
 
-  vocabularyItem   VocabularyItem   @relation(fields: [vocabularyItemId], references: [id], onDelete: Cascade)
-  vocabularySet    VocabularySet    @relation(fields: [vocabularySetId], references: [id], onDelete: Cascade)
-
-  @@unique([vocabularySetId, vocabularyItemId])
+  @@id([vocabularySetId, vocabularyItemId])
+  @@index([vocabularyItemId])
 }
 
 model VocabularySet {
-  id                   String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId               String
-  name                 String
-  type                 VocabularySetType
+  id                 String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId             String
+  name               String
+  createdAt          DateTime            @default(now())
 
-  periodStart          DateTime?
-  periodEnd            DateTime?
+  vocabularySetItems VocabularySetItem[]
+  reviewSessions     ReviewSession[]
+  userProfile        UserProfile         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  createdAt            DateTime               @default(now())
-  updatedAt            DateTime
+  @@unique([userId, name])
+}
 
-  vocabularySetItems   VocabularySetItem[]
-  userProfile          UserProfile            @relation(fields: [userId], references: [id], onDelete: Cascade)
+model ReviewSession {
+  id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String
+  // Null means the session covers every due card.
+  vocabularySetId String?        @db.Uuid
+  startedAt       DateTime       @default(now())
+  endedAt         DateTime?
+  cardsReviewed   Int            @default(0)
 
-  @@unique([userId, type, periodStart, periodEnd])
-  @@index([userId, type])
+  userProfile     UserProfile    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vocabularySet   VocabularySet? @relation(fields: [vocabularySetId], references: [id], onDelete: SetNull)
+  reviewLogs      ReviewLog[]
+
+  @@index([userId, startedAt(sort: Desc)])
+}
+
+// One row per rating. status, dueAt, stability, difficulty and learningSteps hold
+// the card state before the rating; scheduledDays is the interval after it.
+model ReviewLog {
+  id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId           String
+  vocabularyItemId String           @db.Uuid
+  sessionId        String?          @db.Uuid
+  // Sent by the client so a resent rating is not counted twice.
+  clientReviewId   String           @unique @db.Uuid
+  rating           ReviewRating
+  status           VocabularyStatus
+  dueAt            DateTime
+  stability        Float
+  difficulty       Float
+  elapsedDays      Int
+  scheduledDays    Int
+  learningSteps    Int
+  durationMs       Int?
+  reviewedAt       DateTime         @default(now())
+
+  vocabularyItem   VocabularyItem   @relation(fields: [vocabularyItemId], references: [id], onDelete: Cascade)
+  session          ReviewSession?   @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+
+  @@index([vocabularyItemId, reviewedAt])
+  @@index([userId, reviewedAt])
 }
 
 //[enum]
@@ -212,17 +268,18 @@ enum SourceType {
   YOUTUBE
 }
 
-enum VocabularySetType {
-  MANUAL
-  GENARATED
-  DEFAULT
+enum VocabularyStatus {
+  NEW
+  LEARNING
+  REVIEW
+  RELEARNING
 }
 
-
-enum VocabularyStatus {
- NEW
- LEARNING
- MEMORIZED
+enum ReviewRating {
+  AGAIN
+  HARD
+  GOOD
+  EASY
 }
 
 enum StudioArtifactType {

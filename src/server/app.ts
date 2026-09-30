@@ -6,6 +6,8 @@ import { AppError, onError } from "@/server/lib/errors";
 import { passageRoutes } from "@/server/modules/passage/passage-routes";
 import { artifactRoutes } from "@/server/modules/studio/artifact-routes";
 import { vocabularyRoutes } from "@/server/modules/vocabulary/vocabulary-routes";
+import { vocabularySetRoutes } from "@/server/modules/vocabulary/vocabulary-set-routes";
+import { reviewRoutes } from "@/server/modules/vocabulary/review-routes";
 import { translateRoutes } from "@/server/modules/reading/translate-routes";
 import { aiChatRoutes } from "@/server/modules/studio/ai-chat-routes";
 import type { AppEnv } from "@/server/env";
@@ -20,6 +22,8 @@ const app = new Hono<AppEnv>()
   .route("/passage", passageRoutes)
   .route("/artifact", artifactRoutes)
   .route("/vocabulary", vocabularyRoutes)
+  .route("/vocabulary-set", vocabularySetRoutes)
+  .route("/review", reviewRoutes)
   .route("/translate", translateRoutes)
   .route("/ai-chat", aiChatRoutes)
   .notFound((c) => {

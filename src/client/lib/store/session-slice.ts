@@ -4,6 +4,7 @@ export interface SessionUser {
   name?: string | null;
   email: string;
   image?: string | null;
+  tier?: string | null;
 }
 
 interface SessionState {

@@ -34,14 +34,16 @@ const STATUS_FILTERS: Array<"ALL" | VocabularyStatus> = [
   "ALL",
   "NEW",
   "LEARNING",
-  "MEMORIZED",
+  "REVIEW",
+  "RELEARNING",
 ];
 
 const STATUS_LABEL: Record<VocabularyStatus | "ALL", string> = {
   ALL: "Tất cả",
   NEW: "Mới",
   LEARNING: "Đang học",
-  MEMORIZED: "Đã thuộc",
+  REVIEW: "Đang ôn",
+  RELEARNING: "Học lại",
 };
 
 const STATUS_STYLE: Record<
@@ -50,7 +52,8 @@ const STATUS_STYLE: Record<
 > = {
   NEW: { bg: "#FBEFD8", color: "#A66A12", dot: "#EEA63C" },
   LEARNING: { bg: "#ECEAFB", color: "#4A3FD0", dot: "#5A4FE0" },
-  MEMORIZED: { bg: "#DDF3E7", color: "#1E7A4B", dot: "#2FA66A" },
+  REVIEW: { bg: "#DDF3E7", color: "#1E7A4B", dot: "#2FA66A" },
+  RELEARNING: { bg: "#FCE7E1", color: "#C8442B", dot: "#F2664A" },
 };
 
 const POS_LABEL: Record<Exclude<PartOfSpeech, "OTHER">, string> = {
@@ -208,7 +211,7 @@ function TableRow({
   onEdit: (item: VocabularyItem) => void;
   onDelete: (id: string) => void;
 }) {
-  const statusStyle = STATUS_STYLE[item.learningstatus];
+  const statusStyle = STATUS_STYLE[item.status];
 
   const savedDate = item.createdAt
     ? new Intl.DateTimeFormat("en", {
@@ -257,7 +260,7 @@ function TableRow({
             className="w-1.5 h-1.5 rounded-full shrink-0"
             style={{ background: statusStyle.dot }}
           />
-          {STATUS_LABEL[item.learningstatus]}
+          {STATUS_LABEL[item.status]}
         </span>
       </div>
 

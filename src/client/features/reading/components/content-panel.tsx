@@ -1,11 +1,12 @@
 "use client";
 import { useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { FileText, FileSearch, Plus, FileType, Loader2 } from "lucide-react";
 import { cn } from "@/client/lib/utils";
 import { CefrBadge } from "./cefr-badge";
 import { InlineTranslationPopup } from "./inline-translation-popup";
 import { useScrollProgress } from "../hooks/use-scroll-progress";
-import { useTranslateMutation } from "../api/mutations";
+import { readingQueries } from "../api/queries";
 import { useCreateVocabularyMutation } from "@/client/features/vocabulary";
 import { validateWordSelection } from "../lib/word-selection";
 import { getErrorMessage } from "@/client/lib/api/error-message";
@@ -30,7 +31,13 @@ export function ContentPanel({
   const [wordAnchor, setWordAnchor] = useState<WordSelectionAnchor | null>(null);
   // Display state for isSaved - reset when selection or translation changes
   const [isSaved, setIsSaved] = useState(false);
-  const translation = useTranslateMutation();
+  // True once the user asks for a translation of the current selection.
+  const [translationRequested, setTranslationRequested] = useState(false);
+  const translation = useQuery({
+    ...readingQueries.translate(wordAnchor?.word ?? "", wordAnchor?.context ?? ""),
+    enabled: translationRequested && wordAnchor !== null,
+  });
+  const translationData = translationRequested ? (translation.data ?? null) : null;
   const createVocabulary = useCreateVocabularyMutation();
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -41,7 +48,7 @@ export function ContentPanel({
 
   const clearTranslation = () => {
     setWordAnchor(null);
-    translation.reset();
+    setTranslationRequested(false);
     window.getSelection()?.removeAllRanges();
   };
 
@@ -53,7 +60,7 @@ export function ContentPanel({
     );
     if (!next) {
       setWordAnchor(null);
-      translation.reset();
+      setTranslationRequested(false);
       return;
     }
     const current = wordAnchor;
@@ -65,25 +72,29 @@ export function ContentPanel({
       return;
     }
     setWordAnchor(next);
-    translation.reset();
+    setTranslationRequested(false);
     setIsSaved(false); // Reset saved state when selection changes
   };
 
   const handleTranslateClick = () => {
     if (!wordAnchor) return;
-    translation.mutate({ word: wordAnchor.word, context: wordAnchor.context });
+    // A second click is the popup's retry button; a cached result needs no request.
+    if (translationRequested && translation.isError) void translation.refetch();
+    setTranslationRequested(true);
     setIsSaved(false); // Reset saved state when re-translating
   };
 
   const handleSaveVocabulary = () => {
-    const result = translation.data;
-    if (!result || !wordAnchor) return;
+    const result = translationData;
+    if (!result || !wordAnchor || !passage) return;
     createVocabulary.mutate({
       term: result.lemma,
       translation: result.translation,
       sourceLanguage: "en",
       targetLanguage: "vi",
       partofSpeech: result.partOfSpeech,
+      contextSentence: wordAnchor.context,
+      passageId: passage.id,
     });
     // Mark as saved (display state only)
     setIsSaved(true);
@@ -208,9 +219,9 @@ export function ContentPanel({
       </div>
       <InlineTranslationPopup
         anchor={wordAnchor}
-        data={translation.data ?? null}
-        error={translation.error}
-        isPending={translation.isPending}
+        data={translationData}
+        error={translationRequested ? translation.error : null}
+        isPending={translation.isFetching}
         isSaving={createVocabulary.isPending}
         isSaved={isSaved}
         onTranslate={handleTranslateClick}

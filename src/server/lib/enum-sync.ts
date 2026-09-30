@@ -11,6 +11,7 @@ type _EnumSync = [
   Assert<Equal<typeof Shared.CEFRLevel, typeof Db.CEFRLevel>>,
   Assert<Equal<typeof Shared.SourceType, typeof Db.SourceType>>,
   Assert<Equal<typeof Shared.VocabularyStatus, typeof Db.VocabularyStatus>>,
+  Assert<Equal<typeof Shared.ReviewRating, typeof Db.ReviewRating>>,
   Assert<Equal<typeof Shared.StudioArtifactType, typeof Db.StudioArtifactType>>,
   Assert<Equal<typeof Shared.ProcessingStatus, typeof Db.ProcessingStatus>>,
   Assert<Equal<typeof Shared.PartOfSpeech, typeof Db.PartOfSpeech>>,

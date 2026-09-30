@@ -2,18 +2,28 @@
 
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { BookOpen, Library } from "lucide-react";
+import { Link } from "react-router";
+import { BookOpen, GraduationCap, Library } from "lucide-react";
+import { Button } from "@/client/components/ui/button";
+import { useAppSelector } from "@/client/lib/store/hooks";
+import { selectSessionUser } from "@/client/lib/store/session-slice";
 import { VocabularyList } from "./vocabulary-list";
 import { VocabularySetList } from "./vocabulary-set-list";
 import { VocabularyFormDialog } from "./vocabulary-form-dialog";
-import { vocabularyQueries } from "../api/queries";
+import { VocabularySetDialog } from "./vocabulary-set-dialog";
+import { reviewQueries, vocabularyQueries, vocabularySetQueries } from "../api/queries";
+import {
+  useCreateVocabularySetMutation,
+  useGenerateVocabularySetMutation,
+} from "../api/set-mutations";
 import {
   useCreateVocabularyMutation,
   useDeleteVocabularyMutation,
   useUpdateVocabularyMutation,
 } from "../api/mutations";
 import { VocabularyStatus } from "@/shared/enums";
-import type { VocabularyItem, VocabularySet } from "@/shared/vocabulary/schema";
+import type { VocabularyItem } from "@/shared/vocabulary/schema";
+import { PRO_TIER } from "@/shared/vocabulary/set-schema";
 
 
 type ViewTab = "words" | "sets";
@@ -68,7 +78,8 @@ const STAT_CONFIG: Array<{
   { key: "total", label: "Tổng", sublabel: "từ đã lưu", accent: "#221F2B" },
   { key: "new", label: "Mới", sublabel: "chưa học", accent: "#EEA63C" },
   { key: "learning", label: "Đang học", sublabel: "đang tiến", accent: "#5A4FE0" },
-  { key: "known", label: "Đã biết", sublabel: "đã thuộc", accent: "#2FA66A" },
+  { key: "review", label: "Đang ôn", sublabel: "ôn theo ngày", accent: "#2FA66A" },
+  { key: "relearning", label: "Học lại", sublabel: "vừa quên", accent: "#F2664A" },
 ];
 
 export function VocabularyPageClient() {
@@ -78,30 +89,36 @@ export function VocabularyPageClient() {
     "ALL",
   );
   const [activeTab, setActiveTab] = useState<ViewTab>("words");
-  const [creating, setCreating] = useState(false);
-  const [sets] = useState<VocabularySet[]>([]);
+  const [openSetId, setOpenSetId] = useState<string | null>(null);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<VocabularyItem | null>(null);
 
   const listQuery = useQuery(vocabularyQueries.list());
   const statsQuery = useQuery(vocabularyQueries.stats());
+  const setsQuery = useQuery(vocabularySetQueries.list());
+  const dueQuery = useQuery(reviewQueries.due());
+  const isPro = useAppSelector(selectSessionUser)?.tier === PRO_TIER;
 
   const items = useMemo(() => listQuery.data ?? [], [listQuery.data]);
   const stats = statsQuery.data;
   const total = stats?.total ?? items.length;
+  const sets = setsQuery.data ?? [];
+  const dueCount = dueQuery.data?.cards.length ?? 0;
 
   const filteredItems = useMemo(
     () =>
       statusFilter === "ALL"
         ? items
-        : items.filter((item) => item.learningstatus === statusFilter),
+        : items.filter((item) => item.status === statusFilter),
     [items, statusFilter],
   );
 
   const createItem = useCreateVocabularyMutation();
   const updateItem = useUpdateVocabularyMutation();
   const deleteItem = useDeleteVocabularyMutation();
+  const createSet = useCreateVocabularySetMutation();
+  const generateSet = useGenerateVocabularySetMutation();
 
   const dialogMode: "create" | "edit" = editingItem ? "edit" : "create";
   const dialogPending =
@@ -116,7 +133,6 @@ export function VocabularyPageClient() {
     term: string;
     translation: string;
     partofSpeech: VocabularyItem["partofSpeech"];
-    learningstatus: VocabularyStatus;
   }) => {
     if (editingItem) {
       updateItem.mutate(
@@ -151,34 +167,37 @@ export function VocabularyPageClient() {
     deleteItem.mutate(id);
   };
 
-  const handleCreateSet = async (_name: string) => {
-    setCreating(true);
-    // TODO: implement create set
-    setCreating(false);
-  };
-  const handleDeleteSet = async (id: string) => {
-    // TODO: implement delete set — keeping local-only for now
-    void id;
-  };
-
   const wOn = activeTab === "words";
   const sOn = activeTab === "sets";
 
   return (
     <div className="flex-1 overflow-y-auto bg-[#F5F2EC]">
       <div className="mx-auto max-w-[1020px] px-10 py-10 pb-16">
-        <div className="mb-7">
-          <h1 className="text-[26px] font-extrabold tracking-tight text-[#221F2B] mb-1">
-            Từ vựng
-          </h1>
-          <p className="text-sm text-[#565160] leading-relaxed">
-            Xem lại và quản lý các từ và cụm từ đã lưu.
-          </p>
+        <div className="mb-7 flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-[26px] font-extrabold tracking-tight text-[#221F2B] mb-1">
+              Từ vựng
+            </h1>
+            <p className="text-sm text-[#565160] leading-relaxed">
+              Xem lại và quản lý các từ và cụm từ đã lưu.
+            </p>
+          </div>
+          <Button asChild size="sm" className="h-9 rounded-xl gap-1.5 shrink-0">
+            <Link to="/review">
+              <GraduationCap className="size-3.5" />
+              Ôn tập
+              {dueCount > 0 && (
+                <span className="ml-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-white/25">
+                  {dueCount}
+                </span>
+              )}
+            </Link>
+          </Button>
         </div>
 
         <div
           className="grid gap-3 mb-8"
-          style={{ gridTemplateColumns: "repeat(4, 1fr)" }}
+          style={{ gridTemplateColumns: `repeat(${STAT_CONFIG.length}, 1fr)` }}
         >
           {STAT_CONFIG.map(({ key, label, sublabel, accent }) => (
             <StatCard
@@ -255,13 +274,24 @@ export function VocabularyPageClient() {
         {activeTab === "sets" && (
           <VocabularySetList
             sets={sets}
-            loading={false}
-            onCreateSet={handleCreateSet}
-            onDeleteSet={handleDeleteSet}
-            creating={creating}
+            loading={setsQuery.isPending}
+            creating={createSet.isPending}
+            canGenerate={isPro}
+            generating={generateSet.isPending}
+            onCreateSet={(name) => createSet.mutate({ name })}
+            onGenerateSet={(name, size) => generateSet.mutate({ name, size })}
+            onOpenSet={setOpenSetId}
           />
         )}
       </div>
+
+      {openSetId && (
+        <VocabularySetDialog
+          key={openSetId}
+          setId={openSetId}
+          onClose={() => setOpenSetId(null)}
+        />
+      )}
 
       <VocabularyFormDialog
         key={editingItem?.id ?? "new"}

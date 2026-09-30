@@ -1,5 +1,5 @@
 import { getQueryClient } from "@/client/lib/query-client";
-import { vocabularyQueries, VocabularyPageClient } from "@/client/features/vocabulary";
+import { vocabularyQueries, vocabularySetQueries, VocabularyPageClient } from "@/client/features/vocabulary";
 
 export { DashboardError as ErrorBoundary } from "@/client/components/layout/dashboard-error";
 
@@ -10,6 +10,7 @@ export async function clientLoader() {
   await Promise.all([
     queryClient.ensureQueryData(vocabularyQueries.list()),
     queryClient.ensureQueryData(vocabularyQueries.stats()),
+    queryClient.ensureQueryData(vocabularySetQueries.list()),
   ]);
   return null;
 }

@@ -21,9 +21,18 @@ export type SourceType = (typeof SourceType)[keyof typeof SourceType];
 export const VocabularyStatus = {
   NEW: "NEW",
   LEARNING: "LEARNING",
-  MEMORIZED: "MEMORIZED",
+  REVIEW: "REVIEW",
+  RELEARNING: "RELEARNING",
 } as const;
 export type VocabularyStatus = (typeof VocabularyStatus)[keyof typeof VocabularyStatus];
+
+export const ReviewRating = {
+  AGAIN: "AGAIN",
+  HARD: "HARD",
+  GOOD: "GOOD",
+  EASY: "EASY",
+} as const;
+export type ReviewRating = (typeof ReviewRating)[keyof typeof ReviewRating];
 
 export const StudioArtifactType = {
   QUESTION: "QUESTION",
