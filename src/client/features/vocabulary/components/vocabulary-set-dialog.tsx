@@ -19,6 +19,10 @@ import {
   useRenameVocabularySetMutation,
 } from "../api/set-mutations";
 import type { VocabularyItem } from "@/shared/vocabulary/schema";
+import { formatDate } from "../lib/format-date";
+import { STATUS_LABEL, STATUS_STYLE } from "../lib/status-display";
+
+const COLUMN_HEAD = "text-[10px] font-bold uppercase tracking-widest text-[#908B98]";
 
 const FIELD =
   "h-9 text-xs border-[#EAE5DB] rounded-xl focus:border-[#5A4FE0] focus:ring-2 focus:ring-[#5A4FE0]/10";
@@ -110,38 +114,110 @@ export function VocabularySetDialog({ setId, onClose }: VocabularySetDialogProps
               </Button>
             </form>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <WordColumn
-                title={`Trong bộ (${set.items.length})`}
-                emptyText="Bộ từ chưa có từ nào."
-                items={set.items}
-                actionLabel="Bỏ khỏi bộ"
-                icon={<X className="size-3.5" />}
-                disabled={removeItem.isPending}
-                onAction={(item) => removeItem.mutate({ id: setId, itemId: item.id })}
-              />
-              <WordColumn
-                title="Kho từ"
-                emptyText="Không còn từ nào để thêm."
-                items={candidates}
-                actionLabel="Thêm vào bộ"
-                icon={<Plus className="size-3.5" />}
-                disabled={addItems.isPending}
-                onAction={(item) => addItems.mutate({ id: setId, itemIds: [item.id] })}
-                header={
-                  <Input
-                    placeholder="Tìm từ..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className={FIELD}
-                  />
-                }
-              />
+            <div className="text-xs text-[#908B98]">
+              Tạo ngày {formatDate(set.createdAt)} · Học gần nhất:{" "}
+              {set.lastStudiedAt ? formatDate(set.lastStudiedAt) : "chưa học"} ·{" "}
+              {set.studiedToday ? "Hôm nay đã học" : "Hôm nay chưa học"}
             </div>
+
+            <div className="flex flex-col gap-2 min-w-0">
+              <div className={COLUMN_HEAD}>Trong bộ ({set.items.length})</div>
+              <div className="border border-[#EAE5DB] rounded-xl overflow-hidden">
+                <div className="flex items-center px-3 py-2 bg-[#FBF9F5] border-b border-[#EAE5DB]">
+                  <div className={`w-28 shrink-0 ${COLUMN_HEAD}`}>Từ</div>
+                  <div className={`flex-1 min-w-0 ${COLUMN_HEAD}`}>Nghĩa</div>
+                  <div className={`w-24 shrink-0 text-center ${COLUMN_HEAD}`}>Trạng thái</div>
+                  <div className={`w-20 shrink-0 text-center ${COLUMN_HEAD}`}>Ôn gần nhất</div>
+                  <div className={`w-20 shrink-0 text-center ${COLUMN_HEAD}`}>Ôn tiếp</div>
+                  <div className="w-8 shrink-0" />
+                </div>
+                <div className="max-h-56 overflow-y-auto">
+                  {set.items.length === 0 && (
+                    <div className="px-3 py-4 text-xs text-[#908B98] text-center">
+                      Bộ từ chưa có từ nào.
+                    </div>
+                  )}
+                  {set.items.map((item) => (
+                    <MemberRow
+                      key={item.id}
+                      item={item}
+                      disabled={removeItem.isPending}
+                      onRemove={() => removeItem.mutate({ id: setId, itemId: item.id })}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <WordColumn
+              title="Thêm từ kho từ"
+              emptyText="Không còn từ nào để thêm."
+              items={candidates}
+              actionLabel="Thêm vào bộ"
+              icon={<Plus className="size-3.5" />}
+              disabled={addItems.isPending}
+              onAction={(item) => addItems.mutate({ id: setId, itemIds: [item.id] })}
+              header={
+                <Input
+                  placeholder="Tìm từ..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className={FIELD}
+                />
+              }
+            />
           </>
         )}
       </DialogContent>
     </Dialog>
+  );
+}
+
+function MemberRow({
+  item,
+  disabled,
+  onRemove,
+}: {
+  item: VocabularyItem;
+  disabled: boolean;
+  onRemove: () => void;
+}) {
+  const style = STATUS_STYLE[item.status];
+  return (
+    <div className="flex items-center px-3 py-2 border-b border-[#EAE5DB] last:border-b-0">
+      <div className="w-28 shrink-0 text-sm font-semibold text-[#221F2B] truncate">
+        {item.term}
+      </div>
+      <div className="flex-1 min-w-0 pr-3 text-xs text-[#565160] truncate" title={item.translation}>
+        {item.translation}
+      </div>
+      <div className="w-24 shrink-0 text-center">
+        <span
+          className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold"
+          style={{ background: style.bg, color: style.color }}
+        >
+          <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: style.dot }} />
+          {STATUS_LABEL[item.status]}
+        </span>
+      </div>
+      <div className="w-20 shrink-0 text-center text-xs text-[#908B98]">
+        {formatDate(item.lastReviewAt)}
+      </div>
+      {/* A word never reviewed has no schedule yet; its dueAt is only its save time. */}
+      <div className="w-20 shrink-0 text-center text-xs text-[#908B98]">
+        {item.status === "NEW" ? "—" : formatDate(item.dueAt)}
+      </div>
+      <button
+        type="button"
+        title="Bỏ khỏi bộ"
+        aria-label={`Bỏ khỏi bộ: ${item.term}`}
+        disabled={disabled}
+        onClick={onRemove}
+        className="flex items-center justify-center size-8 shrink-0 rounded-lg border border-[#EAE5DB] text-[#565160] cursor-pointer hover:border-[#C8442B] hover:text-[#C8442B] disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <X className="size-3.5" />
+      </button>
+    </div>
   );
 }
 
@@ -166,11 +242,9 @@ function WordColumn({
 }) {
   return (
     <div className="flex flex-col gap-2 min-w-0">
-      <div className="text-[10px] font-bold uppercase tracking-widest text-[#908B98]">
-        {title}
-      </div>
+      <div className={COLUMN_HEAD}>{title}</div>
       {header}
-      <ul className="border border-[#EAE5DB] rounded-xl divide-y divide-[#EAE5DB] max-h-64 overflow-y-auto">
+      <ul className="border border-[#EAE5DB] rounded-xl divide-y divide-[#EAE5DB] max-h-40 overflow-y-auto">
         {items.length === 0 && (
           <li className="px-3 py-4 text-xs text-[#908B98] text-center">{emptyText}</li>
         )}

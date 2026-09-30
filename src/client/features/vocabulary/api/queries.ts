@@ -4,10 +4,7 @@ import {
   VocabularyListResponseSchema,
   VocabularyStatsSchema,
 } from "@/shared/vocabulary/schema";
-import {
-  VocabularySetDetailSchema,
-  VocabularySetListResponseSchema,
-} from "@/shared/vocabulary/set-schema";
+import { VocabularySetListResponseSchema, VocabularySetSchema } from "@/shared/vocabulary/set-schema";
 import { ReviewDueResponseSchema } from "@/shared/vocabulary/review-schema";
 
 // Sets and review keys sit under "vocabulary": a change to a word, a set, or a
@@ -42,7 +39,7 @@ export const vocabularySetQueries = {
     queryOptions({
       queryKey: [...vocabularyQueries.all(), "sets", "detail", id] as const,
       queryFn: ({ signal }) =>
-        fetchJson(`/api/vocabulary-set/${id}`, VocabularySetDetailSchema, { signal }),
+        fetchJson(`/api/vocabulary-set/${id}`, VocabularySetSchema, { signal }),
     }),
 };
 

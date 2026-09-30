@@ -13,6 +13,7 @@ import {
 import { cn } from "@/client/lib/utils";
 import { PartOfSpeech, VocabularyStatus } from "@/shared/enums";
 import type { VocabularyItem } from "@/shared/vocabulary/schema";
+import { STATUS_LABEL, STATUS_STYLE } from "../lib/status-display";
 
 interface VocabularyListProps {
   items: VocabularyItem[];
@@ -37,24 +38,6 @@ const STATUS_FILTERS: Array<"ALL" | VocabularyStatus> = [
   "REVIEW",
   "RELEARNING",
 ];
-
-const STATUS_LABEL: Record<VocabularyStatus | "ALL", string> = {
-  ALL: "Tất cả",
-  NEW: "Mới",
-  LEARNING: "Đang học",
-  REVIEW: "Đang ôn",
-  RELEARNING: "Học lại",
-};
-
-const STATUS_STYLE: Record<
-  VocabularyStatus,
-  { bg: string; color: string; dot: string }
-> = {
-  NEW: { bg: "#FBEFD8", color: "#A66A12", dot: "#EEA63C" },
-  LEARNING: { bg: "#ECEAFB", color: "#4A3FD0", dot: "#5A4FE0" },
-  REVIEW: { bg: "#DDF3E7", color: "#1E7A4B", dot: "#2FA66A" },
-  RELEARNING: { bg: "#FCE7E1", color: "#C8442B", dot: "#F2664A" },
-};
 
 const POS_LABEL: Record<Exclude<PartOfSpeech, "OTHER">, string> = {
   NOUN: "danh từ",

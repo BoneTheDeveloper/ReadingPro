@@ -6,6 +6,7 @@ import { Loader2, Plus, Sparkles } from "lucide-react";
 import { Button } from "@/client/components/ui/button";
 import { Input } from "@/client/components/ui/input";
 import { GENERATED_SET_MAX_SIZE, type VocabularySet } from "@/shared/vocabulary/set-schema";
+import { formatDate } from "../lib/format-date";
 
 interface VocabularySetListProps {
   sets: VocabularySet[];
@@ -165,7 +166,7 @@ function SetCard({
 
   return (
     <div
-      className="group bg-white border border-[#EAE5DB] rounded-2xl p-5 transition-all hover:border-[#5A4FE0] hover:shadow-md hover:-translate-y-0.5"
+      className="group flex flex-col min-h-[168px] bg-white border border-[#EAE5DB] rounded-2xl p-5 transition-all hover:border-[#5A4FE0] hover:shadow-md hover:-translate-y-0.5"
       style={{
         boxShadow: "0 1px 2px rgba(0,0,0,.04), 0 4px 12px rgba(0,0,0,.04)",
       }}
@@ -182,18 +183,29 @@ function SetCard({
             <path d="M4 4v16" />
           </svg>
         </div>
-        <span className="text-xs text-[#908B98] font-medium pt-0.5">
-          {itemCount} từ
+        <span
+          className="rounded-full px-2 py-0.5 text-[10px] font-semibold"
+          style={
+            set.studiedToday
+              ? { background: "#DDF3E7", color: "#1E7A4B" }
+              : { background: "#F0EDE8", color: "#908B98" }
+          }
+        >
+          {set.studiedToday ? "Hôm nay đã học" : "Hôm nay chưa học"}
         </span>
       </div>
 
       <button
         type="button"
         onClick={() => onOpen(set.id)}
-        className="block w-full text-left text-sm font-bold text-[#221F2B] mb-1.5 leading-snug line-clamp-2 cursor-pointer hover:text-[#4A3FD0]"
+        className="block w-full text-left text-sm font-bold text-[#221F2B] mb-0.5 leading-snug line-clamp-2 cursor-pointer hover:text-[#4A3FD0]"
       >
         {set.name}
       </button>
+      <div className="text-[10px] text-[#908B98] mb-2">
+        {itemCount} từ · Học gần nhất:{" "}
+        {set.lastStudiedAt ? formatDate(set.lastStudiedAt) : "chưa học"}
+      </div>
 
       <div className="h-1 bg-[#F5F2EC] rounded-full overflow-hidden mb-2">
         <div
@@ -210,13 +222,13 @@ function SetCard({
         {progress.relearning}
       </div>
 
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mt-auto">
         <button
           type="button"
           onClick={() => onOpen(set.id)}
           className="text-[10px] font-semibold text-[#565160] cursor-pointer hover:text-[#4A3FD0]"
         >
-          Quản lý
+          Xem từ
         </button>
         <Link
           to={`/review?setId=${set.id}`}

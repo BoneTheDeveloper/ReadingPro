@@ -31,6 +31,7 @@ export const VocabularyItemSchema = z.object({
   partofSpeech: z.nativeEnum(PartOfSpeech),
   status: z.nativeEnum(VocabularyStatus),
   dueAt: z.coerce.date(),
+  lastReviewAt: z.coerce.date().nullable(),
   contextSentence: z.string().nullable(),
   passageId: z.string().uuid().nullable(),
   createdAt: z.coerce.date(),

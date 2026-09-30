@@ -1,49 +1,60 @@
 import prisma, { isUniqueViolation } from "@/server/lib/prisma";
 import { AppError } from "@/server/lib/errors";
 import type { VocabularyStatus } from "@/shared/enums";
-import type { VocabularyStatusCounts } from "@/shared/vocabulary/schema";
 import {
   PRO_TIER,
   type VocabularySet,
-  type VocabularySetDetail,
   type VocabularySetGenerateInput,
 } from "@/shared/vocabulary/set-schema";
 import { toStatusCounts } from "./vocabulary-crud";
+import { startOfDayInTimeZone } from "./fsrs-scheduler";
 
 type SetRow = { id: string; name: string; createdAt: Date };
 
 const SET_FIELDS = { id: true, name: true, createdAt: true } as const;
 
-/** Member counts per status for each set, in one grouped query. */
-async function loadProgress(setIds: string[]): Promise<Map<string, VocabularyStatusCounts>> {
-  if (setIds.length === 0) return new Map();
-  const rows = await prisma.$queryRaw<
-    Array<{ vocabularySetId: string; status: VocabularyStatus; count: number }>
-  >`
-    SELECT si."vocabularySetId", vi."status", COUNT(*)::int AS count
-    FROM "VocabularySetItem" si
-    JOIN "VocabularyItem" vi ON vi."id" = si."vocabularyItemId"
-    WHERE si."vocabularySetId" = ANY(${setIds}::uuid[])
-    GROUP BY si."vocabularySetId", vi."status"
-  `;
+/** Adds each set's words (with their schedule), status counts, and last study date. */
+async function withItems(userId: string, sets: SetRow[]): Promise<VocabularySet[]> {
+  if (sets.length === 0) return [];
+  const setIds = sets.map((s) => s.id);
+  const inSets = { vocabularySetId: { in: setIds } };
 
-  const bySet = new Map<string, Array<{ status: VocabularyStatus; count: number }>>();
-  for (const row of rows) {
-    const groups = bySet.get(row.vocabularySetId) ?? [];
-    groups.push(row);
-    bySet.set(row.vocabularySetId, groups);
-  }
-  return new Map([...bySet].map(([id, groups]) => [id, toStatusCounts(groups)]));
-}
+  const [rows, sessions, profile] = await Promise.all([
+    prisma.vocabularyItem.findMany({
+      where: { userId, vocabularySetItems: { some: inSets } },
+      orderBy: { createdAt: "desc" },
+      include: { vocabularySetItems: { where: inSets, select: { vocabularySetId: true } } },
+    }),
+    prisma.reviewSession.groupBy({
+      by: ["vocabularySetId"],
+      // A session that was opened and left without a rating is not study.
+      where: { userId, ...inSets, cardsReviewed: { gt: 0 } },
+      _max: { startedAt: true },
+    }),
+    prisma.userProfile.findUnique({ where: { id: userId }, select: { timezone: true } }),
+  ]);
 
-async function withProgress(sets: SetRow[]): Promise<VocabularySet[]> {
-  const progress = await loadProgress(sets.map((s) => s.id));
+  const today = startOfDayInTimeZone(new Date(), profile?.timezone ?? "UTC");
+
+  const lastStudied = new Map(sessions.map((s) => [s.vocabularySetId, s._max.startedAt]));
+
   return sets.map((set) => {
-    const counts = progress.get(set.id) ?? toStatusCounts([]);
+    const items = rows
+      .filter((row) => row.vocabularySetItems.some((link) => link.vocabularySetId === set.id))
+      .map(({ vocabularySetItems: _links, ...item }) => item);
+
+    const byStatus = new Map<VocabularyStatus, number>();
+    for (const item of items) byStatus.set(item.status, (byStatus.get(item.status) ?? 0) + 1);
+
+    const lastStudiedAt = lastStudied.get(set.id) ?? null;
+
     return {
       ...set,
-      progress: counts,
-      itemCount: counts.new + counts.learning + counts.review + counts.relearning,
+      lastStudiedAt,
+      studiedToday: lastStudiedAt !== null && lastStudiedAt >= today,
+      itemCount: items.length,
+      progress: toStatusCounts([...byStatus].map(([status, count]) => ({ status, count }))),
+      items,
     };
   });
 }
@@ -75,22 +86,12 @@ export async function listVocabularySetsForUser(userId: string): Promise<Vocabul
     orderBy: { createdAt: "desc" },
     select: SET_FIELDS,
   });
-  return withProgress(sets);
+  return withItems(userId, sets);
 }
 
-export async function getVocabularySetForUser(
-  userId: string,
-  id: string,
-): Promise<VocabularySetDetail> {
+export async function getVocabularySetForUser(userId: string, id: string): Promise<VocabularySet> {
   const set = await requireSetForUser(userId, id);
-  const [[summary], items] = await Promise.all([
-    withProgress([set]),
-    prisma.vocabularyItem.findMany({
-      where: { userId, vocabularySetItems: { some: { vocabularySetId: id } } },
-      orderBy: { createdAt: "desc" },
-    }),
-  ]);
-  return { ...summary, items };
+  return (await withItems(userId, [set]))[0];
 }
 
 export async function createVocabularySetForUser(
@@ -109,7 +110,7 @@ export async function createVocabularySetForUser(
       },
       select: SET_FIELDS,
     });
-    return (await withProgress([set]))[0];
+    return (await withItems(userId, [set]))[0];
   } catch (error) {
     if (isUniqueViolation(error)) throw nameTaken(input.name);
     throw error;
@@ -159,7 +160,7 @@ export async function renameVocabularySetForUser(
       data: { name },
       select: SET_FIELDS,
     });
-    return (await withProgress([set]))[0];
+    return (await withItems(userId, [set]))[0];
   } catch (error) {
     if (isUniqueViolation(error)) throw nameTaken(name);
     throw error;
