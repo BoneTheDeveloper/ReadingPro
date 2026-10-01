@@ -32,7 +32,7 @@ function findCard(userId: string, id: string) {
 async function loadSettings(userId: string) {
   const profile = await prisma.userProfile.findUnique({
     where: { id: userId },
-    select: { timezone: true, desiredRetention: true, dailyNewLimit: true, fsrsParams: true },
+    select: { timezone: true, desiredRetention: true, fsrsParams: true },
   });
   if (!profile) throw new AppError("auth.required", "User profile not found");
   return { ...profile, scheduler: createScheduler(profile) };
@@ -64,17 +64,24 @@ async function requireSetForUser(userId: string, setId: string): Promise<void> {
 }
 
 /**
- * Due cards first (oldest due date first), then new cards up to what is left of
- * today's new-card limit. "Today" is the user's local day.
+ * Due cards first (oldest due date first), then new cards. Each set adds new
+ * cards up to what is left of its own limit for today, so a review of every set
+ * adds up the sets' allowances. "Today" is the user's local day.
  */
 export async function listDueCardsForUser(
   userId: string,
   setId?: string,
 ): Promise<ReviewDueResponse> {
-  if (setId) await requireSetForUser(userId, setId);
+  const sets = await prisma.vocabularySet.findMany({
+    where: { userId, id: setId },
+    select: { id: true, dailyNewLimit: true },
+  });
+  if (setId && sets.length === 0) {
+    throw new AppError("vocabulary_set.not_found", "VocabularySet not found", { id: setId });
+  }
   const settings = await loadSettings(userId);
   const now = new Date();
-  const inSet = setId ? { vocabularySetItems: { some: { vocabularySetId: setId } } } : {};
+  const inSet = setId ? { vocabularySetId: setId } : {};
 
   const [due, introducedToday] = await Promise.all([
     prisma.vocabularyItem.findMany({
@@ -82,25 +89,37 @@ export async function listDueCardsForUser(
       orderBy: { dueAt: "asc" },
       include: CARD_INCLUDE,
     }),
-    prisma.reviewLog.count({
+    // A first rating counts against the set the word is in now.
+    prisma.reviewLog.findMany({
       where: {
         userId,
         status: "NEW",
         reviewedAt: { gte: startOfDayInTimeZone(now, settings.timezone) },
+        vocabularyItem: inSet,
       },
+      select: { vocabularyItem: { select: { vocabularySetId: true } } },
     }),
   ]);
 
-  const newAllowance = Math.max(0, settings.dailyNewLimit - introducedToday);
-  const fresh =
-    newAllowance > 0
-      ? await prisma.vocabularyItem.findMany({
-          where: { userId, status: "NEW", ...inSet },
-          orderBy: { createdAt: "asc" },
-          take: newAllowance,
-          include: CARD_INCLUDE,
-        })
-      : [];
+  const introducedBySet = new Map<string, number>();
+  for (const log of introducedToday) {
+    const id = log.vocabularyItem.vocabularySetId;
+    introducedBySet.set(id, (introducedBySet.get(id) ?? 0) + 1);
+  }
+
+  const freshBySet = await Promise.all(
+    sets.map((set) => {
+      const allowance = set.dailyNewLimit - (introducedBySet.get(set.id) ?? 0);
+      if (allowance <= 0) return [];
+      return prisma.vocabularyItem.findMany({
+        where: { userId, status: "NEW", vocabularySetId: set.id },
+        orderBy: { createdAt: "asc" },
+        take: allowance,
+        include: CARD_INCLUDE,
+      });
+    }),
+  );
+  const fresh = freshBySet.flat().sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
 
   return {
     cards: [...due, ...fresh].map((row) => toReviewCard(settings.scheduler, row, now)),

@@ -8,6 +8,7 @@ import type {
   VocabularyStatusCounts,
   VocabularyUpdateInput,
 } from "@/shared/vocabulary/schema";
+import { ensureDefaultSetForUser } from "./default-vocabulary-set";
 
 const COUNT_KEY = {
   NEW: "new",
@@ -36,6 +37,8 @@ export async function storeVocabularyItemForUser(
     if (!passage) throw new AppError("passage.not_found", "Passage not found", { id: input.passageId });
   }
 
+  const vocabularySetId = await ensureDefaultSetForUser(userId);
+
   return prisma.vocabularyItem.upsert({
     where: {
       userId_term_translation: {
@@ -53,8 +56,9 @@ export async function storeVocabularyItemForUser(
       partofSpeech: input.partofSpeech,
       contextSentence: input.contextSentence,
       passageId: input.passageId,
+      vocabularySetId,
     },
-    // A repeat save keeps the first context: the card shows where the word was first met.
+    // A repeat save keeps the first context and the set the user filed the word in.
     update: {
       partofSpeech: input.partofSpeech,
       savedCount: { increment: 1 },

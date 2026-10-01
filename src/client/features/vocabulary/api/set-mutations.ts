@@ -7,6 +7,7 @@ import {
   VocabularySetSchema,
   type VocabularySetCreateInput,
   type VocabularySetGenerateInput,
+  type VocabularySetUpdateInput,
 } from "@/shared/vocabulary/set-schema";
 import { vocabularyQueries } from "./queries";
 
@@ -43,14 +44,14 @@ export function useGenerateVocabularySetMutation() {
   });
 }
 
-export function useRenameVocabularySetMutation() {
+export function useUpdateVocabularySetMutation() {
   return useMutation({
-    mutationKey: ["vocabulary", "sets", "rename"] as const,
-    mutationFn: ({ id, name }: { id: string; name: string }) =>
+    mutationKey: ["vocabulary", "sets", "update"] as const,
+    mutationFn: ({ id, ...input }: { id: string } & VocabularySetUpdateInput) =>
       fetchJson(`/api/vocabulary-set/${id}`, VocabularySetSchema, {
         method: "PATCH",
         headers: JSON_HEADERS,
-        body: JSON.stringify({ name }),
+        body: JSON.stringify(input),
       }),
     onSuccess: useInvalidateVocabulary(),
   });

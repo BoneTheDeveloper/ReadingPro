@@ -5,16 +5,21 @@ const SetNameSchema = z.string().trim().min(1).max(60);
 const ItemIdsSchema = z.array(z.string().uuid()).max(200);
 
 /**
- * A set is a name plus members. Every set looks the same whether it was built
- * by hand or generated; progress is counted from member statuses on read.
+ * A set is a name plus the words filed in it; a word is in exactly one set.
+ * Every set looks the same whether it was built by hand or generated; progress
+ * is counted from member statuses on read.
  */
 export const VocabularySetSchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
+  /** The set new words land in; it cannot be deleted. */
+  isDefault: z.boolean(),
+  /** New words of this set that may be introduced per day. */
+  dailyNewLimit: z.number().int().nonnegative(),
   createdAt: z.coerce.date(),
-  /** Start of the most recent session that rated a card of this set; null if never studied. */
+  /** Most recent rating of any word in this set, from any review; null if never studied. */
   lastStudiedAt: z.coerce.date().nullable(),
-  /** Whether that session falls in the user's current local day. */
+  /** Whether that rating falls in the user's current local day. */
   studiedToday: z.boolean(),
   itemCount: z.number().int().nonnegative(),
   progress: VocabularyStatusCountsSchema,
@@ -32,7 +37,19 @@ export const VocabularySetCreateInputSchema = z.object({
 
 export type VocabularySetCreateInput = z.input<typeof VocabularySetCreateInputSchema>;
 
-export const VocabularySetRenameInputSchema = z.object({ name: SetNameSchema });
+export const SET_DAILY_NEW_LIMIT_MAX = 999;
+
+export const VocabularySetUpdateInputSchema = z
+  .object({
+    name: SetNameSchema,
+    dailyNewLimit: z.number().int().min(0).max(SET_DAILY_NEW_LIMIT_MAX),
+  })
+  .partial()
+  .refine((input) => input.name !== undefined || input.dailyNewLimit !== undefined, {
+    message: "Nothing to update",
+  });
+
+export type VocabularySetUpdateInput = z.infer<typeof VocabularySetUpdateInputSchema>;
 
 export const GENERATED_SET_MAX_SIZE = 50;
 

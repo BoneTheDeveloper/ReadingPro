@@ -83,7 +83,6 @@ model UserProfile {
   updatedAt            DateTime                @updatedAt
   timezone             String                  @default("Asia/Bangkok")
   desiredRetention     Float                   @default(0.9)
-  dailyNewLimit        Int                     @default(10)
   // Optimized FSRS weights; null means the library defaults.
   fsrsParams           Json?
   passages             Passage[]
@@ -157,6 +156,9 @@ model VocabularyItem {
 
   savedCount         Int                 @default(1)
 
+  // A word lives in exactly one set; words the user has not filed sit in the default set.
+  vocabularySetId    String              @db.Uuid
+
   // Where the word was first saved; shown on the back of the review card.
   contextSentence    String?
   passageId          String?             @db.Uuid
@@ -177,32 +179,28 @@ model VocabularyItem {
 
   userProfile        UserProfile         @relation(fields: [userId], references: [id], onDelete: Cascade)
   passage            Passage?            @relation(fields: [passageId], references: [id], onDelete: SetNull)
-  vocabularySetItems VocabularySetItem[]
+  // NoAction, not Restrict: deleting a profile removes its sets and words in one
+  // statement, which Restrict would reject. A set is emptied before it is deleted.
+  vocabularySet      VocabularySet       @relation(fields: [vocabularySetId], references: [id], onDelete: NoAction)
   reviewLogs         ReviewLog[]
 
   @@unique([userId, term, translation])
   @@index([userId, dueAt])
   @@index([userId, status])
-}
-
-model VocabularySetItem {
-  vocabularySetId  String         @db.Uuid
-  vocabularyItemId String         @db.Uuid
-
-  vocabularyItem   VocabularyItem @relation(fields: [vocabularyItemId], references: [id], onDelete: Cascade)
-  vocabularySet    VocabularySet  @relation(fields: [vocabularySetId], references: [id], onDelete: Cascade)
-
-  @@id([vocabularySetId, vocabularyItemId])
-  @@index([vocabularyItemId])
+  @@index([vocabularySetId])
 }
 
 model VocabularySet {
   id                 String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId             String
   name               String
+  // The set new words land in. One per user; it cannot be deleted.
+  isDefault          Boolean             @default(false)
+  // New words of this set that may be introduced per user-local day.
+  dailyNewLimit      Int                 @default(10)
   createdAt          DateTime            @default(now())
 
-  vocabularySetItems VocabularySetItem[]
+  vocabularyItems    VocabularyItem[]
   reviewSessions     ReviewSession[]
   userProfile        UserProfile         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -212,7 +210,7 @@ model VocabularySet {
 model ReviewSession {
   id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId          String
-  // Null means the session covers every due card.
+  // Null means the session covers the due cards of every set.
   vocabularySetId String?        @db.Uuid
   startedAt       DateTime       @default(now())
   endedAt         DateTime?

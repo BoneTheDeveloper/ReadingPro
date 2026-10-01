@@ -50,12 +50,14 @@ Scenario: Save a new word
   When I save it
   Then the word, its translation, the sentence it appeared in, and its passage are stored in my word bank
   And the word is marked NEW
+  And the word is placed in my default set
 
 Scenario: Save a duplicate
   Given the same word with the same translation is already saved
   When I save it again
   Then the existing entry is updated in place, not duplicated
   And its first context sentence is kept
+  And it stays in the set it is already in
 ```
 
 - Each word keeps one context: the sentence where it was first saved. It is shown on the

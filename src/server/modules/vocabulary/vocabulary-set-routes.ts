@@ -9,7 +9,7 @@ import {
   getVocabularySetForUser,
   listVocabularySetsForUser,
   removeVocabularySetItemForUser,
-  renameVocabularySetForUser,
+  updateVocabularySetForUser,
 } from "./vocabulary-set-crud";
 import {
   VocabularySetCreateInputSchema,
@@ -17,7 +17,7 @@ import {
   VocabularySetIdParamSchema,
   VocabularySetItemParamSchema,
   VocabularySetItemsInputSchema,
-  VocabularySetRenameInputSchema,
+  VocabularySetUpdateInputSchema,
 } from "@/shared/vocabulary/set-schema";
 import type { AuthEnv } from "@/server/env";
 
@@ -41,11 +41,10 @@ export const vocabularySetRoutes = new Hono<AuthEnv>()
   .patch(
     "/:id",
     validate("param", VocabularySetIdParamSchema),
-    validate("json", VocabularySetRenameInputSchema),
+    validate("json", VocabularySetUpdateInputSchema),
     async (c) => {
       const { id } = c.req.valid("param");
-      const { name } = c.req.valid("json");
-      return c.json(await renameVocabularySetForUser(c.var.user.id, id, name));
+      return c.json(await updateVocabularySetForUser(c.var.user.id, id, c.req.valid("json")));
     },
   )
   .delete("/:id", validate("param", VocabularySetIdParamSchema), async (c) => {

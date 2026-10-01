@@ -26,6 +26,7 @@ export const ERROR_REASONS = {
   "vocabulary.duplicate": { status: 409, code: ERROR_CODES.CONFLICT },
   "vocabulary_set.not_found": { status: 404, code: ERROR_CODES.NOT_FOUND },
   "vocabulary_set.name_taken": { status: 409, code: ERROR_CODES.CONFLICT },
+  "vocabulary_set.default_protected": { status: 409, code: ERROR_CODES.CONFLICT },
   "plan.pro_required": { status: 403, code: ERROR_CODES.FORBIDDEN },
   "review.session_not_found": { status: 404, code: ERROR_CODES.NOT_FOUND },
   "review.session_ended": { status: 409, code: ERROR_CODES.CONFLICT },

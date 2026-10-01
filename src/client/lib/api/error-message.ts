@@ -44,6 +44,7 @@ const MESSAGES: Record<ErrorMessageKey, string> = {
   "vocabulary.duplicate": "Từ này với nghĩa này đã có trong kho từ.",
   "vocabulary_set.not_found": "Không tìm thấy bộ từ.",
   "vocabulary_set.name_taken": "Đã có bộ từ mang tên này.",
+  "vocabulary_set.default_protected": "Không thể xóa bộ từ mặc định.",
   "plan.pro_required": "Tính năng này chỉ dành cho gói Pro.",
   "review.session_not_found": "Không tìm thấy phiên ôn tập.",
   "review.session_ended": "Phiên ôn tập đã kết thúc.",

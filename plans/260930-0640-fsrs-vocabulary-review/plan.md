@@ -134,5 +134,12 @@ run them in order. Phase 5 depends on phases 3 and 4.
   cascade on word delete.
 - Not verified: the review screen, set dialog, and reader popup in a browser.
   Sign-in is Google only, so the UI checks in phases 2, 3, and 5 remain open.
+- **Set model changed after delivery (decision by the owner).** Sets now follow the
+  Anki deck model: a word is in exactly one set (`VocabularyItem.vocabularySetId`),
+  each user has a default set, `VocabularySetItem` is removed, and the daily
+  new-word limit moved from `UserProfile` to `VocabularySet`. This supersedes the
+  n–n relation and the per-user limit described in phases 1, 3 and 4. Migration
+  `20260930163000_one_set_per_word` is written but not applied; typecheck, lint
+  and knip pass, the API and UI were not exercised against the new schema.
 
 <!-- slug: fsrs-vocabulary-review -->

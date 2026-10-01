@@ -16,9 +16,10 @@ import {
   useAddVocabularySetItemsMutation,
   useDeleteVocabularySetMutation,
   useRemoveVocabularySetItemMutation,
-  useRenameVocabularySetMutation,
+  useUpdateVocabularySetMutation,
 } from "../api/set-mutations";
 import type { VocabularyItem } from "@/shared/vocabulary/schema";
+import { SET_DAILY_NEW_LIMIT_MAX } from "@/shared/vocabulary/set-schema";
 import { formatDate } from "../lib/format-date";
 import { STATUS_LABEL, STATUS_STYLE } from "../lib/status-display";
 
@@ -32,22 +33,24 @@ interface VocabularySetDialogProps {
   onClose: () => void;
 }
 
-/** Rename a set, choose which saved words belong to it, or delete it. */
+/** Rename a set, move saved words into or out of it, or delete it. */
 export function VocabularySetDialog({ setId, onClose }: VocabularySetDialogProps) {
   const detail = useQuery(vocabularySetQueries.detail(setId));
   const bank = useQuery(vocabularyQueries.list());
 
-  // Null until the user types, so the field follows the server name after a rename.
+  // Null until the user types, so the fields follow the server values after a save.
   const [nameDraft, setNameDraft] = useState<string | null>(null);
+  const [limitDraft, setLimitDraft] = useState<number | null>(null);
   const [search, setSearch] = useState("");
 
-  const rename = useRenameVocabularySetMutation();
+  const update = useUpdateVocabularySetMutation();
   const remove = useDeleteVocabularySetMutation();
   const addItems = useAddVocabularySetItemsMutation();
   const removeItem = useRemoveVocabularySetItemMutation();
 
   const set = detail.data;
   const name = nameDraft ?? set?.name ?? "";
+  const dailyNewLimit = limitDraft ?? set?.dailyNewLimit ?? 0;
 
   const candidates = useMemo(() => {
     const memberIds = new Set(set?.items.map((item) => item.id));
@@ -59,7 +62,10 @@ export function VocabularySetDialog({ setId, onClose }: VocabularySetDialogProps
     );
   }, [bank.data, set, search]);
 
-  const canRename = !!set && name.trim().length > 0 && name.trim() !== set.name;
+  const canSave =
+    !!set &&
+    name.trim().length > 0 &&
+    (name.trim() !== set.name || dailyNewLimit !== set.dailyNewLimit);
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
@@ -79,10 +85,15 @@ export function VocabularySetDialog({ setId, onClose }: VocabularySetDialogProps
               className="flex items-center gap-2"
               onSubmit={(e) => {
                 e.preventDefault();
-                if (!canRename) return;
-                rename.mutate(
-                  { id: setId, name: name.trim() },
-                  { onSuccess: () => setNameDraft(null) },
+                if (!canSave) return;
+                update.mutate(
+                  { id: setId, name: name.trim(), dailyNewLimit },
+                  {
+                    onSuccess: () => {
+                      setNameDraft(null);
+                      setLimitDraft(null);
+                    },
+                  },
                 );
               }}
             >
@@ -93,25 +104,42 @@ export function VocabularySetDialog({ setId, onClose }: VocabularySetDialogProps
                 onChange={(e) => setNameDraft(e.target.value)}
                 className={`${FIELD} flex-1`}
               />
+              <label className="flex items-center gap-1.5 text-xs text-[#565160] shrink-0">
+                Từ mới/ngày
+                <Input
+                  type="number"
+                  min={0}
+                  max={SET_DAILY_NEW_LIMIT_MAX}
+                  value={dailyNewLimit}
+                  onChange={(e) =>
+                    setLimitDraft(
+                      Math.min(SET_DAILY_NEW_LIMIT_MAX, Math.max(0, Math.trunc(Number(e.target.value)) || 0)),
+                    )
+                  }
+                  className={`${FIELD} w-16`}
+                />
+              </label>
               <Button
                 type="submit"
                 size="sm"
-                disabled={!canRename || rename.isPending}
+                disabled={!canSave || update.isPending}
                 className="h-9 rounded-xl"
               >
-                Đổi tên
+                Lưu
               </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                disabled={remove.isPending}
-                onClick={() => remove.mutate(setId, { onSuccess: onClose })}
-                className="h-9 rounded-xl gap-1.5 border-[#EAE5DB] text-[#C8442B] hover:border-[#C8442B] hover:text-[#C8442B]"
-              >
-                <Trash2 className="size-3.5" />
-                Xóa bộ
-              </Button>
+              {!set.isDefault && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={remove.isPending}
+                  onClick={() => remove.mutate(setId, { onSuccess: onClose })}
+                  className="h-9 rounded-xl gap-1.5 border-[#EAE5DB] text-[#C8442B] hover:border-[#C8442B] hover:text-[#C8442B]"
+                >
+                  <Trash2 className="size-3.5" />
+                  Xóa bộ
+                </Button>
+              )}
             </form>
 
             <div className="text-xs text-[#908B98]">
@@ -142,7 +170,12 @@ export function VocabularySetDialog({ setId, onClose }: VocabularySetDialogProps
                       key={item.id}
                       item={item}
                       disabled={removeItem.isPending}
-                      onRemove={() => removeItem.mutate({ id: setId, itemId: item.id })}
+                      // A word always has a set, so the default set has nowhere to send it.
+                      onRemove={
+                        set.isDefault
+                          ? undefined
+                          : () => removeItem.mutate({ id: setId, itemId: item.id })
+                      }
                     />
                   ))}
                 </div>
@@ -150,10 +183,10 @@ export function VocabularySetDialog({ setId, onClose }: VocabularySetDialogProps
             </div>
 
             <WordColumn
-              title="Thêm từ kho từ"
-              emptyText="Không còn từ nào để thêm."
+              title="Chuyển từ bộ khác sang"
+              emptyText="Không còn từ nào để chuyển."
               items={candidates}
-              actionLabel="Thêm vào bộ"
+              actionLabel="Chuyển vào bộ"
               icon={<Plus className="size-3.5" />}
               disabled={addItems.isPending}
               onAction={(item) => addItems.mutate({ id: setId, itemIds: [item.id] })}
@@ -180,7 +213,8 @@ function MemberRow({
 }: {
   item: VocabularyItem;
   disabled: boolean;
-  onRemove: () => void;
+  /** Absent when the word cannot leave this set. */
+  onRemove?: () => void;
 }) {
   const style = STATUS_STYLE[item.status];
   return (
@@ -207,16 +241,20 @@ function MemberRow({
       <div className="w-20 shrink-0 text-center text-xs text-[#908B98]">
         {item.status === "NEW" ? "—" : formatDate(item.dueAt)}
       </div>
-      <button
-        type="button"
-        title="Bỏ khỏi bộ"
-        aria-label={`Bỏ khỏi bộ: ${item.term}`}
-        disabled={disabled}
-        onClick={onRemove}
-        className="flex items-center justify-center size-8 shrink-0 rounded-lg border border-[#EAE5DB] text-[#565160] cursor-pointer hover:border-[#C8442B] hover:text-[#C8442B] disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        <X className="size-3.5" />
-      </button>
+      {onRemove ? (
+        <button
+          type="button"
+          title="Trả về bộ mặc định"
+          aria-label={`Trả về bộ mặc định: ${item.term}`}
+          disabled={disabled}
+          onClick={onRemove}
+          className="flex items-center justify-center size-8 shrink-0 rounded-lg border border-[#EAE5DB] text-[#565160] cursor-pointer hover:border-[#C8442B] hover:text-[#C8442B] disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <X className="size-3.5" />
+        </button>
+      ) : (
+        <div className="size-8 shrink-0" />
+      )}
     </div>
   );
 }
