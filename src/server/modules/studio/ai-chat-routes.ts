@@ -14,7 +14,7 @@ import {
   resetHistoryForUser,
   streamStudyChat,
 } from "./ai-chat";
-import { findPassageForUser } from "@/server/modules/passage/passage-crud";
+import { requireOwnedPassage } from "@/server/modules/passage";
 import { AppError } from "@/server/lib/errors";
 import type { AuthEnv } from "@/server/env";
 
@@ -27,8 +27,7 @@ export const aiChatRoutes = new Hono<AuthEnv>()
       const userId = c.var.user.id;
       const { messages, passageId, language } = c.req.valid("json");
 
-      const passage = await findPassageForUser(userId, passageId);
-      if (!passage) throw new AppError("passage.not_found", "Passage not found", { id: passageId });
+      const passage = await requireOwnedPassage(userId, passageId);
 
       // Persist the user turn synchronously so it survives an immediate client
       // abort before the streamed response finishes.
@@ -66,8 +65,7 @@ export const aiChatRoutes = new Hono<AuthEnv>()
       throw new AppError("request.invalid", "passageId is required");
     }
 
-    const passage = await findPassageForUser(userId, passageId);
-    if (!passage) throw new AppError("passage.not_found", "Passage not found", { id: passageId });
+    await requireOwnedPassage(userId, passageId);
 
     await resetHistoryForUser(userId, passageId);
     return c.body(null, 204);
@@ -80,8 +78,7 @@ export const aiChatRoutes = new Hono<AuthEnv>()
       throw new AppError("request.invalid", "passageId is required");
     }
 
-    const passage = await findPassageForUser(userId, passageId);
-    if (!passage) throw new AppError("passage.not_found", "Passage not found", { id: passageId });
+    await requireOwnedPassage(userId, passageId);
 
     const history = await getChatHistoryForUser(userId, passageId);
     const messages = history.map((row) => ({

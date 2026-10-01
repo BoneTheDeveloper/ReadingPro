@@ -3,7 +3,7 @@ import { validate } from "@/server/lib/validate";
 import { requireSession } from "@/server/modules/auth/require-session";
 import { StudioArtifactType } from "@/server/db/generated/enums";
 import { z } from "zod";
-import { findPassageForUser } from "@/server/modules/passage/passage-crud";
+import { requireReadyPassage } from "@/server/modules/passage";
 import {
   createArtifact,
   deleteArtifact,
@@ -37,12 +37,7 @@ export const artifactRoutes = new Hono<AuthEnv>()
     const { user } = c.var;
     const { passageId } = c.req.valid("json");
 
-    const passage = await findPassageForUser(user.id, passageId);
-    // Content is empty until processing completes — generating from it would
-    // feed the model an empty passage.
-    if (!passage || passage.status !== "COMPLETED") {
-      throw new AppError("passage.not_ready", "Passage is not ready");
-    }
+    await requireReadyPassage(user.id, passageId);
 
     const artifact = await createArtifact({
       passageId,
@@ -64,12 +59,7 @@ export const artifactRoutes = new Hono<AuthEnv>()
     const { user } = c.var;
     const { passageId } = c.req.valid("json");
 
-    const passage = await findPassageForUser(user.id, passageId);
-    // Content is empty until processing completes — generating from it would
-    // feed the model an empty passage.
-    if (!passage || passage.status !== "COMPLETED") {
-      throw new AppError("passage.not_ready", "Passage is not ready");
-    }
+    await requireReadyPassage(user.id, passageId);
 
     const artifact = await createArtifact({
       passageId,

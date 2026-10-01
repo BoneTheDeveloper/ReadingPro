@@ -3,7 +3,7 @@ import { requestId } from "hono/request-id";
 import { auth } from "@/server/modules/auth/auth";
 import { requestContext } from "@/server/middleware/request-context";
 import { AppError, onError } from "@/server/lib/errors";
-import { passageRoutes } from "@/server/modules/passage/passage-routes";
+import { passageRoutes } from "@/server/modules/passage";
 import { artifactRoutes } from "@/server/modules/studio/artifact-routes";
 import { vocabularyRoutes } from "@/server/modules/vocabulary/vocabulary-routes";
 import { vocabularySetRoutes } from "@/server/modules/vocabulary/vocabulary-set-routes";
