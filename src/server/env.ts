@@ -1,5 +1,5 @@
 import type pino from "pino";
-import type { auth } from "@/server/modules/auth/auth";
+import type { auth } from "@/server/modules/auth";
 import type { ErrorReason } from "@/shared/api-error";
 
 type AuthSession = NonNullable<Awaited<ReturnType<typeof auth.api.getSession>>>;
