@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { validate } from "@/server/lib/validate";
-import { requireSession } from "@/server/modules/auth/require-session";
+import { requireSession } from "@/server/middleware/require-session";
 import {
   deleteVocabularyItemForUser,
   listVocabularyItemsForUser,

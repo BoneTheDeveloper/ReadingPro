@@ -63,13 +63,14 @@ src/
 └─ server/
    ├─ app.ts                  # Hono app: auth handler, request context, module routes, onError
    ├─ env.ts                  # Hono context types (request logger, signed-in user)
-   ├─ middleware/             # request id and logger per request
-   ├─ modules/                # one folder per domain: routes, services, helpers, workflows
-   │  ├─ auth/                # better-auth instance, session middleware
-   │  ├─ passage/             # import, normalization, processing workflow
-   │  ├─ reading/             # word translation
-   │  ├─ studio/              # artifacts, generation workflow, passage chat
-   │  └─ vocabulary/          # word bank CRUD, sets, FSRS scheduler and review
+   ├─ middleware/             # request id and logger per request, requireSession
+   ├─ modules/                # one folder per domain; import it through its index.ts
+   │  ├─ auth/                # better-auth instance
+   │  ├─ passage/             # import, ingestion (normalization, AI rewrite), processing workflow
+   │  ├─ artifact/            # questions and flashcards, generation workflow
+   │  ├─ chat/                # passage chat, tutor prompts, history
+   │  ├─ translate/           # word translation
+   │  └─ vocabulary/          # items/, sets/, review/, FSRS scheduler
    ├─ lib/                    # prisma, logger, errors and onError, validation, enum sync check
    └─ db/generated/           # generated Prisma client — do not edit
 
@@ -78,7 +79,12 @@ prisma/migrations/            # SQL migrations; apply with `pnpm exec prisma mig
 ```
 
 Client and server code only meet in `src/shared/`. ESLint (`no-restricted-imports`
-in `eslint.config.mjs`) enforces this. Client code gets Prisma enums from
+in `eslint.config.mjs`) enforces this, and that features and server modules are
+imported only through their `index.ts`.
+
+Inside a server module, `*-routes.ts` handles HTTP only (validate, call a service,
+shape the response), `*-service.ts` holds the use cases, and `*-repository.ts`,
+where present, is the only file that queries the module's tables. Client code gets Prisma enums from
 `@/shared/enums`; `src/server/lib/enum-sync.ts` fails typecheck if they drift
 from the schema.
 

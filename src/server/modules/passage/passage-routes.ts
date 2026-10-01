@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import { validate } from "@/server/lib/validate";
-import { requireSession } from "@/server/modules/auth/require-session";
+import { requireSession } from "@/server/middleware/require-session";
 import { CreatePassageInputSchema } from "@/shared/passage/schema";
 import {
   deletePassageForUser,

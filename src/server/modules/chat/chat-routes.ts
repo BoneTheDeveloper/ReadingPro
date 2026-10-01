@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import type { UIMessage } from "ai";
 import { validate } from "@/server/lib/validate";
 import { AppError } from "@/server/lib/errors";
-import { requireSession } from "@/server/modules/auth/require-session";
+import { requireSession } from "@/server/middleware/require-session";
 import { chatHistoryResponseSchema, studyChatRequestSchema } from "@/shared/studio/chat";
 import {
   getChatHistoryForUser,

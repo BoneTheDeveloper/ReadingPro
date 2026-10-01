@@ -1,12 +1,12 @@
 import { Hono } from "hono";
 import { requestId } from "hono/request-id";
-import { auth } from "@/server/modules/auth/auth";
+import { auth } from "@/server/modules/auth";
 import { requestContext } from "@/server/middleware/request-context";
 import { AppError, onError } from "@/server/lib/errors";
 import { passageRoutes } from "@/server/modules/passage";
 import { artifactRoutes } from "@/server/modules/artifact";
 import { reviewRoutes, vocabularyRoutes, vocabularySetRoutes } from "@/server/modules/vocabulary";
-import { translateRoutes } from "@/server/modules/reading/translate-routes";
+import { translateRoutes } from "@/server/modules/translate";
 import { chatRoutes } from "@/server/modules/chat";
 import type { AppEnv } from "@/server/env";
 
