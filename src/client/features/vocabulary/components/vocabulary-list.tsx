@@ -13,6 +13,7 @@ import {
 import { cn } from "@/client/lib/utils";
 import { PartOfSpeech, VocabularyStatus } from "@/shared/enums";
 import type { VocabularyItem } from "@/shared/vocabulary/schema";
+import { STATUS_LABEL, STATUS_STYLE } from "../lib/status-display";
 
 interface VocabularyListProps {
   items: VocabularyItem[];
@@ -34,24 +35,9 @@ const STATUS_FILTERS: Array<"ALL" | VocabularyStatus> = [
   "ALL",
   "NEW",
   "LEARNING",
-  "MEMORIZED",
+  "REVIEW",
+  "RELEARNING",
 ];
-
-const STATUS_LABEL: Record<VocabularyStatus | "ALL", string> = {
-  ALL: "Tất cả",
-  NEW: "Mới",
-  LEARNING: "Đang học",
-  MEMORIZED: "Đã thuộc",
-};
-
-const STATUS_STYLE: Record<
-  VocabularyStatus,
-  { bg: string; color: string; dot: string }
-> = {
-  NEW: { bg: "#FBEFD8", color: "#A66A12", dot: "#EEA63C" },
-  LEARNING: { bg: "#ECEAFB", color: "#4A3FD0", dot: "#5A4FE0" },
-  MEMORIZED: { bg: "#DDF3E7", color: "#1E7A4B", dot: "#2FA66A" },
-};
 
 const POS_LABEL: Record<Exclude<PartOfSpeech, "OTHER">, string> = {
   NOUN: "danh từ",
@@ -208,7 +194,7 @@ function TableRow({
   onEdit: (item: VocabularyItem) => void;
   onDelete: (id: string) => void;
 }) {
-  const statusStyle = STATUS_STYLE[item.learningstatus];
+  const statusStyle = STATUS_STYLE[item.status];
 
   const savedDate = item.createdAt
     ? new Intl.DateTimeFormat("en", {
@@ -257,7 +243,7 @@ function TableRow({
             className="w-1.5 h-1.5 rounded-full shrink-0"
             style={{ background: statusStyle.dot }}
           />
-          {STATUS_LABEL[item.learningstatus]}
+          {STATUS_LABEL[item.status]}
         </span>
       </div>
 

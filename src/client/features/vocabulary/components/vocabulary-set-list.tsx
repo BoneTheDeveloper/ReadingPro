@@ -1,18 +1,23 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { Loader2, Plus } from "lucide-react";
+import { useCallback, useRef, useState } from "react";
+import { Link } from "react-router";
+import { Loader2, Plus, Sparkles } from "lucide-react";
 import { Button } from "@/client/components/ui/button";
 import { Input } from "@/client/components/ui/input";
-import type { VocabularySet } from "@/shared/vocabulary/schema";
-
+import { GENERATED_SET_MAX_SIZE, type VocabularySet } from "@/shared/vocabulary/set-schema";
+import { formatDate } from "../lib/format-date";
 
 interface VocabularySetListProps {
   sets: VocabularySet[];
   loading: boolean;
-  onCreateSet: (name: string) => void;
-  onDeleteSet: (id: string) => void;
   creating: boolean;
+  /** Generating a set is a Pro feature; the control is absent for other tiers. */
+  canGenerate: boolean;
+  generating: boolean;
+  onCreateSet: (name: string) => void;
+  onGenerateSet: (name: string, size: number) => void;
+  onOpenSet: (id: string) => void;
 }
 
 const SET_COLORS = [
@@ -23,13 +28,21 @@ const SET_COLORS = [
   { bg: "#E8F4FF", color: "#2A6FDB" },
 ];
 
+const DEFAULT_GENERATED_SIZE = 20;
+
 export function VocabularySetList({
   sets,
   loading,
-  onCreateSet,
   creating,
+  canGenerate,
+  generating,
+  onCreateSet,
+  onGenerateSet,
+  onOpenSet,
 }: VocabularySetListProps) {
   const [newSetName, setNewSetName] = useState("");
+  const [generatedSize, setGeneratedSize] = useState(DEFAULT_GENERATED_SIZE);
+  const nameRef = useRef<HTMLInputElement | null>(null);
 
   const handleCreate = useCallback(() => {
     const trimmed = newSetName.trim();
@@ -37,6 +50,13 @@ export function VocabularySetList({
     onCreateSet(trimmed);
     setNewSetName("");
   }, [newSetName, onCreateSet]);
+
+  const handleGenerate = useCallback(() => {
+    const trimmed = newSetName.trim();
+    if (!trimmed) return;
+    onGenerateSet(trimmed, generatedSize);
+    setNewSetName("");
+  }, [newSetName, generatedSize, onGenerateSet]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -49,14 +69,16 @@ export function VocabularySetList({
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
         <span className="text-xs text-[#565160]">
           {sets.length} bộ từ trong thư viện
         </span>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Input
+            ref={nameRef}
             placeholder="Tên bộ từ..."
             value={newSetName}
+            maxLength={60}
             onChange={(e) => setNewSetName(e.target.value)}
             onKeyDown={handleKeyDown}
             className="h-9 w-44 text-xs border-[#EAE5DB] rounded-xl focus:border-[#5A4FE0] focus:ring-2 focus:ring-[#5A4FE0]/10"
@@ -74,20 +96,49 @@ export function VocabularySetList({
             )}
             Bộ mới
           </Button>
+          {canGenerate && (
+            <>
+              <Input
+                type="number"
+                aria-label="Số từ của bộ tự động"
+                min={1}
+                max={GENERATED_SET_MAX_SIZE}
+                value={generatedSize}
+                onChange={(e) =>
+                  setGeneratedSize(
+                    Math.min(GENERATED_SET_MAX_SIZE, Math.max(1, Number(e.target.value) || 1)),
+                  )
+                }
+                className="h-9 w-16 text-xs border-[#EAE5DB] rounded-xl focus:border-[#5A4FE0] focus:ring-2 focus:ring-[#5A4FE0]/10"
+              />
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={!newSetName.trim() || generating}
+                onClick={handleGenerate}
+                className="h-9 rounded-xl gap-1.5 border-[#EAE5DB] hover:border-[#5A4FE0] hover:text-[#4A3FD0]"
+              >
+                {generating ? (
+                  <Loader2 className="size-3 animate-spin" />
+                ) : (
+                  <Sparkles className="size-3.5" />
+                )}
+                Tạo bộ từ tự động
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {sets.map((set, i) => (
-          <SetCard key={set.id} set={set} colorIndex={i} />
+          <SetCard key={set.id} set={set} colorIndex={i} onOpen={onOpenSet} />
         ))}
 
         <button
           type="button"
           className="group flex flex-col items-center justify-center gap-3 min-h-[168px] rounded-2xl border-2 border-dashed border-[#DAD4C8] cursor-pointer text-[#908B98] font-semibold text-sm transition-all hover:border-[#5A4FE0] hover:text-[#5A4FE0] hover:bg-[#5A4FE0]/3"
-          onClick={() => {
-            /* TODO: open create set modal */
-          }}
+          onClick={() => nameRef.current?.focus()}
         >
           <div className="w-9 h-9 rounded-xl border-2 border-dashed border-current flex items-center justify-center">
             <Plus className="size-4" strokeWidth={2.2} />
@@ -102,19 +153,20 @@ export function VocabularySetList({
 function SetCard({
   set,
   colorIndex,
+  onOpen,
 }: {
   set: VocabularySet;
   colorIndex: number;
+  onOpen: (id: string) => void;
 }) {
   const col = SET_COLORS[colorIndex % SET_COLORS.length];
-  const itemCount = set.itemCount;
-  const knownCount = Math.min(itemCount, Math.floor(itemCount * 0.3));
-  const progress =
-    itemCount > 0 ? Math.round((knownCount / itemCount) * 100) : 0;
+  const { itemCount, progress } = set;
+  // Words that left the first learning steps and are on a day-based schedule.
+  const reviewShare = itemCount > 0 ? Math.round((progress.review / itemCount) * 100) : 0;
 
   return (
     <div
-      className="group bg-white border border-[#EAE5DB] rounded-2xl p-5 cursor-pointer transition-all hover:border-[#5A4FE0] hover:shadow-md hover:-translate-y-0.5"
+      className="group flex flex-col min-h-[168px] bg-white border border-[#EAE5DB] rounded-2xl p-5 transition-all hover:border-[#5A4FE0] hover:shadow-md hover:-translate-y-0.5"
       style={{
         boxShadow: "0 1px 2px rgba(0,0,0,.04), 0 4px 12px rgba(0,0,0,.04)",
       }}
@@ -131,32 +183,59 @@ function SetCard({
             <path d="M4 4v16" />
           </svg>
         </div>
-        <span className="text-xs text-[#908B98] font-medium pt-0.5">
-          {itemCount} {itemCount === 1 ? "word" : "words"}
+        <span
+          className="rounded-full px-2 py-0.5 text-[10px] font-semibold"
+          style={
+            set.studiedToday
+              ? { background: "#DDF3E7", color: "#1E7A4B" }
+              : { background: "#F0EDE8", color: "#908B98" }
+          }
+        >
+          {set.studiedToday ? "Hôm nay đã học" : "Hôm nay chưa học"}
         </span>
       </div>
 
-      <div className="text-sm font-bold text-[#221F2B] mb-1.5 leading-snug line-clamp-2">
+      <button
+        type="button"
+        onClick={() => onOpen(set.id)}
+        className="block w-full text-left text-sm font-bold text-[#221F2B] mb-0.5 leading-snug line-clamp-2 cursor-pointer hover:text-[#4A3FD0]"
+      >
         {set.name}
+      </button>
+      <div className="text-[10px] text-[#908B98] mb-2">
+        {itemCount} từ · Học gần nhất:{" "}
+        {set.lastStudiedAt ? formatDate(set.lastStudiedAt) : "chưa học"}
       </div>
 
       <div className="h-1 bg-[#F5F2EC] rounded-full overflow-hidden mb-2">
         <div
           className="h-full rounded-full transition-all"
           style={{
-            width: `${progress}%`,
+            width: `${reviewShare}%`,
             background: "linear-gradient(90deg, #5A4FE0, #F2664A)",
           }}
         />
       </div>
 
-      <div className="flex items-center justify-between">
-        <span className="text-[10px] font-medium text-[#908B98]">
-          {knownCount}/{itemCount} known
-        </span>
-        <span className="text-[10px] font-semibold text-[#5A4FE0]">
-          Học →
-        </span>
+      <div className="text-[10px] font-medium text-[#908B98] mb-2">
+        Mới {progress.new} · Đang học {progress.learning} · Đang ôn {progress.review} · Học lại{" "}
+        {progress.relearning}
+      </div>
+
+      <div className="flex items-center justify-between mt-auto">
+        <button
+          type="button"
+          onClick={() => onOpen(set.id)}
+          className="text-[10px] font-semibold text-[#565160] cursor-pointer hover:text-[#4A3FD0]"
+        >
+          Xem từ
+        </button>
+        <Link
+          to={`/review?setId=${set.id}`}
+          className="text-[10px] font-semibold text-[#5A4FE0] hover:underline"
+        >
+          Ôn tập →
+        </Link>
       </div>
     </div>
   );

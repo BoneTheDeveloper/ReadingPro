@@ -6,6 +6,7 @@ export default [
   layout("routes/dashboard-layout.tsx", [
     route("study", "routes/study/route.tsx"),
     route("vocabulary", "routes/vocabulary.tsx"),
+    route("review", "routes/review.tsx"),
     route("account", "routes/account.tsx"),
   ]),
 ] satisfies RouteConfig;

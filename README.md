@@ -19,7 +19,7 @@ owned workspace.
 | [Study & comprehension](docs/Requirements/epic-02-study-comprehension.md) | Generate comprehension questions and flashcards over a passage |
 | [Passage chat](docs/Requirements/epic-03-passage-chat.md) | Ask a tutor grounded in the passage you are reading |
 | [Vocabulary capture](docs/Requirements/epic-04-vocabulary-capture.md) | Inline translation while reading, then save words with their context |
-| [Memorization & review](docs/Requirements/epic-05-memorization-review.md) | Group saved words into sets and review them on a schedule |
+| [Memorization & review](docs/Requirements/epic-05-memorization-review.md) | Group saved words into sets and review them on an FSRS spaced-repetition schedule |
 
 ## Tech stack
 
@@ -41,14 +41,14 @@ src/
 ├─ client/                    # React Router appDirectory
 │  ├─ root.tsx                # document shell, providers, error boundary
 │  ├─ routes.ts               # route config
-│  ├─ routes/                 # marketing, login, dashboard layout, study, vocabulary, account
+│  ├─ routes/                 # marketing, login, dashboard layout, study, vocabulary, review, account
 │  │  └─ study/               # study page view: composes passage, reading and studio panels
 │  ├─ features/               # one folder per domain; import it through its index.ts
 │  │  ├─ auth/                # login form, account controls
 │  │  ├─ passage/             # import UI, library panel
 │  │  ├─ reading/             # reader panel, selection, inline translation
 │  │  ├─ studio/              # study workspace; artifacts: questions, flashcards, passage chat
-│  │  └─ vocabulary/          # word bank and sets
+│  │  └─ vocabulary/          # word bank, sets, review session
 │  ├─ components/             # shared UI: layout and shadcn/ui (components/ui)
 │  └─ lib/                    # auth client, fetch helpers, query client, store
 │  ── shared (imported by both sides) ──
@@ -58,7 +58,7 @@ src/
 │  ├─ passage/                # passage schemas, upload limits, YouTube URL parsing
 │  ├─ reading/                # translation schemas
 │  ├─ studio/                 # artifact and chat schemas
-│  └─ vocabulary/             # vocabulary schemas
+│  └─ vocabulary/             # vocabulary, set and review schemas
 │  ── server (Nitro) ──
 └─ server/
    ├─ app.ts                  # Hono app: auth handler, request context, module routes, onError
@@ -69,11 +69,12 @@ src/
    │  ├─ passage/             # import, normalization, processing workflow
    │  ├─ reading/             # word translation
    │  ├─ studio/              # artifacts, generation workflow, passage chat
-   │  └─ vocabulary/          # word bank CRUD
+   │  └─ vocabulary/          # word bank CRUD, sets, FSRS scheduler and review
    ├─ lib/                    # prisma, logger, errors and onError, validation, enum sync check
    └─ db/generated/           # generated Prisma client — do not edit
 
 prisma/schema.prisma          # database schema
+prisma/migrations/            # SQL migrations; apply with `pnpm exec prisma migrate deploy`
 ```
 
 Client and server code only meet in `src/shared/`. ESLint (`no-restricted-imports`

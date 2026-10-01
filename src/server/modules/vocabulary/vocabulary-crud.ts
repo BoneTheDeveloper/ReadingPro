@@ -1,16 +1,44 @@
-import prisma from "@/server/lib/prisma";
+import prisma, { isUniqueViolation } from "@/server/lib/prisma";
 import { AppError } from "@/server/lib/errors";
+import type { VocabularyStatus } from "@/shared/enums";
 import type {
   VocabularyInputParsed,
   VocabularyItem,
   VocabularyStats,
+  VocabularyStatusCounts,
   VocabularyUpdateInput,
 } from "@/shared/vocabulary/schema";
+import { ensureDefaultSetForUser } from "./default-vocabulary-set";
+
+const COUNT_KEY = {
+  NEW: "new",
+  LEARNING: "learning",
+  REVIEW: "review",
+  RELEARNING: "relearning",
+} as const satisfies Record<VocabularyStatus, keyof VocabularyStatusCounts>;
+
+export function toStatusCounts(
+  groups: Array<{ status: VocabularyStatus; count: number }>,
+): VocabularyStatusCounts {
+  const counts: VocabularyStatusCounts = { new: 0, learning: 0, review: 0, relearning: 0 };
+  for (const g of groups) counts[COUNT_KEY[g.status]] = g.count;
+  return counts;
+}
 
 export async function storeVocabularyItemForUser(
   userId: string,
   input: VocabularyInputParsed,
 ) {
+  if (input.passageId) {
+    const passage = await prisma.passage.findFirst({
+      where: { id: input.passageId, userId },
+      select: { id: true },
+    });
+    if (!passage) throw new AppError("passage.not_found", "Passage not found", { id: input.passageId });
+  }
+
+  const vocabularySetId = await ensureDefaultSetForUser(userId);
+
   return prisma.vocabularyItem.upsert({
     where: {
       userId_term_translation: {
@@ -26,12 +54,14 @@ export async function storeVocabularyItemForUser(
       sourceLanguage: input.sourceLanguage,
       targetLanguage: input.targetLanguage,
       partofSpeech: input.partofSpeech,
-      updatedAt: new Date(),
+      contextSentence: input.contextSentence,
+      passageId: input.passageId,
+      vocabularySetId,
     },
+    // A repeat save keeps the first context and the set the user filed the word in.
     update: {
       partofSpeech: input.partofSpeech,
       savedCount: { increment: 1 },
-      updatedAt: new Date(),
     },
   });
 }
@@ -67,34 +97,36 @@ export async function updateVocabularyItemForUser(
     select: { id: true },
   });
   if (!existing) throw new AppError("vocabulary.not_found", "VocabularyItem not found", { id: id });
-  return prisma.vocabularyItem.update({
-    where: { id },
-    data: {
-      term: input.term,
-      translation: input.translation,
-      partofSpeech: input.partofSpeech,
-      learningstatus: input.learningstatus,
-      updatedAt: new Date(),
-    },
-  });
+  try {
+    return await prisma.vocabularyItem.update({
+      where: { id },
+      data: {
+        term: input.term,
+        translation: input.translation,
+        partofSpeech: input.partofSpeech,
+      },
+    });
+  } catch (error) {
+    if (isUniqueViolation(error)) {
+      throw new AppError("vocabulary.duplicate", "Term and translation already saved", { id });
+    }
+    throw error;
+  }
 }
 
 export async function listVocabularyStatsForUser(
   userId: string,
 ): Promise<VocabularyStats> {
   const groups = await prisma.vocabularyItem.groupBy({
-    by: ["learningstatus"],
+    by: ["status"],
     where: { userId },
     _count: { _all: true },
   });
 
-  const buckets = { NEW: 0, LEARNING: 0, MEMORIZED: 0 };
-  for (const g of groups) buckets[g.learningstatus] = g._count._all;
+  const counts = toStatusCounts(groups.map((g) => ({ status: g.status, count: g._count._all })));
 
   return {
-    total: buckets.NEW + buckets.LEARNING + buckets.MEMORIZED,
-    new: buckets.NEW,
-    learning: buckets.LEARNING,
-    known: buckets.MEMORIZED,
+    ...counts,
+    total: counts.new + counts.learning + counts.review + counts.relearning,
   };
 }

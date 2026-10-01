@@ -12,11 +12,10 @@ import { Button } from "@/client/components/ui/button";
 import { Input } from "@/client/components/ui/input";
 import { Label } from "@/client/components/ui/label";
 import { Textarea } from "@/client/components/ui/textarea";
-import { PartOfSpeech, VocabularyStatus } from "@/shared/enums";
+import { PartOfSpeech } from "@/shared/enums";
 import {
   VocabularyUpdateInputSchema,
   type VocabularyItem,
-  type VocabularyUpdateInput,
 } from "@/shared/vocabulary/schema";
 
 const POS_OPTIONS: Array<{ value: PartOfSpeech; label: string }> = [
@@ -30,12 +29,6 @@ const POS_OPTIONS: Array<{ value: PartOfSpeech; label: string }> = [
   { value: "OTHER", label: "Khác" },
 ];
 
-const STATUS_OPTIONS: Array<{ value: VocabularyStatus; label: string }> = [
-  { value: "NEW", label: "Mới" },
-  { value: "LEARNING", label: "Đang học" },
-  { value: "MEMORIZED", label: "Đã thuộc" },
-];
-
 const FIELD_BASE =
   "h-10 rounded-xl border-[#EAE5DB] bg-white text-sm text-[#221F2B] focus:border-[#5A4FE0] focus:ring-2 focus:ring-[#5A4FE0]/15";
 
@@ -46,14 +39,12 @@ interface VocabularyFormValues {
   term: string;
   translation: string;
   partofSpeech: PartOfSpeech;
-  learningstatus: VocabularyStatus;
 }
 
 const EMPTY_VALUES: VocabularyFormValues = {
   term: "",
   translation: "",
   partofSpeech: "OTHER",
-  learningstatus: "NEW",
 };
 
 export interface VocabularyFormDialogProps {
@@ -79,7 +70,6 @@ export function VocabularyFormDialog({
   const termId = useId();
   const posId = useId();
   const translationId = useId();
-  const statusId = useId();
 
   const initialValues: VocabularyFormValues =
     mode === "edit" && item
@@ -87,7 +77,6 @@ export function VocabularyFormDialog({
           term: item.term,
           translation: item.translation,
           partofSpeech: item.partofSpeech,
-          learningstatus: item.learningstatus,
         }
       : EMPTY_VALUES;
 
@@ -110,7 +99,6 @@ export function VocabularyFormDialog({
       term: values.term,
       translation: values.translation,
       partofSpeech: values.partofSpeech,
-      learningstatus: values.learningstatus,
     });
 
     if (!parsed.success) {
@@ -129,7 +117,7 @@ export function VocabularyFormDialog({
     }
 
     setErrors({});
-    onSubmit(parsed.data as VocabularyUpdateInput & { learningstatus: VocabularyStatus });
+    onSubmit(parsed.data);
   };
 
   return (
@@ -238,35 +226,6 @@ export function VocabularyFormDialog({
               </p>
             )}
           </div>
-
-          {mode === "edit" && (
-            <div className="flex flex-col gap-1.5">
-              <Label
-                htmlFor={statusId}
-                className="text-xs font-semibold text-[#565160]"
-              >
-                Trạng thái
-              </Label>
-              <select
-                id={statusId}
-                value={values.learningstatus}
-                onChange={(e) =>
-                  setValues((v) => ({
-                    ...v,
-                    learningstatus: e.target.value as VocabularyStatus,
-                  }))
-                }
-                disabled={pending}
-                className={SELECT_BASE}
-              >
-                {STATUS_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
 
           <div className="flex items-center justify-end gap-2 pt-2">
             <Button

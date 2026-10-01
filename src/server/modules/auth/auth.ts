@@ -60,7 +60,7 @@ export const auth = betterAuth({
         after: async (user) => {
           await prisma.userProfile.upsert({
             where: { id: user.id },
-            create: { id: user.id, updatedAt: new Date() },
+            create: { id: user.id },
             update: {},
           });
         },

@@ -46,7 +46,7 @@ export function DashboardSidebar({ children }: DashboardSidebarProps) {
         );
       }
       if (href === "/vocabulary") {
-        return pathname === "/vocabulary";
+        return pathname === "/vocabulary" || pathname.startsWith("/review");
       }
       return pathname.startsWith(href);
     },
