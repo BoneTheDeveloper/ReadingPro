@@ -8,8 +8,8 @@
   },
   "packageManager": "pnpm@12.3.4",
   "scripts": {
-    "dev:web": "vite --port 3000",
-    "dev:api": "nitro dev --port 3001",
+    "dev:web": "vite",
+    "dev:api": "nitro dev",
     "build": "pnpm db:generate && pnpm build:web && pnpm build:api",
     "build:web": "react-router build",
     "build:api": "nitro build",
