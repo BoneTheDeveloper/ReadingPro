@@ -1,7 +1,4 @@
-import { convertToModelMessages, streamText, type UIMessage } from "ai";
-import prisma from "@/server/lib/prisma";
-import { MAX_TEXT_CHARS, type StudyChatLanguage } from "@/shared/studio/chat";
-import { extractAssistantText } from "./chat-message";
+import type { StudyChatLanguage } from "@/shared/studio/chat";
 
 const STUDY_CHAT_SYSTEM_PROMPT_EN = [
   "You are an encouraging English reading comprehension tutor.",
@@ -42,91 +39,6 @@ const STUDY_CHAT_SYSTEM_PROMPT_VI = [
   "Không thêm câu mời chào hay gợi ý ở cuối.",
 ].join("\n");
 
-
- function getStudyChatSystemPrompt(language: StudyChatLanguage): string {
+export function getStudyChatSystemPrompt(language: StudyChatLanguage): string {
   return language === "vi" ? STUDY_CHAT_SYSTEM_PROMPT_VI : STUDY_CHAT_SYSTEM_PROMPT_EN;
-}
-
-export async function streamStudyChat(params: {
-  userId: string;
-  passageId: string;
-  passage: { id: string; content: string; title: string };
-  messages: UIMessage[];
-  language: StudyChatLanguage;
-}) {
-  const { userId, passageId, passage, messages, language } = params;
-
-  const history = await prisma.chatMessage.findMany({
-    where: { userId, passageId },
-    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
-    take: 40,
-    select: { id: true, role: true, content: true },
-  });
-  const historyMessages = history.map((message) => ({
-    id: message.id,
-    role: message.role as "user" | "assistant",
-    parts: [{ type: "text" as const, text: message.content.slice(0, MAX_TEXT_CHARS) }],
-  }));
-
-  const passageContext = `
-Passage title: ${passage.title}
-Passage ID: ${passage.id}
-
-Passage content:
-${passage.content.slice(0, MAX_TEXT_CHARS)}
-  `.trim();
-
-  const combined = [...historyMessages, ...messages];
-  const modelMessages = await convertToModelMessages(combined);
-
-  return streamText({
-    model: "deepseek/deepseek-v4-flash",
-    system: getStudyChatSystemPrompt(language),
-    messages: [
-      { role: "user", content: `Selected passage context:\n${passageContext}` },
-      ...modelMessages,
-    ],
-    temperature: 0.4,
-  });
-}
-
-export async function persistAssistantMessage(
-  userId: string,
-  passageId: string,
-  message: UIMessage,
-) {
-  const text = extractAssistantText(message);
-  if (!text) return;
-
-  await prisma.chatMessage.create({
-    data: { userId, passageId, role: "assistant", content: text },
-  });
-}
-
-export async function persistUserMessage(
-  userId: string,
-  passageId: string,
-  message: UIMessage,
-) {
-  const text = extractAssistantText(message);
-  if (!text) return;
-
-  await prisma.chatMessage.create({
-    data: { userId, passageId, role: "user", content: text },
-  });
-}
-
-export async function getChatHistoryForUser(userId: string, passageId: string) {
-  return prisma.chatMessage.findMany({
-    where: { userId, passageId },
-    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
-    take: 40,
-    select: { id: true, role: true, content: true },
-  });
-}
-
-export async function resetHistoryForUser(userId: string, passageId: string) {
-  await prisma.chatMessage.deleteMany({
-    where: { userId, passageId },
-  });
 }

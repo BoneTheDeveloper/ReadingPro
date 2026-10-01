@@ -1,5 +1,5 @@
 import { generateObject } from "ai";
-import { updateArtifactStatus } from "./artifact-crud";
+import { updateArtifactStatus } from "./artifact-repository";
 import { requireOwnedPassage } from "@/server/modules/passage";
 import {
   questionContentSchema,
