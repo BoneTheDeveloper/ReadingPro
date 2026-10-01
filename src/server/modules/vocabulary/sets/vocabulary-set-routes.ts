@@ -10,7 +10,7 @@ import {
   listVocabularySetsForUser,
   removeVocabularySetItemForUser,
   updateVocabularySetForUser,
-} from "./vocabulary-set-crud";
+} from "./vocabulary-set-service";
 import {
   VocabularySetCreateInputSchema,
   VocabularySetGenerateInputSchema,

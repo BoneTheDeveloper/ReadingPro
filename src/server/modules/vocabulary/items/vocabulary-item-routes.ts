@@ -7,7 +7,7 @@ import {
   listVocabularyStatsForUser,
   storeVocabularyItemForUser,
   updateVocabularyItemForUser,
-} from "./vocabulary-crud";
+} from "./vocabulary-item-service";
 import {
   VocabularyIdParamSchema,
   VocabularyInputSchema,
