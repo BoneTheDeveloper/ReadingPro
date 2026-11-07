@@ -1,41 +1,20 @@
 import prisma, { isUniqueViolation } from "@/server/lib/prisma";
 import { AppError } from "@/server/lib/errors";
-import type { VocabularyStatus } from "@/shared/enums";
 import type {
   VocabularyInputParsed,
   VocabularyItem,
   VocabularyStats,
-  VocabularyStatusCounts,
   VocabularyUpdateInput,
 } from "@/shared/vocabulary/schema";
-import { ensureDefaultSetForUser } from "./default-vocabulary-set";
-
-const COUNT_KEY = {
-  NEW: "new",
-  LEARNING: "learning",
-  REVIEW: "review",
-  RELEARNING: "relearning",
-} as const satisfies Record<VocabularyStatus, keyof VocabularyStatusCounts>;
-
-export function toStatusCounts(
-  groups: Array<{ status: VocabularyStatus; count: number }>,
-): VocabularyStatusCounts {
-  const counts: VocabularyStatusCounts = { new: 0, learning: 0, review: 0, relearning: 0 };
-  for (const g of groups) counts[COUNT_KEY[g.status]] = g.count;
-  return counts;
-}
+import { requireOwnedPassage } from "@/server/modules/passage";
+import { ensureDefaultSetForUser } from "../default-vocabulary-set";
+import { toStatusCounts } from "../status-counts";
 
 export async function storeVocabularyItemForUser(
   userId: string,
   input: VocabularyInputParsed,
 ) {
-  if (input.passageId) {
-    const passage = await prisma.passage.findFirst({
-      where: { id: input.passageId, userId },
-      select: { id: true },
-    });
-    if (!passage) throw new AppError("passage.not_found", "Passage not found", { id: input.passageId });
-  }
+  if (input.passageId) await requireOwnedPassage(userId, input.passageId);
 
   const vocabularySetId = await ensureDefaultSetForUser(userId);
 

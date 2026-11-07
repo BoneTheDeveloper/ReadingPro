@@ -53,6 +53,9 @@ export default defineConfig([
         patterns: [{
           group: ["@/client/*"],
           message: "Server code must not import client modules; move shared code to src/shared.",
+        }, {
+          group: ["@/server/modules/*/*"],
+          message: "Import a server module through its index.ts.",
         }],
       }],
     },

@@ -1,5 +1,5 @@
 import { createMiddleware } from "hono/factory";
-import { auth } from "./auth";
+import { auth } from "@/server/modules/auth";
 import { AppError } from "@/server/lib/errors";
 import type { AuthEnv } from "@/server/env";
 

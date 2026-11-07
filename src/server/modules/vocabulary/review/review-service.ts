@@ -11,7 +11,7 @@ import {
   previewNextDue,
   schedule,
   startOfDayInTimeZone,
-} from "./fsrs-scheduler";
+} from "../fsrs-scheduler";
 
 const CARD_INCLUDE = { passage: { select: { id: true, title: true } } } as const;
 

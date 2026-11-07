@@ -7,9 +7,9 @@ import {
   type VocabularySetGenerateInput,
   type VocabularySetUpdateInput,
 } from "@/shared/vocabulary/set-schema";
-import { toStatusCounts } from "./vocabulary-crud";
-import { ensureDefaultSetForUser } from "./default-vocabulary-set";
-import { startOfDayInTimeZone } from "./fsrs-scheduler";
+import { toStatusCounts } from "../status-counts";
+import { ensureDefaultSetForUser } from "../default-vocabulary-set";
+import { startOfDayInTimeZone } from "../fsrs-scheduler";
 
 type SetRow = {
   id: string;

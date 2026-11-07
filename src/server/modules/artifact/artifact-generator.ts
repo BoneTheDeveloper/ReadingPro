@@ -1,7 +1,6 @@
 import { generateObject } from "ai";
-import { updateArtifactStatus } from "./artifact-crud";
-import { findPassageForUser } from "@/server/modules/passage/passage-crud";
-import { AppError } from "@/server/lib/errors";
+import { updateArtifactStatus } from "./artifact-repository";
+import { requireOwnedPassage } from "@/server/modules/passage";
 import {
   questionContentSchema,
   flashcardContentSchema,
@@ -72,8 +71,7 @@ export async function generateAndStoreArtifact(args: {
   passageId: string;
   type: StudioArtifactType;
 }): Promise<void> {
-  const passage = await findPassageForUser(args.userId, args.passageId);
-  if (!passage) throw new AppError("passage.not_found", "Passage not found", { id: args.passageId });
+  const passage = await requireOwnedPassage(args.userId, args.passageId);
 
   const generate = generators[args.type];
   if (!generate) {

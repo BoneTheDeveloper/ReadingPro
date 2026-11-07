@@ -1,9 +1,9 @@
 /**
  * Step functions for passage processing.
  */
-import { preprocessPassage } from "../passage-preprocessing";
-import { runPassageProcessing } from "../passage-processing";
-import { failPassageProcessing } from "../passage-crud";
+import { preprocessPassage } from "../ingestion/preprocess";
+import { runPassageProcessing } from "../ingestion/generate";
+import { failPassageProcessing } from "../passage-repository";
 import type { CreatePassageInput } from "@/shared/passage/schema";
 
 export interface PassageProcessingInput {

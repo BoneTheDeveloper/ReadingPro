@@ -2,7 +2,7 @@
  * Step functions for artifact generation.
  */
 import { generateAndStoreArtifact } from "../artifact-generator";
-import { updateArtifactStatus } from "../artifact-crud";
+import { updateArtifactStatus } from "../artifact-repository";
 import { StudioArtifactType } from "@/server/db/generated/enums";
 
 export interface ArtifactGenerationInput {
