@@ -18,6 +18,10 @@
     "lint": "eslint",
     "postinstall": "prisma generate --generator client",
     "db:generate": "prisma generate --generator client",
+    "db:up": "docker compose up -d --wait postgres",
+    "db:down": "docker compose down",
+    "db:migrate": "docker compose run --rm flyway migrate",
+    "db:info": "docker compose run --rm flyway info",
     "workflow:inspect": "npx workflow inspect runs --web"
   },
   "dependencies": {

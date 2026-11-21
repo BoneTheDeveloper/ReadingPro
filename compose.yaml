@@ -1,0 +1,35 @@
+# Local development database. Credentials are dev-only values and the port is
+# bound to 127.0.0.1, so nothing here is reachable from outside the machine.
+services:
+  postgres:
+    image: postgres:17.12-alpine
+    environment:
+      POSTGRES_USER: readingpro
+      POSTGRES_PASSWORD: readingpro
+      POSTGRES_DB: readingpro
+    ports: ["127.0.0.1:${POSTGRES_PORT:-54329}:5432"]
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U readingpro -d readingpro"]
+      interval: 2s
+      retries: 30
+
+  # Run through `pnpm db:migrate` / `pnpm db:info`. The URL is fixed to the
+  # compose database, so these scripts never reach the database in `.env`.
+  flyway:
+    image: flyway/flyway:11.20.3-alpine
+    profiles: [tools]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      FLYWAY_URL: jdbc:postgresql://postgres:5432/readingpro
+      FLYWAY_USER: readingpro
+      FLYWAY_PASSWORD: readingpro
+      FLYWAY_LOCATIONS: filesystem:/flyway/sql
+      FLYWAY_CLEAN_DISABLED: "true"
+    # `z` relabels the folder for SELinux hosts such as Fedora; elsewhere it is ignored.
+    volumes: ["./db/migrations:/flyway/sql:ro,z"]
+
+volumes:
+  pgdata:

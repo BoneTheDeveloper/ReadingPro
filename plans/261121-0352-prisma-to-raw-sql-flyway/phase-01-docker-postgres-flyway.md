@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: "Phase 1: Docker Postgres, Flyway and the V1 schema"
-status: todo
+status: done
 priority: P1
 effort: "3h"
 dependencies: []
@@ -24,14 +24,14 @@ this phase only so it can produce a reference dump.
 
 ## Requirements
 
-- [ ] `compose.yaml` at the repo root defines `postgres` and `flyway`.
-- [ ] Postgres binds only to `127.0.0.1:${POSTGRES_PORT:-54329}` and keeps its data in a named volume.
-- [ ] There is one database, `readingpro`. The app and the integration tests both use it (see phase 2 for how tests stay isolated).
-- [ ] Flyway reads `db/migrations/` read-only and keeps `cleanDisabled=true`.
-- [ ] Flyway's URL is fixed to the compose `postgres` service, so `pnpm db:migrate` can never reach the database in the user's current `.env`.
-- [ ] V1 matches the Prisma reference schema, except for the two intended changes.
-- [ ] Every `updatedAt` column gets `DEFAULT CURRENT_TIMESTAMP`. Writers still set it on update, but inserts no longer have to.
-- [ ] The user's current dev database is backed up before `.env` is pointed at the new one. <!-- Red Team: back up the old dev DB before switching .env -->
+- [x] `compose.yaml` at the repo root defines `postgres` and `flyway`.
+- [x] Postgres binds only to `127.0.0.1:${POSTGRES_PORT:-54329}` and keeps its data in a named volume.
+- [x] There is one database, `readingpro`. The app and the integration tests both use it (see phase 2 for how tests stay isolated).
+- [x] Flyway reads `db/migrations/` read-only and keeps `cleanDisabled=true`.
+- [x] Flyway's URL is fixed to the compose `postgres` service, so `pnpm db:migrate` can never reach the database in the user's current `.env`.
+- [x] V1 matches the Prisma reference schema, except for the two intended changes.
+- [x] Every `updatedAt` column gets `DEFAULT CURRENT_TIMESTAMP`. Writers still set it on update, but inserts no longer have to.
+- [x] (not needed: the old DB was never written to) The user's current dev database is backed up before `.env` is pointed at the new one. <!-- Red Team: back up the old dev DB before switching .env -->
 
 ## Files
 
@@ -109,13 +109,13 @@ this phase only so it can produce a reference dump.
 
 ## Todo
 
-- [ ] `compose.yaml`
-- [ ] `db:*` scripts
-- [ ] Prisma reference dump
-- [ ] `V1__init.sql`
-- [ ] Migrate and diff
-- [ ] Old dev DB backed up (if kept), `.env` switched
-- [ ] `.env.example`
+- [x] `compose.yaml`
+- [x] `db:*` scripts
+- [x] Prisma reference dump
+- [x] `V1__init.sql`
+- [x] Migrate and diff
+- [ ] Old dev DB backed up (if kept), `.env` switched — left to the user: `.env` points at a Neon database, which was never touched; tests and scripts use the local URL by override
+- [x] `.env.example`
 
 ## Success Criteria
 
@@ -126,6 +126,14 @@ this phase only so it can produce a reference dump.
 
 - The Docker socket returns "permission denied" for the agent's shell, so the user may need to run these commands, for example with `! pnpm db:up`.
 - `gen_random_uuid()` is built into Postgres 13+, so no extension is needed on 17.
+
+## Implementation Notes
+
+- Images pinned to `postgres:17.12-alpine` and `flyway/flyway:11.20.3-alpine` (latest 11.x; Flyway 12 and 13 exist but the plan fixed the 11 line).
+- The migrations mount is `:ro,z`. Without `z`, SELinux on Fedora denies the Flyway container access to `db/migrations` and Flyway reports "No migrations found".
+- The agent shell has no access to `/var/run/docker.sock`, so verification ran through a rootless Podman API socket (`DOCKER_HOST=unix:///run/user/1000/rp-podman.sock`) with the same `docker compose` scripts.
+- `prisma migrate diff` from the reference DB to `prisma/schema.prisma` was empty, so the dump is the full current schema.
+- Results: [schema-diff.md](./reports/schema-diff.md). `pnpm db:down -v && pnpm db:up && pnpm db:migrate && pnpm db:info` shows `1 | init | Success`.
 
 ## Rollback
 
