@@ -1,7 +1,7 @@
 ---
 title: "Migrate from Prisma to raw SQL with Flyway and local Docker Postgres"
 description: "Replace Prisma with node-postgres raw SQL behind per-module repositories, move schema ownership to Flyway, run Postgres locally in Docker, and keep Better Auth and every current feature working."
-status: pending
+status: in-progress
 priority: P1
 effort: 3d
 branch: bone/refactor/prisma-to-raw-sql
@@ -84,7 +84,7 @@ db/migrations/V*.sql ──(Flyway container)──▶ Postgres container
 
 | # | Phase | Effort | Depends on | Status |
 |---|-------|--------|------------|--------|
-| 1 | [Docker Postgres, Flyway and the V1 schema](./phase-01-docker-postgres-flyway.md) | 3h | none | Pending |
+| 1 | [Docker Postgres, Flyway and the V1 schema](./phase-01-docker-postgres-flyway.md) | 3h | none | Done |
 | 2 | [DB access layer and Vitest harness](./phase-02-db-layer-and-vitest.md) | 3h | 1 | Pending |
 | 3 | [Better Auth on the pg pool and the profile module](./phase-03-auth-on-pg-pool.md) | 3h | 2 | Pending |
 | 4 | [Passage, artifact and chat repositories](./phase-04-passage-artifact-chat-repositories.md) | 4h | 2 | Pending |
