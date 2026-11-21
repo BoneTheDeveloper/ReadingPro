@@ -16,6 +16,7 @@
     "start": "NODE_ENV=production node --env-file-if-exists=.env .output/server/index.mjs",
     "typecheck": "react-router typegen && tsc --noEmit",
     "lint": "eslint",
+    "test": "vitest run",
     "postinstall": "prisma generate --generator client",
     "db:generate": "prisma generate --generator client",
     "db:up": "docker compose up -d --wait postgres",
@@ -73,6 +74,7 @@
     "@tailwindcss/vite": "^4.3.3",
     "@tanstack/react-query-devtools": "^5.101.4",
     "@types/node": "^25.9.5",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "eslint": "^9.39.5",
@@ -85,6 +87,7 @@
     "tailwindcss": "^4.3.3",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.70.1",
-    "vite": "^8.3.1"
+    "vite": "^8.3.1",
+    "vitest": "^5.1.1"
   }
 }

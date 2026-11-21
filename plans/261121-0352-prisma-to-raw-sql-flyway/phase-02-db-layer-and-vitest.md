@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Phase 2: DB access layer and Vitest harness"
-status: todo
+status: done
 priority: P1
 effort: "3h"
 dependencies: [1]
@@ -36,25 +36,25 @@ with a test that compares `src/shared/enums.ts` against `pg_enum`.
 
 ## Requirements
 
-- [ ] `db.ts` exports:
+- [x] `db.ts` exports:
   - the pool, cached on `globalThis` outside production, as `prisma.ts` does today
   - `type Queryable`, which both a `Pool` and a `PoolClient` satisfy
   - `withTransaction(fn)`: BEGIN, COMMIT, ROLLBACK on throw, and the client is always released
   - `isUniqueViolation(error)`: true for SQLSTATE `23505`
   - `type JsonValue`, which replaces `Prisma.InputJsonValue`
-- [ ] The rules for repository authors are written once, as a doc comment in `db.ts`:
+- [x] The rules for repository authors are written once, as a doc comment in `db.ts`:
   - Always list columns explicitly; never `SELECT *`.
   - Send `jsonb` as `JSON.stringify(value)` with `$n::jsonb`.
   - Cast every `COUNT(*)` with `::int`.
   - Set `"updatedAt" = now()` on every UPDATE of a table that has the column.
-- [ ] `pnpm test` runs Vitest against `DATABASE_URL` from `.env`, one file at a time.
-- [ ] Tests never delete a row that a test did not create. The only delete is `DELETE FROM "User" WHERE "email" LIKE '%@test.invalid'`, plus deletes by the ids a test created. <!-- Red Team + validation session 2: no test DB, no TRUNCATE -->
-- [ ] Global setup does three things before any test runs:
+- [x] `pnpm test` runs Vitest against `DATABASE_URL` from `.env`, one file at a time.
+- [x] Tests never delete a row that a test did not create. The only delete is `DELETE FROM "User" WHERE "email" LIKE '%@test.invalid'`, plus deletes by the ids a test created. <!-- Red Team + validation session 2: no test DB, no TRUNCATE -->
+- [x] Global setup does three things before any test runs:
   - fails fast with "run pnpm db:up && pnpm db:migrate" when V1 is missing from `flyway_schema_history`
   - refuses to run unless the host is `localhost` or `127.0.0.1`, so a production URL in `.env` can never be used by the tests
   - removes the `@test.invalid` users left behind by an interrupted run
-- [ ] Every test runs with `TZ=Asia/Bangkok`, so the timestamp fix is checked everywhere. The pool is closed after each file. <!-- Red Team: TZ for the whole suite, close the pool -->
-- [ ] The enum drift test covers all 7 enums in `src/shared/enums.ts`.
+- [x] Every test runs with `TZ=Asia/Bangkok`, so the timestamp fix is checked everywhere. The pool is closed after each file. <!-- Red Team: TZ for the whole suite, close the pool -->
+- [x] The enum drift test covers all 7 enums in `src/shared/enums.ts`.
 
 ## Files
 
@@ -123,11 +123,20 @@ with a test that compares `src/shared/enums.ts` against `pg_enum`.
 
 ## Todo
 
-- [ ] Dependencies installed
-- [ ] `db.ts`
-- [ ] Vitest config, global setup, setup file, test-user helpers
-- [ ] Enum drift test replaces `enum-sync.ts`
-- [ ] Shared enums comment updated
+- [x] Dependencies installed
+- [x] `db.ts`
+- [x] Vitest config, global setup, setup file, test-user helpers
+- [x] Enum drift test replaces `enum-sync.ts`
+- [x] Shared enums comment updated
+
+## Implementation Notes
+
+- `vitest` 5.1.1 and `@types/pg` 8.23.1. `Queryable` is `Pick<pg.Pool, "query"> | Pick<pg.PoolClient, "query">`.
+- `vitest.config.ts` sets `process.env.TZ` before workers start as well as `test.env.TZ`, and limits `include` to `src/**/*.test.ts`.
+- Added `src/server/lib/db.test.ts`: commit, rollback-and-rethrow, and `isUniqueViolation`.
+- `dotenv` does not override variables that are already set, so `DATABASE_URL=postgres://readingpro:readingpro@localhost:54329/readingpro pnpm test` works while `.env` still points elsewhere. With the Neon URL from `.env`, global setup refuses to run before it connects.
+- Checked once: renaming `ProcessingStatus.FAILED` to `FAILURE` fails the enum test; reverted.
+- `pnpm exec knip` reports `Queryable` and `JsonValue` as unused until phases 3 and 4 use them.
 
 ## Success Criteria
 

@@ -1,5 +1,5 @@
-// Browser-safe copies of the Prisma enums that cross the API boundary.
-// src/server/lib/enum-sync.ts fails typecheck if these drift from the schema.
+// Browser-safe copies of the Postgres enums (db/migrations) that cross the API
+// boundary. src/server/lib/enum-sync.test.ts fails if these drift from the DB.
 
 export const CEFRLevel = {
   A1: "A1",
