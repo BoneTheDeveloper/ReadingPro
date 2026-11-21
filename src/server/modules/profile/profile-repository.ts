@@ -2,7 +2,7 @@
 // Better Auth "User" row and owns all of the user's app data.
 import { pool, type Queryable } from "@/server/lib/db";
 
-export type ProfileSettings = {
+type ProfileSettings = {
   timezone: string;
   desiredRetention: number;
   /** Optimized FSRS weights; null means the library defaults. */

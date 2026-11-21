@@ -1,7 +1,7 @@
 ---
 phase: 5
 title: "Phase 5: Vocabulary items, sets and review repositories"
-status: todo
+status: done
 priority: P1
 effort: "6h"
 dependencies: [3, 4]
@@ -29,22 +29,22 @@ a repository, which holds the SQL, and a service, which keeps the rules, the
 
 ## Requirements
 
-- [ ] Three new repositories:
+- [x] Three new repositories:
   - `items/vocabulary-item-repository.ts`: upsert item, list, find id, delete, update, status counts
   - `sets/vocabulary-set-repository.ts`: find the default set id, upsert the default set, find, list, create, update, delete, move items to a set, move all items between sets, count owned items, list items in sets, list unfiled due and new item ids
   - `review/review-repository.ts`: find a card with its passage, lock and read a card, list due cards, count new cards introduced today by set, list new cards in a set, create, find, end and increment a session, find a log by `clientReviewId`, insert a log, update a card's schedule
-- [ ] The service functions keep their names, signatures and results, so the routes and `index.ts` are unchanged.
-- [ ] `ensureDefaultSetForUser` keeps a fast path outside the transaction. Inside the transaction it calls `lockProfile(userId, tx)` from the profile module, re-checks, then runs `INSERT ... ON CONFLICT ("userId", "name") DO UPDATE SET "isDefault" = true RETURNING "id"`.
-- [ ] A repeat save of a word runs `ON CONFLICT ("userId", "term", "translation") DO UPDATE SET "partofSpeech" = EXCLUDED."partofSpeech", "savedCount" = "VocabularyItem"."savedCount" + 1, "updatedAt" = now()`. It keeps the first context and the set the user filed the word in.
-- [ ] A rating is all or nothing in one `withTransaction`:
+- [x] The service functions keep their names, signatures and results, so the routes and `index.ts` are unchanged.
+- [x] `ensureDefaultSetForUser` keeps a fast path outside the transaction. Inside the transaction it calls `lockProfile(userId, tx)` from the profile module, re-checks, then runs `INSERT ... ON CONFLICT ("userId", "name") DO UPDATE SET "isDefault" = true RETURNING "id"`.
+- [x] A repeat save of a word runs `ON CONFLICT ("userId", "term", "translation") DO UPDATE SET "partofSpeech" = EXCLUDED."partofSpeech", "savedCount" = "VocabularyItem"."savedCount" + 1, "updatedAt" = now()`. It keeps the first context and the set the user filed the word in.
+- [x] A rating is all or nothing in one `withTransaction`:
   - check the session
   - `SELECT <card columns> ... FOR UPDATE`, which replaces the separate lock query and read
   - insert the log, update the card with `"updatedAt" = now()`, and increment `"cardsReviewed"`
-- [ ] When two copies of a rating race, the unique violation is still swallowed, as today.
-- [ ] Optional updates use `COALESCE($n, "col")`, matching Prisma's `undefined` meaning "unchanged". This covers set `name` and `dailyNewLimit`, and item `term`, `translation` and `partofSpeech`.
-- [ ] Id lists use `"id" = ANY($n::uuid[])`. An empty list skips the query.
-- [ ] Review cards return `passage` as `{ id, title }` or `null`, built in SQL with `CASE WHEN p."id" IS NULL THEN NULL ELSE json_build_object('id', p."id", 'title', p."title") END`.
-- [ ] Settings come from `findProfileSettings` in the profile module, not from vocabulary SQL.
+- [x] When two copies of a rating race, the unique violation is still swallowed, as today.
+- [x] Optional updates use `COALESCE($n, "col")`, matching Prisma's `undefined` meaning "unchanged". This covers set `name` and `dailyNewLimit`, and item `term`, `translation` and `partofSpeech`.
+- [x] Id lists use `"id" = ANY($n::uuid[])`. An empty list skips the query.
+- [x] Review cards return `passage` as `{ id, title }` or `null`, built in SQL with `CASE WHEN p."id" IS NULL THEN NULL ELSE json_build_object('id', p."id", 'title', p."title") END`.
+- [x] Settings come from `findProfileSettings` in the profile module, not from vocabulary SQL.
 
 ## Files
 
@@ -91,10 +91,22 @@ a repository, which holds the SQL, and a service, which keeps the rules, the
 
 ## Todo
 
-- [ ] Item repository and service
-- [ ] Set repository and service, plus the default set
-- [ ] Review repository and service
-- [ ] Service tests
+- [x] Item repository and service
+- [x] Set repository and service, plus the default set
+- [x] Review repository and service
+- [x] Service tests
+
+## Implementation Notes
+
+- `items/vocabulary-item-repository.ts` owns the `VocabularyItemRow` type and `itemColumns(alias?)`; the set and review repositories reuse them.
+- The item repository has no separate "find id" query. `deleteVocabularyItem` returns a boolean and `updateVocabularyItem` returns the row or `null`, each with the ownership check in the same statement, and the service throws `vocabulary.not_found`.
+- The review service reuses `findSetForUser` and `listSetsForUser` from the set repository instead of its own set queries.
+- `endSession` runs `SET "endedAt" = COALESCE("endedAt", $3)`, so a concurrent second end still keeps the first time.
+- `updateVocabularySetForUser` and `deleteVocabularySetForUser` throw `vocabulary_set.not_found` when the write affects no row. Before, Prisma's `P2025` made this a 500.
+- Item moves between sets also set `"updatedAt" = now()`, as Prisma's `@updatedAt` did on `updateMany`.
+- No `vi.mock("workflow/api")` was needed.
+- An extra test races two copies of one rating and checks for one log and one counted card.
+- Result: 9 test files, 45 tests pass, and the suite leaves no `User` rows behind. The manual check (save, file, review, rate in the browser) needs a signed-in user and is part of the phase 6 smoke checklist.
 
 ## Success Criteria
 

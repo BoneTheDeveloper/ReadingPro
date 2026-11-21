@@ -1,4 +1,4 @@
-import prisma, { isUniqueViolation } from "@/server/lib/prisma";
+import { isUniqueViolation } from "@/server/lib/db";
 import { AppError } from "@/server/lib/errors";
 import type {
   VocabularyInputParsed,
@@ -9,61 +9,43 @@ import type {
 import { requireOwnedPassage } from "@/server/modules/passage";
 import { ensureDefaultSetForUser } from "../default-vocabulary-set";
 import { toStatusCounts } from "../status-counts";
+import {
+  countVocabularyItemsByStatus,
+  deleteVocabularyItem,
+  listVocabularyItemsForUser as listItemRows,
+  updateVocabularyItem,
+  upsertVocabularyItem,
+  type VocabularyItemRow,
+} from "./vocabulary-item-repository";
 
 export async function storeVocabularyItemForUser(
   userId: string,
   input: VocabularyInputParsed,
-) {
+): Promise<VocabularyItemRow> {
   if (input.passageId) await requireOwnedPassage(userId, input.passageId);
 
   const vocabularySetId = await ensureDefaultSetForUser(userId);
 
-  return prisma.vocabularyItem.upsert({
-    where: {
-      userId_term_translation: {
-        userId,
-        term: input.term,
-        translation: input.translation,
-      },
-    },
-    create: {
-      userId,
-      term: input.term,
-      translation: input.translation,
-      sourceLanguage: input.sourceLanguage,
-      targetLanguage: input.targetLanguage,
-      partofSpeech: input.partofSpeech,
-      contextSentence: input.contextSentence,
-      passageId: input.passageId,
-      vocabularySetId,
-    },
-    // A repeat save keeps the first context and the set the user filed the word in.
-    update: {
-      partofSpeech: input.partofSpeech,
-      savedCount: { increment: 1 },
-    },
+  return upsertVocabularyItem({
+    userId,
+    term: input.term,
+    translation: input.translation,
+    sourceLanguage: input.sourceLanguage,
+    targetLanguage: input.targetLanguage,
+    partofSpeech: input.partofSpeech,
+    contextSentence: input.contextSentence ?? null,
+    passageId: input.passageId ?? null,
+    vocabularySetId,
   });
 }
 
-export async function listVocabularyItemsForUser(
-  userId: string,
-): Promise<VocabularyItem[]> {
-  return prisma.vocabularyItem.findMany({
-    where: { userId },
-    orderBy: { createdAt: "desc" },
-  });
+export async function listVocabularyItemsForUser(userId: string): Promise<VocabularyItem[]> {
+  return listItemRows(userId);
 }
 
-export async function deleteVocabularyItemForUser(
-  userId: string,
-  id: string,
-): Promise<void> {
-  const existing = await prisma.vocabularyItem.findFirst({
-    where: { id, userId },
-    select: { id: true },
-  });
-  if (!existing) throw new AppError("vocabulary.not_found", "VocabularyItem not found", { id: id });
-  await prisma.vocabularyItem.delete({ where: { id } });
+export async function deleteVocabularyItemForUser(userId: string, id: string): Promise<void> {
+  const deleted = await deleteVocabularyItem(userId, id);
+  if (!deleted) throw new AppError("vocabulary.not_found", "VocabularyItem not found", { id });
 }
 
 export async function updateVocabularyItemForUser(
@@ -71,19 +53,12 @@ export async function updateVocabularyItemForUser(
   id: string,
   input: VocabularyUpdateInput,
 ): Promise<VocabularyItem> {
-  const existing = await prisma.vocabularyItem.findFirst({
-    where: { id, userId },
-    select: { id: true },
-  });
-  if (!existing) throw new AppError("vocabulary.not_found", "VocabularyItem not found", { id: id });
+  let updated: VocabularyItemRow | null;
   try {
-    return await prisma.vocabularyItem.update({
-      where: { id },
-      data: {
-        term: input.term,
-        translation: input.translation,
-        partofSpeech: input.partofSpeech,
-      },
+    updated = await updateVocabularyItem(userId, id, {
+      term: input.term,
+      translation: input.translation,
+      partofSpeech: input.partofSpeech,
     });
   } catch (error) {
     if (isUniqueViolation(error)) {
@@ -91,18 +66,12 @@ export async function updateVocabularyItemForUser(
     }
     throw error;
   }
+  if (!updated) throw new AppError("vocabulary.not_found", "VocabularyItem not found", { id });
+  return updated;
 }
 
-export async function listVocabularyStatsForUser(
-  userId: string,
-): Promise<VocabularyStats> {
-  const groups = await prisma.vocabularyItem.groupBy({
-    by: ["status"],
-    where: { userId },
-    _count: { _all: true },
-  });
-
-  const counts = toStatusCounts(groups.map((g) => ({ status: g.status, count: g._count._all })));
+export async function listVocabularyStatsForUser(userId: string): Promise<VocabularyStats> {
+  const counts = toStatusCounts(await countVocabularyItemsByStatus(userId));
 
   return {
     ...counts,
