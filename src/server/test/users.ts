@@ -1,11 +1,11 @@
-// Test data is owned by throwaway users. Deleting a "User" cascades to its
-// profile and everything the profile owns, so tests never touch other rows.
+// Test data is owned by throwaway users. Deleting a "User" cascades to all its
+// data, so tests never touch other rows.
 import { randomUUID } from "node:crypto";
 import { pool } from "@/server/lib/db";
 
 type TestUserOverrides = { name?: string; tier?: "FREE" | "PRO" };
 
-/** Inserts a `"User"` with an `@test.invalid` email and its `"UserProfile"`; returns the id. */
+/** Inserts a `"User"` with an `@test.invalid` email; returns the id. */
 export async function createTestUser(overrides: TestUserOverrides = {}): Promise<string> {
   const id = `test-${randomUUID()}`;
   await pool.query(
@@ -13,7 +13,6 @@ export async function createTestUser(overrides: TestUserOverrides = {}): Promise
      VALUES ($1, $2, $3, true, $4)`,
     [id, overrides.name ?? "Test User", `${id}@test.invalid`, overrides.tier ?? "FREE"],
   );
-  await pool.query(`INSERT INTO "UserProfile" ("id") VALUES ($1)`, [id]);
   return id;
 }
 

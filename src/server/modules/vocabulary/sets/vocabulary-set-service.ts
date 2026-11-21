@@ -1,6 +1,6 @@
 import { isUniqueViolation, withTransaction } from "@/server/lib/db";
 import { AppError } from "@/server/lib/errors";
-import { findProfileSettings } from "@/server/modules/profile";
+import { findUserSettings } from "@/server/modules/user-settings";
 import type { VocabularyStatus } from "@/shared/enums";
 import {
   PRO_TIER,
@@ -30,12 +30,12 @@ import {
 async function withItems(userId: string, sets: SetRow[]): Promise<VocabularySet[]> {
   if (sets.length === 0) return [];
 
-  const [rows, profile] = await Promise.all([
+  const [rows, settings] = await Promise.all([
     listItemsInSets(userId, sets.map((s) => s.id)),
-    findProfileSettings(userId),
+    findUserSettings(userId),
   ]);
 
-  const today = startOfDayInTimeZone(new Date(), profile?.timezone ?? "UTC");
+  const today = startOfDayInTimeZone(new Date(), settings?.timezone ?? "UTC");
 
   return sets.map((set) => {
     const items = rows.filter((row) => row.vocabularySetId === set.id);

@@ -3,6 +3,7 @@
 import { randomUUID } from "node:crypto";
 import { afterEach, describe, expect, it } from "vitest";
 import { pool } from "@/server/lib/db";
+import { createTestPassage } from "@/server/test/passages";
 import { deleteTestUsers } from "@/server/test/users";
 import { auth } from "./auth";
 
@@ -30,15 +31,34 @@ async function countRows(table: string, column: string, userId: string): Promise
 }
 
 describe("Better Auth on the pg pool", () => {
-  it("creates a FREE user and its profile through the create hook", async () => {
+  it("creates a FREE user whose app settings start at their defaults", async () => {
     const user = await createAuthUser();
 
-    const { rows } = await pool.query<{ tier: string | null }>(
-      `SELECT "tier" FROM "User" WHERE "id" = $1`,
+    const { rows } = await pool.query<{
+      tier: string | null;
+      timezone: string;
+      desiredRetention: number;
+      fsrsParams: unknown;
+    }>(
+      `SELECT "tier", "timezone", "desiredRetention", "fsrsParams" FROM "User" WHERE "id" = $1`,
       [user.id],
     );
-    expect(rows[0].tier).toBe("FREE");
-    expect(await countRows("UserProfile", "id", user.id)).toBe(1);
+    expect(rows[0]).toEqual({
+      tier: "FREE",
+      timezone: "Asia/Bangkok",
+      desiredRetention: 0.9,
+      fsrsParams: null,
+    });
+  });
+
+  it("lets a new user own app data without any extra setup row", async () => {
+    const user = await createAuthUser();
+
+    await createTestPassage(user.id);
+    expect(await countRows("Passage", "userId", user.id)).toBe(1);
+
+    await pool.query(`DELETE FROM "User" WHERE "id" = $1`, [user.id]);
+    expect(await countRows("Passage", "userId", user.id)).toBe(0);
   });
 
   it("finds a created session with a seven-day expiry", async () => {
@@ -61,7 +81,7 @@ describe("Better Auth on the pg pool", () => {
     expect(Math.abs(rows[0].seconds * 1000 - SEVEN_DAYS_MS)).toBeLessThan(60_000);
   });
 
-  it("cascades a user delete to the profile, sessions and accounts", async () => {
+  it("cascades a user delete to its sessions and accounts", async () => {
     const { internalAdapter } = await auth.$context;
     const user = await createAuthUser();
     await internalAdapter.createSession(user.id);
@@ -75,7 +95,6 @@ describe("Better Auth on the pg pool", () => {
 
     await pool.query(`DELETE FROM "User" WHERE "id" = $1`, [user.id]);
 
-    expect(await countRows("UserProfile", "id", user.id)).toBe(0);
     expect(await countRows("session", "userId", user.id)).toBe(0);
     expect(await countRows("account", "userId", user.id)).toBe(0);
   });

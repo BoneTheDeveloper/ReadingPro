@@ -1,6 +1,6 @@
 import { isUniqueViolation, withTransaction } from "@/server/lib/db";
 import { AppError } from "@/server/lib/errors";
-import { findProfileSettings } from "@/server/modules/profile";
+import { findUserSettings } from "@/server/modules/user-settings";
 import type {
   ReviewCard,
   ReviewDueResponse,
@@ -31,9 +31,9 @@ import {
 } from "./review-repository";
 
 async function loadSettings(userId: string) {
-  const profile = await findProfileSettings(userId);
-  if (!profile) throw new AppError("auth.required", "User profile not found");
-  return { ...profile, scheduler: createScheduler(profile) };
+  const settings = await findUserSettings(userId);
+  if (!settings) throw new AppError("auth.required", "User not found");
+  return { ...settings, scheduler: createScheduler(settings) };
 }
 
 type Scheduler = ReturnType<typeof createScheduler>;

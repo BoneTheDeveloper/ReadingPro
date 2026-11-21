@@ -1,5 +1,5 @@
 import { withTransaction } from "@/server/lib/db";
-import { lockProfile } from "@/server/modules/profile";
+import { lockUser } from "@/server/modules/user-settings";
 import { findDefaultSetId, upsertDefaultSet } from "./sets/vocabulary-set-repository";
 
 const DEFAULT_SET_NAME = "Mặc định";
@@ -13,8 +13,8 @@ export async function ensureDefaultSetForUser(userId: string): Promise<string> {
   if (existing) return existing;
 
   return withTransaction(async (tx) => {
-    // Profile row lock: two first requests must not each create a default set.
-    await lockProfile(userId, tx);
+    // User row lock: two first requests must not each create a default set.
+    await lockUser(userId, tx);
     const created = await findDefaultSetId(userId, tx);
     if (created) return created;
 

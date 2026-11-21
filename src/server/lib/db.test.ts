@@ -7,7 +7,7 @@ afterEach(() => deleteTestUsers(userIds));
 
 async function bioOf(userId: string): Promise<string | null> {
   const { rows } = await pool.query<{ bio: string | null }>(
-    `SELECT "bio" FROM "UserProfile" WHERE "id" = $1`,
+    `SELECT "bio" FROM "User" WHERE "id" = $1`,
     [userId],
   );
   return rows[0].bio;
@@ -19,7 +19,7 @@ describe("withTransaction", () => {
     userIds.push(userId);
 
     await withTransaction((tx) =>
-      tx.query(`UPDATE "UserProfile" SET "bio" = 'kept' WHERE "id" = $1`, [userId]),
+      tx.query(`UPDATE "User" SET "bio" = 'kept' WHERE "id" = $1`, [userId]),
     );
 
     expect(await bioOf(userId)).toBe("kept");
@@ -31,7 +31,7 @@ describe("withTransaction", () => {
 
     await expect(
       withTransaction(async (tx) => {
-        await tx.query(`UPDATE "UserProfile" SET "bio" = 'lost' WHERE "id" = $1`, [userId]);
+        await tx.query(`UPDATE "User" SET "bio" = 'lost' WHERE "id" = $1`, [userId]);
         throw new Error("boom");
       }),
     ).rejects.toThrow("boom");
@@ -46,7 +46,10 @@ describe("isUniqueViolation", () => {
     userIds.push(userId);
 
     const duplicate = await pool
-      .query(`INSERT INTO "UserProfile" ("id") VALUES ($1)`, [userId])
+      .query(
+        `INSERT INTO "User" ("id", "name", "email") VALUES ($1, 'Duplicate', $1 || '-dup@test.invalid')`,
+        [userId],
+      )
       .catch((error: unknown) => error);
 
     expect(isUniqueViolation(duplicate)).toBe(true);

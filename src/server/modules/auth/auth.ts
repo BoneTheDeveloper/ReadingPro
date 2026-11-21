@@ -1,7 +1,6 @@
 import { betterAuth } from "better-auth";
 import { oAuthProxy } from "better-auth/plugins";
 import { pool } from "@/server/lib/db";
-import { insertProfileIfMissing } from "@/server/modules/profile";
 
 const productionUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
   ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
@@ -55,15 +54,5 @@ export const auth = betterAuth({
     expiresIn: 60 * 60 * 24 * 7,
     updateAge: 60 * 60 * 24,
     cookieCache: { enabled: true, maxAge: 5 * 60, strategy: "compact" },
-  },
-
-  databaseHooks: {
-    user: {
-      create: {
-        after: async (user) => {
-          await insertProfileIfMissing(user.id);
-        },
-      },
-    },
   },
 });

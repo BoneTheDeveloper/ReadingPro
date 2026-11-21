@@ -3,7 +3,8 @@
 --
 -- Better Auth tables: "User" (capitalized, Better Auth `user.modelName`),
 -- account, session and verification. Every other table is app data owned by a
--- "UserProfile", which shares its id with "User".
+-- "User". The app's own user settings are extra "User" columns with defaults,
+-- so Better Auth's inserts fill them without knowing about them.
 --
 -- Never edit this file once it has been applied; add V<n>__<name>.sql instead.
 
@@ -35,8 +36,13 @@ CREATE TABLE "User" (
     "image" TEXT,
     "createdAt" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    -- Better Auth `additionalFields.tier`: FREE or PRO.
     "tier" TEXT DEFAULT 'FREE',
+    -- App settings, not declared to Better Auth.
+    "bio" TEXT,
+    "desiredRetention" DOUBLE PRECISION NOT NULL DEFAULT 0.9,
+    -- Optimized FSRS weights; null means the library defaults.
+    "fsrsParams" JSONB,
+    "timezone" TEXT NOT NULL DEFAULT 'Asia/Bangkok',
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
@@ -84,19 +90,6 @@ CREATE TABLE "verification" (
 );
 
 -- App tables -----------------------------------------------------------------
-
-CREATE TABLE "UserProfile" (
-    "id" TEXT NOT NULL,
-    "bio" TEXT,
-    "createdAt" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "desiredRetention" DOUBLE PRECISION NOT NULL DEFAULT 0.9,
-    -- Optimized FSRS weights; null means the library defaults.
-    "fsrsParams" JSONB,
-    "timezone" TEXT NOT NULL DEFAULT 'Asia/Bangkok',
-
-    CONSTRAINT "UserProfile_pkey" PRIMARY KEY ("id")
-);
 
 CREATE TABLE "Passage" (
     "id" UUID NOT NULL DEFAULT gen_random_uuid(),
@@ -258,11 +251,8 @@ ALTER TABLE "account" ADD CONSTRAINT "account_userId_fkey"
 ALTER TABLE "session" ADD CONSTRAINT "session_userId_fkey"
     FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
-ALTER TABLE "UserProfile" ADD CONSTRAINT "UserProfile_id_fkey"
-    FOREIGN KEY ("id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
 ALTER TABLE "Passage" ADD CONSTRAINT "Passage_userId_fkey"
-    FOREIGN KEY ("userId") REFERENCES "UserProfile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+    FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 ALTER TABLE "StudioArtifact" ADD CONSTRAINT "StudioArtifact_passageId_fkey"
     FOREIGN KEY ("passageId") REFERENCES "Passage"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -271,19 +261,19 @@ ALTER TABLE "ChatMessage" ADD CONSTRAINT "ChatMessage_passageId_fkey"
     FOREIGN KEY ("passageId") REFERENCES "Passage"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 ALTER TABLE "VocabularySet" ADD CONSTRAINT "VocabularySet_userId_fkey"
-    FOREIGN KEY ("userId") REFERENCES "UserProfile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+    FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 ALTER TABLE "VocabularyItem" ADD CONSTRAINT "VocabularyItem_userId_fkey"
-    FOREIGN KEY ("userId") REFERENCES "UserProfile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+    FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 ALTER TABLE "VocabularyItem" ADD CONSTRAINT "VocabularyItem_passageId_fkey"
     FOREIGN KEY ("passageId") REFERENCES "Passage"("id") ON DELETE SET NULL ON UPDATE CASCADE;
--- NO ACTION, not RESTRICT: deleting a profile removes its sets and words in one
+-- NO ACTION, not RESTRICT: deleting a user removes its sets and words in one
 -- statement, which RESTRICT would reject. A set is emptied before it is deleted.
 ALTER TABLE "VocabularyItem" ADD CONSTRAINT "VocabularyItem_vocabularySetId_fkey"
     FOREIGN KEY ("vocabularySetId") REFERENCES "VocabularySet"("id") ON DELETE NO ACTION ON UPDATE CASCADE;
 
 ALTER TABLE "ReviewSession" ADD CONSTRAINT "ReviewSession_userId_fkey"
-    FOREIGN KEY ("userId") REFERENCES "UserProfile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+    FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 ALTER TABLE "ReviewSession" ADD CONSTRAINT "ReviewSession_vocabularySetId_fkey"
     FOREIGN KEY ("vocabularySetId") REFERENCES "VocabularySet"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
