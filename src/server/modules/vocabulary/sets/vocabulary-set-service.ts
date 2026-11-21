@@ -1,5 +1,6 @@
-import prisma, { isUniqueViolation } from "@/server/lib/prisma";
+import { isUniqueViolation, withTransaction } from "@/server/lib/db";
 import { AppError } from "@/server/lib/errors";
+import { findUserSettings } from "@/server/modules/user-settings";
 import type { VocabularyStatus } from "@/shared/enums";
 import {
   PRO_TIER,
@@ -10,36 +11,31 @@ import {
 import { toStatusCounts } from "../status-counts";
 import { ensureDefaultSetForUser } from "../default-vocabulary-set";
 import { startOfDayInTimeZone } from "../fsrs-scheduler";
-
-type SetRow = {
-  id: string;
-  name: string;
-  isDefault: boolean;
-  dailyNewLimit: number;
-  createdAt: Date;
-};
-
-const SET_FIELDS = {
-  id: true,
-  name: true,
-  isDefault: true,
-  dailyNewLimit: true,
-  createdAt: true,
-} as const;
+import {
+  countOwnedItems,
+  createSet,
+  deleteSet,
+  findSetForUser,
+  listDueItemIdsInSet,
+  listItemsInSets,
+  listNewItemIdsInSet,
+  listSetsForUser,
+  moveItemsBetweenSets,
+  moveItemsToSet,
+  updateSet,
+  type SetRow,
+} from "./vocabulary-set-repository";
 
 /** Adds each set's words (with their schedule), status counts, and last study date. */
 async function withItems(userId: string, sets: SetRow[]): Promise<VocabularySet[]> {
   if (sets.length === 0) return [];
 
-  const [rows, profile] = await Promise.all([
-    prisma.vocabularyItem.findMany({
-      where: { userId, vocabularySetId: { in: sets.map((s) => s.id) } },
-      orderBy: { createdAt: "desc" },
-    }),
-    prisma.userProfile.findUnique({ where: { id: userId }, select: { timezone: true } }),
+  const [rows, settings] = await Promise.all([
+    listItemsInSets(userId, sets.map((s) => s.id)),
+    findUserSettings(userId),
   ]);
 
-  const today = startOfDayInTimeZone(new Date(), profile?.timezone ?? "UTC");
+  const today = startOfDayInTimeZone(new Date(), settings?.timezone ?? "UTC");
 
   return sets.map((set) => {
     const items = rows.filter((row) => row.vocabularySetId === set.id);
@@ -65,7 +61,7 @@ async function withItems(userId: string, sets: SetRow[]): Promise<VocabularySet[
 }
 
 async function requireSetForUser(userId: string, id: string): Promise<SetRow> {
-  const set = await prisma.vocabularySet.findFirst({ where: { id, userId }, select: SET_FIELDS });
+  const set = await findSetForUser(userId, id);
   if (!set) throw new AppError("vocabulary_set.not_found", "VocabularySet not found", { id });
   return set;
 }
@@ -74,7 +70,7 @@ async function requireSetForUser(userId: string, id: string): Promise<SetRow> {
 async function requireItemsForUser(userId: string, itemIds: string[]): Promise<string[]> {
   const unique = [...new Set(itemIds)];
   if (unique.length === 0) return unique;
-  const owned = await prisma.vocabularyItem.count({ where: { userId, id: { in: unique } } });
+  const owned = await countOwnedItems(userId, unique);
   if (owned !== unique.length) {
     throw new AppError("vocabulary.not_found", "VocabularyItem not found", { itemIds: unique });
   }
@@ -88,12 +84,7 @@ function nameTaken(name: string) {
 export async function listVocabularySetsForUser(userId: string): Promise<VocabularySet[]> {
   // The default set always exists, so it is listed even before the first save.
   await ensureDefaultSetForUser(userId);
-  const sets = await prisma.vocabularySet.findMany({
-    where: { userId },
-    orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }],
-    select: SET_FIELDS,
-  });
-  return withItems(userId, sets);
+  return withItems(userId, await listSetsForUser(userId));
 }
 
 export async function getVocabularySetForUser(userId: string, id: string): Promise<VocabularySet> {
@@ -108,15 +99,9 @@ export async function createVocabularySetForUser(
 ): Promise<VocabularySet> {
   const itemIds = await requireItemsForUser(userId, input.itemIds);
   try {
-    const set = await prisma.$transaction(async (tx) => {
-      const created = await tx.vocabularySet.create({
-        data: { userId, name: input.name },
-        select: SET_FIELDS,
-      });
-      await tx.vocabularyItem.updateMany({
-        where: { userId, id: { in: itemIds } },
-        data: { vocabularySetId: created.id },
-      });
+    const set = await withTransaction(async (tx) => {
+      const created = await createSet(userId, input.name, tx);
+      await moveItemsToSet(userId, itemIds, created.id, tx);
       return created;
     });
     return (await withItems(userId, [set]))[0];
@@ -138,28 +123,15 @@ export async function generateVocabularySetForUser(
     throw new AppError("plan.pro_required", "Generating a set requires the Pro tier");
   }
 
-  const unfiled = { userId: user.id, vocabularySetId: await ensureDefaultSetForUser(user.id) };
+  const defaultSetId = await ensureDefaultSetForUser(user.id);
 
-  const due = await prisma.vocabularyItem.findMany({
-    where: { ...unfiled, status: { not: "NEW" }, dueAt: { lte: new Date() } },
-    orderBy: { dueAt: "asc" },
-    take: input.size,
-    select: { id: true },
-  });
+  const due = await listDueItemIdsInSet(user.id, defaultSetId, new Date(), input.size);
   const fresh =
     due.length < input.size
-      ? await prisma.vocabularyItem.findMany({
-          where: { ...unfiled, status: "NEW" },
-          orderBy: { createdAt: "asc" },
-          take: input.size - due.length,
-          select: { id: true },
-        })
+      ? await listNewItemIdsInSet(user.id, defaultSetId, input.size - due.length)
       : [];
 
-  return createVocabularySetForUser(user.id, {
-    name: input.name,
-    itemIds: [...due, ...fresh].map((item) => item.id),
-  });
+  return createVocabularySetForUser(user.id, { name: input.name, itemIds: [...due, ...fresh] });
 }
 
 export async function updateVocabularySetForUser(
@@ -167,18 +139,15 @@ export async function updateVocabularySetForUser(
   id: string,
   input: VocabularySetUpdateInput,
 ): Promise<VocabularySet> {
-  await requireSetForUser(userId, id);
+  let set: SetRow | null;
   try {
-    const set = await prisma.vocabularySet.update({
-      where: { id },
-      data: { name: input.name, dailyNewLimit: input.dailyNewLimit },
-      select: SET_FIELDS,
-    });
-    return (await withItems(userId, [set]))[0];
+    set = await updateSet(userId, id, { name: input.name, dailyNewLimit: input.dailyNewLimit });
   } catch (error) {
     if (isUniqueViolation(error)) throw nameTaken(input.name ?? "");
     throw error;
   }
+  if (!set) throw new AppError("vocabulary_set.not_found", "VocabularySet not found", { id });
+  return (await withItems(userId, [set]))[0];
 }
 
 /** Deleting a set keeps its words: they go back to the default set. */
@@ -190,13 +159,11 @@ export async function deleteVocabularySetForUser(userId: string, id: string): Pr
     });
   }
   const defaultSetId = await ensureDefaultSetForUser(userId);
-  await prisma.$transaction([
-    prisma.vocabularyItem.updateMany({
-      where: { vocabularySetId: id },
-      data: { vocabularySetId: defaultSetId },
-    }),
-    prisma.vocabularySet.delete({ where: { id } }),
-  ]);
+  await withTransaction(async (tx) => {
+    await moveItemsBetweenSets(userId, id, defaultSetId, undefined, tx);
+    const deleted = await deleteSet(userId, id, tx);
+    if (!deleted) throw new AppError("vocabulary_set.not_found", "VocabularySet not found", { id });
+  });
 }
 
 /** Moves the words into this set, out of the sets they were in. */
@@ -207,10 +174,7 @@ export async function addVocabularySetItemsForUser(
 ): Promise<void> {
   await requireSetForUser(userId, id);
   const owned = await requireItemsForUser(userId, itemIds);
-  await prisma.vocabularyItem.updateMany({
-    where: { userId, id: { in: owned } },
-    data: { vocabularySetId: id },
-  });
+  await moveItemsToSet(userId, owned, id);
 }
 
 /** Moves the word back to the default set; a word is never left without a set. */
@@ -220,8 +184,5 @@ export async function removeVocabularySetItemForUser(
   itemId: string,
 ): Promise<void> {
   await requireSetForUser(userId, id);
-  await prisma.vocabularyItem.updateMany({
-    where: { userId, id: itemId, vocabularySetId: id },
-    data: { vocabularySetId: await ensureDefaultSetForUser(userId) },
-  });
+  await moveItemsBetweenSets(userId, id, await ensureDefaultSetForUser(userId), itemId);
 }

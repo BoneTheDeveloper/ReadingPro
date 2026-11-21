@@ -1,5 +1,6 @@
-import prisma, { isUniqueViolation } from "@/server/lib/prisma";
+import { isUniqueViolation, withTransaction } from "@/server/lib/db";
 import { AppError } from "@/server/lib/errors";
+import { findUserSettings } from "@/server/modules/user-settings";
 import type {
   ReviewCard,
   ReviewDueResponse,
@@ -12,30 +13,27 @@ import {
   schedule,
   startOfDayInTimeZone,
 } from "../fsrs-scheduler";
-
-const CARD_INCLUDE = { passage: { select: { id: true, title: true } } } as const;
-
-const SESSION_FIELDS = {
-  id: true,
-  vocabularySetId: true,
-  startedAt: true,
-  endedAt: true,
-  cardsReviewed: true,
-} as const;
-
-type CardRow = NonNullable<Awaited<ReturnType<typeof findCard>>>;
-
-function findCard(userId: string, id: string) {
-  return prisma.vocabularyItem.findFirst({ where: { id, userId }, include: CARD_INCLUDE });
-}
+import { findSetForUser, listSetsForUser } from "../sets/vocabulary-set-repository";
+import {
+  countNewCardsIntroducedSince,
+  createSession,
+  endSession,
+  findCardForUser,
+  findLogByClientReviewId,
+  findSessionForUser,
+  incrementCardsReviewed,
+  insertReviewLog,
+  listDueCards,
+  listNewCardsInSet,
+  lockCardForUser,
+  updateCardSchedule,
+  type CardRow,
+} from "./review-repository";
 
 async function loadSettings(userId: string) {
-  const profile = await prisma.userProfile.findUnique({
-    where: { id: userId },
-    select: { timezone: true, desiredRetention: true, fsrsParams: true },
-  });
-  if (!profile) throw new AppError("auth.required", "User profile not found");
-  return { ...profile, scheduler: createScheduler(profile) };
+  const settings = await findUserSettings(userId);
+  if (!settings) throw new AppError("auth.required", "User not found");
+  return { ...settings, scheduler: createScheduler(settings) };
 }
 
 type Scheduler = ReturnType<typeof createScheduler>;
@@ -56,10 +54,7 @@ function toReviewCard(scheduler: Scheduler, row: CardRow, now: Date): ReviewCard
 }
 
 async function requireSetForUser(userId: string, setId: string): Promise<void> {
-  const set = await prisma.vocabularySet.findFirst({
-    where: { id: setId, userId },
-    select: { id: true },
-  });
+  const set = await findSetForUser(userId, setId);
   if (!set) throw new AppError("vocabulary_set.not_found", "VocabularySet not found", { id: setId });
 }
 
@@ -72,51 +67,29 @@ export async function listDueCardsForUser(
   userId: string,
   setId?: string,
 ): Promise<ReviewDueResponse> {
-  const sets = await prisma.vocabularySet.findMany({
-    where: { userId, id: setId },
-    select: { id: true, dailyNewLimit: true },
-  });
-  if (setId && sets.length === 0) {
+  const set = setId ? await findSetForUser(userId, setId) : null;
+  if (setId && !set) {
     throw new AppError("vocabulary_set.not_found", "VocabularySet not found", { id: setId });
   }
+  const sets = set ? [set] : await listSetsForUser(userId);
   const settings = await loadSettings(userId);
   const now = new Date();
-  const inSet = setId ? { vocabularySetId: setId } : {};
 
   const [due, introducedToday] = await Promise.all([
-    prisma.vocabularyItem.findMany({
-      where: { userId, status: { not: "NEW" }, dueAt: { lte: now }, ...inSet },
-      orderBy: { dueAt: "asc" },
-      include: CARD_INCLUDE,
-    }),
+    listDueCards(userId, now, setId ?? null),
     // A first rating counts against the set the word is in now.
-    prisma.reviewLog.findMany({
-      where: {
-        userId,
-        status: "NEW",
-        reviewedAt: { gte: startOfDayInTimeZone(now, settings.timezone) },
-        vocabularyItem: inSet,
-      },
-      select: { vocabularyItem: { select: { vocabularySetId: true } } },
-    }),
+    countNewCardsIntroducedSince(userId, startOfDayInTimeZone(now, settings.timezone), setId ?? null),
   ]);
 
-  const introducedBySet = new Map<string, number>();
-  for (const log of introducedToday) {
-    const id = log.vocabularyItem.vocabularySetId;
-    introducedBySet.set(id, (introducedBySet.get(id) ?? 0) + 1);
-  }
+  const introducedBySet = new Map(
+    introducedToday.map((row) => [row.vocabularySetId, row.count] as const),
+  );
 
   const freshBySet = await Promise.all(
     sets.map((set) => {
       const allowance = set.dailyNewLimit - (introducedBySet.get(set.id) ?? 0);
       if (allowance <= 0) return [];
-      return prisma.vocabularyItem.findMany({
-        where: { userId, status: "NEW", vocabularySetId: set.id },
-        orderBy: { createdAt: "asc" },
-        take: allowance,
-        include: CARD_INCLUDE,
-      });
+      return listNewCardsInSet(userId, set.id, allowance);
     }),
   );
   const fresh = freshBySet.flat().sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
@@ -133,14 +106,11 @@ export async function startReviewSessionForUser(
   setId?: string,
 ): Promise<ReviewSession> {
   if (setId) await requireSetForUser(userId, setId);
-  return prisma.reviewSession.create({
-    data: { userId, vocabularySetId: setId },
-    select: SESSION_FIELDS,
-  });
+  return createSession(userId, setId ?? null);
 }
 
 async function currentCard(scheduler: Scheduler, userId: string, id: string): Promise<ReviewCard> {
-  const row = await findCard(userId, id);
+  const row = await findCardForUser(userId, id);
   if (!row) throw new AppError("vocabulary.not_found", "VocabularyItem not found", { id });
   return toReviewCard(scheduler, row, new Date());
 }
@@ -157,10 +127,7 @@ export async function rateCardForUser(
 ): Promise<ReviewCard> {
   const { scheduler } = await loadSettings(userId);
 
-  const alreadyApplied = await prisma.reviewLog.findUnique({
-    where: { clientReviewId: input.clientReviewId },
-    select: { userId: true, vocabularyItemId: true },
-  });
+  const alreadyApplied = await findLogByClientReviewId(input.clientReviewId);
   if (alreadyApplied) {
     // The id belongs to someone else's rating: answer as if the word did not exist.
     if (alreadyApplied.userId !== userId) {
@@ -172,11 +139,8 @@ export async function rateCardForUser(
   }
 
   try {
-    await prisma.$transaction(async (tx) => {
-      const session = await tx.reviewSession.findFirst({
-        where: { id: sessionId, userId },
-        select: { endedAt: true },
-      });
+    await withTransaction(async (tx) => {
+      const session = await findSessionForUser(userId, sessionId, tx);
       if (!session) {
         throw new AppError("review.session_not_found", "ReviewSession not found", { id: sessionId });
       }
@@ -184,15 +148,7 @@ export async function rateCardForUser(
         throw new AppError("review.session_ended", "ReviewSession already ended", { id: sessionId });
       }
 
-      // Row lock: two ratings for one card must not both read the same state.
-      await tx.$queryRaw`
-        SELECT "id" FROM "VocabularyItem"
-        WHERE "id" = ${input.vocabularyItemId}::uuid AND "userId" = ${userId}
-        FOR UPDATE
-      `;
-      const card = await tx.vocabularyItem.findFirst({
-        where: { id: input.vocabularyItemId, userId },
-      });
+      const card = await lockCardForUser(userId, input.vocabularyItemId, tx);
       if (!card) {
         throw new AppError("vocabulary.not_found", "VocabularyItem not found", {
           id: input.vocabularyItemId,
@@ -202,8 +158,8 @@ export async function rateCardForUser(
       const now = new Date();
       const { next, elapsedDays } = schedule(scheduler, card, input.rating, now);
 
-      await tx.reviewLog.create({
-        data: {
+      await insertReviewLog(
+        {
           userId,
           vocabularyItemId: card.id,
           sessionId,
@@ -216,15 +172,13 @@ export async function rateCardForUser(
           learningSteps: card.learningSteps,
           elapsedDays,
           scheduledDays: next.scheduledDays,
-          durationMs: input.durationMs,
+          durationMs: input.durationMs ?? null,
           reviewedAt: now,
         },
-      });
-      await tx.vocabularyItem.update({ where: { id: card.id }, data: next });
-      await tx.reviewSession.update({
-        where: { id: sessionId },
-        data: { cardsReviewed: { increment: 1 } },
-      });
+        tx,
+      );
+      await updateCardSchedule(card.id, next, tx);
+      await incrementCardsReviewed(sessionId, tx);
     });
   } catch (error) {
     // Two copies of the same request raced; the other one applied the rating.
@@ -238,17 +192,11 @@ export async function endReviewSessionForUser(
   userId: string,
   sessionId: string,
 ): Promise<ReviewSession> {
-  const session = await prisma.reviewSession.findFirst({
-    where: { id: sessionId, userId },
-    select: SESSION_FIELDS,
-  });
-  if (!session) {
+  const session = await findSessionForUser(userId, sessionId);
+  if (session?.endedAt) return session;
+  const ended = session && (await endSession(userId, sessionId, new Date()));
+  if (!ended) {
     throw new AppError("review.session_not_found", "ReviewSession not found", { id: sessionId });
   }
-  if (session.endedAt) return session;
-  return prisma.reviewSession.update({
-    where: { id: sessionId },
-    data: { endedAt: new Date() },
-    select: SESSION_FIELDS,
-  });
+  return ended;
 }

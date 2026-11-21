@@ -3,7 +3,7 @@ import { z } from "zod";
 import { validate } from "@/server/lib/validate";
 import { AppError } from "@/server/lib/errors";
 import { requireSession } from "@/server/middleware/require-session";
-import { StudioArtifactType } from "@/server/db/generated/enums";
+import { StudioArtifactType } from "@/shared/enums";
 import {
   deleteArtifact,
   getCompletedArtifactForUser,

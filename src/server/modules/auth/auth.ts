@@ -1,14 +1,15 @@
 import { betterAuth } from "better-auth";
-import { prismaAdapter } from "better-auth/adapters/prisma";
 import { oAuthProxy } from "better-auth/plugins";
-import prisma from "@/server/lib/prisma";
+import { pool } from "@/server/lib/db";
 
 const productionUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
   ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
   : "http://localhost:3000";
 
 export const auth = betterAuth({
-  database: prismaAdapter(prisma, { provider: "postgresql" }),
+  // Better Auth's built-in Kysely adapter on the app's pool. Flyway owns the
+  // auth tables (db/migrations); never run Better Auth's own migrate command.
+  database: pool,
 
   baseURL: {
     // Do not allow the API server's own host (localhost:3001): the dev proxy
@@ -43,6 +44,7 @@ export const auth = betterAuth({
   },
 
   user: {
+    modelName: "User",
     additionalFields: {
       tier: { type: "string", required: false, defaultValue: "FREE" },
     },
@@ -52,19 +54,5 @@ export const auth = betterAuth({
     expiresIn: 60 * 60 * 24 * 7,
     updateAge: 60 * 60 * 24,
     cookieCache: { enabled: true, maxAge: 5 * 60, strategy: "compact" },
-  },
-
-  databaseHooks: {
-    user: {
-      create: {
-        after: async (user) => {
-          await prisma.userProfile.upsert({
-            where: { id: user.id },
-            create: { id: user.id },
-            update: {},
-          });
-        },
-      },
-    },
   },
 });

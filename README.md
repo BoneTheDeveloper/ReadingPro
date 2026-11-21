@@ -13,95 +13,140 @@ owned workspace.
 
 ## What it does
 
-| Area | Capability |
-|---|---|
-| [Content import](docs/Requirements/epic-01-content-import.md) | Paste text, upload a PDF, or bring a YouTube link in as a passage |
-| [Study & comprehension](docs/Requirements/epic-02-study-comprehension.md) | Generate comprehension questions and flashcards over a passage |
-| [Passage chat](docs/Requirements/epic-03-passage-chat.md) | Ask a tutor grounded in the passage you are reading |
-| [Vocabulary capture](docs/Requirements/epic-04-vocabulary-capture.md) | Inline translation while reading, then save words with their context |
-| [Memorization & review](docs/Requirements/epic-05-memorization-review.md) | Group saved words into sets and review them on an FSRS spaced-repetition schedule |
+
+| Area                                                                          | Capability                                                                        |
+| ----------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| [Content import](docs/Requirements/epic-01-content-import.md)                 | Paste text, upload a PDF, or bring a YouTube link in as a passage                 |
+| [Study &amp; comprehension](docs/Requirements/epic-02-study-comprehension.md) | Generate comprehension questions and flashcards over a passage                    |
+| [Passage chat](docs/Requirements/epic-03-passage-chat.md)                     | Ask a tutor grounded in the passage you are reading                               |
+| [Vocabulary capture](docs/Requirements/epic-04-vocabulary-capture.md)         | Inline translation while reading, then save words with their context              |
+| [Memorization &amp; review](docs/Requirements/epic-05-memorization-review.md) | Group saved words into sets and review them on an FSRS spaced-repetition schedule |
+
 
 ## Tech stack
 
-- **React Router** (SPA mode, landing page prerendered) · **Vite** · **React** · **TypeScript**
-- **Hono** API on **Nitro** · **Workflow SDK** for background processing
-- **Tailwind CSS** · **shadcn/ui** (Radix primitives)
-- **TanStack Query** for client data
-- **Prisma** · **PostgreSQL**
-- **Better Auth** (Google sign-in)
-- **Vercel AI SDK** for translation, passage processing, questions, and chat
-- **pino** for errors and logs
-- **pnpm** · deployed on **Vercel**
+- **Web:** React Router (SPA) · Vite · React · TypeScript · Tailwind CSS · shadcn/ui · TanStack Query
+- **API:** Hono on Nitro · Workflow SDK for background jobs · Vercel AI SDK
+- **Data:** PostgreSQL with raw SQL (`pg`) · Flyway migrations · Docker for local development
+- **Auth:** Better Auth (Google sign-in)
+- **Deploy:** Vercel · pnpm
 
-## Directory map
+## How the code is organized
 
 ```
-src/
-│  ── client (browser bundle) ──
-├─ client/                    # React Router appDirectory
-│  ├─ root.tsx                # document shell, providers, error boundary
-│  ├─ routes.ts               # route config
-│  ├─ routes/                 # marketing, login, dashboard layout, study, vocabulary, review, account
-│  │  └─ study/               # study page view: composes passage, reading and studio panels
-│  ├─ features/               # one folder per domain; import it through its index.ts
-│  │  ├─ auth/                # login form, account controls
-│  │  ├─ passage/             # import UI, library panel
-│  │  ├─ reading/             # reader panel, selection, inline translation
-│  │  ├─ studio/              # study workspace; artifacts: questions, flashcards, passage chat
-│  │  └─ vocabulary/          # word bank, sets, review session
-│  ├─ components/             # shared UI: layout and shadcn/ui (components/ui)
-│  └─ lib/                    # auth client, fetch helpers, query client, store
-│  ── shared (imported by both sides) ──
-├─ shared/
-│  ├─ api-error.ts            # API error envelope, codes and reasons (translation keys)
-│  ├─ enums.ts                # browser-safe copies of Prisma enums (sync-checked on the server)
-│  ├─ passage/                # passage schemas, upload limits, YouTube URL parsing
-│  ├─ reading/                # translation schemas
-│  ├─ studio/                 # artifact and chat schemas
-│  └─ vocabulary/             # vocabulary, set and review schemas
-│  ── server (Nitro) ──
-└─ server/
-   ├─ app.ts                  # Hono app: auth handler, request context, module routes, onError
-   ├─ env.ts                  # Hono context types (request logger, signed-in user)
-   ├─ middleware/             # request id and logger per request, requireSession
-   ├─ modules/                # one folder per domain; import it through its index.ts
-   │  ├─ auth/                # better-auth instance
-   │  ├─ passage/             # import, ingestion (normalization, AI rewrite), processing workflow
-   │  ├─ artifact/            # questions and flashcards, generation workflow
-   │  ├─ chat/                # passage chat, tutor prompts, history
-   │  ├─ translate/           # word translation
-   │  └─ vocabulary/          # items/, sets/, review/, FSRS scheduler
-   ├─ lib/                    # prisma, logger, errors and onError, validation, enum sync check
-   └─ db/generated/           # generated Prisma client — do not edit
-
-prisma/schema.prisma          # database schema
-prisma/migrations/            # SQL migrations; apply with `pnpm exec prisma migrate deploy`
+src/client/    React app (pages, features, UI components)
+src/server/    API: one module per feature (passage, artifact, chat, vocabulary, ...)
+src/shared/    types and schemas used by both sides
+db/migrations/ the database schema, as Flyway SQL migrations
 ```
 
-Client and server code only meet in `src/shared/`. ESLint (`no-restricted-imports`
-in `eslint.config.mjs`) enforces this, and that features and server modules are
-imported only through their `index.ts`.
+Each server module follows the same layers: `*-routes.ts` handles HTTP,
+`*-service.ts` holds the business rules, and `*-repository.ts` is the only place
+with SQL. Client and server code only share `src/shared/`.
 
-Inside a server module, `*-routes.ts` handles HTTP only (validate, call a service,
-shape the response), `*-service.ts` holds the use cases, and `*-repository.ts`,
-where present, is the only file that queries the module's tables. Client code gets Prisma enums from
-`@/shared/enums`; `src/server/lib/enum-sync.ts` fails typecheck if they drift
-from the schema.
+## Getting started
 
-API errors use one envelope, `{ error: { code, reason, message, details? } }`
-(`src/shared/api-error.ts`). Server code throws `new AppError(reason, message)`;
-`reason` fixes the status and code, and `message` is English for logs only. The
-client turns reasons into user-facing text in `src/client/lib/api/error-message.ts`,
-the single catalog of error strings, so adding a language means translating that file.
+**1. Install and configure**
 
-## Development
-
+```bash
+pnpm install
+cp .env.example .env
 ```
-pnpm dev        # dev:api + dev:web together
-pnpm dev:web    # Vite on :3000 only (proxies /api to :3001)
-pnpm dev:api    # Nitro API on :3001 only
-pnpm build      # prisma generate, build:web, then build:api
-pnpm build:web  # react-router build → build/client
-pnpm build:api  # nitro build → .output (bundles build/client, so run build:web first)
-pnpm start      # serve .output with .env loaded
+
+In `.env`, the `POSTGRES_*` variables configure the local database container
+(`docker-compose.yml` reads them). The app connects to `DATABASE_URL` when it is
+set; without it, the app builds the local URL from the `POSTGRES_*` values.
+
+**2. Start the database**
+
+```bash
+pnpm db:up        # starts Postgres, then Flyway creates the tables
 ```
+
+`docker compose up -d` does the same: it starts the `postgres` service, and
+the `flyway` service applies the migrations and exits.
+
+**3. Run the app** in two terminals:
+
+```bash
+pnpm dev:api      # API on http://localhost:3001
+pnpm dev:web      # web app on http://localhost:3000
+```
+
+Open [**http://localhost:3000**](http://localhost:3000). Always use port 3000: it forwards `/api` to the
+API, and sign-in only works on this address.
+
+After a reboot, run `pnpm db:up` again before starting the app. Your data is kept.
+
+## Database and migrations
+
+The schema lives in `db/migrations/` and is applied by Flyway.
+
+
+| Command           | What it does                          |
+| ----------------- | ------------------------------------- |
+| `pnpm db:up`      | Start Postgres and apply migrations   |
+| `pnpm db:down`    | Stop it (data is kept)                |
+| `pnpm db:down -v` | Stop it and **delete all local data** |
+| `pnpm db:migrate` | Apply new migrations                  |
+| `pnpm db:info`    | Show which migrations are applied     |
+
+
+Flyway runs from `db/Dockerfile`, which copies `db/migrations/` into the image;
+the scripts rebuild it, so new files are picked up. It always targets the
+`postgres` container, never the database in `DATABASE_URL`.
+
+**To change the schema:**
+
+1. Add a new file `db/migrations/V<next number>__<description>.sql`, for
+example `V2__add_passage_language.sql`, with plain Postgres SQL.
+2. Run `pnpm db:migrate`.
+3. Update the matching `*-repository.ts`. If you changed an enum, also update
+`src/shared/enums.ts`; a test checks that they match.
+
+Never edit a migration that has already run; add a new one instead. If the
+migration has only ever run on your machine, you can start over with
+`pnpm db:down -v && pnpm db:up`.
+
+**New Better Auth plugin?** Run the Better Auth CLI at the installed version to
+see which columns are missing, then put that SQL in a new migration:
+
+```bash
+pnpm dlx auth@1.7.6 generate --config src/server/modules/auth/auth.ts --output auth-diff.sql
+```
+
+Never run Better Auth's own `migrate` command.
+
+## Tests and checks
+
+```bash
+pnpm test         # integration tests (needs the local database running)
+pnpm typecheck
+pnpm lint
+```
+
+Tests use the local database and only refuse to run when `DATABASE_URL` is not
+on `localhost`. Each test creates its own throwaway users and deletes them, so
+your own data is not touched.
+
+## Build and deploy
+
+```bash
+pnpm build        # builds the web app and the API into .output
+pnpm start        # runs the production build on port 3000
+```
+
+**Migrating the production database** is a manual step:
+
+1. Back up first: `pg_dump "<production url>" > backup.sql`
+2. Apply the migrations:
+   ```bash
+    docker build -t readingpro-flyway db
+    docker run --rm readingpro-flyway \
+      -url="jdbc:postgresql://<host>:5432/<db>?sslmode=require" \
+      -user=<user> -password=<password> migrate
+   ```
+
+
+
+&nbsp;

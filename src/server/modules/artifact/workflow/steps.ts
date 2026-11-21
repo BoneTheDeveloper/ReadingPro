@@ -3,7 +3,8 @@
  */
 import { generateAndStoreArtifact } from "../artifact-generator";
 import { updateArtifactStatus } from "../artifact-repository";
-import { StudioArtifactType } from "@/server/db/generated/enums";
+import { AppError } from "@/server/lib/errors";
+import type { StudioArtifactType } from "@/shared/enums";
 
 export interface ArtifactGenerationInput {
   artifactId: string;
@@ -24,9 +25,12 @@ export async function generateArtifactStep(args: ArtifactGenerationInput) {
 
 export async function failStep(args: ArtifactGenerationInput) {
   "use step";
-  await updateArtifactStatus({
+  const artifact = await updateArtifactStatus({
     id: args.artifactId,
     userId: args.userId,
     status: "FAILED",
   });
+  if (!artifact) {
+    throw new AppError("artifact.not_found", "Artifact not found", { id: args.artifactId });
+  }
 }

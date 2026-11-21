@@ -18,8 +18,6 @@
 # typescript
 *.tsbuildinfo
 
-/src/server/db/generated
-
 # agent file
 .claude
 .codex

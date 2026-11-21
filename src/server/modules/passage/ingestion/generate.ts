@@ -3,6 +3,7 @@ import {
   passageMetadataSchema,
   type PassageMetadata,
 } from "@/shared/passage/schema";
+import { AppError } from "@/server/lib/errors";
 import { completePassageProcessing } from "../passage-repository";
 import { takeWords, titleFromContent } from "./text";
 
@@ -92,11 +93,15 @@ export async function runPassageProcessing(args: {
 
   const meta = metadata.status === "fulfilled" ? metadata.value : null;
 
-  await completePassageProcessing({
+  const passage = await completePassageProcessing({
     userId: args.userId,
     passageId: args.passageId,
     content: content.value,
     title: meta?.title || args.userTitle || titleFromContent(content.value),
     cefrLevel: meta?.cefrLevel ?? null,
   });
+  // Deleted while processing: fail the step so the workflow does not report success.
+  if (!passage) {
+    throw new AppError("passage.not_found", "Passage not found", { id: args.passageId });
+  }
 }

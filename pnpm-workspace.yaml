@@ -1,9 +1,6 @@
 packages: []
 
 allowBuilds:
-  "@prisma/client": true
-  "@prisma/engines": true
-  prisma: true
   sharp: true
   msw: false
   unrs-resolver: false
@@ -12,3 +9,7 @@ allowBuilds:
   esbuild: true
   protobufjs: true
   cbor-extract: true
+  # Optional peers that better-auth's lockfile entry still resolves; the app
+  # does not use them, so their install scripts never run.
+  "@prisma/engines": false
+  prisma: false
