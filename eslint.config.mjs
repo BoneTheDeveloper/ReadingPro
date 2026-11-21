@@ -14,7 +14,6 @@ export default defineConfig([
     ".react-router/**",
     ".vercel/**",
     "coverage/**",
-    "src/server/db/generated/**",
   ]),
 
   {

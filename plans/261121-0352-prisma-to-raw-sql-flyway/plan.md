@@ -1,7 +1,7 @@
 ---
 title: "Migrate from Prisma to raw SQL with Flyway and local Docker Postgres"
 description: "Replace Prisma with node-postgres raw SQL behind per-module repositories, move schema ownership to Flyway, run Postgres locally in Docker, and keep Better Auth and every current feature working."
-status: in-progress
+status: done
 priority: P1
 effort: 3d
 branch: bone/refactor/prisma-to-raw-sql
@@ -89,7 +89,7 @@ db/migrations/V*.sql ──(Flyway container)──▶ Postgres container
 | 3 | [Better Auth on the pg pool and the profile module](./phase-03-auth-on-pg-pool.md) | 3h | 2 | Done |
 | 4 | [Passage, artifact and chat repositories](./phase-04-passage-artifact-chat-repositories.md) | 4h | 2 | Done |
 | 5 | [Vocabulary items, sets and review repositories](./phase-05-vocabulary-repositories.md) | 6h | 3, 4 | Done |
-| 6 | [Remove Prisma, update docs, final verification](./phase-06-remove-prisma-and-verify.md) | 3h | 3, 4, 5 | Pending |
+| 6 | [Remove Prisma, update docs, final verification](./phase-06-remove-prisma-and-verify.md) | 3h | 3, 4, 5 | Done |
 
 The app's runtime is broken between phases 1 and 5 for modules that still use
 Prisma, because Prisma maps `ProcessingStatus` to lowercase labels that V1 no
@@ -110,11 +110,11 @@ modules. Full runtime behavior returns at the end of phase 5.
 
 ## Success Criteria
 
-- [ ] Acceptance criterion 1: integration tests pass and the smoke checklist is done
-- [ ] Acceptance criterion 2: no Prisma traces
-- [ ] Acceptance criterion 3: SQL only in repositories
-- [ ] Acceptance criterion 4: Docker Postgres and Flyway work from an empty volume
-- [ ] `pnpm typecheck`, `pnpm lint`, `pnpm exec knip`, `pnpm test`, `pnpm build` are all green
+- [ ] Acceptance criterion 1: integration tests and an HTTP smoke run pass; the Google and AI parts of the manual checklist are open for the user
+- [x] Acceptance criterion 2: no Prisma traces, except `prisma` and `@prisma/client` as better-auth optional peers in the lockfile and their disabled builds in `pnpm-workspace.yaml` (see [verification-report.md](./reports/verification-report.md))
+- [x] Acceptance criterion 3: SQL only in repositories
+- [x] Acceptance criterion 4: Docker Postgres and Flyway work from an empty volume
+- [x] `pnpm typecheck`, `pnpm lint`, `pnpm exec knip`, `pnpm test`, `pnpm build` are all green
 
 ## Validation Log
 

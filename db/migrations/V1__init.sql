@@ -1,5 +1,5 @@
 -- Initial schema, owned by Flyway. Columns keep the physical order of the
--- previous Prisma schema so schema dumps stay comparable.
+-- schema this replaced, so schema dumps stay comparable.
 --
 -- Better Auth tables: "User" (capitalized, Better Auth `user.modelName`),
 -- account, session and verification. Every other table is app data owned by a

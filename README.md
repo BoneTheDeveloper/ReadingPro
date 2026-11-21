@@ -27,7 +27,7 @@ owned workspace.
 - **Hono** API on **Nitro** · **Workflow SDK** for background processing
 - **Tailwind CSS** · **shadcn/ui** (Radix primitives)
 - **TanStack Query** for client data
-- **Prisma** · **PostgreSQL**
+- **PostgreSQL** with raw SQL through **node-postgres** (`pg`) · **Flyway** migrations · local database in **Docker**
 - **Better Auth** (Google sign-in)
 - **Vercel AI SDK** for translation, passage processing, questions, and chat
 - **pino** for errors and logs
@@ -54,7 +54,7 @@ src/
 │  ── shared (imported by both sides) ──
 ├─ shared/
 │  ├─ api-error.ts            # API error envelope, codes and reasons (translation keys)
-│  ├─ enums.ts                # browser-safe copies of Prisma enums (sync-checked on the server)
+│  ├─ enums.ts                # browser-safe copies of the Postgres enums (checked by a test)
 │  ├─ passage/                # passage schemas, upload limits, YouTube URL parsing
 │  ├─ reading/                # translation schemas
 │  ├─ studio/                 # artifact and chat schemas
@@ -66,16 +66,17 @@ src/
    ├─ middleware/             # request id and logger per request, requireSession
    ├─ modules/                # one folder per domain; import it through its index.ts
    │  ├─ auth/                # better-auth instance
+   │  ├─ profile/             # UserProfile queries (settings, profile row lock)
    │  ├─ passage/             # import, ingestion (normalization, AI rewrite), processing workflow
    │  ├─ artifact/            # questions and flashcards, generation workflow
    │  ├─ chat/                # passage chat, tutor prompts, history
    │  ├─ translate/           # word translation
    │  └─ vocabulary/          # items/, sets/, review/, FSRS scheduler
-   ├─ lib/                    # prisma, logger, errors and onError, validation, enum sync check
-   └─ db/generated/           # generated Prisma client — do not edit
+   ├─ lib/                    # db pool and transactions, logger, errors and onError, validation
+   └─ test/                   # Vitest setup and test-user helpers
 
-prisma/schema.prisma          # database schema
-prisma/migrations/            # SQL migrations; apply with `pnpm exec prisma migrate deploy`
+db/migrations/                # Flyway migrations (V<n>__<name>.sql), the whole schema
+compose.yaml                  # local Postgres and Flyway
 ```
 
 Client and server code only meet in `src/shared/`. ESLint (`no-restricted-imports`
@@ -84,9 +85,12 @@ imported only through their `index.ts`.
 
 Inside a server module, `*-routes.ts` handles HTTP only (validate, call a service,
 shape the response), `*-service.ts` holds the use cases, and `*-repository.ts`,
-where present, is the only file that queries the module's tables. Client code gets Prisma enums from
-`@/shared/enums`; `src/server/lib/enum-sync.ts` fails typecheck if they drift
-from the schema.
+where present, is the only file that holds SQL for the module's tables. Repositories
+return rows, `null` or a boolean; services decide what a missing row means and
+throw the `AppError`. All database access goes through the one pool in
+`src/server/lib/db.ts`, whose header lists the rules for writing queries. Client
+code gets the database enums from `@/shared/enums`;
+`src/server/lib/enum-sync.test.ts` fails if they drift from the Postgres enums.
 
 API errors use one envelope, `{ error: { code, reason, message, details? } }`
 (`src/shared/api-error.ts`). Server code throws `new AppError(reason, message)`;
@@ -100,8 +104,56 @@ the single catalog of error strings, so adding a language means translating that
 pnpm dev        # dev:api + dev:web together
 pnpm dev:web    # Vite on :3000 only (proxies /api to :3001)
 pnpm dev:api    # Nitro API on :3001 only
-pnpm build      # prisma generate, build:web, then build:api
+pnpm build      # build:web, then build:api
 pnpm build:web  # react-router build → build/client
 pnpm build:api  # nitro build → .output (bundles build/client, so run build:web first)
 pnpm start      # serve .output with .env loaded
+pnpm typecheck  # route types, then tsc
+pnpm lint       # eslint
+pnpm test       # Vitest integration tests against the local database
 ```
+
+## Database
+
+Flyway owns the whole schema, including the Better Auth tables (`"User"`,
+`account`, `session`, `verification`). The app talks to Postgres with raw SQL;
+Better Auth uses its built-in Kysely adapter on the same pool.
+
+```
+pnpm db:up       # start Postgres in Docker on 127.0.0.1:54329 (POSTGRES_PORT to change)
+pnpm db:migrate  # apply db/migrations with Flyway
+pnpm db:info     # list the applied migrations
+pnpm db:down     # stop the container; `pnpm db:down -v` also deletes the data
+```
+
+Set `DATABASE_URL` in `.env` to the value in `.env.example` to use the local
+database. The Flyway scripts always target the compose database, whatever
+`.env` says. On a Docker host where your user is not in the `docker` group, run
+the `db:*` scripts with a Docker-enabled account.
+
+**Adding a migration:** create `db/migrations/V<n>__<snake_case>.sql` with the
+next version number. Never edit a version that has been applied anywhere; fix
+it with a new version. Use `timestamptz` for timestamps.
+
+**Better Auth plugin columns:** after adding a plugin, run the Better Auth CLI
+pinned to the installed version (`pnpm list better-auth`), for example
+`pnpm dlx auth@1.7.6 generate --config src/server/modules/auth/auth.ts`, with
+`DATABASE_URL` pointing at the migrated local database. Copy what it proposes
+into a new Flyway version. Never run Better Auth's own `migrate` command.
+
+**Tests:** `pnpm test` runs on the local dev database. It refuses any
+`DATABASE_URL` whose host is not `localhost` or `127.0.0.1`, and fails fast
+when Flyway has not applied V1. Each test creates its own `@test.invalid` users
+and deletes them afterwards; the cascades remove their data, and nothing else
+is touched.
+
+**Production:** take a `pg_dump` backup first, then run Flyway against the
+production database:
+
+```
+docker run --rm -v "$PWD/db/migrations:/flyway/sql:ro,z" flyway/flyway:11.20.3-alpine \
+  -url="jdbc:postgresql://<host>:5432/<db>?sslmode=require" -user=<user> -password=<password> migrate
+```
+
+V1 creates every table, so the first run needs an empty database. Then update
+`DATABASE_URL` in Vercel if the database changed.
