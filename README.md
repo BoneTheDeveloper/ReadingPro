@@ -28,7 +28,7 @@ owned workspace.
 - **Web:** React Router (SPA) · Vite · React · TypeScript · Tailwind CSS · shadcn/ui · TanStack Query
 - **API:** Hono on Nitro · Workflow SDK for background jobs · Vercel AI SDK
 - **Data:** PostgreSQL with raw SQL (`pg`) · Flyway migrations · Docker for local development
-- **Auth:** Better Auth (Google sign-in)
+- **Auth:** Better Auth (Google sign-in, or username/email + password with an emailed OTP)
 - **Deploy:** Vercel · pnpm
 
 ## How the code is organized
@@ -77,6 +77,18 @@ Open [**http://localhost:3000**](http://localhost:3000). Always use port 3000: i
 API, and sign-in only works on this address.
 
 After a reboot, run `pnpm db:up` again before starting the app. Your data is kept.
+
+**Email for sign-up codes.** Password sign-up needs a password of at least 8
+characters with a digit (rules in `src/shared/auth/credential-rules.ts`, used by
+both the form and the server). It emails a 6-digit code (valid 5 minutes) that
+the user must enter before the account can sign in. "Quên mật khẩu"
+(`/forgot-password`) emails a code the same way to set a new password; a
+Google-only user can use it to add a password. Set the
+`SMTP_*` and `MAIL_FROM` variables in `.env` to send real email (for Gmail, use
+`smtp.gmail.com`, port 587 and an
+[app password](https://support.google.com/accounts/answer/185833)). Without
+`SMTP_HOST`, local development prints the code in the `pnpm dev:api` log
+instead; production refuses to sign anyone up until SMTP is set.
 
 ## Database and migrations
 

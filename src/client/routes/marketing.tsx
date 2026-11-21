@@ -89,12 +89,18 @@ export default function MarketingRoute() {
                 </a>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3">
                 <Link
                   to="/login"
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-semibold py-2.5 px-6 rounded-full transition-colors shadow-md hover:shadow-lg"
+                  className="text-foreground hover:text-primary hover:bg-indigo-soft text-sm font-semibold py-2.5 px-4 sm:px-5 rounded-full transition-colors"
                 >
                   Đăng nhập
+                </Link>
+                <Link
+                  to="/register"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-semibold py-2.5 px-4 sm:px-6 rounded-full transition-colors shadow-md hover:shadow-lg"
+                >
+                  Đăng ký
                 </Link>
               </div>
             </div>

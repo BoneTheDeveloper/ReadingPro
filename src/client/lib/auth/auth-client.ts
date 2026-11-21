@@ -1,7 +1,15 @@
 import { createAuthClient } from "better-auth/react";
-import { inferAdditionalFields } from "better-auth/client/plugins";
+import {
+  emailOTPClient,
+  inferAdditionalFields,
+  usernameClient,
+} from "better-auth/client/plugins";
 
+// Plugins mirror the server's in src/server/modules/auth/auth.ts.
 export const authClient = createAuthClient({
-  // Mirrors `user.additionalFields` in src/server/modules/auth/auth.ts.
-  plugins: [inferAdditionalFields({ user: { tier: { type: "string", required: false } } })],
+  plugins: [
+    inferAdditionalFields({ user: { tier: { type: "string", required: false } } }),
+    usernameClient(),
+    emailOTPClient(),
+  ],
 });

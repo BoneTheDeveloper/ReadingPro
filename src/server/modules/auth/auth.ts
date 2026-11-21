@@ -1,6 +1,26 @@
 import { betterAuth } from "better-auth";
-import { oAuthProxy } from "better-auth/plugins";
+import { APIError, createAuthMiddleware } from "better-auth/api";
+import { emailOTP, oAuthProxy, username } from "better-auth/plugins";
 import { pool } from "@/server/lib/db";
+import {
+  OTP_LENGTH,
+  PASSWORD_MAX_LENGTH,
+  PASSWORD_MIN_LENGTH,
+  USERNAME_MAX_LENGTH,
+  USERNAME_MIN_LENGTH,
+  passwordError,
+} from "@/shared/auth/credential-rules";
+import { claimUnverifiedUserForOAuth, deletePendingPasswordSignUp } from "./auth-repository";
+import { sendOtpEmail } from "./otp-mailer";
+
+// Endpoints that set a password, and the body field that carries it. Better
+// Auth checks only the length; the shared rules also require a digit.
+const PASSWORD_FIELDS: Record<string, string> = {
+  "/sign-up/email": "password",
+  "/change-password": "newPassword",
+  "/reset-password": "newPassword",
+  "/email-otp/reset-password": "password",
+};
 
 const productionUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
   ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
@@ -19,6 +39,43 @@ export const auth = betterAuth({
     fallback: productionUrl,
   },
 
+  // Password sign-up stays signed out until the email is verified with the
+  // OTP that `emailOTP` sends; verifying it signs the user in.
+  emailAndPassword: {
+    enabled: true,
+    requireEmailVerification: true,
+    minPasswordLength: PASSWORD_MIN_LENGTH,
+    maxPasswordLength: PASSWORD_MAX_LENGTH,
+    // A reset (by the forget-password OTP) signs out every other device.
+    revokeSessionsOnPasswordReset: true,
+  },
+
+  emailVerification: {
+    sendOnSignUp: true,
+    autoSignInAfterVerification: true,
+  },
+
+  hooks: {
+    before: createAuthMiddleware(async (ctx) => {
+      const field = PASSWORD_FIELDS[ctx.path];
+      const password: unknown = field ? ctx.body?.[field] : undefined;
+      if (typeof password === "string" && passwordError(password) === "password.no_digit") {
+        throw new APIError("BAD_REQUEST", {
+          code: "PASSWORD_NO_DIGIT",
+          message: "Password must contain at least one digit",
+        });
+      }
+      if (
+        ctx.path === "/sign-up/email" &&
+        typeof ctx.body?.email === "string" &&
+        typeof password === "string" &&
+        !passwordError(password)
+      ) {
+        await deletePendingPasswordSignUp(ctx.body.email);
+      }
+    }),
+  },
+
   socialProviders: {
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID ?? "",
@@ -32,6 +89,16 @@ export const auth = betterAuth({
       productionURL: productionUrl,
       secret: process.env.OAUTH_PROXY_SECRET,
     }),
+    // Adds "User"."username" / "displayUsername" and /sign-in/username.
+    username({ minUsernameLength: USERNAME_MIN_LENGTH, maxUsernameLength: USERNAME_MAX_LENGTH }),
+    emailOTP({
+      // Email verification sends a 6-digit code instead of a link.
+      overrideDefaultEmailVerification: true,
+      otpLength: OTP_LENGTH,
+      expiresIn: 5 * 60,
+      allowedAttempts: 5,
+      sendVerificationOTP: ({ email, otp, type }) => sendOtpEmail(email, otp, type),
+    }),
   ],
 
   trustedOrigins: [
@@ -41,6 +108,19 @@ export const auth = betterAuth({
 
   account: {
     accountLinking: { enabled: true, trustedProviders: ["google"] },
+  },
+
+  databaseHooks: {
+    account: {
+      create: {
+        // Linking never changes emailVerified, so a same-email Google sign-in
+        // would otherwise land in an unverified account whose password someone
+        // else may know. See claimUnverifiedUserForOAuth.
+        after: async (account) => {
+          if (account.providerId === "google") await claimUnverifiedUserForOAuth(account.userId);
+        },
+      },
+    },
   },
 
   user: {

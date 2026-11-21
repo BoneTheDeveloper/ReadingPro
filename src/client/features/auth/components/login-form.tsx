@@ -1,69 +1,116 @@
-"use client";
-
 import * as React from "react";
+import { Link, useNavigate } from "react-router";
 import { PillButton } from "@/client/components/ui/pill-button";
 import { authClient } from "@/client/lib/auth/auth-client";
+import {
+  AUTH_FORM_MESSAGES,
+  credentialErrorText,
+  getAuthErrorMessage,
+} from "@/client/lib/api/error-message";
+import { AuthField, AuthHeader, FormError, OrDivider } from "./auth-form-parts";
+import { GoogleSignInButton } from "./google-sign-in-button";
+import { OtpVerificationForm } from "./otp-verification-form";
 
-const GoogleIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-  </svg>
-);
-
-const BookIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
-  </svg>
-);
-
-interface LoginFormProps {
-  signInLabel?: string;
-}
-
-export function LoginForm({ signInLabel = "Đăng nhập" }: LoginFormProps) {
-  const [loading, setLoading] = React.useState(false);
+/** Signs in with a username or an email plus password, or with Google. */
+export function LoginForm() {
+  const navigate = useNavigate();
+  const [identifier, setIdentifier] = React.useState("");
+  const [password, setPassword] = React.useState("");
   const [error, setError] = React.useState("");
+  const [submitting, setSubmitting] = React.useState(false);
+  // Empty-field errors appear after the first submit, then follow the input.
+  const [submitted, setSubmitted] = React.useState(false);
+  const identifierError = submitted && !identifier.trim() ? credentialErrorText("identifier.required") : undefined;
+  const passwordError = submitted && !password ? credentialErrorText("password.required") : undefined;
+  // Set when a password sign-in hits an unverified email: finish the OTP step first.
+  const [verifyEmail, setVerifyEmail] = React.useState<string | null>(null);
 
-  const handleGoogle = async () => {
-    setLoading(true);
+  const goToApp = () => navigate("/study", { replace: true });
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setSubmitted(true);
     setError("");
-    try {
-      await authClient.signIn.social({
-        provider: "google",
-        callbackURL: "/study",
-      });
-    } catch {
-      setError("Đăng nhập Google thất bại");
-      setLoading(false);
+    const id = identifier.trim();
+    if (!id || !password) return;
+    setSubmitting(true);
+    const isEmail = id.includes("@");
+    const { error: signInError } = isEmail
+      ? await authClient.signIn.email({ email: id, password })
+      : await authClient.signIn.username({ username: id, password });
+
+    if (!signInError) {
+      goToApp();
+      return;
     }
+    setSubmitting(false);
+
+    if (signInError.code !== "EMAIL_NOT_VERIFIED") {
+      setError(getAuthErrorMessage(signInError));
+      return;
+    }
+    // A username sign-in does not tell us the address to send the code to.
+    if (!isEmail) {
+      setError(AUTH_FORM_MESSAGES.usernameUnverified);
+      return;
+    }
+    const { error: sendError } = await authClient.emailOtp.sendVerificationOtp({
+      email: id,
+      type: "email-verification",
+    });
+    if (sendError) {
+      setError(AUTH_FORM_MESSAGES.otpSendFailed);
+      return;
+    }
+    setVerifyEmail(id);
   };
 
+  if (verifyEmail) {
+    return <OtpVerificationForm email={verifyEmail} onVerified={goToApp} onBack={() => setVerifyEmail(null)} />;
+  }
+
   return (
-    <div className="w-full max-w-[320px] flex flex-col items-center">
-      <div className="w-11 h-11 rounded-full bg-gradient-to-br from-[#5A4FE0] to-[#4A3FD0] flex items-center justify-center text-white mb-6 shadow-md">
-        <BookIcon />
-      </div>
+    <div className="w-full">
+      <AuthHeader title="Đăng nhập" />
+      <FormError message={error} />
 
-      <h1 className="text-[17px] font-semibold mb-6 text-center text-foreground tracking-tight">
-        {signInLabel}
-      </h1>
-
-      {error && (
-        <div className="text-sm text-coral text-center mb-4 bg-coral/10 py-2 rounded-full">
-          {error}
+      <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+        <AuthField
+          id="identifier"
+          label="Tên đăng nhập hoặc email"
+          value={identifier}
+          onChange={(e) => setIdentifier(e.target.value)}
+          error={identifierError}
+          autoComplete="username"
+        />
+        <AuthField
+          id="password"
+          label="Mật khẩu"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          error={passwordError}
+          autoComplete="current-password"
+        />
+        <div className="-mt-2 text-right text-sm">
+          <Link to="/forgot-password" className="font-medium text-primary hover:underline">
+            Quên mật khẩu?
+          </Link>
         </div>
-      )}
-
-      <div className="space-y-3 w-full">
-        <PillButton onClick={handleGoogle} className="w-full" disabled={loading}>
-          <GoogleIcon />
-          Đăng nhập với Google
+        <PillButton type="submit" className="w-full" disabled={submitting}>
+          {submitting ? "Đang đăng nhập..." : "Đăng nhập"}
         </PillButton>
-      </div>
+      </form>
+
+      <OrDivider />
+      <GoogleSignInButton label="Đăng nhập với Google" disabled={submitting} onError={setError} />
+
+      <p className="mt-6 text-center text-sm text-muted-foreground">
+        Chưa có tài khoản?{" "}
+        <Link to="/register" className="font-medium text-primary hover:underline">
+          Đăng ký
+        </Link>
+      </p>
     </div>
   );
 }

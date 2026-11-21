@@ -1,5 +1,12 @@
 import type { ErrorCode, ErrorReason } from "@/shared/api-error";
 import { isApiError } from "@/client/lib/api/fetch-json";
+import {
+  PASSWORD_MAX_LENGTH,
+  PASSWORD_MIN_LENGTH,
+  USERNAME_MAX_LENGTH,
+  USERNAME_MIN_LENGTH,
+  type CredentialErrorKey,
+} from "@/shared/auth/credential-rules";
 
 /** Failures the browser catches before sending a request. */
 type ClientErrorReason =
@@ -63,6 +70,65 @@ const MESSAGES: Record<ErrorMessageKey, string> = {
   "file.invalid": "File không hợp lệ, vui lòng thử lại.",
   "upload.failed": "Tải lên thất bại",
 };
+
+/** Better Auth error codes the sign-in, sign-up and OTP screens can receive. */
+const AUTH_MESSAGES: Record<string, string> = {
+  INVALID_EMAIL_OR_PASSWORD: "Email hoặc mật khẩu không đúng.",
+  INVALID_USERNAME_OR_PASSWORD: "Tên đăng nhập hoặc mật khẩu không đúng.",
+  EMAIL_NOT_VERIFIED: "Email chưa được xác thực.",
+  USER_ALREADY_EXISTS: "Email này đã được đăng ký.",
+  USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL: "Email này đã được đăng ký.",
+  USERNAME_IS_ALREADY_TAKEN: "Tên đăng nhập đã có người dùng.",
+  USERNAME_TOO_SHORT: `Tên đăng nhập phải có ít nhất ${USERNAME_MIN_LENGTH} ký tự.`,
+  USERNAME_TOO_LONG: `Tên đăng nhập tối đa ${USERNAME_MAX_LENGTH} ký tự.`,
+  INVALID_USERNAME: "Tên đăng nhập chỉ gồm chữ, số, dấu gạch dưới và dấu chấm.",
+  INVALID_EMAIL: "Email không hợp lệ.",
+  PASSWORD_TOO_SHORT: `Mật khẩu phải có ít nhất ${PASSWORD_MIN_LENGTH} ký tự.`,
+  PASSWORD_TOO_LONG: `Mật khẩu tối đa ${PASSWORD_MAX_LENGTH} ký tự.`,
+  PASSWORD_NO_DIGIT: "Mật khẩu phải có ít nhất 1 chữ số.",
+  INVALID_OTP: "Mã OTP không đúng.",
+  OTP_EXPIRED: "Mã OTP đã hết hạn. Hãy gửi lại mã mới.",
+  TOO_MANY_ATTEMPTS: "Nhập sai quá nhiều lần. Hãy gửi lại mã mới.",
+};
+
+/** Per-field checks on the auth forms (src/shared/auth/credential-rules.ts). */
+const CREDENTIAL_MESSAGES: Record<CredentialErrorKey, string> = {
+  "username.required": "Vui lòng nhập tên đăng nhập.",
+  "username.too_short": AUTH_MESSAGES.USERNAME_TOO_SHORT,
+  "username.too_long": AUTH_MESSAGES.USERNAME_TOO_LONG,
+  "username.invalid": AUTH_MESSAGES.INVALID_USERNAME,
+  "email.required": "Vui lòng nhập email.",
+  "email.invalid": AUTH_MESSAGES.INVALID_EMAIL,
+  "password.required": "Vui lòng nhập mật khẩu.",
+  "password.too_short": AUTH_MESSAGES.PASSWORD_TOO_SHORT,
+  "password.too_long": AUTH_MESSAGES.PASSWORD_TOO_LONG,
+  "password.no_digit": AUTH_MESSAGES.PASSWORD_NO_DIGIT,
+  "confirmPassword.required": "Vui lòng nhập lại mật khẩu.",
+  "confirmPassword.mismatch": "Hai mật khẩu không khớp.",
+  "identifier.required": "Vui lòng nhập tên đăng nhập hoặc email.",
+};
+
+export function credentialErrorText(key: CredentialErrorKey | undefined): string | undefined {
+  return key && CREDENTIAL_MESSAGES[key];
+}
+
+/** Shown under the password field on sign-up, so the rule is visible before any error. */
+export const PASSWORD_HINT = `Ít nhất ${PASSWORD_MIN_LENGTH} ký tự và có 1 chữ số.`;
+
+/** Client-side checks on the auth forms, before any request is sent. */
+export const AUTH_FORM_MESSAGES = {
+  otpIncomplete: "Hãy nhập đủ 6 chữ số.",
+  usernameUnverified: "Email của tài khoản chưa được xác thực. Hãy đăng nhập bằng email để nhận mã OTP.",
+  otpSendFailed: "Không gửi được mã OTP. Vui lòng thử lại.",
+  googleFailed: "Đăng nhập Google thất bại.",
+} as const;
+
+/** User-facing text for a Better Auth client error: by code, then rate limit, then generic. */
+export function getAuthErrorMessage(error: { code?: string; status?: number } | null | undefined): string {
+  if (error?.code && error.code in AUTH_MESSAGES) return AUTH_MESSAGES[error.code];
+  if (error?.status === 429) return CODE_MESSAGES.RATE_LIMITED;
+  return CODE_MESSAGES.INTERNAL;
+}
 
 export function errorText(key: ErrorMessageKey): string {
   return MESSAGES[key];
