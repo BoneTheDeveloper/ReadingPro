@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "Phase 3: Better Auth on the pg pool and the profile module"
-status: todo
+status: done
 priority: P1
 effort: "3h"
 dependencies: [2]
@@ -25,17 +25,17 @@ confirm that nothing is missing.
 
 ## Requirements
 
-- [ ] `auth.ts` sets `database: pool` and `user.modelName: "User"`, and no longer imports Prisma.
-- [ ] Every other Better Auth option stays the same: `baseURL`, Google provider, `oAuthProxy`, `trustedOrigins`, account linking, the `tier` field, and the session and cookie cache settings.
-- [ ] The user-create hook calls the profile module. It does not contain SQL itself.
-- [ ] `src/server/modules/profile/` provides:
+- [x] `auth.ts` sets `database: pool` and `user.modelName: "User"`, and no longer imports Prisma.
+- [x] Every other Better Auth option stays the same: `baseURL`, Google provider, `oAuthProxy`, `trustedOrigins`, account linking, the `tier` field, and the session and cookie cache settings.
+- [x] The user-create hook calls the profile module. It does not contain SQL itself.
+- [x] `src/server/modules/profile/` provides:
   - `profile-repository.ts`, the only file that queries `"UserProfile"`
   - `index.ts`, the public API
-- [ ] The profile repository provides:
+- [x] The profile repository provides:
   - `insertProfileIfMissing(userId, db?)`: `INSERT ... ON CONFLICT ("id") DO NOTHING`
   - `findProfileSettings(userId, db?)`: `timezone`, `desiredRetention`, `fsrsParams`
   - `lockProfile(userId, tx)`: `SELECT "id" ... FOR UPDATE`
-- [ ] Better Auth's CLI reports that the schema is up to date against the migrated DB.
+- [x] Better Auth's CLI reports that the schema is up to date against the migrated DB.
 
 ## Files
 
@@ -69,11 +69,17 @@ confirm that nothing is missing.
 
 ## Todo
 
-- [ ] Profile module
-- [ ] `auth.ts` on the pg pool
-- [ ] CLI schema check
-- [ ] `auth.test.ts`
-- [ ] Manual Google sign-in
+- [x] Profile module
+- [x] `auth.ts` on the pg pool
+- [x] CLI schema check
+- [x] `auth.test.ts`
+- [ ] Manual Google sign-in (left to the user: needs a browser and the user's Google account)
+
+## Implementation Notes
+
+- `pnpm dlx auth@1.7.6 generate --config src/server/modules/auth/auth.ts` against the migrated DB printed "Your schema is already up to date." Against an empty database the same command proposed `"User"` (with `tier`), `session`, `account` and `verification` with `timestamptz` columns, which shows it loaded this config and read the DB.
+- better-auth 1.7.6 `internalAdapter.createUser(user, source)` needs a provisioning source; the test passes `{ method: "oauth", oauth: { providerId: "google" } }` like the Google flow.
+- The session test also checks `"expiresAt" - now()` in SQL. The DB runs in UTC and the suite in Asia/Bangkok, so a column without a time zone would be 7 hours off there; a JS-only round trip would not catch it.
 
 ## Success Criteria
 
