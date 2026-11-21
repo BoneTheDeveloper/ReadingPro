@@ -22,11 +22,15 @@ import { useAppSelector } from "@/client/lib/store/hooks";
 import { selectSessionUser } from "@/client/lib/store/session-slice";
 
 interface AuthControlsProps {
-  variant?: "default" | "rail";
+  /** `rail` sits on the dark nav rail; `tab` is the account cell of the mobile bottom tab bar. */
+  variant?: "default" | "rail" | "tab";
+  /** Highlights the `tab` trigger while an account route is open. */
+  active?: boolean;
 }
 
-export function AuthControls({ variant = "default" }: AuthControlsProps) {
-  const isRail = variant === "rail";
+export function AuthControls({ variant = "default", active = false }: AuthControlsProps) {
+  const isTab = variant === "tab";
+  const isRail = variant === "rail" || isTab;
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const user = useAppSelector(selectSessionUser);
@@ -48,36 +52,58 @@ export function AuthControls({ variant = "default" }: AuthControlsProps) {
 
   if (!user) return null;
 
+  const avatar = (
+    <Avatar
+      className={cn(
+        "rounded-full cursor-pointer select-none transition-colors",
+        isTab ? "w-6 h-6" : "w-9 h-9",
+        isRail
+          ? "hover:bg-white/[0.08] data-[state=open]:bg-white/[0.14] after:border-transparent"
+          : "hover:bg-accent",
+      )}
+    >
+      {user.image ? (
+        <AvatarImage
+          src={user.image}
+          alt={user.name || "User avatar"}
+        />
+      ) : null}
+      <AvatarFallback
+        className={cn(
+          "uppercase",
+          isRail && "bg-white/10 text-white",
+          isTab && "text-[11px]",
+        )}
+      >
+        {user.name ? (
+          user.name[0]
+        ) : (
+          <User className="w-4 h-4" />
+        )}
+      </AvatarFallback>
+    </Avatar>
+  );
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Avatar
-          className={cn(
-            "rounded-full cursor-pointer select-none transition-colors w-9 h-9",
-            isRail
-              ? "hover:bg-white/[0.08] data-[state=open]:bg-white/[0.14] after:border-transparent"
-              : "hover:bg-accent",
-          )}
-        >
-          {user.image ? (
-            <AvatarImage
-              src={user.image}
-              alt={user.name || "User avatar"}
-            />
-          ) : null}
-          <AvatarFallback
+        {isTab ? (
+          <button
+            type="button"
             className={cn(
-              "uppercase",
-              isRail && "bg-white/10 text-white",
+              "relative flex flex-1 flex-col items-center justify-center gap-1 py-2 text-[11px] font-medium transition-colors outline-none focus-visible:bg-white/[0.08]",
+              active ? "text-white" : "text-sidebar-foreground hover:text-white",
             )}
           >
-            {user.name ? (
-              user.name[0]
-            ) : (
-              <User className="w-4 h-4" />
+            {active && (
+              <span className="absolute top-0 h-0.5 w-8 rounded-full bg-sidebar-ring" />
             )}
-          </AvatarFallback>
-        </Avatar>
+            {avatar}
+            Tài khoản
+          </button>
+        ) : (
+          avatar
+        )}
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end" className="w-48">

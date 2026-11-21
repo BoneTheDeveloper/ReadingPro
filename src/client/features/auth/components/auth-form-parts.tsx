@@ -12,7 +12,7 @@ const BookIcon = () => (
 export function AuthHeader({ title, subtitle }: { title: string; subtitle?: React.ReactNode }) {
   return (
     <div className="flex flex-col items-center mb-6">
-      <div className="w-11 h-11 rounded-full bg-gradient-to-br from-[#5A4FE0] to-[#4A3FD0] flex items-center justify-center text-white mb-6 shadow-md">
+      <div className="w-11 h-11 rounded-full bg-gradient-to-br from-primary to-indigo-hover flex items-center justify-center text-white mb-6 shadow-md">
         <BookIcon />
       </div>
       <h1 className="text-[17px] font-semibold text-center text-foreground tracking-tight">{title}</h1>

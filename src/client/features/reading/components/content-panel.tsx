@@ -154,7 +154,7 @@ export function ContentPanel({
         />
       </div>
 
-      <div className="h-[53px] shrink-0 flex items-center gap-3 px-6 border-b border-border/20">
+      <div className="h-[53px] shrink-0 flex items-center gap-3 px-6 border-b border-border">
         <div className="flex items-center gap-3">
           <CefrBadge level={passage.cefrLevel} />
           <span className="w-px h-3.5 bg-border" />
@@ -268,7 +268,7 @@ function SegmentedToggle<T extends string>({
   options: { value: T; label: string; disabled?: boolean }[];
 }) {
   return (
-    <div className="inline-flex bg-paper border border-border rounded-[11px] p-[3px]">
+    <div className="inline-flex bg-muted rounded-[11px] p-[3px]">
       {options.map((opt) => {
         const active = opt.value === value;
         return (
@@ -280,10 +280,10 @@ function SegmentedToggle<T extends string>({
             className={cn(
               "px-3.5 py-1.5 rounded-lg text-xs transition-all duration-140",
               active
-                ? "bg-surface text-primary font-semibold shadow-sm"
+                ? "bg-primary text-primary-foreground font-semibold shadow-sm"
                 : opt.disabled
                   ? "text-muted-foreground/40 font-medium cursor-not-allowed"
-                  : "text-ink-3 font-medium hover:text-foreground cursor-pointer",
+                  : "text-muted-foreground font-medium hover:text-foreground cursor-pointer",
             )}
           >
             {opt.label}

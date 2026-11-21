@@ -21,11 +21,11 @@ interface VocabularySetListProps {
 }
 
 const SET_COLORS = [
-  { bg: "#ECEAFB", color: "#5A4FE0" },
-  { bg: "#FCE7E1", color: "#C8442B" },
-  { bg: "#DDF3E7", color: "#1E7A4B" },
-  { bg: "#FBEFD8", color: "#A66A12" },
-  { bg: "#E8F4FF", color: "#2A6FDB" },
+  { bg: "var(--indigo-soft)", color: "var(--primary)" },
+  { bg: "var(--coral-soft)", color: "var(--coral-text)" },
+  { bg: "var(--success-soft)", color: "var(--status-known-text)" },
+  { bg: "var(--amber-soft)", color: "var(--amber-text)" },
+  { bg: "var(--muted)", color: "var(--muted-foreground)" },
 ];
 
 const DEFAULT_GENERATED_SIZE = 20;
@@ -70,7 +70,7 @@ export function VocabularySetList({
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-center justify-between gap-2 flex-wrap">
-        <span className="text-xs text-[#565160]">
+        <span className="text-xs text-muted-foreground">
           {sets.length} bộ từ trong thư viện
         </span>
         <div className="flex items-center gap-2 flex-wrap">
@@ -81,7 +81,7 @@ export function VocabularySetList({
             maxLength={60}
             onChange={(e) => setNewSetName(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="h-9 w-44 text-xs border-[#EAE5DB] rounded-xl focus:border-[#5A4FE0] focus:ring-2 focus:ring-[#5A4FE0]/10"
+            className="h-9 w-44 text-xs border-border rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/10"
           />
           <Button
             size="sm"
@@ -109,14 +109,14 @@ export function VocabularySetList({
                     Math.min(GENERATED_SET_MAX_SIZE, Math.max(1, Number(e.target.value) || 1)),
                   )
                 }
-                className="h-9 w-16 text-xs border-[#EAE5DB] rounded-xl focus:border-[#5A4FE0] focus:ring-2 focus:ring-[#5A4FE0]/10"
+                className="h-9 w-16 text-xs border-border rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/10"
               />
               <Button
                 size="sm"
                 variant="outline"
                 disabled={!newSetName.trim() || generating}
                 onClick={handleGenerate}
-                className="h-9 rounded-xl gap-1.5 border-[#EAE5DB] hover:border-[#5A4FE0] hover:text-[#4A3FD0]"
+                className="h-9 rounded-xl gap-1.5 border-border hover:border-primary hover:text-indigo-hover"
               >
                 {generating ? (
                   <Loader2 className="size-3 animate-spin" />
@@ -137,7 +137,7 @@ export function VocabularySetList({
 
         <button
           type="button"
-          className="group flex flex-col items-center justify-center gap-3 min-h-[168px] rounded-2xl border-2 border-dashed border-[#DAD4C8] cursor-pointer text-[#908B98] font-semibold text-sm transition-all hover:border-[#5A4FE0] hover:text-[#5A4FE0] hover:bg-[#5A4FE0]/3"
+          className="group flex flex-col items-center justify-center gap-3 min-h-[168px] rounded-2xl border-2 border-dashed border-border-strong cursor-pointer text-ink-3 font-semibold text-sm transition-all hover:border-primary hover:text-primary hover:bg-primary/3"
           onClick={() => nameRef.current?.focus()}
         >
           <div className="w-9 h-9 rounded-xl border-2 border-dashed border-current flex items-center justify-center">
@@ -166,17 +166,17 @@ function SetCard({
 
   return (
     <div
-      className="group flex flex-col min-h-[168px] bg-white border border-[#EAE5DB] rounded-2xl p-5 transition-all hover:border-[#5A4FE0] hover:shadow-md hover:-translate-y-0.5"
+      className="group flex flex-col min-h-[168px] bg-white border border-border rounded-2xl p-5 transition-all hover:border-primary hover:shadow-md hover:-translate-y-0.5"
       style={{
-        boxShadow: "0 1px 2px rgba(0,0,0,.04), 0 4px 12px rgba(0,0,0,.04)",
+        boxShadow: "var(--shadow-card)",
       }}
     >
       <div className="flex items-start justify-between gap-2 mb-3">
         <div
           className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-          style={{ background: col.bg }}
+          style={{ background: col.bg, color: col.color }}
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={col.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="m16 6 4 14" />
             <path d="M12 6v14" />
             <path d="M8 8v12" />
@@ -187,8 +187,8 @@ function SetCard({
           className="rounded-full px-2 py-0.5 text-[10px] font-semibold"
           style={
             set.studiedToday
-              ? { background: "#DDF3E7", color: "#1E7A4B" }
-              : { background: "#F0EDE8", color: "#908B98" }
+              ? { background: "var(--success-soft)", color: "var(--status-known-text)" }
+              : { background: "var(--muted)", color: "var(--ink-3)" }
           }
         >
           {set.studiedToday ? "Hôm nay đã học" : "Hôm nay chưa học"}
@@ -198,26 +198,26 @@ function SetCard({
       <button
         type="button"
         onClick={() => onOpen(set.id)}
-        className="block w-full text-left text-sm font-bold text-[#221F2B] mb-0.5 leading-snug line-clamp-2 cursor-pointer hover:text-[#4A3FD0]"
+        className="block w-full text-left text-sm font-bold text-foreground mb-0.5 leading-snug line-clamp-2 cursor-pointer hover:text-indigo-hover"
       >
         {set.name}
       </button>
-      <div className="text-[10px] text-[#908B98] mb-2">
+      <div className="text-[10px] text-ink-3 mb-2">
         {itemCount} từ · Học gần nhất:{" "}
         {set.lastStudiedAt ? formatDate(set.lastStudiedAt) : "chưa học"}
       </div>
 
-      <div className="h-1 bg-[#F5F2EC] rounded-full overflow-hidden mb-2">
+      <div className="h-1 bg-background rounded-full overflow-hidden mb-2">
         <div
           className="h-full rounded-full transition-all"
           style={{
             width: `${reviewShare}%`,
-            background: "linear-gradient(90deg, #5A4FE0, #F2664A)",
+            background: "linear-gradient(90deg, var(--primary), var(--coral))",
           }}
         />
       </div>
 
-      <div className="text-[10px] font-medium text-[#908B98] mb-2">
+      <div className="text-[10px] font-medium text-ink-3 mb-2">
         Mới {progress.new} · Đang học {progress.learning} · Đang ôn {progress.review} · Học lại{" "}
         {progress.relearning}
       </div>
@@ -226,13 +226,13 @@ function SetCard({
         <button
           type="button"
           onClick={() => onOpen(set.id)}
-          className="text-[10px] font-semibold text-[#565160] cursor-pointer hover:text-[#4A3FD0]"
+          className="text-[10px] font-semibold text-muted-foreground cursor-pointer hover:text-indigo-hover"
         >
           Xem từ
         </button>
         <Link
           to={`/review?setId=${set.id}`}
-          className="text-[10px] font-semibold text-[#5A4FE0] hover:underline"
+          className="text-[10px] font-semibold text-primary hover:underline"
         >
           Ôn tập →
         </Link>
@@ -247,15 +247,15 @@ function SetCardGridSkeleton() {
       {Array.from({ length: 4 }).map((_, i) => (
         <div
           key={i}
-          className="bg-white border border-[#EAE5DB] rounded-2xl p-5 animate-pulse"
+          className="bg-white border border-border rounded-2xl p-5 animate-pulse"
         >
           <div className="flex items-start justify-between mb-3">
-            <div className="w-9 h-9 rounded-xl bg-[#F0EDE8]" />
-            <div className="w-14 h-3 rounded bg-[#F0EDE8]" />
+            <div className="w-9 h-9 rounded-xl bg-muted" />
+            <div className="w-14 h-3 rounded bg-muted" />
           </div>
-          <div className="w-3/4 h-4 rounded bg-[#F0EDE8] mb-3" />
-          <div className="h-1 bg-[#F0EDE8] rounded-full mb-2" />
-          <div className="h-2.5 w-1/3 rounded bg-[#F0EDE8]" />
+          <div className="w-3/4 h-4 rounded bg-muted mb-3" />
+          <div className="h-1 bg-muted rounded-full mb-2" />
+          <div className="h-2.5 w-1/3 rounded bg-muted" />
         </div>
       ))}
     </div>

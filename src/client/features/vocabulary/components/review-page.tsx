@@ -96,27 +96,27 @@ export function ReviewPageClient({ setId }: { setId?: string }) {
   const current = queue[0];
 
   return (
-    <div className="flex-1 overflow-y-auto bg-[#F5F2EC]">
+    <div className="flex-1 overflow-y-auto bg-background">
       <div className="mx-auto max-w-[640px] px-6 py-10 pb-16">
         <div className="mb-7 flex items-center justify-between gap-4">
-          <h1 className="text-[26px] font-extrabold tracking-tight text-[#221F2B]">Ôn tập</h1>
-          <Link to="/vocabulary" className="text-xs font-semibold text-[#5A4FE0] hover:underline">
+          <h1 className="text-[26px] font-extrabold tracking-tight text-foreground">Ôn tập</h1>
+          <Link to="/vocabulary" className="text-xs font-semibold text-primary hover:underline">
             ← Từ vựng
           </Link>
         </div>
 
         {summary ? (
           <Panel>
-            <CheckCircle2 className="size-10 text-[#2FA66A]" />
-            <div className="text-lg font-bold text-[#221F2B]">Hoàn thành phiên ôn tập</div>
-            <p className="text-sm text-[#565160]">Bạn đã chấm {summary.cardsReviewed} lượt thẻ.</p>
+            <CheckCircle2 className="size-10 text-success" />
+            <div className="text-lg font-bold text-foreground">Hoàn thành phiên ôn tập</div>
+            <p className="text-sm text-muted-foreground">Bạn đã chấm {summary.cardsReviewed} lượt thẻ.</p>
             <Button asChild className="h-10 rounded-xl">
               <Link to="/vocabulary">Về trang từ vựng</Link>
             </Button>
           </Panel>
         ) : session && current ? (
           <>
-            <div className="mb-3 text-xs text-[#908B98]">Còn {queue.length} thẻ</div>
+            <div className="mb-3 text-xs text-ink-3">Còn {queue.length} thẻ</div>
             <ReviewCard
               key={`${current.id}-${shownAt}`}
               card={current}
@@ -129,11 +129,11 @@ export function ReviewPageClient({ setId }: { setId?: string }) {
           </>
         ) : session ? (
           <Panel>
-            <Loader2 className="size-5 animate-spin text-[#908B98]" />
+            <Loader2 className="size-5 animate-spin text-ink-3" />
           </Panel>
         ) : dueQuery.isPending ? (
           <Panel>
-            <Loader2 className="size-5 animate-spin text-[#908B98]" />
+            <Loader2 className="size-5 animate-spin text-ink-3" />
           </Panel>
         ) : (
           <StartPanel
@@ -164,14 +164,14 @@ function StartPanel({
     <Panel>
       {nothingDue ? (
         <>
-          <CheckCircle2 className="size-10 text-[#2FA66A]" />
-          <div className="text-lg font-bold text-[#221F2B]">Bạn đã ôn xong</div>
-          <p className="text-sm text-[#565160]">Hiện không có thẻ nào đến hạn.</p>
+          <CheckCircle2 className="size-10 text-success" />
+          <div className="text-lg font-bold text-foreground">Bạn đã ôn xong</div>
+          <p className="text-sm text-muted-foreground">Hiện không có thẻ nào đến hạn.</p>
         </>
       ) : (
         <>
-          <div className="text-lg font-bold text-[#221F2B]">Sẵn sàng ôn tập</div>
-          <p className="text-sm text-[#565160]">
+          <div className="text-lg font-bold text-foreground">Sẵn sàng ôn tập</div>
+          <p className="text-sm text-muted-foreground">
             {dueCount} thẻ đến hạn · {newCount} thẻ mới
           </p>
         </>
@@ -191,8 +191,8 @@ function StartPanel({
 function Panel({ children }: { children: React.ReactNode }) {
   return (
     <div
-      className="bg-white border border-[#EAE5DB] rounded-2xl px-8 py-12 flex flex-col items-center text-center gap-3"
-      style={{ boxShadow: "0 1px 2px rgba(0,0,0,.04), 0 4px 12px rgba(0,0,0,.04)" }}
+      className="bg-white border border-border rounded-2xl px-8 py-12 flex flex-col items-center text-center gap-3"
+      style={{ boxShadow: "var(--shadow-card)" }}
     >
       {children}
     </div>

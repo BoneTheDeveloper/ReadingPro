@@ -65,7 +65,7 @@ export function DefaultStudioView({
   };
 
   return (
-    <Card className="h-full flex flex-col overflow-hidden bg-panel rounded-none">
+    <Card className="h-full flex flex-col overflow-hidden bg-background rounded-none">
       <CardContent className="p-0 flex flex-col h-full">
         <div className="h-[54px] px-4 flex items-center justify-between border-b border-border">
           <h2 className="text-[11px] font-bold text-ink-3 uppercase tracking-[0.13em]">Studio</h2>
@@ -91,7 +91,7 @@ export function DefaultStudioView({
         </div>
         <div className="flex-1 overflow-y-auto panel-scroll px-3 pb-4">
           {artifacts.length > 0 ? (
-            <div className="space-y-1.5 pt-0.25">
+            <div className="space-y-0.5 pt-0.25">
               {artifacts.map((artifact) => {
                 const meta = ARTIFACT_META[artifact.type];
                 const subtitle = artifactSubtitle(artifact);
@@ -101,6 +101,7 @@ export function DefaultStudioView({
                     key={artifact.id}
                     title={meta.name}
                     icon={meta.icon}
+                    tone={meta.tone}
                     status={listStatus}
                     subtitle={subtitle}
                     onClick={() => {

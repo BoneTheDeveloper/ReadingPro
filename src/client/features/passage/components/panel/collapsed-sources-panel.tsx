@@ -7,10 +7,10 @@ import { cn } from "@/client/lib/utils";
 import type { PassageListItem } from "@/shared/passage/schema";
 import type { SourceType } from "@/shared/enums";
 
-const SOURCE_TYPE_VISUAL: Record<SourceType, { icon: typeof FileText; chip: string }> = {
-  TEXT: { icon: FileText, chip: "bg-indigo-soft text-primary" },
-  PDF: { icon: File, chip: "bg-amber-soft text-amber-text" },
-  YOUTUBE: { icon: PlayCircle, chip: "bg-coral-soft text-coral-hover" },
+const SOURCE_TYPE_VISUAL: Record<SourceType, { icon: typeof FileText; color: string }> = {
+  TEXT: { icon: FileText, color: "text-primary" },
+  PDF: { icon: File, color: "text-gold" },
+  YOUTUBE: { icon: PlayCircle, color: "text-coral" },
 };
 
 interface CollapsedSourcesPanelProps {
@@ -29,7 +29,7 @@ export function CollapsedSourcesPanel({
   onToggleCollapse,
 }: CollapsedSourcesPanelProps) {
   return (
-    <Card className="h-full flex flex-col overflow-hidden bg-panel rounded-none">
+    <Card className="h-full flex flex-col overflow-hidden bg-background rounded-none">
       <CardContent className="p-0 flex flex-col h-full items-center">
         <div className="w-full p-2 flex justify-center border-b border-border">
           <Button
@@ -47,8 +47,9 @@ export function CollapsedSourcesPanel({
             variant="ghost"
             size="icon"
             onClick={onOpenUploadModal}
-            className="h-9 w-9 text-muted-foreground hover:text-primary"
+            className="h-9 w-9 bg-primary text-primary-foreground shadow-indigo hover:bg-indigo-hover hover:text-primary-foreground"
             title="Thêm nguồn"
+            aria-label="Thêm nguồn"
           >
             <Plus className="w-5 h-5" />
           </Button>
@@ -58,7 +59,7 @@ export function CollapsedSourcesPanel({
           <div className="flex flex-col items-center gap-1">
             {items.filter((item) => item.status === "COMPLETED").map((item) => {
               const isActive = activeId === item.id;
-              const { icon: Icon, chip } = SOURCE_TYPE_VISUAL[item.sourceType];
+              const { icon: Icon, color } = SOURCE_TYPE_VISUAL[item.sourceType];
               return (
                 <button
                   key={item.id}
@@ -67,8 +68,8 @@ export function CollapsedSourcesPanel({
                   className={cn(
                     "w-11 h-11 rounded-[13px] flex items-center justify-center transition-colors cursor-pointer",
                     isActive
-                      ? "bg-indigo-soft text-primary"
-                      : cn(chip, "opacity-70 hover:opacity-100"),
+                      ? cn("bg-surface ring-2 ring-primary shadow-card", color)
+                      : cn(color, "hover:bg-surface"),
                   )}
                 >
                   <Icon className="w-5 h-5" />

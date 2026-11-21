@@ -23,10 +23,10 @@ import { SET_DAILY_NEW_LIMIT_MAX } from "@/shared/vocabulary/set-schema";
 import { formatDate } from "../lib/format-date";
 import { STATUS_LABEL, STATUS_STYLE } from "../lib/status-display";
 
-const COLUMN_HEAD = "text-[10px] font-bold uppercase tracking-widest text-[#908B98]";
+const COLUMN_HEAD = "text-[10px] font-bold uppercase tracking-widest text-ink-3";
 
 const FIELD =
-  "h-9 text-xs border-[#EAE5DB] rounded-xl focus:border-[#5A4FE0] focus:ring-2 focus:ring-[#5A4FE0]/10";
+  "h-9 text-xs border-border rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/10";
 
 interface VocabularySetDialogProps {
   setId: string;
@@ -71,11 +71,11 @@ export function VocabularySetDialog({ setId, onClose }: VocabularySetDialogProps
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-2xl rounded-2xl p-6 gap-5" showCloseButton>
         <DialogHeader>
-          <DialogTitle className="text-base font-bold text-[#221F2B]">Bộ từ</DialogTitle>
+          <DialogTitle className="text-base font-bold text-foreground">Bộ từ</DialogTitle>
         </DialogHeader>
 
         {!set ? (
-          <div className="flex items-center justify-center py-10 text-sm text-[#908B98]">
+          <div className="flex items-center justify-center py-10 text-sm text-ink-3">
             <Loader2 className="size-4 animate-spin mr-2" />
             Đang tải...
           </div>
@@ -104,7 +104,7 @@ export function VocabularySetDialog({ setId, onClose }: VocabularySetDialogProps
                 onChange={(e) => setNameDraft(e.target.value)}
                 className={`${FIELD} flex-1`}
               />
-              <label className="flex items-center gap-1.5 text-xs text-[#565160] shrink-0">
+              <label className="flex items-center gap-1.5 text-xs text-muted-foreground shrink-0">
                 Từ mới/ngày
                 <Input
                   type="number"
@@ -134,7 +134,7 @@ export function VocabularySetDialog({ setId, onClose }: VocabularySetDialogProps
                   variant="outline"
                   disabled={remove.isPending}
                   onClick={() => remove.mutate(setId, { onSuccess: onClose })}
-                  className="h-9 rounded-xl gap-1.5 border-[#EAE5DB] text-[#C8442B] hover:border-[#C8442B] hover:text-[#C8442B]"
+                  className="h-9 rounded-xl gap-1.5 border-border text-danger hover:border-danger hover:text-danger"
                 >
                   <Trash2 className="size-3.5" />
                   Xóa bộ
@@ -142,7 +142,7 @@ export function VocabularySetDialog({ setId, onClose }: VocabularySetDialogProps
               )}
             </form>
 
-            <div className="text-xs text-[#908B98]">
+            <div className="text-xs text-ink-3">
               Tạo ngày {formatDate(set.createdAt)} · Học gần nhất:{" "}
               {set.lastStudiedAt ? formatDate(set.lastStudiedAt) : "chưa học"} ·{" "}
               {set.studiedToday ? "Hôm nay đã học" : "Hôm nay chưa học"}
@@ -150,8 +150,8 @@ export function VocabularySetDialog({ setId, onClose }: VocabularySetDialogProps
 
             <div className="flex flex-col gap-2 min-w-0">
               <div className={COLUMN_HEAD}>Trong bộ ({set.items.length})</div>
-              <div className="border border-[#EAE5DB] rounded-xl overflow-hidden">
-                <div className="flex items-center px-3 py-2 bg-[#FBF9F5] border-b border-[#EAE5DB]">
+              <div className="border border-border rounded-xl overflow-hidden">
+                <div className="flex items-center px-3 py-2 bg-panel border-b border-border">
                   <div className={`w-28 shrink-0 ${COLUMN_HEAD}`}>Từ</div>
                   <div className={`flex-1 min-w-0 ${COLUMN_HEAD}`}>Nghĩa</div>
                   <div className={`w-24 shrink-0 text-center ${COLUMN_HEAD}`}>Trạng thái</div>
@@ -161,7 +161,7 @@ export function VocabularySetDialog({ setId, onClose }: VocabularySetDialogProps
                 </div>
                 <div className="max-h-56 overflow-y-auto">
                   {set.items.length === 0 && (
-                    <div className="px-3 py-4 text-xs text-[#908B98] text-center">
+                    <div className="px-3 py-4 text-xs text-ink-3 text-center">
                       Bộ từ chưa có từ nào.
                     </div>
                   )}
@@ -218,11 +218,11 @@ function MemberRow({
 }) {
   const style = STATUS_STYLE[item.status];
   return (
-    <div className="flex items-center px-3 py-2 border-b border-[#EAE5DB] last:border-b-0">
-      <div className="w-28 shrink-0 text-sm font-semibold text-[#221F2B] truncate">
+    <div className="flex items-center px-3 py-2 border-b border-border last:border-b-0">
+      <div className="w-28 shrink-0 text-sm font-semibold text-foreground truncate">
         {item.term}
       </div>
-      <div className="flex-1 min-w-0 pr-3 text-xs text-[#565160] truncate" title={item.translation}>
+      <div className="flex-1 min-w-0 pr-3 text-xs text-muted-foreground truncate" title={item.translation}>
         {item.translation}
       </div>
       <div className="w-24 shrink-0 text-center">
@@ -234,11 +234,11 @@ function MemberRow({
           {STATUS_LABEL[item.status]}
         </span>
       </div>
-      <div className="w-20 shrink-0 text-center text-xs text-[#908B98]">
+      <div className="w-20 shrink-0 text-center text-xs text-ink-3">
         {formatDate(item.lastReviewAt)}
       </div>
       {/* A word never reviewed has no schedule yet; its dueAt is only its save time. */}
-      <div className="w-20 shrink-0 text-center text-xs text-[#908B98]">
+      <div className="w-20 shrink-0 text-center text-xs text-ink-3">
         {item.status === "NEW" ? "—" : formatDate(item.dueAt)}
       </div>
       {onRemove ? (
@@ -248,7 +248,7 @@ function MemberRow({
           aria-label={`Trả về bộ mặc định: ${item.term}`}
           disabled={disabled}
           onClick={onRemove}
-          className="flex items-center justify-center size-8 shrink-0 rounded-lg border border-[#EAE5DB] text-[#565160] cursor-pointer hover:border-[#C8442B] hover:text-[#C8442B] disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center justify-center size-8 shrink-0 rounded-lg border border-border text-muted-foreground cursor-pointer hover:border-danger hover:text-danger disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <X className="size-3.5" />
         </button>
@@ -282,15 +282,15 @@ function WordColumn({
     <div className="flex flex-col gap-2 min-w-0">
       <div className={COLUMN_HEAD}>{title}</div>
       {header}
-      <ul className="border border-[#EAE5DB] rounded-xl divide-y divide-[#EAE5DB] max-h-40 overflow-y-auto">
+      <ul className="border border-border rounded-xl divide-y divide-border max-h-40 overflow-y-auto">
         {items.length === 0 && (
-          <li className="px-3 py-4 text-xs text-[#908B98] text-center">{emptyText}</li>
+          <li className="px-3 py-4 text-xs text-ink-3 text-center">{emptyText}</li>
         )}
         {items.map((item) => (
           <li key={item.id} className="flex items-center gap-2 px-3 py-2">
             <div className="flex-1 min-w-0">
-              <div className="text-sm font-semibold text-[#221F2B] truncate">{item.term}</div>
-              <div className="text-xs text-[#565160] truncate">{item.translation}</div>
+              <div className="text-sm font-semibold text-foreground truncate">{item.term}</div>
+              <div className="text-xs text-muted-foreground truncate">{item.translation}</div>
             </div>
             <button
               type="button"
@@ -298,7 +298,7 @@ function WordColumn({
               aria-label={`${actionLabel}: ${item.term}`}
               disabled={disabled}
               onClick={() => onAction(item)}
-              className="flex items-center justify-center size-8 shrink-0 rounded-lg border border-[#EAE5DB] text-[#565160] cursor-pointer hover:border-[#5A4FE0] hover:text-[#4A3FD0] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center justify-center size-8 shrink-0 rounded-lg border border-border text-muted-foreground cursor-pointer hover:border-primary hover:text-indigo-hover disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {icon}
             </button>

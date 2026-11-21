@@ -30,10 +30,10 @@ const POS_OPTIONS: Array<{ value: PartOfSpeech; label: string }> = [
 ];
 
 const FIELD_BASE =
-  "h-10 rounded-xl border-[#EAE5DB] bg-white text-sm text-[#221F2B] focus:border-[#5A4FE0] focus:ring-2 focus:ring-[#5A4FE0]/15";
+  "h-10 rounded-xl border-border bg-white text-sm text-foreground focus:border-primary focus:ring-2 focus:ring-primary/15";
 
 const SELECT_BASE =
-  "h-10 rounded-xl border border-[#EAE5DB] bg-white px-3 text-sm text-[#221F2B] focus:border-[#5A4FE0] focus:ring-2 focus:ring-[#5A4FE0]/15 focus:outline-none";
+  "h-10 rounded-xl border border-border bg-white px-3 text-sm text-foreground focus:border-primary focus:ring-2 focus:ring-primary/15 focus:outline-none";
 
 interface VocabularyFormValues {
   term: string;
@@ -127,7 +127,7 @@ export function VocabularyFormDialog({
         showCloseButton
       >
         <DialogHeader>
-          <DialogTitle className="text-base font-bold text-[#221F2B]">
+          <DialogTitle className="text-base font-bold text-foreground">
             {title}
           </DialogTitle>
         </DialogHeader>
@@ -136,7 +136,7 @@ export function VocabularyFormDialog({
           <div className="flex flex-col gap-1.5">
             <Label
               htmlFor={termId}
-              className="text-xs font-semibold text-[#565160]"
+              className="text-xs font-semibold text-muted-foreground"
             >
               Từ vựng
             </Label>
@@ -159,7 +159,7 @@ export function VocabularyFormDialog({
             {errors.term && (
               <p
                 id={`${termId}-err`}
-                className="text-xs text-[#C8442B]"
+                className="text-xs text-danger"
                 role="alert"
               >
                 {errors.term}
@@ -170,7 +170,7 @@ export function VocabularyFormDialog({
           <div className="flex flex-col gap-1.5">
             <Label
               htmlFor={posId}
-              className="text-xs font-semibold text-[#565160]"
+              className="text-xs font-semibold text-muted-foreground"
             >
               Loại từ
             </Label>
@@ -197,7 +197,7 @@ export function VocabularyFormDialog({
           <div className="flex flex-col gap-1.5">
             <Label
               htmlFor={translationId}
-              className="text-xs font-semibold text-[#565160]"
+              className="text-xs font-semibold text-muted-foreground"
             >
               Nghĩa
             </Label>
@@ -214,12 +214,12 @@ export function VocabularyFormDialog({
               aria-describedby={
                 errors.translation ? `${translationId}-err` : undefined
               }
-              className="rounded-xl border-[#EAE5DB] bg-white text-sm text-[#221F2B] focus:border-[#5A4FE0] focus:ring-2 focus:ring-[#5A4FE0]/15 min-h-20"
+              className="rounded-xl border-border bg-white text-sm text-foreground focus:border-primary focus:ring-2 focus:ring-primary/15 min-h-20"
             />
             {errors.translation && (
               <p
                 id={`${translationId}-err`}
-                className="text-xs text-[#C8442B]"
+                className="text-xs text-danger"
                 role="alert"
               >
                 {errors.translation}
@@ -234,7 +234,7 @@ export function VocabularyFormDialog({
               size="sm"
               onClick={() => onOpenChange(false)}
               disabled={pending}
-              className="h-9 px-4 rounded-xl border-[#EAE5DB] text-sm font-semibold text-[#565160] hover:border-[#5A4FE0] hover:text-[#4A3FD0]"
+              className="h-9 px-4 rounded-xl border-border text-sm font-semibold text-muted-foreground hover:border-primary hover:text-indigo-hover"
             >
               Huỷ
             </Button>

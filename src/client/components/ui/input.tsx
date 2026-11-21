@@ -3,8 +3,8 @@ import * as React from "react";
 import { cn } from "@/client/lib/utils";
 
 // Input per design.md §9:
-// - padding 9px 12px, border 1px solid #EAE5DB, radius 11px, bg #fff
-// - Focus: indigo border + glow 0 0 0 3px rgba(90,79,224,.10)
+// - padding 9px 12px, border `--input` (3:1 control boundary), radius 11px, surface bg
+// - Focus: primary border + 3px primary/10 glow
 function Input({ className, type, ...props }: React.ComponentProps<"input">) {
   return (
     <input

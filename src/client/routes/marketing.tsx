@@ -31,7 +31,7 @@ const ArrowRightIcon = () => (
 const features = [
   {
     icon: FileText,
-    color: "text-[#F2664A] bg-[#FCE7E1]",
+    color: "text-coral-text bg-coral-soft",
     title: "Tóm tắt văn bản",
     description: "Tải lên bất kỳ văn bản nào và nhận tóm tắt tức thì với từ vựng quan trọng được làm nổi bật.",
   },
@@ -43,7 +43,7 @@ const features = [
   },
   {
     icon: Lightbulb,
-    color: "text-[#C8842A] bg-[#FBEFD8]",
+    color: "text-amber-text bg-amber-soft",
     title: "Dịch văn bản",
     description: "Dịch tức thì và lưu từ vựng kèm theo ngữ cảnh của đoạn văn.",
   },
@@ -62,7 +62,7 @@ export default function MarketingRoute() {
     <div className="marketing-scroll min-h-0 flex-1 overflow-y-auto">
       <div className="min-h-dvh bg-background">
         {/* Nav */}
-        <nav className="fixed w-full z-50 bg-background/80 backdrop-blur-md border-b border-border">
+        <nav className="fixed w-full z-50 bg-surface border-b border-border">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-20">
               <Link to="/" className="flex items-center gap-3">
@@ -109,11 +109,6 @@ export default function MarketingRoute() {
 
         {/* Hero */}
         <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
-          <div className="absolute inset-0 z-0 pointer-events-none">
-            <div className="absolute top-20 left-10 w-72 h-72 rounded-full bg-indigo-soft blur-[80px]" />
-            <div className="absolute top-40 right-20 w-96 h-96 rounded-full bg-[#EAE5DB] blur-[100px]" />
-          </div>
-
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
               <div className="text-center lg:text-left">
@@ -122,7 +117,7 @@ export default function MarketingRoute() {
                 </div>
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-foreground leading-[1.15] mb-6 tracking-tight">
                   Đọc thông minh hơn{" "}
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-[#7B74E8]">
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-indigo-hover">
                     với AI
                   </span>
                 </h1>
@@ -142,33 +137,33 @@ export default function MarketingRoute() {
 
               {/* Mockup */}
               <div className="relative mx-auto w-full max-w-lg lg:max-w-none">
-                <div className="relative rounded-2xl bg-white/60 backdrop-blur-xl border border-border shadow-lg overflow-hidden transform lg:rotate-y-[-10deg] lg:rotate-x-[5deg] transition-transform duration-700 lg:hover:rotate-0">
-                  <div className="h-12 border-b border-border bg-white/50 flex items-center px-4 gap-2">
+                <div className="relative rounded-2xl bg-surface border border-border shadow-lg overflow-hidden transform lg:rotate-y-[-10deg] lg:rotate-x-[5deg] transition-transform duration-700 lg:hover:rotate-0">
+                  <div className="h-12 border-b border-border bg-panel flex items-center px-4 gap-2">
                     <div className="w-3 h-3 rounded-full bg-red-400" />
                     <div className="w-3 h-3 rounded-full bg-yellow-400" />
                     <div className="w-3 h-3 rounded-full bg-green-400" />
-                    <div className="ml-4 w-48 h-4 bg-[#EAE5DB] rounded-full" />
+                    <div className="ml-4 w-48 h-4 bg-border rounded-full" />
                   </div>
                   <div className="p-6 grid grid-cols-3 gap-6 h-80">
                     <div className="col-span-1 border-r border-border pr-4 space-y-4">
                       <div className="w-full h-8 bg-indigo-soft rounded-lg" />
-                      <div className="w-3/4 h-4 bg-[#EAE5DB] rounded-full" />
-                      <div className="w-2/3 h-4 bg-[#EAE5DB] rounded-full" />
-                      <div className="w-5/6 h-4 bg-[#EAE5DB] rounded-full" />
+                      <div className="w-3/4 h-4 bg-border rounded-full" />
+                      <div className="w-2/3 h-4 bg-border rounded-full" />
+                      <div className="w-5/6 h-4 bg-border rounded-full" />
                     </div>
                     <div className="col-span-2 space-y-4">
-                      <div className="w-1/3 h-6 bg-[#EAE5DB] rounded-lg mb-6" />
+                      <div className="w-1/3 h-6 bg-border rounded-lg mb-6" />
                       <div className="grid grid-cols-2 gap-4">
                         <div className="h-24 bg-indigo-soft rounded-xl border border-indigo-soft-border flex flex-col justify-center items-center text-primary gap-2">
                           <Brain className="w-6 h-6" />
                           <span className="text-xs font-bold">Flashcards</span>
                         </div>
-                        <div className="h-24 bg-[#FBEFD8] rounded-xl border border-[#E8D9B8] flex flex-col justify-center items-center text-[#C8842A] gap-2">
+                        <div className="h-24 bg-amber-soft rounded-xl border border-amber/40 flex flex-col justify-center items-center text-amber-text gap-2">
                           <Lightbulb className="w-6 h-6" />
                           <span className="text-xs font-bold">Mind Map</span>
                         </div>
                       </div>
-                      <div className="w-full h-20 bg-[#EAE5DB] rounded-xl mt-4" />
+                      <div className="w-full h-20 bg-border rounded-xl mt-4" />
                     </div>
                   </div>
                 </div>
@@ -227,7 +222,7 @@ export default function MarketingRoute() {
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
               Sẵn sàng chuyển đổi việc đọc tiếng Anh của bạn?
             </h2>
-            <p className="text-white/80 text-lg mb-10 max-w-2xl mx-auto">
+            <p className="text-white/90 text-lg mb-10 max-w-2xl mx-auto">
               Trợ lý AI cá nhân giúp bạn thành thạo tiếng Anh — từ PDF đến video YouTube.
             </p>
 
@@ -258,7 +253,7 @@ export default function MarketingRoute() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="ReadingPro trên GitHub"
-                className="w-8 h-8 rounded-full bg-[#EAE5DB] flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-indigo-soft transition-colors"
+                className="w-8 h-8 rounded-full bg-border flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-indigo-soft transition-colors"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.51 11.51 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.652.242 2.873.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.805 5.625-5.478 5.921.43.371.814 1.102.814 2.222 0 1.604-.015 2.896-.015 3.289 0 .322.217.696.826.578C20.565 22.092 24 17.598 24 12.297c0-6.627-5.373-12-12-12z" />
@@ -267,7 +262,7 @@ export default function MarketingRoute() {
               <a
                 href="mailto:dacluc2k4@gmail.com"
                 aria-label="Liên hệ qua Gmail: dacluc2k4@gmail.com"
-                className="w-8 h-8 rounded-full bg-[#EAE5DB] flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-indigo-soft transition-colors"
+                className="w-8 h-8 rounded-full bg-border flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-indigo-soft transition-colors"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 0 1 0 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L5.455 4.64 12 9.548l6.545-4.91 1.528-1.145C21.69 2.28 24 3.434 24 5.457z" />

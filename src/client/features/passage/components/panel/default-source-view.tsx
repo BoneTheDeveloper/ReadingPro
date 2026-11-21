@@ -59,7 +59,7 @@ export function DefaultSourceView({
   }, [items, searchQuery]);
 
   return (
-    <Card className="h-full flex flex-col overflow-hidden bg-panel rounded-none">
+    <Card className="h-full flex flex-col overflow-hidden bg-background rounded-none">
       <CardContent className="p-0 flex flex-col h-full">
         <DefaultSourceHeader onToggleCollapse={onToggleCollapse} />
 
@@ -70,13 +70,13 @@ export function DefaultSourceView({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Tìm nguồn..."
-              className="pl-9 h-9 rounded-[11px] bg-surface border-border text-[13px]"
+              className="pl-9 h-9 rounded-[11px] bg-surface text-[13px]"
             />
           </div>
           <button
             type="button"
             onClick={onOpenUploadModal}
-            className="w-full mt-1 inline-flex items-center justify-center gap-[7px] px-3 py-[11px] rounded-[13px] border-[1.5px] border-dashed border-border-strong text-xs font-semibold text-ink-3 hover:border-primary hover:text-primary hover:bg-surface transition-all duration-140 cursor-pointer"
+            className="w-full mt-2 inline-flex items-center justify-center gap-[7px] px-3 py-2.5 rounded-[12px] bg-primary text-primary-foreground text-xs font-semibold shadow-indigo hover:bg-indigo-hover hover:-translate-y-px transition-all duration-140 cursor-pointer outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
           >
             <Plus className="w-[15px] h-[15px]" />
             Thêm nguồn

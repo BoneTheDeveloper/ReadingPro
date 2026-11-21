@@ -52,8 +52,8 @@ const POS_LABEL: Record<Exclude<PartOfSpeech, "OTHER">, string> = {
 const FILTER_CHIP_BASE =
   "px-3.5 py-1.5 rounded-full border text-xs font-semibold cursor-pointer transition-all";
 const FILTER_CHIP_OFF =
-  "bg-white text-[#565160] border-[#EAE5DB] hover:border-[#5A4FE0] hover:text-[#4A3FD0]";
-const FILTER_CHIP_ON = "bg-[#5A4FE0] text-white border-[#5A4FE0]";
+  "bg-white text-muted-foreground border-border hover:border-primary hover:text-indigo-hover";
+const FILTER_CHIP_ON = "bg-primary text-white border-primary";
 
 export function VocabularyList({
   items,
@@ -76,12 +76,12 @@ export function VocabularyList({
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2 flex-wrap">
         <div className="relative shrink-0">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-[#908B98] pointer-events-none" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-ink-3 pointer-events-none" />
           <Input
             placeholder="Tìm từ..."
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-8 h-9 text-xs w-52 border-[#EAE5DB] rounded-xl focus:border-[#5A4FE0] focus:ring-2 focus:ring-[#5A4FE0]/10"
+            className="pl-8 h-9 text-xs w-52 border-border rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/10"
           />
         </div>
 
@@ -107,7 +107,7 @@ export function VocabularyList({
         <Button
           variant="outline"
           size="sm"
-          className="h-9 text-xs font-semibold gap-1.5 border-[#EAE5DB] rounded-xl hover:border-[#5A4FE0] hover:text-[#4A3FD0]"
+          className="h-9 text-xs font-semibold gap-1.5 border-border rounded-xl hover:border-primary hover:text-indigo-hover"
         >
           <Download className="size-3.5" />
           Xuất
@@ -123,33 +123,33 @@ export function VocabularyList({
         </Button>
       </div>
 
-      <div className="bg-white border border-[#EAE5DB] rounded-2xl overflow-hidden shadow-sm">
+      <div className="bg-white border border-border rounded-2xl overflow-hidden shadow-sm">
         <div
-          className="flex items-center px-4 py-2.5 bg-[#FBF9F5] border-b border-[#EAE5DB] sticky top-0 z-10"
+          className="flex items-center px-4 py-2.5 bg-panel border-b border-border sticky top-0 z-10"
           style={{ gap: "0" }}
         >
           <div className="w-36 shrink-0">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-[#908B98]">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-ink-3">
               Từ
             </span>
           </div>
           <div className="w-24 shrink-0">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-[#908B98]">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-ink-3">
               Loại từ
             </span>
           </div>
           <div className="flex-1 min-w-0">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-[#908B98]">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-ink-3">
               Nghĩa
             </span>
           </div>
           <div className="w-24 shrink-0 text-center">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-[#908B98]">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-ink-3">
               Trạng thái
             </span>
           </div>
           <div className="w-20 shrink-0 text-center">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-[#908B98]">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-ink-3">
               Lưu
             </span>
           </div>
@@ -206,20 +206,20 @@ function TableRow({
 
   return (
     <div
-      className="flex items-center px-4 py-3 border-b border-[#EAE5DB] last:border-b-0 transition-colors"
+      className="flex items-center px-4 py-3 border-b border-border last:border-b-0 transition-colors"
       style={{ gap: "0" }}
     >
       <div className="w-36 shrink-0">
-        <span className="text-sm font-semibold text-[#221F2B]">
+        <span className="text-sm font-semibold text-foreground">
           {item.term}
         </span>
       </div>
 
       <div className="w-24 shrink-0 pr-2">
         {item.partofSpeech === "OTHER" ? (
-          <span className="text-xs text-[#908B98]">—</span>
+          <span className="text-xs text-ink-3">—</span>
         ) : (
-          <span className="text-xs text-[#565160]">
+          <span className="text-xs text-muted-foreground">
             {POS_LABEL[item.partofSpeech]}
           </span>
         )}
@@ -227,7 +227,7 @@ function TableRow({
 
       <div className="flex-1 min-w-0 pr-4">
         <span
-          className="text-xs text-[#565160] block truncate"
+          className="text-xs text-muted-foreground block truncate"
           title={item.translation}
         >
           {item.translation}
@@ -248,7 +248,7 @@ function TableRow({
       </div>
 
       <div className="w-20 shrink-0 text-center">
-        <span className="text-xs text-[#908B98]">{savedDate}</span>
+        <span className="text-xs text-ink-3">{savedDate}</span>
       </div>
 
       <div className="w-16 shrink-0 flex items-center justify-end pr-2">
@@ -259,7 +259,7 @@ function TableRow({
               title="Tác vụ"
               aria-label="Tác vụ"
               aria-haspopup="menu"
-              className="relative flex items-center justify-center size-9 rounded-xl border border-[#EAE5DB] bg-white text-[#565160] transition-colors cursor-pointer hover:border-[#5A4FE0] hover:text-[#4A3FD0] focus-visible:ring-2 focus-visible:ring-[#5A4FE0]/40 focus-visible:outline-none before:content-[''] before:absolute before:inset-y-[-6px] before:left-[-6px] before:right-[-6px]"
+              className="relative flex items-center justify-center size-9 rounded-xl border border-border bg-white text-muted-foreground transition-colors cursor-pointer hover:border-primary hover:text-indigo-hover focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:outline-none before:content-[''] before:absolute before:inset-y-[-6px] before:left-[-6px] before:right-[-6px]"
             >
               <MoreVertical className="size-[15px]" strokeWidth={2} />
             </button>
@@ -267,17 +267,17 @@ function TableRow({
           <DropdownMenuContent align="end" className="min-w-[140px]">
             <DropdownMenuItem
               onSelect={() => onEdit(item)}
-              className="text-[#221F2B]"
+              className="text-foreground"
             >
-              <Pencil className="size-3.5 text-[#565160]" />
+              <Pencil className="size-3.5 text-muted-foreground" />
               Sửa
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onSelect={() => onDelete(item.id)}
-              className="text-[#C8442B] focus:bg-[#FCEAE3] focus:text-[#C8442B]"
+              className="text-danger focus:bg-danger-soft focus:text-danger"
             >
-              <Trash2 className="size-3.5 text-[#C8442B]" />
+              <Trash2 className="size-3.5 text-danger" />
               Xóa
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -291,17 +291,17 @@ function EmptyVocabularyState() {
   return (
     <div className="py-14 text-center">
       <div className="flex justify-center mb-4 opacity-30">
-        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#221F2B" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-foreground" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
           <path d="m16 6 4 14" />
           <path d="M12 6v14" />
           <path d="M8 8v12" />
           <path d="M4 4v16" />
         </svg>
       </div>
-      <p className="text-sm font-semibold text-[#565160] mb-1.5">
+      <p className="text-sm font-semibold text-muted-foreground mb-1.5">
         Chưa có từ vựng
       </p>
-      <p className="text-xs text-[#908B98]">
+      <p className="text-xs text-ink-3">
         Lưu từ trong không gian học tập để xây dựng danh sách từ vựng tại đây.
       </p>
     </div>
@@ -322,7 +322,7 @@ function PaginationBar({
 }) {
   return (
     <div className="flex items-center justify-between">
-      <span className="text-xs text-[#908B98]">
+      <span className="text-xs text-ink-3">
         {total} từ
       </span>
       <div className="flex gap-1">
@@ -336,8 +336,8 @@ function PaginationBar({
               className={cn(
                 "w-8 h-8 rounded-lg text-xs font-semibold transition-colors",
                 p === page
-                  ? "bg-[#5A4FE0] text-white"
-                  : "text-[#565160] hover:bg-[#F5F2EC]",
+                  ? "bg-primary text-white"
+                  : "text-muted-foreground hover:bg-background",
               )}
             >
               {p}
@@ -351,14 +351,14 @@ function PaginationBar({
 
 function TableSkeleton() {
   return (
-    <div className="divide-y divide-[#EAE5DB]">
+    <div className="divide-y divide-border">
       {Array.from({ length: 5 }).map((_, i) => (
         <div key={i} className="flex items-center px-4 py-3 gap-4">
-          <div className="w-36 h-4 bg-[#F0EDE8] rounded animate-pulse" />
-          <div className="flex-1 h-4 bg-[#F0EDE8] rounded animate-pulse" />
-          <div className="w-16 h-4 bg-[#F0EDE8] rounded animate-pulse" />
-          <div className="w-24 h-4 bg-[#F0EDE8] rounded animate-pulse" />
-          <div className="w-20 h-4 bg-[#F0EDE8] rounded animate-pulse" />
+          <div className="w-36 h-4 bg-muted rounded animate-pulse" />
+          <div className="flex-1 h-4 bg-muted rounded animate-pulse" />
+          <div className="w-16 h-4 bg-muted rounded animate-pulse" />
+          <div className="w-24 h-4 bg-muted rounded animate-pulse" />
+          <div className="w-20 h-4 bg-muted rounded animate-pulse" />
         </div>
       ))}
     </div>

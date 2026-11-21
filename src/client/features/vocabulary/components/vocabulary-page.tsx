@@ -30,7 +30,7 @@ type ViewTab = "words" | "sets";
 
 const TAB_BASE =
   "flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer";
-const TAB_ON = "bg-[#5A4FE0] text-white shadow-sm";
+const TAB_ON = "bg-primary text-white shadow-sm";
 
 function StatCard({
   label,
@@ -47,8 +47,8 @@ function StatCard({
     <div
       className="relative bg-white border rounded-lg px-5 py-4 overflow-hidden shadow-sm"
       style={{
-        borderColor: `${accent}30`,
-        boxShadow: "0 1px 2px rgba(0,0,0,.04), 0 4px 12px rgba(0,0,0,.04)",
+        borderColor: `color-mix(in srgb, ${accent} 19%, transparent)`,
+        boxShadow: "var(--shadow-card)",
       }}
     >
       <div
@@ -57,14 +57,15 @@ function StatCard({
       />
       <div
         className="text-[10px] font-bold uppercase tracking-widest mb-2"
-        style={{ color: accent }}
+        // Darkened toward the ink so small amber/green labels stay above 4.5:1.
+        style={{ color: `color-mix(in srgb, ${accent} 70%, var(--foreground))` }}
       >
         {label}
       </div>
-      <div className="text-3xl font-extrabold text-[#221F2B] leading-none mb-1">
+      <div className="text-3xl font-extrabold text-foreground leading-none mb-1">
         {value}
       </div>
-      <div className="text-xs text-[#908B98]">{sublabel}</div>
+      <div className="text-xs text-ink-3">{sublabel}</div>
     </div>
   );
 }
@@ -75,11 +76,11 @@ const STAT_CONFIG: Array<{
   sublabel: string;
   accent: string;
 }> = [
-  { key: "total", label: "Tổng", sublabel: "từ đã lưu", accent: "#221F2B" },
-  { key: "new", label: "Mới", sublabel: "chưa học", accent: "#EEA63C" },
-  { key: "learning", label: "Đang học", sublabel: "đang tiến", accent: "#5A4FE0" },
-  { key: "review", label: "Đang ôn", sublabel: "ôn theo ngày", accent: "#2FA66A" },
-  { key: "relearning", label: "Học lại", sublabel: "vừa quên", accent: "#F2664A" },
+  { key: "total", label: "Tổng", sublabel: "từ đã lưu", accent: "var(--foreground)" },
+  { key: "new", label: "Mới", sublabel: "chưa học", accent: "var(--amber)" },
+  { key: "learning", label: "Đang học", sublabel: "đang tiến", accent: "var(--primary)" },
+  { key: "review", label: "Đang ôn", sublabel: "ôn theo ngày", accent: "var(--success)" },
+  { key: "relearning", label: "Học lại", sublabel: "vừa quên", accent: "var(--coral)" },
 ];
 
 export function VocabularyPageClient() {
@@ -171,14 +172,14 @@ export function VocabularyPageClient() {
   const sOn = activeTab === "sets";
 
   return (
-    <div className="flex-1 overflow-y-auto bg-[#F5F2EC]">
+    <div className="flex-1 overflow-y-auto bg-background">
       <div className="mx-auto max-w-[1020px] px-10 py-10 pb-16">
         <div className="mb-7 flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-[26px] font-extrabold tracking-tight text-[#221F2B] mb-1">
+            <h1 className="text-[26px] font-extrabold tracking-tight text-foreground mb-1">
               Từ vựng
             </h1>
-            <p className="text-sm text-[#565160] leading-relaxed">
+            <p className="text-sm text-muted-foreground leading-relaxed">
               Xem lại và quản lý các từ và cụm từ đã lưu.
             </p>
           </div>
@@ -210,7 +211,7 @@ export function VocabularyPageClient() {
           ))}
         </div>
 
-        <div className="flex bg-white border border-[#EAE5DB] rounded-xl p-0.5 max-w-xs mb-6">
+        <div className="flex bg-white border border-border rounded-xl p-0.5 max-w-xs mb-6">
           <button
             type="button"
             className={`${TAB_BASE} ${wOn ? TAB_ON : ""}`}
@@ -221,8 +222,8 @@ export function VocabularyPageClient() {
             <span
               className="ml-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold"
               style={{
-                background: wOn ? "rgba(255,255,255,0.25)" : "#F0EDE8",
-                color: wOn ? "#fff" : "#908B98",
+                background: wOn ? "rgba(255,255,255,0.25)" : "var(--muted)",
+                color: wOn ? "#fff" : "var(--ink-3)",
               }}
             >
               {total}
@@ -238,8 +239,8 @@ export function VocabularyPageClient() {
             <span
               className="ml-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold"
               style={{
-                background: sOn ? "rgba(255,255,255,0.25)" : "#F0EDE8",
-                color: sOn ? "#fff" : "#908B98",
+                background: sOn ? "rgba(255,255,255,0.25)" : "var(--muted)",
+                color: sOn ? "#fff" : "var(--ink-3)",
               }}
             >
               {sets.length}

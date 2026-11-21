@@ -9,12 +9,14 @@ import {
 } from "@/client/components/ui/dropdown-menu";
 import { cn } from "@/client/lib/utils";
 import type { LucideIcon } from "lucide-react";
+import { TONE_CLASSES, type StudioTone } from "./studio-icon-list";
 
 type ArtifactStatus = "ready" | "pending" | "failed";
 
 interface ArtifactListItemProps {
   title: string;
   icon: LucideIcon;
+  tone: StudioTone;
   status: ArtifactStatus;
   subtitle: string | null;
   onClick: () => void;
@@ -24,6 +26,7 @@ interface ArtifactListItemProps {
 export function ArtifactListItem({
   title,
   icon: Icon,
+  tone,
   status,
   subtitle,
   onClick,
@@ -38,29 +41,28 @@ export function ArtifactListItem({
       role="button"
       tabIndex={isReady ? 0 : -1}
       onClick={() => { if (isReady) onClick(); }}
+      onKeyDown={(e) => {
+        if (isReady && (e.key === "Enter" || e.key === " ")) {
+          e.preventDefault();
+          onClick();
+        }
+      }}
       className={cn(
-        "group w-full flex items-center gap-2.5 px-3 py-2.5 text-left rounded-[13px] border transition-all outline-none",
-        isPending && "border-primary/20 bg-primary/5 cursor-default",
-        isFailed && "border-destructive/20 bg-destructive/5 cursor-default",
-        isReady && "border-border bg-surface hover:border-primary hover:-translate-y-px hover:shadow-card cursor-pointer",
+        "group w-full flex items-center gap-3 px-3 py-2.5 text-left rounded-[12px] transition-colors outline-none",
+        isPending && "cursor-default",
+        isFailed && "bg-destructive/5 cursor-default",
+        isReady && "hover:bg-surface cursor-pointer focus-visible:ring-2 focus-visible:ring-ring",
       )}
     >
-      <div className={cn(
-        "w-8 h-8 rounded-[10px] flex items-center justify-center shrink-0",
-        isPending && "bg-primary/10 text-primary animate-processing-fill",
-        isFailed && "bg-destructive/10 text-destructive",
-        isReady && "bg-primary/10 text-primary",
-      )}>
-        {isPending ? (
-          <Loader2 className="w-4 h-4 animate-spin" strokeWidth={2} />
-        ) : isFailed ? (
-          <AlertTriangle className="w-4 h-4" strokeWidth={2} />
-        ) : (
-          <Icon className="w-4 h-4" strokeWidth={2} />
-        )}
-      </div>
+      {isPending ? (
+        <Loader2 className="w-[18px] h-[18px] shrink-0 text-primary animate-spin" strokeWidth={2} />
+      ) : isFailed ? (
+        <AlertTriangle className="w-[18px] h-[18px] shrink-0 text-destructive" strokeWidth={2} />
+      ) : (
+        <Icon className={cn("w-[18px] h-[18px] shrink-0", TONE_CLASSES[tone].icon)} strokeWidth={2} />
+      )}
       <div className="min-w-0 flex-1">
-        <p className="text-[12px] font-semibold text-foreground truncate leading-tight">
+        <p className="text-[13px] font-semibold text-foreground truncate leading-tight">
           {title}
         </p>
         {isFailed ? (
@@ -84,7 +86,7 @@ export function ArtifactListItem({
           <DropdownMenuTrigger asChild>
             <button
               onClick={(e) => e.stopPropagation()}
-              className="shrink-0 p-1 rounded-lg text-muted-foreground/40 hover:text-foreground hover:bg-muted transition-colors opacity-0 group-hover:opacity-100"
+              className="shrink-0 p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
               aria-label="Xóa artifact"
             >
               <MoreVertical className="w-4 h-4" />

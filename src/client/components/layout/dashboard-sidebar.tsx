@@ -1,25 +1,11 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useCallback } from "react";
 import { Link, useLocation } from "react-router";
-import {
-  BookOpen,
-  GraduationCap,
-  Library,
-  Menu,
-} from "lucide-react";
+import { BookOpen, GraduationCap, Library } from "lucide-react";
 import { cn } from "@/client/lib/utils";
-import { Button } from "@/client/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/client/components/ui/tooltip";
+import { TooltipProvider } from "@/client/components/ui/tooltip";
 import { AuthControls } from "@/client/features/auth";
-
-
-const RAIL_WIDTH_PX = 62;
 
 const navItems = [
   { href: "/study", label: "Học tập", icon: BookOpen },
@@ -30,11 +16,16 @@ interface DashboardSidebarProps {
   children: React.ReactNode;
 }
 
+/**
+ * App shell. App-level navigation lives in a horizontal top bar so pages keep
+ * their full width for their own side panels (the study workspace has a
+ * sources column on the left).
+ * - md and up: top bar with nav tabs and the account menu.
+ * - below md: top bar shows the brand only; nav moves to a bottom tab bar.
+ * The page is rendered exactly once; only the navigation chrome changes.
+ */
 export function DashboardSidebar({ children }: DashboardSidebarProps) {
   const { pathname } = useLocation();
-  const [mobileOpen, setMobileOpen] = useState(false);
-
-  const closeMobile = useCallback(() => setMobileOpen(false), []);
 
   const isActive = useCallback(
     (href: string) => {
@@ -55,185 +46,100 @@ export function DashboardSidebar({ children }: DashboardSidebarProps) {
 
   return (
     <TooltipProvider delayDuration={150}>
-      <div className="h-dvh flex bg-background overflow-hidden">
-        <aside
-          style={{ width: RAIL_WIDTH_PX }}
-          className="hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 bg-rail items-center py-5 z-40"
-        >
-          <SidebarContent isActive={isActive} />
-        </aside>
+      <div className="h-dvh flex flex-col bg-background overflow-hidden">
+        <TopBar isActive={isActive} />
 
-      {mobileOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-foreground/10 lg:hidden"
-          onClick={closeMobile}
-        />
-      )}
+        <main className="flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden">
+          {children}
+        </main>
 
-      <aside
-        className={cn(
-          "fixed inset-y-0 left-0 z-50 w-70 bg-background border-r border-border transition-transform duration-200 lg:hidden",
-          mobileOpen ? "translate-x-0" : "-translate-x-full",
-        )}
-      >
-        <MobileSidebarContent
+        <BottomTabBar
           isActive={isActive}
-          onNavigate={closeMobile}
+          accountActive={pathname.startsWith("/account")}
         />
-      </aside>
-
-      <div
-        style={{ marginLeft: RAIL_WIDTH_PX }}
-        className="hidden lg:flex flex-1 flex-col h-dvh overflow-hidden"
-      >
-        <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
-          {children}
-        </main>
-      </div>
-
-      <div className="lg:hidden flex-1 flex flex-col h-dvh overflow-hidden">
-        <header className="lg:hidden sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-border px-4 py-3 flex items-center gap-3">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setMobileOpen(true)}
-                className="-ml-1.5"
-                aria-label="Open menu"
-              >
-                <Menu className="w-5 h-5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Open menu</TooltipContent>
-          </Tooltip>
-          <GraduationCap className="w-5 h-5 text-primary" />
-          <span className="font-semibold text-foreground text-sm">
-            ReadingPro
-          </span>
-          <div className="ml-auto flex items-center gap-2">
-            <AuthControls />
-          </div>
-        </header>
-        <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
-          {children}
-        </main>
-      </div>
       </div>
     </TooltipProvider>
   );
 }
 
-function SidebarContent({
-  isActive,
-}: {
-  isActive: (href: string) => boolean;
-}) {
+function TopBar({ isActive }: { isActive: (href: string) => boolean }) {
   return (
-    <div className="flex flex-col h-full w-full items-center">
-      <div
-        className="mb-6 w-10 h-10 rounded-[13px] flex justify-center items-center text-white cursor-default"
-        style={{
-          background:
-            "linear-gradient(135deg, #5A4FE0 0%, #7A6BFF 60%, #F2664A 100%)",
-        }}
+    <header className="shrink-0 h-12 md:h-13 flex items-center gap-6 bg-rail px-4 md:px-5 text-white z-40">
+      <Link
+        to="/study"
+        className="flex items-center gap-2.5 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
       >
-        <GraduationCap className="w-5 h-5" />
-      </div>
+        <span className="flex w-8 h-8 shrink-0 items-center justify-center rounded-[10px] bg-primary text-primary-foreground">
+          <GraduationCap className="w-[18px] h-[18px]" />
+        </span>
+        <span className="font-bold text-sm tracking-tight">ReadingPro</span>
+      </Link>
 
-      <nav className="flex-1 w-full px-2 space-y-1.5 flex flex-col items-center">
-        {navItems.map((item) => {
-          const active = isActive(item.href);
-          return (
-            <Tooltip key={item.href}>
-              <TooltipTrigger asChild>
-                <Link
-                  to={item.href}
-                  aria-label={item.label}
-                  className={cn(
-                    "w-10 h-10 flex justify-center items-center rounded-[13px] transition-all",
-                    active
-                      ? "bg-white/[0.14] text-white"
-                      : "text-white/60 hover:text-white hover:bg-white/[0.08]",
-                  )}
-                >
-                  <item.icon className="w-5 h-5" strokeWidth={1.75} />
-                </Link>
-              </TooltipTrigger>
-              <TooltipContent side="right">{item.label}</TooltipContent>
-            </Tooltip>
-          );
-        })}
-      </nav>
-
-      <div className="mt-4 pt-4 w-full px-2 border-t border-white/10 flex flex-col items-center gap-3">
-        <AuthControls />
-      </div>
-    </div>
-  );
-}
-
-function MobileSidebarContent({
-  isActive,
-  onNavigate,
-}: {
-  isActive: (href: string) => boolean;
-  onNavigate: () => void;
-}) {
-  return (
-    <div className="flex flex-col h-full">
-      <div className="px-5 py-5 border-b border-border">
-        <div className="flex items-center gap-3">
-          <div
-            className="w-9 h-9 rounded-[12px] flex justify-center items-center text-white cursor-default"
-            style={{
-              background:
-                "linear-gradient(135deg, #5A4FE0 0%, #7A6BFF 60%, #F2664A 100%)",
-            }}
-          >
-            <GraduationCap className="w-5 h-5" />
-          </div>
-          <div>
-            <h1 className="text-sm font-bold text-foreground leading-tight">
-              ReadingPro
-            </h1>
-            <p className="text-[11px] text-muted-foreground leading-tight">
-              Training App
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <nav className="flex-1 px-3 py-4 space-y-1">
+      <nav aria-label="Điều hướng chính" className="hidden md:flex self-stretch items-stretch gap-1">
         {navItems.map((item) => {
           const active = isActive(item.href);
           return (
             <Link
               key={item.href}
               to={item.href}
-              onClick={onNavigate}
+              aria-current={active ? "page" : undefined}
               className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                "relative flex items-center gap-2 px-3 text-sm font-medium transition-colors outline-none focus-visible:bg-white/[0.08]",
                 active
-                  ? "bg-accent text-primary"
-                  : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
+                  ? "text-white"
+                  : "text-sidebar-foreground hover:text-white",
               )}
             >
-              <item.icon
-                className={cn(
-                  "w-4.5 h-4.5",
-                  active ? "text-primary" : "text-muted-foreground",
-                )}
-              />
+              <item.icon className="w-4 h-4" strokeWidth={active ? 2.25 : 1.75} />
               {item.label}
+              {active && (
+                <span className="absolute inset-x-3 bottom-0 h-[3px] rounded-t-full bg-sidebar-ring" />
+              )}
             </Link>
           );
         })}
       </nav>
 
-      <div className="px-3 py-3 border-t border-border flex items-center justify-between">
-        <AuthControls />
+      <div className="ml-auto hidden md:flex items-center">
+        <AuthControls variant="rail" />
       </div>
-    </div>
+    </header>
+  );
+}
+
+function BottomTabBar({
+  isActive,
+  accountActive,
+}: {
+  isActive: (href: string) => boolean;
+  accountActive: boolean;
+}) {
+  return (
+    <nav
+      aria-label="Điều hướng chính"
+      className="md:hidden shrink-0 flex bg-rail border-t border-sidebar-border pb-[env(safe-area-inset-bottom)]"
+    >
+      {navItems.map((item) => {
+        const active = isActive(item.href);
+        return (
+          <Link
+            key={item.href}
+            to={item.href}
+            aria-current={active ? "page" : undefined}
+            className={cn(
+              "relative flex flex-1 flex-col items-center justify-center gap-1 py-2 text-[11px] font-medium transition-colors outline-none focus-visible:bg-white/[0.08]",
+              active ? "text-white" : "text-sidebar-foreground hover:text-white",
+            )}
+          >
+            {active && (
+              <span className="absolute top-0 h-0.5 w-8 rounded-full bg-sidebar-ring" />
+            )}
+            <item.icon className="w-5 h-5" strokeWidth={active ? 2 : 1.75} />
+            {item.label}
+          </Link>
+        );
+      })}
+      <AuthControls variant="tab" active={accountActive} />
+    </nav>
   );
 }

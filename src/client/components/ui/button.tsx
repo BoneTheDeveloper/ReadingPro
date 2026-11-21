@@ -18,16 +18,16 @@ const buttonVariants = cva(
           "bg-primary text-primary-foreground shadow-indigo hover:-translate-y-px hover:bg-indigo-hover",
         // Secondary: white bg, ink text, border → indigo on hover, card-subtle shadow
         secondary:
-          "bg-surface text-ink border-border shadow-card hover:border-primary hover:text-primary hover:-translate-y-px",
+          "bg-surface text-foreground border-border-strong shadow-card hover:border-primary hover:text-primary hover:-translate-y-px",
         // Outline: transparent, border visible, hover background
         outline:
-          "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
+          "border-border-strong bg-surface hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
         // Ghost: transparent, hover muted surface
         ghost:
           "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
-        // Destructive: coral bg, white text, tinted coral shadow
+        // Destructive: danger red, kept separate from the coral CTA
         destructive:
-          "bg-coral text-white shadow-coral hover:-translate-y-px hover:bg-coral-hover focus-visible:ring-coral/20",
+          "bg-destructive text-white shadow-card hover:-translate-y-px hover:bg-destructive/90 focus-visible:ring-destructive/20",
         // Coral accent (used sparingly — one prominent CTA per screen per §1)
         coral:
           "bg-coral text-white shadow-coral hover:-translate-y-px hover:bg-coral-hover",

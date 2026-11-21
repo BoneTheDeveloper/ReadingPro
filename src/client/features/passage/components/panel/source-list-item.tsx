@@ -11,10 +11,10 @@ import {
 import type { PassageListItem } from "@/shared/passage/schema";
 import { ProcessingStatus, type SourceType } from "@/shared/enums";
 
-const SOURCE_TYPE_VISUAL: Record<SourceType, { icon: LucideIcon; chip: string }> = {
-  TEXT: { icon: FileText, chip: "bg-indigo-soft text-primary" },
-  PDF: { icon: File, chip: "bg-amber-soft text-amber-text" },
-  YOUTUBE: { icon: PlayCircle, chip: "bg-coral-soft text-coral-hover" },
+const SOURCE_TYPE_VISUAL: Record<SourceType, { icon: LucideIcon; color: string }> = {
+  TEXT: { icon: FileText, color: "text-primary" },
+  PDF: { icon: File, color: "text-gold" },
+  YOUTUBE: { icon: PlayCircle, color: "text-coral" },
 };
 
 // Exhaustive on purpose: a new ProcessingStatus must be a compile error here,
@@ -46,7 +46,7 @@ interface SourceListItemProps {
 }
 
 export function SourceListItem({ item, active, onSelect, onDelete }: SourceListItemProps) {
-  const { icon: Icon, chip } = SOURCE_TYPE_VISUAL[item.sourceType];
+  const { icon: Icon, color } = SOURCE_TYPE_VISUAL[item.sourceType];
   const state = mapProcessingStatus(item.status);
   const isPending = state === "pending";
   const isFailed = state === "failed";
@@ -67,30 +67,17 @@ export function SourceListItem({ item, active, onSelect, onDelete }: SourceListI
         !isInteractive
           ? "cursor-default opacity-70 border-transparent"
           : active
-            ? "bg-indigo-soft border-indigo-soft-border cursor-pointer"
+            ? "bg-surface border-primary shadow-card cursor-pointer"
             : "border-transparent hover:bg-surface hover:border-border cursor-pointer",
       )}
     >
-      <div
-        className={cn(
-          "w-8 h-8 rounded-[10px] flex items-center justify-center shrink-0",
-          isFailed
-            ? "bg-destructive/10 text-destructive"
-            : isPending
-              ? "bg-accent text-primary"
-              : active
-                ? "bg-surface text-primary shadow-sm"
-                : chip,
-        )}
-      >
-        {isPending ? (
-          <Loader2 className="w-4 h-4 animate-spin" />
-        ) : isFailed ? (
-          <AlertTriangle className="w-4 h-4" />
-        ) : (
-          <Icon className="w-4 h-4" />
-        )}
-      </div>
+      {isPending ? (
+        <Loader2 className="w-[18px] h-[18px] shrink-0 text-primary animate-spin" />
+      ) : isFailed ? (
+        <AlertTriangle className="w-[18px] h-[18px] shrink-0 text-destructive" />
+      ) : (
+        <Icon className={cn("w-[18px] h-[18px] shrink-0", color)} strokeWidth={2} />
+      )}
       <div className="flex-1 overflow-hidden">
         <div
           className={cn(
@@ -108,7 +95,7 @@ export function SourceListItem({ item, active, onSelect, onDelete }: SourceListI
               : isPending
                 ? "text-muted-foreground"
                 : active
-                  ? "text-primary/60"
+                  ? "text-indigo-hover"
                   : "text-ink-3",
           )}
         >

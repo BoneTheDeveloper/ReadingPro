@@ -2,7 +2,7 @@
 
 import { BookOpen, Sparkles, Loader2 } from "lucide-react";
 import { cn } from "@/client/lib/utils";
-import { STUDIO_TILES, type StudioGridId } from "./studio-icon-list";
+import { STUDIO_TILES, TONE_CLASSES, type StudioGridId } from "./studio-icon-list";
 import { StudioArtifactType } from "@/shared/enums";
 
 interface StudioGridProps {
@@ -29,6 +29,7 @@ export function StudioGrid({
             (tile.gridId === StudioArtifactType.FLASHCARD && flashcardPending));
         const isGenerating = tile.kind === "generate" && pendingTypes.includes(tile.gridId);
         const disabled = !hasActivePassage || isPendingMutation || isGenerating;
+        const tone = TONE_CLASSES[tile.tone];
 
         return (
           <button
@@ -37,29 +38,22 @@ export function StudioGrid({
             onClick={() => onSelect(tile.gridId)}
             disabled={disabled}
             className={cn(
-              "relative overflow-hidden flex flex-col items-center gap-1.5 px-2 py-3.5 rounded-[14px] border bg-surface transition-all",
-              !disabled && "border-border hover:border-primary hover:-translate-y-px hover:shadow-card cursor-pointer",
-              disabled && "border-border opacity-50 cursor-not-allowed",
+              "flex items-center gap-2.5 min-h-11 px-3 py-2.5 rounded-[14px] bg-surface text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              !disabled && cn(tone.hoverBg, "cursor-pointer"),
+              disabled && "opacity-50 cursor-not-allowed",
             )}
             aria-label={tile.action}
           >
             {isGenerating ? (
-              <Loader2
-                className="relative z-10 text-primary animate-spin"
-                strokeWidth={2}
-                size={21}
-              />
+              <Loader2 className="shrink-0 text-primary animate-spin" strokeWidth={2} size={18} />
             ) : (
               <tile.icon
-                className={cn(
-                  "relative z-10",
-                  disabled ? "text-muted-foreground/60" : "text-primary",
-                )}
+                className={cn("shrink-0", disabled ? "text-muted-foreground" : tone.icon)}
                 strokeWidth={2}
-                size={21}
+                size={18}
               />
             )}
-            <span className={cn("relative z-10 text-[11.5px] font-semibold text-center leading-tight", disabled ? "text-muted-foreground/70" : "text-foreground")}>
+            <span className={cn("min-w-0 text-[13px] font-medium leading-tight", disabled ? "text-muted-foreground" : "text-foreground")}>
               {isGenerating ? "Đang tạo..." : tile.name}
             </span>
           </button>

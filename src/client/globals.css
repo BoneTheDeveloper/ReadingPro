@@ -108,124 +108,128 @@
     --font-lora: "Lora Variable", ui-serif, Georgia, serif;
     --font-jetbrains-mono: "JetBrains Mono Variable", ui-monospace, monospace;
 
-    /* Base surfaces — warm paper */
-    --background: #F5F2EC; /* paper */
-    --foreground: #221F2B; /* ink */
+    /* Teal Focus — every text pair below meets WCAG AA (4.5:1), every control
+       boundary meets 3:1. Page, panel and card are stepped so cards separate
+       from the page without relying on blur or translucency. */
+
+    /* Base surfaces */
+    --background: #E9F0EF;
+    --foreground: #0D1F1C;
     --surface: #FFFFFF;
     --surface-elevated: #FFFFFF;
-    --border: #EAE5DB;
-    --input: #FFFFFF;
+    --border: #C7D6D3; /* dividers and card edges */
+    --input: #748985; /* input/control border (shadcn `border-input`), 3.6:1 on white */
 
     /* Structural neutrals (study workspace) */
-    --paper: #F5F2EC;
-    --panel: #FBF9F5;
-    --border-strong: #DAD4C8;
-    --rail: #221F2B; /* dark anchor / left nav rail */
-    --ink-3: #908B98; /* muted / caption text */
+    --paper: #E9F0EF;
+    --panel: #F5F9F8;
+    --border-strong: #748985; /* control boundaries, 3.6:1 on white */
+    --rail: #0D2421; /* dark anchor / left nav rail */
+    --ink-3: #526662; /* caption text, 5.7:1 on white */
 
-    /* Primary — Indigo */
-    --primary: #5A4FE0;
+    /* Primary — Teal (legacy `indigo-*` token names kept so components need no rename) */
+    --primary: #0F766E;
     --primary-foreground: #FFFFFF;
-    --indigo-hover: #4A3FD0;
-    --ring: #5A4FE0;
+    --indigo-hover: #115E59;
+    --ring: #0F766E;
 
-    /* Secondary — neutral surface (button styling refined in primitives) */
-    --secondary: #FBF9F5;
-    --secondary-foreground: #221F2B;
+    /* Secondary — neutral surface */
+    --secondary: #F5F9F8;
+    --secondary-foreground: #0D1F1C;
 
     /* Muted */
-    --muted: #F2EFE8;
-    --muted-foreground: #565160; /* ink-2 */
+    --muted: #DFE9E7;
+    --muted-foreground: #364A46; /* ink-2 */
 
     /* Accent — soft neutral hover/surface role (NOT the coral brand accent) */
-    --accent: #F2EFE8;
-    --accent-foreground: #221F2B;
+    --accent: #DFE9E7;
+    --accent-foreground: #0D1F1C;
 
-    /* Indigo soft (selected/active surfaces) */
-    --indigo-soft: #ECEAFB;
-    --indigo-soft-border: #D6D1F7;
+    /* Primary soft (selected/active surfaces) */
+    --indigo-soft: #D3EFEA;
+    --indigo-soft-border: #A7DCD3;
 
-    /* Coral — accent / highlight / one prominent CTA */
-    --coral: #F2664A;
-    --coral-hover: #E0512F;
-    --coral-soft: #FCE7E1;
-    --coral-text: #C8442B;
+    /* Coral — burnt orange accent, one prominent CTA per screen */
+    --coral: #C2410C;
+    --coral-hover: #9A3412;
+    --coral-soft: #FFEDD5;
+    --coral-text: #9A3412;
 
-    /* Amber — warm warning / "new" */
-    --amber: #EEA63C;
-    --amber-soft: #FBEFD8;
-    --amber-text: #A66A12;
+    /* Amber — warning / "new" */
+    --amber: #D97706;
+    --amber-soft: #FEF3C7;
+    --amber-text: #92400E;
 
     /* Gold (legacy warm accent) — mapped onto the amber family */
-    --gold: #C8842A;
-    --gold-soft: #FBEFD8;
+    --gold: #B45309;
+    --gold-soft: #FEF3C7;
 
     /* Success — green */
-    --success: #2FA66A;
-    --success-soft: #DDF3E7;
+    --success: #15803D;
+    --success-soft: #DCFCE7;
 
-    /* Danger — coral */
-    --destructive: #F2664A;
-    --danger: #F2664A;
-    --danger-soft: #FCE7E1;
+    /* Danger — red, kept apart from the coral CTA */
+    --destructive: #B91C1C;
+    --danger: #B91C1C;
+    --danger-soft: #FEE2E2;
 
     /* Card & Popover */
     --card: #FFFFFF;
-    --card-foreground: #221F2B;
+    --card-foreground: #0D1F1C;
     --popover: #FFFFFF;
-    --popover-foreground: #221F2B;
+    --popover-foreground: #0D1F1C;
 
-    /* Charts — indigo / coral / green / amber family */
-    --chart-1: #5A4FE0;
-    --chart-2: #F2664A;
-    --chart-3: #2FA66A;
-    --chart-4: #EEA63C;
-    --chart-5: #908B98;
+    /* Charts */
+    --chart-1: #0F766E;
+    --chart-2: #C2410C;
+    --chart-3: #15803D;
+    --chart-4: #D97706;
+    --chart-5: #526662;
 
     /* Radius — soft but structured (button rounding handled in primitives) */
     --radius: 1rem;
 
-    /* Sidebar (recolored; restyled to dark rail in shell phase) */
-    --sidebar: #FBF9F5;
-    --sidebar-foreground: #221F2B;
-    --sidebar-primary: #5A4FE0;
+    /* Sidebar */
+    --sidebar: #0D2421;
+    --sidebar-foreground: #A3BCB8;
+    --sidebar-primary: #0F766E;
     --sidebar-primary-foreground: #FFFFFF;
-    --sidebar-accent: #ECEAFB;
-    --sidebar-accent-foreground: #4A3FD0;
-    --sidebar-border: #EAE5DB;
-    --sidebar-ring: #5A4FE0;
+    --sidebar-accent: #1A3A36;
+    --sidebar-accent-foreground: #FFFFFF;
+    --sidebar-border: #1A3A36;
+    --sidebar-ring: #2DD4BF;
 
     /* Learning status — badge bg / text / leading dot */
-    --status-new-bg: #FBEFD8;
-    --status-new-text: #A66A12;
-    --status-new-dot: #EEA63C;
-    --status-learning-bg: #ECEAFB;
-    --status-learning-text: #4A3FD0;
-    --status-learning-dot: #5A4FE0;
-    --status-known-bg: #DDF3E7;
-    --status-known-text: #1E7A4B;
-    --status-known-dot: #2FA66A;
+    --status-new-bg: #FEF3C7;
+    --status-new-text: #92400E;
+    --status-new-dot: #D97706;
+    --status-learning-bg: #D3EFEA;
+    --status-learning-text: #115E59;
+    --status-learning-dot: #0F766E;
+    --status-known-bg: #DCFCE7;
+    --status-known-text: #166534;
+    --status-known-dot: #15803D;
 
-    /* CEFR — semantic difficulty scale: A=green → B=amber → C=coral */
-    --cefr-a1: #DDF3E7;
-    --cefr-a2: #CFEEDD;
-    --cefr-b1: #FBEFD8;
-    --cefr-b2: #F8E4C2;
-    --cefr-c1: #FCE7E1;
-    --cefr-c2: #F9D9D0;
-    --cefr-a1-text: #1E7A4B;
-    --cefr-a2-text: #176B40;
-    --cefr-b1-text: #A66A12;
-    --cefr-b2-text: #8A560C;
-    --cefr-c1-text: #C8442B;
-    --cefr-c2-text: #A8341E;
+    /* CEFR — semantic difficulty scale: A=green → B=amber → C=red */
+    --cefr-a1: #DCFCE7;
+    --cefr-a2: #BBF7D0;
+    --cefr-b1: #FEF3C7;
+    --cefr-b2: #FDE68A;
+    --cefr-c1: #FEE2E2;
+    --cefr-c2: #FECACA;
+    --cefr-a1-text: #166534;
+    --cefr-a2-text: #14532D;
+    --cefr-b1-text: #92400E;
+    --cefr-b2-text: #78350F;
+    --cefr-c1-text: #991B1B;
+    --cefr-c2-text: #7F1D1D;
 
     /* Depth shadows (button shadows are tinted to the button color) */
-    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.04);
-    --shadow-raised: 0 4px 12px rgba(0, 0, 0, 0.07);
-    --shadow-popup: 0 4px 12px rgba(0, 0, 0, 0.06), 0 18px 40px rgba(0, 0, 0, 0.1);
-    --shadow-indigo: 0 2px 5px rgba(90, 79, 224, 0.3), 0 6px 16px rgba(90, 79, 224, 0.2);
-    --shadow-coral: 0 2px 5px rgba(242, 102, 74, 0.3), 0 6px 16px rgba(242, 102, 74, 0.18);
+    --shadow-card: 0 1px 2px rgba(13, 31, 28, 0.06), 0 4px 12px rgba(13, 31, 28, 0.05);
+    --shadow-raised: 0 4px 12px rgba(13, 31, 28, 0.09);
+    --shadow-popup: 0 4px 12px rgba(13, 31, 28, 0.08), 0 18px 40px rgba(13, 31, 28, 0.14);
+    --shadow-indigo: 0 2px 5px rgba(15, 118, 110, 0.28), 0 6px 16px rgba(15, 118, 110, 0.18);
+    --shadow-coral: 0 2px 5px rgba(194, 65, 12, 0.28), 0 6px 16px rgba(194, 65, 12, 0.16);
 }
 
 @layer base {
@@ -242,73 +246,102 @@
 }
 
 .dark {
-    /* Base surfaces */
-    --background: #11100E;
-    --foreground: #F7F2EA;
-    --surface: #1A1815;
-    --surface-elevated: #23201C;
-    --border: #343029;
-    --input: #23201C;
+    --background: #08120F;
+    --foreground: #E2EEEB;
+    --surface: #111F1C;
+    --surface-elevated: #182A26;
+    --border: #243934;
+    --input: #5A746E;
 
-    /* Primary - Navy, lifted for dark surfaces */
-    --primary: #8FB4E8;
-    --primary-foreground: #0E1726;
-    --indigo-hover: #A9C7EE;
-    --ring: #A9C7EE;
+    --paper: #08120F;
+    --panel: #0C1815;
+    --border-strong: #5A746E;
+    --rail: #050C0A;
+    --ink-3: #8AA19C;
 
-    /* Secondary */
-    --secondary: #2D3E55;
-    --secondary-foreground: #F7F2EA;
+    --primary: #2DD4BF;
+    --primary-foreground: #042A25;
+    --indigo-hover: #5EEAD4;
+    --ring: #5EEAD4;
 
-    /* Muted */
-    --muted: #211F1B;
-    --muted-foreground: #B8AEA1;
+    --secondary: #0C1815;
+    --secondary-foreground: #E2EEEB;
 
-    /* Accent - Gold */
-    --accent: #2B241A;
-    --accent-foreground: #F1C78F;
-    --gold: #E0B57F;
-    --gold-soft: #332719;
+    --muted: #182A26;
+    --muted-foreground: #AFC3BF;
 
-    /* Success */
-    --success: #8FBC8A;
-    --success-soft: #1E2A1E;
+    --accent: #182A26;
+    --accent-foreground: #E2EEEB;
 
-    /* Danger */
-    --destructive: #E58A76;
-    --danger: #E58A76;
-    --danger-soft: #351F1A;
+    --indigo-soft: #0F3A34;
+    --indigo-soft-border: #1A5A51;
 
-    /* Card & Popover */
-    --card: #1A1815;
-    --card-foreground: #F7F2EA;
-    --popover: #23201C;
-    --popover-foreground: #F7F2EA;
+    --coral: #FB923C;
+    --coral-hover: #FDBA74;
+    --coral-soft: #3A1F0C;
+    --coral-text: #FDBA74;
 
-    /* Charts */
-    --chart-1: #8FB4E8;
-    --chart-2: #E0B57F;
-    --chart-3: #8FBC8A;
-    --chart-4: #C7A6F2;
-    --chart-5: #E58A76;
+    --amber: #FBBF24;
+    --amber-soft: #3A2A0C;
+    --amber-text: #FCD34D;
+    --gold: #FBBF24;
+    --gold-soft: #3A2A0C;
 
-    /* Sidebar */
-    --sidebar: #171512;
-    --sidebar-foreground: #F7F2EA;
-    --sidebar-primary: #8FB4E8;
-    --sidebar-primary-foreground: #0E1726;
-    --sidebar-accent: #2B241A;
-    --sidebar-accent-foreground: #F1C78F;
-    --sidebar-border: #343029;
-    --sidebar-ring: #A9C7EE;
+    --success: #4ADE80;
+    --success-soft: #11301F;
 
-    /* CEFR levels - muted for dark backgrounds */
-    --cefr-a1: #7DDC9D;
-    --cefr-a2: #B7D96A;
-    --cefr-b1: #E7CF5D;
-    --cefr-b2: #E6A94D;
-    --cefr-c1: #E98BBE;
-    --cefr-c2: #B9A4F4;
+    --destructive: #F87171;
+    --danger: #F87171;
+    --danger-soft: #3B1518;
+
+    --card: #111F1C;
+    --card-foreground: #E2EEEB;
+    --popover: #182A26;
+    --popover-foreground: #E2EEEB;
+
+    --chart-1: #2DD4BF;
+    --chart-2: #FB923C;
+    --chart-3: #4ADE80;
+    --chart-4: #FBBF24;
+    --chart-5: #8AA19C;
+
+    --sidebar: #050C0A;
+    --sidebar-foreground: #8AA19C;
+    --sidebar-primary: #2DD4BF;
+    --sidebar-primary-foreground: #042A25;
+    --sidebar-accent: #182A26;
+    --sidebar-accent-foreground: #E2EEEB;
+    --sidebar-border: #182A26;
+    --sidebar-ring: #5EEAD4;
+
+    --status-new-bg: #3A2A0C;
+    --status-new-text: #FCD34D;
+    --status-new-dot: #FBBF24;
+    --status-learning-bg: #0F3A34;
+    --status-learning-text: #99F6E4;
+    --status-learning-dot: #2DD4BF;
+    --status-known-bg: #11301F;
+    --status-known-text: #86EFAC;
+    --status-known-dot: #4ADE80;
+
+    --cefr-a1: #11301F;
+    --cefr-a2: #11301F;
+    --cefr-b1: #3A2A0C;
+    --cefr-b2: #3A2A0C;
+    --cefr-c1: #3B1518;
+    --cefr-c2: #3B1518;
+    --cefr-a1-text: #86EFAC;
+    --cefr-a2-text: #86EFAC;
+    --cefr-b1-text: #FCD34D;
+    --cefr-b2-text: #FCD34D;
+    --cefr-c1-text: #FCA5A5;
+    --cefr-c2-text: #FCA5A5;
+
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.25);
+    --shadow-raised: 0 4px 12px rgba(0, 0, 0, 0.35);
+    --shadow-popup: 0 4px 12px rgba(0, 0, 0, 0.35), 0 18px 40px rgba(0, 0, 0, 0.45);
+    --shadow-indigo: 0 2px 5px rgba(45, 212, 191, 0.2), 0 6px 16px rgba(45, 212, 191, 0.12);
+    --shadow-coral: 0 2px 5px rgba(251, 146, 60, 0.2), 0 6px 16px rgba(251, 146, 60, 0.12);
 }
 
 @keyframes upload-fill {

@@ -17,7 +17,7 @@ export function PillButton({
     <Button
       className={cn(
         variant === "primary" && "bg-primary text-white shadow-md hover:bg-primary/90 hover:-translate-y-px",
-        variant === "secondary" && "bg-[#EAE5DB] text-foreground hover:bg-[#E0DBD3]",
+        variant === "secondary" && "bg-border text-foreground hover:bg-border",
         "!rounded-full",
         className
       )}
