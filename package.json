@@ -17,10 +17,10 @@
     "typecheck": "react-router typegen && tsc --noEmit",
     "lint": "eslint",
     "test": "vitest run",
-    "db:up": "docker compose up -d --wait postgres",
+    "db:up": "docker compose up -d --wait postgres && pnpm db:migrate",
     "db:down": "docker compose down",
-    "db:migrate": "docker compose run --rm flyway migrate",
-    "db:info": "docker compose run --rm flyway info",
+    "db:migrate": "docker compose run --rm --build flyway migrate",
+    "db:info": "docker compose run --rm --build flyway info",
     "workflow:inspect": "npx workflow inspect runs --web"
   },
   "dependencies": {

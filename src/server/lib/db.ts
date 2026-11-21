@@ -13,11 +13,12 @@
 // - Take `db: Queryable = pool` as the last parameter so services can pass a
 //   transaction client from `withTransaction`.
 import pg from "pg";
+import { resolveDatabaseUrl } from "./database-url";
 
 const globalForDb = globalThis as unknown as { pool?: pg.Pool };
 
 export const pool =
-  globalForDb.pool ?? new pg.Pool({ connectionString: process.env.DATABASE_URL });
+  globalForDb.pool ?? new pg.Pool({ connectionString: resolveDatabaseUrl() });
 
 if (process.env.NODE_ENV !== "production") globalForDb.pool = pool;
 

@@ -2,8 +2,9 @@ import "dotenv/config";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 
-// Integration tests run against the local dev database (DATABASE_URL, which
-// must point at localhost). Every test removes only the users it created.
+// Integration tests run against the local dev database (see
+// src/server/lib/database-url.ts), which must be on localhost. Every test
+// removes only the users it created.
 // A fixed non-UTC zone proves that timestamps survive the round trip.
 process.env.TZ = "Asia/Bangkok";
 

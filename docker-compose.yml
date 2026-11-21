@@ -1,0 +1,33 @@
+# Local development database. `docker compose up` starts Postgres, then Flyway
+# applies db/migrations and exits. Every setting comes from `.env` (see
+# `.env.example`); compose stops with an error when one is missing.
+services:
+  postgres:
+    image: postgres:17.12-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:?set POSTGRES_DB in .env}
+    # Bound to 127.0.0.1 only, so the database is not reachable from outside.
+    ports: ["127.0.0.1:${POSTGRES_PORT:?set POSTGRES_PORT in .env}:5432"]
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 2s
+      retries: 30
+
+  # Runs `migrate` once Postgres is healthy, then exits. It always targets the
+  # postgres service above, never the database in DATABASE_URL.
+  flyway:
+    build: ./db
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      FLYWAY_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:?set POSTGRES_DB in .env}
+      FLYWAY_USER: ${POSTGRES_USER:?set POSTGRES_USER in .env}
+      FLYWAY_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    restart: "no"
+
+volumes:
+  pgdata:
