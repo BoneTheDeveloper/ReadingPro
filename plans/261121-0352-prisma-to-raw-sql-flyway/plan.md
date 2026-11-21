@@ -87,7 +87,7 @@ db/migrations/V*.sql ──(Flyway container)──▶ Postgres container
 | 1 | [Docker Postgres, Flyway and the V1 schema](./phase-01-docker-postgres-flyway.md) | 3h | none | Done |
 | 2 | [DB access layer and Vitest harness](./phase-02-db-layer-and-vitest.md) | 3h | 1 | Done |
 | 3 | [Better Auth on the pg pool and the profile module](./phase-03-auth-on-pg-pool.md) | 3h | 2 | Done |
-| 4 | [Passage, artifact and chat repositories](./phase-04-passage-artifact-chat-repositories.md) | 4h | 2 | Pending |
+| 4 | [Passage, artifact and chat repositories](./phase-04-passage-artifact-chat-repositories.md) | 4h | 2 | Done |
 | 5 | [Vocabulary items, sets and review repositories](./phase-05-vocabulary-repositories.md) | 6h | 3, 4 | Pending |
 | 6 | [Remove Prisma, update docs, final verification](./phase-06-remove-prisma-and-verify.md) | 3h | 3, 4, 5 | Pending |
 

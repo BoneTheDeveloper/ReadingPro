@@ -1,4 +1,5 @@
 import { generateObject } from "ai";
+import { AppError } from "@/server/lib/errors";
 import { updateArtifactStatus } from "./artifact-repository";
 import { requireOwnedPassage } from "@/server/modules/passage";
 import {
@@ -7,7 +8,7 @@ import {
   type QuestionContent,
   type FlashcardContent,
 } from "@/shared/studio/artifact";
-import { StudioArtifactType } from "@/server/db/generated/enums";
+import { StudioArtifactType } from "@/shared/enums";
 
 // ─── Prompt templates ─────────────────────────────────────────────
 
@@ -80,10 +81,13 @@ export async function generateAndStoreArtifact(args: {
 
   const content = await generate(passage.content);
 
-  await updateArtifactStatus({
+  const artifact = await updateArtifactStatus({
     id: args.artifactId,
     userId: args.userId,
     status: "COMPLETED",
-    content: content as object,
+    content,
   });
+  if (!artifact) {
+    throw new AppError("artifact.not_found", "Artifact not found", { id: args.artifactId });
+  }
 }

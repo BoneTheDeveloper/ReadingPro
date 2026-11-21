@@ -3,6 +3,7 @@
  */
 import { preprocessPassage } from "../ingestion/preprocess";
 import { runPassageProcessing } from "../ingestion/generate";
+import { AppError } from "@/server/lib/errors";
 import { failPassageProcessing } from "../passage-repository";
 import type { CreatePassageInput } from "@/shared/passage/schema";
 
@@ -31,8 +32,11 @@ export async function aiProcessStep(
 }
 export async function failStep(args: PassageProcessingInput) {
   "use step";
-  await failPassageProcessing({
+  const passage = await failPassageProcessing({
     passageId: args.passageId,
     userId: args.userId,
   });
+  if (!passage) {
+    throw new AppError("passage.not_found", "Passage not found", { id: args.passageId });
+  }
 }

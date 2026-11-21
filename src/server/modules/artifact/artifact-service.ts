@@ -1,12 +1,29 @@
 import { start } from "workflow/api";
 import { AppError } from "@/server/lib/errors";
-import { StudioArtifactType } from "@/server/db/generated/enums";
+import { StudioArtifactType } from "@/shared/enums";
 import { requireReadyPassage } from "@/server/modules/passage";
 import { flashcardProgressSchema, questionProgressSchema } from "@/shared/studio/artifact";
-import { createArtifact, getArtifact, updateArtifactProgress } from "./artifact-repository";
+import {
+  createArtifact,
+  deleteArtifact as deleteArtifactRow,
+  findArtifactForUser,
+  updateArtifactProgress,
+  type ArtifactDetailRow,
+} from "./artifact-repository";
 import { artifactGenerationWorkflow } from "./workflow/index";
 
-export { deleteArtifact, listArtifactsForUser } from "./artifact-repository";
+export { listArtifactsForUser } from "./artifact-repository";
+
+async function getArtifact(id: string, userId: string): Promise<ArtifactDetailRow> {
+  const artifact = await findArtifactForUser(id, userId);
+  if (!artifact) throw new AppError("artifact.not_found", "Artifact not found", { id });
+  return artifact;
+}
+
+export async function deleteArtifact(id: string, userId: string): Promise<void> {
+  const deleted = await deleteArtifactRow(id, userId);
+  if (!deleted) throw new AppError("artifact.not_found", "Artifact not found", { id });
+}
 
 /** Saves the artifact as PENDING and hands it to the generation workflow. */
 export async function requestArtifactForUser(
@@ -50,5 +67,6 @@ export async function saveArtifactProgressForUser(userId: string, id: string, pr
       throw new AppError("request.invalid", `Unknown artifact type: ${artifact.type}`);
   }
 
-  await updateArtifactProgress(id, userId, parsed);
+  const updated = await updateArtifactProgress(id, userId, parsed);
+  if (!updated) throw new AppError("artifact.not_found", "Artifact not found", { id });
 }

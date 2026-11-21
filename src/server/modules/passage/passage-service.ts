@@ -1,11 +1,15 @@
 import { start } from "workflow/api";
 import { AppError } from "@/server/lib/errors";
 import type { CreatePassageInput, Passage } from "@/shared/passage/schema";
-import { createPassageForUser, findPassageForUser } from "./passage-repository";
+import {
+  createPassageForUser,
+  deletePassageForUser as deletePassageRow,
+  findPassageForUser,
+} from "./passage-repository";
 import { requireTranscript } from "./ingestion/youtube-transcript";
 import { passageProcessingWorkflow } from "./workflow/index";
 
-export { deletePassageForUser, listPassagesForUser } from "./passage-repository";
+export { listPassagesForUser } from "./passage-repository";
 
 /**
  * Saves the passage as PENDING and hands it to the processing workflow. A
@@ -41,4 +45,9 @@ export async function requireReadyPassage(userId: string, id: string): Promise<P
     throw new AppError("passage.not_ready", "Passage is not ready");
   }
   return passage;
+}
+
+export async function deletePassageForUser(userId: string, id: string): Promise<void> {
+  const deleted = await deletePassageRow(userId, id);
+  if (!deleted) throw new AppError("passage.not_found", "Passage not found", { id });
 }
