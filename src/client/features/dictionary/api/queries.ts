@@ -34,9 +34,9 @@ export const wordLookupQueries = {
 
   /**
    * Looks a selected word up and records it in the passage's history. It is a
-   * query rather than a mutation because the POST is an idempotent upsert: the
-   * Pro popup and the Studio view share one cached result, so "Xem chi tiết"
-   * sends no second request. A `dictionary.not_found` error is rendered inline.
+   * query rather than a mutation because the POST is an idempotent upsert:
+   * reopening the same word in the view reuses the cached result instead of
+   * sending it again. A `dictionary.not_found` error is rendered inline.
    */
   lookUp: (passageId: string, word: string, context: string | null) =>
     queryOptions({
@@ -61,8 +61,8 @@ export const wordLookupQueries = {
 
 export const translateQueries = {
   /**
-   * The AI meaning in context (Pro only). Cached for the browser session: the
-   * same word in the same sentence is translated once.
+   * The AI meaning in context (Pro only, sent only when the user asks). Cached
+   * for the browser session: the same word in the same sentence is translated once.
    */
   inContext: (word: string, context: string) =>
     queryOptions({

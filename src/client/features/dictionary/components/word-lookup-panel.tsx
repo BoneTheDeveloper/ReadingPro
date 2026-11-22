@@ -20,7 +20,7 @@ interface WordLookupPanelProps {
   entries: MatchedDictionaryEntry[];
 }
 
-/** The body of the "Tra từ" view: dictionary entries, the AI meaning for Pro, outside translators, and saving. */
+/** The body of the "Tra từ" view: dictionary entries, the AI meaning on request (Pro), outside translators, and saving. */
 export function WordLookupPanel({ passageId, selectedText, context, entries }: WordLookupPanelProps) {
   const isPro = isProTier(useAppSelector(selectSessionUser)?.tier);
   const [choice, setChoice] = useState<MeaningChoice | null>(null);
@@ -35,14 +35,15 @@ export function WordLookupPanel({ passageId, selectedText, context, entries }: W
         </blockquote>
       )}
 
-      {isPro && context ? (
-        <AiContextMeaning word={selectedText} context={context} selectedKey={choice?.key ?? null} onSelectMeaning={setChoice} />
-      ) : (
-        !isPro && (
-          <p className="text-[11.5px] text-muted-foreground">
-            Dịch nhanh tại chỗ và nghĩa theo ngữ cảnh (AI) có trong gói Pro.
-          </p>
-        )
+      {/* The AI meaning needs the sentence, so a word typed into the search box has none. */}
+      {context && (
+        <AiContextMeaning
+          word={selectedText}
+          context={context}
+          isPro={isPro}
+          selectedKey={choice?.key ?? null}
+          onSelectMeaning={setChoice}
+        />
       )}
 
       {entries.length > 0 ? (

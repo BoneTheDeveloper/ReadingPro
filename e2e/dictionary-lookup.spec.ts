@@ -25,6 +25,8 @@ test.describe("Free user", () => {
     // The particle after the selection picks the phrasal verb.
     await expect(page.getByText("Theo câu")).toBeVisible();
     await expect(page.getByText("to look after").first()).toBeVisible();
+    // The AI meaning is a Pro feature: locked, and never requested.
+    await expect(page.getByRole("button", { name: "Dịch theo ngữ cảnh" })).toBeDisabled();
     await expect(page.getByText(/có trong gói Pro/)).toBeVisible();
     expect(translate.count).toBe(0);
   });
@@ -94,29 +96,32 @@ test.describe("Free user", () => {
 });
 
 test.describe("Pro user", () => {
-  test("gets the in-place popup with the AI meaning; Xem chi tiết reuses the lookup", async ({ page }) => {
+  test("Dịch opens the Studio view; the AI meaning is sent only on request", async ({ page }) => {
     // The AI call is mocked: this checks the flow, not the model.
     await page.route("**/api/translate", (route) =>
       route.fulfill({ json: { translation: "chăm sóc", lemma: "look after", partOfSpeech: "VERB" } }),
     );
-    const lookups = countRequests(page, "POST", "/api/word-lookup");
+    const translate = countRequests(page, "POST", "/api/translate");
     await signIn(page, TEST_ACCOUNTS.pro);
     await openStudy(page);
 
     await translateWord(page, "looks");
 
-    const popup = page.getByRole("dialog");
-    await expect(popup.getByText("Theo ngữ cảnh (AI)")).toBeVisible();
-    await expect(popup.getByText("chăm sóc", { exact: true })).toBeVisible();
-    await expect(popup.getByText(/Theo câu · to look after/i)).toBeVisible();
-    await expect(popup.getByText("trông nom, chăm sóc")).toBeVisible();
-
-    await popup.getByRole("button", { name: "Lưu nghĩa theo ngữ cảnh" }).click();
-    await expect(popup.getByRole("button", { name: "Đã lưu từ vựng" })).toBeVisible();
-
-    await popup.getByRole("button", { name: "Xem chi tiết" }).click();
+    // No in-place translation: the meaning opens in the Studio panel, like for Free.
+    await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(page.getByRole("navigation", { name: "Đường dẫn" }).getByText("Tra từ")).toBeVisible();
-    await expect(page.getByText("Theo ngữ cảnh (AI)")).toBeVisible();
-    expect(lookups.count).toBe(1);
+    await expect(page.getByText("to look after").first()).toBeVisible();
+    expect(translate.count).toBe(0);
+
+    await page.getByRole("button", { name: "Dịch theo ngữ cảnh" }).click();
+    const aiMeaning = page.getByRole("button", { name: /chăm sóc\s*look after/ });
+    await expect(aiMeaning).toBeVisible();
+    expect(translate.count).toBe(1);
+
+    await aiMeaning.click();
+    await expect(page.getByText(/^Lưu “look after” vào từ vựng$/)).toBeVisible();
+    await expect(page.getByLabel("Nghĩa sẽ lưu")).toHaveValue("chăm sóc");
+    await page.getByRole("button", { name: "Lưu vào từ vựng" }).click();
+    await expect(page.getByRole("button", { name: "Đã lưu" })).toBeVisible();
   });
 });
