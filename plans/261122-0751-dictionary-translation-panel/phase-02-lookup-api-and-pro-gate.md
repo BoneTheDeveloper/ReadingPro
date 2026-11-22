@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Server: dictionary lookup, word-lookup API, Pro gate"
-status: pending
+status: completed
 priority: P1
 effort: "1d"
 dependencies: [1]
@@ -54,11 +54,12 @@ per-passage lookup rows, and restrict `/api/translate` to signed-in Pro users.
 3. **Dictionary repository and service.**
    - Repository: `findEntries(headwords: string[], db = pool)` runs
      `SELECT ... WHERE "headword" = ANY($1)`.
-   - Service: `resolveEntry(word)` builds the candidates in this order:
-     lowercased surface form, verb form, noun form, adjective form. It
-     dedupes them, runs one query, and returns the first candidate in order
-     that exists, or `null`.
-   - Export `resolveEntry` and `findEntry` from the module's `index.ts`.
+   - Service: `resolveEntries(word)` builds the surface forms (lowercased,
+     plus the form without a trailing `'s`) and the base forms (verb, noun,
+     adjective), runs one query, and returns at most two entries: the surface
+     entry (`match: "surface"`) and the first existing base form that differs
+     from it (`match: "lemma"`). An empty array means not found.
+   - Export `resolveEntries` from the module's `index.ts`.
 4. **Word-lookup repository.**
    - `upsertLookup({ userId, passageId, headword, selectedText, contextSentence })`:
      `INSERT ... ON CONFLICT ("passageId","headword") DO UPDATE SET "lookedUpAt" = CURRENT_TIMESTAMP, "selectedText" = EXCLUDED."selectedText", "contextSentence" = COALESCE(EXCLUDED."contextSentence", "WordLookup"."contextSentence") RETURNING *`.
@@ -70,13 +71,14 @@ per-passage lookup rows, and restrict `/api/translate` to signed-in Pro users.
 5. **Word-lookup service and routes.** All routes sit behind `requireSession`.
    - `POST /api/word-lookup { passageId, word, context? }`:
      - Call `requireOwnedPassage` first.
-     - Call `resolveEntry`. If it returns `null`, throw
+     - Call `resolveEntries`. If it returns nothing, throw
        `dictionary.not_found` and write nothing.
-     - Otherwise upsert and return 201 with `{ lookup, entry }`.
+     - Otherwise upsert with the first entry's headword and return 201 with
+       `{ lookup, entries }`.
    - `GET /api/word-lookup?passageId=` returns the list.
-   - `GET /api/word-lookup/:id` returns `{ lookup, entry | null }`. A null
-     entry means the dictionary has since been reimported without that
-     headword.
+   - `GET /api/word-lookup/:id` returns `{ lookup, entries }`, resolved
+     again from the stored `selectedText`. An empty array means the
+     dictionary has since been reimported without that word.
    - `DELETE /api/word-lookup/:id` returns 204, or `word_lookup.not_found`.
    - Validate the input with zod: `word` uses the same rules as
      `TranslateInputSchema.word`, and `context` is at most 1000 characters.
@@ -89,9 +91,8 @@ per-passage lookup rows, and restrict `/api/translate` to signed-in Pro users.
 7. **Tests.** They run against the real local database.
    - Dictionary tests run inside one transaction that is rolled back.
      Repository functions take a `Queryable`. Seed `run`, `go` and `study`,
-     then assert that `running`, `went` and `studies` resolve (`went`
-     depends on the lemmatizer's irregular list) and that `qzxv` returns
-     `null`.
+     then assert that `went` and `studies` resolve to the base form, that
+     `running` returns `running` then `run`, and that `qzxv` returns nothing.
    - Word-lookup tests use `createTestUser` and the passage helpers in
      `src/server/test/`. They assert:
      - a found word creates one row;

@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: "Dictionary data: schema, parser, import"
-status: pending
+status: completed
 priority: P1
 effort: "1d"
 dependencies: []
@@ -15,11 +15,30 @@ Load the Hồ Ngọc Đức / OVDP English-Vietnamese dictionary into a
 `"DictionaryEntry"` table with a repeatable import, and add the
 `"WordLookup"` table that phase 2 writes to.
 
+## Decisions from the source check (2026-11-22, accepted by the user)
+
+- The source is OVDP `Stardict/English/AnhViet.zip` on SourceForge (GPLv2 per
+  the project page). It is StarDict (`en_vi.idx` + `en_vi.dict.dz`), not a
+  `.txt`; each definition uses the `@ * - = !` markup below.
+- The original zip (13.2 MB) is committed unchanged, by user decision, so its
+  sha256 matches upstream. The import reads the zip directly.
+- Only single-token headwords are imported (117,811 of 387,517). Selection
+  never contains whitespace, and 255k of the 269k multi-word headwords carry
+  only specialist meanings. Phrasal verbs live inside the verb entry as `!`
+  idioms (`!to look after`).
+- Specialist sections (`@Chuyên ngành …`, `@Lĩnh vực: …`) are kept as
+  `domain` groups after the general and idiom groups.
+- Phase 3 adds a context match: when the words right after the selection
+  match an idiom's particle (`looks after` → `to look after`), that idiom
+  group moves to the top with a "Theo câu" badge.
+
 ## Files to Create / Modify
 
 - Create: `db/migrations/V3__dictionary_and_word_lookup.sql`
-- Create: `db/dictionary/anhviet.txt.gz` (source file, committed) and
+- Create: `db/dictionary/AnhViet.zip` (source file, committed) and
   `db/dictionary/SOURCE.txt` (origin URL, license, sha256, retrieval date)
+- Create: `src/server/modules/dictionary/stardict-reader.ts` (zip + StarDict
+  index reader, relative imports only)
 - Create: `src/server/modules/dictionary/ovdp-parser.ts`. It must import
   only relative paths and no `@/` alias, so the script can run it under plain
   Node.

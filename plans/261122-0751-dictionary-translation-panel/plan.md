@@ -1,7 +1,7 @@
 ---
 title: "Dictionary translation panel in Studio, inline translation for Pro"
 description: "Move word translation into a Studio view backed by an imported English-Vietnamese dictionary, record each lookup as a Studio row, open external translators in popups, save words from the panel, and make the in-place popup plus AI context meaning Pro-only."
-status: pending
+status: completed
 priority: P1
 effort: 4d
 branch: bone/feat/dictionary-translation-panel
@@ -78,9 +78,10 @@ Context and decisions:
   1. `GET`/`POST /api/word-lookup*` and `/api/translate` return 401 without
      a session. `/api/translate` returns 403 `plan.pro_required` for a FREE
      user.
-  2. Looking up `running`, `went` or `studies` resolves to `run`, `go` or
-     `study` and returns dictionary senses. An unknown token returns 404
-     `dictionary.not_found` and creates no row.
+  2. Looking up `went` or `studies` returns the `go` or `study` entry marked
+     as the base form. Looking up `running` returns the `running` entry first
+     and the `run` entry second, marked as the base form. An unknown token
+     returns 404 `dictionary.not_found` and creates no row.
   3. Looking up the same word twice in one passage leaves one row, moved to
      the top. The row disappears when the passage is deleted (cascade).
   4. Across `docs/Fixtures/upload-files/txt/valid-a1-simple.txt` and
@@ -100,17 +101,35 @@ Context and decisions:
 
 | # | Phase | Status | Depends on |
 |---|-------|--------|-----------|
-| 1 | [Dictionary data: schema, parser, import](./phase-01-dictionary-data-import.md) | Pending | none |
-| 2 | [Server: dictionary lookup, word-lookup API, Pro gate](./phase-02-lookup-api-and-pro-gate.md) | Pending | 1 |
-| 3 | [Studio: Tra từ tile, lookup rows, detail view](./phase-03-studio-lookup-view.md) | Pending | 2 |
-| 4 | [Reading flow: route selection to Studio, Pro inline popup](./phase-04-reading-flow-and-pro-inline.md) | Pending | 3 |
-| 5 | [Docs and end-to-end verification](./phase-05-docs-and-verification.md) | Pending | 4 |
+| 1 | [Dictionary data: schema, parser, import](./phase-01-dictionary-data-import.md) | Completed | none |
+| 2 | [Server: dictionary lookup, word-lookup API, Pro gate](./phase-02-lookup-api-and-pro-gate.md) | Completed | 1 |
+| 3 | [Studio: Tra từ tile, lookup rows, detail view](./phase-03-studio-lookup-view.md) | Completed | 2 |
+| 4 | [Reading flow: route selection to Studio, Pro inline popup](./phase-04-reading-flow-and-pro-inline.md) | Completed | 3 |
+| 5 | [Docs and end-to-end verification](./phase-05-docs-and-verification.md) | Completed | 4 |
+
+## Verification (2026-11-22)
+
+All eight acceptance criteria were checked:
+- Criteria 1 to 3: integration tests in `src/server/modules/{dictionary,word-lookup,translate}`,
+  plus curl against the dev server (401 without a session).
+- Criterion 4: `pnpm db:dictionary-coverage` reports 97.8% (misses: democratisation,
+  lifecycle, pangram).
+- Criteria 5 to 7: a headless Playwright run against the dev server with throwaway
+  `@test.invalid` FREE and PRO accounts, and a database check of the saved word.
+- Criterion 8: `pnpm test`, `pnpm typecheck`, `pnpm lint` and `pnpm build` are green.
+
+Not checked in the browser: switching passages closes an open lookup view. The view is
+derived from the passage id, so it resets without an effect.
 
 ## Key decisions
 
-- **Lemma resolution without AI.** Candidates are the lowercased surface form,
-  then `wink-lemmatizer` verb, noun and adjective forms. They are looked up in
-  one `= ANY($1)` query, and the first candidate in order that exists wins.
+- **Lemma resolution without AI, both entries shown.** The lowercased surface
+  form and the `wink-lemmatizer` verb, noun and adjective forms are looked up
+  in one `= ANY($1)` query. The result holds at most two entries: the surface
+  entry when it exists, then the first existing base form (verb, then noun,
+  then adjective) marked `match: "lemma"`. This follows Yomitan and Oxford
+  Learner's: neither entry is hidden, so `interesting` keeps its own entry and
+  `running` still shows `run`. Accepted by the user on 2026-11-22.
 - **Lookup rows reference the headword, not the dictionary row**, through no
   foreign key. A reimport (`TRUNCATE` + insert) never breaks history. A
   missing entry falls back to showing external translators.

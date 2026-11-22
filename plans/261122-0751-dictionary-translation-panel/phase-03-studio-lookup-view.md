@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "Studio: Tra từ tile, lookup rows, detail view"
-status: pending
+status: completed
 priority: P1
 effort: "1d"
 dependencies: [2]
@@ -58,13 +58,20 @@ panel.
      no context.
    - **Request state:** fire the mutation once per `request` object (keyed
      by word and context), and show a loader.
-   - **Found:** show `dictionary-entry-view`:
+   - **Found:** show one `dictionary-entry-view` per returned entry, at most
+     two. The base-form entry gets the header "🧩 Dạng gốc: run
+     (running → run)". Each entry:
      - display headword and phonetic;
      - one block per sense group with its raw label and a part-of-speech
        badge;
      - the first 3 meanings visible and the rest behind "Xem thêm";
      - examples collapsed under each meaning;
      - the context sentence quoted if present.
+     - **Context match:** when the one or two words right after the
+       selection in the context sentence equal the particle of an idiom
+       (`looks after` → `to look after`), that idiom group moves to the top
+       of its entry with a "Theo câu" badge. Pure string matching, no AI;
+       a split phrasal verb ("look the word up") is not detected.
    - **Not found:** show "Không có trong từ điển" plus the translator bar.
      No row is created.
    - **Footer:** translator bar, then save form.
@@ -87,7 +94,7 @@ panel.
      its group. The user may also type their own meaning and pick the part of
      speech.
    - "Lưu vào từ vựng" calls the existing `useCreateVocabularyMutation` with
-     `term = headword`, `translation`, `partofSpeech`, `contextSentence` and
+     `term` = the headword of the entry the meaning came from, `translation`, `partofSpeech`, `contextSentence` and
      `passageId`.
    - It shows "Đã lưu" after success and resets when the meaning changes.
 7. **Row list.** In `default-studio-view.tsx`, below the artifacts, add the
