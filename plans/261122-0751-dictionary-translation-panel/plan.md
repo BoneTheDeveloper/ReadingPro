@@ -118,8 +118,8 @@ All eight acceptance criteria were checked:
   `@test.invalid` FREE and PRO accounts, and a database check of the saved word.
 - Criterion 8: `pnpm test`, `pnpm typecheck`, `pnpm lint` and `pnpm build` are green.
 
-Not checked in the browser: switching passages closes an open lookup view. The view is
-derived from the passage id, so it resets without an effect.
+Switching passages closes an open lookup view; this is covered by the Playwright suite
+added afterwards (`pnpm test:e2e`, `e2e/dictionary-lookup.spec.ts`).
 
 ## Key decisions
 
