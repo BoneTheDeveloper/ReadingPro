@@ -8,6 +8,7 @@ import { artifactRoutes } from "@/server/modules/artifact";
 import { reviewRoutes, vocabularyRoutes, vocabularySetRoutes } from "@/server/modules/vocabulary";
 import { translateRoutes } from "@/server/modules/translate";
 import { chatRoutes } from "@/server/modules/chat";
+import { wordLookupRoutes } from "@/server/modules/word-lookup";
 import type { AppEnv } from "@/server/env";
 
 // Session checks live on each module's router, never here, so /auth/* stays public.
@@ -23,6 +24,7 @@ const app = new Hono<AppEnv>()
   .route("/vocabulary-set", vocabularySetRoutes)
   .route("/review", reviewRoutes)
   .route("/translate", translateRoutes)
+  .route("/word-lookup", wordLookupRoutes)
   .route("/ai-chat", chatRoutes)
   .notFound((c) => {
     const error = new AppError("route.not_found", `No route for ${c.req.method} ${c.req.path}`);

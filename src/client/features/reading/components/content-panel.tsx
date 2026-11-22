@@ -1,13 +1,10 @@
 "use client";
 import { useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { FileText, FileSearch, Plus, FileType, Loader2 } from "lucide-react";
 import { cn } from "@/client/lib/utils";
 import { CefrBadge } from "./cefr-badge";
 import { InlineTranslationPopup } from "./inline-translation-popup";
 import { useScrollProgress } from "../hooks/use-scroll-progress";
-import { readingQueries } from "../api/queries";
-import { useCreateVocabularyMutation } from "@/client/features/vocabulary";
 import { validateWordSelection } from "../lib/word-selection";
 import { getErrorMessage } from "@/client/lib/api/error-message";
 import type { WordSelectionAnchor } from "../lib/word-selection";
@@ -19,26 +16,19 @@ export function ContentPanel({
   isLoading,
   error,
   onOpenUploadModal,
+  onLookup,
 }: {
   passage: Passage | null;
   isLoading: boolean;
   error: Error | null;
   onOpenUploadModal: () => void;
+  /** Opens the Studio "Tra từ" view for a selected word. */
+  onLookup: (request: { word: string; context: string }) => void;
 }) {
   const [viewMode, setViewMode] = useState<"text" | "pdf" | "video">(
     "text",
   );
   const [wordAnchor, setWordAnchor] = useState<WordSelectionAnchor | null>(null);
-  // Display state for isSaved - reset when selection or translation changes
-  const [isSaved, setIsSaved] = useState(false);
-  // True once the user asks for a translation of the current selection.
-  const [translationRequested, setTranslationRequested] = useState(false);
-  const translation = useQuery({
-    ...readingQueries.translate(wordAnchor?.word ?? "", wordAnchor?.context ?? ""),
-    enabled: translationRequested && wordAnchor !== null,
-  });
-  const translationData = translationRequested ? (translation.data ?? null) : null;
-  const createVocabulary = useCreateVocabularyMutation();
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -46,9 +36,8 @@ export function ContentPanel({
   const pdfBlobPathname =
     viewMode === "pdf" && passage?.filePath ? passage.filePath : null;
 
-  const clearTranslation = () => {
+  const clearSelection = () => {
     setWordAnchor(null);
-    setTranslationRequested(false);
     window.getSelection()?.removeAllRanges();
   };
 
@@ -60,7 +49,6 @@ export function ContentPanel({
     );
     if (!next) {
       setWordAnchor(null);
-      setTranslationRequested(false);
       return;
     }
     const current = wordAnchor;
@@ -72,33 +60,16 @@ export function ContentPanel({
       return;
     }
     setWordAnchor(next);
-    setTranslationRequested(false);
-    setIsSaved(false); // Reset saved state when selection changes
   };
 
+  // The meaning is shown in the Studio "Tra từ" view, where the user decides
+  // whether to also ask for the AI meaning in context.
   const handleTranslateClick = () => {
     if (!wordAnchor) return;
-    // A second click is the popup's retry button; a cached result needs no request.
-    if (translationRequested && translation.isError) void translation.refetch();
-    setTranslationRequested(true);
-    setIsSaved(false); // Reset saved state when re-translating
+    onLookup({ word: wordAnchor.word, context: wordAnchor.context });
+    clearSelection();
   };
 
-  const handleSaveVocabulary = () => {
-    const result = translationData;
-    if (!result || !wordAnchor || !passage) return;
-    createVocabulary.mutate({
-      term: result.lemma,
-      translation: result.translation,
-      sourceLanguage: "en",
-      targetLanguage: "vi",
-      partofSpeech: result.partOfSpeech,
-      contextSentence: wordAnchor.context,
-      passageId: passage.id,
-    });
-    // Mark as saved (display state only)
-    setIsSaved(true);
-  };
   if (!passage) {
     if (isLoading) {
       return (
@@ -219,14 +190,8 @@ export function ContentPanel({
       </div>
       <InlineTranslationPopup
         anchor={wordAnchor}
-        data={translationData}
-        error={translationRequested ? translation.error : null}
-        isPending={translation.isFetching}
-        isSaving={createVocabulary.isPending}
-        isSaved={isSaved}
         onTranslate={handleTranslateClick}
-        onClose={clearTranslation}
-        onSave={handleSaveVocabulary}
+        onClose={clearSelection}
       />
     </div>
   );

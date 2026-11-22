@@ -19,7 +19,7 @@ owned workspace.
 | [Content import](docs/Requirements/epic-01-content-import.md)                 | Paste text, upload a PDF, or bring a YouTube link in as a passage                 |
 | [Study &amp; comprehension](docs/Requirements/epic-02-study-comprehension.md) | Generate comprehension questions and flashcards over a passage                    |
 | [Passage chat](docs/Requirements/epic-03-passage-chat.md)                     | Ask a tutor grounded in the passage you are reading                               |
-| [Vocabulary capture](docs/Requirements/epic-04-vocabulary-capture.md)         | Inline translation while reading, then save words with their context              |
+| [Vocabulary capture](docs/Requirements/epic-04-vocabulary-capture.md)         | Look words up in a built-in dictionary while reading (AI meaning in context on Pro), then save them with their context |
 | [Memorization &amp; review](docs/Requirements/epic-05-memorization-review.md) | Group saved words into sets and review them on an FSRS spaced-repetition schedule |
 
 
@@ -60,7 +60,8 @@ set; without it, the app builds the local URL from the `POSTGRES_*` values.
 **2. Start the database**
 
 ```bash
-pnpm db:up        # starts Postgres, then Flyway creates the tables
+pnpm db:up                  # starts Postgres, then Flyway creates the tables
+pnpm db:import-dictionary   # once: loads the English-Vietnamese dictionary
 ```
 
 `docker compose up -d` does the same: it starts the `postgres` service, and
@@ -129,6 +130,22 @@ pnpm dlx auth@1.7.6 generate --config src/server/modules/auth/auth.ts --output a
 
 Never run Better Auth's own `migrate` command.
 
+### Dictionary data
+
+Word lookup reads the `"DictionaryEntry"` table, filled from the OVDP
+English-Vietnamese dictionary by Hồ Ngọc Đức (GPLv2). The source archive is
+committed in `db/dictionary/`; its origin, license and checksum are in
+[`db/dictionary/SOURCE.txt`](db/dictionary/SOURCE.txt).
+
+| Command | What it does |
+| ------- | ------------ |
+| `pnpm db:import-dictionary` | Load the dictionary (about 117,000 single-word entries). Safe to run again: it replaces the table in one transaction. |
+| `pnpm db:dictionary-coverage` | Print how many words of the sample passages the dictionary resolves (target 90%) |
+
+Run the import once after `pnpm db:up` on a new database. For production, take
+a backup with `pg_dump` first, then run the import with `DATABASE_URL` set to
+the production database.
+
 ## Tests and checks
 
 ```bash
@@ -138,7 +155,22 @@ pnpm lint
 ```
 
 Tests use the local database and only refuse to run when `DATABASE_URL` is not
-on `localhost`. Each test creates its own throwaway users and deletes them, so
+on `localhost`. The word-lookup tests read the imported dictionary, so run
+`pnpm db:import-dictionary` once before the first `pnpm test`.
+
+**Browser tests** (Playwright, headless Chromium):
+
+```bash
+pnpm test:e2e:install   # once: downloads the headless Chromium shell
+pnpm test:e2e           # reuses running dev servers, or starts and stops them
+```
+
+They sign in with local test accounts that each test recreates. To sign in by
+hand with the same accounts, run `pnpm db:seed-test-accounts`: it prints the
+FREE and PRO logins (password `e2e-pass-123`). The accounts live only in the
+local database, end in `@test.invalid`, and are deleted by every `pnpm test`;
+seed them again afterwards. Both commands refuse a database that is not on
+`localhost`. Code lives in `e2e/`, the accounts in `e2e/test-accounts.ts`. Each test creates its own throwaway users and deletes them, so
 your own data is not touched.
 
 ## Build and deploy

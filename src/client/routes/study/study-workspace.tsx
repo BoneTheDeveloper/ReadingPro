@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Group, Panel, Separator } from "react-resizable-panels";
 import { SourcesPanel, UploadModal, usePassageLibrary, passageQueries, useUploadFlow } from "@/client/features/passage";
 import { ContentPanel } from "@/client/features/reading";
-import { StudioPanel, type StudioPanelView } from "@/client/features/studio";
+import { StudioPanel, type StudioPanelView, type WordLookupRequest } from "@/client/features/studio";
 import { useStudyPanelLayout } from "./use-study-panel-layout";
 
 import type { RefObject } from "react";
@@ -16,28 +16,14 @@ const STUDIO_VIEW_SIZE = {
   chat: 400,
   question: 500,
   flashcard: 500,
+  lookup: 420,
 } as const satisfies Record<NonNullable<StudioPanelView>["contentType"], number>;
 
-interface StudioSlotProps {
-  passageId: string | null;
-  panelRef: RefObject<PanelImperativeHandle | null>;
-  collapsed: boolean;
-  onToggleCollapse: () => void;
-}
+/** An open studio view belongs to the passage it was opened from. */
+type StudioViewState = { passageId: string | null; view: StudioPanelView };
 
-/**
- * Owns the studio's `view` state. Mounted with a passage-derived key so the
- * open view resets on passage change without a reset effect — an artifact view
- * is only meaningful for the passage it was opened from.
- */
-function StudioSlot({
-  passageId,
-  panelRef,
-  collapsed,
-  onToggleCollapse,
-}: StudioSlotProps) {
-  const [view, setView] = useState<StudioPanelView>(null);
-
+/** Widens the studio panel to fit the open view. */
+function useFitStudioToView(view: StudioPanelView, panelRef: RefObject<PanelImperativeHandle | null>) {
   // Syncs with the panel's imperative handle (outside React), so it belongs in
   // an effect: the size can only be read after the layout has committed.
   useEffect(() => {
@@ -51,16 +37,6 @@ function StudioSlot({
       panel.resize(`${target}px`);
     }
   }, [view, panelRef]);
-
-  return (
-    <StudioPanel
-      passageId={passageId}
-      collapsed={collapsed}
-      onToggleCollapse={onToggleCollapse}
-      view={view}
-      onViewChange={setView}
-    />
-  );
 }
 
 export function StudyWorkspace() {
@@ -74,6 +50,25 @@ export function StudyWorkspace() {
   // driving detail or artifact generation.
   const detail = useQuery(passageQueries.detail(library.activeId));
   const contentKey = library.activeId ?? "empty";
+
+  // Lifted here so the reading panel can open a studio view. Derived, not
+  // reset by an effect: switching passages closes whatever view was open.
+  const [studio, setStudio] = useState<StudioViewState>({ passageId: null, view: null });
+  const studioView = studio.passageId === library.activeId ? studio.view : null;
+  const setStudioView = useCallback(
+    (view: StudioPanelView) => setStudio({ passageId: library.activeId, view }),
+    [library.activeId],
+  );
+  useFitStudioToView(studioView, layout.rightPanelRef);
+
+  const { expandRight } = layout;
+  const openLookup = useCallback(
+    (request: WordLookupRequest) => {
+      expandRight();
+      setStudioView({ contentType: "lookup", request });
+    },
+    [expandRight, setStudioView],
+  );
 
   return (
     <>
@@ -121,6 +116,7 @@ export function StudyWorkspace() {
                 isLoading={detail.isLoading}
                 error={detail.error}
                 onOpenUploadModal={upload.openModal}
+                onLookup={openLookup}
               />
             </div>
           </Panel>
@@ -136,12 +132,14 @@ export function StudyWorkspace() {
             collapsible={true}
             onResize={layout.handleRightResize}
           >
-            <StudioSlot
+            <StudioPanel
+              // Remounts per passage so in-flight generation state never leaks into another passage.
               key={contentKey}
               passageId={library.activeId}
-              panelRef={layout.rightPanelRef}
               collapsed={layout.rightPanelCollapsed}
               onToggleCollapse={layout.toggleRight}
+              view={studioView}
+              onViewChange={setStudioView}
             />
           </Panel>
         </Group>

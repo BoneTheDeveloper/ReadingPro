@@ -9,7 +9,9 @@ import { ChatDetailView } from "../view/ai-chat/chat-detail-view";
 import { ChatProvider } from "../view/ai-chat/chat-provider";
 import { QuestionDetailView } from "../view/questions/question-detail-view";
 import { FlashcardDetailView } from "../view/flashcards";
+import { LookupDetailView } from "../view/lookup/lookup-detail-view";
 import { useQuery } from "@tanstack/react-query";
+import { useDeleteLookupMutation, wordLookupQueries } from "@/client/features/dictionary";
 import { artifactQueries } from "../../api/queries";
 import {
   useGenerateArtifactMutation,
@@ -35,6 +37,8 @@ export function StudioPanel({
   const generateQuestion = useGenerateArtifactMutation(StudioArtifactType.QUESTION);
   const generateFlashcard = useGenerateArtifactMutation(StudioArtifactType.FLASHCARD);
   const deleteArtifact = useDeleteArtifactMutation();
+  const lookupsQuery = useQuery(wordLookupQueries.list(passageId));
+  const deleteLookup = useDeleteLookupMutation();
 
   const closeView = useCallback(() => onViewChange(null), [onViewChange]);
 
@@ -42,6 +46,10 @@ export function StudioPanel({
     (id: StudioGridId, artifactId?: string) => {
       if (id === "CHAT") {
         onViewChange({ contentType: "chat" });
+        return;
+      }
+      if (id === "LOOKUP") {
+        onViewChange({ contentType: "lookup" });
         return;
       }
       if (!artifactId) return;
@@ -97,9 +105,21 @@ export function StudioPanel({
           />
         )}
 
+        {view?.contentType === "lookup" && (
+          <LookupDetailView
+            // A new selection or row replaces the view, including a search typed into it.
+            key={view.request ? `request|${view.request.word}|${view.request.context ?? ""}` : `row|${view.lookupId ?? ""}`}
+            passageId={passageId}
+            lookupId={view.lookupId}
+            request={view.request}
+            onClose={closeView}
+          />
+        )}
+
         {!view && (
           <DefaultStudioView
             artifacts={artifactsQuery.data ?? []}
+            lookups={lookupsQuery.data ?? []}
             hasActivePassage={true}
             pendingTypes={
               artifactsQuery.data
@@ -110,11 +130,14 @@ export function StudioPanel({
             flashcardPending={generateFlashcard.isPending}
             onToggleCollapse={onToggleCollapse}
             onSelectChat={() => openView("CHAT")}
+            onSelectLookup={() => openView("LOOKUP")}
             onSelectAction={handleGenerate}
             onOpenArtifact={(type, id) => openView(type, id)}
             onDeleteArtifact={(artifactId) =>
               deleteArtifact.mutate({ artifactId, passageId })
             }
+            onOpenLookup={(lookupId) => onViewChange({ contentType: "lookup", lookupId })}
+            onDeleteLookup={(lookupId) => deleteLookup.mutate({ lookupId, passageId })}
           />
         )}
       </ChatProvider>
@@ -124,15 +147,18 @@ export function StudioPanel({
   return (
     <DefaultStudioView
       artifacts={artifactsQuery.data ?? []}
+      lookups={[]}
       hasActivePassage={false}
       pendingTypes={[]}
       questionPending={generateQuestion.isPending}
       flashcardPending={generateFlashcard.isPending}
       onToggleCollapse={onToggleCollapse}
       onSelectChat={() => {}}
+      onSelectLookup={() => {}}
       onSelectAction={() => {}}
       onOpenArtifact={() => {}}
       onDeleteArtifact={undefined}
+      onOpenLookup={() => {}}
     />
   );
 }

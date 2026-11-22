@@ -1,0 +1,19 @@
+English-Vietnamese dictionary data
+==================================
+
+File:      AnhViet.zip (committed unchanged)
+Contents:  stardict_en_vi/en_vi.idx, en_vi.dict.dz, en_vi.ifo (StarDict 2.4.2,
+           387,517 headwords)
+Origin:    Open Vietnamese Dictionary Project (OVDP), based on the
+           English-Vietnamese dictionary compiled by Hồ Ngọc Đức
+Project:   https://sourceforge.net/projects/ovdp/
+Download:  https://downloads.sourceforge.net/project/ovdp/Stardict/English/AnhViet.zip
+Author:    https://www.informatik.uni-leipzig.de/~duc/software/Dict/index.html
+License:   GNU General Public License version 2.0 (GPLv2), as stated on the
+           OVDP project page. The archive itself ships no license file.
+sha256:    6ff1508004311e916993b4eb84580cee910c89d682028d387763f7f85fc9c442
+Retrieved: 2026-11-22
+
+`pnpm db:import-dictionary` reads this zip, keeps the single-word headwords
+and loads them into the "DictionaryEntry" table. It refuses this zip when its sha256
+differs from the value above.

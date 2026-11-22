@@ -5,21 +5,26 @@ import { Card, CardContent } from "@/client/components/ui/card";
 import { Button } from "@/client/components/ui/button";
 import { StudioGrid, StudioEmptyState } from "./studio-grid";
 import { ArtifactListItem } from "./artifact-list-item";
-import { ARTIFACT_META, type StudioGridId } from "./studio-icon-list";
+import { ARTIFACT_META, LOOKUP_META, type StudioGridId } from "./studio-icon-list";
 import { ProcessingStatus, StudioArtifactType } from "@/shared/enums";
 import type { StudioArtifactListItem } from "@/shared/studio/artifact";
+import type { WordLookup } from "@/shared/dictionary/schema";
 
 interface DefaultStudioViewProps {
   artifacts: StudioArtifactListItem[];
+  lookups: WordLookup[];
   hasActivePassage: boolean;
   pendingTypes: StudioArtifactType[];
   questionPending: boolean;
   flashcardPending: boolean;
   onToggleCollapse: () => void;
   onSelectChat: () => void;
+  onSelectLookup: () => void;
   onSelectAction: (actionId: StudioGridId) => void;
   onOpenArtifact: (type: StudioGridId, id: string) => void;
   onDeleteArtifact?: (artifactId: string) => void;
+  onOpenLookup: (lookupId: string) => void;
+  onDeleteLookup?: (lookupId: string) => void;
 }
 
 // Exhaustive on purpose: a new ProcessingStatus must be a compile error here,
@@ -48,19 +53,24 @@ function artifactSubtitle(
 
 export function DefaultStudioView({
   artifacts,
+  lookups,
   hasActivePassage,
   pendingTypes,
   questionPending,
   flashcardPending,
   onToggleCollapse,
   onSelectChat,
+  onSelectLookup,
   onSelectAction,
   onOpenArtifact,
   onDeleteArtifact,
+  onOpenLookup,
+  onDeleteLookup,
 }: DefaultStudioViewProps) {
 
   const handleSelect = (id: StudioGridId) => {
     if (id === "CHAT") onSelectChat();
+    else if (id === "LOOKUP") onSelectLookup();
     else onSelectAction(id);
   };
 
@@ -90,7 +100,7 @@ export function DefaultStudioView({
           <div className="flex-1 h-px bg-border" />
         </div>
         <div className="flex-1 overflow-y-auto panel-scroll px-3 pb-4">
-          {artifacts.length > 0 ? (
+          {artifacts.length > 0 && (
             <div className="space-y-0.5 pt-0.25">
               {artifacts.map((artifact) => {
                 const meta = ARTIFACT_META[artifact.type];
@@ -118,7 +128,31 @@ export function DefaultStudioView({
                 );
               })}
             </div>
-          ) : (
+          )}
+          {lookups.length > 0 && (
+            <section aria-label="Từ đã tra" className="pt-3">
+              <h3 className="px-3 pb-1 text-[11px] font-bold uppercase tracking-[0.11em] text-ink-3">
+                Từ đã tra ({lookups.length})
+              </h3>
+              <div className="space-y-0.5">
+                {lookups.map((lookup) => (
+                  <ArtifactListItem
+                    key={lookup.id}
+                    title={lookup.headword}
+                    icon={LOOKUP_META.icon}
+                    tone={LOOKUP_META.tone}
+                    status="ready"
+                    subtitle={lookup.summary}
+                    subtitleMuted
+                    deleteLabel="Xóa khỏi danh sách"
+                    onClick={() => onOpenLookup(lookup.id)}
+                    onDelete={onDeleteLookup ? () => onDeleteLookup(lookup.id) : undefined}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+          {artifacts.length === 0 && lookups.length === 0 && (
             <StudioEmptyState hasActivePassage={hasActivePassage} />
           )}
         </div>

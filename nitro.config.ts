@@ -9,6 +9,7 @@ export default defineConfig({
   modules: ["workflow/nitro"],
   alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
   routes: { "/api/**": "./src/server/app.ts" },
+  plugins: ["./src/server/plugins/database-check.ts"],
   devServer: { port: 3001 },
   routeRules: {
     "/**": { headers: securityHeaders(false) },
