@@ -22,6 +22,7 @@
     "db:migrate": "docker compose run --rm --build flyway migrate",
     "db:info": "docker compose run --rm --build flyway info",
     "db:import-dictionary": "node --env-file-if-exists=.env scripts/import-dictionary.ts",
+    "db:dictionary-coverage": "node --env-file-if-exists=.env scripts/dictionary-coverage.ts",
     "workflow:inspect": "npx workflow inspect runs --web"
   },
   "dependencies": {
