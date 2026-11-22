@@ -1,6 +1,6 @@
 ---
-title: "Dictionary translation panel in Studio, inline translation for Pro"
-description: "Move word translation into a Studio view backed by an imported English-Vietnamese dictionary, record each lookup as a Studio row, open external translators in popups, save words from the panel, and make the in-place popup plus AI context meaning Pro-only."
+title: "Dictionary translation panel in Studio, AI meaning on request for Pro"
+description: "Move word translation into a Studio view backed by an imported English-Vietnamese dictionary, record each lookup as a Studio row, open external translators in popups, save words from the panel, and make the AI context meaning a Pro feature the user asks for in the panel."
 status: completed
 priority: P1
 effort: 4d
@@ -11,7 +11,7 @@ blocks: []
 created: 2026-11-22
 ---
 
-# Dictionary translation panel in Studio, inline translation for Pro
+# Dictionary translation panel in Studio, AI meaning on request for Pro
 
 ## Overview
 
@@ -27,9 +27,12 @@ LingQ-style flow:
 3. Every lookup that finds a meaning becomes a row in the Studio list for that
    passage (the **Từ đã tra** section, shown next to the artifacts). It is
    stored in the database, so it survives a reload and can be deleted.
-4. A Pro user gets the old in-place popup: dictionary meanings, the AI
-   meaning in the context of the sentence, a quick save, and **Xem chi tiết**,
-   which opens the Studio view. Only Pro may call `/api/translate`.
+4. **Dịch** opens the same Studio view for a Pro user. The AI meaning in the
+   context of the sentence is not fetched by itself: the view has a
+   **Dịch theo ngữ cảnh** button, so the user chooses whether to use it. The
+   button is locked for Free users. Only Pro may call `/api/translate`.
+   (Changed on 2026-11-22 at the user's request: the first build kept the old
+   in-place popup for Pro and fetched the AI meaning at once.)
 
 This plan runs before the billing plan. Pro is read from the existing
 `"User"."tier"` session field through one shared helper. The billing plan
@@ -50,7 +53,8 @@ Context and decisions:
   - A chosen or typed meaning can be saved to the vocabulary list.
   - Each successful lookup is stored as one row per word per passage, listed
     in Studio, can be reopened, and can be deleted.
-  - Only Pro users get the in-place popup and the AI context meaning.
+  - Only Pro users get the AI context meaning, and only when they press
+    **Dịch theo ngữ cảnh** in the view.
 - **Constraints:**
   - The meanings come from the Hồ Ngọc Đức / OVDP English-Vietnamese
     dictionary, imported into Postgres. A lookup makes no AI call.
@@ -91,8 +95,9 @@ Context and decisions:
   5. A FREE user who selects a word and presses **Dịch** sees the Studio
      **Tra từ** view open (the right panel expands if collapsed), and a
      **Từ đã tra** row appears. No `/api/translate` request is sent.
-  6. A PRO user sees the in-place popup with dictionary meanings and the AI
-     context meaning. **Xem chi tiết** opens the same Studio view.
+  6. A PRO user who presses **Dịch** also sees the Studio view, with no
+     `/api/translate` request. Pressing **Dịch theo ngữ cảnh** sends one and
+     shows the AI meaning, which can be picked and saved.
   7. Saving from the view adds the word to `/vocabulary` with the chosen
      meaning, its part of speech, the context sentence and the passage.
   8. `pnpm test`, `pnpm typecheck` and `pnpm lint` are green.
@@ -104,7 +109,7 @@ Context and decisions:
 | 1 | [Dictionary data: schema, parser, import](./phase-01-dictionary-data-import.md) | Completed | none |
 | 2 | [Server: dictionary lookup, word-lookup API, Pro gate](./phase-02-lookup-api-and-pro-gate.md) | Completed | 1 |
 | 3 | [Studio: Tra từ tile, lookup rows, detail view](./phase-03-studio-lookup-view.md) | Completed | 2 |
-| 4 | [Reading flow: route selection to Studio, Pro inline popup](./phase-04-reading-flow-and-pro-inline.md) | Completed | 3 |
+| 4 | [Reading flow: route selection to Studio, AI meaning on request](./phase-04-reading-flow-and-pro-inline.md) | Completed | 3 |
 | 5 | [Docs and end-to-end verification](./phase-05-docs-and-verification.md) | Completed | 4 |
 
 ## Verification (2026-11-22)

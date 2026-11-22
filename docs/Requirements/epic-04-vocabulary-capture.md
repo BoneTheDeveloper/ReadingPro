@@ -42,11 +42,16 @@ Scenario: Lookup history
   And looking it up again keeps one row and moves it to the top
   And deleting the passage deletes its rows
 
-Scenario: In-place popup and AI meaning (Pro)
+Scenario: AI meaning in context, on request (Pro)
   Given I am on the Pro plan and press "Dịch"
-  Then a popup next to the word shows the top dictionary meanings and the AI meaning in the sentence's context
-  And "Lưu" saves the AI meaning, and "Xem chi tiết" opens the Studio view without a second lookup
-  And a Free user who calls the AI translation endpoint is refused (plan.pro_required)
+  Then the same Studio view opens, and no AI model is called yet
+  When I press "Dịch theo ngữ cảnh"
+  Then the view shows the AI meaning of the word in its sentence, which I can pick and save
+
+Scenario: AI meaning for a Free user
+  Given I am on the Free plan
+  Then "Dịch theo ngữ cảnh" is locked with a note that it is part of Pro
+  And a Free user who calls the AI translation endpoint directly is refused (plan.pro_required)
 ```
 
 - Meanings come from the OVDP / Hồ Ngọc Đức English-Vietnamese dictionary, imported into

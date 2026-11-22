@@ -1,13 +1,19 @@
 ---
 phase: 4
-title: "Reading flow: route selection to Studio, Pro inline popup"
+title: "Reading flow: route selection to Studio, AI meaning on request"
 status: completed
 priority: P1
 effort: "0.5d"
 dependencies: [3]
 ---
 
-# Phase 4: Reading flow: route selection to Studio, Pro inline popup
+# Phase 4: Reading flow: route selection to Studio, AI meaning on request
+
+> **Changed after delivery (2026-11-22, user request).** The Pro in-place popup
+> described below was built and then removed. **Dịch** now opens the Studio view
+> for every user, and the AI meaning is fetched only when a Pro user presses
+> **Dịch theo ngữ cảnh** in the view (`ai-context-meaning.tsx`). The selection
+> popup keeps only the **Dịch** button. The steps below are the original record.
 
 ## Goal
 
