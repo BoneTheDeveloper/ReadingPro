@@ -26,3 +26,7 @@
 # Workflow SDK local world data
 .workflow-data
 /.swc
+
+# Playwright
+/test-results/
+/playwright-report/

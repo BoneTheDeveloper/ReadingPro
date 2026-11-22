@@ -156,7 +156,21 @@ pnpm lint
 
 Tests use the local database and only refuse to run when `DATABASE_URL` is not
 on `localhost`. The word-lookup tests read the imported dictionary, so run
-`pnpm db:import-dictionary` once before the first `pnpm test`. Each test creates its own throwaway users and deletes them, so
+`pnpm db:import-dictionary` once before the first `pnpm test`.
+
+**Browser tests** (Playwright, headless Chromium):
+
+```bash
+pnpm test:e2e:install   # once: downloads the headless Chromium shell
+pnpm test:e2e           # reuses running dev servers, or starts and stops them
+```
+
+They sign in with local test accounts that each test recreates. To sign in by
+hand with the same accounts, run `pnpm db:seed-test-accounts`: it prints the
+FREE and PRO logins (password `e2e-pass-123`). The accounts live only in the
+local database, end in `@test.invalid`, and are deleted by every `pnpm test`;
+seed them again afterwards. Both commands refuse a database that is not on
+`localhost`. Code lives in `e2e/`, the accounts in `e2e/test-accounts.ts`. Each test creates its own throwaway users and deletes them, so
 your own data is not touched.
 
 ## Build and deploy
