@@ -21,6 +21,7 @@
     "db:down": "docker compose down",
     "db:migrate": "docker compose run --rm --build flyway migrate",
     "db:info": "docker compose run --rm --build flyway info",
+    "db:import-dictionary": "node --env-file-if-exists=.env scripts/import-dictionary.ts",
     "workflow:inspect": "npx workflow inspect runs --web"
   },
   "dependencies": {

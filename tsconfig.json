@@ -4,6 +4,7 @@
     "lib": ["dom", "dom.iterable", "esnext"],
     "types": ["node", "vite/client"],
     "allowJs": true,
+    "allowImportingTsExtensions": true,
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
