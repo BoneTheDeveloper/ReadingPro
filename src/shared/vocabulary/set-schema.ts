@@ -70,6 +70,3 @@ export const VocabularySetItemParamSchema = z.object({
   id: z.string().uuid(),
   itemId: z.string().uuid(),
 });
-
-/** The only tier that may generate a set. */
-export const PRO_TIER = "PRO";

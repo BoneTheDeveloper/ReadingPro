@@ -23,7 +23,7 @@ import {
 } from "../api/mutations";
 import { VocabularyStatus } from "@/shared/enums";
 import type { VocabularyItem } from "@/shared/vocabulary/schema";
-import { PRO_TIER } from "@/shared/vocabulary/set-schema";
+import { isProTier } from "@/shared/plan/tier";
 
 
 type ViewTab = "words" | "sets";
@@ -99,7 +99,7 @@ export function VocabularyPageClient() {
   const statsQuery = useQuery(vocabularyQueries.stats());
   const setsQuery = useQuery(vocabularySetQueries.list());
   const dueQuery = useQuery(reviewQueries.due());
-  const isPro = useAppSelector(selectSessionUser)?.tier === PRO_TIER;
+  const isPro = isProTier(useAppSelector(selectSessionUser)?.tier);
 
   const items = useMemo(() => listQuery.data ?? [], [listQuery.data]);
   const stats = statsQuery.data;

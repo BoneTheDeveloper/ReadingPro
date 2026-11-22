@@ -23,6 +23,8 @@ export const ERROR_REASONS = {
   "passage.not_ready": { status: 404, code: ERROR_CODES.NOT_FOUND },
   "artifact.not_found": { status: 404, code: ERROR_CODES.NOT_FOUND },
   "vocabulary.not_found": { status: 404, code: ERROR_CODES.NOT_FOUND },
+  "dictionary.not_found": { status: 404, code: ERROR_CODES.NOT_FOUND },
+  "word_lookup.not_found": { status: 404, code: ERROR_CODES.NOT_FOUND },
   "vocabulary.duplicate": { status: 409, code: ERROR_CODES.CONFLICT },
   "vocabulary_set.not_found": { status: 404, code: ERROR_CODES.NOT_FOUND },
   "vocabulary_set.name_taken": { status: 409, code: ERROR_CODES.CONFLICT },

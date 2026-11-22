@@ -48,6 +48,8 @@ const MESSAGES: Record<ErrorMessageKey, string> = {
   "passage.not_ready": "Bài đọc chưa xử lý xong. Vui lòng thử lại sau.",
   "artifact.not_found": "Không tìm thấy nội dung học tập.",
   "vocabulary.not_found": "Không tìm thấy từ vựng.",
+  "dictionary.not_found": "Không có trong từ điển.",
+  "word_lookup.not_found": "Không tìm thấy lượt tra từ này.",
   "vocabulary.duplicate": "Từ này với nghĩa này đã có trong kho từ.",
   "vocabulary_set.not_found": "Không tìm thấy bộ từ.",
   "vocabulary_set.name_taken": "Đã có bộ từ mang tên này.",
