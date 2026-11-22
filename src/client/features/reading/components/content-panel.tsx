@@ -4,10 +4,13 @@ import { useQuery } from "@tanstack/react-query";
 import { FileText, FileSearch, Plus, FileType, Loader2 } from "lucide-react";
 import { cn } from "@/client/lib/utils";
 import { CefrBadge } from "./cefr-badge";
-import { InlineTranslationPopup } from "./inline-translation-popup";
+import { InlineTranslationPopup, type InlineLookupState } from "./inline-translation-popup";
 import { useScrollProgress } from "../hooks/use-scroll-progress";
-import { readingQueries } from "../api/queries";
+import { translateQueries, wordLookupQueries } from "@/client/features/dictionary";
 import { useCreateVocabularyMutation } from "@/client/features/vocabulary";
+import { useAppSelector } from "@/client/lib/store/hooks";
+import { selectSessionUser } from "@/client/lib/store/session-slice";
+import { isProTier } from "@/shared/plan/tier";
 import { validateWordSelection } from "../lib/word-selection";
 import { getErrorMessage } from "@/client/lib/api/error-message";
 import type { WordSelectionAnchor } from "../lib/word-selection";
@@ -19,25 +22,42 @@ export function ContentPanel({
   isLoading,
   error,
   onOpenUploadModal,
+  onLookup,
 }: {
   passage: Passage | null;
   isLoading: boolean;
   error: Error | null;
   onOpenUploadModal: () => void;
+  /** Opens the Studio "Tra từ" view for a selected word. */
+  onLookup: (request: { word: string; context: string }) => void;
 }) {
+  const isPro = isProTier(useAppSelector(selectSessionUser)?.tier);
   const [viewMode, setViewMode] = useState<"text" | "pdf" | "video">(
     "text",
   );
   const [wordAnchor, setWordAnchor] = useState<WordSelectionAnchor | null>(null);
   // Display state for isSaved - reset when selection or translation changes
   const [isSaved, setIsSaved] = useState(false);
-  // True once the user asks for a translation of the current selection.
+  // Pro only: true once the user asks for the inline translation of the selection.
   const [translationRequested, setTranslationRequested] = useState(false);
+  const inlineActive = isPro && translationRequested && wordAnchor !== null && passage !== null;
   const translation = useQuery({
-    ...readingQueries.translate(wordAnchor?.word ?? "", wordAnchor?.context ?? ""),
-    enabled: translationRequested && wordAnchor !== null,
+    ...translateQueries.inContext(wordAnchor?.word ?? "", wordAnchor?.context ?? ""),
+    enabled: inlineActive,
   });
-  const translationData = translationRequested ? (translation.data ?? null) : null;
+  // Records the lookup too; "Xem chi tiết" reuses this cached result.
+  const dictionary = useQuery({
+    ...wordLookupQueries.lookUp(passage?.id ?? "", wordAnchor?.word ?? "", wordAnchor?.context ?? null),
+    enabled: inlineActive,
+  });
+  const inlineLookup: InlineLookupState | null = inlineActive
+    ? {
+        entries: dictionary.data?.entries ?? [],
+        dictionaryPending: dictionary.isPending,
+        ai: translation.data ?? null,
+        aiPending: translation.isFetching,
+      }
+    : null;
   const createVocabulary = useCreateVocabularyMutation();
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -78,14 +98,24 @@ export function ContentPanel({
 
   const handleTranslateClick = () => {
     if (!wordAnchor) return;
-    // A second click is the popup's retry button; a cached result needs no request.
-    if (translationRequested && translation.isError) void translation.refetch();
+    // Free: the dictionary lives in Studio; only Pro gets the in-place popup and the AI meaning.
+    if (!isPro) {
+      onLookup({ word: wordAnchor.word, context: wordAnchor.context });
+      clearTranslation();
+      return;
+    }
     setTranslationRequested(true);
     setIsSaved(false); // Reset saved state when re-translating
   };
 
+  const handleOpenDetail = () => {
+    if (!wordAnchor) return;
+    onLookup({ word: wordAnchor.word, context: wordAnchor.context });
+    clearTranslation();
+  };
+
   const handleSaveVocabulary = () => {
-    const result = translationData;
+    const result = translation.data;
     if (!result || !wordAnchor || !passage) return;
     createVocabulary.mutate({
       term: result.lemma,
@@ -219,14 +249,14 @@ export function ContentPanel({
       </div>
       <InlineTranslationPopup
         anchor={wordAnchor}
-        data={translationData}
-        error={translationRequested ? translation.error : null}
-        isPending={translation.isFetching}
+        lookup={inlineLookup}
         isSaving={createVocabulary.isPending}
         isSaved={isSaved}
         onTranslate={handleTranslateClick}
+        onRetryAi={() => void translation.refetch()}
         onClose={clearTranslation}
         onSave={handleSaveVocabulary}
+        onOpenDetail={handleOpenDetail}
       />
     </div>
   );

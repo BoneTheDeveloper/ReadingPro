@@ -19,6 +19,9 @@ interface ArtifactListItemProps {
   tone: StudioTone;
   status: ArtifactStatus;
   subtitle: string | null;
+  /** Plain text instead of the green score style, for a word's meaning. */
+  subtitleMuted?: boolean;
+  deleteLabel?: string;
   onClick: () => void;
   onDelete?: () => void;
 }
@@ -29,6 +32,8 @@ export function ArtifactListItem({
   tone,
   status,
   subtitle,
+  subtitleMuted = false,
+  deleteLabel = "Xóa artifact",
   onClick,
   onDelete,
 }: ArtifactListItemProps) {
@@ -70,7 +75,12 @@ export function ArtifactListItem({
             Tạo thất bại — xoá và tạo lại
           </p>
         ) : subtitle ? (
-          <p className="text-[11px] font-semibold text-success mt-0.5">
+          <p
+            className={cn(
+              "text-[11px] mt-0.5",
+              subtitleMuted ? "text-muted-foreground truncate" : "font-semibold text-success",
+            )}
+          >
             {subtitle}
           </p>
         ) : (
@@ -87,7 +97,7 @@ export function ArtifactListItem({
             <button
               onClick={(e) => e.stopPropagation()}
               className="shrink-0 p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-              aria-label="Xóa artifact"
+              aria-label={deleteLabel}
             >
               <MoreVertical className="w-4 h-4" />
             </button>
@@ -98,7 +108,7 @@ export function ArtifactListItem({
               className="text-destructive focus:text-destructive font-medium"
             >
               <Trash2 className="w-4 h-4 mr-2" />
-              Xóa artifact
+              {deleteLabel}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

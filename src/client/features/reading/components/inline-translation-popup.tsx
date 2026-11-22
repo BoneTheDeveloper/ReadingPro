@@ -11,55 +11,76 @@ import {
   useInteractions,
   useRole,
 } from "@floating-ui/react";
-import { Bookmark, Languages, LoaderCircle, RotateCcw, X } from "lucide-react";
+import { Bookmark, Languages, LoaderCircle, PanelRight, Puzzle, RotateCcw, X } from "lucide-react";
 import { useMemo, useEffect } from "react";
 
 import { Button } from "@/client/components/ui/button";
+import { PART_OF_SPEECH_LABEL, findContextIdiom } from "@/client/features/dictionary";
+import type { MatchedDictionaryEntry } from "@/shared/dictionary/schema";
 import type { Translation } from "@/shared/reading/schema";
-import type { PartOfSpeech } from "@/shared/enums";
 import type { WordSelectionAnchor } from "../lib/word-selection";
+
+const POPUP_MEANINGS = 3;
+
+/** Pro only: what the expanded popup shows. */
+export type InlineLookupState = {
+  /** Dictionary entries; empty when the word is not in the dictionary. */
+  entries: MatchedDictionaryEntry[];
+  dictionaryPending: boolean;
+  /** Null while pending or after a failure; the popup then offers a retry. */
+  ai: Translation | null;
+  aiPending: boolean;
+};
 
 interface InlineTranslationPopupProps {
   anchor: WordSelectionAnchor | null;
-  data: Translation | null;
-  error: Error | null;
-  isPending: boolean;
+  /** Null until the user presses Dịch; a Free user's Dịch opens Studio instead. */
+  lookup: InlineLookupState | null;
   isSaving: boolean;
   isSaved?: boolean;
   onTranslate: () => void;
+  onRetryAi: () => void;
   onClose: () => void;
   onSave: () => void;
+  onOpenDetail: () => void;
 }
 
-const PART_OF_SPEECH_LABEL: Record<Exclude<PartOfSpeech, "OTHER">, string> = {
-  NOUN: "danh từ",
-  VERB: "động từ",
-  ADJECTIVE: "tính từ",
-  ADVERB: "trạng từ",
-  PREPOSITION: "giới từ",
-  CONJUNCTION: "liên từ",
-  PHRASE:"cụm từ"
-};
-
-function partOfSpeechBadge(data: Translation): { label: string; aria: string } | null {
-  if (data.partOfSpeech === "OTHER") return null;
-  const label = PART_OF_SPEECH_LABEL[data.partOfSpeech];
-  return { label, aria: `Loại từ: ${label}` };
+/** The context idiom first, then the general groups, flattened to the first few meanings. */
+function topMeanings(entry: MatchedDictionaryEntry, anchor: WordSelectionAnchor) {
+  const idiom = findContextIdiom(entry, anchor.word, anchor.context);
+  const senses = [...(idiom ? [idiom] : []), ...entry.senses.filter((s) => s.kind === "word")];
+  const groups = senses.length > 0 ? senses : entry.senses;
+  return groups
+    .flatMap((sense) =>
+      sense.meanings.map((meaning, i) => ({
+        text: meaning.text,
+        // The group label goes on its first meaning only.
+        label:
+          i > 0
+            ? null
+            : sense === idiom
+              ? `Theo câu · ${sense.label}`
+              : sense.kind === "idiom"
+                ? sense.label
+                : PART_OF_SPEECH_LABEL[sense.partOfSpeech],
+      })),
+    )
+    .slice(0, POPUP_MEANINGS);
 }
 
 export function InlineTranslationPopup({
   anchor,
-  data,
-  error,
-  isPending,
+  lookup,
   isSaving,
   isSaved = false,
   onTranslate,
+  onRetryAi,
   onClose,
   onSave,
+  onOpenDetail,
 }: InlineTranslationPopupProps) {
   const isOpen = anchor !== null;
-  const isExpanded = isPending || data !== null || error !== null;
+  const isExpanded = lookup !== null;
 
   const { context: floatingContext, floatingStyles, refs } = useFloating({
     open: isOpen,
@@ -106,9 +127,17 @@ export function InlineTranslationPopup({
   if (!anchor) return null;
 
   const word = anchor.word;
-  const lemma = data?.lemma ?? "";
-  const translation = data?.translation?.trim() ?? "";
-  const posBadge = data ? partOfSpeechBadge(data) : null;
+  const closeButton = (
+    <button
+      type="button"
+      onMouseDown={onClose}
+      onTouchStart={onClose}
+      aria-label="Đóng bản dịch"
+      className="relative ml-auto flex size-[30px] shrink-0 items-center justify-center rounded-[9px] text-foreground transition-colors before:absolute before:-inset-1.5 before:content-[''] hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+    >
+      <X className="size-[19px]" strokeWidth={2.2} />
+    </button>
+  );
 
   return (
     <FloatingPortal>
@@ -118,12 +147,12 @@ export function InlineTranslationPopup({
         style={floatingStyles}
         className={
           isExpanded
-            ? "z-50 w-max min-w-[210px] max-w-[min(20rem,calc(100vw-1rem))] rounded-[18px] border border-border bg-surface p-3.5 text-foreground shadow-popup"
+            ? "z-50 w-max min-w-[240px] max-w-[min(21rem,calc(100vw-1rem))] rounded-[18px] border border-border bg-surface p-3.5 text-foreground shadow-popup"
             : "z-50"
         }
         {...getFloatingProps()}
       >
-        {!isExpanded ? (
+        {!lookup ? (
           <Button
             type="button"
             size="xs"
@@ -136,108 +165,134 @@ export function InlineTranslationPopup({
             Dịch
           </Button>
         ) : (
-          <div aria-live="polite">
-            {isPending ? (
-              <div className="flex items-center gap-2.5">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <LoaderCircle className="size-4 animate-spin" />
-                  Đang dịch...
-                </div>
-                <button
-                  type="button"
-                  onMouseDown={onClose}
-                  onTouchStart={onClose}
-                  aria-label="Đóng bản dịch"
-                  className="relative ml-auto flex size-[30px] shrink-0 items-center justify-center rounded-[9px] text-foreground transition-colors before:absolute before:-inset-1.5 before:content-[''] hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
-                >
-                  <X className="size-[19px]" strokeWidth={2.2} />
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-start gap-2.5">
-                <div className="min-w-0 flex-1">
-                  <p
-                    title={lemma}
-                    className="truncate font-serif text-[17px] leading-[1.35] font-semibold text-foreground"
-                  >
-                    {lemma}
-                  </p>
-
-                  {error ? (
-                    <p className="mt-1 text-sm text-coral">
-                      Không thể dịch từ này. Vui lòng thử lại.
-                    </p>
-                  ) : translation ? (
-                    <>
-                      {posBadge && (
-                        <span
-                          aria-label={posBadge.aria}
-                          className="mt-1.5 inline-flex items-center rounded-full border border-border bg-muted px-2.5 py-[3px] text-[10px] font-bold tracking-[0.07em] uppercase text-muted-foreground"
-                        >
-                          {posBadge.label}
-                        </span>
-                      )}
-                    </>
-                  ) : (
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      Không tìm thấy bản dịch
-                    </p>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  onMouseDown={onClose}
-                  onTouchStart={onClose}
-                  aria-label="Đóng bản dịch"
-                  className="relative flex size-[30px] shrink-0 items-center justify-center rounded-[9px] text-foreground transition-colors before:absolute before:-inset-1.5 before:content-[''] hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
-                >
-                  <X className="size-[19px]" strokeWidth={2.2} />
-                </button>
-              </div>
-            )}
-
-            {translation && !isPending && !error && (
-              <div className="mt-3 border-t border-border pt-3">
-                <p className="font-serif text-[19px] leading-[1.35] font-semibold text-primary">
-                  {translation}
-                </p>
-
-                {/* Selected source text — repeats the headword, since translation is single-word */}
-                <div className="mt-3 border-t border-border pt-[11px] text-[13px] leading-normal text-ink-3">
-                  Văn bản đã chọn:{" "}
-                  <span className="font-serif text-sm font-semibold text-foreground">
-                    {word}
-                  </span>
-                </div>
-
-                <Button
-                  type="button"
-                  onClick={onSave}
-                  disabled={isSaving || isSaved}
-                  aria-label={isSaved ? "Đã lưu từ vựng" : "Lưu từ vựng"}
-                  className="mt-3 w-full gap-[7px] rounded-[12px] text-[13px]"
-                >
-                  <Bookmark className="size-3.5" />
-                  {isSaving ? "Đang lưu..." : isSaved ? "Đã lưu" : "Lưu"}
-                </Button>
-              </div>
-            )}
-
-            {(error || (!isPending && !translation)) && (
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                onClick={onTranslate}
-                className="mt-3"
-              >
-                <RotateCcw />
-                Thử lại
-              </Button>
-            )}
-          </div>
+          <ExpandedLookup
+            anchor={anchor}
+            lookup={lookup}
+            closeButton={closeButton}
+            isSaving={isSaving}
+            isSaved={isSaved}
+            onRetryAi={onRetryAi}
+            onSave={onSave}
+            onOpenDetail={onOpenDetail}
+          />
         )}
       </div>
     </FloatingPortal>
+  );
+}
+
+interface ExpandedLookupProps {
+  anchor: WordSelectionAnchor;
+  lookup: InlineLookupState;
+  closeButton: React.ReactNode;
+  isSaving: boolean;
+  isSaved: boolean;
+  onRetryAi: () => void;
+  onSave: () => void;
+  onOpenDetail: () => void;
+}
+
+function ExpandedLookup({
+  anchor,
+  lookup,
+  closeButton,
+  isSaving,
+  isSaved,
+  onRetryAi,
+  onSave,
+  onOpenDetail,
+}: ExpandedLookupProps) {
+  const [entry, base] = lookup.entries;
+  const meanings = entry ? topMeanings(entry, anchor) : [];
+  const ai = lookup.ai;
+  const headword = entry?.displayHeadword ?? ai?.lemma ?? anchor.word;
+
+  return (
+    <div aria-live="polite">
+      <div className="flex items-start gap-2.5">
+        <div className="min-w-0 flex-1">
+          <p title={headword} className="truncate font-serif text-[17px] leading-[1.35] font-semibold text-foreground">
+            {headword}
+          </p>
+          {entry?.phonetic && <p className="text-[12px] text-muted-foreground">/{entry.phonetic}/</p>}
+          {base && (
+            <p className="mt-0.5 flex items-center gap-1 text-[11px] text-ink-3">
+              <Puzzle className="size-3 text-primary" aria-hidden />
+              Dạng gốc: {base.displayHeadword}
+            </p>
+          )}
+        </div>
+        {closeButton}
+      </div>
+
+      {lookup.dictionaryPending ? (
+        <p className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+          <LoaderCircle className="size-4 animate-spin" />
+          Đang tra từ điển...
+        </p>
+      ) : (
+        meanings.length > 0 && (
+          <ol className="mt-2 space-y-1">
+            {meanings.map((meaning, i) => (
+              <li key={i} className="text-[13.5px] leading-snug">
+                {meaning.label && (
+                  <span className="block text-[10px] font-bold uppercase tracking-[0.07em] text-muted-foreground">
+                    {meaning.label}
+                  </span>
+                )}
+                {meaning.text}
+              </li>
+            ))}
+          </ol>
+        )
+      )}
+
+      <div className="mt-3 border-t border-border pt-3">
+        <p className="text-[10.5px] font-bold uppercase tracking-[0.11em] text-ink-3">Theo ngữ cảnh (AI)</p>
+        {lookup.aiPending ? (
+          <p className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
+            <LoaderCircle className="size-4 animate-spin" />
+            Đang dịch...
+          </p>
+        ) : ai ? (
+          <>
+            <p className="mt-1 font-serif text-[19px] leading-[1.35] font-semibold text-primary">{ai.translation}</p>
+            <p className="text-[11.5px] text-muted-foreground">
+              {ai.lemma} · {PART_OF_SPEECH_LABEL[ai.partOfSpeech]}
+            </p>
+          </>
+        ) : (
+          <div className="mt-1 flex items-center gap-2 text-sm text-coral">
+            Không thể dịch theo ngữ cảnh.
+            <Button type="button" variant="secondary" size="xs" onClick={onRetryAi}>
+              <RotateCcw />
+              Thử lại
+            </Button>
+          </div>
+        )}
+      </div>
+
+      <div className="mt-3 flex gap-2">
+        <Button
+          type="button"
+          onClick={onSave}
+          disabled={!ai || isSaving || isSaved}
+          aria-label={isSaved ? "Đã lưu từ vựng" : "Lưu nghĩa theo ngữ cảnh"}
+          className="flex-1 gap-[7px] rounded-[12px] text-[13px]"
+        >
+          <Bookmark className="size-3.5" />
+          {isSaving ? "Đang lưu..." : isSaved ? "Đã lưu" : "Lưu"}
+        </Button>
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={onOpenDetail}
+          className="flex-1 gap-[7px] rounded-[12px] text-[13px]"
+        >
+          <PanelRight className="size-3.5" />
+          Xem chi tiết
+        </Button>
+      </div>
+    </div>
   );
 }

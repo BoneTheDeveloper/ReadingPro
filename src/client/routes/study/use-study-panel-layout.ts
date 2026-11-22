@@ -53,6 +53,12 @@ export function useStudyPanelLayout() {
     else panel.collapse();
   }, []);
 
+  /** Opens the studio panel if it is collapsed, e.g. when the reading panel opens a studio view. */
+  const expandRight = useCallback(() => {
+    const panel = rightPanelRef.current;
+    if (panel?.isCollapsed()) panel.expand();
+  }, []);
+
   const handleLeftResize = useCallback((panelSize: PanelSize) => {
     setLeftPanelCollapsed(isCollapsedSize(panelSize));
   }, []);
@@ -69,6 +75,7 @@ export function useStudyPanelLayout() {
     rightPanelCollapsed,
     toggleLeft,
     toggleRight,
+    expandRight,
     handleLeftResize,
     handleRightResize,
   };
