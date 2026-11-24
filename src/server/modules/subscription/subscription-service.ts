@@ -59,12 +59,6 @@ export async function getUserTier(userId: string, now = new Date()): Promise<Pla
   return (await loadPlan(userId, now)).tier;
 }
 
-export async function assertProForUser(userId: string): Promise<void> {
-  if ((await getUserTier(userId)) !== "PRO") {
-    throw new AppError("plan.pro_required", "This feature requires the Pro tier");
-  }
-}
-
 /**
  * Counts one use of `feature` against the user's plan, before the work runs.
  * A feature the tier does not include throws `plan.pro_required`; a used-up
