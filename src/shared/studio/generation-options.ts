@@ -63,15 +63,15 @@ export const FlashcardContentType = {
 export type FlashcardContentType = (typeof FlashcardContentType)[keyof typeof FlashcardContentType];
 export const FLASHCARD_CONTENT_LABEL: Record<FlashcardContentType, string> = {
   VOCABULARY: "Từ vựng",
-  PHRASE: "Cụm từ / collocation",
+  PHRASE: "Cụm từ",
   CONCEPT: "Ý chính / khái niệm",
 };
 
 export const FlashcardBack = { VI_MEANING: "VI_MEANING", EN_DEFINITION: "EN_DEFINITION" } as const;
 export type FlashcardBack = (typeof FlashcardBack)[keyof typeof FlashcardBack];
 export const FLASHCARD_BACK_LABEL: Record<FlashcardBack, string> = {
-  VI_MEANING: "Nghĩa tiếng Việt",
-  EN_DEFINITION: "Định nghĩa tiếng Anh",
+  VI_MEANING: "Tiếng Việt",
+  EN_DEFINITION: "Tiếng Anh",
 };
 
 export const FLASHCARD_COUNTS = [5, 10, 15, 20] as const;

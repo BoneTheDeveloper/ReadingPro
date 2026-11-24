@@ -42,7 +42,7 @@ async function generateQuestions(passage: string, cefrLevel: CEFRLevel | null, r
   });
 
   // Fails the workflow (artifact → FAILED) when nothing usable came back.
-  return questionContentSchema.parse({ questions: normalizeQuestions(object, options) });
+  return questionContentSchema.parse({ questions: normalizeQuestions(object, options), settings: options });
 }
 
 async function generateFlashcards(passage: string, cefrLevel: CEFRLevel | null, rawOptions: unknown): Promise<FlashcardContent> {
@@ -57,7 +57,7 @@ async function generateFlashcards(passage: string, cefrLevel: CEFRLevel | null, 
     prompt,
   });
 
-  return flashcardContentSchema.parse({ cards: normalizeFlashcards(object, options) });
+  return flashcardContentSchema.parse({ cards: normalizeFlashcards(object, options), settings: options });
 }
 
 const generators = {

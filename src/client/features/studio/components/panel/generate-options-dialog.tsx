@@ -40,7 +40,7 @@ let lastFlashcardOptions = flashcardGenerationOptionsSchema.parse({});
 export function GenerateOptionsDialog({ type, onClose, onGenerate }: GenerateOptionsDialogProps) {
   return (
     <Dialog open={type !== null} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogContent className="flex max-h-[90vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
         {type === StudioArtifactType.QUESTION && (
           <QuestionForm
             onCancel={onClose}
@@ -64,17 +64,44 @@ export function GenerateOptionsDialog({ type, onClose, onGenerate }: GenerateOpt
   );
 }
 
-function Footer({ onCancel, label }: { onCancel: () => void; label: string }) {
+function FormShell({
+  title,
+  subtitle,
+  submitLabel,
+  onCancel,
+  onSubmit,
+  children,
+}: {
+  title: string;
+  subtitle: string;
+  submitLabel: string;
+  onCancel: () => void;
+  onSubmit: () => void;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="flex justify-end gap-2 pt-2">
-      <Button type="button" variant="outline" onClick={onCancel}>
-        Huỷ
-      </Button>
-      <Button type="submit" className="gap-1.5">
-        <Sparkles className="size-4" aria-hidden />
-        {label}
-      </Button>
-    </div>
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        onSubmit();
+      }}
+      className="flex min-h-0 flex-col"
+    >
+      <DialogHeader className="gap-1 border-b border-border px-5 pt-5 pb-4">
+        <DialogTitle className="text-[17px] font-semibold">{title}</DialogTitle>
+        <p className="text-[13px] text-muted-foreground">{subtitle}</p>
+      </DialogHeader>
+      <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-5 py-5">{children}</div>
+      <div className="flex justify-end gap-2 border-t border-border bg-muted/50 px-5 py-3">
+        <Button type="button" variant="ghost" onClick={onCancel}>
+          Huỷ
+        </Button>
+        <Button type="submit" className="gap-1.5">
+          <Sparkles className="size-4" aria-hidden />
+          {submitLabel}
+        </Button>
+      </div>
+    </form>
   );
 }
 
@@ -84,26 +111,23 @@ function QuestionForm({ onCancel, onSubmit }: { onCancel: () => void; onSubmit: 
     setO((prev) => ({ ...prev, [key]: value }));
 
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        onSubmit(o);
-      }}
-      className="space-y-4"
+    <FormShell
+      title="Tạo câu hỏi"
+      subtitle="AI soạn câu hỏi đọc hiểu từ bài đọc theo các lựa chọn dưới đây."
+      submitLabel="Tạo câu hỏi"
+      onCancel={onCancel}
+      onSubmit={() => onSubmit(o)}
     >
-      <DialogHeader>
-        <DialogTitle>Tạo câu hỏi</DialogTitle>
-      </DialogHeader>
       <OptionField label="Số câu">
         <SingleChoice options={countOptions(QUESTION_COUNTS, "câu")} value={o.count} onChange={set("count")} />
       </OptionField>
       <OptionField label="Độ khó">
         <SingleChoice options={optionsFrom(DIFFICULTY_LABEL)} value={o.difficulty} onChange={set("difficulty")} />
       </OptionField>
-      <OptionField label="Dạng câu hỏi" hint="chọn một hoặc nhiều">
+      <OptionField label="Dạng câu hỏi" hint="Chọn một hoặc nhiều">
         <MultiChoice options={optionsFrom(QUESTION_FORMAT_LABEL)} value={o.formats} onChange={set("formats")} min={1} />
       </OptionField>
-      <OptionField label="Kỹ năng trọng tâm" hint="bỏ trống để cân bằng">
+      <OptionField label="Kỹ năng trọng tâm" hint="Bỏ trống để cân bằng">
         <MultiChoice options={optionsFrom(QUESTION_FOCUS_LABEL)} value={o.focus} onChange={set("focus")} />
       </OptionField>
       <OptionField label="Ngôn ngữ giải thích">
@@ -113,8 +137,7 @@ function QuestionForm({ onCancel, onSubmit }: { onCancel: () => void; onSubmit: 
           onChange={set("explanationLanguage")}
         />
       </OptionField>
-      <Footer onCancel={onCancel} label={`Tạo ${o.count} câu hỏi`} />
-    </form>
+    </FormShell>
   );
 }
 
@@ -124,16 +147,13 @@ function FlashcardForm({ onCancel, onSubmit }: { onCancel: () => void; onSubmit:
     setO((prev) => ({ ...prev, [key]: value }));
 
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        onSubmit(o);
-      }}
-      className="space-y-4"
+    <FormShell
+      title="Tạo flashcard"
+      subtitle="AI chọn từ và ý đáng nhớ trong bài đọc để làm thẻ ghi nhớ."
+      submitLabel="Tạo thẻ"
+      onCancel={onCancel}
+      onSubmit={() => onSubmit(o)}
     >
-      <DialogHeader>
-        <DialogTitle>Tạo flashcard</DialogTitle>
-      </DialogHeader>
       <OptionField label="Số thẻ">
         <SingleChoice options={countOptions(FLASHCARD_COUNTS, "thẻ")} value={o.count} onChange={set("count")} />
       </OptionField>
@@ -143,7 +163,7 @@ function FlashcardForm({ onCancel, onSubmit }: { onCancel: () => void; onSubmit:
       <OptionField label="Độ khó">
         <SingleChoice options={optionsFrom(DIFFICULTY_LABEL)} value={o.difficulty} onChange={set("difficulty")} />
       </OptionField>
-      <OptionField label="Mặt sau">
+      <OptionField label="Ngôn ngữ mặt sau">
         <SingleChoice options={optionsFrom(FLASHCARD_BACK_LABEL)} value={o.back} onChange={set("back")} />
       </OptionField>
       <OptionField label="Câu ví dụ">
@@ -156,7 +176,6 @@ function FlashcardForm({ onCancel, onSubmit }: { onCancel: () => void; onSubmit:
           onChange={(v) => set("withExample")(v === "yes")}
         />
       </OptionField>
-      <Footer onCancel={onCancel} label={`Tạo ${o.count} thẻ`} />
-    </form>
+    </FormShell>
   );
 }

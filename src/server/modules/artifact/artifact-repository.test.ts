@@ -85,5 +85,25 @@ describe("artifact repository", () => {
 
     expect(list.map((a) => a.id)).toEqual([newer.id, older.id]);
     expect(list[0]).not.toHaveProperty("content");
+    expect(list[0]).toMatchObject({ itemCount: null, difficulty: null });
+  });
+
+  it("summarises item count and difficulty from the content for the list", async () => {
+    const { userId, passageId } = await newUserWithPassage();
+    const deck = await createArtifact({ userId, passageId, type: "FLASHCARD", status: "PENDING" });
+    await updateArtifactStatus({
+      id: deck.id,
+      userId,
+      status: "COMPLETED",
+      content: { cards: [{ front: "a", back: "b" }, { front: "c", back: "d" }], settings: { difficulty: "HARD" } },
+    });
+    const quiz = await createArtifact({ userId, passageId, type: "QUESTION", status: "PENDING" });
+    await updateArtifactStatus({ id: quiz.id, userId, status: "COMPLETED", content: { questions: [{}, {}, {}] } });
+
+    const list = await listArtifactsForUser(userId, passageId);
+
+    expect(list.find((a) => a.id === deck.id)).toMatchObject({ itemCount: 2, difficulty: "HARD" });
+    // Made before settings existed: the count still shows, the difficulty is unknown.
+    expect(list.find((a) => a.id === quiz.id)).toMatchObject({ itemCount: 3, difficulty: null });
   });
 });

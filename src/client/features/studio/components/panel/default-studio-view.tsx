@@ -1,5 +1,6 @@
 "use client";
 
+import { DIFFICULTY_LABEL } from "@/shared/studio/generation-options";
 import { PanelRight } from "lucide-react";
 import { Card, CardContent } from "@/client/components/ui/card";
 import { Button } from "@/client/components/ui/button";
@@ -40,21 +41,28 @@ function mapProcessingStatus(status: ProcessingStatus): "ready" | "pending" | "f
   }
 }
 
-function artifactSubtitle(
-  artifact: StudioArtifactListItem,
-): string | null {
+/** Progress first (what the learner did), then what the set is: "Đang làm 2/10 · 10 câu · Khó". */
+function artifactSubtitle(artifact: StudioArtifactListItem): string | null {
+  const parts: string[] = [];
+
   if (artifact.type === StudioArtifactType.QUESTION) {
     const p = artifact.progress;
-    if (!p) return null;
-    if (p.isCompleted) return `Đúng ${p.correctCount}/${p.answers.length}`;
-    const answered = p.answers.filter((a) => a !== null).length;
-    return answered ? `Đang làm ${answered}/${p.answers.length}` : null;
+    if (p?.isCompleted) parts.push(`Đúng ${p.correctCount}/${p.answers.length}`);
+    else {
+      const answered = p?.answers.filter((a) => a !== null).length ?? 0;
+      if (answered) parts.push(`Đang làm ${answered}/${p!.answers.length}`);
+    }
+    if (artifact.itemCount) parts.push(`${artifact.itemCount} câu`);
+  } else {
+    const p = artifact.progress;
+    const total = artifact.itemCount ?? p?.missCounts.length ?? 0;
+    if (p && (p.isCompleted || p.queue.length === 0)) parts.push("Đã nhớ hết");
+    else if (p && total) parts.push(`Đã nhớ ${total - new Set(p.queue).size}/${total}`);
+    if (artifact.itemCount) parts.push(`${artifact.itemCount} thẻ`);
   }
-  const p = artifact.progress;
-  if (!p) return null;
-  if (p.isCompleted || p.queue.length === 0) return "Đã nhớ hết";
-  const total = p.missCounts.length || 5;
-  return `Đã nhớ ${total - new Set(p.queue).size}/${total}`;
+
+  if (artifact.difficulty) parts.push(DIFFICULTY_LABEL[artifact.difficulty]);
+  return parts.length ? parts.join(" · ") : null;
 }
 
 export function DefaultStudioView({
@@ -81,7 +89,7 @@ export function DefaultStudioView({
   };
 
   return (
-    <Card className="h-full flex flex-col overflow-hidden bg-background rounded-none">
+    <Card className="h-full flex flex-col overflow-hidden bg-background rounded-none py-0 gap-0 ring-0 shadow-none">
       <CardContent className="p-0 flex flex-col h-full">
         <div className="h-[54px] px-4 flex items-center justify-between border-b border-border">
           <h2 className="text-[11px] font-bold text-ink-3 uppercase tracking-[0.13em]">Studio</h2>

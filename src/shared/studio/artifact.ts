@@ -1,6 +1,11 @@
 import { z } from "zod";
 import { ProcessingStatus, StudioArtifactType } from "@/shared/enums";
-import { QuestionFormat } from "./generation-options";
+import {
+  Difficulty,
+  QuestionFormat,
+  flashcardGenerationOptionsSchema,
+  questionGenerationOptionsSchema,
+} from "./generation-options";
 
 // ─── Question Content ──────────────────────────────────────────────
 
@@ -22,6 +27,8 @@ export type QuestionItem = z.infer<typeof questionItemSchema>;
 
 export const questionContentSchema = z.object({
   questions: z.array(questionItemSchema).min(1).max(15),
+  /** The options the set was generated with; absent on sets made before options existed. */
+  settings: questionGenerationOptionsSchema.nullish(),
 });
 
 export type QuestionContent = z.infer<typeof questionContentSchema>;
@@ -46,6 +53,8 @@ const flashcardItemSchema = z.object({
 
 export const flashcardContentSchema = z.object({
   cards: z.array(flashcardItemSchema).min(1).max(20),
+  /** The options the deck was generated with; absent on decks made before options existed. */
+  settings: flashcardGenerationOptionsSchema.nullish(),
 });
 
 export type FlashcardContent = z.infer<typeof flashcardContentSchema>;
@@ -70,6 +79,14 @@ const artifactCommon = {
   status: z.enum(ProcessingStatus),
 } as const;
 
+/** Read out of the content for the list, which does not carry the content itself. */
+const listSummary = {
+  /** Questions or cards in the set; null until generated. */
+  itemCount: z.number().int().nullable().default(null),
+  /** Null until generated, and on sets made before options existed. */
+  difficulty: z.enum(Difficulty).nullable().default(null),
+} as const;
+
 // ─── List Item Schemas (no content) ───────────────────────────────
 
 const questionListItemVariant = z.object({
@@ -83,8 +100,8 @@ const flashcardListItemVariant = z.object({
 });
 
 export const studioArtifactListItemSchema = z.discriminatedUnion("type", [
-  questionListItemVariant.extend(artifactCommon),
-  flashcardListItemVariant.extend(artifactCommon),
+  questionListItemVariant.extend(artifactCommon).extend(listSummary),
+  flashcardListItemVariant.extend(artifactCommon).extend(listSummary),
 ]);
 
 export type StudioArtifactListItem = z.infer<typeof studioArtifactListItemSchema>;
