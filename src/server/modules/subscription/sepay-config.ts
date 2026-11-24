@@ -9,13 +9,26 @@ export type SepayConfig = {
   webhookApiKey: string;
 };
 
-/** Throws `payment.not_configured` when any SEPAY_* variable is missing. */
+/**
+ * Stand-ins for a machine without a SePay account. The QR points at no real
+ * account, and `pnpm sepay:mock-webhook` sends the same key, so a checkout can
+ * be completed locally. Never used in production.
+ */
+export const DEV_SEPAY_CONFIG: SepayConfig = {
+  bankCode: "MB",
+  accountNumber: "0000000000",
+  accountName: "READINGPRO DEV",
+  webhookApiKey: "dev-sepay-key",
+};
+
+/** Each SEPAY_* variable, or its dev stand-in outside production; throws `payment.not_configured` when one is missing. */
 export function requireSepayConfig(): SepayConfig {
+  const dev = process.env.NODE_ENV === "production" ? null : DEV_SEPAY_CONFIG;
   const config = {
-    bankCode: process.env.SEPAY_BANK_CODE ?? "",
-    accountNumber: process.env.SEPAY_BANK_ACCOUNT ?? "",
-    accountName: process.env.SEPAY_ACCOUNT_NAME ?? "",
-    webhookApiKey: process.env.SEPAY_WEBHOOK_API_KEY ?? "",
+    bankCode: process.env.SEPAY_BANK_CODE || dev?.bankCode || "",
+    accountNumber: process.env.SEPAY_BANK_ACCOUNT || dev?.accountNumber || "",
+    accountName: process.env.SEPAY_ACCOUNT_NAME || dev?.accountName || "",
+    webhookApiKey: process.env.SEPAY_WEBHOOK_API_KEY || dev?.webhookApiKey || "",
   };
   if (Object.values(config).some((value) => value === "")) {
     throw new AppError("payment.not_configured", "SEPAY_* environment variables are not set");
