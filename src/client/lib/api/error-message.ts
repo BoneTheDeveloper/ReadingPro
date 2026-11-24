@@ -91,6 +91,7 @@ const AUTH_MESSAGES: Record<string, string> = {
   INVALID_EMAIL: "Email không hợp lệ.",
   PASSWORD_TOO_SHORT: `Mật khẩu phải có ít nhất ${PASSWORD_MIN_LENGTH} ký tự.`,
   PASSWORD_TOO_LONG: `Mật khẩu tối đa ${PASSWORD_MAX_LENGTH} ký tự.`,
+  PASSWORD_NO_LETTER: "Mật khẩu phải có ít nhất 1 chữ cái.",
   PASSWORD_NO_DIGIT: "Mật khẩu phải có ít nhất 1 chữ số.",
   INVALID_OTP: "Mã OTP không đúng.",
   OTP_EXPIRED: "Mã OTP đã hết hạn. Hãy gửi lại mã mới.",
@@ -108,6 +109,7 @@ const CREDENTIAL_MESSAGES: Record<CredentialErrorKey, string> = {
   "password.required": "Vui lòng nhập mật khẩu.",
   "password.too_short": AUTH_MESSAGES.PASSWORD_TOO_SHORT,
   "password.too_long": AUTH_MESSAGES.PASSWORD_TOO_LONG,
+  "password.no_letter": AUTH_MESSAGES.PASSWORD_NO_LETTER,
   "password.no_digit": AUTH_MESSAGES.PASSWORD_NO_DIGIT,
   "confirmPassword.required": "Vui lòng nhập lại mật khẩu.",
   "confirmPassword.mismatch": "Hai mật khẩu không khớp.",
@@ -119,7 +121,7 @@ export function credentialErrorText(key: CredentialErrorKey | undefined): string
 }
 
 /** Shown under the password field on sign-up, so the rule is visible before any error. */
-export const PASSWORD_HINT = `Ít nhất ${PASSWORD_MIN_LENGTH} ký tự và có 1 chữ số.`;
+export const PASSWORD_HINT = `Ít nhất ${PASSWORD_MIN_LENGTH} ký tự, gồm cả chữ và số.`;
 
 /** Client-side checks on the auth forms, before any request is sent. */
 export const AUTH_FORM_MESSAGES = {

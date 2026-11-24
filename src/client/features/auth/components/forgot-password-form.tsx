@@ -20,7 +20,7 @@ import { OtpCodeInput, ResendCodeButton } from "./otp-code-input";
 
 /** Server error codes shown under the code field rather than above the form. */
 const OTP_ERROR_CODES = new Set(["INVALID_OTP", "OTP_EXPIRED", "TOO_MANY_ATTEMPTS"]);
-const PASSWORD_ERROR_CODES = new Set(["PASSWORD_TOO_SHORT", "PASSWORD_TOO_LONG", "PASSWORD_NO_DIGIT"]);
+const PASSWORD_ERROR_CODES = new Set(["PASSWORD_TOO_SHORT", "PASSWORD_TOO_LONG", "PASSWORD_NO_LETTER", "PASSWORD_NO_DIGIT"]);
 
 /**
  * Step 1 asks for the email and sends a code. The answer is the same whether

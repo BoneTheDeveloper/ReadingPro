@@ -124,12 +124,13 @@ describe("password sign-up with email OTP", () => {
     ).toBe("INVALID_USERNAME_OR_PASSWORD");
   });
 
-  it("refuses a password without a digit or shorter than 8 characters", async () => {
+  it("refuses a password without a letter, without a digit, or shorter than 8 characters", async () => {
     const { username, email } = newIdentity();
     const attempt = (password: string) =>
       errorCode(auth.api.signUpEmail({ body: { username, email, name: username, password } }));
 
     expect(await attempt("no-digits-here")).toBe("PASSWORD_NO_DIGIT");
+    expect(await attempt("12345678")).toBe("PASSWORD_NO_LETTER");
     expect(await attempt("short1")).toBe("PASSWORD_TOO_SHORT");
     expect(vi.mocked(sendOtpEmail)).not.toHaveBeenCalled();
   });

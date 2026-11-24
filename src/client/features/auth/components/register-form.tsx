@@ -27,6 +27,7 @@ const SERVER_ERROR_FIELD: Record<string, RegistrationField> = {
   INVALID_EMAIL: "email",
   PASSWORD_TOO_SHORT: "password",
   PASSWORD_TOO_LONG: "password",
+  PASSWORD_NO_LETTER: "password",
   PASSWORD_NO_DIGIT: "password",
 };
 
