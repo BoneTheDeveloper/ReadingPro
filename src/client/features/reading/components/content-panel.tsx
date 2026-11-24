@@ -1,6 +1,6 @@
 "use client";
 import { useRef, useState } from "react";
-import { FileText, FileSearch, Plus, FileType, Loader2 } from "lucide-react";
+import { FileText, FileSearch, Plus, Loader2 } from "lucide-react";
 import { cn } from "@/client/lib/utils";
 import { CefrBadge } from "./cefr-badge";
 import { InlineTranslationPopup } from "./inline-translation-popup";
@@ -25,7 +25,7 @@ export function ContentPanel({
   /** Opens the Studio "Tra từ" view for a selected word. */
   onLookup: (request: { word: string; context: string }) => void;
 }) {
-  const [viewMode, setViewMode] = useState<"text" | "pdf" | "video">(
+  const [viewMode, setViewMode] = useState<"text" | "video">(
     "text",
   );
   const [wordAnchor, setWordAnchor] = useState<WordSelectionAnchor | null>(null);
@@ -33,8 +33,6 @@ export function ContentPanel({
   const scrollRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const progress = useScrollProgress(scrollRef);
-  const pdfBlobPathname =
-    viewMode === "pdf" && passage?.filePath ? passage.filePath : null;
 
   const clearSelection = () => {
     setWordAnchor(null);
@@ -146,16 +144,6 @@ export function ContentPanel({
               ]}
             />
           )}
-          {passage.sourceType === "PDF" && (
-            <SegmentedToggle
-              value={viewMode}
-              onChange={setViewMode}
-              options={[
-                { value: "text", label: "Bài đọc" },
-                { value: "pdf", label: "PDF" },
-              ]}
-            />
-          )}
         </div>
       </div>
 
@@ -165,9 +153,6 @@ export function ContentPanel({
       >
         {viewMode === "video" && (
           <YouTubeEmbed url={passage.youtubeUrl ?? ""} />
-        )}
-        {viewMode === "pdf" && (
-          <PdfPlaceholder fileName={pdfBlobPathname ? passage.title : null} />
         )}
         {viewMode === "text" && (
           <div className="max-w-[66ch] mx-auto">
@@ -193,32 +178,6 @@ export function ContentPanel({
         onTranslate={handleTranslateClick}
         onClose={clearSelection}
       />
-    </div>
-  );
-}
-
-function PdfPlaceholder({ fileName }: { fileName: string | null }) {
-  return (
-    <div className="flex items-center justify-center min-h-[60vh]">
-      <div className="max-w-[42ch] text-center">
-        <FileType
-          className="w-10 h-10 text-muted-foreground mx-auto mb-3"
-          aria-hidden
-        />
-        {fileName ? (
-          <>
-            <p className="text-sm font-medium text-foreground">{fileName}</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Trình xem PDF đang được phát triển. Hãy dùng tab Bài đọc để đọc
-              nội dung đã trích xuất.
-            </p>
-          </>
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            Không có tệp nguồn cho bài đọc này
-          </p>
-        )}
-      </div>
     </div>
   );
 }
