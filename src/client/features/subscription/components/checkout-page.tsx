@@ -65,7 +65,7 @@ function OrderSummary({ checkout: { order } }: { checkout: Checkout }) {
         <h1 className="mt-1 text-2xl font-bold">ReadingPro {PLAN_LABELS[order.planCode].name}</h1>
         <p className="mt-2 text-4xl font-bold tabular-nums">{formatVnd(order.amount)}</p>
       </div>
-      <dl className="divide-y divide-border rounded-2xl border border-border bg-surface text-sm">
+      <dl className="divide-y divide-border rounded-lg border border-border bg-surface text-sm">
         <Row label="Gói">{PLAN_LABELS[order.planCode].name}</Row>
         <Row label="Thời hạn">{order.months} tháng, cộng nối tiếp nếu còn hạn</Row>
         <Row label="Mã đơn">
@@ -89,13 +89,13 @@ function PayPanel({ checkout }: { checkout: Checkout }) {
   const expired = order.status === "EXPIRED" || secondsLeft === 0;
 
   return (
-    <section aria-label="Thanh toán" className="rounded-2xl border border-border bg-surface p-6 shadow-card">
+    <section aria-label="Thanh toán" className="rounded-lg border border-border bg-surface p-6 shadow-card">
       <h2 className="text-lg font-semibold">Quét mã để thanh toán</h2>
       <p className="mt-1 text-sm text-muted-foreground">Dùng app ngân hàng bất kỳ hỗ trợ VietQR.</p>
 
       <div className="mt-5 flex justify-center">
         {expired ? <ExpiredQr planCode={order.planCode} /> : (
-          <img src={qrUrl} alt={`Mã VietQR thanh toán ${formatVnd(order.amount)}`} width={240} height={240} className="aspect-square w-60 rounded-xl border border-border bg-white p-2" />
+          <img src={qrUrl} alt={`Mã VietQR thanh toán ${formatVnd(order.amount)}`} width={240} height={240} className="aspect-square w-60 rounded-md border border-border bg-white p-2" />
         )}
       </div>
 
@@ -110,7 +110,7 @@ function PayPanel({ checkout }: { checkout: Checkout }) {
         </p>
       )}
 
-      <dl className="mt-6 divide-y divide-border rounded-xl bg-muted/50 text-sm">
+      <dl className="mt-6 divide-y divide-border rounded-md bg-muted/50 text-sm">
         <Row label="Ngân hàng">{bank.code}</Row>
         <Row label="Số tài khoản"><CopyValue value={bank.accountNumber} /></Row>
         <Row label="Chủ tài khoản">{bank.accountName}</Row>
@@ -126,7 +126,7 @@ function ExpiredQr({ planCode }: { planCode: Checkout["order"]["planCode"] }) {
   const navigate = useNavigate();
   const checkout = useCheckoutMutation();
   return (
-    <div className="flex aspect-square w-60 flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border p-4 text-center">
+    <div className="flex aspect-square w-60 flex-col items-center justify-center gap-3 rounded-md border border-dashed border-border p-4 text-center">
       <p className="text-sm font-medium">Mã QR đã hết hạn</p>
       <p className="text-xs text-muted-foreground">Đã chuyển khoản đúng nội dung? Đơn vẫn được xác nhận khi tiền về.</p>
       <Button
@@ -143,7 +143,7 @@ function ExpiredQr({ planCode }: { planCode: Checkout["order"]["planCode"] }) {
 function PaidPanel({ checkout: { order } }: { checkout: Checkout }) {
   const status = useQuery(subscriptionQueries.status()).data;
   return (
-    <section aria-label="Thanh toán thành công" className="flex flex-col items-center justify-center rounded-2xl border border-border bg-surface p-8 text-center shadow-card">
+    <section aria-label="Thanh toán thành công" className="flex flex-col items-center justify-center rounded-lg border border-border bg-surface p-8 text-center shadow-card">
       <CheckCircle2 className="h-14 w-14 text-success" aria-hidden />
       <h2 className="mt-4 text-xl font-semibold">Thanh toán thành công</h2>
       <p className="mt-2 text-sm text-muted-foreground">
