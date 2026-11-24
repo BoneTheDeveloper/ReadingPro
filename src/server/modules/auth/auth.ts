@@ -60,7 +60,15 @@ export const auth = betterAuth({
     before: createAuthMiddleware(async (ctx) => {
       const field = PASSWORD_FIELDS[ctx.path];
       const password: unknown = field ? ctx.body?.[field] : undefined;
-      if (typeof password === "string" && passwordError(password) === "password.no_digit") {
+      // Better Auth checks the length itself; the letter and digit rules are ours.
+      const rule = typeof password === "string" ? passwordError(password) : undefined;
+      if (rule === "password.no_letter") {
+        throw new APIError("BAD_REQUEST", {
+          code: "PASSWORD_NO_LETTER",
+          message: "Password must contain at least one letter",
+        });
+      }
+      if (rule === "password.no_digit") {
         throw new APIError("BAD_REQUEST", {
           code: "PASSWORD_NO_DIGIT",
           message: "Password must contain at least one digit",

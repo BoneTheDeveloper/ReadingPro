@@ -23,6 +23,8 @@ export function isValidUsernameFormat(username: string): boolean {
 export const PASSWORD_MIN_LENGTH = 8;
 export const PASSWORD_MAX_LENGTH = 128;
 const HAS_DIGIT = /\d/;
+/** Any letter, so accented Vietnamese letters count too. */
+const HAS_LETTER = /\p{L}/u;
 
 /** Digits in an emailed one-time code. */
 export const OTP_LENGTH = 6;
@@ -41,6 +43,7 @@ export type CredentialErrorKey =
   | "password.too_short"
   | "password.too_long"
   | "password.no_digit"
+  | "password.no_letter"
   | "confirmPassword.required"
   | "confirmPassword.mismatch"
   | "identifier.required";
@@ -66,6 +69,7 @@ export function passwordError(password: string): CredentialErrorKey | undefined 
   if (!password) return "password.required";
   if (password.length < PASSWORD_MIN_LENGTH) return "password.too_short";
   if (password.length > PASSWORD_MAX_LENGTH) return "password.too_long";
+  if (!HAS_LETTER.test(password)) return "password.no_letter";
   if (!HAS_DIGIT.test(password)) return "password.no_digit";
   return undefined;
 }
