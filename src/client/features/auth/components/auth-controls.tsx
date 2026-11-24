@@ -13,7 +13,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/client/components/ui/dropdown-menu";
-import { User, LogOut, Settings, Crown } from "lucide-react";
+import { CreditCard, LogOut, Settings, Sparkles, User } from "lucide-react";
+import { useIsPro } from "@/client/features/subscription";
 import { Link, useNavigate } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { authClient } from "@/client/lib/auth/auth-client";
@@ -34,6 +35,7 @@ export function AuthControls({ variant = "default", active = false }: AuthContro
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const user = useAppSelector(selectSessionUser);
+  const isPro = useIsPro();
 
   const handleSignOut = async () => {
     // Clear all Chat instances from the registry to prevent memory leaks
@@ -106,34 +108,49 @@ export function AuthControls({ variant = "default", active = false }: AuthContro
         )}
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" className="w-48">
-        <div className="px-2 py-1.5 text-sm">
-          <p className="font-medium truncate">{user.name}</p>
-          <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+      <DropdownMenuContent align="end" className="w-64">
+        <div className="flex items-center gap-3 px-2.5 py-2">
+          <Avatar className="h-9 w-9 rounded-full after:border-transparent">
+            {user.image ? <AvatarImage src={user.image} alt="" /> : null}
+            <AvatarFallback className="uppercase">{user.name?.[0] ?? <User className="h-4 w-4" />}</AvatarFallback>
+          </Avatar>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold">{user.name}</p>
+            <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+          </div>
         </div>
         <DropdownMenuSeparator />
 
         <DropdownMenuItem asChild>
-          <Link to="/account" className="cursor-pointer w-full">
-            <Settings className="w-4 h-4 mr-2" />
+          <Link to="/account">
+            <Settings />
             Cài đặt
           </Link>
         </DropdownMenuItem>
 
         <DropdownMenuItem asChild>
-          <Link to="/pricing" className="cursor-pointer w-full">
-            <Crown className="w-4 h-4 mr-2" />
-            Nâng cấp gói
+          <Link to="/account/billing">
+            <CreditCard />
+            <span className="flex-1">Gói đăng ký</span>
+            <span className="rounded-md bg-muted px-1.5 py-0.5 text-[11px] font-semibold text-muted-foreground">
+              {isPro ? "Pro" : "Free"}
+            </span>
           </Link>
         </DropdownMenuItem>
 
+        {!isPro && (
+          <DropdownMenuItem asChild>
+            <Link to="/pricing" className="font-medium text-primary [&_svg]:text-primary">
+              <Sparkles />
+              Nâng cấp lên Pro
+            </Link>
+          </DropdownMenuItem>
+        )}
+
         <DropdownMenuSeparator />
 
-        <DropdownMenuItem
-          onClick={handleSignOut}
-          className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
-        >
-          <LogOut className="w-4 h-4 mr-2" />
+        <DropdownMenuItem onClick={handleSignOut}>
+          <LogOut />
           Đăng xuất
         </DropdownMenuItem>
       </DropdownMenuContent>
