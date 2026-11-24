@@ -17,5 +17,7 @@ export default [
       route("usage", "routes/account/usage.tsx"),
     ]),
     route("pricing", "routes/pricing.tsx"),
+    // Development only: every billing settings state from sample data.
+    ...(process.env.NODE_ENV === "production" ? [] : [route("dev/billing-states", "routes/dev-billing-states.tsx")]),
   ]),
 ] satisfies RouteConfig;

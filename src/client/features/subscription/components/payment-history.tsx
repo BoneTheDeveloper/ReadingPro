@@ -18,6 +18,10 @@ const STATUS = {
 /** Paid and refunded payments, newest first: date, total, status and the invoice PDF. */
 export function PaymentHistory() {
   const { data } = useQuery(subscriptionQueries.orders());
+  return <PaymentHistoryTable orders={data} />;
+}
+
+export function PaymentHistoryTable({ orders: data }: { orders: PaymentOrder[] | undefined }) {
   return (
     <section className="space-y-4">
       <h2 className="text-base font-semibold">Lịch sử thanh toán</h2>

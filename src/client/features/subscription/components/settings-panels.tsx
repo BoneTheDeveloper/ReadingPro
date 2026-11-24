@@ -18,7 +18,7 @@ const STATE_BADGE: Record<SubscriptionStatus["state"], string> = {
   complimentary: "bg-success-soft text-success",
 };
 
-function Section({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
+export function Section({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
   return (
     <section className="space-y-4">
       <div>
@@ -53,33 +53,49 @@ function periodLine(data: SubscriptionStatus): string {
   }
 }
 
-/** Settings → Billing: the current plan with its expiry, the upgrade/renew action, and invoices. */
+/** The current plan with its expiry and the upgrade/renew action. */
+export function CurrentPlan({ data }: { data: SubscriptionStatus }) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="space-y-1">
+        <p className="flex items-center gap-2 text-lg font-semibold">
+          {data.tier === "PRO" && <Crown className="h-4 w-4 text-primary" aria-hidden />}
+          Gói {data.tier === "PRO" ? "Pro" : "Free"}
+          {/* The plan name already implies an active plan; the badge only flags a state worth noticing. */}
+          {data.state !== "none" && data.state !== "active" && <Badge className={STATE_BADGE[data.state]}>{STATE_LABELS[data.state]}</Badge>}
+        </p>
+        <p className="text-sm text-muted-foreground">{periodLine(data)}</p>
+      </div>
+      {data.state !== "complimentary" && (
+        <Button asChild variant={data.tier === "PRO" && data.state !== "expiring" ? "secondary" : "default"}>
+          <Link to="/pricing">{data.tier === "PRO" ? "Gia hạn" : "Nâng cấp lên Pro"}</Link>
+        </Button>
+      )}
+    </div>
+  );
+}
+
+/** The quota meters, with an upgrade nudge on Free. */
+export function UsageSummary({ data }: { data: SubscriptionStatus }) {
+  return (
+    <div className="space-y-5">
+      <UsageMeters usage={data.usage} />
+      {data.tier === "FREE" && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-indigo-soft px-4 py-3 text-sm">
+          <span>Cần nhiều lượt hơn? Pro tăng hạn mức tới 20 lần.</span>
+          <Button asChild size="sm"><Link to="/pricing">Xem gói Pro</Link></Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Settings → Billing: the current plan and the payment history. */
 export function BillingSettings() {
   const { data, fallback } = useStatus();
   return (
     <div className="space-y-8">
-      <Section title="Gói hiện tại">
-        {data ? (
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="space-y-1">
-              <p className="flex items-center gap-2 text-lg font-semibold">
-                {data.tier === "PRO" && <Crown className="h-4 w-4 text-primary" aria-hidden />}
-                Gói {data.tier === "PRO" ? "Pro" : "Free"}
-                {/* The plan name already implies an active plan; the badge only flags a state worth noticing. */}
-                {data.state !== "none" && data.state !== "active" && <Badge className={STATE_BADGE[data.state]}>{STATE_LABELS[data.state]}</Badge>}
-              </p>
-              <p className="text-sm text-muted-foreground">{periodLine(data)}</p>
-            </div>
-            {data.state !== "complimentary" && (
-              <Button asChild variant={data.tier === "PRO" && data.state !== "expiring" ? "secondary" : "default"}>
-                <Link to="/pricing">{data.tier === "PRO" ? "Gia hạn" : "Nâng cấp lên Pro"}</Link>
-              </Button>
-            )}
-          </div>
-        ) : (
-          fallback
-        )}
-      </Section>
+      <Section title="Gói hiện tại">{data ? <CurrentPlan data={data} /> : fallback}</Section>
       <PaymentHistory />
     </div>
   );
@@ -93,19 +109,7 @@ export function UsageSettings() {
       title="Mức sử dụng"
       description={data ? `Hạn mức của gói ${data.tier === "PRO" ? "Pro" : "Free"} trong kỳ hiện tại.` : undefined}
     >
-      {data ? (
-        <div className="space-y-5">
-          <UsageMeters usage={data.usage} />
-          {data.tier === "FREE" && (
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-indigo-soft px-4 py-3 text-sm">
-              <span>Cần nhiều lượt hơn? Pro tăng hạn mức tới 20 lần.</span>
-              <Button asChild size="sm"><Link to="/pricing">Xem gói Pro</Link></Button>
-            </div>
-          )}
-        </div>
-      ) : (
-        fallback
-      )}
+      {data ? <UsageSummary data={data} /> : fallback}
     </Section>
   );
 }
