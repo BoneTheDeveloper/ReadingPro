@@ -5,3 +5,4 @@ export { redirectIfSignedIn } from "./lib/redirect-if-signed-in";
 export { LoginForm } from "./components/login-form";
 export { RegisterForm } from "./components/register-form";
 export { DeleteAccountButton } from "./components/delete-account-dialog";
+export { ProfileForm } from "./components/profile-form";

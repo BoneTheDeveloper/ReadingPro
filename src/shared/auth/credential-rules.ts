@@ -4,8 +4,21 @@
 
 export const USERNAME_MIN_LENGTH = 3;
 export const USERNAME_MAX_LENGTH = 30;
-/** Same characters Better Auth's username plugin accepts by default. */
-const USERNAME_PATTERN = /^[A-Za-z0-9_.]+$/;
+/**
+ * One word of letters and digits in any script (Vietnamese accents included),
+ * plus "_". The server passes the same check to Better Auth's
+ * username plugin, which would otherwise allow ASCII only.
+ */
+const USERNAME_PATTERN = /^[\p{L}\p{M}\p{N}_]+$/u;
+
+/** Usernames are compared in NFC, so an accented name typed on any OS is one name. */
+export function normalizeUsername(username: string): string {
+  return username.trim().normalize("NFC");
+}
+
+export function isValidUsernameFormat(username: string): boolean {
+  return USERNAME_PATTERN.test(username);
+}
 
 export const PASSWORD_MIN_LENGTH = 8;
 export const PASSWORD_MAX_LENGTH = 128;
@@ -35,12 +48,12 @@ export type CredentialErrorKey =
   | "confirmPassword.mismatch"
   | "identifier.required";
 
-function usernameError(username: string): CredentialErrorKey | undefined {
-  const value = username.trim();
+export function usernameError(username: string): CredentialErrorKey | undefined {
+  const value = normalizeUsername(username);
   if (!value) return "username.required";
   if (value.length < USERNAME_MIN_LENGTH) return "username.too_short";
   if (value.length > USERNAME_MAX_LENGTH) return "username.too_long";
-  if (!USERNAME_PATTERN.test(value)) return "username.invalid";
+  if (!isValidUsernameFormat(value)) return "username.invalid";
   return undefined;
 }
 

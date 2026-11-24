@@ -168,6 +168,21 @@ describe("password sign-up with email OTP", () => {
     });
   });
 
+  it("accepts a Vietnamese username and refuses one with a space", async () => {
+    const { email } = newIdentity();
+    const vietnamese = `lực_phạm_${Date.now() % 100000}`;
+    const created = await auth.api.signUpEmail({ body: { email, username: vietnamese, name: vietnamese, password: PASSWORD } });
+    userIds.push(created.user.id);
+    expect(created.user).toMatchObject({ username: vietnamese.toLowerCase() });
+
+    const other = newIdentity();
+    expect(
+      await errorCode(
+        auth.api.signUpEmail({ body: { email: other.email, username: "lực phạm", name: "x", password: PASSWORD } }),
+      ),
+    ).toBe("INVALID_USERNAME");
+  });
+
   it("refuses a username that is already taken", async () => {
     const { username } = await signUp();
     const other = newIdentity();
