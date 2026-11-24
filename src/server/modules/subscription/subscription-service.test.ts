@@ -215,6 +215,18 @@ describe("createCheckoutForUser", () => {
     await createCheckoutForUser(userId, "PRO_YEARLY");
     expect((await listPaymentOrders(userId)).map((o) => o.id)).toEqual([paid.order.id]);
   });
+
+  it("keeps a refunded payment in the history with its refund date", async () => {
+    const userId = await newUser();
+    const { order } = await createCheckoutForUser(userId, "PRO_MONTHLY");
+    await handleSepayWebhook(sepayPayload({ content: order.paymentCode }));
+    await pool.query(`UPDATE "PaymentOrder" SET "status" = 'REFUNDED', "refundedAt" = now() WHERE "id" = $1`, [order.id]);
+
+    const [listed] = await listPaymentOrders(userId);
+    expect(listed).toMatchObject({ id: order.id, status: "REFUNDED", refundedAt: expect.any(Date) });
+    // A later transfer with the same code does not reactivate it.
+    expect(await handleSepayWebhook(sepayPayload({ content: order.paymentCode }))).toBe("NO_ORDER");
+  });
 });
 
 describe("getCheckoutForUser", () => {

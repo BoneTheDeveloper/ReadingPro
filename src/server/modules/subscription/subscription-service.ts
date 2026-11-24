@@ -111,7 +111,7 @@ export async function getSubscriptionStatus(userId: string, now = new Date()): P
 // ── Checkout ────────────────────────────────────────────────────────────────
 
 /** Transfer notes carry this prefix; set the same prefix as the payment code in SePay. */
-export const PAYMENT_CODE_PREFIX = "RPRO";
+const PAYMENT_CODE_PREFIX = "RPRO";
 const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const PAYMENT_CODE_PATTERN = new RegExp(`${PAYMENT_CODE_PREFIX}[${CODE_ALPHABET}]{8}`);
 
@@ -131,6 +131,7 @@ function toPaymentOrder(row: PaymentOrderRow, now = new Date()): PaymentOrder {
     status: row.status === "PENDING" && row.expiresAt <= now ? "EXPIRED" : row.status,
     expiresAt: row.expiresAt,
     paidAt: row.paidAt,
+    refundedAt: row.refundedAt,
     createdAt: row.createdAt,
   };
 }
@@ -239,8 +240,8 @@ async function applyTransaction(
   const code = extractPaymentCode(payload);
   const order = code ? await lockPaymentOrderByCode(code, tx) : null;
   if (!order) return { outcome: "NO_ORDER", orderId: null };
-  // A second transfer for a paid order is kept on record for a manual refund.
-  if (order.status === "PAID") return { outcome: "NO_ORDER", orderId: order.id };
+  // A transfer for an order already paid or refunded is kept on record for a manual refund.
+  if (order.status !== "PENDING") return { outcome: "NO_ORDER", orderId: order.id };
   if (payload.transferAmount < order.amount) return { outcome: "UNDERPAID", orderId: order.id };
 
   await markPaymentOrderPaid(order.id, tx);

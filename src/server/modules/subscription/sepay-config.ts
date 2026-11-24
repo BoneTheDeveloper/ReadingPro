@@ -14,7 +14,7 @@ export type SepayConfig = {
  * account, and `pnpm sepay:mock-webhook` sends the same key, so a checkout can
  * be completed locally. Never used in production.
  */
-export const DEV_SEPAY_CONFIG: SepayConfig = {
+const DEV_SEPAY_CONFIG: SepayConfig = {
   bankCode: "MB",
   accountNumber: "0000000000",
   accountName: "READINGPRO DEV",

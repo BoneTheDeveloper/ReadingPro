@@ -15,14 +15,15 @@ export type PaymentOrderRow = {
   amount: number;
   months: number;
   paymentCode: string;
-  status: "PENDING" | "PAID";
+  status: "PENDING" | "PAID" | "REFUNDED";
   expiresAt: Date;
   paidAt: Date | null;
+  refundedAt: Date | null;
   createdAt: Date;
 };
 
 const ORDER_COLUMNS = `"id", "userId", "planCode", "amount", "months", "paymentCode", "status",
-  "expiresAt", "paidAt", "createdAt"`;
+  "expiresAt", "paidAt", "refundedAt", "createdAt"`;
 
 export async function findSubscription(userId: string, db: Queryable = pool): Promise<SubscriptionRow | null> {
   const { rows } = await db.query<SubscriptionRow>(
@@ -102,11 +103,11 @@ export async function findOpenPaymentOrder(
   return rows[0] ?? null;
 }
 
-/** Paid orders only: an abandoned checkout is not a payment. */
+/** Paid and refunded orders: an abandoned checkout is not a payment. */
 export async function listPaidOrdersForUser(userId: string, db: Queryable = pool): Promise<PaymentOrderRow[]> {
   const { rows } = await db.query<PaymentOrderRow>(
     `SELECT ${ORDER_COLUMNS} FROM "PaymentOrder"
-     WHERE "userId" = $1 AND "status" = 'PAID' ORDER BY "paidAt" DESC LIMIT 20`,
+     WHERE "userId" = $1 AND "status" IN ('PAID', 'REFUNDED') ORDER BY "paidAt" DESC LIMIT 20`,
     [userId],
   );
   return rows;

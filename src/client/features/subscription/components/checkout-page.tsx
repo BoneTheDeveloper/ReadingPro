@@ -49,7 +49,7 @@ export function CheckoutPage({ orderId }: { orderId: string }) {
         ) : (
           <div className="grid gap-8 md:grid-cols-[1fr_1.1fr]">
             <OrderSummary checkout={data} />
-            {data.order.status === "PAID" ? <PaidPanel checkout={data} /> : <PayPanel checkout={data} />}
+            {data.order.status === "PAID" || data.order.status === "REFUNDED" ? <PaidPanel checkout={data} /> : <PayPanel checkout={data} />}
           </div>
         )}
       </main>
@@ -161,6 +161,7 @@ function PaidPanel({ checkout: { order } }: { checkout: Checkout }) {
 const STATUS_PILL = {
   PENDING: { label: "Chờ thanh toán", className: "bg-amber-soft text-amber-text" },
   PAID: { label: "Đã thanh toán", className: "bg-success-soft text-success" },
+  REFUNDED: { label: "Đã hoàn tiền", className: "bg-muted text-muted-foreground" },
   EXPIRED: { label: "Mã QR hết hạn", className: "bg-muted text-muted-foreground" },
 } as const;
 

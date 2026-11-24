@@ -47,13 +47,12 @@ export const PRO_PLANS = {
   PRO_YEARLY: { code: "PRO_YEARLY", months: 12, amount: 490_000 },
 } as const;
 export type ProPlanCode = keyof typeof PRO_PLANS;
-export const PRO_PLAN_CODES = Object.keys(PRO_PLANS) as [ProPlanCode, ...ProPlanCode[]];
+const PRO_PLAN_CODES = Object.keys(PRO_PLANS) as [ProPlanCode, ...ProPlanCode[]];
 
 /** Pro ends this many days ahead → the UI warns that it is about to expire. */
 export const EXPIRING_SOON_DAYS = 7;
 
 export const CheckoutInputSchema = z.object({ planCode: z.enum(PRO_PLAN_CODES) });
-export type CheckoutInput = z.infer<typeof CheckoutInputSchema>;
 
 export const PaymentOrderIdParamSchema = z.object({ id: z.uuid() });
 
@@ -77,15 +76,16 @@ export const SubscriptionStatusSchema = z.object({
 });
 export type SubscriptionStatus = z.infer<typeof SubscriptionStatusSchema>;
 
-export const PaymentOrderSchema = z.object({
+const PaymentOrderSchema = z.object({
   id: z.uuid(),
   planCode: z.enum(PRO_PLAN_CODES),
   amount: z.number().int(),
   months: z.number().int(),
   paymentCode: z.string(),
-  status: z.enum(["PENDING", "PAID", "EXPIRED"]),
+  status: z.enum(["PENDING", "PAID", "REFUNDED", "EXPIRED"]),
   expiresAt: z.coerce.date(),
   paidAt: z.coerce.date().nullable(),
+  refundedAt: z.coerce.date().nullable(),
   createdAt: z.coerce.date(),
 });
 export type PaymentOrder = z.infer<typeof PaymentOrderSchema>;
