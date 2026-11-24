@@ -75,6 +75,74 @@ const pricingFaq = [
   },
 ];
 
+/**
+ * A miniature of the real study screen: a passage with a looked-up word and
+ * its context meaning, plus a question card with progress. Decorative, so it
+ * is hidden from assistive technology.
+ */
+function HeroPreview() {
+  return (
+    <div aria-hidden className="relative mx-auto w-full max-w-lg select-none lg:max-w-none">
+      <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-lg">
+        <div className="flex h-10 items-center gap-2 border-b border-border bg-panel px-4">
+          <span className="rounded-full bg-success-soft px-2 py-0.5 text-[11px] font-bold text-success">B1</span>
+          <span className="text-[11px] text-muted-foreground">420 từ</span>
+          <span className="ml-auto h-1.5 w-24 overflow-hidden rounded-full bg-muted">
+            <span className="block h-full w-2/5 rounded-full bg-gradient-to-r from-primary to-coral" />
+          </span>
+        </div>
+
+        <div className="relative px-7 pb-24 pt-6 sm:pb-8 sm:pr-56">
+          <p className="mb-3 font-serif text-xl font-semibold text-foreground">How Forests Recover</p>
+          <p className="font-serif text-[15px] leading-7 text-foreground/85">
+            After a wildfire, a forest can look completely lost. Yet many trees are surprisingly{" "}
+            <mark className="rounded bg-indigo-soft px-0.5 text-primary ring-1 ring-primary/40">resilient</mark>: their
+            roots survive underground and new shoots appear within weeks.
+          </p>
+
+          <div className="absolute bottom-4 left-7 right-7 rounded-xl border border-border bg-surface p-3.5 shadow-lg sm:bottom-auto sm:left-auto sm:right-5 sm:top-6 sm:w-48">
+            <p className="font-serif text-lg font-semibold text-foreground">resilient</p>
+            <p className="text-[11px] text-muted-foreground">/rɪˈzɪliənt/ · tính từ</p>
+            <div className="mt-2 rounded-lg bg-indigo-soft px-2.5 py-1.5">
+              <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-coral">
+                <SparklesIcon /> Theo ngữ cảnh
+              </p>
+              <p className="text-[13px] font-semibold text-primary">có sức phục hồi</p>
+            </div>
+            <span className="mt-2 flex items-center justify-center gap-1 rounded-md bg-primary py-1.5 text-[11px] font-semibold text-primary-foreground">
+              <BookmarkIcon /> Lưu vào từ vựng
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div className="absolute -bottom-8 -left-4 hidden w-60 rounded-xl border border-border bg-surface p-4 shadow-lg sm:block lg:-left-10">
+        <div className="mb-2 flex gap-1">
+          {["bg-success", "bg-success", "bg-danger", "bg-muted", "bg-muted"].map((c, i) => (
+            <span key={i} className={`h-1.5 flex-1 rounded-full ${c}`} />
+          ))}
+        </div>
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Câu 3 / 5 · Điền từ</p>
+        <p className="mt-1 text-[13px] font-medium leading-snug text-foreground">
+          Many trees are ____ because their roots survive.
+        </p>
+        <div className="mt-2 grid grid-cols-2 gap-1.5 text-[11px]">
+          <span className="rounded-md border border-primary bg-primary/5 px-2 py-1 font-medium text-primary">resilient</span>
+          <span className="rounded-md border border-border px-2 py-1 text-muted-foreground">fragile</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const SparklesIcon = () => (
+  <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z" /></svg>
+);
+
+const BookmarkIcon = () => (
+  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg>
+);
+
 export default function MarketingRoute() {
   // body is `h-full overflow-hidden flex flex-col`, so the marketing shell must
   // be its own scroll container for the page to scroll at all.
@@ -132,17 +200,15 @@ export default function MarketingRoute() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
               <div className="text-center lg:text-left">
-                <div className="inline-block px-4 py-1.5 rounded-full bg-indigo-soft text-primary font-semibold text-sm mb-6">
-                  Được hỗ trợ bởi AI
-                </div>
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-foreground leading-[1.15] mb-6 tracking-tight">
                   Đọc thông minh hơn{" "}
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-indigo-hover">
                     với AI
                   </span>
                 </h1>
-                <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
-                  Trợ lý AI cá nhân giúp bạn thành thạo tiếng Anh — từ PDF đến video YouTube.
+                <p className="text-lg text-muted-foreground mb-8 max-w-xl mx-auto lg:mx-0 leading-relaxed">
+                  Biến bài báo, PDF hay video YouTube thành bài đọc vừa trình độ của bạn — tra từ theo
+                  đúng ngữ cảnh, luyện câu hỏi và ghi nhớ bằng flashcard.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                   <Link
@@ -155,39 +221,7 @@ export default function MarketingRoute() {
                 </div>
               </div>
 
-              {/* Mockup */}
-              <div className="relative mx-auto w-full max-w-lg lg:max-w-none">
-                <div className="relative rounded-2xl bg-surface border border-border shadow-lg overflow-hidden transform lg:rotate-y-[-10deg] lg:rotate-x-[5deg] transition-transform duration-700 lg:hover:rotate-0">
-                  <div className="h-12 border-b border-border bg-panel flex items-center px-4 gap-2">
-                    <div className="w-3 h-3 rounded-full bg-red-400" />
-                    <div className="w-3 h-3 rounded-full bg-yellow-400" />
-                    <div className="w-3 h-3 rounded-full bg-green-400" />
-                    <div className="ml-4 w-48 h-4 bg-border rounded-full" />
-                  </div>
-                  <div className="p-6 grid grid-cols-3 gap-6 h-80">
-                    <div className="col-span-1 border-r border-border pr-4 space-y-4">
-                      <div className="w-full h-8 bg-indigo-soft rounded-lg" />
-                      <div className="w-3/4 h-4 bg-border rounded-full" />
-                      <div className="w-2/3 h-4 bg-border rounded-full" />
-                      <div className="w-5/6 h-4 bg-border rounded-full" />
-                    </div>
-                    <div className="col-span-2 space-y-4">
-                      <div className="w-1/3 h-6 bg-border rounded-lg mb-6" />
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="h-24 bg-indigo-soft rounded-xl border border-indigo-soft-border flex flex-col justify-center items-center text-primary gap-2">
-                          <Brain className="w-6 h-6" />
-                          <span className="text-xs font-bold">Flashcards</span>
-                        </div>
-                        <div className="h-24 bg-amber-soft rounded-xl border border-amber/40 flex flex-col justify-center items-center text-amber-text gap-2">
-                          <Lightbulb className="w-6 h-6" />
-                          <span className="text-xs font-bold">Mind Map</span>
-                        </div>
-                      </div>
-                      <div className="w-full h-20 bg-border rounded-xl mt-4" />
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <HeroPreview />
             </div>
           </div>
         </section>
