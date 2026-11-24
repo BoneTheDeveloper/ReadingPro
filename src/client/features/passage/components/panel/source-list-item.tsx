@@ -30,12 +30,16 @@ function mapProcessingStatus(status: ProcessingStatus): "ready" | "pending" | "f
   }
 }
 
+/** dd/mm/yyyy */
 function formatDate(createdAt: Date): string {
-  return createdAt.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
+  return createdAt.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
+}
+
+/** "B1 · 420 từ · 24/11/2026"; a missing level is simply left out. */
+function metaLine(item: PassageListItem): string {
+  return [item.cefrLevel, `${item.wordCount.toLocaleString("vi-VN")} từ`, formatDate(new Date(item.createdAt))]
+    .filter(Boolean)
+    .join(" · ");
 }
 
 interface SourceListItemProps {
@@ -103,7 +107,7 @@ export function SourceListItem({ item, active, onSelect, onDelete }: SourceListI
             ? "Đang xử lý..."
             : isFailed
               ? "Xử lý thất bại — xoá và tải lên lại"
-              : formatDate(item.createdAt)}
+              : metaLine(item)}
         </p>
       </div>
       <DropdownMenu>

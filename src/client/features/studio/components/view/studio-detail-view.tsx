@@ -28,7 +28,7 @@ export function StudioDetailView({
   }, [onClose]);
 
   return (
-    <Card className="h-full flex flex-col overflow-hidden bg-panel rounded-none">
+    <Card className="h-full flex flex-col overflow-hidden bg-panel rounded-none py-0 gap-0 ring-0 shadow-none">
       <CardContent className="p-0 flex flex-col h-full">
         <div className="h-[54px] shrink-0 pl-2 pr-2.5 flex items-center gap-1.5 border-b border-border">
           <button

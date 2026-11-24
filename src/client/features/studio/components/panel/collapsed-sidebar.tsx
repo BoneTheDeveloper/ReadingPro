@@ -10,7 +10,7 @@ interface CollapsedSidebarProps {
 
 export function CollapsedSidebar({ onToggleCollapse }: CollapsedSidebarProps) {
   return (
-    <Card className="h-full flex flex-col overflow-hidden bg-background rounded-none">
+    <Card className="h-full flex flex-col overflow-hidden bg-background rounded-none py-0 gap-0 ring-0 shadow-none">
       <CardContent className="p-0 flex flex-col h-full items-center">
         <div className="w-full p-2 flex justify-center border-b border-border">
           <Button

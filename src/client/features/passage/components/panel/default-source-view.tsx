@@ -59,7 +59,7 @@ export function DefaultSourceView({
   }, [items, searchQuery]);
 
   return (
-    <Card className="h-full flex flex-col overflow-hidden bg-background rounded-none">
+    <Card className="h-full flex flex-col overflow-hidden bg-background rounded-none py-0 gap-0 ring-0 shadow-none">
       <CardContent className="p-0 flex flex-col h-full">
         <DefaultSourceHeader onToggleCollapse={onToggleCollapse} />
 

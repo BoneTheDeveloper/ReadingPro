@@ -28,6 +28,7 @@ export async function aiProcessStep(
     userId: args.userId,
     normalizedText: args.normalized,
     userTitle: args.input.title,
+    options: args.input.options,
   });
 }
 export async function failStep(args: PassageProcessingInput) {

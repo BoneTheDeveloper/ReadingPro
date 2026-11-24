@@ -87,7 +87,7 @@ describe("passage repository", () => {
     const list = await listPassagesForUser(owner);
 
     expect(list.map((p) => p.id)).toEqual([second.id, first.id]);
-    expect(Object.keys(list[0]).sort()).toEqual(["createdAt", "id", "sourceType", "status", "title"]);
+    expect(Object.keys(list[0]).sort()).toEqual(["cefrLevel", "createdAt", "id", "sourceType", "status", "title", "wordCount"]);
   });
 
   it("does not find or delete another user's passage", async () => {

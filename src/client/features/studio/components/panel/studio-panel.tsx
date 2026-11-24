@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { StudioArtifactType } from "@/shared/enums";
 import type { StudioPanelView, StudioGridId } from "./studio-icon-list";
 import { CollapsedSidebar } from "./collapsed-sidebar";
+import { GenerateOptionsDialog } from "./generate-options-dialog";
 import { DefaultStudioView } from "./default-studio-view";
 import { ChatDetailView } from "../view/ai-chat/chat-detail-view";
 import { ChatProvider } from "../view/ai-chat/chat-provider";
@@ -62,19 +63,29 @@ export function StudioPanel({
     [onViewChange],
   );
 
-  // Tile click on a generation tile kicks off an async artifact creation.
+  // A generation tile opens the options popup; generating starts from there.
   // The CHAT tile is routed by DefaultStudioView directly to onSelectChat.
-  const handleGenerate = useCallback(
-    (actionId: StudioGridId) => {
-      if (!passageId) return;
-      if (actionId === StudioArtifactType.QUESTION) {
-        generateQuestion.mutate(passageId);
-      } else if (actionId === StudioArtifactType.FLASHCARD) {
-        generateFlashcard.mutate(passageId);
-      }
-    },
-    [passageId, generateQuestion, generateFlashcard],
-  );
+  const [configuring, setConfiguring] = useState<
+    typeof StudioArtifactType.QUESTION | typeof StudioArtifactType.FLASHCARD | null
+  >(null);
+
+  const handleGenerate = useCallback((actionId: StudioGridId) => {
+    if (actionId === StudioArtifactType.QUESTION || actionId === StudioArtifactType.FLASHCARD) {
+      setConfiguring(actionId);
+    }
+  }, []);
+
+  const optionsDialog = passageId ? (
+    <GenerateOptionsDialog
+      type={configuring}
+      onClose={() => setConfiguring(null)}
+      onGenerate={(type, options) => {
+        const mutation = type === StudioArtifactType.QUESTION ? generateQuestion : generateFlashcard;
+        mutation.mutate({ passageId, options });
+        setConfiguring(null);
+      }}
+    />
+  ) : null;
 
   if (collapsed) {
     return <CollapsedSidebar onToggleCollapse={onToggleCollapse} />;
@@ -85,6 +96,7 @@ export function StudioPanel({
   if (passageId) {
     return (
       <ChatProvider key={passageId} passageId={passageId}>
+        {optionsDialog}
         {view?.contentType === "chat" && (
           <ChatDetailView passageId={passageId} onClose={closeView} />
         )}

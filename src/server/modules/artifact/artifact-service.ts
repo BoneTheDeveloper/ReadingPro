@@ -4,6 +4,7 @@ import { AppError } from "@/server/lib/errors";
 import { StudioArtifactType } from "@/shared/enums";
 import { requireReadyPassage } from "@/server/modules/passage";
 import { flashcardProgressSchema, questionProgressSchema } from "@/shared/studio/artifact";
+import type { FlashcardGenerationOptions, QuestionGenerationOptions } from "@/shared/studio/generation-options";
 import {
   createArtifact,
   deleteArtifact as deleteArtifactRow,
@@ -31,6 +32,7 @@ export async function requestArtifactForUser(
   userId: string,
   passageId: string,
   type: StudioArtifactType,
+  options: QuestionGenerationOptions | FlashcardGenerationOptions,
 ) {
   // Generating from an unprocessed passage would feed the model empty content.
   await requireReadyPassage(userId, passageId);
@@ -38,7 +40,7 @@ export async function requestArtifactForUser(
 
   const artifact = await createArtifact({ passageId, userId, type, status: "PENDING" });
 
-  await start(artifactGenerationWorkflow, [{ artifactId: artifact.id, userId, passageId, type }]);
+  await start(artifactGenerationWorkflow, [{ artifactId: artifact.id, userId, passageId, type, options }]);
 
   return artifact;
 }

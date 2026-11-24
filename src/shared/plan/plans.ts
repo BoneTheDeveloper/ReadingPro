@@ -42,6 +42,26 @@ export const PLAN_QUOTAS: Record<PlanTier, Record<MeteredFeature, number>> = {
   },
 };
 
+/**
+ * Passage size per tier, in words (fair across English and Vietnamese, unlike
+ * characters). `maxSourceWords` caps what one import may send to the AI —
+ * Free fits a long article, Pro a book chapter or an hour of video.
+ * `maxTargetWords` caps the rewritten passage the user may ask for.
+ */
+export const MIN_SOURCE_WORDS = 50;
+export const MIN_TARGET_WORDS = 150;
+export const TARGET_WORDS_STEP = 50;
+export const DEFAULT_TARGET_WORDS = 400;
+export const PLAN_PASSAGE_LIMITS: Record<PlanTier, { maxSourceWords: number; maxTargetWords: number }> = {
+  FREE: { maxSourceWords: 3_000, maxTargetWords: 800 },
+  PRO: { maxSourceWords: 12_000, maxTargetWords: 1_500 },
+};
+
+/** Words as the gate counts them: whitespace-separated tokens. */
+export function countWords(text: string): number {
+  return text.trim().split(/\s+/).filter(Boolean).length;
+}
+
 export const PRO_PLANS = {
   PRO_MONTHLY: { code: "PRO_MONTHLY", months: 1, amount: 49_000 },
   PRO_YEARLY: { code: "PRO_YEARLY", months: 12, amount: 490_000 },

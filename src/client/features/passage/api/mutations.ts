@@ -31,9 +31,9 @@ export function useCreatePassageMutation() {
     // polling loop then drives it to COMPLETED. Deliberately no detail-cache
     // write — the response body is the unprocessed passage, and AI processing
     // rewrites content/title/cefrLevel server-side afterwards.
-    onSuccess: ({ id, title, sourceType, status, createdAt }) => {
+    onSuccess: ({ id, title, cefrLevel, wordCount, sourceType, status, createdAt }) => {
       queryClient.setQueryData(listKey, (prev: PassageListItem[] = []) => [
-        { id, title, sourceType, status, createdAt },
+        { id, title, cefrLevel, wordCount, sourceType, status, createdAt },
         ...prev,
       ]);
     },

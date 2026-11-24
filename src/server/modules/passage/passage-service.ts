@@ -1,4 +1,6 @@
-import { consumeQuota } from "@/server/modules/subscription";
+import { consumeQuota, getUserTier } from "@/server/modules/subscription";
+import { MIN_SOURCE_WORDS, PLAN_PASSAGE_LIMITS, countWords } from "@/shared/plan/plans";
+import { passageGenerationOptionsSchema } from "@/shared/passage/schema";
 import { start } from "workflow/api";
 import { AppError } from "@/server/lib/errors";
 import type { CreatePassageInput, Passage } from "@/shared/passage/schema";
@@ -14,13 +16,29 @@ export { listPassagesForUser } from "./passage-repository";
 
 /**
  * Saves the passage as PENDING and hands it to the processing workflow. A
- * YouTube link without a transcript is rejected before anything is saved.
+ * YouTube link without a transcript, or a source outside the tier's size
+ * limits, is rejected before anything is saved or any quota is spent.
  */
 export async function submitPassageForUser(
   userId: string,
   input: CreatePassageInput,
 ): Promise<Passage> {
-  if (input.sourceType === "YOUTUBE") await requireTranscript(input.youtubeUrl);
+  const source = input.sourceType === "YOUTUBE" ? await requireTranscript(input.youtubeUrl) : input.text;
+  const tier = await getUserTier(userId);
+  const limits = PLAN_PASSAGE_LIMITS[tier];
+
+  const words = countWords(source);
+  if (words < MIN_SOURCE_WORDS) {
+    throw new AppError("passage.too_short", "Source is too short", { words, min: MIN_SOURCE_WORDS });
+  }
+  if (words > limits.maxSourceWords) {
+    throw new AppError("passage.too_long", "Source is too long for the plan", { words, max: limits.maxSourceWords, tier });
+  }
+
+  // A longer target than the tier allows is lowered, not refused.
+  const options = passageGenerationOptionsSchema.parse(input.options ?? {});
+  const clamped = { ...options, targetWords: Math.min(options.targetWords, limits.maxTargetWords) };
+
   await consumeQuota(userId, "passage_import");
 
   const passage = await createPassageForUser({
@@ -29,7 +47,7 @@ export async function submitPassageForUser(
     youtubeUrl: input.sourceType === "YOUTUBE" ? input.youtubeUrl : null,
   });
 
-  await start(passageProcessingWorkflow, [{ passageId: passage.id, input, userId }]);
+  await start(passageProcessingWorkflow, [{ passageId: passage.id, input: { ...input, options: clamped }, userId }]);
 
   return passage;
 }

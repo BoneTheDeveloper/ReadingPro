@@ -1,17 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { FileText, AlertCircle } from "lucide-react";
-import { TEXT_INPUT_LIMITS } from "@/shared/passage/upload-config";
-import { errorText } from "@/client/lib/api/error-message";
+import { AlertCircle } from "lucide-react";
+import { useIsPro } from "@/client/features/subscription";
+import { sourceSizeError } from "../../lib/passage-limits";
 import { Button } from "@/client/components/ui/button";
 import { Textarea } from "@/client/components/ui/textarea";
 
-function getTextError(text: string): string | undefined {
-  const len = text.trim().length;
-  if (len < TEXT_INPUT_LIMITS.MIN_LENGTH) return errorText("text.too_short");
-  if (len > TEXT_INPUT_LIMITS.MAX_LENGTH) return errorText("text.too_long");
-}
 interface TextInputAreaProps {
   onSubmit: (text: string) => void;
   disabled?: boolean;
@@ -23,54 +18,39 @@ export function TextInputArea({
 }: TextInputAreaProps) {
   const [text, setText] = useState("");
   const [submitted, setSubmitted] = useState(false);
-  const error = submitted ? getTextError(text) : undefined;
-  const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
+  const isPro = useIsPro();
+  const error = submitted ? sourceSizeError(text, isPro) : null;
   const handleSubmit = () => {
      setSubmitted(true);
-     if (getTextError(text)) return;
+     if (sourceSizeError(text, isPro)) return;
      onSubmit(text);};
+  const length = text.trim().length;
+
   return (
-    <div className="w-full">
-      <div className="border border-border rounded-[14px] overflow-hidden bg-surface">
-        <div className="flex items-center gap-3 px-5 py-3.5 border-b border-border bg-muted/40">
-          <FileText className="w-4 h-4 text-primary" />
-          <h3 className="font-semibold text-foreground text-sm">
-            Nhập văn bản
-          </h3>
-        </div>
-
-        <Textarea
-          value={text}
-          onChange={(e) => {
-            setText(e.target.value);
-          }}
-          disabled={disabled}
-          placeholder="Nhập tối thiểu 50 từ vào đây"
-          className="w-full p-6 min-h-75 resize-none border-0 focus-visible:ring-0 text-lg leading-relaxed bg-surface font-serif"
-        />
-
-        <div className="flex items-center justify-between px-5 py-3.5 border-t border-border bg-muted/40">
-          <span className="text-sm text-muted-foreground">
-            {wordCount} {wordCount === 1 ? "word" : "words"}
-            <span className="mx-2">·</span>
-            {text.length} / {TEXT_INPUT_LIMITS.MAX_LENGTH}
-          </span>
-
-          <Button
-            onClick={handleSubmit}
-            disabled={disabled || text.trim().length === 0}
-          >
-            Continue
-          </Button>
-        </div>
-      </div>
+    <div className="w-full space-y-3">
+      <Textarea
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        disabled={disabled}
+        autoFocus
+        aria-label="Văn bản cần thêm"
+        aria-invalid={Boolean(error)}
+        placeholder="Dán hoặc nhập văn bản tiếng Anh hay tiếng Việt…"
+        className="min-h-64 max-h-[50vh] w-full resize-y rounded-[12px] border-border bg-surface px-4 py-3.5 text-[15px] leading-relaxed"
+      />
 
       {error && (
-        <div className="mt-4 p-3 bg-danger-soft border border-destructive/20 rounded-lg flex items-center gap-2 text-destructive text-sm">
-          <AlertCircle className="w-4 h-4 shrink-0" />
-          <span>{error}</span>
-        </div>
+        <p role="alert" className="flex items-center gap-1.5 text-[13px] text-destructive">
+          <AlertCircle className="size-4 shrink-0" aria-hidden />
+          {error}
+        </p>
       )}
+
+      <div className="flex justify-end">
+        <Button onClick={handleSubmit} disabled={disabled || length === 0}>
+          {disabled ? "Đang thêm…" : "Thêm bài đọc"}
+        </Button>
+      </div>
     </div>
   );
 }

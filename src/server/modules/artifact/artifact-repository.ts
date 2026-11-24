@@ -12,7 +12,10 @@ type ArtifactRow = {
   status: ProcessingStatus;
 };
 
-type ArtifactListRow = Omit<ArtifactRow, "userId" | "content">;
+type ArtifactListRow = Omit<ArtifactRow, "userId" | "content"> & {
+  itemCount: number | null;
+  difficulty: string | null;
+};
 export type ArtifactDetailRow = Omit<ArtifactRow, "userId">;
 
 const ARTIFACT_COLUMNS = `"id", "passageId", "userId", "type", "createdAt", "content", "progress", "status"`;
@@ -28,7 +31,9 @@ export async function listArtifactsForUser(
   db: Queryable = pool,
 ): Promise<ArtifactListRow[]> {
   const { rows } = await db.query<ArtifactListRow>(
-    `SELECT "id", "passageId", "type", "createdAt", "progress", "status"
+    `SELECT "id", "passageId", "type", "createdAt", "progress", "status",
+            jsonb_array_length(COALESCE("content"->'questions', "content"->'cards')) AS "itemCount",
+            "content"->'settings'->>'difficulty' AS "difficulty"
      FROM "StudioArtifact"
      WHERE "passageId" = $1 AND "userId" = $2
      ORDER BY "createdAt" DESC`,
