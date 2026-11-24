@@ -22,7 +22,7 @@ export async function listPassagesForUser(
   db: Queryable = pool,
 ): Promise<PassageListItem[]> {
   const { rows } = await db.query<PassageListItem>(
-    `SELECT "id", "title", "sourceType", "status", "createdAt"
+    `SELECT "id", "title", "cefrLevel", "wordCount", "sourceType", "status", "createdAt"
      FROM "Passage" WHERE "userId" = $1
      ORDER BY "createdAt" DESC`,
     [userId],
