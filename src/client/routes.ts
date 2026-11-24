@@ -9,7 +9,11 @@ export default [
     route("study", "routes/study/route.tsx"),
     route("vocabulary", "routes/vocabulary.tsx"),
     route("review", "routes/review.tsx"),
-    route("account", "routes/account.tsx"),
-    route("billing", "routes/billing.tsx"),
+    route("account", "routes/account/layout.tsx", [
+      index("routes/account/general.tsx"),
+      route("billing", "routes/account/billing.tsx"),
+      route("usage", "routes/account/usage.tsx"),
+    ]),
+    route("pricing", "routes/pricing.tsx"),
   ]),
 ] satisfies RouteConfig;

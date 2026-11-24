@@ -38,3 +38,5 @@ const res = await fetch(url, {
   body: JSON.stringify(payload),
 });
 console.log(res.status, await res.text());
+
+export {};

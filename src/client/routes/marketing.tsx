@@ -5,6 +5,7 @@ import {
   Lightbulb,
   MessageCircle,
 } from "lucide-react";
+import { PlanCards } from "@/client/features/subscription";
 
 const BookIcon = () => (
   <svg
@@ -52,6 +53,25 @@ const features = [
     color: "text-success bg-success-soft",
     title: "Trò chuyện AI",
     description: "Hỏi bất cứ điều gì về bất kỳ đoạn văn nào và nhận câu trả lời tức thì, theo ngữ cảnh.",
+  },
+];
+
+const pricingFaq = [
+  {
+    q: "Thanh toán như thế nào?",
+    a: "Quét mã VietQR bằng bất kỳ app ngân hàng nào. Gói Pro được kích hoạt tự động ngay khi tiền về, thường trong vài giây.",
+  },
+  {
+    q: "Gói có tự động gia hạn không?",
+    a: "Không. Bạn trả trước cho 1 hoặc 12 tháng. Gia hạn khi còn hạn sẽ được cộng nối tiếp, không mất ngày nào.",
+  },
+  {
+    q: "Hết hạn Pro thì dữ liệu của tôi ra sao?",
+    a: "Bài đọc, từ vựng và lịch ôn vẫn giữ nguyên. Bạn chỉ quay về hạn mức của gói Free.",
+  },
+  {
+    q: "Lượt dùng được làm mới khi nào?",
+    a: "Tin nhắn chat làm mới mỗi ngày, các hạn mức khác làm mới vào ngày đầu mỗi tháng (giờ Việt Nam).",
   },
 ];
 
@@ -203,6 +223,35 @@ export default function MarketingRoute() {
                   </p>
                 </div>
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Pricing */}
+        <section id="pricing" className="py-20 scroll-mt-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center max-w-3xl mx-auto mb-12">
+              <h2 className="text-3xl font-bold text-foreground mb-4">Bảng giá đơn giản</h2>
+              <p className="text-muted-foreground">
+                Bắt đầu miễn phí. Nâng cấp Pro khi bạn cần học nhiều hơn mỗi ngày.
+              </p>
+            </div>
+
+            <PlanCards variant="marketing" />
+
+            <div className="max-w-3xl mx-auto mt-16">
+              <h3 className="text-xl font-bold text-foreground mb-4 text-center">Câu hỏi thường gặp</h3>
+              <div className="divide-y divide-border rounded-[24px] border border-border bg-surface">
+                {pricingFaq.map((item) => (
+                  <details key={item.q} className="group px-6 py-4">
+                    <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between gap-4 font-medium text-foreground">
+                      {item.q}
+                      <span aria-hidden className="text-muted-foreground transition-transform group-open:rotate-45">+</span>
+                    </summary>
+                    <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{item.a}</p>
+                  </details>
+                ))}
+              </div>
             </div>
           </div>
         </section>

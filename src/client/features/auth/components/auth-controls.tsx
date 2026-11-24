@@ -121,9 +121,9 @@ export function AuthControls({ variant = "default", active = false }: AuthContro
         </DropdownMenuItem>
 
         <DropdownMenuItem asChild>
-          <Link to="/billing" className="cursor-pointer w-full">
+          <Link to="/pricing" className="cursor-pointer w-full">
             <Crown className="w-4 h-4 mr-2" />
-            Gói đăng ký
+            Nâng cấp gói
           </Link>
         </DropdownMenuItem>
 

@@ -16,8 +16,8 @@ export function PlanBadge({ className }: { className?: string }) {
 
   return (
     <Link
-      to="/billing"
-      title="Gói đăng ký"
+      to={pro ? "/account/billing" : "/pricing"}
+      title={pro ? "Gói & thanh toán" : "Nâng cấp lên Pro"}
       className={cn(
         "inline-flex h-7 items-center gap-1.5 rounded-full px-3 text-xs font-bold transition-colors outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
         pro && data.state !== "expiring" && "bg-amber-400/20 text-amber-200 hover:bg-amber-400/30",
