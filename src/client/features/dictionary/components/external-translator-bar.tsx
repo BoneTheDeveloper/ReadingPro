@@ -12,14 +12,14 @@ export function ExternalTranslatorBar({ word, sentence }: { word: string; senten
 
   return (
     <div>
-      <p className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.11em] text-ink-3">Tra thêm</p>
+      <p className="mb-1.5 text-[12px] font-bold uppercase tracking-[0.11em] text-ink-3">Tra thêm</p>
       <div className="flex flex-wrap gap-1.5">
         {links.map((link) => (
           <button
             key={link.id}
             type="button"
             onClick={() => openTranslator(link.url)}
-            className="inline-flex items-center gap-1 rounded-full border border-border bg-surface px-2.5 py-1 text-[12px] font-medium text-foreground transition-colors hover:border-primary hover:text-primary"
+            className="inline-flex items-center gap-1 rounded-full border border-border bg-surface px-2.5 py-1 text-[13.5px] font-medium text-foreground transition-colors hover:border-primary hover:text-primary"
           >
             {link.label}
             <ExternalLink className="size-3" aria-hidden />

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Puzzle } from "lucide-react";
 import { cn } from "@/client/lib/utils";
 import type { DictionarySense, MatchedDictionaryEntry } from "@/shared/dictionary/schema";
 import { findContextIdiom } from "../lib/context-match";
@@ -9,6 +8,8 @@ import { PART_OF_SPEECH_LABEL } from "../lib/part-of-speech";
 import type { MeaningChoice } from "./meaning-choice";
 
 const VISIBLE_MEANINGS = 3;
+/** Parts of speech shown open; the rest fold away so a long entry stays short. */
+const VISIBLE_WORD_SENSES = 2;
 
 interface DictionaryEntryViewProps {
   entry: MatchedDictionaryEntry;
@@ -48,24 +49,20 @@ export function DictionaryEntryView({
 
   return (
     <section className="space-y-3">
-      {entry.match === "lemma" && (
-        <p className="flex items-center gap-1.5 text-[11px] font-semibold text-ink-3">
-          <Puzzle className="size-3.5 text-primary" aria-hidden />
-          Dạng gốc: {entry.displayHeadword}
-          <span className="font-normal">
-            ({selectedText} → {entry.displayHeadword})
-          </span>
-        </p>
-      )}
       <header>
-        <h3 className="font-serif text-[22px] font-semibold leading-tight text-foreground">
+        <h3 className="font-serif text-[26px] font-semibold leading-tight text-foreground">
           {entry.displayHeadword}
         </h3>
-        {entry.phonetic && <p className="mt-0.5 text-[13px] text-muted-foreground">/{entry.phonetic}/</p>}
+        {entry.phonetic && <p className="mt-0.5 text-[14px] text-muted-foreground">/{entry.phonetic}/</p>}
       </header>
 
       {contextIdiom && block(contextIdiom, -1, "Theo câu")}
-      {words.map((sense, i) => block(sense, i))}
+      {words.slice(0, VISIBLE_WORD_SENSES).map((sense, i) => block(sense, i))}
+      {words.length > VISIBLE_WORD_SENSES && (
+        <Fold title={`Loại từ khác (${words.length - VISIBLE_WORD_SENSES})`}>
+          {words.slice(VISIBLE_WORD_SENSES).map((sense, i) => block(sense, i + VISIBLE_WORD_SENSES))}
+        </Fold>
+      )}
 
       {idioms.length > 0 && (
         <Fold title={`Thành ngữ & cụm từ (${idioms.length})`}>{idioms.map((sense, i) => block(sense, i))}</Fold>
@@ -80,7 +77,7 @@ export function DictionaryEntryView({
 function Fold({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <details className="group rounded-[12px] border border-border">
-      <summary className="cursor-pointer select-none px-3 py-2 text-[12px] font-semibold text-ink-3 hover:text-primary">
+      <summary className="cursor-pointer select-none px-3 py-2 text-[13.5px] font-semibold text-ink-3 hover:text-primary">
         {title}
       </summary>
       <div className="space-y-3 px-3 pb-3">{children}</div>
@@ -110,22 +107,22 @@ function SenseBlock({ sense, term, keyPrefix, badge, selectedKey, onSelectMeanin
     <div>
       <div className="mb-1 flex flex-wrap items-center gap-1.5">
         {badge && (
-          <span className="rounded-full bg-primary px-2 py-[2px] text-[10px] font-bold uppercase tracking-[0.07em] text-primary-foreground">
+          <span className="rounded-full bg-primary px-2 py-[2px] text-[11px] font-bold uppercase tracking-[0.07em] text-primary-foreground">
             {badge}
           </span>
         )}
         {label && (
           <span
             className={cn(
-              "text-[12px] text-ink-3",
-              sense.kind === "idiom" ? "font-serif text-[14px] font-semibold text-foreground" : "italic",
+              "text-[13.5px] text-ink-3",
+              sense.kind === "idiom" ? "font-serif text-[15.5px] font-semibold text-foreground" : "italic",
             )}
           >
             {label}
           </span>
         )}
         {posLabel && (
-          <span className="rounded-full border border-border bg-muted px-2 py-[2px] text-[10px] font-bold uppercase tracking-[0.07em] text-muted-foreground">
+          <span className="rounded-full border border-border bg-muted px-2 py-[2px] text-[11px] font-bold uppercase tracking-[0.07em] text-muted-foreground">
             {posLabel}
           </span>
         )}
@@ -143,7 +140,7 @@ function SenseBlock({ sense, term, keyPrefix, badge, selectedKey, onSelectMeanin
                 aria-pressed={selected}
                 title="Chọn nghĩa này để lưu"
                 className={cn(
-                  "w-full rounded-[9px] px-2 py-1 text-left text-[13.5px] leading-snug transition-colors",
+                  "w-full rounded-[9px] px-2 py-1 text-left text-[15px] leading-snug transition-colors",
                   selected ? "bg-indigo-soft text-foreground ring-1 ring-primary" : "hover:bg-surface",
                 )}
               >
@@ -151,12 +148,12 @@ function SenseBlock({ sense, term, keyPrefix, badge, selectedKey, onSelectMeanin
               </button>
               {meaning.examples.length > 0 && (
                 <details className="ml-2 mt-0.5">
-                  <summary className="cursor-pointer select-none text-[11px] text-muted-foreground hover:text-primary">
+                  <summary className="cursor-pointer select-none text-[12px] text-muted-foreground hover:text-primary">
                     Ví dụ ({meaning.examples.length})
                   </summary>
                   <ul className="mt-1 space-y-1 border-l border-border pl-2.5">
                     {meaning.examples.map((example, j) => (
-                      <li key={j} className="text-[12.5px] leading-snug">
+                      <li key={j} className="text-[14px] leading-snug">
                         <span className="italic text-foreground">{example.en}</span>
                         {example.vi && <span className="block text-muted-foreground">{example.vi}</span>}
                       </li>
@@ -173,7 +170,7 @@ function SenseBlock({ sense, term, keyPrefix, badge, selectedKey, onSelectMeanin
         <button
           type="button"
           onClick={() => setExpanded((value) => !value)}
-          className="ml-2 mt-1 text-[11.5px] font-semibold text-primary hover:underline"
+          className="ml-2 mt-1 text-[12.5px] font-semibold text-primary hover:underline"
         >
           {expanded ? "Thu gọn" : `Xem thêm (${hidden})`}
         </button>
