@@ -17,7 +17,8 @@ import { Button } from "@/client/components/ui/button";
 import { TextInputArea } from "./paste-text-input-area";
 import { UploadZone } from "./upload-zone";
 import { YouTubeInput } from "./youtube-input";
-import type { CreatePassageInput } from "@/shared/passage/schema";
+import { RewriteOptionsPanel } from "./rewrite-options-panel";
+import { passageGenerationOptionsSchema, type CreatePassageInput } from "@/shared/passage/schema";
 
 export interface UploadModalProps {
   isOpen: boolean;
@@ -49,11 +50,12 @@ function SourceButton({ icon: Icon, label, desc, onClick, disabled }: {
 export function UploadModal({ isOpen, onClose, onClientError }: UploadModalProps) {
   const [activeMode, setActiveMode] = useState<InputMode>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [rewriteOptions, setRewriteOptions] = useState(() => passageGenerationOptionsSchema.parse({}));
   const mutation = useCreatePassageMutation();
 
   const submit = (input: CreatePassageInput) => {
     setSubmitError(null);
-    mutation.mutate(input, {
+    mutation.mutate({ ...input, options: rewriteOptions }, {
       // The mutation writes the new row into the list cache itself, so the
       // modal only has to get out of the way.
       onSuccess: () => {
@@ -110,6 +112,10 @@ export function UploadModal({ isOpen, onClose, onClientError }: UploadModalProps
           </button>
         </DialogHeader>
         <div className="px-5 pb-5 pt-1 flex-1 overflow-y-auto">
+          {/* Above the sources: picking a file uploads at once, so options come first. */}
+          <div className="mb-4">
+            <RewriteOptionsPanel value={rewriteOptions} onChange={setRewriteOptions} />
+          </div>
           {activeMode === null && (
             <>
               <UploadZone onTxtSelect={handleTxtSelect} onPdfSelect={handlePdfSelect} variant="compact" disabled={mutation.isPending} />

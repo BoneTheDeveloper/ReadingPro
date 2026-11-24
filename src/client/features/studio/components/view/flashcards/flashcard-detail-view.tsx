@@ -166,6 +166,7 @@ function FlashcardResults({
               <div className="min-w-0 flex-1">
                 <p className="font-medium text-foreground">{card.front}</p>
                 <p className="text-muted-foreground mt-0.5">{card.back}</p>
+                {card.example && <p className="mt-0.5 text-[13px] italic text-muted-foreground/80">“{card.example}”</p>}
               </div>
               <span
                 className={cn(

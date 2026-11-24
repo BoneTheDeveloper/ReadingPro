@@ -11,6 +11,8 @@ export interface ArtifactGenerationInput {
   userId: string;
   passageId: string;
   type: StudioArtifactType;
+  /** Generation options for the type; absent on runs started before options existed. */
+  options?: unknown;
 }
 
 export async function generateArtifactStep(args: ArtifactGenerationInput) {
@@ -20,6 +22,7 @@ export async function generateArtifactStep(args: ArtifactGenerationInput) {
     userId: args.userId,
     passageId: args.passageId,
     type: args.type,
+    options: args.options,
   });
 }
 

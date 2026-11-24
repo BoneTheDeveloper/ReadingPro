@@ -5,7 +5,7 @@ import { Button } from "@/client/components/ui/button";
 import { cn } from "@/client/lib/utils";
 
 interface FlashcardContentProps {
-  card: { front: string; back: string };
+  card: { front: string; back: string; example?: string | null };
   masteredCount: number;
   totalCards: number;
   remaining: number;
@@ -80,13 +80,16 @@ export function FlashcardContent({
               className="absolute inset-0 bg-surface rounded-xl border border-border p-6 flex items-center justify-center text-center"
               style={{ backfaceVisibility: "hidden" }}
             >
-              <p className="text-lg font-medium text-foreground">{card.front}</p>
+              <p className="text-xl font-semibold text-foreground">{card.front}</p>
             </div>
             <div
               className="absolute inset-0 bg-primary/5 rounded-xl border border-primary/30 p-6 flex items-center justify-center text-center"
               style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
             >
-              <p className="text-base text-foreground">{card.back}</p>
+              <div className="space-y-3">
+                <p className="text-lg text-foreground">{card.back}</p>
+                {card.example && <p className="text-[14px] italic leading-snug text-muted-foreground">“{card.example}”</p>}
+              </div>
             </div>
           </div>
         </button>

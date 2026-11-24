@@ -5,6 +5,7 @@ import { CheckCircle, XCircle, ArrowRight, Lightbulb, ChevronLeft, ChevronRight 
 import { cn } from "@/client/lib/utils";
 import { Button } from "@/client/components/ui/button";
 import type { QuestionContent as QuestionContentData } from "@/shared/studio/artifact";
+import { QUESTION_FORMAT_LABEL, QuestionFormat } from "@/shared/studio/generation-options";
 
 type QuestionItem = QuestionContentData["questions"][number];
 
@@ -60,7 +61,8 @@ export function QuestionContent({
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.key >= "1" && e.key <= "4" && !showFeedback) setSelected(Number(e.key) - 1);
+      const pick = Number(e.key) - 1;
+      if (pick >= 0 && pick < question.options.length && !showFeedback) setSelected(pick);
       else if (e.key === "Enter") {
         if (showFeedback) handleNext();
         else handleCheck();
@@ -69,7 +71,7 @@ export function QuestionContent({
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [showFeedback, handleNext, handleCheck, goTo, currentIndex]);
+  }, [showFeedback, handleNext, handleCheck, goTo, currentIndex, question.options.length]);
 
   const isCorrectAnswer = committed === question.correctIndex;
 
@@ -116,7 +118,20 @@ export function QuestionContent({
       </div>
 
       <div className="px-5">
-        <h3 className="text-lg font-semibold text-foreground leading-snug mb-4">{question.text}</h3>
+        <p className="mb-1.5 text-[12px] font-semibold uppercase tracking-[0.11em] text-muted-foreground">
+          {QUESTION_FORMAT_LABEL[question.format]}
+        </p>
+        <h3 className="text-lg font-semibold text-foreground leading-snug mb-4">
+          {question.format === QuestionFormat.FILL_BLANK ? (
+            <BlankSentence
+              text={question.text}
+              filled={showFeedback ? question.options[question.correctIndex] : selected !== null ? question.options[selected] : null}
+              revealed={showFeedback}
+            />
+          ) : (
+            question.text
+          )}
+        </h3>
         <div className="space-y-2" role="radiogroup" aria-label="Các đáp án">
           {question.options.map((optionText, idx) => {
             const label = String.fromCharCode(65 + idx);
@@ -224,5 +239,25 @@ export function QuestionContent({
         </section>
       )}
     </div>
+  );
+}
+
+/** A fill-in-the-blank sentence: the gap shows the picked word, or the right one once checked. */
+function BlankSentence({ text, filled, revealed }: { text: string; filled: string | null; revealed: boolean }) {
+  const [before, ...rest] = text.split(/_{2,}/);
+  if (rest.length === 0) return <>{text}</>;
+  return (
+    <>
+      {before}
+      <span
+        className={cn(
+          "mx-0.5 inline-block min-w-[4.5rem] border-b-2 px-1 text-center",
+          revealed ? "border-success text-success" : filled ? "border-primary text-primary" : "border-border-strong text-transparent",
+        )}
+      >
+        {filled ?? "____"}
+      </span>
+      {rest.join("____")}
+    </>
   );
 }

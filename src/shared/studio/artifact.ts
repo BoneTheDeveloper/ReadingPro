@@ -1,20 +1,27 @@
 import { z } from "zod";
 import { ProcessingStatus, StudioArtifactType } from "@/shared/enums";
+import { QuestionFormat } from "./generation-options";
 
 // ─── Question Content ──────────────────────────────────────────────
 
-const QUESTION_OPTIONS_COUNT = 4 as const;
+// Every format is answered by picking an option, so grading and progress stay
+// numeric: multiple choice has 4 options, True/False/Not Given has 3, and
+// fill-in-the-blank offers 4 words for the "____" in the text.
+const questionItemSchema = z
+  .object({
+    format: z.enum(QuestionFormat).default(QuestionFormat.MULTIPLE_CHOICE),
+    text: z.string(),
+    options: z.array(z.string()).min(2).max(4),
+    correctIndex: z.number().int().min(0),
+    sourceText: z.string(),
+    explanation: z.string(),
+  })
+  .refine((q) => q.correctIndex < q.options.length, { message: "correctIndex out of range", path: ["correctIndex"] });
 
-const questionItemSchema = z.object({
-  text: z.string(),
-  options: z.array(z.string()).length(QUESTION_OPTIONS_COUNT),
-  correctIndex: z.number().int().min(0).max(QUESTION_OPTIONS_COUNT - 1),
-  sourceText: z.string(),
-  explanation: z.string(),
-});
+export type QuestionItem = z.infer<typeof questionItemSchema>;
 
 export const questionContentSchema = z.object({
-  questions: z.array(questionItemSchema).min(1),
+  questions: z.array(questionItemSchema).min(1).max(15),
 });
 
 export type QuestionContent = z.infer<typeof questionContentSchema>;
@@ -33,10 +40,12 @@ export type QuestionProgress = z.infer<typeof questionProgressSchema>;
 const flashcardItemSchema = z.object({
   front: z.string(),
   back: z.string(),
+  /** An example sentence, when the deck was generated with examples. */
+  example: z.string().nullish(),
 });
 
 export const flashcardContentSchema = z.object({
-  cards: z.array(flashcardItemSchema).length(5),
+  cards: z.array(flashcardItemSchema).min(1).max(20),
 });
 
 export type FlashcardContent = z.infer<typeof flashcardContentSchema>;

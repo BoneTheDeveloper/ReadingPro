@@ -80,3 +80,7 @@ Scenario: Video has no usable transcript
   Refinement is best-effort: if it fails, the import still succeeds with the
   mechanically cleaned text, and a rewrite that drifts too far from its source is
   discarded rather than stored.
+- The import screen offers rewrite options before the source is chosen: target CEFR level
+  (auto B1–B2, A2–C1), tone, length and fidelity to the source (free rewrite or close).
+  A chosen level becomes the passage's stored CEFR level. Schema:
+  `passageGenerationOptionsSchema` in `src/shared/passage/schema.ts`.

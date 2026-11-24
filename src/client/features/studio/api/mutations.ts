@@ -10,10 +10,16 @@ import {
 } from "@/shared/studio/artifact";
 import type { QuestionProgress, FlashcardProgress } from "@/shared/studio/artifact";
 import { StudioArtifactType } from "@/shared/enums";
+import type { FlashcardGenerationOptions, QuestionGenerationOptions } from "@/shared/studio/generation-options";
 
 const generateArtifactResponseSchema = z.object({
   artifact: studioArtifactListItemSchema,
 });
+
+type GenerateArtifactInput = {
+  passageId: string;
+  options: QuestionGenerationOptions | FlashcardGenerationOptions;
+};
 
 /** Starts generating a question set or flashcard deck for a passage. */
 export function useGenerateArtifactMutation(type: StudioArtifactType) {
@@ -21,18 +27,18 @@ export function useGenerateArtifactMutation(type: StudioArtifactType) {
 
   return useMutation({
     mutationKey: ["artifact", "generate", type],
-    mutationFn: (passageId: string) =>
+    mutationFn: ({ passageId, options }: GenerateArtifactInput) =>
       fetchJson(`/api/artifact/${type.toLowerCase()}`, generateArtifactResponseSchema, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ passageId }),
+        body: JSON.stringify({ passageId, options }),
       }),
 
     // Seed the list cache so the new PENDING row paints immediately. No
     // invalidate here: it would fire a refetch that returns the same row we
     // just seeded, and the list already polls every 2s while non-terminal —
     // that poll is what picks up the COMPLETED transition.
-    onSuccess: ({ artifact }, passageId) => {
+    onSuccess: ({ artifact }, { passageId }) => {
       queryClient.setQueryData(
         artifactQueries.list(passageId).queryKey,
         (prev: StudioArtifactListItem[] | undefined) =>

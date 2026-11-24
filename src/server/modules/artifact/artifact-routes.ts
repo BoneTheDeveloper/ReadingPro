@@ -5,6 +5,10 @@ import { AppError } from "@/server/lib/errors";
 import { requireSession } from "@/server/middleware/require-session";
 import { StudioArtifactType } from "@/shared/enums";
 import {
+  flashcardGenerationOptionsSchema,
+  questionGenerationOptionsSchema,
+} from "@/shared/studio/generation-options";
+import {
   deleteArtifact,
   getCompletedArtifactForUser,
   listArtifactsForUser,
@@ -14,7 +18,14 @@ import {
 import type { AuthEnv } from "@/server/env";
 
 const ArtifactIdParamSchema = z.object({ id: z.uuid() });
-const CreateArtifactInputSchema = z.object({ passageId: z.uuid() });
+const CreateQuestionInputSchema = z.object({
+  passageId: z.uuid(),
+  options: questionGenerationOptionsSchema.default(questionGenerationOptionsSchema.parse({})),
+});
+const CreateFlashcardInputSchema = z.object({
+  passageId: z.uuid(),
+  options: flashcardGenerationOptionsSchema.default(flashcardGenerationOptionsSchema.parse({})),
+});
 
 export const artifactRoutes = new Hono<AuthEnv>()
   .use(requireSession)
@@ -24,14 +35,14 @@ export const artifactRoutes = new Hono<AuthEnv>()
 
     return c.json(await listArtifactsForUser(c.var.user.id, passageId));
   })
-  .post("/flashcard", validate("json", CreateArtifactInputSchema), async (c) => {
-    const { passageId } = c.req.valid("json");
-    const artifact = await requestArtifactForUser(c.var.user.id, passageId, StudioArtifactType.FLASHCARD);
+  .post("/flashcard", validate("json", CreateFlashcardInputSchema), async (c) => {
+    const { passageId, options } = c.req.valid("json");
+    const artifact = await requestArtifactForUser(c.var.user.id, passageId, StudioArtifactType.FLASHCARD, options);
     return c.json({ artifact }, 201);
   })
-  .post("/question", validate("json", CreateArtifactInputSchema), async (c) => {
-    const { passageId } = c.req.valid("json");
-    const artifact = await requestArtifactForUser(c.var.user.id, passageId, StudioArtifactType.QUESTION);
+  .post("/question", validate("json", CreateQuestionInputSchema), async (c) => {
+    const { passageId, options } = c.req.valid("json");
+    const artifact = await requestArtifactForUser(c.var.user.id, passageId, StudioArtifactType.QUESTION, options);
     return c.json({ artifact }, 201);
   })
   .get("/:id", validate("param", ArtifactIdParamSchema), async (c) => {

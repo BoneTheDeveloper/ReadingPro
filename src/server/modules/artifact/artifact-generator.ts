@@ -8,58 +8,57 @@ import {
   type QuestionContent,
   type FlashcardContent,
 } from "@/shared/studio/artifact";
+import type { CEFRLevel } from "@/shared/enums";
 import { StudioArtifactType } from "@/shared/enums";
+import {
+  flashcardGenerationOptionsSchema,
+  questionGenerationOptionsSchema,
+} from "@/shared/studio/generation-options";
+import {
+  buildFlashcardPrompt,
+  buildQuestionPrompt,
+  flashcardOutputSchema,
+  normalizeFlashcards,
+  normalizeQuestions,
+  questionOutputSchema,
+} from "./artifact-prompts";
 
-// ─── Prompt templates ─────────────────────────────────────────────
+const MODEL = "openai/gpt-4o-mini";
+const PASSAGE_CHAR_LIMIT = 10_000;
 
-const QUESTION_SYSTEM_PROMPT = `You are an expert English language educator.
-Generate multiple-choice reading comprehension questions that:
-- Test understanding (not memory)
-- Have clear answers from text
-- Range from factual to inferential
-- Cover different parts of the passage
-- Have plausible but clearly incorrect wrong answers`;
+/** Larger sets take longer to write; give each item its own share of time. */
+const timeoutFor = (count: number) => AbortSignal.timeout(30_000 + count * 6_000);
 
-const FLASHCARD_SYSTEM_PROMPT = `You are an expert English language educator.
-Generate 5 flashcards from the passage.
-
-Each flashcard:
-- Front: A key term, important quote, or question from the passage
-- Back: Clear, concise answer or definition
-
-Focus on meaningful content worth memorizing.`;
-
-// ─── Generation functions ─────────────────────────────────────────
-
-async function generateQuestions(passage: string): Promise<QuestionContent> {
-  const truncated = passage.slice(0, 10_000);
+async function generateQuestions(passage: string, cefrLevel: CEFRLevel | null, rawOptions: unknown): Promise<QuestionContent> {
+  const options = questionGenerationOptionsSchema.parse(rawOptions ?? {});
+  const { instructions, prompt } = buildQuestionPrompt(passage.slice(0, PASSAGE_CHAR_LIMIT), options, cefrLevel);
 
   const { object } = await generateObject({
-    model: "openai/gpt-4o-mini",
-    schema: questionContentSchema,
-    abortSignal: AbortSignal.timeout(45_000),
-    instructions: QUESTION_SYSTEM_PROMPT,
-    prompt: `Generate 5 reading comprehension questions for this passage:\n\n${truncated}`,
+    model: MODEL,
+    schema: questionOutputSchema,
+    abortSignal: timeoutFor(options.count),
+    instructions,
+    prompt,
   });
 
-  return object;
+  // Fails the workflow (artifact → FAILED) when nothing usable came back.
+  return questionContentSchema.parse({ questions: normalizeQuestions(object, options) });
 }
 
-async function generateFlashcards(passage: string): Promise<FlashcardContent> {
-  const truncated = passage.slice(0, 10_000);
+async function generateFlashcards(passage: string, cefrLevel: CEFRLevel | null, rawOptions: unknown): Promise<FlashcardContent> {
+  const options = flashcardGenerationOptionsSchema.parse(rawOptions ?? {});
+  const { instructions, prompt } = buildFlashcardPrompt(passage.slice(0, PASSAGE_CHAR_LIMIT), options, cefrLevel);
 
   const { object } = await generateObject({
-    model: "openai/gpt-4o-mini",
-    schema: flashcardContentSchema,
-    abortSignal: AbortSignal.timeout(45_000),
-    instructions: FLASHCARD_SYSTEM_PROMPT,
-    prompt: `Generate 5 flashcards from this passage:\n\n${truncated}`,
+    model: MODEL,
+    schema: flashcardOutputSchema,
+    abortSignal: timeoutFor(options.count),
+    instructions,
+    prompt,
   });
 
-  return object;
+  return flashcardContentSchema.parse({ cards: normalizeFlashcards(object, options) });
 }
-
-// ─── Main generator ───────────────────────────────────────────────
 
 const generators = {
   [StudioArtifactType.QUESTION]: generateQuestions,
@@ -71,6 +70,8 @@ export async function generateAndStoreArtifact(args: {
   userId: string;
   passageId: string;
   type: StudioArtifactType;
+  /** Validated against the type's option schema here; missing means defaults. */
+  options?: unknown;
 }): Promise<void> {
   const passage = await requireOwnedPassage(args.userId, args.passageId);
 
@@ -79,7 +80,7 @@ export async function generateAndStoreArtifact(args: {
     throw new Error(`Unknown artifact type: ${args.type}`);
   }
 
-  const content = await generate(passage.content);
+  const content = await generate(passage.content, passage.cefrLevel, args.options);
 
   const artifact = await updateArtifactStatus({
     id: args.artifactId,
