@@ -75,9 +75,19 @@ export function CurrentPlan({ data }: { data: SubscriptionStatus }) {
   );
 }
 
-/** The quota meters for the current period. */
+/** The quota meters, with an upgrade nudge on Free. */
 export function UsageSummary({ data }: { data: SubscriptionStatus }) {
-  return <UsageMeters usage={data.usage} />;
+  return (
+    <div className="space-y-5">
+      <UsageMeters usage={data.usage} />
+      {data.tier === "FREE" && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-indigo-soft px-4 py-3 text-sm">
+          <span>Cần nhiều lượt hơn? Pro tăng hạn mức tới 20 lần.</span>
+          <Button asChild size="sm"><Link to="/pricing">Xem gói Pro</Link></Button>
+        </div>
+      )}
+    </div>
+  );
 }
 
 /** Settings → Billing: the current plan and the payment history. */
@@ -97,7 +107,7 @@ export function UsageSettings() {
   return (
     <Section
       title="Mức sử dụng"
-      description="Lượt dùng làm mới theo ngày hoặc tháng. Nâng cấp để có hạn mức cao hơn."
+      description={data ? `Hạn mức của gói ${data.tier === "PRO" ? "Pro" : "Free"} trong kỳ hiện tại.` : undefined}
     >
       {data ? <UsageSummary data={data} /> : fallback}
     </Section>
