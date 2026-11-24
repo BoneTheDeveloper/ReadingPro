@@ -18,7 +18,7 @@ export function PricingPage() {
       <div className="mx-auto w-full max-w-5xl space-y-10 px-6 py-12">
         <div className="text-center">
           <h1 className="text-3xl font-bold tracking-tight">Nâng cấp gói của bạn</h1>
-          <p className="mt-2 text-muted-foreground">Thanh toán một lần bằng VietQR. Gia hạn khi còn hạn sẽ được cộng nối tiếp.</p>
+          <p className="mt-2 text-muted-foreground">Học nhiều hơn mỗi ngày với hạn mức AI cao hơn.</p>
         </div>
         <PlanCards
           variant="app"

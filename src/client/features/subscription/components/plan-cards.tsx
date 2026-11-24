@@ -72,7 +72,7 @@ export function PlanCards(props: PlanCardsProps) {
           tagline="Cho người học nghiêm túc mỗi ngày"
           price={formatVnd(pro.amount)}
           period={cycle === "monthly" ? "/tháng" : "/năm"}
-          note={cycle === "yearly" ? `Tương đương ${formatVnd(monthlyEquivalent)}/tháng` : "Trả trước, không tự động gia hạn"}
+          note={cycle === "yearly" ? `Tương đương ${formatVnd(monthlyEquivalent)}/tháng` : undefined}
           items={["Mọi quyền lợi của Free, với hạn mức cao hơn", ...benefits("PRO").slice(1)]}
           action={
             props.variant === "marketing" ? (
