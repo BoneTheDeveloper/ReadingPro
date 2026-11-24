@@ -65,7 +65,8 @@ export function BillingSettings() {
               <p className="flex items-center gap-2 text-lg font-semibold">
                 {data.tier === "PRO" && <Crown className="h-4 w-4 text-primary" aria-hidden />}
                 ReadingPro {data.tier === "PRO" ? "Pro" : "Free"}
-                <Badge className={STATE_BADGE[data.state]}>{STATE_LABELS[data.state]}</Badge>
+                {/* The plan name already says Free; the badge only adds a state worth noticing. */}
+                {data.state !== "none" && <Badge className={STATE_BADGE[data.state]}>{STATE_LABELS[data.state]}</Badge>}
               </p>
               <p className="text-sm text-muted-foreground">{periodLine(data)}</p>
             </div>
@@ -78,9 +79,6 @@ export function BillingSettings() {
         ) : (
           fallback
         )}
-      </Section>
-      <Section title="Phương thức thanh toán" description="Chuyển khoản ngân hàng qua mã VietQR (SePay). Mỗi lần thanh toán là trả trước một kỳ.">
-        <p className="text-sm text-muted-foreground">Không lưu thẻ hay tài khoản ngân hàng của bạn.</p>
       </Section>
       <PaymentHistory />
     </div>
