@@ -3,6 +3,7 @@ import { selectSessionUser } from "@/client/lib/store/session-slice";
 import { Button } from "@/client/components/ui/button";
 import { Input } from "@/client/components/ui/input";
 import { Label } from "@/client/components/ui/label";
+import { DeleteAccountButton } from "@/client/features/auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/client/components/ui/card";
 
 export default function AccountGeneralRoute() {
@@ -74,7 +75,7 @@ export default function AccountGeneralRoute() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button variant="destructive">Xóa tài khoản</Button>
+          <DeleteAccountButton />
         </CardContent>
       </Card>
     </div>

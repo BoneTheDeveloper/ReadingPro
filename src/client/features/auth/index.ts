@@ -4,3 +4,4 @@ export { ForgotPasswordForm } from "./components/forgot-password-form";
 export { redirectIfSignedIn } from "./lib/redirect-if-signed-in";
 export { LoginForm } from "./components/login-form";
 export { RegisterForm } from "./components/register-form";
+export { DeleteAccountButton } from "./components/delete-account-dialog";
