@@ -4,7 +4,6 @@ import { useCallback } from "react";
 import { Link, useLocation } from "react-router";
 import { BookOpen, GraduationCap, Library } from "lucide-react";
 import { cn } from "@/client/lib/utils";
-import { TooltipProvider } from "@/client/components/ui/tooltip";
 import { AuthControls } from "@/client/features/auth";
 import { PlanBadge } from "@/client/features/subscription";
 
@@ -46,20 +45,18 @@ export function DashboardSidebar({ children }: DashboardSidebarProps) {
   );
 
   return (
-    <TooltipProvider delayDuration={150}>
-      <div className="h-dvh flex flex-col bg-background overflow-hidden">
-        <TopBar isActive={isActive} />
+    <div className="h-dvh flex flex-col bg-background overflow-hidden">
+      <TopBar isActive={isActive} />
 
-        <main className="flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden">
-          {children}
-        </main>
+      <main className="flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden">
+        {children}
+      </main>
 
-        <BottomTabBar
-          isActive={isActive}
-          accountActive={pathname.startsWith("/account")}
-        />
-      </div>
-    </TooltipProvider>
+      <BottomTabBar
+        isActive={isActive}
+        accountActive={pathname.startsWith("/account")}
+      />
+    </div>
   );
 }
 
