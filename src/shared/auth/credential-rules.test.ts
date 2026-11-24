@@ -13,14 +13,15 @@ describe("passwordError", () => {
     ["", "password.required"],
     ["abc1234", "password.too_short"],
     ["abcdefgh", "password.no_digit"],
+    ["12345678", "password.no_letter"],
     ["a".repeat(128) + "1", "password.too_long"],
   ])("rejects %j with %s", (password, key) => {
     expect(passwordError(password)).toBe(key);
   });
 
-  it("accepts 8 characters with a digit", () => {
+  it("accepts 8 characters with a letter and a digit", () => {
     expect(passwordError("abcdefg1")).toBeUndefined();
-    expect(passwordError("12345678")).toBeUndefined();
+    expect(passwordError("1234567đ")).toBeUndefined();
   });
 });
 
