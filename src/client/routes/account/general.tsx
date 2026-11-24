@@ -1,45 +1,18 @@
-import { useAppSelector } from "@/client/lib/store/hooks";
-import { selectSessionUser } from "@/client/lib/store/session-slice";
 import { Button } from "@/client/components/ui/button";
 import { Input } from "@/client/components/ui/input";
 import { Label } from "@/client/components/ui/label";
-import { DeleteAccountButton } from "@/client/features/auth";
+import { DeleteAccountButton, ProfileForm } from "@/client/features/auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/client/components/ui/card";
 
 export default function AccountGeneralRoute() {
-  const user = useAppSelector(selectSessionUser);
-
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle>Hồ sơ</CardTitle>
-          <CardDescription>
-            Thông tin hồ sơ công khai của bạn
-          </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Tên</Label>
-            <Input
-              id="name"
-              defaultValue={user?.name || ""}
-              placeholder="Tên của bạn"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              defaultValue={user?.email || ""}
-              disabled
-              className="bg-muted"
-            />
-            <p className="text-xs text-muted-foreground">
-              Email không thể thay đổi
-            </p>
-          </div>
+        <CardContent>
+          <ProfileForm />
         </CardContent>
       </Card>
 

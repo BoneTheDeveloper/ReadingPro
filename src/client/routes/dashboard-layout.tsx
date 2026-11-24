@@ -20,10 +20,10 @@ const requireSession: MiddlewareFunction = async ({ context }) => {
   if (error) throw new Error(error.message ?? error.statusText);
   if (!session) throw redirect("/login");
 
-  const { name, email, image, tier } = session.user;
+  const { name, email, image, tier, username, displayUsername } = session.user;
   // Only plain fields go into the store; the session's Date fields would
   // trip Redux's serializability check.
-  context.set(sessionUserContext, { name, email, image, tier });
+  context.set(sessionUserContext, { name, email, image, tier, username: displayUsername ?? username ?? null });
 };
 
 export const clientMiddleware = [requireSession];

@@ -32,7 +32,7 @@ export type CredentialErrorKey =
   | "confirmPassword.mismatch"
   | "identifier.required";
 
-function usernameError(username: string): CredentialErrorKey | undefined {
+export function usernameError(username: string): CredentialErrorKey | undefined {
   const value = username.trim();
   if (!value) return "username.required";
   if (value.length < USERNAME_MIN_LENGTH) return "username.too_short";
