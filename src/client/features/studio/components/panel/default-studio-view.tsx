@@ -44,11 +44,17 @@ function artifactSubtitle(
   artifact: StudioArtifactListItem,
 ): string | null {
   if (artifact.type === StudioArtifactType.QUESTION) {
-    if (!artifact.progress) return null;
-    const total = artifact.progress.answers.filter((a) => a !== null).length;
-    return `${artifact.progress.correctCount}/${total}`;
+    const p = artifact.progress;
+    if (!p) return null;
+    if (p.isCompleted) return `Đúng ${p.correctCount}/${p.answers.length}`;
+    const answered = p.answers.filter((a) => a !== null).length;
+    return answered ? `Đang làm ${answered}/${p.answers.length}` : null;
   }
-  return null;
+  const p = artifact.progress;
+  if (!p) return null;
+  if (p.isCompleted || p.queue.length === 0) return "Đã nhớ hết";
+  const total = p.missCounts.length || 5;
+  return `Đã nhớ ${total - new Set(p.queue).size}/${total}`;
 }
 
 export function DefaultStudioView({

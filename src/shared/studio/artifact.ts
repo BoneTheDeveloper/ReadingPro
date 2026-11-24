@@ -41,9 +41,13 @@ export const flashcardContentSchema = z.object({
 
 export type FlashcardContent = z.infer<typeof flashcardContentSchema>;
 
-// Queue-based progress: store indices of cards needing review
+// Queue-based progress: `queue` holds indices of cards still to review,
+// `missCounts[i]` counts how many times card i was marked "not yet".
+// Defaults keep rows saved before these fields existed readable.
 export const flashcardProgressSchema = z.object({
   queue: z.array(z.number().int().min(0)).default([0, 1, 2, 3, 4]),
+  missCounts: z.array(z.number().int().nonnegative()).default([]),
+  isCompleted: z.boolean().default(false),
 });
 
 export type FlashcardProgress = z.infer<typeof flashcardProgressSchema>;
