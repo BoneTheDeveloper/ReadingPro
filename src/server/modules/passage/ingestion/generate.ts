@@ -41,16 +41,13 @@ const TONE: Record<PassageGenerationOptions["tone"], string> = {
   JOURNALISTIC: "journalistic news style: most important information first, factual, concise",
 };
 
-const LENGTH: Record<PassageGenerationOptions["length"], string> = {
-  SHORT: "about 150-250 words, 2-3 paragraphs",
-  MEDIUM: "about 300-500 words, 3-4 paragraphs",
-  LONG: "about 600-800 words, 4-6 paragraphs",
-};
-
 const FIDELITY: Record<PassageGenerationOptions["fidelity"], string> = {
   FREE: "Rewrite completely: do not preserve original wording, sentence structure or order. The result should read like a new passage written for learners.",
   CLOSE: "Stay close to the source: keep its ideas, their order and its examples; simplify and fix the wording, but do not add or drop points.",
 };
+
+/** About one paragraph per 120 words, at least 2. */
+const paragraphs = (words: number) => Math.max(2, Math.round(words / 120));
 
 function buildPassageInstructions(options: PassageGenerationOptions) {
   return `You are an English reading passage generator for language learners.
@@ -69,7 +66,7 @@ Rules:
 - Never invent facts, names, or numbers the source does not state.
 - Language level: ${LEVEL[options.targetLevel]}.
 - Tone: ${TONE[options.tone]}.
-- Length: ${LENGTH[options.length]}, unless the source has less content than that — never pad.
+- Length: about ${options.targetWords} words (between ${Math.round(options.targetWords * 0.85)} and ${Math.round(options.targetWords * 1.15)}), in roughly ${paragraphs(options.targetWords)} paragraphs — unless the source has less content than that; never pad.
 - Each paragraph has one clear topic; separate paragraphs with a blank line.
 
 Return only the passage. No preamble, no commentary, no markdown, no title.`;

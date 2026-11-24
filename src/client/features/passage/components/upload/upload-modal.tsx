@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Type, PlayCircle } from "lucide-react";
+import { AlertCircle, Type, PlayCircle } from "lucide-react";
 import { cn } from "@/client/lib/utils";
 import { useCreatePassageMutation } from "../../api/mutations";
 import { extractPdfText } from "../../lib/pdf-parser";
@@ -18,6 +18,8 @@ import { TextInputArea } from "./paste-text-input-area";
 import { UploadZone } from "./upload-zone";
 import { YouTubeInput } from "./youtube-input";
 import { RewriteOptionsPanel } from "./rewrite-options-panel";
+import { sourceSizeError } from "../../lib/passage-limits";
+import { useIsPro } from "@/client/features/subscription";
 import { passageGenerationOptionsSchema, type CreatePassageInput } from "@/shared/passage/schema";
 
 export interface UploadModalProps {
@@ -50,6 +52,7 @@ function SourceButton({ icon: Icon, label, desc, onClick, disabled }: {
 export function UploadModal({ isOpen, onClose, onClientError }: UploadModalProps) {
   const [activeMode, setActiveMode] = useState<InputMode>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const isPro = useIsPro();
   const [rewriteOptions, setRewriteOptions] = useState(() => passageGenerationOptionsSchema.parse({}));
   const mutation = useCreatePassageMutation();
 
@@ -62,11 +65,11 @@ export function UploadModal({ isOpen, onClose, onClientError }: UploadModalProps
         handleClose();
       },
       onError: (err) => {
-        // A 400 on a YouTube submit means the video itself is unusable (no
-        // subtitles) — the user fixes that by trying another URL, so keep the
-        // form open with the message on it. Everything else is a real failure:
-        // hand it to the workspace and close.
-        if (isApiError(err) && err.status === 400 && activeMode === "youtube") {
+        // A 400 means the source itself is unusable (no subtitles, too short or
+        // too long for the plan) — the user fixes that with another source, so
+        // keep the modal open with the message. Anything else is a real
+        // failure: hand it to the workspace and close.
+        if (isApiError(err) && err.status === 400) {
           setSubmitError(getErrorMessage(err));
           return;
         }
@@ -76,14 +79,24 @@ export function UploadModal({ isOpen, onClose, onClientError }: UploadModalProps
     });
   };
 
+  // Files are checked against the plan's size gate before uploading.
+  const submitFile = (input: CreatePassageInput & { text: string }) => {
+    const sizeError = sourceSizeError(input.text, isPro);
+    if (sizeError) {
+      setSubmitError(sizeError);
+      return;
+    }
+    submit(input);
+  };
+
   const handlePdfSelect = async (file: File) => {
     const title = file.name.replace(/\.pdf$/i, "");
-    submit({ sourceType: "PDF", title, text: await extractPdfText(file) });
+    submitFile({ sourceType: "PDF", title, text: await extractPdfText(file) });
   };
 
   const handleTxtSelect = async (file: File) => {
     const title = file.name.replace(/\.txt$/i, "");
-    submit({ sourceType: "TEXT", title, text: await file.text() });
+    submitFile({ sourceType: "TEXT", title, text: await file.text() });
   };
 
   const handleTextSubmit = (text: string) => {
@@ -98,11 +111,14 @@ export function UploadModal({ isOpen, onClose, onClientError }: UploadModalProps
 
   const handleBack = () => { setActiveMode(null); setSubmitError(null); };
   const handleClose = () => { setActiveMode(null); setSubmitError(null); onClose(); };
-  const handleModeChange = (next: InputMode) => setActiveMode(next);
+  const handleModeChange = (next: InputMode) => {
+    setActiveMode(next);
+    setSubmitError(null);
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent showCloseButton={false} className="max-w-lg max-h-[90vh] flex flex-col p-0 gap-0">
+      <DialogContent showCloseButton={false} className="sm:max-w-xl max-h-[90vh] flex flex-col p-0 gap-0">
         <DialogHeader className="p-5 pb-2 relative">
           <DialogTitle>Thêm nguồn</DialogTitle>
           <button onClick={handleClose} className="absolute right-5 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center rounded-full hover:bg-accent transition-colors" aria-label="Đóng">
@@ -116,6 +132,12 @@ export function UploadModal({ isOpen, onClose, onClientError }: UploadModalProps
           <div className="mb-4">
             <RewriteOptionsPanel value={rewriteOptions} onChange={setRewriteOptions} />
           </div>
+          {submitError && activeMode !== "youtube" && (
+            <p role="alert" className="mb-4 flex items-start gap-2 rounded-[10px] bg-danger-soft px-3 py-2.5 text-[13.5px] text-destructive">
+              <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden />
+              {submitError}
+            </p>
+          )}
           {activeMode === null && (
             <>
               <UploadZone onTxtSelect={handleTxtSelect} onPdfSelect={handlePdfSelect} variant="compact" disabled={mutation.isPending} />

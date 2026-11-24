@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { CEFRLevel, ProcessingStatus, SourceType } from "@/shared/enums";
+import { DEFAULT_TARGET_WORDS, MIN_TARGET_WORDS, PLAN_PASSAGE_LIMITS } from "@/shared/plan/plans";
 
 export const passageSchema = z.object({
   id: z.string(),
@@ -18,6 +19,8 @@ export const passageSchema = z.object({
 const passageListItemSchema = passageSchema.pick({
   id: true,
   title: true,
+  cefrLevel: true,
+  wordCount: true,
   sourceType: true,
   status: true,
   createdAt: true,
@@ -30,16 +33,17 @@ export type PassageListItem = z.infer<typeof passageListItemSchema>;
 
 // ── Rewrite options ───────────────────────────────────────────────────────────
 // How the AI rewrites the source into a reading passage. The defaults match the
-// original fixed prompt: B1–B2, neutral, 200–600 words, free rewrite.
+// original fixed prompt (B1–B2, neutral, ~400 words) except fidelity, which
+// stays close to the source by default.
 
 export const PassageTargetLevel = { AUTO: "AUTO", A2: "A2", B1: "B1", B2: "B2", C1: "C1" } as const;
 export type PassageTargetLevel = (typeof PassageTargetLevel)[keyof typeof PassageTargetLevel];
 export const PASSAGE_TARGET_LEVEL_LABEL: Record<PassageTargetLevel, string> = {
-  AUTO: "Tự động (B1–B2)",
-  A2: "A2 · Sơ cấp",
-  B1: "B1 · Trung cấp",
-  B2: "B2 · Trung cao",
-  C1: "C1 · Cao cấp",
+  AUTO: "Tự động",
+  A2: "A2",
+  B1: "B1",
+  B2: "B2",
+  C1: "C1",
 };
 
 export const PassageTone = {
@@ -58,26 +62,24 @@ export const PASSAGE_TONE_LABEL: Record<PassageTone, string> = {
   JOURNALISTIC: "Báo chí",
 };
 
-export const PassageLength = { SHORT: "SHORT", MEDIUM: "MEDIUM", LONG: "LONG" } as const;
-export type PassageLength = (typeof PassageLength)[keyof typeof PassageLength];
-export const PASSAGE_LENGTH_LABEL: Record<PassageLength, string> = {
-  SHORT: "Ngắn · ~200 từ",
-  MEDIUM: "Vừa · ~400 từ",
-  LONG: "Dài · ~700 từ",
-};
-
-export const PassageFidelity = { FREE: "FREE", CLOSE: "CLOSE" } as const;
+export const PassageFidelity = { CLOSE: "CLOSE", FREE: "FREE" } as const;
 export type PassageFidelity = (typeof PassageFidelity)[keyof typeof PassageFidelity];
 export const PASSAGE_FIDELITY_LABEL: Record<PassageFidelity, string> = {
-  FREE: "Viết lại tự do",
   CLOSE: "Bám sát bản gốc",
+  FREE: "Viết lại tự do",
 };
 
 export const passageGenerationOptionsSchema = z.object({
   targetLevel: z.enum(PassageTargetLevel).default(PassageTargetLevel.AUTO),
   tone: z.enum(PassageTone).default(PassageTone.NEUTRAL),
-  length: z.enum(PassageLength).default(PassageLength.MEDIUM),
-  fidelity: z.enum(PassageFidelity).default(PassageFidelity.FREE),
+  /** Target length of the rewritten passage; the server clamps it to the tier's maximum. */
+  targetWords: z
+    .number()
+    .int()
+    .min(MIN_TARGET_WORDS)
+    .max(PLAN_PASSAGE_LIMITS.PRO.maxTargetWords)
+    .default(DEFAULT_TARGET_WORDS),
+  fidelity: z.enum(PassageFidelity).default(PassageFidelity.CLOSE),
 });
 export type PassageGenerationOptions = z.infer<typeof passageGenerationOptionsSchema>;
 

@@ -36,6 +36,8 @@ export const ERROR_REASONS = {
   "payment.not_configured": { status: 503, code: ERROR_CODES.INTERNAL },
   "review.session_not_found": { status: 404, code: ERROR_CODES.NOT_FOUND },
   "review.session_ended": { status: 409, code: ERROR_CODES.CONFLICT },
+  "passage.too_short": { status: 400, code: ERROR_CODES.VALIDATION },
+  "passage.too_long": { status: 400, code: ERROR_CODES.VALIDATION },
   "youtube.url_invalid": { status: 400, code: ERROR_CODES.VALIDATION },
   "youtube.no_transcript": { status: 400, code: ERROR_CODES.VALIDATION },
   "chat.invalid_request": { status: 400, code: ERROR_CODES.VALIDATION },

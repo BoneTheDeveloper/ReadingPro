@@ -10,8 +10,6 @@ import {
 
 /** Failures the browser catches before sending a request. */
 type ClientErrorReason =
-  | "text.too_short"
-  | "text.too_long"
   | "text.empty"
   | "file.too_large"
   | "file.invalid_type"
@@ -61,11 +59,11 @@ const MESSAGES: Record<ErrorMessageKey, string> = {
   "payment.not_configured": "Thanh toán tạm thời chưa sẵn sàng. Vui lòng thử lại sau.",
   "review.session_not_found": "Không tìm thấy phiên ôn tập.",
   "review.session_ended": "Phiên ôn tập đã kết thúc.",
+  "passage.too_short": "Nguồn quá ngắn: cần ít nhất 50 từ.",
+  "passage.too_long": "Nguồn quá dài so với giới hạn của gói hiện tại. Hãy chia nhỏ hoặc nâng cấp Pro.",
   "youtube.url_invalid": "YouTube URL không hợp lệ",
   "youtube.no_transcript": "Video không có phụ đề",
   "chat.invalid_request": "Yêu cầu không hợp lệ. Hãy chọn bài đọc và nhập tin nhắn.",
-  "text.too_short": "Văn bản quá ngắn tối.",
-  "text.too_long": "Văn bản quá dài.",
   "text.empty": "Văn bản trống.",
   "file.too_large": "File vượt quá giới hạn 10MB.",
   "file.invalid_type": "Chỉ hỗ trợ file PDF và văn bản thuần.",
