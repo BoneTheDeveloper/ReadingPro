@@ -16,13 +16,13 @@ import {
   type ProPlanCode,
   type SubscriptionStatus,
 } from "@/shared/plan/plans";
-import { periodKey, periodResetsAt } from "./quota-period";
+import { quotaWindow } from "./quota-period";
 import { buildVietQrUrl, requireSepayConfig } from "./sepay-config";
 import {
   extendSubscription,
   findPaymentOrderForUser,
   findSubscription,
-  findUserTier,
+  findUserPlanFields,
   incrementUsage,
   insertPaymentOrder,
   insertSepayTransaction,
@@ -41,11 +41,22 @@ const ORDER_TTL_MS = 30 * 60 * 1000;
 
 // ── Entitlements ────────────────────────────────────────────────────────────
 
-/** Pro while a paid period runs, or when "User"."tier" grants it outright. */
+/**
+ * The user's plan at `now`. Pro while a paid period runs, or when
+ * "User"."tier" grants it outright. `cycleAnchor` starts the monthly quota
+ * cycles: the paid period's start, otherwise the sign-up time.
+ */
+async function loadPlan(userId: string, now: Date) {
+  const [subscription, user] = await Promise.all([findSubscription(userId), findUserPlanFields(userId)]);
+  const paid = subscription !== null && subscription.currentPeriodEnd > now;
+  const complimentary = !paid && user?.tier === "PRO";
+  const tier: PlanTier = paid || complimentary ? "PRO" : "FREE";
+  const cycleAnchor = paid ? subscription.currentPeriodStart : (user?.createdAt ?? now);
+  return { tier, subscription, paid, complimentary, cycleAnchor };
+}
+
 export async function getUserTier(userId: string, now = new Date()): Promise<PlanTier> {
-  const subscription = await findSubscription(userId);
-  if (subscription && subscription.currentPeriodEnd > now) return "PRO";
-  return (await findUserTier(userId)) === "PRO" ? "PRO" : "FREE";
+  return (await loadPlan(userId, now)).tier;
 }
 
 export async function assertProForUser(userId: string): Promise<void> {
@@ -60,37 +71,40 @@ export async function assertProForUser(userId: string): Promise<void> {
  * quota throws `plan.quota_exceeded` with the limit and the reset time.
  */
 export async function consumeQuota(userId: string, feature: MeteredFeature, now = new Date()): Promise<void> {
-  const tier = await getUserTier(userId, now);
+  const { tier, cycleAnchor } = await loadPlan(userId, now);
   const limit = PLAN_QUOTAS[tier][feature];
   if (limit === 0) throw new AppError("plan.pro_required", `${feature} requires the Pro tier`);
 
   const period = FEATURE_PERIOD[feature];
-  const count = await incrementUsage(userId, feature, periodKey(period, now), limit);
+  const window = quotaWindow(period, cycleAnchor, now);
+  const count = await incrementUsage(userId, feature, window.key, limit);
   if (count === null) {
     throw new AppError("plan.quota_exceeded", `${feature} quota of ${limit} per ${period} is used up`, {
       feature,
       limit,
       period,
-      resetsAt: periodResetsAt(period, now).toISOString(),
+      resetsAt: window.resetsAt.toISOString(),
     });
   }
 }
 
 export async function getSubscriptionStatus(userId: string, now = new Date()): Promise<SubscriptionStatus> {
-  const subscription = await findSubscription(userId);
-  const active = subscription !== null && subscription.currentPeriodEnd > now;
-  const complimentary = !active && (await findUserTier(userId)) === "PRO";
-  const tier: PlanTier = active || complimentary ? "PRO" : "FREE";
+  const { tier, subscription, paid: active, complimentary, cycleAnchor } = await loadPlan(userId, now);
 
-  const daysLeft = active ? Math.ceil((subscription.currentPeriodEnd.getTime() - now.getTime()) / DAY_MS) : null;
+  const daysLeft = active && subscription ? Math.ceil((subscription.currentPeriodEnd.getTime() - now.getTime()) / DAY_MS) : null;
   const state: SubscriptionStatus["state"] = active
     ? daysLeft! <= EXPIRING_SOON_DAYS ? "expiring" : "active"
     : complimentary ? "complimentary"
     : subscription ? "expired"
     : "none";
 
-  const keys = METERED_FEATURES.map((feature) => ({ feature, periodKey: periodKey(FEATURE_PERIOD[feature], now) }));
-  const used = await listUsage(userId, keys);
+  const windows = new Map(
+    METERED_FEATURES.map((feature) => [feature, quotaWindow(FEATURE_PERIOD[feature], cycleAnchor, now)]),
+  );
+  const used = await listUsage(
+    userId,
+    METERED_FEATURES.map((feature) => ({ feature, periodKey: windows.get(feature)!.key })),
+  );
 
   return {
     tier,
@@ -103,7 +117,7 @@ export async function getSubscriptionStatus(userId: string, now = new Date()): P
       period: FEATURE_PERIOD[feature],
       used: used.get(feature) ?? 0,
       limit: PLAN_QUOTAS[tier][feature],
-      resetsAt: periodResetsAt(FEATURE_PERIOD[feature], now),
+      resetsAt: windows.get(feature)!.resetsAt,
     })),
   };
 }

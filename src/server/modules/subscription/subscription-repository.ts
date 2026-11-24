@@ -34,10 +34,19 @@ export async function findSubscription(userId: string, db: Queryable = pool): Pr
   return rows[0] ?? null;
 }
 
-/** The manual tier on "User" (set by an admin or a test); "PRO" grants Pro without a payment. */
-export async function findUserTier(userId: string, db: Queryable = pool): Promise<string | null> {
-  const { rows } = await db.query<{ tier: string | null }>(`SELECT "tier" FROM "User" WHERE "id" = $1`, [userId]);
-  return rows[0]?.tier ?? null;
+/**
+ * The manual tier on "User" (set by an admin or a test; "PRO" grants Pro
+ * without a payment) and the sign-up time that anchors Free billing cycles.
+ */
+export async function findUserPlanFields(
+  userId: string,
+  db: Queryable = pool,
+): Promise<{ tier: string | null; createdAt: Date } | null> {
+  const { rows } = await db.query<{ tier: string | null; createdAt: Date }>(
+    `SELECT "tier", "createdAt" FROM "User" WHERE "id" = $1`,
+    [userId],
+  );
+  return rows[0] ?? null;
 }
 
 /**

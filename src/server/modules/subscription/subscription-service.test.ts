@@ -124,6 +124,25 @@ describe("checkout and SePay webhook", () => {
     expect(await getUserTier(userId)).toBe("PRO");
   });
 
+  it("starts a fresh monthly quota cycle on the day Pro begins", async () => {
+    const userId = await newUser();
+    await consumeQuota(userId, "passage_import");
+    await consumeQuota(userId, "chat_message");
+
+    const { order } = await createCheckoutForUser(userId, "PRO_MONTHLY");
+    await handleSepayWebhook(sepayPayload({ content: order.paymentCode }));
+
+    const status = await getSubscriptionStatus(userId);
+    const passage = status.usage.find((u) => u.feature === "passage_import")!;
+    expect(passage.used).toBe(0);
+    // The monthly quota resets one month after Pro started, not on the 1st.
+    const expected = new Date(status.currentPeriodStart!);
+    expected.setUTCMonth(expected.getUTCMonth() + 1);
+    expect(Math.abs(passage.resetsAt.getTime() - expected.getTime())).toBeLessThan(4 * 24 * 60 * 60 * 1000);
+    // The daily chat quota is unaffected.
+    expect(status.usage.find((u) => u.feature === "chat_message")!.used).toBe(1);
+  });
+
   it("extends an active subscription from its end, not from now", async () => {
     const userId = await newUser();
     const first = await createCheckoutForUser(userId, "PRO_MONTHLY");
