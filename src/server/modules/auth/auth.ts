@@ -128,6 +128,11 @@ export const auth = betterAuth({
     additionalFields: {
       tier: { type: "string", required: false, defaultValue: "FREE" },
     },
+    // Self-service deletion from Settings. Every table references "User" with
+    // ON DELETE CASCADE, so one delete removes all of the user's data.
+    // Without a password the session must be fresh (signed in within
+    // session.freshAge, one day by default).
+    deleteUser: { enabled: true },
   },
 
   session: {
