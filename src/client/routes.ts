@@ -10,5 +10,6 @@ export default [
     route("vocabulary", "routes/vocabulary.tsx"),
     route("review", "routes/review.tsx"),
     route("account", "routes/account.tsx"),
+    route("billing", "routes/billing.tsx"),
   ]),
 ] satisfies RouteConfig;

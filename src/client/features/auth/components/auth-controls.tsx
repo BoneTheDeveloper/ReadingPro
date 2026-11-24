@@ -13,7 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/client/components/ui/dropdown-menu";
-import { User, LogOut, Settings } from "lucide-react";
+import { User, LogOut, Settings, Crown } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { authClient } from "@/client/lib/auth/auth-client";
@@ -117,6 +117,13 @@ export function AuthControls({ variant = "default", active = false }: AuthContro
           <Link to="/account" className="cursor-pointer w-full">
             <Settings className="w-4 h-4 mr-2" />
             Cài đặt
+          </Link>
+        </DropdownMenuItem>
+
+        <DropdownMenuItem asChild>
+          <Link to="/billing" className="cursor-pointer w-full">
+            <Crown className="w-4 h-4 mr-2" />
+            Gói đăng ký
           </Link>
         </DropdownMenuItem>
 

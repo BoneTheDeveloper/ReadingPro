@@ -1,9 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { isProTier } from "@/shared/plan/tier";
-import { useAppSelector } from "@/client/lib/store/hooks";
-import { selectSessionUser } from "@/client/lib/store/session-slice";
+import { useIsPro } from "@/client/features/subscription";
 import { PartOfSpeech } from "@/shared/enums";
 import type { MatchedDictionaryEntry } from "@/shared/dictionary/schema";
 import { AiContextMeaning } from "./ai-context-meaning";
@@ -22,7 +20,7 @@ interface WordLookupPanelProps {
 
 /** The body of the "Tra từ" view: dictionary entries, the AI meaning on request (Pro), outside translators, and saving. */
 export function WordLookupPanel({ passageId, selectedText, context, entries }: WordLookupPanelProps) {
-  const isPro = isProTier(useAppSelector(selectSessionUser)?.tier);
+  const isPro = useIsPro();
   const [choice, setChoice] = useState<MeaningChoice | null>(null);
   const first = entries[0];
   const firstPartOfSpeech = first?.senses.find((s) => s.kind === "word")?.partOfSpeech ?? PartOfSpeech.OTHER;

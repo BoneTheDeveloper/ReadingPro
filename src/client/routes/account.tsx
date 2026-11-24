@@ -5,6 +5,7 @@ import { Input } from "@/client/components/ui/input";
 import { Label } from "@/client/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/client/components/ui/card";
 import { Separator } from "@/client/components/ui/separator";
+import { SubscriptionOverview } from "@/client/features/subscription";
 
 export { DashboardError as ErrorBoundary } from "@/client/components/layout/dashboard-error";
 
@@ -21,6 +22,8 @@ export default function AccountRoute() {
       </div>
 
       <Separator />
+
+      <SubscriptionOverview showManageLink />
 
       <Card>
         <CardHeader>
