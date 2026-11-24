@@ -64,7 +64,7 @@ export function ProfileForm() {
           aria-describedby="profile-username-hint"
         />
         <p id="profile-username-hint" className={message ? "text-xs text-destructive" : "text-xs text-muted-foreground"}>
-          {message ?? "Dùng để đăng nhập. Chữ, số, dấu gạch dưới và dấu chấm."}
+          {message ?? "Dùng khi đăng nhập. Chỉ gồm chữ không dấu, số, dấu _ và dấu ."}
         </p>
       </div>
 
