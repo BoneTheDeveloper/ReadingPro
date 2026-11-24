@@ -6,6 +6,7 @@ import { BookOpen, GraduationCap, Library } from "lucide-react";
 import { cn } from "@/client/lib/utils";
 import { TooltipProvider } from "@/client/components/ui/tooltip";
 import { AuthControls } from "@/client/features/auth";
+import { PlanBadge } from "@/client/features/subscription";
 
 const navItems = [
   { href: "/study", label: "Học tập", icon: BookOpen },
@@ -100,7 +101,10 @@ function TopBar({ isActive }: { isActive: (href: string) => boolean }) {
         })}
       </nav>
 
-      <div className="ml-auto hidden md:flex items-center">
+      <PlanBadge className="ml-auto md:hidden" />
+
+      <div className="ml-auto hidden md:flex items-center gap-3">
+        <PlanBadge />
         <AuthControls variant="rail" />
       </div>
     </header>

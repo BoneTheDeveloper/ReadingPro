@@ -31,7 +31,8 @@ function DropdownMenuContent({
         data-slot="dropdown-menu-content"
         sideOffset={sideOffset}
         className={cn(
-          "z-50 min-w-[8rem] overflow-hidden rounded-xl border border-border bg-popover p-1 text-popover-foreground shadow-md",
+          // Fixed radii: the theme radius scale is sized for cards and reads as bubbly on a menu.
+          "z-50 min-w-[8rem] overflow-hidden rounded-[12px] border border-border/70 bg-popover p-1.5 text-popover-foreground shadow-[0_8px_30px_rgb(0_0_0/0.12)]",
           "data-[state=open]:animate-in data-[state=closed]:animate-out",
           "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
           "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
@@ -53,8 +54,9 @@ function DropdownMenuItem({
     <DropdownMenuPrimitive.Item
       data-slot="dropdown-menu-item"
       className={cn(
-        "relative flex cursor-pointer select-none items-center gap-2 rounded-lg px-2 py-1.5 text-[14px] outline-none transition-colors",
-        "focus:bg-accent focus:text-accent-foreground",
+        "relative flex min-h-9 cursor-pointer select-none items-center gap-2.5 rounded-[8px] px-2.5 text-[14px] outline-none transition-colors",
+        "[&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-muted-foreground",
+        "focus:bg-muted focus:text-foreground",
         "data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
         className,
       )}
@@ -70,7 +72,7 @@ function DropdownMenuSeparator({
   return (
     <DropdownMenuPrimitive.Separator
       data-slot="dropdown-menu-separator"
-      className={cn("bg-border -mx-1 my-1 h-px", className)}
+      className={cn("bg-border -mx-1.5 my-1.5 h-px", className)}
       {...props}
     />
   );

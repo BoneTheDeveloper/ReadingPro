@@ -5,8 +5,6 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router";
 import { BookOpen, GraduationCap, Library } from "lucide-react";
 import { Button } from "@/client/components/ui/button";
-import { useAppSelector } from "@/client/lib/store/hooks";
-import { selectSessionUser } from "@/client/lib/store/session-slice";
 import { VocabularyList } from "./vocabulary-list";
 import { VocabularySetList } from "./vocabulary-set-list";
 import { VocabularyFormDialog } from "./vocabulary-form-dialog";
@@ -23,7 +21,7 @@ import {
 } from "../api/mutations";
 import { VocabularyStatus } from "@/shared/enums";
 import type { VocabularyItem } from "@/shared/vocabulary/schema";
-import { isProTier } from "@/shared/plan/tier";
+import { useIsPro } from "@/client/features/subscription";
 
 
 type ViewTab = "words" | "sets";
@@ -99,7 +97,7 @@ export function VocabularyPageClient() {
   const statsQuery = useQuery(vocabularyQueries.stats());
   const setsQuery = useQuery(vocabularySetQueries.list());
   const dueQuery = useQuery(reviewQueries.due());
-  const isPro = isProTier(useAppSelector(selectSessionUser)?.tier);
+  const isPro = useIsPro();
 
   const items = useMemo(() => listQuery.data ?? [], [listQuery.data]);
   const stats = statsQuery.data;

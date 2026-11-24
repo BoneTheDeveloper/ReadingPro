@@ -105,9 +105,9 @@ export function ArtifactListItem({
           <DropdownMenuContent side="right" align="end" className="min-w-40">
             <DropdownMenuItem
               onClick={(e) => { e.stopPropagation(); onDelete(); }}
-              className="text-destructive focus:text-destructive font-medium"
+              className="text-destructive focus:text-destructive focus:bg-destructive/10 font-medium [&_svg]:text-destructive"
             >
-              <Trash2 className="w-4 h-4 mr-2" />
+              <Trash2 />
               {deleteLabel}
             </DropdownMenuItem>
           </DropdownMenuContent>

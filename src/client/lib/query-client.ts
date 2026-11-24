@@ -39,6 +39,9 @@ function makeQueryClient() {
       },
     }),
     mutationCache: new MutationCache({
+      // Most writes (imports, generations) spend plan quota, so the usage
+      // shown in the top bar and on /billing is refreshed after each one.
+      onSettled: () => queryClient.invalidateQueries({ queryKey: ["subscription", "status"] }),
       onError: (err, _v, _c, mutation) => {
         if (handleUnauthorized(err, queryClient)) return;
         // Mutations whose caller renders the error inline opt out with

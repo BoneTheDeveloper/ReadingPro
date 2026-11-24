@@ -4,24 +4,12 @@ import { Button } from "@/client/components/ui/button";
 import { Input } from "@/client/components/ui/input";
 import { Label } from "@/client/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/client/components/ui/card";
-import { Separator } from "@/client/components/ui/separator";
 
-export { DashboardError as ErrorBoundary } from "@/client/components/layout/dashboard-error";
-
-export default function AccountRoute() {
+export default function AccountGeneralRoute() {
   const user = useAppSelector(selectSessionUser);
 
   return (
-    <div className="max-w-2xl mx-auto p-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Cài đặt tài khoản</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Quản lý cài đặt và tùy chọn tài khoản của bạn
-        </p>
-      </div>
-
-      <Separator />
-
+    <div className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle>Hồ sơ</CardTitle>
@@ -82,14 +70,11 @@ export default function AccountRoute() {
         <CardHeader>
           <CardTitle className="text-destructive">Vùng nguy hiểm</CardTitle>
           <CardDescription>
-            Hành động không thể đảo ngược cho tài khoản của bạn
+            Xóa vĩnh viễn tài khoản và toàn bộ dữ liệu. Không thể hoàn tác.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Button variant="destructive">Xóa tài khoản</Button>
-          <p className="text-xs text-muted-foreground mt-2">
-            Hành động này là vĩnh viễn và không thể hoàn tác
-          </p>
         </CardContent>
       </Card>
     </div>
