@@ -32,7 +32,7 @@ export function UsageMeters({ usage }: { usage: Usage[] }) {
             </div>
             {!locked && (
               <p className="text-xs text-muted-foreground">
-                {u.period === "day" ? "Hạn mức ngày" : "Hạn mức tháng"} · {formatReset(u.resetsAt, u.period)}
+                {formatReset(u.resetsAt, u.period)}
               </p>
             )}
           </li>
