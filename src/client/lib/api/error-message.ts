@@ -87,7 +87,7 @@ const AUTH_MESSAGES: Record<string, string> = {
   USERNAME_IS_ALREADY_TAKEN: "Tên đăng nhập đã có người dùng.",
   USERNAME_TOO_SHORT: `Tên đăng nhập phải có ít nhất ${USERNAME_MIN_LENGTH} ký tự.`,
   USERNAME_TOO_LONG: `Tên đăng nhập tối đa ${USERNAME_MAX_LENGTH} ký tự.`,
-  INVALID_USERNAME: "Tên đăng nhập chỉ gồm chữ không dấu, số, dấu _ và dấu .",
+  INVALID_USERNAME: "Tên người dùng phải viết liền, chỉ gồm chữ, số và dấu _.",
   INVALID_EMAIL: "Email không hợp lệ.",
   PASSWORD_TOO_SHORT: `Mật khẩu phải có ít nhất ${PASSWORD_MIN_LENGTH} ký tự.`,
   PASSWORD_TOO_LONG: `Mật khẩu tối đa ${PASSWORD_MAX_LENGTH} ký tự.`,

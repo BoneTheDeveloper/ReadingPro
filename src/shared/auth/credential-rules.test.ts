@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { passwordError, validateRegistration } from "./credential-rules";
+import { passwordError, usernameError, validateRegistration } from "./credential-rules";
 
 const VALID = {
-  username: "reader.01",
+  username: "reader_01",
   email: "reader@example.com",
   password: "matkhau123",
   confirmPassword: "matkhau123",
@@ -47,5 +47,22 @@ describe("validateRegistration", () => {
       confirmPassword: "confirmPassword.mismatch",
     });
     expect(validateRegistration({ ...VALID, username: "tên có dấu" }).username).toBe("username.invalid");
+  });
+});
+
+describe("usernameError", () => {
+  it("accepts letters and digits in any script, with _", () => {
+    expect(usernameError("lực_phạm_2004")).toBeUndefined();
+    expect(usernameError("reader_01")).toBeUndefined();
+  });
+
+  it("rejects spaces, dots and other symbols", () => {
+    expect(usernameError("lực phạm")).toBe("username.invalid");
+    expect(usernameError("reader.01")).toBe("username.invalid");
+    expect(usernameError("reader-01")).toBe("username.invalid");
+  });
+
+  it("treats a decomposed accent like the composed one", () => {
+    expect(usernameError("lu\u0323c")).toBeUndefined();
   });
 });

@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { Loader2 } from "lucide-react";
-import { toast } from "sonner";
+import { Check, Loader2 } from "lucide-react";
 import { Button } from "@/client/components/ui/button";
 import { Input } from "@/client/components/ui/input";
 import { Label } from "@/client/components/ui/label";
@@ -8,7 +7,7 @@ import { authClient } from "@/client/lib/auth/auth-client";
 import { credentialErrorText, getAuthErrorMessage } from "@/client/lib/api/error-message";
 import { useAppDispatch, useAppSelector } from "@/client/lib/store/hooks";
 import { selectSessionUser, sessionUserUpdated } from "@/client/lib/store/session-slice";
-import { usernameError } from "@/shared/auth/credential-rules";
+import { normalizeUsername, usernameError } from "@/shared/auth/credential-rules";
 
 /**
  * One identity field, like most SaaS profiles: the username, which is also
@@ -23,10 +22,11 @@ export function ProfileForm() {
   const [value, setValue] = useState(current);
   const [pending, setPending] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
 
   if (!user) return null;
 
-  const next = value.trim();
+  const next = normalizeUsername(value);
   const changed = next !== current;
   const problem = changed ? credentialErrorText(usernameError(next)) : undefined;
   const message = problem ?? serverError;
@@ -43,11 +43,16 @@ export function ProfileForm() {
       return;
     }
     dispatch(sessionUserUpdated({ name: next, username: next }));
-    toast.success("Đã lưu thay đổi.");
+    setSaved(true);
   };
 
   return (
     <form onSubmit={save} className="space-y-4" noValidate>
+      <div className="space-y-2">
+        <Label htmlFor="profile-email">Email</Label>
+        <Input id="profile-email" type="email" value={user.email} disabled readOnly />
+      </div>
+
       <div className="space-y-2">
         <Label htmlFor="profile-username">Tên người dùng</Label>
         <Input
@@ -56,28 +61,32 @@ export function ProfileForm() {
           onChange={(e) => {
             setValue(e.target.value);
             setServerError(null);
+            setSaved(false);
           }}
           autoComplete="username"
           autoCapitalize="off"
           spellCheck={false}
           aria-invalid={Boolean(message)}
-          aria-describedby="profile-username-hint"
+          aria-describedby={message ? "profile-username-error" : undefined}
         />
-        <p id="profile-username-hint" className={message ? "text-xs text-destructive" : "text-xs text-muted-foreground"}>
-          {message ?? "Dùng khi đăng nhập. Chỉ gồm chữ không dấu, số, dấu _ và dấu ."}
-        </p>
+        {message && (
+          <p id="profile-username-error" className="text-xs text-destructive">{message}</p>
+        )}
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="profile-email">Email</Label>
-        <Input id="profile-email" type="email" value={user.email} disabled readOnly />
-      </div>
-
-      <div className="flex justify-end">
+      <div className="flex items-center gap-3">
         <Button type="submit" disabled={!changed || Boolean(problem) || pending}>
           {pending && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
-          Lưu
+          Lưu thay đổi
         </Button>
+        <p role="status" aria-live="polite" className="flex items-center gap-1.5 text-sm text-success">
+          {saved && !changed && (
+            <>
+              <Check className="h-4 w-4" aria-hidden />
+              Đã cập nhật tên người dùng.
+            </>
+          )}
+        </p>
       </div>
     </form>
   );

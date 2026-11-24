@@ -31,7 +31,7 @@ export function LoginForm() {
     event.preventDefault();
     setSubmitted(true);
     setError("");
-    const id = identifier.trim();
+    const id = identifier.trim().normalize("NFC");
     if (!id || !password) return;
     setSubmitting(true);
     const isEmail = id.includes("@");

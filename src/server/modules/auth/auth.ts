@@ -9,6 +9,7 @@ import {
   USERNAME_MAX_LENGTH,
   USERNAME_MIN_LENGTH,
   passwordError,
+  isValidUsernameFormat,
 } from "@/shared/auth/credential-rules";
 import { claimUnverifiedUserForOAuth, deletePendingPasswordSignUp } from "./auth-repository";
 import { sendOtpEmail } from "./otp-mailer";
@@ -90,7 +91,11 @@ export const auth = betterAuth({
       secret: process.env.OAUTH_PROXY_SECRET,
     }),
     // Adds "User"."username" / "displayUsername" and /sign-in/username.
-    username({ minUsernameLength: USERNAME_MIN_LENGTH, maxUsernameLength: USERNAME_MAX_LENGTH }),
+    username({
+      minUsernameLength: USERNAME_MIN_LENGTH,
+      maxUsernameLength: USERNAME_MAX_LENGTH,
+      usernameValidator: isValidUsernameFormat,
+    }),
     emailOTP({
       // Email verification sends a 6-digit code instead of a link.
       overrideDefaultEmailVerification: true,

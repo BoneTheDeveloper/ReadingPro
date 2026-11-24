@@ -11,6 +11,7 @@ import {
   validateRegistration,
   type RegistrationField,
   type RegistrationValues,
+  normalizeUsername,
 } from "@/shared/auth/credential-rules";
 import { AuthField, AuthHeader, FormError, OrDivider } from "./auth-form-parts";
 import { GoogleSignInButton } from "./google-sign-in-button";
@@ -62,7 +63,7 @@ export function RegisterForm() {
     if (Object.keys(validateRegistration(values)).length > 0) return;
 
     setSubmitting(true);
-    const username = values.username.trim();
+    const username = normalizeUsername(values.username);
     const email = values.email.trim();
     const { error } = await authClient.signUp.email({
       email,
