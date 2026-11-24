@@ -64,7 +64,7 @@ export function BillingSettings() {
             <div className="space-y-1">
               <p className="flex items-center gap-2 text-lg font-semibold">
                 {data.tier === "PRO" && <Crown className="h-4 w-4 text-primary" aria-hidden />}
-                ReadingPro {data.tier === "PRO" ? "Pro" : "Free"}
+                Gói {data.tier === "PRO" ? "Pro" : "Free"}
                 {/* The plan name already says Free; the badge only adds a state worth noticing. */}
                 {data.state !== "none" && <Badge className={STATE_BADGE[data.state]}>{STATE_LABELS[data.state]}</Badge>}
               </p>
