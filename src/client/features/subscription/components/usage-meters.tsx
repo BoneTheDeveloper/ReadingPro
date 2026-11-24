@@ -1,6 +1,6 @@
 import { cn } from "@/client/lib/utils";
 import type { Usage } from "@/shared/plan/plans";
-import { FEATURE_LABELS, formatDateTime } from "../lib/labels";
+import { FEATURE_LABELS, formatReset } from "../lib/labels";
 
 /** One meter per metered feature: used / limit this period and when it resets. */
 export function UsageMeters({ usage }: { usage: Usage[] }) {
@@ -32,7 +32,7 @@ export function UsageMeters({ usage }: { usage: Usage[] }) {
             </div>
             {!locked && (
               <p className="text-xs text-muted-foreground">
-                {u.period === "day" ? "Theo ngày" : "Theo tháng"} · làm mới lúc {formatDateTime(u.resetsAt)}
+                {u.period === "day" ? "Hạn mức ngày" : "Hạn mức tháng"} · {formatReset(u.resetsAt, u.period)}
               </p>
             )}
           </li>

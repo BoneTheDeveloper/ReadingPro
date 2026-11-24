@@ -26,5 +26,13 @@ export const formatVnd = (amount: number) => `${amount.toLocaleString("vi-VN")}�
 export const formatDate = (date: Date) =>
   date.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
 
+/** "24/11/2026 14:05": explicit parts, since vi-VN's own date-time join varies by engine. */
 export const formatDateTime = (date: Date) =>
-  date.toLocaleString("vi-VN", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" });
+  `${formatDate(date)} ${date.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", hour12: false })}`;
+
+/** When a quota resets: a date for monthly quotas, "sau 5 giờ" for daily ones. */
+export function formatReset(resetsAt: Date, period: "month" | "day", now = new Date()): string {
+  if (period === "month") return `Làm mới vào ${formatDate(resetsAt)}`;
+  const minutes = Math.max(1, Math.ceil((resetsAt.getTime() - now.getTime()) / 60_000));
+  return minutes < 60 ? `Làm mới sau ${minutes} phút` : `Làm mới sau ${Math.floor(minutes / 60)} giờ`;
+}
