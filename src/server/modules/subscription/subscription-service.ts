@@ -26,7 +26,8 @@ import {
   incrementUsage,
   insertPaymentOrder,
   insertSepayTransaction,
-  listPaymentOrdersForUser,
+  findOpenPaymentOrder,
+  listPaidOrdersForUser,
   listUsage,
   lockPaymentOrderByCode,
   markPaymentOrderPaid,
@@ -145,6 +146,11 @@ function toCheckout(row: PaymentOrderRow): Checkout {
 
 export async function createCheckoutForUser(userId: string, planCode: ProPlanCode): Promise<Checkout> {
   requireSepayConfig();
+  // Leaving the checkout page and choosing the same plan again resumes that
+  // order instead of piling up unpaid ones.
+  const open = await findOpenPaymentOrder(userId, planCode);
+  if (open) return toCheckout(open);
+
   const plan = PRO_PLANS[planCode];
   const row = await insertPaymentOrder({
     userId,
@@ -171,8 +177,7 @@ export async function getPaymentOrderForUser(userId: string, id: string): Promis
 }
 
 export async function listPaymentOrders(userId: string): Promise<PaymentOrder[]> {
-  const now = new Date();
-  return (await listPaymentOrdersForUser(userId)).map((row) => toPaymentOrder(row, now));
+  return (await listPaidOrdersForUser(userId)).map((row) => toPaymentOrder(row));
 }
 
 // ── SePay webhook ───────────────────────────────────────────────────────────

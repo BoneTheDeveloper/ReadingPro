@@ -12,6 +12,7 @@ import {
   getSubscriptionStatus,
   getUserTier,
   handleSepayWebhook,
+  listPaymentOrders,
 } from "./subscription-service";
 
 const API_KEY = "test-sepay-key";
@@ -187,6 +188,32 @@ describe("POST /api/webhooks/sepay", () => {
     const res = await post(sepayPayload({ content: order.paymentCode }), `Apikey ${API_KEY}`);
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ success: true, outcome: "MATCHED" });
+  });
+});
+
+describe("createCheckoutForUser", () => {
+  it("resumes the open order for the same plan and starts a new one for another plan", async () => {
+    const userId = await newUser();
+    const first = await createCheckoutForUser(userId, "PRO_MONTHLY");
+    const again = await createCheckoutForUser(userId, "PRO_MONTHLY");
+    const yearly = await createCheckoutForUser(userId, "PRO_YEARLY");
+    expect(again.order.id).toBe(first.order.id);
+    expect(yearly.order.id).not.toBe(first.order.id);
+  });
+
+  it("starts a new order once the previous QR has expired", async () => {
+    const userId = await newUser();
+    const first = await createCheckoutForUser(userId, "PRO_MONTHLY");
+    await pool.query(`UPDATE "PaymentOrder" SET "expiresAt" = now() - interval '1 minute' WHERE "id" = $1`, [first.order.id]);
+    expect((await createCheckoutForUser(userId, "PRO_MONTHLY")).order.id).not.toBe(first.order.id);
+  });
+
+  it("lists only paid orders as payment history", async () => {
+    const userId = await newUser();
+    const paid = await createCheckoutForUser(userId, "PRO_MONTHLY");
+    await handleSepayWebhook(sepayPayload({ content: paid.order.paymentCode }));
+    await createCheckoutForUser(userId, "PRO_YEARLY");
+    expect((await listPaymentOrders(userId)).map((o) => o.id)).toEqual([paid.order.id]);
   });
 });
 

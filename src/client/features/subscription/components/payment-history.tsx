@@ -1,14 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import type { PaymentOrder } from "@/shared/plan/plans";
 import { subscriptionQueries } from "../api/queries";
 import { formatDateTime, formatVnd, PLAN_LABELS } from "../lib/labels";
 
-const STATUS_TEXT: Record<PaymentOrder["status"], { label: string; className: string }> = {
-  PAID: { label: "Đã thanh toán", className: "text-emerald-700" },
-  PENDING: { label: "Chờ thanh toán", className: "text-orange-700" },
-  EXPIRED: { label: "Hết hạn", className: "text-muted-foreground" },
-};
 
+/** Paid orders, newest first; the server leaves abandoned checkouts out. */
 export function PaymentHistory() {
   const { data } = useQuery(subscriptionQueries.orders());
   return (
@@ -27,7 +22,7 @@ export function PaymentHistory() {
               </span>
               <span className="tabular-nums">{formatVnd(order.amount)}</span>
               <span className="text-muted-foreground">{formatDateTime(order.paidAt ?? order.createdAt)}</span>
-              <span className={STATUS_TEXT[order.status].className}>{STATUS_TEXT[order.status].label}</span>
+              <span className="text-success">Đã thanh toán</span>
             </li>
           ))}
         </ul>

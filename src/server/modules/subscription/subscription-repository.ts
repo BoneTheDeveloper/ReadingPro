@@ -87,10 +87,26 @@ export async function findPaymentOrderForUser(
   return rows[0] ?? null;
 }
 
-export async function listPaymentOrdersForUser(userId: string, db: Queryable = pool): Promise<PaymentOrderRow[]> {
+/** The user's unpaid order for this plan whose QR is still shown, if any. */
+export async function findOpenPaymentOrder(
+  userId: string,
+  planCode: string,
+  db: Queryable = pool,
+): Promise<PaymentOrderRow | null> {
   const { rows } = await db.query<PaymentOrderRow>(
     `SELECT ${ORDER_COLUMNS} FROM "PaymentOrder"
-     WHERE "userId" = $1 ORDER BY "createdAt" DESC LIMIT 20`,
+     WHERE "userId" = $1 AND "planCode" = $2 AND "status" = 'PENDING' AND "expiresAt" > now()
+     ORDER BY "createdAt" DESC LIMIT 1`,
+    [userId, planCode],
+  );
+  return rows[0] ?? null;
+}
+
+/** Paid orders only: an abandoned checkout is not a payment. */
+export async function listPaidOrdersForUser(userId: string, db: Queryable = pool): Promise<PaymentOrderRow[]> {
+  const { rows } = await db.query<PaymentOrderRow>(
+    `SELECT ${ORDER_COLUMNS} FROM "PaymentOrder"
+     WHERE "userId" = $1 AND "status" = 'PAID' ORDER BY "paidAt" DESC LIMIT 20`,
     [userId],
   );
   return rows;
