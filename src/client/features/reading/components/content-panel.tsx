@@ -110,20 +110,9 @@ export function ContentPanel({
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      <div
-        className="h-[3px] w-full bg-border shrink-0"
-        role="progressbar"
-        aria-valuenow={Math.round(progress * 100)}
-        aria-valuemin={0}
-        aria-valuemax={100}
-      >
-        <div
-          className="h-full bg-gradient-to-r from-primary to-coral transition-[width] duration-150 ease-out"
-          style={{ width: `${progress * 100}%` }}
-        />
-      </div>
-
-      <div className="h-[53px] shrink-0 flex items-center gap-3 px-6 border-b border-border">
+      {/* Same 54px as the side panels' headers so the lines align. The reading
+          progress sits on the bottom edge, away from the navbar above. */}
+      <div className="relative h-[54px] shrink-0 flex items-center gap-3 px-6 border-b border-border">
         <div className="flex items-center gap-3">
           <CefrBadge level={passage.cefrLevel} />
           <span className="w-px h-3.5 bg-border" />
@@ -145,6 +134,21 @@ export function ContentPanel({
             />
           )}
         </div>
+        {viewMode === "text" && (
+          <div
+            className="absolute inset-x-0 -bottom-px h-1 bg-muted"
+            role="progressbar"
+            aria-label="Tiến độ đọc"
+            aria-valuenow={Math.round(progress * 100)}
+            aria-valuemin={0}
+            aria-valuemax={100}
+          >
+            <div
+              className="h-full rounded-r-full bg-gradient-to-r from-primary to-coral transition-[width] duration-150 ease-out"
+              style={{ width: `${progress * 100}%` }}
+            />
+          </div>
+        )}
       </div>
 
       <div
