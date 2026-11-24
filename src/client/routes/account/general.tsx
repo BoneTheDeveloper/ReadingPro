@@ -70,14 +70,11 @@ export default function AccountGeneralRoute() {
         <CardHeader>
           <CardTitle className="text-destructive">Vùng nguy hiểm</CardTitle>
           <CardDescription>
-            Hành động không thể đảo ngược cho tài khoản của bạn
+            Xóa vĩnh viễn tài khoản và toàn bộ dữ liệu. Không thể hoàn tác.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Button variant="destructive">Xóa tài khoản</Button>
-          <p className="text-xs text-muted-foreground mt-2">
-            Hành động này là vĩnh viễn và không thể hoàn tác
-          </p>
         </CardContent>
       </Card>
     </div>
