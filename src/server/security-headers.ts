@@ -14,7 +14,7 @@ export function securityHeaders(isDev: boolean): Record<string, string> {
       .filter(Boolean)
       .join(" "),
     styleSrc: "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com",
-    imgSrc: "img-src 'self' blob: data: https://lh3.googleusercontent.com https://accounts.google.com",
+    imgSrc: "img-src 'self' blob: data: https://lh3.googleusercontent.com https://accounts.google.com https://vietqr.app",
     fontSrc: "font-src 'self' https://fonts.gstatic.com",
     connectSrc: [
       "connect-src 'self'",

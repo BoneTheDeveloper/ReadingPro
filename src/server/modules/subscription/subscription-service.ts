@@ -1,0 +1,232 @@
+import { randomInt } from "node:crypto";
+import { z } from "zod";
+import { withTransaction, type JsonValue } from "@/server/lib/db";
+import { AppError } from "@/server/lib/errors";
+import { log } from "@/server/lib/logger";
+import {
+  EXPIRING_SOON_DAYS,
+  FEATURE_PERIOD,
+  METERED_FEATURES,
+  PLAN_QUOTAS,
+  PRO_PLANS,
+  type Checkout,
+  type MeteredFeature,
+  type PaymentOrder,
+  type PlanTier,
+  type ProPlanCode,
+  type SubscriptionStatus,
+} from "@/shared/plan/plans";
+import { periodKey, periodResetsAt } from "./quota-period";
+import { buildVietQrUrl, requireSepayConfig } from "./sepay-config";
+import {
+  extendSubscription,
+  findPaymentOrderForUser,
+  findSubscription,
+  findUserTier,
+  incrementUsage,
+  insertPaymentOrder,
+  insertSepayTransaction,
+  listPaymentOrdersForUser,
+  listUsage,
+  lockPaymentOrderByCode,
+  markPaymentOrderPaid,
+  setSepayTransactionOutcome,
+  type PaymentOrderRow,
+} from "./subscription-repository";
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+/** How long the checkout QR is shown; a late transfer with the code still counts. */
+const ORDER_TTL_MS = 30 * 60 * 1000;
+
+// ── Entitlements ────────────────────────────────────────────────────────────
+
+/** Pro while a paid period runs, or when "User"."tier" grants it outright. */
+export async function getUserTier(userId: string, now = new Date()): Promise<PlanTier> {
+  const subscription = await findSubscription(userId);
+  if (subscription && subscription.currentPeriodEnd > now) return "PRO";
+  return (await findUserTier(userId)) === "PRO" ? "PRO" : "FREE";
+}
+
+export async function assertProForUser(userId: string): Promise<void> {
+  if ((await getUserTier(userId)) !== "PRO") {
+    throw new AppError("plan.pro_required", "This feature requires the Pro tier");
+  }
+}
+
+/**
+ * Counts one use of `feature` against the user's plan, before the work runs.
+ * A feature the tier does not include throws `plan.pro_required`; a used-up
+ * quota throws `plan.quota_exceeded` with the limit and the reset time.
+ */
+export async function consumeQuota(userId: string, feature: MeteredFeature, now = new Date()): Promise<void> {
+  const tier = await getUserTier(userId, now);
+  const limit = PLAN_QUOTAS[tier][feature];
+  if (limit === 0) throw new AppError("plan.pro_required", `${feature} requires the Pro tier`);
+
+  const period = FEATURE_PERIOD[feature];
+  const count = await incrementUsage(userId, feature, periodKey(period, now), limit);
+  if (count === null) {
+    throw new AppError("plan.quota_exceeded", `${feature} quota of ${limit} per ${period} is used up`, {
+      feature,
+      limit,
+      period,
+      resetsAt: periodResetsAt(period, now).toISOString(),
+    });
+  }
+}
+
+export async function getSubscriptionStatus(userId: string, now = new Date()): Promise<SubscriptionStatus> {
+  const subscription = await findSubscription(userId);
+  const active = subscription !== null && subscription.currentPeriodEnd > now;
+  const complimentary = !active && (await findUserTier(userId)) === "PRO";
+  const tier: PlanTier = active || complimentary ? "PRO" : "FREE";
+
+  const daysLeft = active ? Math.ceil((subscription.currentPeriodEnd.getTime() - now.getTime()) / DAY_MS) : null;
+  const state: SubscriptionStatus["state"] = active
+    ? daysLeft! <= EXPIRING_SOON_DAYS ? "expiring" : "active"
+    : complimentary ? "complimentary"
+    : subscription ? "expired"
+    : "none";
+
+  const keys = METERED_FEATURES.map((feature) => ({ feature, periodKey: periodKey(FEATURE_PERIOD[feature], now) }));
+  const used = await listUsage(userId, keys);
+
+  return {
+    tier,
+    state,
+    currentPeriodStart: subscription?.currentPeriodStart ?? null,
+    currentPeriodEnd: subscription?.currentPeriodEnd ?? null,
+    daysLeft,
+    usage: METERED_FEATURES.map((feature) => ({
+      feature,
+      period: FEATURE_PERIOD[feature],
+      used: used.get(feature) ?? 0,
+      limit: PLAN_QUOTAS[tier][feature],
+      resetsAt: periodResetsAt(FEATURE_PERIOD[feature], now),
+    })),
+  };
+}
+
+// ── Checkout ────────────────────────────────────────────────────────────────
+
+/** Transfer notes carry this prefix; set the same prefix as the payment code in SePay. */
+export const PAYMENT_CODE_PREFIX = "RPRO";
+const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const PAYMENT_CODE_PATTERN = new RegExp(`${PAYMENT_CODE_PREFIX}[${CODE_ALPHABET}]{8}`);
+
+function newPaymentCode(): string {
+  let code = PAYMENT_CODE_PREFIX;
+  for (let i = 0; i < 8; i++) code += CODE_ALPHABET[randomInt(CODE_ALPHABET.length)];
+  return code;
+}
+
+function toPaymentOrder(row: PaymentOrderRow, now = new Date()): PaymentOrder {
+  return {
+    id: row.id,
+    planCode: row.planCode as ProPlanCode,
+    amount: row.amount,
+    months: row.months,
+    paymentCode: row.paymentCode,
+    status: row.status === "PENDING" && row.expiresAt <= now ? "EXPIRED" : row.status,
+    expiresAt: row.expiresAt,
+    paidAt: row.paidAt,
+    createdAt: row.createdAt,
+  };
+}
+
+export async function createCheckoutForUser(userId: string, planCode: ProPlanCode): Promise<Checkout> {
+  const config = requireSepayConfig();
+  const plan = PRO_PLANS[planCode];
+  const row = await insertPaymentOrder({
+    userId,
+    planCode,
+    amount: plan.amount,
+    months: plan.months,
+    paymentCode: newPaymentCode(),
+    expiresAt: new Date(Date.now() + ORDER_TTL_MS),
+  });
+  return {
+    order: toPaymentOrder(row),
+    qrUrl: buildVietQrUrl(config, row.amount, row.paymentCode),
+    bank: { code: config.bankCode, accountNumber: config.accountNumber, accountName: config.accountName },
+  };
+}
+
+export async function getPaymentOrderForUser(userId: string, id: string): Promise<PaymentOrder> {
+  const row = await findPaymentOrderForUser(userId, id);
+  if (!row) throw new AppError("payment.order_not_found", `No payment order ${id}`);
+  return toPaymentOrder(row);
+}
+
+export async function listPaymentOrders(userId: string): Promise<PaymentOrder[]> {
+  const now = new Date();
+  return (await listPaymentOrdersForUser(userId)).map((row) => toPaymentOrder(row, now));
+}
+
+// ── SePay webhook ───────────────────────────────────────────────────────────
+
+/** The fields of SePay's transaction webhook that matter here; others are kept in the payload. */
+export const SepayWebhookSchema = z.looseObject({
+  id: z.number().int(),
+  transferType: z.string(),
+  transferAmount: z.number(),
+  content: z.string().nullish(),
+  code: z.string().nullish(),
+  referenceCode: z.string().nullish(),
+});
+export type SepayWebhook = z.infer<typeof SepayWebhookSchema>;
+
+export type WebhookOutcome = "MATCHED" | "UNDERPAID" | "NO_ORDER" | "IGNORED" | "DUPLICATE";
+
+/** Finds our payment code in SePay's parsed `code` or anywhere in the transfer note. */
+export function extractPaymentCode(payload: Pick<SepayWebhook, "code" | "content">): string | null {
+  for (const text of [payload.code, payload.content]) {
+    const match = text?.toUpperCase().replace(/[^A-Z0-9]/g, "").match(PAYMENT_CODE_PATTERN);
+    if (match) return match[0];
+  }
+  return null;
+}
+
+/**
+ * Applies one SePay delivery exactly once: the transaction id is recorded in
+ * the same transaction that marks the order paid and extends Pro.
+ */
+export async function handleSepayWebhook(payload: SepayWebhook): Promise<WebhookOutcome> {
+  return withTransaction(async (tx) => {
+    const fresh = await insertSepayTransaction(
+      {
+        id: payload.id,
+        transferType: payload.transferType,
+        transferAmount: payload.transferAmount,
+        content: payload.content ?? "",
+        referenceCode: payload.referenceCode ?? null,
+        payload: payload as JsonValue,
+      },
+      tx,
+    );
+    if (!fresh) return "DUPLICATE";
+
+    const outcome = await applyTransaction(payload, tx);
+    await setSepayTransactionOutcome(payload.id, outcome.outcome, outcome.orderId, tx);
+    log.info({ sepayTransactionId: payload.id, ...outcome }, "sepay webhook applied");
+    return outcome.outcome;
+  });
+}
+
+async function applyTransaction(
+  payload: SepayWebhook,
+  tx: Parameters<typeof lockPaymentOrderByCode>[1],
+): Promise<{ outcome: Exclude<WebhookOutcome, "DUPLICATE">; orderId: string | null }> {
+  if (payload.transferType !== "in") return { outcome: "IGNORED", orderId: null };
+
+  const code = extractPaymentCode(payload);
+  const order = code ? await lockPaymentOrderByCode(code, tx) : null;
+  if (!order) return { outcome: "NO_ORDER", orderId: null };
+  // A second transfer for a paid order is kept on record for a manual refund.
+  if (order.status === "PAID") return { outcome: "NO_ORDER", orderId: order.id };
+  if (payload.transferAmount < order.amount) return { outcome: "UNDERPAID", orderId: order.id };
+
+  await markPaymentOrderPaid(order.id, tx);
+  await extendSubscription(order.userId, order.months, tx);
+  return { outcome: "MATCHED", orderId: order.id };
+}

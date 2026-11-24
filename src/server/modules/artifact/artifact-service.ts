@@ -1,3 +1,4 @@
+import { consumeQuota } from "@/server/modules/subscription";
 import { start } from "workflow/api";
 import { AppError } from "@/server/lib/errors";
 import { StudioArtifactType } from "@/shared/enums";
@@ -33,6 +34,7 @@ export async function requestArtifactForUser(
 ) {
   // Generating from an unprocessed passage would feed the model empty content.
   await requireReadyPassage(userId, passageId);
+  await consumeQuota(userId, "artifact_generate");
 
   const artifact = await createArtifact({ passageId, userId, type, status: "PENDING" });
 

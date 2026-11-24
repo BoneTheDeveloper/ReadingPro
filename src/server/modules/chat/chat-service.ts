@@ -1,3 +1,4 @@
+import { consumeQuota } from "@/server/modules/subscription";
 import { convertToModelMessages, generateId, streamText, type UIMessage } from "ai";
 import { requireOwnedPassage } from "@/server/modules/passage";
 import { MAX_TEXT_CHARS, type StudyChatLanguage } from "@/shared/studio/chat";
@@ -50,6 +51,7 @@ export async function streamStudyChatForUser(params: {
 }): Promise<Response> {
   const { userId, passageId, messages, language } = params;
   const passage = await requireOwnedPassage(userId, passageId);
+  await consumeQuota(userId, "chat_message");
 
   const latestUserMessage = [...messages].reverse().find((m) => m.role === "user");
   if (latestUserMessage) await persistMessage(userId, passageId, "user", latestUserMessage);

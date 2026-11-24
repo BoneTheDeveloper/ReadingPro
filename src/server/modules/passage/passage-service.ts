@@ -1,3 +1,4 @@
+import { consumeQuota } from "@/server/modules/subscription";
 import { start } from "workflow/api";
 import { AppError } from "@/server/lib/errors";
 import type { CreatePassageInput, Passage } from "@/shared/passage/schema";
@@ -20,6 +21,7 @@ export async function submitPassageForUser(
   input: CreatePassageInput,
 ): Promise<Passage> {
   if (input.sourceType === "YOUTUBE") await requireTranscript(input.youtubeUrl);
+  await consumeQuota(userId, "passage_import");
 
   const passage = await createPassageForUser({
     userId,

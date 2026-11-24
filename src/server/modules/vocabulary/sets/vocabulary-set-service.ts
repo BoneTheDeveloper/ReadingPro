@@ -2,7 +2,7 @@ import { isUniqueViolation, withTransaction } from "@/server/lib/db";
 import { AppError } from "@/server/lib/errors";
 import { findUserSettings } from "@/server/modules/user-settings";
 import type { VocabularyStatus } from "@/shared/enums";
-import { isProTier } from "@/shared/plan/tier";
+import { consumeQuota } from "@/server/modules/subscription";
 import {
   type VocabularySet,
   type VocabularySetGenerateInput,
@@ -119,9 +119,8 @@ export async function generateVocabularySetForUser(
   user: { id: string; tier?: string | null },
   input: VocabularySetGenerateInput,
 ): Promise<VocabularySet> {
-  if (!isProTier(user.tier)) {
-    throw new AppError("plan.pro_required", "Generating a set requires the Pro tier");
-  }
+  // Free has no allowance, so this throws plan.pro_required there.
+  await consumeQuota(user.id, "set_generate");
 
   const defaultSetId = await ensureDefaultSetForUser(user.id);
 
