@@ -5,6 +5,8 @@ export default [
   route("login", "routes/login.tsx"),
   route("register", "routes/register.tsx"),
   route("forgot-password", "routes/forgot-password.tsx"),
+  // Full-page checkout, outside the app chrome like a hosted payment page.
+  route("checkout/:orderId", "routes/checkout.tsx"),
   layout("routes/dashboard-layout.tsx", [
     route("study", "routes/study/route.tsx"),
     route("vocabulary", "routes/vocabulary.tsx"),

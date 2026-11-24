@@ -1,9 +1,8 @@
-import { queryOptions, skipToken, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryOptions, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchJson } from "@/client/lib/api/fetch-json";
 import {
   CheckoutSchema,
   PaymentOrderListSchema,
-  PaymentOrderSchema,
   SubscriptionStatusSchema,
   type ProPlanCode,
 } from "@/shared/plan/plans";
@@ -25,12 +24,13 @@ export const subscriptionQueries = {
       queryFn: ({ signal }) => fetchJson("/api/subscription/orders", PaymentOrderListSchema, { signal }),
     }),
 
-  /** Polled while the QR is open, until SePay's webhook marks the order paid. */
-  order: (id: string | null) =>
+  /** The checkout page's order and QR, polled until SePay's webhook marks it paid. */
+  checkout: (id: string) =>
     queryOptions({
-      queryKey: [...subscriptionQueries.all(), "order", id ?? ""] as const,
-      queryFn: id === null ? skipToken : ({ signal }) => fetchJson(`/api/subscription/orders/${id}`, PaymentOrderSchema, { signal }),
-      refetchInterval: (query) => (query.state.data?.status === "PENDING" ? 3_000 : false),
+      queryKey: [...subscriptionQueries.all(), "checkout", id] as const,
+      queryFn: ({ signal }) => fetchJson(`/api/subscription/orders/${id}`, CheckoutSchema, { signal }),
+      refetchInterval: (query) => (query.state.data?.order.status === "PENDING" ? 3_000 : false),
+      refetchIntervalInBackground: true,
     }),
 };
 

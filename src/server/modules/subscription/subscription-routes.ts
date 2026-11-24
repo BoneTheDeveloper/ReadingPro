@@ -7,7 +7,7 @@ import { CheckoutInputSchema, PaymentOrderIdParamSchema } from "@/shared/plan/pl
 import { requireSepayConfig } from "./sepay-config";
 import {
   createCheckoutForUser,
-  getPaymentOrderForUser,
+  getCheckoutForUser,
   getSubscriptionStatus,
   handleSepayWebhook,
   listPaymentOrders,
@@ -23,7 +23,7 @@ export const subscriptionRoutes = new Hono<AuthEnv>()
     return c.json(await createCheckoutForUser(c.var.user.id, c.req.valid("json").planCode), 201);
   })
   .get("/orders/:id", validate("param", PaymentOrderIdParamSchema), async (c) => {
-    return c.json(await getPaymentOrderForUser(c.var.user.id, c.req.valid("param").id));
+    return c.json(await getCheckoutForUser(c.var.user.id, c.req.valid("param").id));
   });
 
 function sameSecret(received: string, expected: string): boolean {

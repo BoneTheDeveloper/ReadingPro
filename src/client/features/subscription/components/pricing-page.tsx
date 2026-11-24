@@ -1,17 +1,14 @@
-import { useState } from "react";
+import { useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { getErrorMessage } from "@/client/lib/api/error-message";
-import type { Checkout } from "@/shared/plan/plans";
-import { subscriptionQueries, useCheckoutMutation, useRefreshSubscription } from "../api/queries";
-import { CheckoutDialog } from "./checkout-dialog";
+import { subscriptionQueries, useCheckoutMutation } from "../api/queries";
 import { PlanCards } from "./plan-cards";
 
-/** The in-app upgrade page: plan cards, then the VietQR checkout for the chosen cycle. */
+/** The in-app upgrade page: plan cards; choosing Pro opens the checkout page for a new order. */
 export function PricingPage() {
   const status = useQuery(subscriptionQueries.status());
   const checkout = useCheckoutMutation();
-  const refresh = useRefreshSubscription();
-  const [open, setOpen] = useState<Checkout | null>(null);
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-0 flex-1 overflow-y-auto">
@@ -24,18 +21,10 @@ export function PricingPage() {
           variant="app"
           currentTier={status.data?.tier ?? "FREE"}
           busy={checkout.isPending}
-          onUpgrade={(plan) => checkout.mutate(plan, { onSuccess: setOpen })}
+          onUpgrade={(plan) => checkout.mutate(plan, { onSuccess: (c) => navigate(`/checkout/${c.order.id}`) })}
         />
         {checkout.error && <p className="text-center text-sm text-destructive">{getErrorMessage(checkout.error)}</p>}
       </div>
-      <CheckoutDialog
-        key={open?.order.id}
-        checkout={open}
-        onClose={() => {
-          setOpen(null);
-          void refresh();
-        }}
-      />
     </div>
   );
 }

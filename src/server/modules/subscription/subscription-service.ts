@@ -134,8 +134,17 @@ function toPaymentOrder(row: PaymentOrderRow, now = new Date()): PaymentOrder {
   };
 }
 
-export async function createCheckoutForUser(userId: string, planCode: ProPlanCode): Promise<Checkout> {
+function toCheckout(row: PaymentOrderRow): Checkout {
   const config = requireSepayConfig();
+  return {
+    order: toPaymentOrder(row),
+    qrUrl: buildVietQrUrl(config, row.amount, row.paymentCode),
+    bank: { code: config.bankCode, accountNumber: config.accountNumber, accountName: config.accountName },
+  };
+}
+
+export async function createCheckoutForUser(userId: string, planCode: ProPlanCode): Promise<Checkout> {
+  requireSepayConfig();
   const plan = PRO_PLANS[planCode];
   const row = await insertPaymentOrder({
     userId,
@@ -145,11 +154,14 @@ export async function createCheckoutForUser(userId: string, planCode: ProPlanCod
     paymentCode: newPaymentCode(),
     expiresAt: new Date(Date.now() + ORDER_TTL_MS),
   });
-  return {
-    order: toPaymentOrder(row),
-    qrUrl: buildVietQrUrl(config, row.amount, row.paymentCode),
-    bank: { code: config.bankCode, accountNumber: config.accountNumber, accountName: config.accountName },
-  };
+  return toCheckout(row);
+}
+
+/** The checkout page's data: the order with its QR, reloadable by URL. */
+export async function getCheckoutForUser(userId: string, id: string): Promise<Checkout> {
+  const row = await findPaymentOrderForUser(userId, id);
+  if (!row) throw new AppError("payment.order_not_found", `No payment order ${id}`);
+  return toCheckout(row);
 }
 
 export async function getPaymentOrderForUser(userId: string, id: string): Promise<PaymentOrder> {

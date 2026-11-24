@@ -7,6 +7,7 @@ import {
   consumeQuota,
   createCheckoutForUser,
   extractPaymentCode,
+  getCheckoutForUser,
   getPaymentOrderForUser,
   getSubscriptionStatus,
   getUserTier,
@@ -186,6 +187,18 @@ describe("POST /api/webhooks/sepay", () => {
     const res = await post(sepayPayload({ content: order.paymentCode }), `Apikey ${API_KEY}`);
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ success: true, outcome: "MATCHED" });
+  });
+});
+
+describe("getCheckoutForUser", () => {
+  it("reloads an order with its QR for its owner only", async () => {
+    const userId = await newUser();
+    const other = await newUser();
+    const { order } = await createCheckoutForUser(userId, "PRO_YEARLY");
+    const checkout = await getCheckoutForUser(userId, order.id);
+    expect(checkout.order.paymentCode).toBe(order.paymentCode);
+    expect(checkout.qrUrl).toContain("amount=490000");
+    expect(await rejectionReason(getCheckoutForUser(other, order.id))).toBe("payment.order_not_found");
   });
 });
 
