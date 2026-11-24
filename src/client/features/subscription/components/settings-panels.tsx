@@ -43,13 +43,13 @@ function useStatus() {
 function periodLine(data: SubscriptionStatus): string {
   switch (data.state) {
     case "none":
-      return "Lượt dùng làm mới theo ngày hoặc tháng. Nâng cấp để có hạn mức cao hơn.";
+      return "Nâng cấp để có hạn mức cao hơn.";
     case "complimentary":
       return "Tài khoản được cấp quyền Pro, không có ngày hết hạn.";
     case "expired":
       return `Pro đã hết hạn ngày ${formatDate(data.currentPeriodEnd!)}. Bạn đang dùng hạn mức của gói Free.`;
     default:
-      return `Hết hạn ngày ${formatDate(data.currentPeriodEnd!)} (còn ${data.daysLeft} ngày). Không tự động gia hạn.`;
+      return `Hiệu lực đến ${formatDate(data.currentPeriodEnd!)} (còn ${data.daysLeft} ngày).`;
   }
 }
 
