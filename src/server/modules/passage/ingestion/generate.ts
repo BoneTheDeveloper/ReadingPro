@@ -9,10 +9,11 @@ import { AppError } from "@/server/lib/errors";
 import { completePassageProcessing } from "../passage-repository";
 import { takeWords, titleFromContent } from "./text";
 
-const MODEL = "deepseek/deepseek-v4-flash";
+const MODEL = "deepseek/deepseek-v4.1-flash";
+const METADATA_MODEL = "openai/gpt-4o-mini";
 const AI_TIMEOUT_MS = 170_000;
 
-const METADATA_SAMPLE_WORDS = 1000;
+const METADATA_SAMPLE_WORDS = 500;
 
 const METADATA_INSTRUCTIONS = `You label English passages for language learners.
 
@@ -74,7 +75,7 @@ Return only the passage. No preamble, no commentary, no markdown, no title.`;
 
 async function generateMetadata(sample: string): Promise<PassageMetadata> {
   const { object } = await generateObject({
-    model: MODEL,
+    model: METADATA_MODEL,
     schema: passageMetadataSchema,
     abortSignal: AbortSignal.timeout(AI_TIMEOUT_MS),
     instructions: METADATA_INSTRUCTIONS,

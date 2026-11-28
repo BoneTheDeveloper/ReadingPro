@@ -69,7 +69,7 @@ ${passage.content.slice(0, MAX_TEXT_CHARS)}
   const modelMessages = await convertToModelMessages([...historyMessages, ...messages]);
 
   const result = streamText({
-    model: "deepseek/deepseek-v4-flash",
+    model: "deepseek/deepseek-v4.1-flash",
     system: getStudyChatSystemPrompt(language),
     messages: [
       { role: "user", content: `Selected passage context:\n${passageContext}` },
